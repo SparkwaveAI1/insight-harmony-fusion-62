@@ -4,6 +4,7 @@ import Hero from "@/components/sections/Hero";
 import CustomAIPersonas from "@/components/sections/CustomAIPersonas";
 import HowToUsePersonaAI from "@/components/sections/HowToUsePersonaAI";
 import Features from "@/components/sections/Features";
+import HowItWorks from "@/components/sections/HowItWorks";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
 import Footer from "@/components/sections/Footer";
@@ -17,6 +18,7 @@ const Index = () => {
         <CustomAIPersonas />
         <HowToUsePersonaAI />
         <Features />
+        <HowItWorks />
         <QualitativeAnalysis />
         <ProductShowcase />
       </main>
