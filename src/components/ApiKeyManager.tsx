@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { saveApiKey, clearApiKey, hasApiKey } from "@/services/qualitativeAnalysisService";
+import { saveApiKey, clearApiKey, hasApiKey } from "@/services/utils/apiKeyUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

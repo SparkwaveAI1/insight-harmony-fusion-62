@@ -11,9 +11,9 @@ import {
   DataSource, 
   SentimentFilter, 
   TimeFrame,
-  AnalysisResults,
-  fetchQualitativeData 
-} from "@/services/qualitativeAnalysisService";
+  AnalysisResults
+} from "@/services/types/qualitativeAnalysisTypes";
+import { fetchQualitativeData } from "@/services/mock/mockDataService";
 import ApiKeyManager from "../ApiKeyManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
