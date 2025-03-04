@@ -44,6 +44,10 @@
     --sidebar-accent-foreground: 240 6% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217 91% 60%;
+
+    /* Added accent colors to match the logo */
+    --logo-blue: 195 100% 50%;
+    --logo-orange: 30 100% 60%;
   }
 
   .dark {
@@ -83,6 +87,10 @@
     --sidebar-accent-foreground: 240 5% 96%;
     --sidebar-border: 240 4% 16%;
     --sidebar-ring: 217 91% 60%;
+
+    /* Added accent colors to match the logo */
+    --logo-blue: 195 100% 50%;
+    --logo-orange: 30 100% 60%;
   }
 }
 
