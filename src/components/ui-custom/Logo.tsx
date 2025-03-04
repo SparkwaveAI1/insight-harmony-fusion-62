@@ -13,15 +13,24 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md' }) => {
     lg: 'h-10'
   };
 
+  // Calculate frame size based on logo size
+  const frameClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12'
+  };
+
   return (
     <div className={`flex items-center ${className}`}>
       <div className="relative">
-        <div className="rounded-full bg-white p-1 flex items-center justify-center shadow-sm">
-          <img 
-            src="/lovable-uploads/6e576833-6996-45f0-8cbf-9d884a7a7889.png" 
-            alt="PersonaAI Logo" 
-            className={`${sizeClasses[size]}`}
-          />
+        <div className={`rounded-full bg-white p-1 flex items-center justify-center shadow-sm ${frameClasses[size]}`}>
+          <div className="overflow-hidden flex items-center justify-center w-full h-full">
+            <img 
+              src="/lovable-uploads/6e576833-6996-45f0-8cbf-9d884a7a7889.png" 
+              alt="PersonaAI Logo" 
+              className={`${sizeClasses[size]} object-contain`}
+            />
+          </div>
         </div>
       </div>
       <span className="ml-2 font-medium text-xl">
