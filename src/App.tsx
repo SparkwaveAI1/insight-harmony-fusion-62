@@ -5,6 +5,7 @@ import NotFound from "./pages/NotFound";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
 import AIFocusGroups from "./pages/AIFocusGroups";
 import PRSNAEcosystem from "./pages/PRSNAEcosystem";
+import Contact from "./pages/Contact";
 import "./App.css";
 
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
   {
     path: "/prsna-ecosystem",
     element: <PRSNAEcosystem />,
+  },
+  {
+    path: "/contact",
+    element: <Contact />,
   },
 ]);
 

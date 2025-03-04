@@ -1,5 +1,6 @@
 
 import { User } from "lucide-react";
+import { Link } from "react-router-dom";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -39,9 +40,11 @@ const CustomAIPersonas = () => {
             </Reveal>
             
             <Reveal delay={300}>
-              <Button size="lg" variant="primary" className="rounded-full px-8 py-3">
-                Commission a Custom Persona
-              </Button>
+              <Link to="/contact">
+                <Button size="lg" variant="primary" className="rounded-full px-8 py-3">
+                  Commission Custom Personas
+                </Button>
+              </Link>
             </Reveal>
           </div>
         </div>
