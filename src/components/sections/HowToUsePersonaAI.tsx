@@ -45,8 +45,22 @@ const useCases: UseCase[] = [
   {
     icon: <LightbulbIcon className="h-10 w-10 text-primary" />,
     title: "Ideation, Strategy & Planning",
-    description: "Generate innovative ideas and validate strategic concepts with targeted persona feedback.",
+    description: "Validate concepts, refine strategies, and optimize innovation with AI-driven persona feedback.",
     actionText: "Validate your concepts",
+    details: [
+      {
+        title: "Concept Testing & Validation:",
+        description: "Assess early-stage ideas, product positioning, and go-to-market strategies with AI-powered feedback loops."
+      },
+      {
+        title: "Strategic Decision Optimization:",
+        description: "Refine business models, customer acquisition approaches, and messaging frameworks through AI-driven insights."
+      },
+      {
+        title: "Example:",
+        description: "Which product positioning works better? 'AI-Powered Investing' vs. 'Data-Driven Wealth Growth'?"
+      }
+    ]
   },
   {
     icon: <TrendingUp className="h-10 w-10 text-primary" />,
@@ -81,7 +95,7 @@ const HowToUsePersonaAI = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {useCases.map((useCase, index) => (
             <Reveal key={index} delay={index * 100}>
-              <Card className={`h-full border-2 ${index === 0 ? 'border-primary/20' : 'border-slate-200'} hover:border-primary/20 transition-all`}>
+              <Card className={`h-full border-2 ${index === 0 || index === 1 ? 'border-primary/20' : 'border-slate-200'} hover:border-primary/20 transition-all`}>
                 <div className="flex flex-col h-full">
                   <div className="flex gap-4 items-start mb-4">
                     <div className="p-3 bg-blue-50 rounded-xl">
@@ -99,7 +113,7 @@ const HowToUsePersonaAI = () => {
                     </p>
                   )}
 
-                  {index === 0 && useCase.details && (
+                  {(index === 0 || index === 1) && useCase.details && (
                     <div className="mt-6 border-t pt-4 border-slate-100">
                       {useCase.details.map((detail, idx) => (
                         <div key={idx} className="mb-4 last:mb-0">
