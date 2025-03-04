@@ -1,5 +1,5 @@
 
-export type DataSource = "twitter" | "reddit" | "news" | "farcaster" | "all";
+export type DataSource = "twitter" | "reddit" | "news" | "all";
 export type SentimentFilter = "positive" | "neutral" | "negative" | "all";
 export type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term";
 

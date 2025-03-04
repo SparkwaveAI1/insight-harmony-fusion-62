@@ -223,52 +223,6 @@ const QualitativeAnalysis: React.FC = () => {
                           News & Blogs
                         </label>
                       </div>
-                      
-                      <div className="font-medium text-sm mt-4 mb-1">Coming Soon:</div>
-                      <div className="flex flex-col gap-2">
-                        <label className="flex items-center gap-2 text-muted-foreground">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300"
-                            disabled
-                          />
-                          <div className="flex items-center gap-1">
-                            <AlertTriangle size={14} className="text-amber-500" />
-                            Discord
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Info size={14} className="text-muted-foreground cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Coming in Q4 2024</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </label>
-                        <label className="flex items-center gap-2 text-muted-foreground">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300"
-                            disabled
-                          />
-                          <div className="flex items-center gap-1">
-                            <AlertTriangle size={14} className="text-amber-500" />
-                            Farcaster
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Info size={14} className="text-muted-foreground cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Coming in Q3 2024</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </label>
-                      </div>
                     </div>
                   </div>
 
