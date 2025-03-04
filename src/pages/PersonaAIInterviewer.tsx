@@ -40,6 +40,36 @@ const PersonaAIInterviewer = () => {
           </div>
         </section>
 
+        {/* AI Interviews at Scale Section - Now as a separate section */}
+        <Section className="bg-background py-20">
+          <div className="container px-4 mx-auto relative">
+            <div className="max-w-4xl mx-auto text-center">
+              <Reveal>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
+                  AI Interviews at Scale—Instant Insights, No Delays.
+                </h2>
+              </Reveal>
+              
+              <Reveal delay={100}>
+                <p className="text-muted-foreground text-pretty max-w-2xl mx-auto mb-10">
+                  Get real consumer opinions, motivations, and decision-making patterns through AI-driven interviews—then analyze responses instantly with our research-grade AI Personas.
+                </p>
+              </Reveal>
+              
+              <Reveal delay={200}>
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="group"
+                >
+                  Try the PersonaAI Interviewer
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Reveal>
+            </div>
+          </div>
+        </Section>
+
         {/* Main Options Section */}
         <Section>
           <div className="container px-4 mx-auto">
