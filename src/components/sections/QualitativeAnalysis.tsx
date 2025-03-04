@@ -191,37 +191,75 @@ const QualitativeAnalysis: React.FC = () => {
                     
                     <div className="space-y-2">
                       <div className="font-medium text-sm mb-1">Live Sources:</div>
-                      <div className="flex flex-col gap-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300"
-                            checked={isSourceSelected("twitter")}
-                            onChange={(e) => handleSourceChange("twitter")(e.target.checked)}
-                          />
-                          <Check size={14} className="text-green-500" />
-                          Twitter
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300"
-                            checked={isSourceSelected("reddit")}
-                            onChange={(e) => handleSourceChange("reddit")(e.target.checked)}
-                          />
-                          <Check size={14} className="text-green-500" />
-                          Reddit
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300"
-                            checked={isSourceSelected("news")}
-                            onChange={(e) => handleSourceChange("news")(e.target.checked)}
-                          />
-                          <Check size={14} className="text-green-500" />
-                          News & Blogs
-                        </label>
+                      <div className="bg-background rounded-lg p-4 border border-input">
+                        <div className="grid grid-cols-1 gap-3">
+                          <label className="flex items-center p-2 rounded-md hover:bg-muted transition-colors cursor-pointer group">
+                            <div className="h-6 w-6 rounded border-2 flex items-center justify-center mr-3 border-primary bg-background group-hover:bg-primary/10">
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={isSourceSelected("twitter")}
+                                onChange={(e) => handleSourceChange("twitter")(e.target.checked)}
+                              />
+                              {isSourceSelected("twitter") && <Check size={16} className="text-primary" />}
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-medium">Twitter</span>
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Live
+                              </span>
+                            </div>
+                          </label>
+                          
+                          <label className="flex items-center p-2 rounded-md hover:bg-muted transition-colors cursor-pointer group">
+                            <div className="h-6 w-6 rounded border-2 flex items-center justify-center mr-3 border-primary bg-background group-hover:bg-primary/10">
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={isSourceSelected("reddit")}
+                                onChange={(e) => handleSourceChange("reddit")(e.target.checked)}
+                              />
+                              {isSourceSelected("reddit") && <Check size={16} className="text-primary" />}
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-medium">Reddit</span>
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Live
+                              </span>
+                            </div>
+                          </label>
+                          
+                          <label className="flex items-center p-2 rounded-md hover:bg-muted transition-colors cursor-pointer group">
+                            <div className="h-6 w-6 rounded border-2 flex items-center justify-center mr-3 border-primary bg-background group-hover:bg-primary/10">
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={isSourceSelected("news")}
+                                onChange={(e) => handleSourceChange("news")(e.target.checked)}
+                              />
+                              {isSourceSelected("news") && <Check size={16} className="text-primary" />}
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-medium">News & Blogs</span>
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                Live
+                              </span>
+                            </div>
+                          </label>
+                          
+                          <label className="flex items-center p-2 rounded-md hover:bg-muted transition-colors cursor-pointer group">
+                            <div className="h-6 w-6 rounded border-2 flex items-center justify-center mr-3 border-primary bg-background group-hover:bg-primary/10">
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={query.sources.includes("all")}
+                                onChange={(e) => handleSourceChange("all")(e.target.checked)}
+                              />
+                              {query.sources.includes("all") && <Check size={16} className="text-primary" />}
+                            </div>
+                            <span className="font-medium">All Sources</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
