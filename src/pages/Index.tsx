@@ -12,9 +12,9 @@ const Index = () => {
       <Header />
       <main className="flex-grow">
         <Hero />
+        <QualitativeAnalysis />
         <Features />
         <ProductShowcase />
-        <QualitativeAnalysis />
       </main>
       <Footer />
     </div>

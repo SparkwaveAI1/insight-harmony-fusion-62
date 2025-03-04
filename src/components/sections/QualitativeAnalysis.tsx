@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -73,17 +72,20 @@ const QualitativeAnalysis: React.FC = () => {
   };
 
   return (
-    <Section className="bg-gradient-to-b from-accent to-background py-20">
+    <Section className="bg-gradient-to-b from-accent to-background py-20" highlight={true}>
       <div className="container max-w-5xl mx-auto">
         <Reveal>
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            PersonaAI Qualitative Intelligence Aggregator
+          <h2 className="text-3xl md:text-5xl font-bold text-center mb-4">
+            PersonaAI Qualitative Intelligence
           </h2>
+          <p className="text-center text-muted-foreground mb-12 text-lg">
+            Discover the real conversations and sentiment around your topics of interest
+          </p>
         </Reveal>
 
         {!showResults ? (
           <Reveal delay={200}>
-            <Card className="shadow-lg mb-8">
+            <Card className="shadow-lg mb-8 border-primary/20">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <label htmlFor="query" className="block text-lg font-medium">
@@ -218,7 +220,6 @@ const QualitativeAnalysis: React.FC = () => {
   );
 };
 
-// Results dashboard component to display insights
 interface ResultsDashboardProps {
   results: {
     topTopics: string[];
