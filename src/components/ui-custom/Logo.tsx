@@ -16,11 +16,13 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md' }) => {
   return (
     <div className={`flex items-center ${className}`}>
       <div className="relative">
-        <img 
-          src="/lovable-uploads/6e576833-6996-45f0-8cbf-9d884a7a7889.png" 
-          alt="PersonaAI Logo" 
-          className={`${sizeClasses[size]}`}
-        />
+        <div className="rounded-full bg-white p-1 flex items-center justify-center shadow-sm">
+          <img 
+            src="/lovable-uploads/6e576833-6996-45f0-8cbf-9d884a7a7889.png" 
+            alt="PersonaAI Logo" 
+            className={`${sizeClasses[size]}`}
+          />
+        </div>
       </div>
       <span className="ml-2 font-medium text-xl">
         Persona<span className="text-primary">AI</span>
