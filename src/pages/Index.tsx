@@ -3,6 +3,7 @@ import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import Features from "@/components/sections/Features";
 import ProductShowcase from "@/components/sections/ProductShowcase";
+import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
 import Footer from "@/components/sections/Footer";
 
 const Index = () => {
@@ -13,6 +14,7 @@ const Index = () => {
         <Hero />
         <Features />
         <ProductShowcase />
+        <QualitativeAnalysis />
       </main>
       <Footer />
     </div>
