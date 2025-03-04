@@ -5,8 +5,9 @@ import CustomAIPersonas from "@/components/sections/CustomAIPersonas";
 import HowToUsePersonaAI from "@/components/sections/HowToUsePersonaAI";
 import Features from "@/components/sections/Features";
 import HowItWorks from "@/components/sections/HowItWorks";
-import ProductShowcase from "@/components/sections/ProductShowcase";
+import PersonaAIInterviewerSection from "@/components/sections/PersonaAIInterviewer";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
+import ProductShowcase from "@/components/sections/ProductShowcase";
 import Footer from "@/components/sections/Footer";
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
         <HowToUsePersonaAI />
         <Features />
         <HowItWorks />
+        <PersonaAIInterviewerSection />
         <QualitativeAnalysis />
         <ProductShowcase />
       </main>
