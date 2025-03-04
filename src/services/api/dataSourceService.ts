@@ -14,10 +14,8 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     let keywords: string[] = [];
     let topics: string[] = [];
     
-    // Determine which sources to query
-    const sourcesToQuery: Array<"twitter" | "reddit" | "news"> = query.sources.includes("all") 
-      ? ["twitter", "reddit", "news"] 
-      : query.sources.filter(s => s !== "all") as Array<"twitter" | "reddit" | "news">;
+    // Determine which sources to query - modified to handle only specific sources
+    const sourcesToQuery = query.sources as Array<"twitter" | "reddit" | "news">;
     
     // Parallel API calls to different data sources
     const apiPromises = [];

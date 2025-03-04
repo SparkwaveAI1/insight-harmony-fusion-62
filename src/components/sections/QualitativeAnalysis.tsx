@@ -25,7 +25,7 @@ const QualitativeAnalysis: React.FC = () => {
   const [results, setResults] = useState<AnalysisResults | null>(null);
   const [query, setQuery] = useState<ResearchQuery>({
     query: "",
-    sources: ["all"],
+    sources: ["twitter", "reddit", "news"],
     sentiment: "all",
     timeFrame: "medium-term",
     keywords: []
@@ -107,28 +107,25 @@ const QualitativeAnalysis: React.FC = () => {
   };
   
   const handleSourceChange = (source: DataSource) => (checked: boolean) => {
-    if (source === "all" && checked) {
-      setQuery({ ...query, sources: ["all"] });
-      return;
-    }
-    
-    let newSources = query.sources.filter(s => s !== "all");
+    let newSources = [...query.sources];
     
     if (checked) {
-      newSources.push(source);
+      if (!newSources.includes(source)) {
+        newSources.push(source);
+      }
     } else {
       newSources = newSources.filter(s => s !== source);
     }
     
     if (newSources.length === 0) {
-      newSources = ["all"];
+      newSources = ["twitter"];
     }
     
     setQuery({ ...query, sources: newSources });
   };
   
   const isSourceSelected = (source: DataSource) => {
-    return query.sources.includes(source) || query.sources.includes("all");
+    return query.sources.includes(source);
   };
 
   return (
@@ -245,19 +242,6 @@ const QualitativeAnalysis: React.FC = () => {
                                 Live
                               </span>
                             </div>
-                          </label>
-                          
-                          <label className="flex items-center p-2 rounded-md hover:bg-muted transition-colors cursor-pointer group">
-                            <div className="h-6 w-6 rounded border-2 flex items-center justify-center mr-3 border-primary bg-background group-hover:bg-primary/10">
-                              <input
-                                type="checkbox"
-                                className="sr-only"
-                                checked={query.sources.includes("all")}
-                                onChange={(e) => handleSourceChange("all")(e.target.checked)}
-                              />
-                              {query.sources.includes("all") && <Check size={16} className="text-primary" />}
-                            </div>
-                            <span className="font-medium">All Sources</span>
                           </label>
                         </div>
                       </div>
