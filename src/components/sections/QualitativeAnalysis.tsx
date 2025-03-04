@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
-import { BarChart3, Filter, Search, Clock, Hash, Loader2, BrainCircuit, TrendingUp } from "lucide-react";
+import { BarChart3, Filter, Search, Clock, Hash, Loader2, BrainCircuit, TrendingUp, Info, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { 
   ResearchQuery, 
@@ -16,6 +16,8 @@ import {
 import { fetchQualitativeData } from "@/services/api/dataSourceService";
 import ApiKeyManager from "../ApiKeyManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const QualitativeAnalysis: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,10 +27,43 @@ const QualitativeAnalysis: React.FC = () => {
     query: "",
     sources: ["all"],
     sentiment: "all",
-    timeFrame: "short-term",
+    timeFrame: "medium-term",
     keywords: []
   });
   const [keywordInput, setKeywordInput] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Rotating placeholder examples
+  const placeholders = [
+    "What are people saying about AI token staking incentives?",
+    "How do crypto investors feel about token rewards?",
+    "What's the biggest fear in the NFT space right now?",
+    "What do people really think about AI-generated art?",
+    "What are the most common concerns about Web3 adoption?"
+  ];
+  
+  // Auto-rotate placeholders every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Auto-resize textarea based on content
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  };
+  
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [query.query]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,20 +108,51 @@ const QualitativeAnalysis: React.FC = () => {
   const handleNewSearch = () => {
     setShowResults(false);
   };
+  
+  const handleSourceChange = (source: DataSource, checked: boolean) => {
+    // If selecting "all", clear other selections
+    if (source === "all" && checked) {
+      setQuery({ ...query, sources: ["all"] });
+      return;
+    }
+    
+    // If deselecting "all", remove it
+    let newSources = query.sources.filter(s => s !== "all");
+    
+    // Toggle the selected source
+    if (checked) {
+      newSources.push(source);
+    } else {
+      newSources = newSources.filter(s => s !== source);
+    }
+    
+    // If no sources selected, default to "all"
+    if (newSources.length === 0) {
+      newSources = ["all"];
+    }
+    
+    setQuery({ ...query, sources: newSources });
+  };
+  
+  const isSourceSelected = (source: DataSource) => {
+    return query.sources.includes(source) || query.sources.includes("all");
+  };
 
   return (
     <Section className="bg-gradient-to-b from-accent to-background py-20" highlight={true}>
       <div className="container max-w-5xl mx-auto">
         <Reveal>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-3xl md:text-5xl font-bold">
-              PersonaAI Qualitative Intelligence
-            </h2>
+            <div className="max-w-3xl">
+              <h2 className="text-3xl md:text-5xl font-bold mb-3">
+                PersonaAI: AI That Thinks Like a Human, Not a Machine
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Uncover the real thoughts, opinions, and emotions driving conversations—beyond data, beyond numbers.
+              </p>
+            </div>
             <ApiKeyManager />
           </div>
-          <p className="text-center text-muted-foreground mb-12 text-lg">
-            Discover the real conversations and sentiment around your topics of interest
-          </p>
         </Reveal>
 
         {!showResults ? (
@@ -98,13 +164,17 @@ const QualitativeAnalysis: React.FC = () => {
                     Research Query
                   </label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute left-3 top-3 text-muted-foreground" />
                     <textarea
+                      ref={textareaRef}
                       id="query"
-                      className="w-full h-32 pl-10 pr-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="What are people saying about AI token staking incentives?"
+                      className="w-full min-h-32 pl-10 pr-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none overflow-hidden"
+                      placeholder={placeholders[placeholderIndex]}
                       value={query.query}
-                      onChange={(e) => setQuery({ ...query, query: e.target.value })}
+                      onChange={(e) => {
+                        setQuery({ ...query, query: e.target.value });
+                      }}
+                      onInput={adjustTextareaHeight}
                       required
                     />
                   </div>
@@ -113,60 +183,186 @@ const QualitativeAnalysis: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="sources" className="block font-medium flex items-center gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="block font-medium flex items-center gap-2">
                       <Filter size={16} />
                       Data Sources
                     </label>
-                    <select
-                      id="sources"
-                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      value={query.sources[0]}
-                      onChange={(e) => setQuery({ ...query, sources: [e.target.value as DataSource] })}
-                    >
-                      <option value="all">All Sources</option>
-                      <option value="twitter">Twitter/X</option>
-                      <option value="reddit">Reddit</option>
-                      <option value="news">News Articles</option>
-                      <option value="farcaster">Farcaster</option>
-                    </select>
+                    
+                    <div className="space-y-2">
+                      <div className="font-medium text-sm mb-1">Live Sources:</div>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={isSourceSelected("twitter")}
+                            onChange={(e) => handleSourceChange("twitter", e.target.checked)}
+                          />
+                          <Check size={14} className="text-green-500" />
+                          Twitter
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={isSourceSelected("reddit")}
+                            onChange={(e) => handleSourceChange("reddit", e.target.checked)}
+                          />
+                          <Check size={14} className="text-green-500" />
+                          Reddit
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={isSourceSelected("news")}
+                            onChange={(e) => handleSourceChange("news", e.target.checked)}
+                          />
+                          <Check size={14} className="text-green-500" />
+                          News & Blogs
+                        </label>
+                      </div>
+                      
+                      <div className="font-medium text-sm mt-4 mb-1">Coming Soon:</div>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            disabled
+                          />
+                          <div className="flex items-center gap-1">
+                            <AlertTriangle size={14} className="text-amber-500" />
+                            Discord
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Info size={14} className="text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Coming in Q4 2024</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </label>
+                        <label className="flex items-center gap-2 text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            disabled
+                          />
+                          <div className="flex items-center gap-1">
+                            <AlertTriangle size={14} className="text-amber-500" />
+                            Farcaster
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Info size={14} className="text-muted-foreground cursor-help" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Coming in Q3 2024</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="sentiment" className="block font-medium flex items-center gap-2">
-                      <BarChart3 size={16} />
-                      Sentiment Focus
-                    </label>
-                    <select
-                      id="sentiment"
-                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      value={query.sentiment}
-                      onChange={(e) => setQuery({ ...query, sentiment: e.target.value as SentimentFilter })}
-                    >
-                      <option value="all">All Perspectives</option>
-                      <option value="positive">Supporters (Positive)</option>
-                      <option value="neutral">Neutral Opinions</option>
-                      <option value="negative">Criticism & Concerns</option>
-                    </select>
-                  </div>
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <label className="block font-medium flex items-center gap-2">
+                        <BarChart3 size={16} />
+                        Which voices do you want to hear?
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "positive" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
+                          <input
+                            type="radio"
+                            name="sentiment"
+                            value="positive"
+                            className="sr-only"
+                            checked={query.sentiment === "positive"}
+                            onChange={() => setQuery({ ...query, sentiment: "positive" })}
+                          />
+                          <span>😊 Positive Sentiment – Supporters & Enthusiasts</span>
+                        </label>
+                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "neutral" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
+                          <input
+                            type="radio"
+                            name="sentiment"
+                            value="neutral"
+                            className="sr-only"
+                            checked={query.sentiment === "neutral"}
+                            onChange={() => setQuery({ ...query, sentiment: "neutral" })}
+                          />
+                          <span>😐 Neutral Sentiment – Balanced & Informational</span>
+                        </label>
+                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "negative" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
+                          <input
+                            type="radio"
+                            name="sentiment"
+                            value="negative"
+                            className="sr-only"
+                            checked={query.sentiment === "negative"}
+                            onChange={() => setQuery({ ...query, sentiment: "negative" })}
+                          />
+                          <span>😔 Negative Sentiment – Concerns & Criticism</span>
+                        </label>
+                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "all" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
+                          <input
+                            type="radio"
+                            name="sentiment"
+                            value="all"
+                            className="sr-only"
+                            checked={query.sentiment === "all"}
+                            onChange={() => setQuery({ ...query, sentiment: "all" })}
+                          />
+                          <span>🔍 All Perspectives (Recommended) – Full spectrum of opinions</span>
+                        </label>
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="timeFrame" className="block font-medium flex items-center gap-2">
-                      <Clock size={16} />
-                      Time Frame
-                    </label>
-                    <select
-                      id="timeFrame"
-                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      value={query.timeFrame}
-                      onChange={(e) => setQuery({ ...query, timeFrame: e.target.value as TimeFrame })}
-                    >
-                      <option value="real-time">Real-time (Last 24 hours)</option>
-                      <option value="short-term">Short-term (Past week)</option>
-                      <option value="medium-term">Medium-term (Past month)</option>
-                      <option value="long-term">Long-term (3-6 months)</option>
-                    </select>
+                    <div className="space-y-3">
+                      <label className="block font-medium flex items-center gap-2">
+                        <Clock size={16} />
+                        Time Frame
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          className={`px-3 py-2 rounded-md border ${query.timeFrame === "real-time" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}
+                          onClick={() => setQuery({ ...query, timeFrame: "real-time" })}
+                        >
+                          Live Trends (24 hours)
+                        </button>
+                        <button
+                          type="button"
+                          className={`px-3 py-2 rounded-md border ${query.timeFrame === "short-term" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}
+                          onClick={() => setQuery({ ...query, timeFrame: "short-term" })}
+                        >
+                          Short-Term (Past 7 Days)
+                        </button>
+                        <button
+                          type="button"
+                          className={`px-3 py-2 rounded-md border ${query.timeFrame === "medium-term" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}
+                          onClick={() => setQuery({ ...query, timeFrame: "medium-term" })}
+                        >
+                          Medium-Term (Past Month)
+                        </button>
+                        <button
+                          type="button"
+                          className={`px-3 py-2 rounded-md border ${query.timeFrame === "long-term" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}
+                          onClick={() => setQuery({ ...query, timeFrame: "long-term" })}
+                        >
+                          Long-Term (3-6 Months)
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -176,9 +372,9 @@ const QualitativeAnalysis: React.FC = () => {
                     Keywords Filter (Optional)
                   </label>
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       id="keywords"
-                      className="flex-grow px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="flex-grow"
                       placeholder="Enter keywords to filter results"
                       value={keywordInput}
                       onChange={(e) => setKeywordInput(e.target.value)}
@@ -214,12 +410,16 @@ const QualitativeAnalysis: React.FC = () => {
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-5 h-5">
+                          <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+                            <Loader2 className="animate-spin" size={20} />
+                          </div>
+                        </div>
+                        <span>Gathering insights...</span>
+                      </div>
                     ) : (
-                      "Generate Insights"
+                      "Reveal the Conversation"
                     )}
                   </Button>
                 </div>
