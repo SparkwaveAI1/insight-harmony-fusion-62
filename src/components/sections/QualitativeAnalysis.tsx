@@ -4,7 +4,22 @@ import Card from "../ui-custom/Card";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
 import Logo from "../ui-custom/Logo";
-import { BarChart3, Filter, Search, Clock, Hash, Loader2, BrainCircuit, TrendingUp, Info, Check, AlertTriangle } from "lucide-react";
+import { 
+  BarChart3, 
+  Filter, 
+  Search, 
+  Clock, 
+  Hash, 
+  Loader2, 
+  BrainCircuit, 
+  TrendingUp, 
+  Info, 
+  Check, 
+  AlertTriangle, 
+  ThumbsUp, 
+  CircleEqual, 
+  ThumbsDown 
+} from "lucide-react";
 import { toast } from "sonner";
 import { 
   ResearchQuery, 
@@ -126,6 +141,32 @@ const QualitativeAnalysis: React.FC = () => {
   
   const isSourceSelected = (source: DataSource) => {
     return query.sources.includes(source);
+  };
+
+  const getSentimentIconAndColor = (sentiment: SentimentFilter) => {
+    switch (sentiment) {
+      case "positive":
+        return { 
+          icon: <ThumbsUp size={18} className="text-green-600" />, 
+          color: "border-green-200 bg-green-50 hover:bg-green-100 data-[state=active]:bg-green-100 data-[state=active]:border-green-300"
+        };
+      case "neutral":
+        return { 
+          icon: <CircleEqual size={18} className="text-gray-600" />, 
+          color: "border-gray-200 bg-gray-50 hover:bg-gray-100 data-[state=active]:bg-gray-100 data-[state=active]:border-gray-300"
+        };
+      case "negative":
+        return { 
+          icon: <ThumbsDown size={18} className="text-red-600" />, 
+          color: "border-red-200 bg-red-50 hover:bg-red-100 data-[state=active]:bg-red-100 data-[state=active]:border-red-300"
+        };
+      case "all":
+      default:
+        return { 
+          icon: <Info size={18} className="text-blue-600" />, 
+          color: "border-blue-200 bg-blue-50 hover:bg-blue-100 data-[state=active]:bg-blue-100 data-[state=active]:border-blue-300"
+        };
+    }
   };
 
   return (
@@ -254,51 +295,52 @@ const QualitativeAnalysis: React.FC = () => {
                         <BarChart3 size={16} />
                         Which voices do you want to hear?
                       </label>
-                      <div className="flex flex-wrap gap-2">
-                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "positive" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
-                          <input
-                            type="radio"
-                            name="sentiment"
-                            value="positive"
-                            className="sr-only"
-                            checked={query.sentiment === "positive"}
-                            onChange={() => setQuery({ ...query, sentiment: "positive" })}
-                          />
-                          <span>😊 Positive Sentiment – Supporters & Enthusiasts</span>
-                        </label>
-                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "neutral" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
-                          <input
-                            type="radio"
-                            name="sentiment"
-                            value="neutral"
-                            className="sr-only"
-                            checked={query.sentiment === "neutral"}
-                            onChange={() => setQuery({ ...query, sentiment: "neutral" })}
-                          />
-                          <span>😐 Neutral Sentiment – Balanced & Informational</span>
-                        </label>
-                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "negative" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
-                          <input
-                            type="radio"
-                            name="sentiment"
-                            value="negative"
-                            className="sr-only"
-                            checked={query.sentiment === "negative"}
-                            onChange={() => setQuery({ ...query, sentiment: "negative" })}
-                          />
-                          <span>😔 Negative Sentiment – Concerns & Criticism</span>
-                        </label>
-                        <label className={`flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer ${query.sentiment === "all" ? "bg-primary/10 border-primary" : "border-input hover:bg-accent/50"}`}>
-                          <input
-                            type="radio"
-                            name="sentiment"
-                            value="all"
-                            className="sr-only"
-                            checked={query.sentiment === "all"}
-                            onChange={() => setQuery({ ...query, sentiment: "all" })}
-                          />
-                          <span>🔍 All Perspectives (Recommended) – Full spectrum of opinions</span>
-                        </label>
+                      
+                      <div className="grid grid-cols-1 gap-2">
+                        {(["positive", "neutral", "negative", "all"] as SentimentFilter[]).map((sentimentOption) => {
+                          const { icon, color } = getSentimentIconAndColor(sentimentOption);
+                          const isActive = query.sentiment === sentimentOption;
+                          
+                          return (
+                            <button
+                              key={sentimentOption}
+                              type="button"
+                              className={`flex items-center gap-2 px-4 py-3 rounded-md border text-left transition-all
+                                ${color} ${isActive ? 'ring-2 ring-primary/30' : ''}
+                              `}
+                              onClick={() => setQuery({ ...query, sentiment: sentimentOption })}
+                              data-state={isActive ? 'active' : 'inactive'}
+                            >
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-current/10 shrink-0">
+                                {icon}
+                              </div>
+                              <div className="flex-grow">
+                                <span className="font-medium">
+                                  {sentimentOption === "positive" && "Positive"}
+                                  {sentimentOption === "neutral" && "Neutral"}
+                                  {sentimentOption === "negative" && "Negative"}
+                                  {sentimentOption === "all" && "All Perspectives"}
+                                </span>
+                                <span className="block text-sm text-muted-foreground">
+                                  {sentimentOption === "positive" && "Supporters & Enthusiasts"}
+                                  {sentimentOption === "neutral" && "Balanced & Informational"}
+                                  {sentimentOption === "negative" && "Concerns & Criticism"}
+                                  {sentimentOption === "all" && 
+                                    <span className="flex items-center gap-1">
+                                      Recommended
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                        Full spectrum
+                                      </span>
+                                    </span>
+                                  }
+                                </span>
+                              </div>
+                              {isActive && (
+                                <Check size={18} className="text-primary ml-2" />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
