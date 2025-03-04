@@ -1,4 +1,3 @@
-
 import { ResearchQuery, AnalysisResults, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { toast } from "sonner";
@@ -18,7 +17,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     // Determine which sources to query
     const sourcesToQuery = query.sources.includes("all") 
       ? ["twitter", "reddit", "news"] 
-      : query.sources;
+      : query.sources as Array<"twitter" | "reddit" | "news">;
     
     // Parallel API calls to different data sources
     const apiPromises = [];
