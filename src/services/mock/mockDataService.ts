@@ -1,6 +1,14 @@
-
 import { ResearchQuery, AnalysisResults, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
+
+// Function to fetch qualitative data from mock service
+export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults> {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Generate mock results
+  return generateMockResults(query);
+}
 
 // Fallback to generate mock results if API calls fail
 export function generateMockResults(query: ResearchQuery): AnalysisResults {
