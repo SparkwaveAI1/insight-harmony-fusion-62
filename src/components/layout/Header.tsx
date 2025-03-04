@@ -52,7 +52,7 @@ const Header = () => {
       <div className="container flex items-center justify-between">
         <div className="flex items-center">
           <a href="#" className="text-xl font-medium">
-            Qualitative<span className="text-primary">Insight</span>
+            Persona<span className="text-primary">AI</span>
           </a>
         </div>
 

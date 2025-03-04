@@ -40,7 +40,7 @@ const Footer = () => {
           <Reveal className="lg:col-span-2">
             <div className="max-w-sm">
               <a href="#" className="inline-block text-xl font-medium mb-4">
-                Qualitative<span className="text-primary">Insight</span>
+                Persona<span className="text-primary">AI</span>
               </a>
               <p className="text-muted-foreground mb-4">
                 Transforming qualitative data into strategic insights through elegant design and powerful analysis.
@@ -92,7 +92,7 @@ const Footer = () => {
         <Reveal>
           <div className="border-t mt-12 pt-6 flex flex-col md:flex-row justify-between items-center">
             <p className="text-sm text-muted-foreground order-2 md:order-1">
-              © {currentYear} QualitativeInsight. All rights reserved.
+              © {currentYear} PersonaAI. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground mb-4 md:mb-0 order-1 md:order-2">
               Crafted with precision. Designed for insight.
