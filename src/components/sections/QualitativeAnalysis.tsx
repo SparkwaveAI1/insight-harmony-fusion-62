@@ -4,7 +4,7 @@ import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
-import { BarChart3, Filter, Search, Clock, Hash, Loader2 } from "lucide-react";
+import { BarChart3, Filter, Search, Clock, Hash, Loader2, BrainCircuit, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { 
   ResearchQuery, 
@@ -15,6 +15,7 @@ import {
   fetchQualitativeData 
 } from "@/services/qualitativeAnalysisService";
 import ApiKeyManager from "../ApiKeyManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const QualitativeAnalysis: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -256,93 +257,154 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
     <div className="space-y-8">
       <Reveal>
         <Card className="shadow-lg">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">Results for: "{query.query}"</h3>
-            <Button variant="outline" onClick={onNewSearch}>New Search</Button>
+            <div className="flex gap-2">
+              {results.reportGeneratedAt && (
+                <p className="text-xs text-muted-foreground self-center">
+                  Generated: {new Date(results.reportGeneratedAt).toLocaleString()}
+                </p>
+              )}
+              <Button variant="outline" onClick={onNewSearch}>New Search</Button>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-              <h4 className="text-lg font-medium mb-4 border-b pb-2">Top Emerging Topics</h4>
-              <ol className="list-decimal pl-5 space-y-2">
-                {results.topTopics.map((topic, index) => (
-                  <li key={index} className="text-base">{topic}</li>
-                ))}
-              </ol>
-            </div>
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList className="mb-4 grid grid-cols-3 md:grid-cols-4">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="quotes">Example Quotes</TabsTrigger>
+              <TabsTrigger value="ai-insights" className="flex items-center gap-1">
+                <BrainCircuit size={14} />
+                AI Insights
+              </TabsTrigger>
+              <TabsTrigger value="trends" className="flex items-center gap-1">
+                <TrendingUp size={14} />
+                Trends Analysis
+              </TabsTrigger>
+            </TabsList>
             
-            <div>
-              <h4 className="text-lg font-medium mb-4 border-b pb-2">Sentiment Breakdown</h4>
-              <div className="h-10 w-full rounded-full overflow-hidden bg-gray-200 mb-4">
-                <div className="flex h-full">
-                  <div 
-                    className="bg-green-500 h-full" 
-                    style={{ width: `${results.sentimentBreakdown.positive}%` }}
-                    title={`Positive: ${results.sentimentBreakdown.positive}%`}
-                  ></div>
-                  <div 
-                    className="bg-gray-400 h-full" 
-                    style={{ width: `${results.sentimentBreakdown.neutral}%` }}
-                    title={`Neutral: ${results.sentimentBreakdown.neutral}%`}
-                  ></div>
-                  <div 
-                    className="bg-red-500 h-full" 
-                    style={{ width: `${results.sentimentBreakdown.negative}%` }}
-                    title={`Negative: ${results.sentimentBreakdown.negative}%`}
-                  ></div>
+            <TabsContent value="summary" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                  <h4 className="text-lg font-medium mb-4 border-b pb-2">Top Emerging Topics</h4>
+                  <ol className="list-decimal pl-5 space-y-2">
+                    {results.topTopics.map((topic, index) => (
+                      <li key={index} className="text-base">{topic}</li>
+                    ))}
+                  </ol>
                 </div>
-              </div>
-              <div className="flex justify-between text-sm">
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                  <span>Positive ({results.sentimentBreakdown.positive}%)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-gray-400"></span>
-                  <span>Neutral ({results.sentimentBreakdown.neutral}%)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                  <span>Negative ({results.sentimentBreakdown.negative}%)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <h4 className="text-lg font-medium mb-4 border-b pb-2">Example Quotes</h4>
-            <div className="space-y-4">
-              {results.exampleQuotes.map((quote, index) => (
-                <div 
-                  key={index} 
-                  className={`p-4 rounded-lg border ${getSentimentColor(quote.sentiment)}`}
-                >
-                  <p className="text-base italic">"{quote.text}"</p>
-                  <div className="mt-2 flex justify-between text-sm">
-                    <span className="font-medium">Sentiment: {quote.sentiment}</span>
-                    <span>Source: {quote.source}</span>
+                
+                <div>
+                  <h4 className="text-lg font-medium mb-4 border-b pb-2">Sentiment Breakdown</h4>
+                  <div className="h-10 w-full rounded-full overflow-hidden bg-gray-200 mb-4">
+                    <div className="flex h-full">
+                      <div 
+                        className="bg-green-500 h-full" 
+                        style={{ width: `${results.sentimentBreakdown.positive}%` }}
+                        title={`Positive: ${results.sentimentBreakdown.positive}%`}
+                      ></div>
+                      <div 
+                        className="bg-gray-400 h-full" 
+                        style={{ width: `${results.sentimentBreakdown.neutral}%` }}
+                        title={`Neutral: ${results.sentimentBreakdown.neutral}%`}
+                      ></div>
+                      <div 
+                        className="bg-red-500 h-full" 
+                        style={{ width: `${results.sentimentBreakdown.negative}%` }}
+                        title={`Negative: ${results.sentimentBreakdown.negative}%`}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                      <span>Positive ({results.sentimentBreakdown.positive}%)</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+                      <span>Neutral ({results.sentimentBreakdown.neutral}%)</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                      <span>Negative ({results.sentimentBreakdown.negative}%)</span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <h4 className="text-lg font-medium mb-4 border-b pb-2">Key Phrases</h4>
-            <div className="flex flex-wrap gap-2">
-              {results.keyPhrases.map((phrase, index) => (
-                <span 
-                  key={index} 
-                  className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm"
-                  style={{
-                    fontSize: `${Math.random() * 0.5 + 0.8}rem`
-                  }}
-                >
-                  {phrase}
-                </span>
-              ))}
-            </div>
-          </div>
+              </div>
+              
+              <div>
+                <h4 className="text-lg font-medium mb-4 border-b pb-2">Key Phrases</h4>
+                <div className="flex flex-wrap gap-2">
+                  {results.keyPhrases.map((phrase, index) => (
+                    <span 
+                      key={index} 
+                      className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm"
+                      style={{
+                        fontSize: `${Math.random() * 0.5 + 0.8}rem`
+                      }}
+                    >
+                      {phrase}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="quotes" className="space-y-6">
+              <h4 className="text-lg font-medium mb-4 border-b pb-2">Example Quotes from Sources</h4>
+              <div className="space-y-4">
+                {results.exampleQuotes.map((quote, index) => (
+                  <div 
+                    key={index} 
+                    className={`p-4 rounded-lg border ${getSentimentColor(quote.sentiment)}`}
+                  >
+                    <p className="text-base italic">"{quote.text}"</p>
+                    <div className="mt-2 flex justify-between text-sm">
+                      <span className="font-medium">Sentiment: {quote.sentiment}</span>
+                      <span>Source: {quote.source}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="ai-insights" className="space-y-6">
+              <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <BrainCircuit className="text-primary" />
+                  <h4 className="text-lg font-medium">AI-Powered Insights</h4>
+                </div>
+                <div className="space-y-3">
+                  {results.aiInsights ? (
+                    results.aiInsights.map((insight, index) => (
+                      <div key={index} className="p-3 bg-background rounded-md border">
+                        <p>{insight}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No AI insights available for this query.</p>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  These insights are generated by our advanced AI model based on pattern analysis of the collected data.
+                </p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="trends" className="space-y-6">
+              <div className="bg-primary/5 p-6 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="text-primary" />
+                  <h4 className="text-lg font-medium">Trends Analysis</h4>
+                </div>
+                {results.trendsAnalysis ? (
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: results.trendsAnalysis.replace(/\n\n/g, '<br/><br/>').replace(/###\s(.*)/g, '<h3>$1</h3>').replace(/##\s(.*)/g, '<h2>$1</h2>') }} />
+                ) : (
+                  <p>No trends analysis available for this query.</p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </Card>
       </Reveal>
     </div>
