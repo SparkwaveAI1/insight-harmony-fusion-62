@@ -13,7 +13,7 @@ import {
   TimeFrame,
   AnalysisResults
 } from "@/services/types/qualitativeAnalysisTypes";
-import { fetchQualitativeData } from "@/services/mock/mockDataService";
+import { fetchQualitativeData } from "@/services/api/dataSourceService";
 import ApiKeyManager from "../ApiKeyManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

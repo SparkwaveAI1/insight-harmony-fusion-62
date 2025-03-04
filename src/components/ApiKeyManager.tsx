@@ -14,11 +14,14 @@ const ApiKeyManager = () => {
   const [hasNewsKey, setHasNewsKey] = useState(false);
   const [twitterApiKey, setTwitterApiKey] = useState("");
   const [hasTwitterKey, setHasTwitterKey] = useState(false);
+  const [redditApiKey, setRedditApiKey] = useState("");
+  const [hasRedditKey, setHasRedditKey] = useState(false);
   
   // Check for existing API keys
   useEffect(() => {
     setHasNewsKey(hasApiKey("newsApi"));
     setHasTwitterKey(hasApiKey("twitter"));
+    setHasRedditKey(hasApiKey("reddit"));
   }, [open]);
   
   const handleSaveNewsKey = () => {
@@ -49,6 +52,21 @@ const ApiKeyManager = () => {
   const handleClearTwitterKey = () => {
     clearApiKey("twitter");
     setHasTwitterKey(false);
+  };
+  
+  const handleSaveRedditKey = () => {
+    if (redditApiKey.trim()) {
+      saveApiKey("reddit", redditApiKey.trim());
+      setRedditApiKey("");
+      setHasRedditKey(true);
+    } else {
+      toast.error("Please enter a valid Reddit API key");
+    }
+  };
+  
+  const handleClearRedditKey = () => {
+    clearApiKey("reddit");
+    setHasRedditKey(false);
   };
   
   return (
@@ -110,6 +128,32 @@ const ApiKeyManager = () => {
                 </Button>
               ) : (
                 <Button variant="default" onClick={handleSaveTwitterKey} type="button">
+                  Save
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label htmlFor="redditApiKey" className="text-base">Reddit API Key</Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Requires a Reddit developer account. <a href="https://www.reddit.com/dev/api/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Learn more</a>
+            </p>
+            <div className="flex gap-2">
+              <Input
+                id="redditApiKey"
+                value={redditApiKey}
+                onChange={(e) => setRedditApiKey(e.target.value)}
+                placeholder={hasRedditKey ? "••••••••••••••••••••" : "Enter Reddit API key"}
+                type="password"
+                className="flex-grow"
+              />
+              {hasRedditKey ? (
+                <Button variant="destructive" onClick={handleClearRedditKey} type="button">
+                  Clear
+                </Button>
+              ) : (
+                <Button variant="default" onClick={handleSaveRedditKey} type="button">
                   Save
                 </Button>
               )}
