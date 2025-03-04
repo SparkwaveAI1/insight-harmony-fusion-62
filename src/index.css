@@ -1,4 +1,3 @@
-
 @import url('https://rsms.me/inter/inter.css');
 
 @tailwind base;
@@ -8,32 +7,32 @@
 @layer base {
   :root {
     --background: 0 0% 98%;
-    --foreground: 220 20% 10%;
+    --foreground: 240 5% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 240 5% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 240 5% 14%;
 
-    --primary: 210 100% 50%;
+    --primary: 195 92% 57%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 20% 96%;
-    --secondary-foreground: 220 20% 10%;
+    --secondary-foreground: 240 5% 14%;
 
     --muted: 220 20% 96%;
-    --muted-foreground: 220 10% 40%;
+    --muted-foreground: 240 5% 40%;
 
-    --accent: 210 100% 96%;
-    --accent-foreground: 220 20% 10%;
+    --accent: 60 92% 90%;
+    --accent-foreground: 240 5% 14%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 20% 90%;
     --input: 220 20% 90%;
-    --ring: 210 100% 50%;
+    --ring: 195 92% 57%;
 
     --radius: 0.8rem;
 
@@ -48,37 +47,37 @@
   }
 
   .dark {
-    --background: 220 20% 10%;
+    --background: 240 5% 14%;
     --foreground: 0 0% 98%;
 
-    --card: 220 20% 12%;
+    --card: 240 5% 16%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 220 20% 12%;
+    --popover: 240 5% 16%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 210 100% 50%;
+    --primary: 195 92% 57%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 16%;
+    --secondary: 240 5% 22%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 20% 16%;
-    --muted-foreground: 220 10% 70%;
+    --muted: 240 5% 22%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 210 100% 20%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 60 70% 80%;
+    --accent-foreground: 240 5% 14%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 210 100% 50%;
+    --border: 240 5% 22%;
+    --input: 240 5% 22%;
+    --ring: 195 92% 57%;
 
     --sidebar-background: 240 6% 10%;
     --sidebar-foreground: 240 5% 96%;
-    --sidebar-primary: 224 76% 48%;
+    --sidebar-primary: 195 92% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4% 16%;
     --sidebar-accent-foreground: 240 5% 96%;

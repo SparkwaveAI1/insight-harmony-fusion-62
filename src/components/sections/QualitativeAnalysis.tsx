@@ -3,6 +3,7 @@ import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
+import Logo from "../ui-custom/Logo";
 import { BarChart3, Filter, Search, Clock, Hash, Loader2, BrainCircuit, TrendingUp, Info, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -33,7 +34,6 @@ const QualitativeAnalysis: React.FC = () => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Rotating placeholder examples
   const placeholders = [
     "What are people saying about AI token staking incentives?",
     "How do crypto investors feel about token rewards?",
@@ -42,7 +42,6 @@ const QualitativeAnalysis: React.FC = () => {
     "What are the most common concerns about Web3 adoption?"
   ];
   
-  // Auto-rotate placeholders every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
@@ -51,7 +50,6 @@ const QualitativeAnalysis: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
   
-  // Auto-resize textarea based on content
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -109,23 +107,19 @@ const QualitativeAnalysis: React.FC = () => {
   };
   
   const handleSourceChange = (source: DataSource, checked: boolean) => {
-    // If selecting "all", clear other selections
     if (source === "all" && checked) {
       setQuery({ ...query, sources: ["all"] });
       return;
     }
     
-    // If deselecting "all", remove it
     let newSources = query.sources.filter(s => s !== "all");
     
-    // Toggle the selected source
     if (checked) {
       newSources.push(source);
     } else {
       newSources = newSources.filter(s => s !== source);
     }
     
-    // If no sources selected, default to "all"
     if (newSources.length === 0) {
       newSources = ["all"];
     }
@@ -141,10 +135,16 @@ const QualitativeAnalysis: React.FC = () => {
     <Section className="bg-gradient-to-b from-accent to-background py-20" highlight={true}>
       <div className="container max-w-5xl mx-auto">
         <Reveal>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-6">
             <div className="max-w-3xl">
-              <h2 className="text-3xl md:text-5xl font-bold mb-3">
-                PersonaAI: AI That Thinks Like a Human, Not a Machine
+              <div className="flex items-center gap-3 mb-4">
+                <Logo size="lg" />
+                <span className="text-sm font-medium px-3 py-1 bg-[#FEF7CD] text-[#403E43] rounded-full">
+                  Qualitative Insights Conductor
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-bold mb-3 text-[#221F26]">
+                AI That Thinks Like a Human, Not a Machine
               </h2>
               <p className="text-muted-foreground text-lg">
                 Uncover the real thoughts, opinions, and emotions driving conversations—beyond data, beyond numbers.
@@ -156,10 +156,10 @@ const QualitativeAnalysis: React.FC = () => {
 
         {!showResults ? (
           <Reveal delay={200}>
-            <Card className="shadow-lg mb-8 border-primary/20">
+            <Card className="shadow-lg mb-8 border-[#33C3F0]/20">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label htmlFor="query" className="block text-lg font-medium">
+                  <label htmlFor="query" className="block text-lg font-medium text-[#221F26]">
                     Research Query
                   </label>
                   <div className="relative">
@@ -167,7 +167,7 @@ const QualitativeAnalysis: React.FC = () => {
                     <textarea
                       ref={textareaRef}
                       id="query"
-                      className="w-full min-h-32 pl-10 pr-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none overflow-hidden"
+                      className="w-full min-h-32 pl-10 pr-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-[#33C3F0] resize-none overflow-hidden"
                       placeholder={placeholders[placeholderIndex]}
                       value={query.query}
                       onChange={(e) => {
@@ -406,6 +406,7 @@ const QualitativeAnalysis: React.FC = () => {
                   <Button 
                     type="submit" 
                     size="lg"
+                    className="bg-[#33C3F0] hover:bg-[#1EAEDB] text-white"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -455,28 +456,34 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
   return (
     <div className="space-y-8">
       <Reveal>
-        <Card className="shadow-lg">
+        <Card className="shadow-lg border-[#33C3F0]/20">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">Results for: "{query.query}"</h3>
+            <h3 className="text-xl font-semibold text-[#221F26]">Results for: "{query.query}"</h3>
             <div className="flex gap-2">
               {results.reportGeneratedAt && (
                 <p className="text-xs text-muted-foreground self-center">
                   Generated: {new Date(results.reportGeneratedAt).toLocaleString()}
                 </p>
               )}
-              <Button variant="outline" onClick={onNewSearch}>New Search</Button>
+              <Button 
+                variant="outline" 
+                onClick={onNewSearch}
+                className="border-[#33C3F0]/30 hover:border-[#33C3F0]/60"
+              >
+                New Search
+              </Button>
             </div>
           </div>
           
           <Tabs defaultValue="summary" className="w-full">
-            <TabsList className="mb-4 grid grid-cols-3 md:grid-cols-4">
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-              <TabsTrigger value="quotes">Example Quotes</TabsTrigger>
-              <TabsTrigger value="ai-insights" className="flex items-center gap-1">
+            <TabsList className="mb-4 grid grid-cols-3 md:grid-cols-4 bg-[#F1F1F1]">
+              <TabsTrigger value="summary" className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">Summary</TabsTrigger>
+              <TabsTrigger value="quotes" className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">Example Quotes</TabsTrigger>
+              <TabsTrigger value="ai-insights" className="flex items-center gap-1 data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">
                 <BrainCircuit size={14} />
                 AI Insights
               </TabsTrigger>
-              <TabsTrigger value="trends" className="flex items-center gap-1">
+              <TabsTrigger value="trends" className="flex items-center gap-1 data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">
                 <TrendingUp size={14} />
                 Trends Analysis
               </TabsTrigger>
