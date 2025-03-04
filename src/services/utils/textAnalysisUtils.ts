@@ -111,8 +111,16 @@ export function getDateFromTimeFrame(timeFrame: TimeFrame): string {
       now.setMonth(now.getMonth() - 1);
       break;
     case "long-term":
-      // Last 3 months
+      // Last 3-6 months
       now.setMonth(now.getMonth() - 3);
+      break;
+    case "historical":
+      // Last 6-12 months
+      now.setMonth(now.getMonth() - 9);
+      break;
+    case "deep-historical":
+      // 1+ year
+      now.setFullYear(now.getFullYear() - 1);
       break;
   }
   

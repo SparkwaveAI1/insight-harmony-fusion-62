@@ -1,6 +1,6 @@
 export type DataSource = "twitter" | "reddit" | "news" | "all";
 export type SentimentFilter = "positive" | "neutral" | "negative" | "all";
-export type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term";
+export type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term" | "historical" | "deep-historical";
 
 export interface ResearchQuery {
   query: string;
