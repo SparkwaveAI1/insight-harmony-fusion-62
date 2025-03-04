@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 export type DataSource = "twitter" | "reddit" | "news" | "farcaster" | "all";
@@ -30,18 +29,64 @@ export interface AnalysisResults {
   keyPhrases: string[];
 }
 
-// API configuration - replace with your actual API keys
-const API_KEYS = {
-  // Use your News API key here
-  newsApi: "1dbe0abf78c24a02a593ce5ba0b1c6fa", // This is a publishable key, not a secret
-  
-  // Twitter API v2 requires authentication
-  // You can use a bearer token with read-only access
+// API configuration keys storage
+const STORAGE_KEYS = {
+  NEWS_API_KEY: "persona_news_api_key",
+  TWITTER_API_KEY: "persona_twitter_api_key",
+  REDDIT_API_KEY: "persona_reddit_api_key"
+};
+
+// Default API keys
+const DEFAULT_API_KEYS = {
+  newsApi: "1dbe0abf78c24a02a593ce5ba0b1c6fa", // This is a placeholder key
   twitter: "", // For production, this should be managed securely
-  
-  // Reddit doesn't require an API key for public data in many cases
-  // but you might need to set up an app and get credentials for higher rate limits
   reddit: "",
+};
+
+// Get API keys (user's keys if they exist, otherwise defaults)
+export const getApiKeys = () => {
+  return {
+    newsApi: localStorage.getItem(STORAGE_KEYS.NEWS_API_KEY) || DEFAULT_API_KEYS.newsApi,
+    twitter: localStorage.getItem(STORAGE_KEYS.TWITTER_API_KEY) || DEFAULT_API_KEYS.twitter,
+    reddit: localStorage.getItem(STORAGE_KEYS.REDDIT_API_KEY) || DEFAULT_API_KEYS.reddit,
+  };
+};
+
+// Save API key to localStorage
+export const saveApiKey = (type: "newsApi" | "twitter" | "reddit", key: string) => {
+  const storageKey = type === "newsApi" 
+    ? STORAGE_KEYS.NEWS_API_KEY 
+    : type === "twitter" 
+      ? STORAGE_KEYS.TWITTER_API_KEY 
+      : STORAGE_KEYS.REDDIT_API_KEY;
+  
+  localStorage.setItem(storageKey, key);
+  toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} API key saved successfully`);
+  return true;
+};
+
+// Clear API key from localStorage
+export const clearApiKey = (type: "newsApi" | "twitter" | "reddit") => {
+  const storageKey = type === "newsApi" 
+    ? STORAGE_KEYS.NEWS_API_KEY 
+    : type === "twitter" 
+      ? STORAGE_KEYS.TWITTER_API_KEY 
+      : STORAGE_KEYS.REDDIT_API_KEY;
+  
+  localStorage.removeItem(storageKey);
+  toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} API key removed`);
+  return true;
+};
+
+// Check if API key is set
+export const hasApiKey = (type: "newsApi" | "twitter" | "reddit") => {
+  const storageKey = type === "newsApi" 
+    ? STORAGE_KEYS.NEWS_API_KEY 
+    : type === "twitter" 
+      ? STORAGE_KEYS.TWITTER_API_KEY 
+      : STORAGE_KEYS.REDDIT_API_KEY;
+  
+  return !!localStorage.getItem(storageKey);
 };
 
 // Main function to fetch data from multiple sources
@@ -131,6 +176,9 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
 // News API integration
 async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
   try {
+    // Get API key (user's key if they provided one, otherwise default)
+    const API_KEYS = getApiKeys();
+    
     // Convert timeframe to date range for News API
     const from = getDateFromTimeFrame(query.timeFrame);
     
@@ -150,9 +198,9 @@ async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: QuoteData[
       console.error("News API error:", errorData);
       
       if (response.status === 401) {
-        toast.error("News API key is invalid or missing");
+        toast.error("News API key is invalid or missing. Please update your API key.");
       } else if (response.status === 429) {
-        toast.error("News API rate limit exceeded");
+        toast.error("News API rate limit exceeded. Try again later or use a different API key.");
       } else {
         toast.error(`News API error: ${errorData.message || response.statusText}`);
       }

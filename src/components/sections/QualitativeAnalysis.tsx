@@ -14,6 +14,7 @@ import {
   AnalysisResults,
   fetchQualitativeData 
 } from "@/services/qualitativeAnalysisService";
+import ApiKeyManager from "../ApiKeyManager";
 
 const QualitativeAnalysis: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -76,9 +77,12 @@ const QualitativeAnalysis: React.FC = () => {
     <Section className="bg-gradient-to-b from-accent to-background py-20" highlight={true}>
       <div className="container max-w-5xl mx-auto">
         <Reveal>
-          <h2 className="text-3xl md:text-5xl font-bold text-center mb-4">
-            PersonaAI Qualitative Intelligence
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold">
+              PersonaAI Qualitative Intelligence
+            </h2>
+            <ApiKeyManager />
+          </div>
           <p className="text-center text-muted-foreground mb-12 text-lg">
             Discover the real conversations and sentiment around your topics of interest
           </p>
