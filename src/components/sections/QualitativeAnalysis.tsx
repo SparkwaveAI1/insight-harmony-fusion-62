@@ -1,44 +1,24 @@
+
 import React, { useState } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
-import { BarChart3, Filter, Search, Clock, Hash } from "lucide-react";
-
-type DataSource = "twitter" | "reddit" | "news" | "farcaster" | "all";
-type SentimentFilter = "positive" | "neutral" | "negative" | "all";
-type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term";
-
-interface ResearchQuery {
-  query: string;
-  sources: DataSource[];
-  sentiment: SentimentFilter;
-  timeFrame: TimeFrame;
-  keywords: string[];
-}
-
-// Mock data for demonstration
-const mockResults = {
-  topTopics: [
-    "Staking rewards uncertainty",
-    "Security risks in new platforms",
-    "Regulatory fears affecting adoption"
-  ],
-  sentimentBreakdown: {
-    positive: 60,
-    neutral: 30,
-    negative: 10
-  },
-  exampleQuotes: [
-    { text: "I've been staking my tokens for 3 months and the rewards have been consistent and higher than expected.", sentiment: "positive", source: "Reddit" },
-    { text: "The security of these new staking platforms is still unproven. I'm waiting to see more audits.", sentiment: "neutral", source: "Twitter" },
-    { text: "Regulatory uncertainty makes me hesitant to lock up my assets in staking contracts for long periods.", sentiment: "negative", source: "Farcaster" }
-  ],
-  keyPhrases: ["high APY", "liquidity concerns", "validator requirements", "regulatory compliance", "reward distribution", "lock-up periods", "slashing risks", "governance participation", "token inflation", "yield farming"]
-};
+import { BarChart3, Filter, Search, Clock, Hash, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { 
+  ResearchQuery, 
+  DataSource, 
+  SentimentFilter, 
+  TimeFrame,
+  AnalysisResults,
+  fetchQualitativeData 
+} from "@/services/qualitativeAnalysisService";
 
 const QualitativeAnalysis: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState<AnalysisResults | null>(null);
   const [query, setQuery] = useState<ResearchQuery>({
     query: "",
     sources: ["all"],
@@ -48,10 +28,27 @@ const QualitativeAnalysis: React.FC = () => {
   });
   const [keywordInput, setKeywordInput] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitting query:", query);
-    setShowResults(true);
+    
+    if (!query.query.trim()) {
+      toast.error("Please enter a research query");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await fetchQualitativeData(query);
+      setResults(data);
+      setShowResults(true);
+      toast.success("Analysis completed successfully");
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to fetch analysis data");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const addKeyword = () => {
@@ -69,6 +66,10 @@ const QualitativeAnalysis: React.FC = () => {
       ...query,
       keywords: query.keywords.filter(k => k !== keyword)
     });
+  };
+
+  const handleNewSearch = () => {
+    setShowResults(false);
   };
 
   return (
@@ -176,6 +177,7 @@ const QualitativeAnalysis: React.FC = () => {
                       placeholder="Enter keywords to filter results"
                       value={keywordInput}
                       onChange={(e) => setKeywordInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
                     />
                     <Button type="button" variant="secondary" onClick={addKeyword}>
                       Add
@@ -201,8 +203,19 @@ const QualitativeAnalysis: React.FC = () => {
                 </div>
 
                 <div className="flex justify-center pt-4">
-                  <Button type="submit" size="lg">
-                    Generate Insights
+                  <Button 
+                    type="submit" 
+                    size="lg"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      "Generate Insights"
+                    )}
                   </Button>
                 </div>
               </form>
@@ -210,9 +223,9 @@ const QualitativeAnalysis: React.FC = () => {
           </Reveal>
         ) : (
           <ResultsDashboard 
-            results={mockResults} 
+            results={results!} 
             query={query} 
-            onNewSearch={() => setShowResults(false)} 
+            onNewSearch={handleNewSearch} 
           />
         )}
       </div>
@@ -221,20 +234,7 @@ const QualitativeAnalysis: React.FC = () => {
 };
 
 interface ResultsDashboardProps {
-  results: {
-    topTopics: string[];
-    sentimentBreakdown: {
-      positive: number;
-      neutral: number;
-      negative: number;
-    };
-    exampleQuotes: {
-      text: string;
-      sentiment: string;
-      source: string;
-    }[];
-    keyPhrases: string[];
-  };
+  results: AnalysisResults;
   query: ResearchQuery;
   onNewSearch: () => void;
 }
