@@ -26,6 +26,7 @@ export default {
 			fontFamily: {
 				sans: ['Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				display: ['Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
+				plasmik: ['Plasmik Pro', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

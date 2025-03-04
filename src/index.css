@@ -1,5 +1,6 @@
 
 @import url('https://rsms.me/inter/inter.css');
+@import url('https://fonts.googleapis.com/css2?family=Plasmik+Pro:wght@700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -110,6 +111,10 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "ss02", "cv01", "cv03";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-plasmik font-bold;
   }
 
   ::-webkit-scrollbar {
