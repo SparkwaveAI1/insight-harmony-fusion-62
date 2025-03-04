@@ -37,7 +37,6 @@ import {
   AnalysisResults
 } from "@/services/types/qualitativeAnalysisTypes";
 import { fetchQualitativeData } from "@/services/api/dataSourceService";
-import ApiKeyManager from "../ApiKeyManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -181,9 +180,9 @@ const QualitativeAnalysis: React.FC = () => {
     <Section className="bg-gradient-to-b from-primary/5 to-background py-20" highlight={true}>
       <div className="container max-w-5xl mx-auto">
         <Reveal>
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col items-center text-center mb-6">
             <div className="max-w-3xl">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 justify-center">
                 <Logo size="lg" />
                 <span className="text-sm font-medium px-3 py-1 bg-primary/10 text-primary rounded-full">
                   Qualitative Insights Conductor
@@ -197,7 +196,6 @@ const QualitativeAnalysis: React.FC = () => {
                 Uncover the real thoughts, opinions, and emotions driving conversations—beyond data, beyond numbers.
               </p>
             </div>
-            <ApiKeyManager />
           </div>
         </Reveal>
 
