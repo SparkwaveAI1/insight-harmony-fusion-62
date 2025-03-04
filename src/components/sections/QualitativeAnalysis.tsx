@@ -106,7 +106,7 @@ const QualitativeAnalysis: React.FC = () => {
     setShowResults(false);
   };
   
-  const handleSourceChange = (source: DataSource, checked: boolean) => {
+  const handleSourceChange = (source: DataSource) => (checked: boolean) => {
     if (source === "all" && checked) {
       setQuery({ ...query, sources: ["all"] });
       return;
@@ -197,7 +197,7 @@ const QualitativeAnalysis: React.FC = () => {
                             type="checkbox"
                             className="rounded border-gray-300"
                             checked={isSourceSelected("twitter")}
-                            onChange={(e) => handleSourceChange("twitter", e.target.checked)}
+                            onChange={(e) => handleSourceChange("twitter")(e.target.checked)}
                           />
                           <Check size={14} className="text-green-500" />
                           Twitter
@@ -207,7 +207,7 @@ const QualitativeAnalysis: React.FC = () => {
                             type="checkbox"
                             className="rounded border-gray-300"
                             checked={isSourceSelected("reddit")}
-                            onChange={(e) => handleSourceChange("reddit", e.target.checked)}
+                            onChange={(e) => handleSourceChange("reddit")(e.target.checked)}
                           />
                           <Check size={14} className="text-green-500" />
                           Reddit
@@ -217,7 +217,7 @@ const QualitativeAnalysis: React.FC = () => {
                             type="checkbox"
                             className="rounded border-gray-300"
                             checked={isSourceSelected("news")}
-                            onChange={(e) => handleSourceChange("news", e.target.checked)}
+                            onChange={(e) => handleSourceChange("news")(e.target.checked)}
                           />
                           <Check size={14} className="text-green-500" />
                           News & Blogs

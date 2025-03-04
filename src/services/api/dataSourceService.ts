@@ -1,4 +1,4 @@
-import { ResearchQuery, AnalysisResults, QuoteData } from "../types/qualitativeAnalysisTypes";
+import { ResearchQuery, AnalysisResults, QuoteData, DataSource } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
@@ -15,9 +15,9 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     let topics: string[] = [];
     
     // Determine which sources to query
-    const sourcesToQuery = query.sources.includes("all") 
+    const sourcesToQuery: Array<"twitter" | "reddit" | "news"> = query.sources.includes("all") 
       ? ["twitter", "reddit", "news"] 
-      : query.sources as Array<"twitter" | "reddit" | "news">;
+      : query.sources.filter(s => s !== "all") as Array<"twitter" | "reddit" | "news">;
     
     // Parallel API calls to different data sources
     const apiPromises = [];
@@ -334,19 +334,10 @@ export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: Q
           };
         });
       
-      // Extract keywords from titles and texts
-      const keywords = extractKeywords(
-        data.data.children.map((post: any) => 
-          post.data.title + " " + (post.data.selftext || "")
-        ).join(" ")
-      );
-      
-      // Extract potential topics
-      const topics = extractTopics(
-        data.data.children.map((post: any) => 
-          post.data.title + " " + (post.data.selftext || "")
-        ).join(" ")
-      );
+      // Extract keywords and topics
+      const allText = data.data.children.map((post: any) => post.data.title + " " + (post.data.selftext || "")).join(" ");
+      const keywords = extractKeywords(allText);
+      const topics = extractTopics(allText);
       
       return { quotes, keywords, topics };
     }
