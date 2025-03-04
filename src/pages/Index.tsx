@@ -9,6 +9,7 @@ import HowItWorks from "@/components/sections/HowItWorks";
 import PersonaAIInterviewerSection from "@/components/sections/PersonaAIInterviewer";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
 import ProductShowcase from "@/components/sections/ProductShowcase";
+import TokenEcosystem from "@/components/sections/TokenEcosystem";
 import Footer from "@/components/sections/Footer";
 
 const Index = () => {
@@ -25,6 +26,7 @@ const Index = () => {
         <PersonaAIInterviewerSection />
         <QualitativeAnalysis />
         <ProductShowcase />
+        <TokenEcosystem />
       </main>
       <Footer />
     </div>

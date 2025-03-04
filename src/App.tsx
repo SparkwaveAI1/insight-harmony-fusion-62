@@ -4,6 +4,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
 import AIFocusGroups from "./pages/AIFocusGroups";
+import PRSNAEcosystem from "./pages/PRSNAEcosystem";
 import "./App.css";
 
 const router = createBrowserRouter([
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: "/ai-focus-groups",
     element: <AIFocusGroups />,
+  },
+  {
+    path: "/prsna-ecosystem",
+    element: <PRSNAEcosystem />,
   },
 ]);
 

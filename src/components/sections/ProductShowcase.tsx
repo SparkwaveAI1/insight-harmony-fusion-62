@@ -9,7 +9,7 @@ const ProductShowcase = () => {
   const plans = [
     {
       name: "Essential",
-      price: "$49",
+      price: "$XX",
       description: "Perfect for individuals and small teams just getting started.",
       features: [
         "Qualitative data analysis",
@@ -21,7 +21,7 @@ const ProductShowcase = () => {
     },
     {
       name: "Professional",
-      price: "$99",
+      price: "$XX",
       description: "Advanced features for professional researchers and medium teams.",
       features: [
         "Everything in Essential",
@@ -81,7 +81,7 @@ const ProductShowcase = () => {
                   <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
                   <div className="flex items-baseline mb-4">
                     <span className="text-3xl font-bold">{plan.price}</span>
-                    {plan.price !== "Custom" && <span className="text-muted-foreground ml-2">/month</span>}
+                    {plan.price !== "Custom" && <span className="text-muted-foreground ml-2">per month</span>}
                   </div>
                   <p className="text-muted-foreground mb-6">{plan.description}</p>
                 </div>
