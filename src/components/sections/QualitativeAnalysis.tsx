@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -24,7 +23,7 @@ import {
   FileText,
   LineChart,
   MessageCircle,
-  FlowChart,
+  GitBranch,
   Waves,
   Calendar,
   ArrowLeft
@@ -689,7 +688,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                 Key Insights
               </TabsTrigger>
               <TabsTrigger value="storyline" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                <FlowChart size={16} className="mr-2" />
+                <GitBranch size={16} className="mr-2" />
                 Storyline
               </TabsTrigger>
               <TabsTrigger value="topic-ripples" className="data-[state=active]:bg-primary data-[state=active]:text-white">
@@ -834,7 +833,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
               <div className="bg-white p-6 rounded-lg border shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <h4 className="text-lg font-semibold text-primary flex items-center gap-2">
-                    <FlowChart size={20} />
+                    <GitBranch size={20} />
                     Narrative Evolution Over Time
                   </h4>
                   <div className="flex gap-2 items-center">
