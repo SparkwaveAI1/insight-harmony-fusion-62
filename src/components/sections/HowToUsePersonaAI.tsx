@@ -1,5 +1,10 @@
 
-import { Users, Flag, TrendingUp, Search } from "lucide-react";
+import { 
+  Users, 
+  LightbulbIcon, 
+  TrendingUp, 
+  SearchCode 
+} from "lucide-react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
 import Reveal from "../ui-custom/Reveal";
@@ -7,7 +12,8 @@ import Reveal from "../ui-custom/Reveal";
 interface UseCase {
   icon: React.ReactNode;
   title: string;
-  description?: string;
+  description: string;
+  actionText?: string;
   details?: {
     title: string;
     description: string;
@@ -17,8 +23,10 @@ interface UseCase {
 
 const useCases: UseCase[] = [
   {
-    icon: <Users className="h-8 w-8 text-primary" />,
-    title: "Traditional Market Research & Consumer Insights",
+    icon: <Users className="h-10 w-10 text-primary" />,
+    title: "Market Research & Consumer Insights",
+    description: "Understand your audience through AI-powered focus groups and messaging optimization.",
+    actionText: "Discover buyer personas",
     details: [
       {
         title: "AI-Powered Focus Groups:",
@@ -35,16 +43,22 @@ const useCases: UseCase[] = [
     ]
   },
   {
-    icon: <Flag className="h-8 w-8 text-primary" />,
-    title: "Ideation, Strategy, & Planning"
+    icon: <LightbulbIcon className="h-10 w-10 text-primary" />,
+    title: "Ideation, Strategy & Planning",
+    description: "Generate innovative ideas and validate strategic concepts with targeted persona feedback.",
+    actionText: "Validate your concepts",
   },
   {
-    icon: <TrendingUp className="h-8 w-8 text-primary" />,
-    title: "Develop an AI persona once—use it for years."
+    icon: <TrendingUp className="h-10 w-10 text-primary" />,
+    title: "Long-term Consumer Intelligence",
+    description: "Develop an AI persona once and leverage it for years of consistent consumer insights.",
+    actionText: "Build lasting insights",
   },
   {
-    icon: <Search className="h-8 w-8 text-primary" />,
-    title: "AI & Web3 Token Research; Community & Ecosystem Growth"
+    icon: <SearchCode className="h-10 w-10 text-primary" />,
+    title: "AI & Web3 Research",
+    description: "Conduct specialized research for emerging technologies, tokens, and community ecosystems.",
+    actionText: "Explore tech audiences",
   },
 ];
 
@@ -54,27 +68,36 @@ const HowToUsePersonaAI = () => {
       <div className="container px-4 mx-auto">
         <Reveal>
           <div className="text-center mb-12">
-            <p className="text-primary text-lg mb-2">Features</p>
+            <p className="text-primary font-medium text-lg mb-2">Features</p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 font-plasmik text-[#1d3a8a]">
               How Can You Use Persona AI?
             </h2>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              Transform how you understand your audience with these powerful application areas
+            </p>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-6 max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {useCases.map((useCase, index) => (
-              <Reveal key={index} delay={index * 100}>
-                <Card className={`relative overflow-hidden border-2 ${index === 0 ? 'border-primary/20' : 'border-slate-200'} hover:border-primary/20 transition-all`}>
-                  <div className="flex gap-4">
-                    <div className="p-3 bg-blue-50 rounded-xl h-fit">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {useCases.map((useCase, index) => (
+            <Reveal key={index} delay={index * 100}>
+              <Card className={`h-full border-2 ${index === 0 ? 'border-primary/20' : 'border-slate-200'} hover:border-primary/20 transition-all`}>
+                <div className="flex flex-col h-full">
+                  <div className="flex gap-4 items-start mb-4">
+                    <div className="p-3 bg-blue-50 rounded-xl">
                       {useCase.icon}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-medium mb-2">{useCase.title}</h3>
-                      {useCase.description && <p className="text-muted-foreground">{useCase.description}</p>}
+                      <h3 className="text-xl font-semibold mb-2">{useCase.title}</h3>
+                      <p className="text-slate-600">{useCase.description}</p>
                     </div>
                   </div>
+
+                  {useCase.actionText && (
+                    <p className="text-primary font-medium mt-auto pt-3">
+                      {useCase.actionText} →
+                    </p>
+                  )}
 
                   {index === 0 && useCase.details && (
                     <div className="mt-6 border-t pt-4 border-slate-100">
@@ -86,10 +109,10 @@ const HowToUsePersonaAI = () => {
                       ))}
                     </div>
                   )}
-                </Card>
-              </Reveal>
-            ))}
-          </div>
+                </div>
+              </Card>
+            </Reveal>
+          ))}
         </div>
       </div>
     </Section>
