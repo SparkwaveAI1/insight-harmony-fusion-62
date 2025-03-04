@@ -1,6 +1,7 @@
 
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
+import WhyPersonaAI from "@/components/sections/WhyPersonaAI";
 import Features from "@/components/sections/Features";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
@@ -12,8 +13,9 @@ const Index = () => {
       <Header />
       <main className="flex-grow">
         <Hero />
-        <QualitativeAnalysis />
+        <WhyPersonaAI />
         <Features />
+        <QualitativeAnalysis />
         <ProductShowcase />
       </main>
       <Footer />

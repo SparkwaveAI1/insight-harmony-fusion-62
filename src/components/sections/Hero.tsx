@@ -21,25 +21,25 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={100} animation="blur-in">
-            <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl text-balance">
-              Transform Qualitative Data into Strategic Insights
+            <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
+              AI-Powered Market Research with Research-Grade AI Personas
             </h1>
           </Reveal>
           
           <Reveal delay={200}>
             <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
-              Our platform empowers researchers and businesses to uncover meaningful patterns in qualitative data, turning complex information into actionable insights with elegant precision.
+              AI Personas—digital consumers built from real human interviews. Run AI-driven focus groups, analyze sentiment shifts, and predict market behavior—faster and at scale.
             </p>
           </Reveal>
           
           <Reveal delay={300}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="group">
-                Get Started
+                See It in Action
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
               <Button variant="outline" size="lg">
-                View Demo
+                Get Insights Now
               </Button>
             </div>
           </Reveal>
