@@ -3,6 +3,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
+import AIFocusGroups from "./pages/AIFocusGroups";
 import "./App.css";
 
 const router = createBrowserRouter([
@@ -14,6 +15,10 @@ const router = createBrowserRouter([
   {
     path: "/persona-ai-interviewer",
     element: <PersonaAIInterviewer />,
+  },
+  {
+    path: "/ai-focus-groups",
+    element: <AIFocusGroups />,
   },
 ]);
 
