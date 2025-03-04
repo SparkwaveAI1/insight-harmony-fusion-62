@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 export type DataSource = "twitter" | "reddit" | "news" | "farcaster" | "all";
@@ -31,8 +32,8 @@ export interface AnalysisResults {
 
 // API configuration - replace with your actual API keys
 const API_KEYS = {
-  // Get your News API key at https://newsapi.org/
-  newsApi: "YOUR_NEWS_API_KEY", // This is a publishable key, not a secret
+  // Use your News API key here
+  newsApi: "1dbe0abf78c24a02a593ce5ba0b1c6fa", // This is a publishable key, not a secret
   
   // Twitter API v2 requires authentication
   // You can use a bearer token with read-only access
