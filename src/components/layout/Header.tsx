@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import Button from "../ui-custom/Button";
+import Logo from "../ui-custom/Logo";
 import { cn } from "@/lib/utils";
 
 const Header = () => {
@@ -51,8 +52,8 @@ const Header = () => {
     >
       <div className="container flex items-center justify-between">
         <div className="flex items-center">
-          <a href="#" className="text-xl font-medium">
-            Persona<span className="text-primary">AI</span>
+          <a href="#" className="flex items-center">
+            <Logo size="md" />
           </a>
         </div>
 
