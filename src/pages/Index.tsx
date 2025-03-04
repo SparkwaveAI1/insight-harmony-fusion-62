@@ -3,10 +3,10 @@ import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import CustomAIPersonas from "@/components/sections/CustomAIPersonas";
 import HowToUsePersonaAI from "@/components/sections/HowToUsePersonaAI";
+import AIFocusGroupsSection from "@/components/sections/AIFocusGroupsSection";
 import Features from "@/components/sections/Features";
 import HowItWorks from "@/components/sections/HowItWorks";
 import PersonaAIInterviewerSection from "@/components/sections/PersonaAIInterviewer";
-import AIFocusGroupsSection from "@/components/sections/AIFocusGroupsSection";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import Footer from "@/components/sections/Footer";
@@ -19,10 +19,10 @@ const Index = () => {
         <Hero />
         <CustomAIPersonas />
         <HowToUsePersonaAI />
+        <AIFocusGroupsSection />
         <Features />
         <HowItWorks />
         <PersonaAIInterviewerSection />
-        <AIFocusGroupsSection />
         <QualitativeAnalysis />
         <ProductShowcase />
       </main>
