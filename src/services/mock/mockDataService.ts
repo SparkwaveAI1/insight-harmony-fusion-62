@@ -1,3 +1,4 @@
+
 import { ResearchQuery, AnalysisResults, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 
@@ -51,6 +52,12 @@ function generateTopTopics(query: ResearchQuery): string[] {
       "Environmental impact concerns",
       "Integration with traditional art markets"
     ];
+  } else if (queryText.includes("zelenskyy") || queryText.includes("ukraine")) {
+    return [
+      "International aid negotiations",
+      "Domestic political challenges",
+      "War strategy developments"
+    ];
   } else {
     return [
       "User adoption challenges",
@@ -83,6 +90,29 @@ function generateExampleQuotes(query: ResearchQuery): QuoteData[] {
     : query.sources.map(s => s.charAt(0).toUpperCase() + s.slice(1));
   
   const quotes: QuoteData[] = [];
+  
+  // Zelenskyy-specific quotes
+  if (queryText.includes("zelenskyy") || queryText.includes("ukraine")) {
+    quotes.push({
+      text: "President Zelenskyy's diplomatic efforts have been crucial in maintaining international support during this critical phase of the conflict.",
+      sentiment: "positive",
+      source: sources[Math.floor(Math.random() * sources.length)]
+    });
+    
+    quotes.push({
+      text: "The administration faces growing challenges balancing war efforts with domestic economic concerns, which will be a key factor going forward.",
+      sentiment: "neutral",
+      source: sources[Math.floor(Math.random() * sources.length)]
+    });
+    
+    quotes.push({
+      text: "Critics argue that the timeline promised for military advances has repeatedly been missed, raising questions about strategic planning.",
+      sentiment: "negative",
+      source: sources[Math.floor(Math.random() * sources.length)]
+    });
+    
+    return quotes;
+  }
   
   // Positive quote
   if (query.sentiment === "all" || query.sentiment === "positive") {
@@ -141,6 +171,20 @@ function generateExampleQuotes(query: ResearchQuery): QuoteData[] {
 function generateKeyPhrases(query: ResearchQuery): string[] {
   const baseKeywords = ["adoption", "implementation", "community feedback", "future development"];
   const queryText = query.query.toLowerCase();
+  
+  // Add topic-specific keywords for Zelenskyy/Ukraine
+  if (queryText.includes("zelenskyy") || queryText.includes("ukraine")) {
+    return [
+      "diplomatic initiatives",
+      "battlefield strategy",
+      "international support",
+      "NATO cooperation",
+      "domestic politics",
+      "reconstruction efforts",
+      "defense funding",
+      "civilian resilience"
+    ];
+  }
   
   // Add query-specific keywords
   if (queryText.includes("token") || queryText.includes("staking")) {
