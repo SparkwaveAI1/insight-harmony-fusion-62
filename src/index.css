@@ -1,3 +1,4 @@
+
 @import url('https://rsms.me/inter/inter.css');
 
 @tailwind base;
@@ -15,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 5% 14%;
 
-    --primary: 217 77% 37%;   /* Changed to #1b51a1 */
+    --primary: 217 77% 37%;   /* #1b51a1 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 20% 96%;
@@ -24,7 +25,7 @@
     --muted: 220 20% 96%;
     --muted-foreground: 240 5% 40%;
 
-    --accent: 45 100% 65%;    /* Yellow accent */
+    --accent: 45 100% 65%;    /* Yellow accent - used sparingly */
     --accent-foreground: 240 5% 14%;
 
     --destructive: 0 84% 60%;
@@ -32,7 +33,7 @@
 
     --border: 220 20% 90%;
     --input: 220 20% 90%;
-    --ring: 217 77% 37%;      /* Changed to #1b51a1 */
+    --ring: 217 77% 37%;      /* #1b51a1 */
 
     --radius: 0.8rem;
 
@@ -46,7 +47,7 @@
     --sidebar-ring: 217 91% 60%;
 
     /* Added accent colors to match the logo */
-    --logo-blue: 217 77% 37%;  /* Changed to #1b51a1 */
+    --logo-blue: 217 77% 37%;  /* #1b51a1 */
     --logo-orange: 30 100% 60%;
   }
 
@@ -60,7 +61,7 @@
     --popover: 240 5% 16%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 217 77% 37%;   /* Changed to #1b51a1 */
+    --primary: 217 77% 37%;   /* #1b51a1 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 5% 22%;
@@ -69,7 +70,7 @@
     --muted: 240 5% 22%;
     --muted-foreground: 240 5% 65%;
 
-    --accent: 45 100% 65%;    /* Yellow accent */
+    --accent: 45 100% 65%;    /* Yellow accent - used sparingly */
     --accent-foreground: 240 5% 14%;
 
     --destructive: 0 84% 60%;
@@ -77,11 +78,11 @@
 
     --border: 240 5% 22%;
     --input: 240 5% 22%;
-    --ring: 217 77% 37%;      /* Changed to #1b51a1 */
+    --ring: 217 77% 37%;      /* #1b51a1 */
 
     --sidebar-background: 240 6% 10%;
     --sidebar-foreground: 240 5% 96%;
-    --sidebar-primary: 217 77% 37%;  /* Changed to #1b51a1 */
+    --sidebar-primary: 217 77% 37%;  /* #1b51a1 */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4% 16%;
     --sidebar-accent-foreground: 240 5% 96%;
@@ -89,7 +90,7 @@
     --sidebar-ring: 217 91% 60%;
 
     /* Added accent colors to match the logo */
-    --logo-blue: 217 77% 37%;  /* Changed to #1b51a1 */
+    --logo-blue: 217 77% 37%;  /* #1b51a1 */
     --logo-orange: 30 100% 60%;
   }
 }

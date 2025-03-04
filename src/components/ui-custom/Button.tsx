@@ -32,7 +32,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {children}
         {variant === "primary" && (
-          <span className="absolute inset-0 rounded-md bg-accent/10 opacity-0 transition-opacity hover:opacity-100"></span>
+          <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
         )}
       </button>
     );
