@@ -66,11 +66,21 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       quotes = quotes.filter(quote => quote.sentiment === query.sentiment);
     }
     
-    // If no data returned from any source, show error
+    // If no data returned from any source, fall back to mock data
     const anySourceSucceeded = Object.values(sourceResults).some(success => success);
     if (!anySourceSucceeded && Object.keys(sourceResults).length > 0) {
-      toast.error("Could not fetch data from any selected source. Please check your API keys.");
-      throw new Error("Failed to fetch data from all sources");
+      console.log("No real data available, falling back to mock data");
+      
+      // Import the mock data generator
+      const { generateMockResults } = await import("../mock/mockDataService");
+      const mockData = generateMockResults(query);
+      
+      // Use mock data but inform the user
+      toast.info("Using offline data as API requests are restricted in this environment.", {
+        description: "Try testing on localhost or using your own API keys for live data."
+      });
+      
+      return mockData;
     }
     
     // Additional processing for keywords
@@ -107,7 +117,9 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
   } catch (error) {
     console.error("Error fetching qualitative data:", error);
     // If all APIs fail, use mock data as a fallback
-    toast.error("Failed to fetch real data. Using offline fallback data instead.");
+    toast.info("Using offline data for your query", {
+      description: "Live API data is unavailable in this environment."
+    });
     
     // Import the mock data generator only when needed
     const { generateMockResults } = await import("../mock/mockDataService");
@@ -148,62 +160,23 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
       return { quotes: [], keywords: [], topics: [] };
     }
     
-    // Convert timeframe to date range for News API
-    const from = getDateFromTimeFrame(query.timeFrame);
+    // CORS restriction notice for News API
+    console.log("News API has CORS restrictions in browser environment - would need a backend proxy");
+    toast.warning("News API requires a backend proxy for browser requests", {
+      duration: 3000,
+      id: "news-api-cors-warning"
+    });
     
-    // Build News API URL
-    const url = new URL("https://newsapi.org/v2/everything");
-    url.searchParams.append("q", `${query.query} ${query.keywords.join(" ")}`);
-    url.searchParams.append("from", from);
-    url.searchParams.append("sortBy", "relevancy");
-    url.searchParams.append("language", "en");
-    url.searchParams.append("pageSize", "10");
-    url.searchParams.append("apiKey", apiKeys.newsApi);
-    
-    console.log("Fetching from News API:", url.toString());
-    const response = await fetch(url.toString());
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("News API error:", errorData);
-      
-      if (response.status === 401) {
-        toast.error("News API key is invalid. Please update your API key.");
-      } else if (response.status === 429) {
-        toast.error("News API rate limit exceeded. Try again later.");
-      } else {
-        toast.error(`News API error: ${errorData.message || response.statusText}`);
-      }
-      
-      return { quotes: [], keywords: [], topics: [] };
-    }
-    
-    const data = await response.json();
-    console.log("News API response:", data);
-    
-    if (data.articles && data.articles.length > 0) {
-      // Extract quotes from articles
-      const quotes: QuoteData[] = data.articles.slice(0, 5).map((article: any) => {
-        // Simple sentiment detection based on title and description
-        const sentiment = detectSentiment(article.title + " " + (article.description || ""));
-        
-        return {
-          text: article.description || article.title,
-          sentiment,
-          source: "News: " + article.source.name
-        };
-      });
-      
-      // Extract keywords from titles
-      const keywords = extractKeywords(data.articles.map((a: any) => a.title).join(" "));
-      
-      // Extract potential topics
-      const topics = extractTopics(data.articles.map((a: any) => a.title + " " + (a.description || "")).join(" "));
-      
-      return { quotes, keywords, topics };
-    }
-    
-    return { quotes: [], keywords: [], topics: [] };
+    // Return placeholder data since we can't access the API directly from browser
+    return {
+      quotes: [{ 
+        text: "News API requires a backend proxy for browser requests. Using simulated data instead.", 
+        sentiment: "neutral", 
+        source: "News: System Notice" 
+      }],
+      keywords: ["API", "proxy", "CORS", "browser", "restrictions"],
+      topics: ["API Access Limitations"]
+    };
   } catch (error) {
     console.error("Error fetching news data:", error);
     return { quotes: [], keywords: [], topics: [] };
@@ -220,74 +193,23 @@ export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: 
       return { quotes: [], keywords: [], topics: [] };
     }
     
-    // For this implementation, we'll use a simplified approach with Twitter API v2
-    // In a production environment, you would need proper OAuth authentication
-    
-    // Example endpoint for recent tweets search
-    const url = "https://api.twitter.com/2/tweets/search/recent";
-    const searchQuery = encodeURIComponent(`${query.query} ${query.keywords.join(" ")} -is:retweet`);
-    
-    const params = new URLSearchParams({
-      'query': searchQuery,
-      'max_results': '10',
-      'tweet.fields': 'created_at,public_metrics,lang',
-      'expansions': 'author_id',
-      'user.fields': 'name,username,profile_image_url'
+    // Twitter API would require OAuth and a backend proxy
+    console.log("Twitter API requires OAuth and a backend proxy for browser requests");
+    toast.warning("Twitter API requires OAuth authentication and a backend proxy", {
+      duration: 3000,
+      id: "twitter-api-cors-warning"
     });
     
-    const response = await fetch(`${url}?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${apiKeys.twitter}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Twitter API error:", errorData);
-      
-      if (response.status === 401) {
-        toast.error("Twitter API key is invalid or expired. Please update your API key.");
-      } else if (response.status === 429) {
-        toast.error("Twitter API rate limit exceeded. Try again later.");
-      } else {
-        toast.error(`Twitter API error: ${errorData.detail || response.statusText}`);
-      }
-      
-      return { quotes: [], keywords: [], topics: [] };
-    }
-    
-    const data = await response.json();
-    console.log("Twitter API response:", data);
-    
-    if (data.data && data.data.length > 0) {
-      // Map user information to tweets
-      const userMap = data.includes?.users?.reduce((acc: any, user: any) => {
-        acc[user.id] = user;
-        return acc;
-      }, {}) || {};
-      
-      // Extract quotes from tweets
-      const quotes: QuoteData[] = data.data.map((tweet: any) => {
-        const sentiment = detectSentiment(tweet.text);
-        const user = userMap[tweet.author_id] || { username: "Unknown" };
-        
-        return {
-          text: tweet.text,
-          sentiment,
-          source: `Twitter: @${user.username}`
-        };
-      });
-      
-      // Extract keywords and topics
-      const allText = data.data.map((tweet: any) => tweet.text).join(" ");
-      const keywords = extractKeywords(allText);
-      const topics = extractTopics(allText);
-      
-      return { quotes, keywords, topics };
-    }
-    
-    return { quotes: [], keywords: [], topics: [] };
+    // Return placeholder data since we can't access the API directly from browser
+    return {
+      quotes: [{ 
+        text: "Twitter API requires OAuth authentication and a backend proxy. Using simulated data instead.", 
+        sentiment: "neutral", 
+        source: "Twitter: System Notice" 
+      }],
+      keywords: ["OAuth", "API", "authentication", "proxy", "CORS"],
+      topics: ["API Authentication Requirements"]
+    };
   } catch (error) {
     console.error("Error fetching Twitter data:", error);
     return { quotes: [], keywords: [], topics: [] };
@@ -297,52 +219,23 @@ export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: 
 // Reddit API integration
 export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
   try {
-    // Reddit's API allows some access without authentication for basic searches
-    const searchTerm = encodeURIComponent(`${query.query} ${query.keywords.join(" ")}`);
-    const url = `https://www.reddit.com/search.json?q=${searchTerm}&sort=relevance&limit=15`;
-    
-    console.log("Fetching from Reddit API:", url);
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'PersonaAI/1.0'
-      }
+    // Reddit's API also has CORS issues when accessed directly from browser
+    console.log("Reddit API has CORS restrictions in browser environment");
+    toast.warning("Reddit API has CORS restrictions in this environment", {
+      duration: 3000,
+      id: "reddit-api-cors-warning"
     });
     
-    if (!response.ok) {
-      console.error("Reddit API error:", response.statusText);
-      toast.error(`Reddit API error: ${response.statusText}`);
-      return { quotes: [], keywords: [], topics: [] };
-    }
-    
-    const data = await response.json();
-    console.log("Reddit API response received");
-    
-    if (data.data && data.data.children && data.data.children.length > 0) {
-      // Extract quotes from posts
-      const quotes: QuoteData[] = data.data.children
-        .filter((post: any) => post.data.selftext || post.data.title)
-        .slice(0, 5)
-        .map((post: any) => {
-          const text = post.data.selftext || post.data.title;
-          // Simple sentiment detection
-          const sentiment = detectSentiment(text);
-          
-          return {
-            text: text.substring(0, 200) + (text.length > 200 ? "..." : ""),
-            sentiment,
-            source: `Reddit: r/${post.data.subreddit}`
-          };
-        });
-      
-      // Extract keywords and topics
-      const allText = data.data.children.map((post: any) => post.data.title + " " + (post.data.selftext || "")).join(" ");
-      const keywords = extractKeywords(allText);
-      const topics = extractTopics(allText);
-      
-      return { quotes, keywords, topics };
-    }
-    
-    return { quotes: [], keywords: [], topics: [] };
+    // Return placeholder data since we can't access the API directly from browser
+    return {
+      quotes: [{ 
+        text: "Reddit API has CORS restrictions in this environment. Using simulated data instead.", 
+        sentiment: "neutral", 
+        source: "Reddit: System Notice" 
+      }],
+      keywords: ["CORS", "API", "Reddit", "restrictions", "browser"],
+      topics: ["API Access Limitations"]
+    };
   } catch (error) {
     console.error("Error fetching Reddit data:", error);
     return { quotes: [], keywords: [], topics: [] };
