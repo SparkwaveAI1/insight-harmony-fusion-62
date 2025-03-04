@@ -63,7 +63,7 @@ const HowItWorks = () => {
                 
                 <div className="flex-1 pt-2">
                   <h3 className="text-xl font-medium mb-2 text-white">{step.title}</h3>
-                  <p className="text-primary-foreground/90">{step.description}</p>
+                  <p className="text-primary-foreground/90 text-left">{step.description}</p>
                 </div>
               </div>
             </Reveal>
