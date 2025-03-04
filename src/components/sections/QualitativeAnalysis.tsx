@@ -170,14 +170,14 @@ const QualitativeAnalysis: React.FC = () => {
   };
 
   return (
-    <Section className="bg-gradient-to-b from-accent to-background py-20" highlight={true}>
+    <Section className="bg-gradient-to-b from-primary/5 to-background py-20" highlight={true}>
       <div className="container max-w-5xl mx-auto">
         <Reveal>
           <div className="flex justify-between items-center mb-6">
             <div className="max-w-3xl">
               <div className="flex items-center gap-3 mb-4">
                 <Logo size="lg" />
-                <span className="text-sm font-medium px-3 py-1 bg-[#FEF7CD] text-[#403E43] rounded-full">
+                <span className="text-sm font-medium px-3 py-1 bg-primary/10 text-primary rounded-full">
                   Qualitative Insights Conductor
                 </span>
               </div>
@@ -194,7 +194,7 @@ const QualitativeAnalysis: React.FC = () => {
 
         {!showResults ? (
           <Reveal delay={200}>
-            <Card className="shadow-lg mb-8 border-[#33C3F0]/20">
+            <Card className="shadow-lg mb-8 border-primary/20">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <label htmlFor="query" className="block text-lg font-medium text-[#221F26]">
@@ -357,7 +357,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "real-time" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5)]" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(27,81,161,0.5)]" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "real-time" })}
@@ -365,7 +365,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Live Trends (24 hours)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                            <TooltipContent side="bottom" className="bg-primary/5 border-primary/20">
                               <p>See the latest discussions in real-time</p>
                             </TooltipContent>
                           </Tooltip>
@@ -378,7 +378,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "short-term" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5)]" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(27,81,161,0.5)]" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "short-term" })}
@@ -386,7 +386,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Short-Term (Past 7 Days)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                            <TooltipContent side="bottom" className="bg-primary/5 border-primary/20">
                               <p>Track recent sentiment shifts</p>
                             </TooltipContent>
                           </Tooltip>
@@ -399,7 +399,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "medium-term" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5),0_2px_12px_rgba(51,195,240,0.25)] font-medium" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(27,81,161,0.5),0_2px_12px_rgba(27,81,161,0.25)] font-medium" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "medium-term" })}
@@ -407,7 +407,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Medium-Term (Past Month) <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-1">(Default)</span>
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                            <TooltipContent side="bottom" className="bg-primary/5 border-primary/20">
                               <p className="text-primary/80 font-medium">Default Option</p>
                               <p>Identify emerging patterns and sustained sentiment trends</p>
                             </TooltipContent>
@@ -421,7 +421,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "long-term" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5)]" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(27,81,161,0.5)]" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "long-term" })}
@@ -429,7 +429,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Long-Term (3-6 Months)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                            <TooltipContent side="bottom" className="bg-primary/5 border-primary/20">
                               <p>Understand trends over a quarter</p>
                             </TooltipContent>
                           </Tooltip>
@@ -442,7 +442,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "historical" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5)]" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(27,81,161,0.5)]" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "historical" })}
@@ -450,7 +450,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Historical View (6-12 Months)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                            <TooltipContent side="bottom" className="bg-primary/5 border-primary/20">
                               <p>Analyze sentiment shifts over a full year</p>
                             </TooltipContent>
                           </Tooltip>
@@ -463,7 +463,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "deep-historical" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5)]" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(27,81,161,0.5)]" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "deep-historical" })}
@@ -471,7 +471,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Deep Historical View (1+ Year)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                            <TooltipContent side="bottom" className="bg-primary/5 border-primary/20">
                               <p>Gain insights on long-term behavioral patterns</p>
                             </TooltipContent>
                           </Tooltip>
@@ -522,7 +522,7 @@ const QualitativeAnalysis: React.FC = () => {
                   <Button 
                     type="submit" 
                     size="lg"
-                    className="bg-[#33C3F0] hover:bg-[#1EAEDB] text-white"
+                    className="bg-primary hover:bg-primary/90 text-white"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -572,7 +572,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
   return (
     <div className="space-y-8">
       <Reveal>
-        <Card className="shadow-lg border-[#33C3F0]/20">
+        <Card className="shadow-lg border-primary/20">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-[#221F26]">Results for: "{query.query}"</h3>
             <div className="flex gap-2">
@@ -584,7 +584,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
               <Button 
                 variant="outline" 
                 onClick={onNewSearch}
-                className="border-[#33C3F0]/30 hover:border-[#33C3F0]/60"
+                className="border-primary/30 hover:border-primary/60"
               >
                 New Search
               </Button>
@@ -593,13 +593,13 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
           
           <Tabs defaultValue="summary" className="w-full">
             <TabsList className="mb-4 grid grid-cols-3 md:grid-cols-4 bg-[#F1F1F1]">
-              <TabsTrigger value="summary" className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">Summary</TabsTrigger>
-              <TabsTrigger value="quotes" className="data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">Example Quotes</TabsTrigger>
-              <TabsTrigger value="ai-insights" className="flex items-center gap-1 data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">
+              <TabsTrigger value="summary" className="data-[state=active]:bg-primary data-[state=active]:text-white">Summary</TabsTrigger>
+              <TabsTrigger value="quotes" className="data-[state=active]:bg-primary data-[state=active]:text-white">Example Quotes</TabsTrigger>
+              <TabsTrigger value="ai-insights" className="flex items-center gap-1 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <BrainCircuit size={14} />
                 AI Insights
               </TabsTrigger>
-              <TabsTrigger value="trends" className="flex items-center gap-1 data-[state=active]:bg-[#33C3F0] data-[state=active]:text-white">
+              <TabsTrigger value="trends" className="flex items-center gap-1 data-[state=active]:bg-primary data-[state=active]:text-white">
                 <TrendingUp size={14} />
                 Trends Analysis
               </TabsTrigger>
