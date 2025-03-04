@@ -350,7 +350,7 @@ const QualitativeAnalysis: React.FC = () => {
                         Time Frame
                       </label>
                       <div className="flex flex-wrap items-center gap-2">
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={300}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -365,13 +365,13 @@ const QualitativeAnalysis: React.FC = () => {
                                 Live Trends (24 hours)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[220px]">
+                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
                               <p>Great for tracking immediate shifts in sentiment and real-time reactions</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                         
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={300}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -386,34 +386,35 @@ const QualitativeAnalysis: React.FC = () => {
                                 Short-Term (Past 7 Days)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[220px]">
+                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
                               <p>Best for recent discussions and emerging topics from the past week</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                         
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={300}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
                                 className={`px-3 py-2 rounded-md border transition-all duration-200 ${
                                   query.timeFrame === "medium-term" 
-                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5),0_0_10px_rgba(51,195,240,0.15)] font-medium" 
+                                  ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(51,195,240,0.5),0_2px_12px_rgba(51,195,240,0.25)] font-medium" 
                                   : "border-input hover:bg-accent/50"
                                 }`}
                                 onClick={() => setQuery({ ...query, timeFrame: "medium-term" })}
                               >
-                                Medium-Term (Past Month) <span className="text-xs text-primary ml-1">(Recommended)</span>
+                                Medium-Term (Past Month) <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-1">(Recommended)</span>
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[220px]">
+                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
+                              <p className="text-primary/80 font-medium">Recommended Option</p>
                               <p>Captures sustained sentiment trends and provides the most balanced analysis timeframe</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                         
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={300}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -428,7 +429,7 @@ const QualitativeAnalysis: React.FC = () => {
                                 Long-Term (3-6 Months)
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[220px]">
+                            <TooltipContent side="bottom" className="bg-[#33C3F0]/5 border-[#33C3F0]/20">
                               <p>Useful for tracking historical sentiment shifts and established patterns over time</p>
                             </TooltipContent>
                           </Tooltip>
