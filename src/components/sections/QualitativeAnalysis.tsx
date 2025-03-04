@@ -189,8 +189,9 @@ const QualitativeAnalysis: React.FC = () => {
                   Qualitative Insights Conductor
                 </span>
               </div>
-              <h2 className="text-3xl md:text-5xl font-bold mb-3 text-[#221F26]">
-                AI That Thinks Like a Human, Not a Machine
+              <h2 className="text-3xl md:text-5xl font-bold mb-3 text-[#221F26] font-plasmik">
+                AI That Thinks Like a Human<br />
+                Not a Machine
               </h2>
               <p className="text-muted-foreground text-lg">
                 Uncover the real thoughts, opinions, and emotions driving conversations—beyond data, beyond numbers.
