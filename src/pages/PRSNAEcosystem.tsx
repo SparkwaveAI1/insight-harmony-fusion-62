@@ -18,7 +18,8 @@ import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis"; // Import from homepage
-import ResearchAgentSection from "@/components/ecosystem/ResearchAgentSection"; // New import
+import ResearchAgentSection from "@/components/ecosystem/ResearchAgentSection"; 
+import AvatarFeature from "@/components/ecosystem/AvatarFeature"; // Re-adding this import
 
 const PRSNAEcosystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,7 +47,10 @@ const PRSNAEcosystem = () => {
           setActiveTab={setActiveTab}
         />
 
-        {/* Research Agent Section - Replaces Avatar Feature */}
+        {/* Avatar Feature Section - Re-adding below Hero */}
+        {!isWalletConnected && <AvatarFeature />}
+        
+        {/* Research Agent Section */}
         {!isWalletConnected && <ResearchAgentSection />}
         
         {/* Web3 Dashboard Section */}
