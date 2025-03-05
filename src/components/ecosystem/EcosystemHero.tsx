@@ -51,7 +51,7 @@ const EcosystemHero = ({
                   <Button 
                     variant="primary" 
                     size="lg" 
-                    className="group bg-gradient-to-r from-primary to-primary/80 border-none"
+                    className="group bg-gradient-to-r from-primary to-primary/80 border-none w-full sm:w-auto"
                     onClick={connectWallet}
                   >
                     <Wallet className="w-4 h-4 mr-2" />
@@ -62,7 +62,7 @@ const EcosystemHero = ({
                     <Button 
                       variant="secondary" 
                       size="lg" 
-                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
+                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none w-full sm:w-auto"
                     >
                       <HandCoins className="w-4 h-4 mr-2" />
                       Earn $PRSNA
@@ -113,7 +113,7 @@ const EcosystemHero = ({
               <div className="bg-gray-800/80 border border-gray-700 rounded-xl p-6 h-full">
                 <div className="aspect-video bg-gray-900/80 rounded-lg flex flex-col items-center justify-center border border-gray-700 mb-4 overflow-hidden relative">
                   <img 
-                    src="/lovable-uploads/c1213db0-f5cd-48dd-89c6-3465c522eb78.png" 
+                    src="/lovable-uploads/a1966bfb-6785-4632-b49d-e778a8986165.png" 
                     alt="AI Research Avatar" 
                     className="object-cover w-full h-full absolute inset-0"
                   />

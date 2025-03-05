@@ -112,30 +112,27 @@ const PRSNAEcosystem = () => {
           </div>
         </Section>
         
-        {/* Earn PRSNA Section */}
+        {/* For non-connected wallet users, show these sections */}
         {!isWalletConnected && (
-          <EarnPRSNASection />
-        )}
-        
-        {/* Insights Conductor Section (NEW) */}
-        {!isWalletConnected && (
-          <InsightsConductorSection />
-        )}
-        
-        {/* Staking Dashboard Preview */}
-        {!isWalletConnected && (
-          <StakingPreview connectWallet={connectWallet} />
-        )}
-        
-        {/* Token Features Overview (below staking) */}
-        {!isWalletConnected && (
-          <Section className="bg-gray-900">
-            <div className="container px-4 mx-auto">
-              <div className="max-w-5xl mx-auto">
-                <TokenFeaturesOverview />
+          <>
+            {/* Earn PRSNA Section */}
+            <EarnPRSNASection />
+            
+            {/* Insights Conductor Section */}
+            <InsightsConductorSection />
+            
+            {/* Staking Dashboard Preview */}
+            <StakingPreview connectWallet={connectWallet} />
+            
+            {/* Token Features Overview (below staking) */}
+            <Section className="bg-gray-900">
+              <div className="container px-4 mx-auto">
+                <div className="max-w-5xl mx-auto">
+                  <TokenFeaturesOverview />
+                </div>
               </div>
-            </div>
-          </Section>
+            </Section>
+          </>
         )}
       </main>
 

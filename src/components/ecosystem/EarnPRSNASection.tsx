@@ -7,7 +7,7 @@ import Reveal from "@/components/ui-custom/Reveal";
 
 const EarnPRSNASection = () => {
   return (
-    <Section className="bg-gray-850 py-8">
+    <Section className="bg-gray-850 py-6">
       <div className="container px-4 mx-auto">
         <div className="max-w-5xl mx-auto">
           <Reveal>
@@ -41,8 +41,8 @@ const EarnPRSNASection = () => {
                   </Link>
                 </div>
               </div>
-              <div className="h-32 w-32 md:h-40 md:w-40 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
-                <HandCoins className="h-16 w-16 md:h-20 md:w-20 text-primary/70" />
+              <div className="h-28 w-28 md:h-36 md:w-36 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                <HandCoins className="h-14 w-14 md:h-18 md:w-18 text-primary/70" />
               </div>
             </div>
           </Reveal>
