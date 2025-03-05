@@ -7,6 +7,7 @@ import AIFocusGroups from "./pages/AIFocusGroups";
 import PRSNAEcosystem from "./pages/PRSNAEcosystem";
 import Contact from "./pages/Contact";
 import "./App.css";
+import "./index.css";
 
 const router = createBrowserRouter([
   {
@@ -33,9 +34,7 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return (
-    <RouterProvider router={router} />
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
