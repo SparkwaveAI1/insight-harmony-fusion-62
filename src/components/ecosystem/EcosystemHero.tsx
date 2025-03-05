@@ -107,19 +107,25 @@ const EcosystemHero = ({
             </Reveal>
           </div>
           
-          {/* Right side - AI Avatar Placeholder */}
+          {/* Right side - AI Avatar with the provided image */}
           <div className="w-full lg:w-1/2">
             <Reveal delay={400}>
               <div className="bg-gray-800/80 border border-gray-700 rounded-xl p-6 h-full">
-                <div className="aspect-video bg-gray-900/80 rounded-lg flex flex-col items-center justify-center border border-gray-700 mb-4">
-                  <Bot className="h-20 w-20 text-primary/50 mb-3" />
-                  <h3 className="text-xl font-semibold text-white mb-2">AI Research Avatar</h3>
-                  <p className="text-gray-400 text-center max-w-md mb-4">
-                    Talk with our AI research agent to explore market insights and token utility
-                  </p>
-                  <div className="px-3 py-1 bg-green-900/40 text-green-400 rounded-full text-xs flex items-center">
-                    <span className="animate-pulse mr-2 h-2 w-2 rounded-full bg-green-400"></span>
-                    Coming Soon
+                <div className="aspect-video bg-gray-900/80 rounded-lg flex flex-col items-center justify-center border border-gray-700 mb-4 overflow-hidden relative">
+                  <img 
+                    src="/lovable-uploads/c1213db0-f5cd-48dd-89c6-3465c522eb78.png" 
+                    alt="AI Research Avatar" 
+                    className="object-cover w-full h-full absolute inset-0"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent flex flex-col items-center justify-end p-4">
+                    <h3 className="text-xl font-semibold text-white mb-2 z-10">AI Research Avatar</h3>
+                    <p className="text-gray-400 text-center max-w-md mb-4 z-10">
+                      Talk with our AI research agent to explore market insights and token utility
+                    </p>
+                    <div className="px-3 py-1 bg-green-900/40 text-green-400 rounded-full text-xs flex items-center z-10 mb-2">
+                      <span className="animate-pulse mr-2 h-2 w-2 rounded-full bg-green-400"></span>
+                      Coming Soon
+                    </div>
                   </div>
                 </div>
                 

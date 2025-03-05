@@ -104,20 +104,32 @@ const PRSNAEcosystem = () => {
                   </Reveal>
                 </>
               ) : (
-                <TokenFeaturesOverview />
+                // This section will now be moved to the end after staking
+                null
               )}
             </div>
           </div>
         </Section>
         
-        {/* Earn PRSNA Section (new section between Avatar and Staking) */}
+        {/* Earn PRSNA Section (between Avatar and Staking) */}
         {!isWalletConnected && (
           <EarnPRSNASection />
         )}
         
-        {/* Staking Dashboard Preview (moved above Token Ecosystem) */}
+        {/* Staking Dashboard Preview */}
         {!isWalletConnected && (
           <StakingPreview connectWallet={connectWallet} />
+        )}
+        
+        {/* Token Features Overview (moved below staking) */}
+        {!isWalletConnected && (
+          <Section className="bg-gray-900">
+            <div className="container px-4 mx-auto">
+              <div className="max-w-5xl mx-auto">
+                <TokenFeaturesOverview />
+              </div>
+            </div>
+          </Section>
         )}
       </main>
 
