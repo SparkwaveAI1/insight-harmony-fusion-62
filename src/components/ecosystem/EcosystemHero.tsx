@@ -1,5 +1,5 @@
 
-import { ArrowRight, Rocket, Wallet, HandCoins } from "lucide-react";
+import { ArrowRight, Rocket, Wallet, HandCoins, Bot } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "@/components/ui-custom/Section";
 import Button from "@/components/ui-custom/Button";
