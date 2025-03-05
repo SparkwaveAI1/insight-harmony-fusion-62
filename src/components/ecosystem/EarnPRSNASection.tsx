@@ -7,7 +7,7 @@ import Reveal from "@/components/ui-custom/Reveal";
 
 const EarnPRSNASection = () => {
   return (
-    <Section className="bg-gray-850">
+    <Section className="bg-gray-850 py-8">
       <div className="container px-4 mx-auto">
         <div className="max-w-5xl mx-auto">
           <Reveal>
@@ -23,7 +23,7 @@ const EarnPRSNASection = () => {
                   <Link to="/earn-prsna">
                     <Button 
                       variant="secondary" 
-                      className="group"
+                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
                     >
                       <HandCoins className="w-4 h-4 mr-2" />
                       Create AI Personas

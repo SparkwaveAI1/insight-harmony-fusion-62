@@ -18,6 +18,7 @@ import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
 import EarnPRSNASection from "@/components/ecosystem/EarnPRSNASection";
+import InsightsConductorSection from "@/components/ecosystem/InsightsConductorSection";
 
 const PRSNAEcosystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -111,9 +112,14 @@ const PRSNAEcosystem = () => {
           </div>
         </Section>
         
-        {/* Earn PRSNA Section (between Avatar and Staking) */}
+        {/* Earn PRSNA Section */}
         {!isWalletConnected && (
           <EarnPRSNASection />
+        )}
+        
+        {/* Insights Conductor Section (NEW) */}
+        {!isWalletConnected && (
+          <InsightsConductorSection />
         )}
         
         {/* Staking Dashboard Preview */}
@@ -121,7 +127,7 @@ const PRSNAEcosystem = () => {
           <StakingPreview connectWallet={connectWallet} />
         )}
         
-        {/* Token Features Overview (moved below staking) */}
+        {/* Token Features Overview (below staking) */}
         {!isWalletConnected && (
           <Section className="bg-gray-900">
             <div className="container px-4 mx-auto">

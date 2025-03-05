@@ -62,7 +62,7 @@ const EcosystemHero = ({
                     <Button 
                       variant="secondary" 
                       size="lg" 
-                      className="group"
+                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
                     >
                       <HandCoins className="w-4 h-4 mr-2" />
                       Earn $PRSNA
@@ -95,7 +95,7 @@ const EcosystemHero = ({
                     <Button 
                       variant="secondary" 
                       size="lg" 
-                      className="group"
+                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
                     >
                       <HandCoins className="w-4 h-4 mr-2" />
                       Earn $PRSNA

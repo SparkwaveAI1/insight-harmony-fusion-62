@@ -30,11 +30,7 @@ const Header = () => {
 
   const navItems = [
     { label: "Home", href: "/" },
-    { label: "Features", href: "#features" },
-    { label: "Products", href: "#products" },
-    { label: "About", href: "#about" },
     { label: "Web3", href: "/prsna-ecosystem" },
-    { label: "Earn $PRSNA", href: "/earn-prsna" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -105,7 +101,7 @@ const Header = () => {
                 <Button 
                   variant="secondary" 
                   size="sm"
-                  className="bg-secondary/90 text-white border-none"
+                  className="bg-blue-500 hover:bg-blue-600 text-white border-none"
                 >
                   <HandCoins className="h-4 w-4 mr-2" />
                   Earn $PRSNA
@@ -196,7 +192,7 @@ const Header = () => {
                   <Link to="/earn-prsna">
                     <Button 
                       variant="secondary"
-                      className="w-full"
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white border-none"
                     >
                       <HandCoins className="h-4 w-4 mr-2" />
                       Earn $PRSNA
