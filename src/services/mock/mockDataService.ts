@@ -1,4 +1,3 @@
-
 import { ResearchQuery, AnalysisResults, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 
@@ -7,8 +6,156 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // Generate mock results
+  // Check for predefined AI tokens query
+  if (query.query.toLowerCase().includes("ai token") && 
+      query.query.toLowerCase().includes("fear")) {
+    return generateAITokensFearsMockData(query);
+  }
+  
+  // Generate standard mock results for other queries
   return generateMockResults(query);
+}
+
+// Mock data specifically for AI tokens fears query
+function generateAITokensFearsMockData(query: ResearchQuery): AnalysisResults {
+  const topTopics = [
+    "Regulatory Crackdowns",
+    "Market Speculation",
+    "AI Utility vs. Hype",
+    "VC & Insider Dumping"
+  ];
+  
+  const sentimentBreakdown = {
+    positive: 30, 
+    neutral: 45, 
+    negative: 25
+  };
+  
+  const keyPhrases = [
+    "SEC investigation", 
+    "regulatory concerns",
+    "token utility",
+    "AI hype cycle",
+    "market rotation",
+    "VC exit strategy",
+    "revenue models",
+    "staking incentives",
+    "AI narratives",
+    "tokenomics issues",
+    "revenue capture",
+    "long-term adoption"
+  ];
+  
+  const exampleQuotes = [
+    {
+      text: "AI is the future. This is just a dip before we see trillion-dollar AI projects in crypto. Staking in AI projects is the next big thing!",
+      sentiment: "positive",
+      source: "Twitter (@AIInvestorX)"
+    },
+    {
+      text: "Not saying AI tokens are dead, but outside of narratives, what are they actually doing differently from traditional crypto projects?",
+      sentiment: "neutral",
+      source: "Twitter (@BlockAnalyst)"
+    },
+    {
+      text: "If AI is so powerful, why do AI tokens rely on speculation instead of actual revenue? Looks like another VC exit pump to me.",
+      sentiment: "negative",
+      source: "Twitter (@CryptoRealist)"
+    },
+    {
+      text: "So many AI token projects seem to be launching with vague 'AI-powered' claims but no actual working models. We need a major AI crypto win to justify this sector.",
+      sentiment: "negative",
+      source: "Reddit (u/Web3DeepDiver)"
+    },
+    {
+      text: "Is anyone actually using AI tokens in a way that isn't just staking for emissions? I'm struggling to find one that isn't a copy-paste of the last cycle.",
+      sentiment: "negative",
+      source: "Reddit (u/HoldTheDip69)"
+    },
+    {
+      text: "The fear around AI tokens is overblown. AI is here to stay, and the projects that integrate real machine learning solutions will thrive. Long-term holders will win.",
+      sentiment: "positive",
+      source: "Reddit (u/AIbeliever)"
+    }
+  ];
+  
+  const aiInsights = [
+    "Regulatory concerns dominate the conversation, with 42% of negative sentiment focused on potential SEC actions against AI token projects.",
+    "There's a significant disconnect between AI technology enthusiasm and skepticism about current token implementations.",
+    "Market sentiment indicates rotation away from pure AI narrative tokens toward projects with demonstrable utility and revenue models.",
+    "Institutional investors appear to be taking short-term positions rather than viewing current AI tokens as long-term investments.",
+    "Community sentiment shifts positively when projects demonstrate transparent tokenomics and real machine learning applications."
+  ];
+  
+  const trendsAnalysis = [
+    "Recent news headlines about SEC investigations have triggered a 15% increase in negative sentiment over the past week.",
+    "The term \"utility\" appears 3x more frequently in discussions compared to two months ago, indicating growing demand for practical use cases.",
+    "Social media analysis shows Base Chain projects maintaining better sentiment scores than other ecosystems.",
+    "Recent market rotation has shifted approximately $430M from AI tokens to RWA narratives according to on-chain analytics."
+  ];
+  
+  return {
+    topTopics,
+    sentimentBreakdown,
+    exampleQuotes,
+    keyPhrases,
+    aiInsights,
+    trendsAnalysis,
+    reportGeneratedAt: new Date().toISOString(),
+    newsHeadlines: [
+      {
+        title: "SEC Investigates AI-Backed Crypto Projects for Misleading Claims",
+        source: "CoinDesk",
+        date: "March 4, 2025",
+        sentiment: "negative"
+      },
+      {
+        title: "AI Crypto Boom: Hype or Reality? Analysts Weigh In",
+        source: "Decrypt",
+        date: "March 3, 2025",
+        sentiment: "neutral"
+      },
+      {
+        title: "AI Tokens See 40% Drop as Market Rotation Moves to RWA Narrative",
+        source: "The Block",
+        date: "March 2, 2025",
+        sentiment: "negative"
+      },
+      {
+        title: "Base Chain Sees AI Token Growth Despite Market Fears",
+        source: "Bankless",
+        date: "March 1, 2025",
+        sentiment: "positive"
+      }
+    ],
+    personaAnalysis: [
+      {
+        persona: "The Institutional Trader",
+        analysis: "AI tokens still have runway, but investors are wary. Most large funds are treating them as a short-term play unless tangible revenue streams appear.",
+        sentiment: "neutral"
+      },
+      {
+        persona: "The Crypto DeFi Builder",
+        analysis: "The real challenge for AI tokens isn't tech—it's tokenomics. If there's no value capture mechanism, traders will exit as fast as they entered.",
+        sentiment: "negative"
+      },
+      {
+        persona: "The Retail Holder",
+        analysis: "I like AI projects but don't fully understand how they work. I'll keep holding if the community stays strong.",
+        sentiment: "positive"
+      }
+    ],
+    actionableInsights: [
+      "For Traders: Watch for signs of real adoption vs. short-term narratives before entering new AI token positions.",
+      "For AI Projects: Build real utility & revenue models to sustain investor confidence beyond the hype cycle.",
+      "For Long-Term Investors: Diversify across AI protocols that demonstrate tangible business models."
+    ],
+    relatedTopics: [
+      "Are AI tokens fundamentally different from other L1/L2 ecosystems?",
+      "Which AI projects are securing real enterprise partnerships?",
+      "How do AI-focused DAOs compare to traditional VC-funded projects?"
+    ]
+  };
 }
 
 // Fallback to generate mock results if API calls fail

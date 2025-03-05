@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -785,6 +786,68 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                 </div>
               </div>
               
+              {/* News Headlines Section - New */}
+              {results.newsHeadlines && results.newsHeadlines.length > 0 && (
+                <div className="bg-white p-6 rounded-lg border shadow-sm">
+                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
+                    <AlertTriangle size={18} />
+                    Recent News Headlines
+                  </h4>
+                  <div className="space-y-3">
+                    {results.newsHeadlines.map((headline, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-3 rounded-md border ${getSentimentColor(headline.sentiment)}`}
+                      >
+                        <div className="font-medium">{headline.title}</div>
+                        <div className="text-sm text-muted-foreground flex justify-between mt-1">
+                          <span>{headline.source}</span>
+                          <span>{headline.date}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Persona Analysis Section - New */}
+              {results.personaAnalysis && results.personaAnalysis.length > 0 && (
+                <div className="bg-white p-6 rounded-lg border shadow-sm">
+                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
+                    <BrainCircuit size={18} />
+                    AI Persona Analysis
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {results.personaAnalysis.map((persona, idx) => (
+                      <div key={idx} className="p-4 border rounded-lg bg-primary/5">
+                        <div className="font-medium mb-2">{persona.persona}</div>
+                        <p className="text-sm text-muted-foreground">{persona.analysis}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Actionable Insights Section - New */}
+              {results.actionableInsights && results.actionableInsights.length > 0 && (
+                <div className="bg-white p-6 rounded-lg border shadow-sm">
+                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
+                    <Check size={18} />
+                    Actionable Insights
+                  </h4>
+                  <div className="space-y-3">
+                    {results.actionableInsights.map((insight, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Check size={14} className="text-primary" />
+                        </div>
+                        <p>{insight}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-lg border shadow-sm">
                   <h4 className="text-lg font-semibold mb-4 text-primary">Top Discussion Keywords</h4>
@@ -804,26 +867,47 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                   </div>
                 </div>
                 
-                <div className="bg-white p-6 rounded-lg border shadow-sm">
-                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
-                    <Calendar size={18} />
-                    Timeline Overview
-                  </h4>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="h-1 flex-grow bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary" style={{width: "65%"}}></div>
+                {/* Related Topics Section - New */}
+                {results.relatedTopics && results.relatedTopics.length > 0 ? (
+                  <div className="bg-white p-6 rounded-lg border shadow-sm">
+                    <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
+                      <GitBranch size={18} />
+                      Related Research Topics
+                    </h4>
+                    <div className="space-y-2">
+                      {results.relatedTopics.map((topic, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-3 rounded-md bg-gray-50 border cursor-pointer hover:bg-gray-100 transition-colors"
+                          onClick={() => toast.info(`Starting new research on: ${topic}`)}
+                        >
+                          <div className="font-medium text-sm">{topic}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <button 
-                      className="text-primary hover:underline"
-                      onClick={() => navigateTo("storyline")}
-                    >
-                      View detailed timeline
-                    </button>
-                    <span className="text-muted-foreground">{query.timeFrame.replace(/-/g, " ")}</span>
+                ) : (
+                  <div className="bg-white p-6 rounded-lg border shadow-sm">
+                    <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
+                      <Calendar size={18} />
+                      Timeline Overview
+                    </h4>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="h-1 flex-grow bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary" style={{width: "65%"}}></div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <button 
+                        className="text-primary hover:underline"
+                        onClick={() => navigateTo("storyline")}
+                      >
+                        View detailed timeline
+                      </button>
+                      <span className="text-muted-foreground">{query.timeFrame.replace(/-/g, " ")}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </TabsContent>
             

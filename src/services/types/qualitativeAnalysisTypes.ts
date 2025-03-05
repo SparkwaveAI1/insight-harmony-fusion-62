@@ -1,5 +1,6 @@
+
 export type DataSource = "twitter" | "reddit" | "news" | "all";
-export type SentimentFilter = "positive" | "neutral" | "negative" | "all";
+export type SentimentFilter = "positive" | "negative" | "neutral" | "all";
 export type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term" | "historical" | "deep-historical";
 
 export interface ResearchQuery {
@@ -12,8 +13,21 @@ export interface ResearchQuery {
 
 export interface QuoteData {
   text: string;
-  sentiment: string;
+  sentiment: SentimentFilter;
   source: string;
+}
+
+export interface NewsHeadline {
+  title: string;
+  source: string;
+  date: string;
+  sentiment: SentimentFilter;
+}
+
+export interface PersonaAnalysis {
+  persona: string;
+  analysis: string;
+  sentiment: SentimentFilter;
 }
 
 export interface AnalysisResults {
@@ -25,21 +39,13 @@ export interface AnalysisResults {
   };
   exampleQuotes: QuoteData[];
   keyPhrases: string[];
-  aiInsights?: string[]; 
-  trendsAnalysis?: string;
-  reportGeneratedAt?: string;
+  aiInsights: string[];
+  trendsAnalysis: string[];
+  reportGeneratedAt: string;
+  
+  // New fields for AI tokens analysis
+  newsHeadlines?: NewsHeadline[];
+  personaAnalysis?: PersonaAnalysis[];
+  actionableInsights?: string[];
+  relatedTopics?: string[];
 }
-
-// API configuration keys storage
-export const STORAGE_KEYS = {
-  NEWS_API_KEY: "persona_news_api_key",
-  TWITTER_API_KEY: "persona_twitter_api_key",
-  REDDIT_API_KEY: "persona_reddit_api_key"
-};
-
-// Default API keys
-export const DEFAULT_API_KEYS = {
-  newsApi: "1dbe0abf78c24a02a593ce5ba0b1c6fa", // This is a placeholder key
-  twitter: "", // For production, this should be managed securely
-  reddit: "",
-};
