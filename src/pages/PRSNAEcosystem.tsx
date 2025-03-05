@@ -17,9 +17,9 @@ import StakingTab from "@/components/ecosystem/dashboard/StakingTab";
 import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
-import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis"; // Import from homepage
+import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis"; 
 import ResearchAgentSection from "@/components/ecosystem/ResearchAgentSection"; 
-import AvatarFeature from "@/components/ecosystem/AvatarFeature"; // Re-adding this import
+import AvatarFeature from "@/components/ecosystem/AvatarFeature";
 
 const PRSNAEcosystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -47,8 +47,12 @@ const PRSNAEcosystem = () => {
           setActiveTab={setActiveTab}
         />
 
-        {/* Avatar Feature Section - Re-adding below Hero */}
-        {!isWalletConnected && <AvatarFeature />}
+        {/* AI Avatar Feature Section - Directly under Hero */}
+        {!isWalletConnected && (
+          <Section className="bg-gradient-to-br from-amber-50 to-orange-50 py-16 mt-0">
+            <AvatarFeature />
+          </Section>
+        )}
         
         {/* Research Agent Section */}
         {!isWalletConnected && <ResearchAgentSection />}
