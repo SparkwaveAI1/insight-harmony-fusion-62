@@ -35,73 +35,112 @@ const AIAgentTab = () => {
   
   return (
     <div className="space-y-6">
-      <Card className="p-6 bg-gray-800 border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">
-            PersonaAI Research Assistant
-          </h3>
-          <div className="px-3 py-1 bg-green-900/40 text-green-400 rounded-full text-xs flex items-center">
-            <Zap className="h-3 w-3 mr-1" />
-            LIVE
+      <Card className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200/50 text-gray-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative aspect-square rounded-xl overflow-hidden shadow-xl border border-amber-200/50">
+            <img 
+              src="/lovable-uploads/71730aa8-fe82-45fd-8644-de4add24519b.png" 
+              alt="AI Research Avatar" 
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-amber-900/40 to-transparent"></div>
+            
+            <div className="absolute top-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-sm border border-amber-400/30 rounded-full flex items-center">
+              <span className="animate-pulse mr-2 h-2 w-2 rounded-full bg-green-400"></span>
+              <span className="text-xs font-medium text-amber-300">Live AI Avatar</span>
+            </div>
           </div>
-        </div>
-        <p className="text-gray-400 mb-6">
-          Chat with our AI agent to get research insights and help with Web3 market analysis.
-        </p>
-        
-        <div className="bg-gray-900 rounded-lg p-4 h-[300px] mb-4 overflow-y-auto flex flex-col space-y-3 border border-gray-700">
-          {chatHistory.map((message, index) => (
-            <div 
-              key={index} 
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div 
-                className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                  message.role === "user" 
-                    ? "bg-primary/80 text-white" 
-                    : "bg-gray-800 border border-gray-700"
-                }`}
-              >
-                {message.content}
+          
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">
+                PersonaAI Research Assistant
+              </h3>
+              <div className="px-3 py-1 bg-green-900/40 text-green-600 rounded-full text-xs flex items-center">
+                <Zap className="h-3 w-3 mr-1" />
+                LIVE
               </div>
             </div>
-          ))}
+            
+            <p className="text-gray-600 mb-6">
+              Chat with our AI agent to get research insights and help with Web3 market analysis.
+            </p>
+            
+            <div className="bg-white rounded-lg p-4 h-[250px] mb-4 overflow-y-auto flex flex-col space-y-3 border border-amber-200/50 shadow-inner">
+              {chatHistory.map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div 
+                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      message.role === "user" 
+                        ? "bg-amber-600 text-white" 
+                        : "bg-white border border-amber-200/50 shadow-sm text-gray-700"
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <form onSubmit={sendMessage} className="flex gap-3">
+              <Input
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder="Ask about market research, sentiment analysis, or Web3 trends..."
+                className="flex-1 bg-white border-amber-200/50 text-gray-800 placeholder:text-gray-400"
+              />
+              <Button 
+                type="submit" 
+                className="bg-gradient-to-r from-amber-600 to-amber-500 border-none"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Send
+              </Button>
+            </form>
+          </div>
         </div>
-        
-        <form onSubmit={sendMessage} className="flex gap-3">
-          <Input
-            value={chatMessage}
-            onChange={(e) => setChatMessage(e.target.value)}
-            placeholder="Ask about market research, sentiment analysis, or Web3 trends..."
-            className="flex-1 bg-gray-800 border-gray-700 text-white"
-          />
-          <Button 
-            type="submit" 
-            className="bg-gradient-to-r from-primary to-primary/80 border-none"
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Send
-          </Button>
-        </form>
       </Card>
       
       <Card className="p-6 bg-gray-800 border-gray-700">
-        <h3 className="text-xl font-semibold mb-4">AI Video Avatar</h3>
+        <h3 className="text-xl font-semibold mb-4">Premium AI Features</h3>
         <p className="text-gray-400 mb-4">
-          Talk to our AI research agent through video interaction for a more immersive experience.
+          Gold Tier stakers unlock additional AI avatar features and research tools.
         </p>
-        <div className="aspect-video bg-gray-900 rounded-lg mb-4 flex items-center justify-center border border-gray-700">
-          <div className="text-center">
-            <Bot className="h-12 w-12 text-primary/50 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">AI Video Avatar Coming Soon</p>
-            <p className="text-xs text-gray-500 mt-1">Available for Gold Tier stakers</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+              <Bot className="h-5 w-5 text-primary" />
+            </div>
+            <h4 className="text-sm font-medium mb-1">Video Interaction</h4>
+            <p className="text-xs text-gray-400 text-center">Immersive video avatar experience</p>
+          </div>
+          
+          <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+              <Zap className="h-5 w-5 text-primary" />
+            </div>
+            <h4 className="text-sm font-medium mb-1">Advanced Analysis</h4>
+            <p className="text-xs text-gray-400 text-center">Deep market trend prediction</p>
+          </div>
+          
+          <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+            </div>
+            <h4 className="text-sm font-medium mb-1">Custom Reports</h4>
+            <p className="text-xs text-gray-400 text-center">Personalized research documents</p>
           </div>
         </div>
+        
         <Button 
           variant="outline" 
           className="w-full border-gray-700 text-gray-300 hover:bg-gray-700"
         >
-          Stake More to Unlock Video Avatar
+          Stake More to Unlock Premium Features
         </Button>
       </Card>
     </div>
