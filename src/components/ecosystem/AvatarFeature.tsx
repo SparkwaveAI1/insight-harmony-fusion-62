@@ -15,7 +15,7 @@ const AvatarFeature = () => {
               <span className="text-sm font-medium text-primary">AI Research Assistant</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-800 font-plasmik">
-              Talk to PersonaAI Research Avatar
+              Talk to PersonaAI Research Agent
             </h2>
             <p className="text-gray-600 text-pretty max-w-2xl mx-auto mb-10">
               Get personalized market insights and token utility information from our 
