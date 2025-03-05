@@ -59,23 +59,23 @@ const AvatarFeature = () => {
 
       <Reveal delay={200}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
+          <div className="bg-amber-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
             <h3 className="font-bold text-lg mb-2 text-amber-800">Market Insights</h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-700 text-sm">
               Get real-time market sentiment analysis and trend predictions from our AI research avatar.
             </p>
           </div>
           
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
+          <div className="bg-orange-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
             <h3 className="font-bold text-lg mb-2 text-amber-800">Token Utility</h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-700 text-sm">
               Learn about $PRSNA token use cases, staking benefits, and ecosystem opportunities.
             </p>
           </div>
           
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
+          <div className="bg-amber-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
             <h3 className="font-bold text-lg mb-2 text-amber-800">Research on Demand</h3>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-700 text-sm">
               Ask specific questions about Web3 projects and get AI-powered qualitative analysis.
             </p>
           </div>
