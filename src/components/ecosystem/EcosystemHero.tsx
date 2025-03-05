@@ -1,5 +1,5 @@
 
-import { ArrowRight, Rocket, Wallet, Bot, HandCoins } from "lucide-react";
+import { ArrowRight, Rocket, Wallet, HandCoins } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "@/components/ui-custom/Section";
 import Button from "@/components/ui-custom/Button";
@@ -58,17 +58,6 @@ const EcosystemHero = ({
                     Connect Wallet
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
                   </Button>
-                  <Link to="/earn-prsna">
-                    <Button 
-                      variant="secondary" 
-                      size="lg" 
-                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none w-full sm:w-auto"
-                    >
-                      <HandCoins className="w-4 h-4 mr-2" />
-                      Earn $PRSNA
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                    </Button>
-                  </Link>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -91,53 +80,50 @@ const EcosystemHero = ({
                     Stake $PRSNA
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
                   </Button>
-                  <Link to="/earn-prsna">
-                    <Button 
-                      variant="secondary" 
-                      size="lg" 
-                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
-                    >
-                      <HandCoins className="w-4 h-4 mr-2" />
-                      Earn $PRSNA
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                    </Button>
-                  </Link>
                 </div>
               )}
             </Reveal>
           </div>
           
-          {/* Right side - AI Avatar with the provided image */}
+          {/* Right side - Earn $PRSNA section */}
           <div className="w-full lg:w-1/2">
             <Reveal delay={400}>
-              <div className="bg-gray-800/80 border border-gray-700 rounded-xl p-6 h-full">
-                <div className="aspect-video bg-gray-900/80 rounded-lg flex flex-col items-center justify-center border border-gray-700 mb-4 overflow-hidden relative">
-                  <img 
-                    src="/lovable-uploads/a1966bfb-6785-4632-b49d-e778a8986165.png" 
-                    alt="AI Research Avatar" 
-                    className="object-cover w-full h-full absolute inset-0"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent flex flex-col items-center justify-end p-4">
-                    <h3 className="text-xl font-semibold text-white mb-2 z-10">AI Research Avatar</h3>
-                    <p className="text-gray-400 text-center max-w-md mb-4 z-10">
-                      Talk with our AI research agent to explore market insights and token utility
-                    </p>
-                    <div className="px-3 py-1 bg-green-900/40 text-green-400 rounded-full text-xs flex items-center z-10 mb-2">
-                      <span className="animate-pulse mr-2 h-2 w-2 rounded-full bg-green-400"></span>
-                      Coming Soon
-                    </div>
+              <div className="flex flex-col bg-gray-800/80 border border-gray-700 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-bold font-plasmik">
+                      Earn $PRSNA Tokens
+                    </h2>
+                  </div>
+                  <div className="h-16 w-16 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
+                    <HandCoins className="h-8 w-8 text-primary/70" />
                   </div>
                 </div>
                 
-                <div className="flex justify-center">
-                  <Button 
-                    variant="secondary" 
-                    className="group"
-                    onClick={() => setActiveTab("ai-agent")}
-                  >
-                    Experience AI Avatar
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                  </Button>
+                <p className="text-gray-300 text-pretty mb-6">
+                  Participate in our ecosystem and earn rewards. Create your own AI personas for research or join AI-powered focus groups to earn $PRSNA tokens.
+                </p>
+                
+                <div className="flex flex-wrap gap-4">
+                  <Link to="/earn-prsna">
+                    <Button 
+                      variant="secondary" 
+                      className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
+                    >
+                      <HandCoins className="w-4 h-4 mr-2" />
+                      Create AI Personas
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
+                    </Button>
+                  </Link>
+                  <Link to="/earn-prsna">
+                    <Button 
+                      variant="outline" 
+                      className="group border-gray-700 text-gray-300 hover:bg-gray-800"
+                    >
+                      <Bot className="w-4 h-4 mr-2" />
+                      Join Focus Groups
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </Reveal>

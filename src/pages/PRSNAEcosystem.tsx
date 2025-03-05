@@ -17,8 +17,8 @@ import StakingTab from "@/components/ecosystem/dashboard/StakingTab";
 import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
-import EarnPRSNASection from "@/components/ecosystem/EarnPRSNASection";
 import InsightsConductorSection from "@/components/ecosystem/InsightsConductorSection";
+import AvatarFeature from "@/components/ecosystem/AvatarFeature";
 
 const PRSNAEcosystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,6 +46,9 @@ const PRSNAEcosystem = () => {
           setActiveTab={setActiveTab}
         />
 
+        {/* Avatar Feature (moved from hero) */}
+        {!isWalletConnected && <AvatarFeature />}
+        
         {/* Web3 Dashboard Section */}
         <Section className="bg-gray-900">
           <div className="container px-4 mx-auto">
@@ -105,7 +108,6 @@ const PRSNAEcosystem = () => {
                   </Reveal>
                 </>
               ) : (
-                // This section will now be moved to the end after staking
                 null
               )}
             </div>
@@ -115,9 +117,6 @@ const PRSNAEcosystem = () => {
         {/* For non-connected wallet users, show these sections */}
         {!isWalletConnected && (
           <>
-            {/* Earn PRSNA Section */}
-            <EarnPRSNASection />
-            
             {/* Insights Conductor Section */}
             <InsightsConductorSection />
             

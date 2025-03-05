@@ -97,16 +97,18 @@ const Header = () => {
         <div className="hidden md:flex items-center gap-3">
           {isEcosystemPage || isEarnPage ? (
             <>
-              <Link to="/earn-prsna" className={!isEarnPage ? "mr-2" : "hidden"}>
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  className="bg-blue-500 hover:bg-blue-600 text-white border-none"
-                >
-                  <HandCoins className="h-4 w-4 mr-2" />
-                  Earn $PRSNA
-                </Button>
-              </Link>
+              {!isEarnPage && (
+                <Link to="/earn-prsna">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    className="bg-blue-500 hover:bg-blue-600 text-white border-none"
+                  >
+                    <HandCoins className="h-4 w-4 mr-2" />
+                    Earn $PRSNA
+                  </Button>
+                </Link>
+              )}
               {isWalletConnected ? (
                 <Button 
                   variant="outline" 
