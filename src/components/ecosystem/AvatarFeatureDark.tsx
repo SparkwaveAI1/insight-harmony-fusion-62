@@ -12,10 +12,10 @@ const AvatarFeatureDark = () => {
             <Bot className="h-5 w-5 text-primary mr-2" />
             <span className="text-sm font-medium text-primary">AI Research Assistant</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-black font-plasmik">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 !text-black font-plasmik" style={{color: '#000000 !important'}}>
             Talk to PersonaAI Research Agent
           </h2>
-          <p className="text-black text-pretty max-w-2xl mx-auto mb-10">
+          <p className="!text-black text-pretty max-w-2xl mx-auto mb-10" style={{color: '#000000 !important'}}>
             Get personalized market insights and token utility information from our 
             AI research agent. Explore Web3 trends with an immersive AI experience.
           </p>
@@ -60,22 +60,22 @@ const AvatarFeatureDark = () => {
       <Reveal delay={200}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
           <div className="bg-white backdrop-blur-sm rounded-xl p-6 shadow-md border border-gray-100">
-            <h3 className="font-bold text-lg mb-2 text-black">Market Insights</h3>
-            <p className="text-black text-sm">
+            <h3 className="font-bold text-lg mb-2 !text-black" style={{color: '#000000 !important'}}>Market Insights</h3>
+            <p className="!text-black text-sm" style={{color: '#000000 !important'}}>
               Get real-time market sentiment analysis and trend predictions from our AI research avatar.
             </p>
           </div>
           
           <div className="bg-gray-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-gray-100">
-            <h3 className="font-bold text-lg mb-2 text-black">Token Utility</h3>
-            <p className="text-black text-sm">
+            <h3 className="font-bold text-lg mb-2 !text-black" style={{color: '#000000 !important'}}>Token Utility</h3>
+            <p className="!text-black text-sm" style={{color: '#000000 !important'}}>
               Learn about $PRSNA token use cases, staking benefits, and ecosystem opportunities.
             </p>
           </div>
           
           <div className="bg-white backdrop-blur-sm rounded-xl p-6 shadow-md border border-gray-100">
-            <h3 className="font-bold text-lg mb-2 text-black">Research on Demand</h3>
-            <p className="text-black text-sm">
+            <h3 className="font-bold text-lg mb-2 !text-black" style={{color: '#000000 !important'}}>Research on Demand</h3>
+            <p className="!text-black text-sm" style={{color: '#000000 !important'}}>
               Ask specific questions about Web3 projects and get AI-powered qualitative analysis.
             </p>
           </div>

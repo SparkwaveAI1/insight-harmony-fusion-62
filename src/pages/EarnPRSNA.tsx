@@ -116,7 +116,7 @@ const EarnPRSNA = () => {
         </Section>
 
         {/* AI Avatar Feature Section - Using the new dark text on light background component */}
-        <Section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16 mt-0">
+        <Section className="bg-white from-gray-50 to-gray-100 py-16 mt-0">
           <AvatarFeatureDark />
         </Section>
 
