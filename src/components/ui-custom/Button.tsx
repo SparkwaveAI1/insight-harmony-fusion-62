@@ -7,33 +7,37 @@ import { cn } from "@/lib/utils";
 interface BaseButtonProps {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
   size?: "sm" | "default" | "lg" | "icon";
-  children: React.ReactNode;
   className?: string;
 }
 
 // For normal button
-interface ButtonAsButtonProps extends BaseButtonProps, React.ButtonHTMLAttributes<HTMLButtonElement> {
-  as?: "button";
+interface ButtonAsButtonProps extends BaseButtonProps {
+  as?: "button" | undefined;
   to?: never;
   href?: never;
+  children: React.ReactNode;
 }
 
 // For Link component
-interface ButtonAsLinkProps extends BaseButtonProps, Omit<LinkProps, 'className'> {
+interface ButtonAsLinkProps extends BaseButtonProps {
   as: typeof Link;
   to: string;
   href?: never;
+  children: React.ReactNode;
 }
 
 // For anchor element
-interface ButtonAsAnchorProps extends BaseButtonProps, Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'className'> {
+interface ButtonAsAnchorProps extends BaseButtonProps {
   as: "a";
   href: string;
   to?: never;
+  children: React.ReactNode;
 }
 
 // Union type for all possible button props
-type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps | ButtonAsAnchorProps;
+type ButtonProps = ButtonAsButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement> | 
+                  ButtonAsLinkProps & Omit<LinkProps, 'className' | 'to'> | 
+                  ButtonAsAnchorProps & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'href'>;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "default", children, as, to, href, ...props }, ref) => {
@@ -59,7 +63,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         <Link 
           to={to} 
           className={styles}
-          {...props as Omit<React.ComponentProps<typeof Link>, 'className' | 'to'>}
+          {...props as Omit<LinkProps, 'className' | 'to'>}
         >
           {children}
           {variant === "primary" && (

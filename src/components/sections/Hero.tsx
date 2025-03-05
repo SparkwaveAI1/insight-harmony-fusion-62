@@ -15,12 +15,6 @@ const Hero = () => {
       
       <div className="container px-4 mx-auto">
         <div className="max-w-4xl mx-auto text-center">
-          <Reveal>
-            <p className="inline-block mb-4 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase bg-primary/10 rounded-full">
-              Insights Conductor
-            </p>
-          </Reveal>
-          
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
               AI-Powered Market Research with Research-Grade AI Personas
