@@ -118,7 +118,11 @@ const PRSNAEcosystem = () => {
         {!isWalletConnected && (
           <>
             {/* Replace InsightsConductorSection with QualitativeAnalysis from homepage */}
-            <QualitativeAnalysis />
+            <div className="bg-gray-800 text-gray-100">
+              <Section className="pt-12 pb-24">
+                <QualitativeAnalysis />
+              </Section>
+            </div>
             
             {/* Staking Dashboard Preview */}
             <StakingPreview connectWallet={connectWallet} />
