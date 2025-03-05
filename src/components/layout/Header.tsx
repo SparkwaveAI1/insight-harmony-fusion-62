@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Menu, X, Wallet } from "lucide-react";
+import { Menu, X, Wallet, HandCoins } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Logo from "../ui-custom/Logo";
@@ -13,6 +13,7 @@ const Header = () => {
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
   const isEcosystemPage = location.pathname === "/prsna-ecosystem";
+  const isEarnPage = location.pathname === "/earn-prsna";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +34,7 @@ const Header = () => {
     { label: "Products", href: "#products" },
     { label: "About", href: "#about" },
     { label: "Web3", href: "/prsna-ecosystem" },
+    { label: "Earn $PRSNA", href: "/earn-prsna" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -83,7 +85,12 @@ const Header = () => {
               <Link
                 key={item.label}
                 to={item.href}
-                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                className={cn(
+                  "text-sm font-medium text-foreground/80 hover:text-foreground transition-colors",
+                  (item.href === '/earn-prsna' && isEarnPage) || (item.href === '/prsna-ecosystem' && isEcosystemPage) 
+                    ? "text-primary font-bold" 
+                    : ""
+                )}
               >
                 {item.label}
               </Link>
@@ -92,27 +99,39 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          {isEcosystemPage ? (
-            isWalletConnected ? (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
-                onClick={disconnectWallet}
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                Disconnect
-              </Button>
-            ) : (
-              <Button 
-                size="sm"
-                className="bg-gradient-to-r from-primary to-primary/80 border-none"
-                onClick={connectWallet}
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                Connect Wallet
-              </Button>
-            )
+          {isEcosystemPage || isEarnPage ? (
+            <>
+              <Link to="/earn-prsna" className={!isEarnPage ? "mr-2" : "hidden"}>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  className="bg-secondary/90 text-white border-none"
+                >
+                  <HandCoins className="h-4 w-4 mr-2" />
+                  Earn $PRSNA
+                </Button>
+              </Link>
+              {isWalletConnected ? (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
+                  onClick={disconnectWallet}
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Disconnect
+                </Button>
+              ) : (
+                <Button 
+                  size="sm"
+                  className="bg-gradient-to-r from-primary to-primary/80 border-none"
+                  onClick={connectWallet}
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Connect Wallet
+                </Button>
+              )}
+            </>
           ) : (
             <>
               <Button variant="outline" size="sm">
@@ -158,7 +177,12 @@ const Header = () => {
               <Link
                 key={item.label}
                 to={item.href}
-                className="text-xl font-medium text-foreground/80 hover:text-foreground transition-colors"
+                className={cn(
+                  "text-xl font-medium text-foreground/80 hover:text-foreground transition-colors",
+                  (item.href === '/earn-prsna' && isEarnPage) || (item.href === '/prsna-ecosystem' && isEcosystemPage) 
+                    ? "text-primary font-bold" 
+                    : ""
+                )}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}
@@ -166,23 +190,36 @@ const Header = () => {
             )
           ))}
           <div className="flex flex-col gap-4 pt-4">
-            {isEcosystemPage ? (
-              isWalletConnected ? (
-                <Button 
-                  variant="outline"
-                  onClick={disconnectWallet}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Disconnect Wallet
-                </Button>
-              ) : (
-                <Button 
-                  onClick={connectWallet}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Connect Wallet
-                </Button>
-              )
+            {isEcosystemPage || isEarnPage ? (
+              <>
+                {!isEarnPage && (
+                  <Link to="/earn-prsna">
+                    <Button 
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      <HandCoins className="h-4 w-4 mr-2" />
+                      Earn $PRSNA
+                    </Button>
+                  </Link>
+                )}
+                {isWalletConnected ? (
+                  <Button 
+                    variant="outline"
+                    onClick={disconnectWallet}
+                  >
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Disconnect Wallet
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={connectWallet}
+                  >
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Connect Wallet
+                  </Button>
+                )}
+              </>
             ) : (
               <>
                 <Button variant="outline">Sign In</Button>

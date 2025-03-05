@@ -1,5 +1,5 @@
 
-import { ArrowRight, Rocket, Wallet, Bot } from "lucide-react";
+import { ArrowRight, Rocket, Wallet, Bot, HandCoins } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "@/components/ui-custom/Section";
 import Button from "@/components/ui-custom/Button";
@@ -46,18 +46,31 @@ const EcosystemHero = ({
             
             <Reveal delay={300}>
               {!isWalletConnected ? (
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  className="group bg-gradient-to-r from-primary to-primary/80 border-none"
-                  onClick={connectWallet}
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  Connect Wallet
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                </Button>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    className="group bg-gradient-to-r from-primary to-primary/80 border-none"
+                    onClick={connectWallet}
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Connect Wallet
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
+                  </Button>
+                  <Link to="/earn-prsna">
+                    <Button 
+                      variant="secondary" 
+                      size="lg" 
+                      className="group"
+                    >
+                      <HandCoins className="w-4 h-4 mr-2" />
+                      Earn $PRSNA
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
+                    </Button>
+                  </Link>
+                </div>
               ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
                   <Button 
                     variant="outline" 
                     size="lg" 
@@ -77,6 +90,17 @@ const EcosystemHero = ({
                     Stake $PRSNA
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
                   </Button>
+                  <Link to="/earn-prsna">
+                    <Button 
+                      variant="secondary" 
+                      size="lg" 
+                      className="group"
+                    >
+                      <HandCoins className="w-4 h-4 mr-2" />
+                      Earn $PRSNA
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
+                    </Button>
+                  </Link>
                 </div>
               )}
             </Reveal>

@@ -12,6 +12,8 @@ type WalletHookReturn = {
   mockAPY: string;
   mockRewards: string;
   mockStakingTier: string;
+  mockEarnedRewards: string;
+  mockAvailableRewards: string;
 };
 
 export function useWeb3Wallet(): WalletHookReturn {
@@ -24,6 +26,8 @@ export function useWeb3Wallet(): WalletHookReturn {
   const mockAPY = "12.5%";
   const mockRewards = "22.43";
   const mockStakingTier = "Silver";
+  const mockEarnedRewards = "152.75";
+  const mockAvailableRewards = "48.30";
   
   const connectWallet = () => {
     // In a real implementation, this would connect to a wallet provider
@@ -48,6 +52,8 @@ export function useWeb3Wallet(): WalletHookReturn {
     mockStaked,
     mockAPY,
     mockRewards,
-    mockStakingTier
+    mockStakingTier,
+    mockEarnedRewards,
+    mockAvailableRewards
   };
 }

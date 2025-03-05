@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp } from "lucide-react";
+import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -31,16 +31,29 @@ const TokenEcosystem = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <Link to="/prsna-ecosystem">
-              <Button 
-                variant="primary" 
-                size="lg" 
-                className="group bg-gradient-to-r from-primary to-primary/80 border-none"
-              >
-                Connect Wallet
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link to="/prsna-ecosystem">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="group bg-gradient-to-r from-primary to-primary/80 border-none"
+                >
+                  Connect Wallet
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+              <Link to="/earn-prsna">
+                <Button 
+                  variant="secondary" 
+                  size="lg" 
+                  className="group"
+                >
+                  <HandCoins className="w-4 h-4 mr-2" />
+                  Earn $PRSNA
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </Reveal>
         </div>
         
@@ -55,6 +68,20 @@ const TokenEcosystem = () => {
                   <h3 className="text-lg font-semibold mb-2">Staking & Research Rewards</h3>
                   <p className="text-sm text-gray-300">
                     Stake $PRSNA to unlock premium AI-generated insights, participate in focus groups, and earn staking rewards. The longer you stake, the greater your access to cutting-edge AI research.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/80 border border-gray-700 rounded-2xl p-6 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/10">
+              <div className="flex items-start">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/20 mr-4 shrink-0">
+                  <HandCoins className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Earn $PRSNA Tokens</h3>
+                  <p className="text-sm text-gray-300">
+                    Create your own AI personas for research or participate in AI-powered focus groups to earn $PRSNA tokens. Help shape the future of AI research while getting rewarded.
                   </p>
                 </div>
               </div>
@@ -83,20 +110,6 @@ const TokenEcosystem = () => {
                   <h3 className="text-lg font-semibold mb-2">Token Utility & Research Access</h3>
                   <p className="text-sm text-gray-300">
                     $PRSNA fuels AI-driven market intelligence. Token holders gain access to exclusive research insights, AI-generated intelligence, and staking rewards. Holding and staking $PRSNA unlocks premium data and participation in next-gen AI research.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-800/80 border border-gray-700 rounded-2xl p-6 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/10">
-              <div className="flex items-start">
-                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/20 mr-4 shrink-0">
-                  <Rocket className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Token Utility & AI-Powered Research</h3>
-                  <p className="text-sm text-gray-300">
-                    $PRSNA is the key to accessing PersonaAI's intelligence ecosystem. Businesses and researchers use it to unlock AI-driven insights, qualitative analysis, and predictive market data.
                   </p>
                 </div>
               </div>
