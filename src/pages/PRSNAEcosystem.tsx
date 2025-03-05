@@ -68,7 +68,7 @@ const PRSNAEcosystem = () => {
     // Add user message to chat
     const newChatHistory = [
       ...chatHistory,
-      {role: "user", content: chatMessage}
+      {role: "user" as const, content: chatMessage}
     ];
     setChatHistory(newChatHistory);
     
@@ -76,7 +76,7 @@ const PRSNAEcosystem = () => {
     setTimeout(() => {
       setChatHistory([
         ...newChatHistory,
-        {role: "assistant", content: "Thank you for your message. Our AI assistant is processing your research query. In a complete implementation, I would provide you with qualitative insights based on your question."}
+        {role: "assistant" as const, content: "Thank you for your message. Our AI assistant is processing your research query. In a complete implementation, I would provide you with qualitative insights based on your question."}
       ]);
     }, 1000);
     
