@@ -1,6 +1,6 @@
 
 import { ArrowRight, Bot } from "lucide-react";
-import Button from "@/components/ui-custom/Button";
+import { Button } from "@/components/ui/button";
 import Reveal from "@/components/ui-custom/Reveal";
 
 const AvatarFeature = () => {
@@ -41,7 +41,7 @@ const AvatarFeature = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              variant="primary" 
+              variant="default" 
               className="group bg-gradient-to-r from-amber-600 to-amber-500 border-none shadow-lg shadow-amber-200/50"
             >
               Start Conversation

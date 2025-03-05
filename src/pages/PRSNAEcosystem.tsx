@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BarChart3, LockIcon, Lightbulb, Bot } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -48,11 +47,9 @@ const PRSNAEcosystem = () => {
         />
 
         {/* AI Avatar Feature Section - Directly under Hero */}
-        {!isWalletConnected && (
-          <Section className="bg-gradient-to-br from-amber-50 to-orange-50 py-16 mt-0">
-            <AvatarFeature />
-          </Section>
-        )}
+        <Section className="bg-gradient-to-br from-amber-50 to-orange-50 py-16 mt-0">
+          <AvatarFeature />
+        </Section>
         
         {/* Research Agent Section */}
         {!isWalletConnected && <ResearchAgentSection />}
