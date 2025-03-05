@@ -1,14 +1,18 @@
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, X, Wallet } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Logo from "../ui-custom/Logo";
 import { cn } from "@/lib/utils";
+import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
+  const isEcosystemPage = location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +32,7 @@ const Header = () => {
     { label: "Features", href: "#features" },
     { label: "Products", href: "#products" },
     { label: "About", href: "#about" },
+    { label: "Web3", href: "/prsna-ecosystem" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -86,11 +91,36 @@ const Header = () => {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" size="sm">
-            Sign In
-          </Button>
-          <Button size="sm">Get Started</Button>
+        <div className="hidden md:flex items-center gap-3">
+          {isEcosystemPage ? (
+            isWalletConnected ? (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
+                onClick={disconnectWallet}
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Disconnect
+              </Button>
+            ) : (
+              <Button 
+                size="sm"
+                className="bg-gradient-to-r from-primary to-primary/80 border-none"
+                onClick={connectWallet}
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Connect Wallet
+              </Button>
+            )
+          ) : (
+            <>
+              <Button variant="outline" size="sm">
+                Sign In
+              </Button>
+              <Button size="sm">Get Started</Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -136,8 +166,29 @@ const Header = () => {
             )
           ))}
           <div className="flex flex-col gap-4 pt-4">
-            <Button variant="outline">Sign In</Button>
-            <Button>Get Started</Button>
+            {isEcosystemPage ? (
+              isWalletConnected ? (
+                <Button 
+                  variant="outline"
+                  onClick={disconnectWallet}
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Disconnect Wallet
+                </Button>
+              ) : (
+                <Button 
+                  onClick={connectWallet}
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Connect Wallet
+                </Button>
+              )
+            ) : (
+              <>
+                <Button variant="outline">Sign In</Button>
+                <Button>Get Started</Button>
+              </>
+            )}
           </div>
         </nav>
       </div>

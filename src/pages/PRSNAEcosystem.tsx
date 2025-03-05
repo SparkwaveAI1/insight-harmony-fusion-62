@@ -35,7 +35,7 @@ const PRSNAEcosystem = () => {
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Header />
       
-      <main className="flex-grow">
+      <main className="flex-grow pt-16">
         {/* Hero Section */}
         <EcosystemHero 
           isWalletConnected={isWalletConnected}
@@ -54,6 +54,7 @@ const PRSNAEcosystem = () => {
                     title="$PRSNA Dashboard"
                     description="Manage your tokens and access AI research tools"
                     walletAddress="0x7b1B...42Fa"
+                    disconnectWallet={disconnectWallet}
                   />
                   
                   <Reveal delay={100}>
