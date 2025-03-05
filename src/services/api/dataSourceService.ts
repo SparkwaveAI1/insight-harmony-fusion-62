@@ -1,9 +1,9 @@
+
 import { ResearchQuery, AnalysisResults, QuoteData, DataSource } from "../types/qualitativeAnalysisTypes";
-import { getApiKeys } from "../utils/apiKeyUtils";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
-import { detectSentiment } from "../utils/sentimentUtils";
-import { extractKeywords, extractTopics, getDateFromTimeFrame } from "../utils/textAnalysisUtils";
+import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./sourceAdapters";
+import { handleApiError } from "../utils/apiUtils";
 
 // Main function to fetch qualitative data from real APIs
 export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults> {
@@ -14,47 +14,22 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     let keywords: string[] = [];
     let topics: string[] = [];
     
-    // Determine which sources to query - modified to handle only specific sources
+    // Determine which sources to query
     const sourcesToQuery = query.sources as Array<"twitter" | "reddit" | "news">;
     
-    // Parallel API calls to different data sources
-    const apiPromises = [];
-    
-    if (sourcesToQuery.includes("twitter")) {
-      apiPromises.push(fetchTwitterData(query).then(result => {
-        sourceResults.twitter = result.quotes.length > 0;
+    // Create promise array for parallel API calls
+    const apiPromises = sourcesToQuery.map(source => {
+      const fetcher = getFetcherForSource(source);
+      return fetcher(query).then(result => {
+        sourceResults[source] = result.quotes.length > 0;
         quotes = [...quotes, ...result.quotes];
         keywords = [...keywords, ...result.keywords];
         topics = [...topics, ...result.topics];
       }).catch(error => {
-        console.error("Twitter API error:", error);
-        sourceResults.twitter = false;
-      }));
-    }
-    
-    if (sourcesToQuery.includes("reddit")) {
-      apiPromises.push(fetchRedditData(query).then(result => {
-        sourceResults.reddit = result.quotes.length > 0;
-        quotes = [...quotes, ...result.quotes];
-        keywords = [...keywords, ...result.keywords];
-        topics = [...topics, ...result.topics];
-      }).catch(error => {
-        console.error("Reddit API error:", error);
-        sourceResults.reddit = false;
-      }));
-    }
-    
-    if (sourcesToQuery.includes("news")) {
-      apiPromises.push(fetchNewsData(query).then(result => {
-        sourceResults.news = result.quotes.length > 0;
-        quotes = [...quotes, ...result.quotes];
-        keywords = [...keywords, ...result.keywords];
-        topics = [...topics, ...result.topics];
-      }).catch(error => {
-        console.error("News API error:", error);
-        sourceResults.news = false;
-      }));
-    }
+        handleApiError(error, `${source} API`);
+        sourceResults[source] = false;
+      });
+    });
     
     // Wait for all API calls to complete
     await Promise.all(apiPromises);
@@ -81,16 +56,8 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       return mockData;
     }
     
-    // Additional processing for keywords
-    if (query.keywords.length > 0) {
-      // If user specified keywords, prioritize content containing those keywords
-      const keywordRegex = new RegExp(query.keywords.join("|"), "i");
-      quotes = quotes.sort((a, b) => {
-        const aHasKeyword = keywordRegex.test(a.text);
-        const bHasKeyword = keywordRegex.test(b.text);
-        return (bHasKeyword ? 1 : 0) - (aHasKeyword ? 1 : 0);
-      });
-    }
+    // Process and prioritize by keywords
+    processKeywords(quotes, query);
     
     // Deduplicate and limit keywords and topics
     keywords = Array.from(new Set(keywords)).slice(0, 15);
@@ -113,15 +80,34 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       reportGeneratedAt: new Date().toISOString()
     };
   } catch (error) {
-    console.error("Error fetching qualitative data:", error);
-    // If all APIs fail, use mock data as a fallback
-    toast.info("Using offline data for your query", {
-      description: "Live API data is unavailable in this environment."
+    return handleGlobalError(error, query);
+  }
+}
+
+// Helper function to get the appropriate fetcher for each source
+function getFetcherForSource(source: string) {
+  switch (source) {
+    case "twitter":
+      return fetchTwitterData;
+    case "reddit":
+      return fetchRedditData;
+    case "news":
+      return fetchNewsData;
+    default:
+      return fetchTwitterData; // Default fallback
+  }
+}
+
+// Process and prioritize quotes by keywords
+function processKeywords(quotes: QuoteData[], query: ResearchQuery): void {
+  if (query.keywords.length > 0) {
+    // If user specified keywords, prioritize content containing those keywords
+    const keywordRegex = new RegExp(query.keywords.join("|"), "i");
+    quotes.sort((a, b) => {
+      const aHasKeyword = keywordRegex.test(a.text);
+      const bHasKeyword = keywordRegex.test(b.text);
+      return (bHasKeyword ? 1 : 0) - (aHasKeyword ? 1 : 0);
     });
-    
-    // Import the mock data generator only when needed
-    const { generateMockResults } = await import("../mock/mockDataService");
-    return generateMockResults(query);
   }
 }
 
@@ -147,95 +133,11 @@ function calculateSentimentBreakdown(quotes: QuoteData[]): { positive: number; n
   };
 }
 
-// News API integration
-export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  try {
-    // Get API key (user's key if they provided one, otherwise default)
-    const apiKeys = getApiKeys();
-    
-    if (!apiKeys.newsApi) {
-      toast.error("News API key is missing. Please add your key in the API Keys settings.");
-      return { quotes: [], keywords: [], topics: [] };
-    }
-    
-    // CORS restriction notice for News API
-    console.log("News API has CORS restrictions in browser environment - would need a backend proxy");
-    toast.warning("News API requires a backend proxy for browser requests", {
-      duration: 3000,
-      id: "news-api-cors-warning"
-    });
-    
-    // Return placeholder data since we can't access the API directly from browser
-    return {
-      quotes: [{ 
-        text: "News API requires a backend proxy for browser requests. Using simulated data instead.", 
-        sentiment: "neutral", 
-        source: "News: System Notice" 
-      }],
-      keywords: ["API", "proxy", "CORS", "browser", "restrictions"],
-      topics: ["API Access Limitations"]
-    };
-  } catch (error) {
-    console.error("Error fetching news data:", error);
-    return { quotes: [], keywords: [], topics: [] };
-  }
-}
-
-// Twitter API integration
-export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  try {
-    const apiKeys = getApiKeys();
-    
-    if (!apiKeys.twitter) {
-      toast.error("Twitter API key is missing. Please add your key in the API Keys settings.");
-      return { quotes: [], keywords: [], topics: [] };
-    }
-    
-    // Twitter API would require OAuth and a backend proxy
-    console.log("Twitter API requires OAuth and a backend proxy for browser requests");
-    toast.warning("Twitter API requires OAuth authentication and a backend proxy", {
-      duration: 3000,
-      id: "twitter-api-cors-warning"
-    });
-    
-    // Return placeholder data since we can't access the API directly from browser
-    return {
-      quotes: [{ 
-        text: "Twitter API requires OAuth authentication and a backend proxy. Using simulated data instead.", 
-        sentiment: "neutral", 
-        source: "Twitter: System Notice" 
-      }],
-      keywords: ["OAuth", "API", "authentication", "proxy", "CORS"],
-      topics: ["API Authentication Requirements"]
-    };
-  } catch (error) {
-    console.error("Error fetching Twitter data:", error);
-    return { quotes: [], keywords: [], topics: [] };
-  }
-}
-
-// Reddit API integration
-export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  try {
-    // Reddit's API also has CORS issues when accessed directly from browser
-    console.log("Reddit API has CORS restrictions in browser environment");
-    toast.warning("Reddit API has CORS restrictions in this environment", {
-      duration: 3000,
-      id: "reddit-api-cors-warning"
-    });
-    
-    // Return placeholder data since we can't access the API directly from browser
-    return {
-      quotes: [{ 
-        text: "Reddit API has CORS restrictions in this environment. Using simulated data instead.", 
-        sentiment: "neutral", 
-        source: "Reddit: System Notice" 
-      }],
-      keywords: ["CORS", "API", "Reddit", "restrictions", "browser"],
-      topics: ["API Access Limitations"]
-    };
-  } catch (error) {
-    console.error("Error fetching Reddit data:", error);
-    return { quotes: [], keywords: [], topics: [] };
-  }
+// Global error handler for the main function
+async function handleGlobalError(error: unknown, query: ResearchQuery): Promise<AnalysisResults> {
+  handleApiError(error, "Qualitative data fetching");
+  
+  // Import the mock data generator only when needed
+  const { generateMockResults } = await import("../mock/mockDataService");
+  return generateMockResults(query);
 }
