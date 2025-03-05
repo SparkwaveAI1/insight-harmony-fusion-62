@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowRight, BrainCircuit, Users, GraduationCap, HandCoins, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -9,6 +8,7 @@ import Button from "@/components/ui-custom/Button";
 import Card from "@/components/ui-custom/Card";
 import Reveal from "@/components/ui-custom/Reveal";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
+import AvatarFeature from "@/components/ecosystem/AvatarFeature";
 
 const EarnPRSNA = () => {
   const { isWalletConnected, connectWallet } = useWeb3Wallet();
@@ -113,6 +113,11 @@ const EarnPRSNA = () => {
               </div>
             </div>
           </div>
+        </Section>
+
+        {/* AI Avatar Feature Section - Directly under Hero */}
+        <Section className="bg-gradient-to-br from-amber-50 to-orange-50 py-16 mt-0">
+          <AvatarFeature />
         </Section>
 
         {/* How to Earn Section */}
