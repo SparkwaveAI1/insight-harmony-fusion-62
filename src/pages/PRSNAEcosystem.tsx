@@ -18,7 +18,7 @@ import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis"; // Import from homepage
-import AvatarFeature from "@/components/ecosystem/AvatarFeature";
+import ResearchAgentSection from "@/components/ecosystem/ResearchAgentSection"; // New import
 
 const PRSNAEcosystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,8 +46,8 @@ const PRSNAEcosystem = () => {
           setActiveTab={setActiveTab}
         />
 
-        {/* Avatar Feature (moved from hero) */}
-        {!isWalletConnected && <AvatarFeature />}
+        {/* Research Agent Section - Replaces Avatar Feature */}
+        {!isWalletConnected && <ResearchAgentSection />}
         
         {/* Web3 Dashboard Section */}
         <Section className="bg-gray-900">
@@ -117,9 +117,9 @@ const PRSNAEcosystem = () => {
         {/* For non-connected wallet users, show these sections */}
         {!isWalletConnected && (
           <>
-            {/* Replace InsightsConductorSection with QualitativeAnalysis from homepage */}
+            {/* Insights Conductor Section with proper background and spacing */}
             <div className="bg-gray-800 text-gray-100">
-              <Section className="pt-12 pb-24">
+              <Section className="pt-8 pb-16" reducedPadding>
                 <QualitativeAnalysis />
               </Section>
             </div>
