@@ -1,10 +1,9 @@
 
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
 import AIFocusGroups from "./pages/AIFocusGroups";
-import PRSNAEcosystem from "./pages/PRSNAEcosystem";
 import EarnPRSNA from "./pages/EarnPRSNA";
 import Contact from "./pages/Contact";
 import "./App.css";
@@ -26,7 +25,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/prsna-ecosystem",
-    element: <PRSNAEcosystem />,
+    element: <Navigate to="/earn-prsna" replace />,
   },
   {
     path: "/earn-prsna",

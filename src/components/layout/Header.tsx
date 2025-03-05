@@ -12,8 +12,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
-  const isEcosystemPage = location.pathname === "/prsna-ecosystem";
-  const isEarnPage = location.pathname === "/earn-prsna";
+  const isEarnPage = location.pathname === "/earn-prsna" || location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,7 +29,7 @@ const Header = () => {
 
   const navItems = [
     { label: "Home", href: "/" },
-    { label: "Web3", href: "/prsna-ecosystem" },
+    { label: "Web3", href: "/earn-prsna" },
   ];
 
   const handleNavClick = (href: string) => {
@@ -83,7 +82,7 @@ const Header = () => {
                 to={item.href}
                 className={cn(
                   "text-sm font-medium text-foreground/80 hover:text-foreground transition-colors",
-                  (item.href === '/earn-prsna' && isEarnPage) || (item.href === '/prsna-ecosystem' && isEcosystemPage) 
+                  (item.href === '/earn-prsna' && isEarnPage)
                     ? "text-primary font-bold" 
                     : ""
                 )}
@@ -95,20 +94,8 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          {isEcosystemPage || isEarnPage ? (
+          {isEarnPage ? (
             <>
-              {!isEarnPage && (
-                <Link to="/earn-prsna">
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    className="bg-blue-500 hover:bg-blue-600 text-white border-none"
-                  >
-                    <HandCoins className="h-4 w-4 mr-2" />
-                    Earn $PRSNA
-                  </Button>
-                </Link>
-              )}
               {isWalletConnected ? (
                 <Button 
                   variant="outline" 
@@ -132,10 +119,14 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Button variant="outline" size="sm">
-                Sign In
-              </Button>
-              <Button size="sm">Get Started</Button>
+              <Link to="/earn-prsna">
+                <Button variant="outline" size="sm">
+                  Open App
+                </Button>
+              </Link>
+              <Link to="/earn-prsna">
+                <Button size="sm">Get Started</Button>
+              </Link>
             </>
           )}
         </div>
@@ -177,7 +168,7 @@ const Header = () => {
                 to={item.href}
                 className={cn(
                   "text-xl font-medium text-foreground/80 hover:text-foreground transition-colors",
-                  (item.href === '/earn-prsna' && isEarnPage) || (item.href === '/prsna-ecosystem' && isEcosystemPage) 
+                  (item.href === '/earn-prsna' && isEarnPage)
                     ? "text-primary font-bold" 
                     : ""
                 )}
@@ -188,19 +179,8 @@ const Header = () => {
             )
           ))}
           <div className="flex flex-col gap-4 pt-4">
-            {isEcosystemPage || isEarnPage ? (
+            {isEarnPage ? (
               <>
-                {!isEarnPage && (
-                  <Link to="/earn-prsna">
-                    <Button 
-                      variant="secondary"
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white border-none"
-                    >
-                      <HandCoins className="h-4 w-4 mr-2" />
-                      Earn $PRSNA
-                    </Button>
-                  </Link>
-                )}
                 {isWalletConnected ? (
                   <Button 
                     variant="outline"
@@ -220,8 +200,12 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Button variant="outline">Sign In</Button>
-                <Button>Get Started</Button>
+                <Link to="/earn-prsna">
+                  <Button variant="outline">Open App</Button>
+                </Link>
+                <Link to="/earn-prsna">
+                  <Button>Get Started</Button>
+                </Link>
               </>
             )}
           </div>
