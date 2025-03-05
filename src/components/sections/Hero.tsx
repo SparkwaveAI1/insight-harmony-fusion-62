@@ -1,5 +1,6 @@
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Zap, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
 
@@ -16,7 +17,7 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
             <p className="inline-block mb-4 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase bg-primary/10 rounded-full">
-              Qualitative Insight Conductor
+              Insights Conductor
             </p>
           </Reveal>
           
@@ -33,13 +34,33 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="group">
-                See It in Action
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="group"
+                as={Link}
+                to="/ai-focus-groups"
+              >
+                Run an AI Focus Group
+                <Zap className="ml-2 h-4 w-4 transition-transform group-hover:scale-110" />
               </Button>
-              <Button variant="outline" size="lg">
-                Get Insights Now
+              <Button 
+                variant="outline" 
+                size="lg"
+                as={Link}
+                to="/persona-ai-interviewer"
+              >
+                Try the PersonaAI Interviewer
+                <MessageCircle className="ml-2 h-4 w-4" />
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="lg"
+                as="a"
+                href="#qualitative-analysis"
+              >
+                Insights Conductor
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
           </Reveal>
