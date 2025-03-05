@@ -1,5 +1,5 @@
 
-import { ArrowRight, Zap, MessageCircle } from "lucide-react";
+import { Rocket, Sparkles, Lightbulb } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -34,27 +34,30 @@ const Hero = () => {
                 className="group"
                 as={Link}
                 to="/ai-focus-groups"
+                variant="primary"
               >
                 Run an AI Focus Group
-                <Zap className="ml-2 h-4 w-4 transition-transform group-hover:scale-110" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                as={Link}
-                to="/persona-ai-interviewer"
-              >
-                Try the PersonaAI Interviewer
-                <MessageCircle className="ml-2 h-4 w-4" />
+                <Rocket className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-[-2px]" />
               </Button>
               <Button 
                 variant="secondary" 
                 size="lg"
+                as={Link}
+                to="/persona-ai-interviewer"
+                className="group"
+              >
+                Try the PersonaAI Interviewer
+                <Sparkles className="ml-2 h-4 w-4 transition-transform group-hover:rotate-12" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg"
                 as="a"
                 href="#qualitative-analysis"
+                className="group"
               >
                 Insights Conductor
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <Lightbulb className="ml-2 h-4 w-4 transition-opacity group-hover:opacity-80" />
               </Button>
             </div>
           </Reveal>
