@@ -8,7 +8,7 @@ import Button from "@/components/ui-custom/Button";
 import Card from "@/components/ui-custom/Card";
 import Reveal from "@/components/ui-custom/Reveal";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
-import AvatarFeature from "@/components/ecosystem/AvatarFeature";
+import AvatarFeatureDark from "@/components/ecosystem/AvatarFeatureDark";
 
 const EarnPRSNA = () => {
   const { isWalletConnected, connectWallet } = useWeb3Wallet();
@@ -115,9 +115,9 @@ const EarnPRSNA = () => {
           </div>
         </Section>
 
-        {/* AI Avatar Feature Section - Directly under Hero */}
-        <Section className="bg-gradient-to-br from-amber-50 to-orange-50 py-16 mt-0">
-          <AvatarFeature />
+        {/* AI Avatar Feature Section - Using the new dark text on light background component */}
+        <Section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16 mt-0">
+          <AvatarFeatureDark />
         </Section>
 
         {/* How to Earn Section */}
