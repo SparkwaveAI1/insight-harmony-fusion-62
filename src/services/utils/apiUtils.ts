@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { QuoteData, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 
 // Centralized error handling for API calls
 export const handleApiError = (error: unknown, service: string): void => {
@@ -24,7 +25,7 @@ export const generatePlaceholderData = (apiName: string) => {
   return {
     quotes: [{ 
       text: `${apiName} API has CORS restrictions in this environment. Using simulated data instead.`, 
-      sentiment: "neutral", 
+      sentiment: "neutral" as SentimentFilter, 
       source: `${apiName}: System Notice` 
     }],
     keywords: ["CORS", "API", apiName, "restrictions", "browser"],

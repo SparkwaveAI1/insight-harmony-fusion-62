@@ -49,3 +49,16 @@ export interface AnalysisResults {
   actionableInsights?: string[];
   relatedTopics?: string[];
 }
+
+// Adding missing constants
+export const STORAGE_KEYS = {
+  NEWS_API_KEY: "persona_news_api_key",
+  TWITTER_API_KEY: "persona_twitter_api_key",
+  REDDIT_API_KEY: "persona_reddit_api_key"
+};
+
+export const DEFAULT_API_KEYS = {
+  newsApi: "",
+  twitter: "",
+  reddit: ""
+};

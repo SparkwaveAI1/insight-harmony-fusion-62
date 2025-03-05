@@ -1,5 +1,5 @@
 
-import { ResearchQuery, AnalysisResults, QuoteData, DataSource } from "../types/qualitativeAnalysisTypes";
+import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./sourceAdapters";
@@ -25,7 +25,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     }
     
     // Determine which sources to query
-    const sourcesToQuery = query.sources as Array<"twitter" | "reddit" | "news">;
+    const sourcesToQuery = query.sources.filter(s => s !== 'all') as Array<DataSource>;
     
     // Create promise array for parallel API calls
     const apiPromises = sourcesToQuery.map(source => {

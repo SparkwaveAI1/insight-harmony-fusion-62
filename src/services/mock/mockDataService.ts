@@ -1,4 +1,5 @@
-import { ResearchQuery, AnalysisResults, QuoteData } from "../types/qualitativeAnalysisTypes";
+
+import { ResearchQuery, AnalysisResults, QuoteData, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 
 // Function to fetch qualitative data from mock service
@@ -46,35 +47,35 @@ function generateAITokensFearsMockData(query: ResearchQuery): AnalysisResults {
     "long-term adoption"
   ];
   
-  const exampleQuotes = [
+  const exampleQuotes: QuoteData[] = [
     {
       text: "AI is the future. This is just a dip before we see trillion-dollar AI projects in crypto. Staking in AI projects is the next big thing!",
-      sentiment: "positive",
+      sentiment: "positive" as SentimentFilter,
       source: "Twitter (@AIInvestorX)"
     },
     {
       text: "Not saying AI tokens are dead, but outside of narratives, what are they actually doing differently from traditional crypto projects?",
-      sentiment: "neutral",
+      sentiment: "neutral" as SentimentFilter,
       source: "Twitter (@BlockAnalyst)"
     },
     {
       text: "If AI is so powerful, why do AI tokens rely on speculation instead of actual revenue? Looks like another VC exit pump to me.",
-      sentiment: "negative",
+      sentiment: "negative" as SentimentFilter,
       source: "Twitter (@CryptoRealist)"
     },
     {
       text: "So many AI token projects seem to be launching with vague 'AI-powered' claims but no actual working models. We need a major AI crypto win to justify this sector.",
-      sentiment: "negative",
+      sentiment: "negative" as SentimentFilter,
       source: "Reddit (u/Web3DeepDiver)"
     },
     {
       text: "Is anyone actually using AI tokens in a way that isn't just staking for emissions? I'm struggling to find one that isn't a copy-paste of the last cycle.",
-      sentiment: "negative",
+      sentiment: "negative" as SentimentFilter,
       source: "Reddit (u/HoldTheDip69)"
     },
     {
       text: "The fear around AI tokens is overblown. AI is here to stay, and the projects that integrate real machine learning solutions will thrive. Long-term holders will win.",
-      sentiment: "positive",
+      sentiment: "positive" as SentimentFilter,
       source: "Reddit (u/AIbeliever)"
     }
   ];
@@ -107,42 +108,42 @@ function generateAITokensFearsMockData(query: ResearchQuery): AnalysisResults {
         title: "SEC Investigates AI-Backed Crypto Projects for Misleading Claims",
         source: "CoinDesk",
         date: "March 4, 2025",
-        sentiment: "negative"
+        sentiment: "negative" as SentimentFilter
       },
       {
         title: "AI Crypto Boom: Hype or Reality? Analysts Weigh In",
         source: "Decrypt",
         date: "March 3, 2025",
-        sentiment: "neutral"
+        sentiment: "neutral" as SentimentFilter
       },
       {
         title: "AI Tokens See 40% Drop as Market Rotation Moves to RWA Narrative",
         source: "The Block",
         date: "March 2, 2025",
-        sentiment: "negative"
+        sentiment: "negative" as SentimentFilter
       },
       {
         title: "Base Chain Sees AI Token Growth Despite Market Fears",
         source: "Bankless",
         date: "March 1, 2025",
-        sentiment: "positive"
+        sentiment: "positive" as SentimentFilter
       }
     ],
     personaAnalysis: [
       {
         persona: "The Institutional Trader",
         analysis: "AI tokens still have runway, but investors are wary. Most large funds are treating them as a short-term play unless tangible revenue streams appear.",
-        sentiment: "neutral"
+        sentiment: "neutral" as SentimentFilter
       },
       {
         persona: "The Crypto DeFi Builder",
         analysis: "The real challenge for AI tokens isn't tech—it's tokenomics. If there's no value capture mechanism, traders will exit as fast as they entered.",
-        sentiment: "negative"
+        sentiment: "negative" as SentimentFilter
       },
       {
         persona: "The Retail Holder",
         analysis: "I like AI projects but don't fully understand how they work. I'll keep holding if the community stays strong.",
-        sentiment: "positive"
+        sentiment: "positive" as SentimentFilter
       }
     ],
     actionableInsights: [
@@ -271,17 +272,17 @@ function getZelenskyyQuotes(query: ResearchQuery): QuoteData[] {
   return [
     {
       text: "President Zelenskyy's diplomatic efforts have been crucial in maintaining international support during this critical phase of the conflict.",
-      sentiment: "positive",
+      sentiment: "positive" as SentimentFilter,
       source: sources[Math.floor(Math.random() * sources.length)]
     },
     {
       text: "The administration faces growing challenges balancing war efforts with domestic economic concerns, which will be a key factor going forward.",
-      sentiment: "neutral",
+      sentiment: "neutral" as SentimentFilter,
       source: sources[Math.floor(Math.random() * sources.length)]
     },
     {
       text: "Critics argue that the timeline promised for military advances has repeatedly been missed, raising questions about strategic planning.",
-      sentiment: "negative",
+      sentiment: "negative" as SentimentFilter,
       source: sources[Math.floor(Math.random() * sources.length)]
     }
   ];
@@ -299,7 +300,7 @@ function getQuotesByDomain(query: ResearchQuery): QuoteData[] {
       text: queryText.includes("token") || queryText.includes("staking") ?
         "I've been staking my tokens for 3 months and the rewards have been consistent and higher than expected." :
         "This innovation is exactly what the industry needed. I'm seeing significant benefits already.",
-      sentiment: "positive",
+      sentiment: "positive" as SentimentFilter,
       source: sources[Math.floor(Math.random() * sources.length)]
     });
   }
@@ -310,7 +311,7 @@ function getQuotesByDomain(query: ResearchQuery): QuoteData[] {
       text: queryText.includes("token") || queryText.includes("staking") ?
         "The security of these new staking platforms is still unproven. I'm waiting to see more audits." :
         "There are both pros and cons to this approach. We need more data before making definitive judgments.",
-      sentiment: "neutral",
+      sentiment: "neutral" as SentimentFilter,
       source: sources[Math.floor(Math.random() * sources.length)]
     });
   }
@@ -321,7 +322,7 @@ function getQuotesByDomain(query: ResearchQuery): QuoteData[] {
       text: queryText.includes("token") || queryText.includes("staking") ?
         "Regulatory uncertainty makes me hesitant to lock up my assets in staking contracts for long periods." :
         "I've been disappointed by the results so far. The promised benefits aren't materializing as expected.",
-      sentiment: "negative",
+      sentiment: "negative" as SentimentFilter,
       source: sources[Math.floor(Math.random() * sources.length)]
     });
   }
@@ -364,7 +365,9 @@ function getKeywordsByDomain(queryText: string): string[] {
 
 // Get sources based on query
 function getSources(query: ResearchQuery): string[] {
-  return query.sources.includes("all") 
+  const sourceList = query.sources.includes("all") 
     ? ["Twitter", "Reddit", "News"] 
     : query.sources.map(s => s.charAt(0).toUpperCase() + s.slice(1));
+  
+  return sourceList;
 }

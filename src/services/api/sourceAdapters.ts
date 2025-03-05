@@ -1,5 +1,5 @@
 
-import { ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
+import { ResearchQuery, QuoteData, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { toast } from "sonner";
 import { handleApiError, showApiRestrictionNotice, generatePlaceholderData } from "../utils/apiUtils";
