@@ -14,6 +14,16 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     let keywords: string[] = [];
     let topics: string[] = [];
     
+    // Prioritize crypto-specific keywords for Web3 queries
+    if (query.query.toLowerCase().includes("crypto") || 
+        query.query.toLowerCase().includes("defi") || 
+        query.query.toLowerCase().includes("web3") || 
+        query.query.toLowerCase().includes("nft")) {
+      if (!query.keywords.includes("defi")) query.keywords.push("defi");
+      if (!query.keywords.includes("crypto")) query.keywords.push("crypto");
+      if (!query.keywords.includes("blockchain")) query.keywords.push("blockchain");
+    }
+    
     // Determine which sources to query
     const sourcesToQuery = query.sources as Array<"twitter" | "reddit" | "news">;
     
@@ -59,9 +69,31 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     // Process and prioritize by keywords
     processKeywords(quotes, query);
     
+    // For crypto queries, prioritize quotes mentioning specific crypto terms
+    if (query.query.toLowerCase().includes("crypto") || 
+        query.query.toLowerCase().includes("defi") || 
+        query.query.toLowerCase().includes("web3")) {
+      const cryptoTerms = ["token", "staking", "yield", "apy", "liquidity", "dex", "defi", "nft"];
+      quotes.sort((a, b) => {
+        const aMentionsCrypto = cryptoTerms.some(term => a.text.toLowerCase().includes(term));
+        const bMentionsCrypto = cryptoTerms.some(term => b.text.toLowerCase().includes(term));
+        return (bMentionsCrypto ? 1 : 0) - (aMentionsCrypto ? 1 : 0);
+      });
+    }
+    
     // Deduplicate and limit keywords and topics
     keywords = Array.from(new Set(keywords)).slice(0, 15);
     topics = Array.from(new Set(topics)).slice(0, 5);
+    
+    // If this is a crypto query, add relevant topics if missing
+    if (query.query.toLowerCase().includes("crypto") || query.query.toLowerCase().includes("web3")) {
+      const cryptoTopics = ["DeFi Trends", "Market Sentiment", "Token Utility", "On-chain Metrics"];
+      for (const topic of cryptoTopics) {
+        if (!topics.includes(topic) && topics.length < 5) {
+          topics.push(topic);
+        }
+      }
+    }
     
     // Calculate sentiment breakdown
     const sentimentBreakdown = calculateSentimentBreakdown(quotes);

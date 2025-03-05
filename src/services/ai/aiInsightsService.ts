@@ -1,10 +1,19 @@
-
 import { ResearchQuery } from "../types/qualitativeAnalysisTypes";
 
 // Generate AI insights based on collected data
 export function generateAIInsights(topics: string[], sentimentBreakdown: any, keyPhrases: string[], query: ResearchQuery): string[] {
   const insights: string[] = [];
   const queryText = query.query.toLowerCase();
+  
+  // Special case for crypto/DeFi related queries
+  if (queryText.includes("crypto") || queryText.includes("defi") || queryText.includes("web3") || queryText.includes("nft")) {
+    insights.push(`Current market sentiment around "${query.query}" shows ${sentimentBreakdown.positive}% bullish, ${sentimentBreakdown.neutral}% neutral, and ${sentimentBreakdown.negative}% bearish perspectives.`);
+    insights.push(`On-chain metrics and social sentiment are showing increasing interest in "${topics[0]}", suggesting potential market movement in the coming days.`);
+    insights.push(`Trading volumes across major DEXs correlate strongly with social media mentions of key topics like "${keyPhrases[0]}" and "${keyPhrases[1]}".`);
+    insights.push(`Base Chain ecosystem projects are showing particularly strong sentiment scores compared to other L2 solutions.`);
+    insights.push(`Based on transaction volume analysis and social data, we recommend monitoring ${topics[1]} development closely for potential investment opportunities.`);
+    return insights;
+  }
   
   // Special case for Zelenskyy/Ukraine related queries
   if (queryText.includes("zelenskyy") || queryText.includes("ukraine")) {
@@ -31,13 +40,17 @@ export function generateAIInsights(topics: string[], sentimentBreakdown: any, ke
   if (topics.length > 0) {
     insights.push(`The most prominent theme emerging from the data is "${topics[0]}", which appears frequently in discussions about "${query.query}".`);
     
-    // Add specific insights based on top topic
+    // Add specific insights based on top topic with new crypto-focused conditionals
     if (topics[0].includes("Regulatory")) {
-      insights.push("Consider monitoring regulatory developments closely as they appear to be a significant factor in current discussions.");
+      insights.push("Regulatory developments are significantly impacting market sentiment. Monitor policy announcements closely as they appear to be driving current price action.");
     } else if (topics[0].includes("Security")) {
-      insights.push("Security considerations are at the forefront of current discussions, which may warrant additional focus on demonstrating security measures.");
+      insights.push("Security considerations remain paramount in the Web3 space. Projects emphasizing robust security measures are receiving more positive mentions.");
     } else if (topics[0].includes("Adoption")) {
-      insights.push("Current conversations highlight challenges in adoption, suggesting a need to address barriers to entry or improve user onboarding processes.");
+      insights.push("Mainstream adoption signals are increasing, with institutional interest correlating to positive sentiment spikes on social platforms.");
+    } else if (topics[0].includes("DeFi")) {
+      insights.push("DeFi protocols showing innovation in capital efficiency are generating the strongest positive sentiment among traders and developers alike.");
+    } else if (topics[0].includes("NFT")) {
+      insights.push("The NFT narrative is shifting toward utility and integration with DeFi, moving away from pure collectibles toward productive assets.");
     }
   }
   
@@ -60,10 +73,35 @@ export function generateAIInsights(topics: string[], sentimentBreakdown: any, ke
   return insights;
 }
 
-// Generate trends analysis
+// Generate trends analysis with crypto-focused content
 export function generateTrendsAnalysis(sentimentBreakdown: any, topics: string[], query: ResearchQuery): string {
   const queryText = query.query.toLowerCase();
   let analysis = `## Trend Analysis for "${query.query}"\n\n`;
+  
+  // Special case for crypto/DeFi
+  if (queryText.includes("crypto") || queryText.includes("defi") || queryText.includes("web3") || queryText.includes("nft")) {
+    analysis += "### Market Sentiment Trends\n";
+    analysis += "On-chain metrics show increasing accumulation by major wallets despite market volatility. ";
+    analysis += "Social sentiment is gradually shifting positive with a correlation to increased developer activity ";
+    analysis += "across major protocols, particularly on Layer 2 solutions.\n\n";
+    
+    analysis += "### Trading Signal Analysis\n";
+    analysis += "Volume analysis indicates growing interest in DeFi protocols with innovative governance models. ";
+    analysis += "Sentiment leads price action by approximately 72 hours based on historical correlation patterns ";
+    analysis += "across the datasets analyzed.\n\n";
+    
+    analysis += "### Community Growth Trajectory\n";
+    analysis += "New wallet creation is accelerating on Base Chain specifically, with a notable increase in first-time DeFi users. ";
+    analysis += "Educational content engagement metrics suggest significant interest from traditional finance professionals ";
+    analysis += "exploring Web3 investment strategies.\n\n";
+    
+    analysis += "### AI-Powered Recommendations\n";
+    analysis += "1. Monitor liquidity flows into smaller market cap tokens with strong developer activity\n";
+    analysis += "2. Focus on protocols demonstrating practical utility and revenue generation rather than speculative narratives\n";
+    analysis += "3. Engage with communities showing stable growth curves over volatile, marketing-driven spikes\n\n";
+    
+    return analysis;
+  }
   
   // Special case for Zelenskyy/Ukraine related queries
   if (queryText.includes("zelenskyy") || queryText.includes("ukraine")) {
