@@ -12,10 +12,10 @@ const AvatarFeature = () => {
             <Bot className="h-5 w-5 text-primary mr-2" />
             <span className="text-sm font-medium text-primary">AI Research Assistant</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-black font-plasmik">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-amber-900 font-plasmik">
             Talk to PersonaAI Research Agent
           </h2>
-          <p className="text-black/90 text-pretty max-w-2xl mx-auto mb-10">
+          <p className="text-amber-950 text-pretty max-w-2xl mx-auto mb-10">
             Get personalized market insights and token utility information from our 
             AI research agent. Explore Web3 trends with an immersive AI experience.
           </p>
@@ -60,22 +60,22 @@ const AvatarFeature = () => {
       <Reveal delay={200}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
           <div className="bg-amber-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
-            <h3 className="font-bold text-lg mb-2 text-amber-800">Market Insights</h3>
-            <p className="text-black/80 text-sm">
+            <h3 className="font-bold text-lg mb-2 text-amber-900">Market Insights</h3>
+            <p className="text-amber-950 text-sm">
               Get real-time market sentiment analysis and trend predictions from our AI research avatar.
             </p>
           </div>
           
           <div className="bg-orange-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
-            <h3 className="font-bold text-lg mb-2 text-amber-800">Token Utility</h3>
-            <p className="text-black/80 text-sm">
+            <h3 className="font-bold text-lg mb-2 text-amber-900">Token Utility</h3>
+            <p className="text-amber-950 text-sm">
               Learn about $PRSNA token use cases, staking benefits, and ecosystem opportunities.
             </p>
           </div>
           
           <div className="bg-amber-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
-            <h3 className="font-bold text-lg mb-2 text-amber-800">Research on Demand</h3>
-            <p className="text-black/80 text-sm">
+            <h3 className="font-bold text-lg mb-2 text-amber-900">Research on Demand</h3>
+            <p className="text-amber-950 text-sm">
               Ask specific questions about Web3 projects and get AI-powered qualitative analysis.
             </p>
           </div>
