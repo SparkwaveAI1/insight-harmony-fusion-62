@@ -1,20 +1,42 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, LinkProps } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+// Define props for different component types
+interface BaseButtonProps {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
   size?: "sm" | "default" | "lg" | "icon";
   children: React.ReactNode;
-  as?: React.ElementType;
-  to?: string;
-  href?: string;
+  className?: string;
 }
+
+// For normal button
+interface ButtonAsButtonProps extends BaseButtonProps, React.ButtonHTMLAttributes<HTMLButtonElement> {
+  as?: "button";
+  to?: never;
+  href?: never;
+}
+
+// For Link component
+interface ButtonAsLinkProps extends BaseButtonProps, Omit<LinkProps, 'className'> {
+  as: typeof Link;
+  to: string;
+  href?: never;
+}
+
+// For anchor element
+interface ButtonAsAnchorProps extends BaseButtonProps, Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'className'> {
+  as: "a";
+  href: string;
+  to?: never;
+}
+
+// Union type for all possible button props
+type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps | ButtonAsAnchorProps;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "default", children, as, to, href, ...props }, ref) => {
-    const Component = as || "button";
     const styles = cn(
       "relative inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
       // Variants
@@ -31,10 +53,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className
     );
     
-    // If it's a Link or anchor, pass the appropriate props
-    if (Component === Link && to) {
+    // Render as Link component
+    if (as === Link && to) {
       return (
-        <Link to={to} className={styles} {...props}>
+        <Link 
+          to={to} 
+          className={styles}
+          {...props as Omit<React.ComponentProps<typeof Link>, 'className' | 'to'>}
+        >
           {children}
           {variant === "primary" && (
             <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
@@ -43,9 +69,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
 
-    if (Component === "a" && href) {
+    // Render as anchor element
+    if (as === "a" && href) {
       return (
-        <a href={href} className={styles} {...props}>
+        <a 
+          href={href} 
+          className={styles}
+          {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>}
+        >
           {children}
           {variant === "primary" && (
             <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
@@ -59,7 +90,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={styles}
         ref={ref}
-        {...props}
+        {...props as React.ButtonHTMLAttributes<HTMLButtonElement>}
       >
         {children}
         {variant === "primary" && (
