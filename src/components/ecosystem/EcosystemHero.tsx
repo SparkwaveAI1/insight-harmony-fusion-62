@@ -33,7 +33,8 @@ const EcosystemHero = ({
 
             <Reveal delay={100}>
               <h1 className="text-4xl md:text-5xl font-bold mb-6 font-plasmik">
-                PersonaAI Web3: Research Layer for Base Chain
+                PersonaAI and $PRSNA<br />
+                Research Layer for Web3
               </h1>
             </Reveal>
             

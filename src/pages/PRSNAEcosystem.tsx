@@ -17,6 +17,7 @@ import StakingTab from "@/components/ecosystem/dashboard/StakingTab";
 import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
+import EarnPRSNASection from "@/components/ecosystem/EarnPRSNASection";
 
 const PRSNAEcosystem = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -109,7 +110,12 @@ const PRSNAEcosystem = () => {
           </div>
         </Section>
         
-        {/* Staking Dashboard Preview (shown when wallet not connected) */}
+        {/* Earn PRSNA Section (new section between Avatar and Staking) */}
+        {!isWalletConnected && (
+          <EarnPRSNASection />
+        )}
+        
+        {/* Staking Dashboard Preview (moved above Token Ecosystem) */}
         {!isWalletConnected && (
           <StakingPreview connectWallet={connectWallet} />
         )}
