@@ -10,7 +10,6 @@ import PersonaAIInterviewerSection from "@/components/sections/PersonaAIIntervie
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
 import ProductShowcase from "@/components/sections/ProductShowcase";
 import TokenEcosystem from "@/components/sections/TokenEcosystem";
-import InsightsGenerator from "@/components/sections/InsightsGenerator";
 import Footer from "@/components/sections/Footer";
 
 const Index = () => {
@@ -26,7 +25,6 @@ const Index = () => {
         <HowItWorks />
         <PersonaAIInterviewerSection />
         <QualitativeAnalysis />
-        <InsightsGenerator />
         <ProductShowcase />
         <TokenEcosystem />
       </main>
