@@ -1,5 +1,5 @@
 
-export type DataSource = "twitter" | "reddit" | "news" | "all";
+export type DataSource = "twitter" | "reddit" | "news" | "forums" | "blogs";
 export type SentimentFilter = "positive" | "negative" | "neutral" | "all";
 export type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term" | "historical" | "deep-historical";
 
@@ -11,54 +11,52 @@ export interface ResearchQuery {
   keywords: string[];
 }
 
-export interface QuoteData {
+export interface Quote {
   text: string;
-  sentiment: SentimentFilter;
-  source: string;
-}
-
-export interface NewsHeadline {
-  title: string;
   source: string;
   date: string;
-  sentiment: SentimentFilter;
+  sentiment: "positive" | "negative" | "neutral";
 }
 
-export interface PersonaAnalysis {
-  persona: string;
-  analysis: string;
-  sentiment: SentimentFilter;
+export interface TimelineEvent {
+  id: string;
+  date: string;
+  timestamp: string;
+  position: string;
+  label: string;
+  description: string;
+  sentiment: "positive" | "neutral" | "negative";
+  impact: number;
+  quotes?: Quote[];
+}
+
+export interface TopicRippleData {
+  name: string;
+  [topic: string]: number | string;
+}
+
+export interface TopicInsight {
+  topic: string;
+  description: string;
+  trend: "rising" | "falling" | "stable";
+  sentiment: "positive" | "negative" | "neutral";
 }
 
 export interface AnalysisResults {
-  topTopics: string[];
+  aiSummary: string;
+  reportGeneratedAt: string;
+  keyInsights: string[];
+  challenges: string[];
+  recommendations: string[];
+  timelineEvents: TimelineEvent[];
+  topicRippleData: TopicRippleData[];
+  topicInsights: TopicInsight[];
   sentimentBreakdown: {
     positive: number;
     neutral: number;
     negative: number;
   };
-  exampleQuotes: QuoteData[];
-  keyPhrases: string[];
-  aiInsights: string[];
-  trendsAnalysis: string[];
-  reportGeneratedAt: string;
-  
-  // New fields for AI tokens analysis
-  newsHeadlines?: NewsHeadline[];
-  personaAnalysis?: PersonaAnalysis[];
-  actionableInsights?: string[];
-  relatedTopics?: string[];
+  sourceBreakdown: {
+    [key in DataSource]?: number;
+  };
 }
-
-// Adding missing constants
-export const STORAGE_KEYS = {
-  NEWS_API_KEY: "persona_news_api_key",
-  TWITTER_API_KEY: "persona_twitter_api_key",
-  REDDIT_API_KEY: "persona_reddit_api_key"
-};
-
-export const DEFAULT_API_KEYS = {
-  newsApi: "",
-  twitter: "",
-  reddit: ""
-};

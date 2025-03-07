@@ -1,373 +1,304 @@
 
-import { ResearchQuery, AnalysisResults, QuoteData, SentimentFilter } from "../types/qualitativeAnalysisTypes";
-import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
+import { AnalysisResults, ResearchQuery } from "../types/qualitativeAnalysisTypes";
 
-// Function to fetch qualitative data from mock service
-export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // Check for predefined AI tokens query
-  if (query.query.toLowerCase().includes("ai token") && 
-      query.query.toLowerCase().includes("fear")) {
-    return generateAITokensFearsMockData(query);
-  }
-  
-  // Generate standard mock results for other queries
-  return generateMockResults(query);
-}
-
-// Mock data specifically for AI tokens fears query
-function generateAITokensFearsMockData(query: ResearchQuery): AnalysisResults {
-  const topTopics = [
-    "Regulatory Crackdowns",
-    "Market Speculation",
-    "AI Utility vs. Hype",
-    "VC & Insider Dumping"
-  ];
-  
-  const sentimentBreakdown = {
-    positive: 30, 
-    neutral: 45, 
-    negative: 25
-  };
-  
-  const keyPhrases = [
-    "SEC investigation", 
-    "regulatory concerns",
-    "token utility",
-    "AI hype cycle",
-    "market rotation",
-    "VC exit strategy",
-    "revenue models",
-    "staking incentives",
-    "AI narratives",
-    "tokenomics issues",
-    "revenue capture",
-    "long-term adoption"
-  ];
-  
-  const exampleQuotes: QuoteData[] = [
-    {
-      text: "AI is the future. This is just a dip before we see trillion-dollar AI projects in crypto. Staking in AI projects is the next big thing!",
-      sentiment: "positive" as SentimentFilter,
-      source: "Twitter (@AIInvestorX)"
-    },
-    {
-      text: "Not saying AI tokens are dead, but outside of narratives, what are they actually doing differently from traditional crypto projects?",
-      sentiment: "neutral" as SentimentFilter,
-      source: "Twitter (@BlockAnalyst)"
-    },
-    {
-      text: "If AI is so powerful, why do AI tokens rely on speculation instead of actual revenue? Looks like another VC exit pump to me.",
-      sentiment: "negative" as SentimentFilter,
-      source: "Twitter (@CryptoRealist)"
-    },
-    {
-      text: "So many AI token projects seem to be launching with vague 'AI-powered' claims but no actual working models. We need a major AI crypto win to justify this sector.",
-      sentiment: "negative" as SentimentFilter,
-      source: "Reddit (u/Web3DeepDiver)"
-    },
-    {
-      text: "Is anyone actually using AI tokens in a way that isn't just staking for emissions? I'm struggling to find one that isn't a copy-paste of the last cycle.",
-      sentiment: "negative" as SentimentFilter,
-      source: "Reddit (u/HoldTheDip69)"
-    },
-    {
-      text: "The fear around AI tokens is overblown. AI is here to stay, and the projects that integrate real machine learning solutions will thrive. Long-term holders will win.",
-      sentiment: "positive" as SentimentFilter,
-      source: "Reddit (u/AIbeliever)"
-    }
-  ];
-  
-  const aiInsights = [
-    "Regulatory concerns dominate the conversation, with 42% of negative sentiment focused on potential SEC actions against AI token projects.",
-    "There's a significant disconnect between AI technology enthusiasm and skepticism about current token implementations.",
-    "Market sentiment indicates rotation away from pure AI narrative tokens toward projects with demonstrable utility and revenue models.",
-    "Institutional investors appear to be taking short-term positions rather than viewing current AI tokens as long-term investments.",
-    "Community sentiment shifts positively when projects demonstrate transparent tokenomics and real machine learning applications."
-  ];
-  
-  const trendsAnalysis = [
-    "Recent news headlines about SEC investigations have triggered a 15% increase in negative sentiment over the past week.",
-    "The term \"utility\" appears 3x more frequently in discussions compared to two months ago, indicating growing demand for practical use cases.",
-    "Social media analysis shows Base Chain projects maintaining better sentiment scores than other ecosystems.",
-    "Recent market rotation has shifted approximately $430M from AI tokens to RWA narratives according to on-chain analytics."
-  ];
+export const fetchQualitativeData = async (query: ResearchQuery): Promise<AnalysisResults> => {
+  // This simulates an API call with a small delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   return {
-    topTopics,
-    sentimentBreakdown,
-    exampleQuotes,
-    keyPhrases,
-    aiInsights,
-    trendsAnalysis,
+    aiSummary: "Analysis of conversations around Web3 and AI token incentives reveals a mix of enthusiasm and caution. Users are excited about potential rewards from staking and participation, but express concerns about security, regulatory clarity, and project sustainability. Community sentiment has notably improved since March's introduction of clearer documentation and governance mechanisms. The most discussed topics include token utility, governance rights, and passive income opportunities.",
+    
     reportGeneratedAt: new Date().toISOString(),
-    newsHeadlines: [
+    
+    keyInsights: [
+      "Staking incentives are the most positively discussed aspect of tokens, with 68% of mentions expressing favorable views.",
+      "User adoption is limited by technical complexity barriers, with 42% of negative comments citing confusion about staking processes.",
+      "Community governance participation has increased 34% since the introduction of token-based voting.",
+      "Security concerns have decreased by 18% following the latest platform audit and smart contract improvements.",
+      "Token utility discussions demonstrate strong interest in real-world use cases beyond speculation."
+    ],
+    
+    challenges: [
+      "Technical barriers remain high for non-crypto native users trying to participate in the ecosystem.",
+      "Regulatory uncertainty is creating hesitation among institutional participants.",
+      "Balancing short-term incentives with long-term sustainability is a frequent concern.",
+      "Price volatility undermines confidence in staking for some potential participants.",
+      "Competition from other token ecosystems is increasing, requiring clearer differentiation."
+    ],
+    
+    recommendations: [
+      "Develop simpler onboarding tools specifically for non-technical users to increase adoption.",
+      "Create educational content focused on explaining staking benefits in clear, non-technical language.",
+      "Increase transparency around tokenomics and long-term sustainability plans.",
+      "Implement additional security measures and promote recent security audit results.",
+      "Consider tiered incentive structures to reward both short and long-term participation."
+    ],
+    
+    // Timeline events for the Storyline visualization
+    timelineEvents: [
       {
-        title: "SEC Investigates AI-Backed Crypto Projects for Misleading Claims",
-        source: "CoinDesk",
-        date: "March 4, 2025",
-        sentiment: "negative" as SentimentFilter
+        id: "event1",
+        date: "Jan 12",
+        timestamp: "2023-01-12",
+        position: "5%",
+        label: "Initial Token Launch",
+        description: "Platform tokens were introduced to the public with initial staking mechanisms and rewards structure announced.",
+        sentiment: "positive",
+        impact: 85,
+        quotes: [
+          {
+            text: "The tokenomics look promising and well-thought-out compared to many other projects I've seen.",
+            source: "Twitter",
+            date: "Jan 12, 2023",
+            sentiment: "positive"
+          },
+          {
+            text: "Excited to see another project embracing the token ecosystem model, but show me the real utility first.",
+            source: "Reddit",
+            date: "Jan 13, 2023",
+            sentiment: "neutral"
+          }
+        ]
       },
       {
-        title: "AI Crypto Boom: Hype or Reality? Analysts Weigh In",
-        source: "Decrypt",
-        date: "March 3, 2025",
-        sentiment: "neutral" as SentimentFilter
+        id: "event2",
+        date: "Feb 8",
+        timestamp: "2023-02-08",
+        position: "22%",
+        label: "Staking Rewards Boost",
+        description: "Platform announced increased rewards for early stakers, driving significant increase in participation.",
+        sentiment: "positive",
+        impact: 65,
+        quotes: [
+          {
+            text: "The APY rates for early stakers are incredible! Already moved my tokens into the staking contract.",
+            source: "Reddit",
+            date: "Feb 9, 2023",
+            sentiment: "positive"
+          },
+          {
+            text: "Good short-term incentives, but these rates are unsustainable. What's the long-term plan?",
+            source: "Twitter",
+            date: "Feb 10, 2023",
+            sentiment: "neutral"
+          }
+        ]
       },
       {
-        title: "AI Tokens See 40% Drop as Market Rotation Moves to RWA Narrative",
-        source: "The Block",
-        date: "March 2, 2025",
-        sentiment: "negative" as SentimentFilter
+        id: "event3",
+        date: "Mar 15",
+        timestamp: "2023-03-15",
+        position: "38%",
+        label: "Security Vulnerability",
+        description: "A minor security issue was discovered in the staking contract, temporarily pausing new deposits.",
+        sentiment: "negative",
+        impact: 70,
+        quotes: [
+          {
+            text: "This is concerning. Even though it was caught early, it raises questions about the audit process.",
+            source: "Reddit",
+            date: "Mar 16, 2023",
+            sentiment: "negative"
+          },
+          {
+            text: "The team responded quickly and transparently. This is how security issues should be handled.",
+            source: "Twitter",
+            date: "Mar 17, 2023",
+            sentiment: "positive"
+          }
+        ]
       },
       {
-        title: "Base Chain Sees AI Token Growth Despite Market Fears",
-        source: "Bankless",
-        date: "March 1, 2025",
-        sentiment: "positive" as SentimentFilter
+        id: "event4",
+        date: "Apr 3",
+        timestamp: "2023-04-03",
+        position: "55%",
+        label: "Governance Proposal System",
+        description: "Introduction of token-based governance allowing holders to propose and vote on platform changes.",
+        sentiment: "positive",
+        impact: 60,
+        quotes: [
+          {
+            text: "Finally some real utility! Being able to influence the platform's direction makes holding these tokens worthwhile.",
+            source: "Reddit",
+            date: "Apr 4, 2023",
+            sentiment: "positive"
+          },
+          {
+            text: "The governance system is still too complex for average users. Need simpler interfaces and better documentation.",
+            source: "Twitter",
+            date: "Apr 5, 2023",
+            sentiment: "negative"
+          }
+        ]
+      },
+      {
+        id: "event5",
+        date: "May 22",
+        timestamp: "2023-05-22",
+        position: "72%",
+        label: "Strategic Partnership",
+        description: "Partnership announced with major DeFi platform, expanding token utility and cross-platform benefits.",
+        sentiment: "positive",
+        impact: 75,
+        quotes: [
+          {
+            text: "This partnership makes perfect sense - expanding the ecosystem while adding real value for token holders.",
+            source: "News Article",
+            date: "May 23, 2023",
+            sentiment: "positive"
+          },
+          {
+            text: "Partnerships are good, but I'd rather see focus on improving the core product before expanding.",
+            source: "Reddit",
+            date: "May 24, 2023",
+            sentiment: "neutral"
+          }
+        ]
+      },
+      {
+        id: "event6",
+        date: "Jun 30",
+        timestamp: "2023-06-30",
+        position: "90%",
+        label: "Community Growth Milestone",
+        description: "Platform reached 100,000 active token holders with 65% participating in staking or governance.",
+        sentiment: "positive",
+        impact: 80,
+        quotes: [
+          {
+            text: "The growth is impressive - reaching 100k active users in this market shows the product has real demand.",
+            source: "Twitter",
+            date: "Jul 1, 2023",
+            sentiment: "positive"
+          },
+          {
+            text: "Great to see the community growing, but what matters more is retention. Let's see these numbers in 6 months.",
+            source: "Reddit",
+            date: "Jul 2, 2023",
+            sentiment: "neutral"
+          }
+        ]
       }
     ],
-    personaAnalysis: [
-      {
-        persona: "The Institutional Trader",
-        analysis: "AI tokens still have runway, but investors are wary. Most large funds are treating them as a short-term play unless tangible revenue streams appear.",
-        sentiment: "neutral" as SentimentFilter
+    
+    // Topic ripple data for the visualization
+    topicRippleData: [
+      { 
+        name: "Jan", 
+        "User Adoption": 25, 
+        "Token Utility": 40, 
+        "Platform Security": 30, 
+        "Governance": 15, 
+        "Development Progress": 35,
+        "Community Growth": 20
       },
-      {
-        persona: "The Crypto DeFi Builder",
-        analysis: "The real challenge for AI tokens isn't tech—it's tokenomics. If there's no value capture mechanism, traders will exit as fast as they entered.",
-        sentiment: "negative" as SentimentFilter
+      { 
+        name: "Feb", 
+        "User Adoption": 30, 
+        "Token Utility": 50, 
+        "Platform Security": 25, 
+        "Governance": 18, 
+        "Development Progress": 30,
+        "Community Growth": 28
       },
-      {
-        persona: "The Retail Holder",
-        analysis: "I like AI projects but don't fully understand how they work. I'll keep holding if the community stays strong.",
-        sentiment: "positive" as SentimentFilter
+      { 
+        name: "Mar", 
+        "User Adoption": 28, 
+        "Token Utility": 45, 
+        "Platform Security": 60, 
+        "Governance": 22, 
+        "Development Progress": 25,
+        "Community Growth": 32
+      },
+      { 
+        name: "Apr", 
+        "User Adoption": 35, 
+        "Token Utility": 42, 
+        "Platform Security": 40, 
+        "Governance": 55, 
+        "Development Progress": 30,
+        "Community Growth": 38
+      },
+      { 
+        name: "May", 
+        "User Adoption": 42, 
+        "Token Utility": 48, 
+        "Platform Security": 30, 
+        "Governance": 45, 
+        "Development Progress": 38,
+        "Community Growth": 45
+      },
+      { 
+        name: "Jun", 
+        "User Adoption": 55, 
+        "Token Utility": 52, 
+        "Platform Security": 25, 
+        "Governance": 50, 
+        "Development Progress": 42,
+        "Community Growth": 60
+      },
+      { 
+        name: "Jul", 
+        "User Adoption": 65, 
+        "Token Utility": 58, 
+        "Platform Security": 22, 
+        "Governance": 48, 
+        "Development Progress": 45,
+        "Community Growth": 70
       }
     ],
-    actionableInsights: [
-      "For Traders: Watch for signs of real adoption vs. short-term narratives before entering new AI token positions.",
-      "For AI Projects: Build real utility & revenue models to sustain investor confidence beyond the hype cycle.",
-      "For Long-Term Investors: Diversify across AI protocols that demonstrate tangible business models."
+    
+    // Insights about each topic for the Topic section
+    topicInsights: [
+      {
+        topic: "User Adoption",
+        description: "User adoption has steadily increased over the past 6 months with a significant acceleration in June following improved onboarding processes.",
+        trend: "rising",
+        sentiment: "positive"
+      },
+      {
+        topic: "Token Utility",
+        description: "Discussions around token utility have remained consistently high, with growing interest in governance rights and platform access benefits.",
+        trend: "rising",
+        sentiment: "positive"
+      },
+      {
+        topic: "Platform Security",
+        description: "Security concerns peaked in March following a contract vulnerability, but have steadily decreased as new security measures were implemented.",
+        trend: "falling",
+        sentiment: "positive"
+      },
+      {
+        topic: "Governance",
+        description: "Governance discussions spiked in April with the introduction of the proposal system and have maintained high engagement since.",
+        trend: "stable",
+        sentiment: "positive"
+      },
+      {
+        topic: "Development Progress",
+        description: "Interest in development updates has been consistent, with slight increases following roadmap announcements.",
+        trend: "stable",
+        sentiment: "neutral"
+      },
+      {
+        topic: "Community Growth",
+        description: "The most rapidly growing topic over the observed period, with overwhelmingly positive sentiment around ecosystem expansion.",
+        trend: "rising",
+        sentiment: "positive"
+      }
     ],
-    relatedTopics: [
-      "Are AI tokens fundamentally different from other L1/L2 ecosystems?",
-      "Which AI projects are securing real enterprise partnerships?",
-      "How do AI-focused DAOs compare to traditional VC-funded projects?"
-    ]
-  };
-}
-
-// Fallback to generate mock results if API calls fail
-export function generateMockResults(query: ResearchQuery): AnalysisResults {
-  const topTopics = generateMockData(query, "topics");
-  const sentimentBreakdown = generateSentimentBreakdown(query);
-  const exampleQuotes = generateMockData(query, "quotes");
-  const keyPhrases = generateMockData(query, "keywords");
-  const aiInsights = generateAIInsights(topTopics, sentimentBreakdown, keyPhrases, query);
-  const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topTopics, query)]; // Fix: Wrapping in array
-  
-  return {
-    topTopics,
-    sentimentBreakdown,
-    exampleQuotes,
-    keyPhrases,
-    aiInsights,
-    trendsAnalysis,
-    reportGeneratedAt: new Date().toISOString()
-  };
-}
-
-// Generate data based on type and query
-function generateMockData(query: ResearchQuery, type: "topics" | "quotes" | "keywords"): any {
-  const queryText = query.query.toLowerCase();
-  const isZelenskyy = queryText.includes("zelenskyy") || queryText.includes("ukraine");
-  
-  if (type === "topics") {
-    return isZelenskyy ? 
-      [
-        "International aid negotiations",
-        "Domestic political challenges",
-        "War strategy developments"
-      ] :
-      getTopicsByDomain(queryText);
-  }
-  
-  if (type === "quotes") {
-    return isZelenskyy ? 
-      getZelenskyyQuotes(query) : 
-      getQuotesByDomain(query);
-  }
-  
-  if (type === "keywords") {
-    const baseKeywords = ["adoption", "implementation", "community feedback", "future development"];
     
-    if (isZelenskyy) {
-      return [
-        "diplomatic initiatives", "battlefield strategy", "international support",
-        "NATO cooperation", "domestic politics", "reconstruction efforts",
-        "defense funding", "civilian resilience"
-      ];
-    }
+    sentimentBreakdown: {
+      positive: 58,
+      neutral: 27,
+      negative: 15
+    },
     
-    return [
-      ...baseKeywords,
-      ...getKeywordsByDomain(queryText)
-    ];
-  }
-  
-  return [];
-}
-
-// Generate sentiment breakdown based on query
-function generateSentimentBreakdown(query: ResearchQuery): { positive: number; neutral: number; negative: number } {
-  if (query.sentiment === "positive") {
-    return { positive: 75, neutral: 20, negative: 5 };
-  } else if (query.sentiment === "negative") {
-    return { positive: 25, neutral: 30, negative: 45 };
-  } else if (query.sentiment === "neutral") {
-    return { positive: 30, neutral: 60, negative: 10 };
-  } else {
-    // Create a more random distribution for "all" sentiment
-    const positive = 30 + Math.floor(Math.random() * 30);
-    const negative = Math.floor(Math.random() * 30);
-    const neutral = 100 - positive - negative;
-    return { positive, neutral, negative };
-  }
-}
-
-// Get domain-specific topics
-function getTopicsByDomain(queryText: string): string[] {
-  if (queryText.includes("token") || queryText.includes("staking")) {
-    return [
-      "Staking rewards uncertainty",
-      "Security risks in new platforms",
-      "Regulatory fears affecting adoption"
-    ];
-  } else if (queryText.includes("regulation") || queryText.includes("compliance")) {
-    return [
-      "Regulatory uncertainty in major markets",
-      "Compliance costs for small projects",
-      "Impact of regulations on innovation"
-    ];
-  } else if (queryText.includes("nft") || queryText.includes("collectible")) {
-    return [
-      "Utility beyond speculation",
-      "Environmental impact concerns",
-      "Integration with traditional art markets"
-    ];
-  } else {
-    return [
-      "User adoption challenges",
-      "Technology integration issues",
-      "Market sentiment shifts"
-    ];
-  }
-}
-
-// Get Zelenskyy-specific quotes
-function getZelenskyyQuotes(query: ResearchQuery): QuoteData[] {
-  const sources = getSources(query);
-  return [
-    {
-      text: "President Zelenskyy's diplomatic efforts have been crucial in maintaining international support during this critical phase of the conflict.",
-      sentiment: "positive" as SentimentFilter,
-      source: sources[Math.floor(Math.random() * sources.length)]
-    },
-    {
-      text: "The administration faces growing challenges balancing war efforts with domestic economic concerns, which will be a key factor going forward.",
-      sentiment: "neutral" as SentimentFilter,
-      source: sources[Math.floor(Math.random() * sources.length)]
-    },
-    {
-      text: "Critics argue that the timeline promised for military advances has repeatedly been missed, raising questions about strategic planning.",
-      sentiment: "negative" as SentimentFilter,
-      source: sources[Math.floor(Math.random() * sources.length)]
+    sourceBreakdown: {
+      "twitter": 45,
+      "reddit": 35,
+      "news": 20
     }
-  ];
-}
-
-// Get domain-specific quotes
-function getQuotesByDomain(query: ResearchQuery): QuoteData[] {
-  const sources = getSources(query);
-  const queryText = query.query.toLowerCase();
-  const quotes: QuoteData[] = [];
-  
-  // Positive quote
-  if (query.sentiment === "all" || query.sentiment === "positive") {
-    quotes.push({
-      text: queryText.includes("token") || queryText.includes("staking") ?
-        "I've been staking my tokens for 3 months and the rewards have been consistent and higher than expected." :
-        "This innovation is exactly what the industry needed. I'm seeing significant benefits already.",
-      sentiment: "positive" as SentimentFilter,
-      source: sources[Math.floor(Math.random() * sources.length)]
-    });
-  }
-  
-  // Neutral quote
-  if (query.sentiment === "all" || query.sentiment === "neutral") {
-    quotes.push({
-      text: queryText.includes("token") || queryText.includes("staking") ?
-        "The security of these new staking platforms is still unproven. I'm waiting to see more audits." :
-        "There are both pros and cons to this approach. We need more data before making definitive judgments.",
-      sentiment: "neutral" as SentimentFilter,
-      source: sources[Math.floor(Math.random() * sources.length)]
-    });
-  }
-  
-  // Negative quote
-  if (query.sentiment === "all" || query.sentiment === "negative") {
-    quotes.push({
-      text: queryText.includes("token") || queryText.includes("staking") ?
-        "Regulatory uncertainty makes me hesitant to lock up my assets in staking contracts for long periods." :
-        "I've been disappointed by the results so far. The promised benefits aren't materializing as expected.",
-      sentiment: "negative" as SentimentFilter,
-      source: sources[Math.floor(Math.random() * sources.length)]
-    });
-  }
-  
-  return quotes;
-}
-
-// Get domain-specific keywords
-function getKeywordsByDomain(queryText: string): string[] {
-  if (queryText.includes("token") || queryText.includes("staking")) {
-    return [
-      "high APY", 
-      "liquidity concerns", 
-      "validator requirements", 
-      "regulatory compliance", 
-      "reward distribution", 
-      "lock-up periods", 
-      "slashing risks"
-    ];
-  } else if (queryText.includes("nft") || queryText.includes("collectible")) {
-    return [
-      "floor price", 
-      "rarity attributes", 
-      "royalty payments", 
-      "secondary markets", 
-      "utility features", 
-      "authenticating ownership"
-    ];
-  } else {
-    return [
-      "technical integration", 
-      "user experience", 
-      "security features", 
-      "competitive advantage", 
-      "market timing", 
-      "innovation factors"
-    ];
-  }
-}
-
-// Get sources based on query
-function getSources(query: ResearchQuery): string[] {
-  const sourceList = query.sources.includes("all") 
-    ? ["Twitter", "Reddit", "News"] 
-    : query.sources.map(s => s.charAt(0).toUpperCase() + s.slice(1));
-  
-  return sourceList;
-}
+  };
+};
