@@ -1,3 +1,4 @@
+<lov-code>
 import React, { useState, useEffect, useRef } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -40,6 +41,25 @@ import { fetchQualitativeData } from "@/services/mock/mockDataService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
+
+// Timeline Event interface
+interface TimelineEvent {
+  id: string;
+  date: string;
+  timestamp: string;
+  position: string;
+  label: string;
+  description: string;
+  sentiment: "positive" | "neutral" | "negative";
+  impact: number;
+}
+
+// Topic Ripple data interface
+interface TopicRippleData {
+  name: string;
+  [topic: string]: number | string;
+}
 
 const QualitativeAnalysis: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -572,6 +592,79 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeFrame>(query.timeFrame);
   const [selectedSentiment, setSelectedSentiment] = useState<SentimentFilter>(query.sentiment);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [topicRippleData, setTopicRippleData] = useState<TopicRippleData[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+
+  useEffect(() => {
+    // Generate timeline events based on results
+    const events: TimelineEvent[] = [
+      {
+        id: "event1",
+        date: "Jan 15",
+        timestamp: "2023-01-15",
+        position: "10%",
+        label: "Initial Concerns",
+        description: "First signs of user hesitation about Web3 integration in existing platforms",
+        sentiment: "negative",
+        impact: 30
+      },
+      {
+        id: "event2",
+        date: "Feb 3",
+        timestamp: "2023-02-03",
+        position: "25%",
+        label: "Major Announcement",
+        description: "Leading tech company announces Web3 integration plans with comprehensive security measures",
+        sentiment: "positive",
+        impact: 70
+      },
+      {
+        id: "event3",
+        date: "Mar 20",
+        timestamp: "2023-03-20",
+        position: "45%",
+        label: "Market Correction",
+        description: "Significant downturn in crypto market impacts Web3 project valuations and sentiment",
+        sentiment: "negative",
+        impact: 65
+      },
+      {
+        id: "event4",
+        date: "Apr 12",
+        timestamp: "2023-04-12",
+        position: "60%",
+        label: "Community Response",
+        description: "Community-led initiative to improve Web3 education and onboarding experiences",
+        sentiment: "positive",
+        impact: 55
+      },
+      {
+        id: "event5",
+        date: "May 8",
+        timestamp: "2023-05-08",
+        position: "80%",
+        label: "Regulatory Update",
+        description: "New regulatory framework introduces clearer guidelines for Web3 projects",
+        sentiment: "neutral",
+        impact: 80
+      }
+    ];
+    
+    setTimelineEvents(events);
+    
+    // Generate topic ripple data
+    const topicsData: TopicRippleData[] = [
+      { name: "Jan", "Security Concerns": 40, "Usability": 24, "Regulatory Uncertainty": 35, "Market Volatility": 20, "Technical Complexity": 15 },
+      { name: "Feb", "Security Concerns": 30, "Usability": 13, "Regulatory Uncertainty": 45, "Market Volatility": 25, "Technical Complexity": 18 },
+      { name: "Mar", "Security Concerns": 20, "Usability": 28, "Regulatory Uncertainty": 35, "Market Volatility": 45, "Technical Complexity": 22 },
+      { name: "Apr", "Security Concerns": 27, "Usability": 39, "Regulatory Uncertainty": 30, "Market Volatility": 30, "Technical Complexity": 28 },
+      { name: "May", "Security Concerns": 18, "Usability": 48, "Regulatory Uncertainty": 25, "Market Volatility": 22, "Technical Complexity": 35 },
+      { name: "Jun", "Security Concerns": 23, "Usability": 38, "Regulatory Uncertainty": 18, "Market Volatility": 28, "Technical Complexity": 40 }
+    ];
+    
+    setTopicRippleData(topicsData);
+  }, [results]);
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
@@ -596,6 +689,35 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
 
   const navigateTo = (section: string) => {
     setActiveTab(section);
+  };
+  
+  const handleEventClick = (event: TimelineEvent) => {
+    setSelectedEvent(event);
+    toast.info(`Viewing details for: ${event.label}`);
+  };
+  
+  // Get colors for topic ripple chart
+  const getTopicColor = (topic: string) => {
+    const colorMap: {[key: string]: string} = {
+      "Security Concerns": "#3182CE", // blue
+      "Usability": "#38A169", // green
+      "Regulatory Uncertainty": "#DD6B20", // orange
+      "Market Volatility": "#E53E3E", // red
+      "Technical Complexity": "#805AD5" // purple
+    };
+    
+    return colorMap[topic] || "#718096"; // default gray
+  };
+  
+  // Filter topic ripple data based on selected topic
+  const getFilteredTopicData = () => {
+    if (!selectedTopic) return topicRippleData;
+    
+    return topicRippleData.map(dataPoint => {
+      const filteredPoint: TopicRippleData = { name: dataPoint.name };
+      filteredPoint[selectedTopic] = dataPoint[selectedTopic];
+      return filteredPoint;
+    });
   };
   
   return (
@@ -672,509 +794,3 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                 className="h-8 text-sm"
                 onChange={(e) => {
                   if (e.target.value.trim() && e.target.value.length > 2) {
-                    filterByKeyword(e.target.value);
-                  }
-                }}
-              />
-            </div>
-          </div>
-          
-          {/* Navigation Tabs */}
-          <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6 grid grid-cols-2 md:grid-cols-5 bg-[#F1F1F1]">
-              <TabsTrigger value="summary" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                <FileText size={16} className="mr-2" />
-                Key Insights
-              </TabsTrigger>
-              <TabsTrigger value="storyline" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                <GitBranch size={16} className="mr-2" />
-                Storyline
-              </TabsTrigger>
-              <TabsTrigger value="topic-ripples" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Waves size={16} className="mr-2" />
-                Topic Ripples
-              </TabsTrigger>
-              <TabsTrigger value="sentiment" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                <LineChart size={16} className="mr-2" />
-                Sentiment
-              </TabsTrigger>
-              <TabsTrigger value="quotes" className="data-[state=active]:bg-primary data-[state=active]:text-white">
-                <MessageCircle size={16} className="mr-2" />
-                Quote Cards
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* 1. Key Insights Summary */}
-            <TabsContent value="summary" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold flex items-center gap-2 text-primary">
-                    <FileText size={20} />
-                    Key Takeaways
-                  </h4>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                    AI-Generated Analysis
-                  </span>
-                </div>
-                
-                <div className="space-y-4">
-                  {results.aiInsights ? (
-                    <div className="prose prose-blue max-w-none">
-                      <ul className="space-y-3">
-                        {results.aiInsights.map((insight, idx) => (
-                          <li key={idx} className="flex gap-2">
-                            <span className="text-primary font-medium">•</span>
-                            <span>{insight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground italic">No AI insights available for this query.</p>
-                  )}
-                </div>
-                
-                <div className="border-t mt-6 pt-4">
-                  <div className="flex justify-between">
-                    <div>
-                      <h5 className="font-medium mb-2">Topic Distribution</h5>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {results.topTopics.map((topic, idx) => (
-                          <span 
-                            key={idx}
-                            className={`px-3 py-1 rounded-full text-sm cursor-pointer transition-colors
-                              ${selectedTopic === topic ? 
-                                'bg-primary text-white' : 
-                                'bg-primary/10 text-primary hover:bg-primary/20'}`}
-                            onClick={() => setSelectedTopic(selectedTopic === topic ? null : topic)}
-                          >
-                            {topic}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="w-1/3">
-                      <h5 className="font-medium mb-2">Sentiment Overview</h5>
-                      <div className="h-8 w-full rounded-full overflow-hidden bg-gray-200">
-                        <div className="flex h-full">
-                          <div 
-                            className="bg-green-500 h-full" 
-                            style={{ width: `${results.sentimentBreakdown.positive}%` }}
-                            title={`Positive: ${results.sentimentBreakdown.positive}%`}
-                          ></div>
-                          <div 
-                            className="bg-gray-400 h-full" 
-                            style={{ width: `${results.sentimentBreakdown.neutral}%` }}
-                            title={`Neutral: ${results.sentimentBreakdown.neutral}%`}
-                          ></div>
-                          <div 
-                            className="bg-red-500 h-full" 
-                            style={{ width: `${results.sentimentBreakdown.negative}%` }}
-                            title={`Negative: ${results.sentimentBreakdown.negative}%`}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-xs mt-1">
-                        <span className="text-green-600">{results.sentimentBreakdown.positive}%</span>
-                        <span className="text-gray-600">{results.sentimentBreakdown.neutral}%</span>
-                        <span className="text-red-600">{results.sentimentBreakdown.negative}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* News Headlines Section - New */}
-              {results.newsHeadlines && results.newsHeadlines.length > 0 && (
-                <div className="bg-white p-6 rounded-lg border shadow-sm">
-                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
-                    <AlertTriangle size={18} />
-                    Recent News Headlines
-                  </h4>
-                  <div className="space-y-3">
-                    {results.newsHeadlines.map((headline, idx) => (
-                      <div 
-                        key={idx}
-                        className={`p-3 rounded-md border ${getSentimentColor(headline.sentiment)}`}
-                      >
-                        <div className="font-medium">{headline.title}</div>
-                        <div className="text-sm text-muted-foreground flex justify-between mt-1">
-                          <span>{headline.source}</span>
-                          <span>{headline.date}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Persona Analysis Section - New */}
-              {results.personaAnalysis && results.personaAnalysis.length > 0 && (
-                <div className="bg-white p-6 rounded-lg border shadow-sm">
-                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
-                    <BrainCircuit size={18} />
-                    AI Persona Analysis
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {results.personaAnalysis.map((persona, idx) => (
-                      <div key={idx} className="p-4 border rounded-lg bg-primary/5">
-                        <div className="font-medium mb-2">{persona.persona}</div>
-                        <p className="text-sm text-muted-foreground">{persona.analysis}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Actionable Insights Section - New */}
-              {results.actionableInsights && results.actionableInsights.length > 0 && (
-                <div className="bg-white p-6 rounded-lg border shadow-sm">
-                  <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
-                    <Check size={18} />
-                    Actionable Insights
-                  </h4>
-                  <div className="space-y-3">
-                    {results.actionableInsights.map((insight, idx) => (
-                      <div key={idx} className="flex gap-2">
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <Check size={14} className="text-primary" />
-                        </div>
-                        <p>{insight}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg border shadow-sm">
-                  <h4 className="text-lg font-semibold mb-4 text-primary">Top Discussion Keywords</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {results.keyPhrases.map((phrase, index) => (
-                      <span 
-                        key={index} 
-                        className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-primary/20 transition-colors"
-                        style={{
-                          fontSize: `${Math.random() * 0.5 + 0.8}rem`
-                        }}
-                        onClick={() => filterByKeyword(phrase)}
-                      >
-                        {phrase}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Related Topics Section - New */}
-                {results.relatedTopics && results.relatedTopics.length > 0 ? (
-                  <div className="bg-white p-6 rounded-lg border shadow-sm">
-                    <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
-                      <GitBranch size={18} />
-                      Related Research Topics
-                    </h4>
-                    <div className="space-y-2">
-                      {results.relatedTopics.map((topic, idx) => (
-                        <div 
-                          key={idx} 
-                          className="p-3 rounded-md bg-gray-50 border cursor-pointer hover:bg-gray-100 transition-colors"
-                          onClick={() => toast.info(`Starting new research on: ${topic}`)}
-                        >
-                          <div className="font-medium text-sm">{topic}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white p-6 rounded-lg border shadow-sm">
-                    <h4 className="text-lg font-semibold mb-4 text-primary flex items-center gap-2">
-                      <Calendar size={18} />
-                      Timeline Overview
-                    </h4>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="h-1 flex-grow bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary" style={{width: "65%"}}></div>
-                      </div>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <button 
-                        className="text-primary hover:underline"
-                        onClick={() => navigateTo("storyline")}
-                      >
-                        View detailed timeline
-                      </button>
-                      <span className="text-muted-foreground">{query.timeFrame.replace(/-/g, " ")}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-            
-            {/* 2. Storyline Timeline */}
-            <TabsContent value="storyline" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-lg font-semibold text-primary flex items-center gap-2">
-                    <GitBranch size={20} />
-                    Narrative Evolution Over Time
-                  </h4>
-                  <div className="flex gap-2 items-center">
-                    <span className="text-xs text-muted-foreground">
-                      Click on events to see discussion details
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Timeline Visualization Placeholder */}
-                <div className="relative h-[300px] border rounded-lg bg-gray-50 flex flex-col justify-center items-center">
-                  <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-gray-300"></div>
-                  
-                  {/* Timeline Events - In a real implementation, these would be dynamically generated */}
-                  {[
-                    { date: "Jan 15", position: "10%", label: "Initial Concerns", sentiment: "neutral" },
-                    { date: "Feb 3", position: "25%", label: "Major Announcement", sentiment: "positive" },
-                    { date: "Mar 20", position: "45%", label: "Market Correction", sentiment: "negative" },
-                    { date: "Apr 12", position: "60%", label: "Community Response", sentiment: "positive" },
-                    { date: "May 8", position: "80%", label: "Regulatory Update", sentiment: "negative" },
-                  ].map((event, idx) => (
-                    <div 
-                      key={idx}
-                      className={`absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-110`}
-                      style={{ 
-                        left: event.position, 
-                        top: idx % 2 === 0 ? "30%" : "70%" 
-                      }}
-                      onClick={() => toast.info(`Viewing details for: ${event.label}`)}
-                    >
-                      <div className={`h-4 w-4 rounded-full ${
-                        event.sentiment === "positive" ? "bg-green-500" : 
-                        event.sentiment === "negative" ? "bg-red-500" : "bg-gray-500"
-                      } border-2 border-white`}></div>
-                      <div className={`absolute mt-2 text-sm font-medium ${idx % 2 === 0 ? "-translate-y-full -top-2" : "top-6"}`}>
-                        {event.label}
-                        <div className="text-xs text-muted-foreground">{event.date}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6 bg-primary/5 p-4 rounded-lg">
-                  <h5 className="font-medium mb-2">Narrative Shift Analysis</h5>
-                  <p className="text-sm text-muted-foreground">
-                    The conversation around "{query.query}" has evolved significantly over time. 
-                    Initial discussions were centered on potential applications, but shifted 
-                    toward regulatory concerns by mid-period. The most recent trend shows 
-                    increased focus on practical implementation challenges.
-                  </p>
-                  <div className="mt-4">
-                    <Button 
-                      variant="outline" 
-                      className="text-sm"
-                      onClick={() => toast.info("Downloading timeline data")}
-                    >
-                      <Download size={14} className="mr-1" />
-                      Export Timeline
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* 3. Topic Ripples */}
-            <TabsContent value="topic-ripples" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-lg font-semibold text-primary flex items-center gap-2">
-                    <Waves size={20} />
-                    Topic Ripples: Growth & Decay of Discussion Themes
-                  </h4>
-                </div>
-                
-                {/* Topics Filter */}
-                <div className="mb-6">
-                  <h5 className="font-medium mb-2">Toggle Topics:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {results.topTopics.map((topic, idx) => (
-                      <Button 
-                        key={idx}
-                        variant={selectedTopic === topic ? "primary" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedTopic(selectedTopic === topic ? null : topic)}
-                        className="text-sm"
-                      >
-                        {topic}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Topic Heatmap Visualization Placeholder */}
-                <div className="relative h-[300px] border rounded-lg bg-gray-50 p-4">
-                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                    {/* This would be replaced with an actual visualization component */}
-                    <p>Interactive Topic Visualization Would Appear Here</p>
-                    <p>(Area chart showing topic prominence over time)</p>
-                  </div>
-                </div>
-                
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-primary/5 p-4 rounded-lg">
-                    <h5 className="font-medium mb-2">Top Growing Topics</h5>
-                    <ul className="space-y-2">
-                      {results.topTopics.slice(0, 3).map((topic, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <TrendingUp size={16} className="text-green-600" />
-                          <span>{topic}</span>
-                          <span className="text-green-600 text-xs">+{Math.floor(Math.random() * 30) + 10}%</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-primary/5 p-4 rounded-lg">
-                    <h5 className="font-medium mb-2">Fading Topics</h5>
-                    <ul className="space-y-2">
-                      <li className="flex items-center gap-2">
-                        <TrendingUp size={16} className="text-red-600 transform rotate-180" />
-                        <span>Early Adoption Concerns</span>
-                        <span className="text-red-600 text-xs">-{Math.floor(Math.random() * 20) + 5}%</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <TrendingUp size={16} className="text-red-600 transform rotate-180" />
-                        <span>Initial Price Speculation</span>
-                        <span className="text-red-600 text-xs">-{Math.floor(Math.random() * 20) + 5}%</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* 4. Sentiment Swings */}
-            <TabsContent value="sentiment" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-lg font-semibold text-primary flex items-center gap-2">
-                    <LineChart size={20} />
-                    Sentiment Swings: Event-Driven Analysis
-                  </h4>
-                </div>
-                
-                {/* Sentiment Chart Placeholder */}
-                <div className="relative h-[300px] border rounded-lg bg-gray-50 p-4">
-                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                    {/* This would be replaced with an actual chart component */}
-                    <p>Interactive Sentiment Chart Would Appear Here</p>
-                    <p>(Line chart with event markers and hover functionality)</p>
-                  </div>
-                </div>
-                
-                <div className="mt-6 space-y-4">
-                  <h5 className="font-medium">Key Sentiment-Shifting Events</h5>
-                  
-                  <div className="space-y-3">
-                    {/* In a real implementation, these would be dynamically generated */}
-                    <div className="p-3 bg-primary/5 rounded-lg">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Market Announcement</span>
-                        <span className="text-green-600 flex items-center gap-1">
-                          <TrendingUp size={14} />
-                          +15% Positive Shift
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Major platform update announced with new token utility features
-                      </p>
-                    </div>
-                    
-                    <div className="p-3 bg-primary/5 rounded-lg">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Regulatory News</span>
-                        <span className="text-red-600 flex items-center gap-1">
-                          <TrendingUp size={14} className="transform rotate-180" />
-                          -12% Negative Shift
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        New regulatory framework introduced for digital assets
-                      </p>
-                    </div>
-                    
-                    <div className="p-3 bg-primary/5 rounded-lg">
-                      <div className="flex justify-between">
-                        <span className="font-medium">Community Response</span>
-                        <span className="text-green-600 flex items-center gap-1">
-                          <TrendingUp size={14} />
-                          +8% Positive Shift
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Community-led initiative to improve protocol governance
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* 5. Quote Cards */}
-            <TabsContent value="quotes" className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-lg font-semibold text-primary flex items-center gap-2">
-                    <MessageCircle size={20} />
-                    Representative Quotes & Comments
-                  </h4>
-                  <div className="flex gap-2">
-                    <select 
-                      className="bg-white border border-primary/20 rounded-md px-2 py-1 text-sm"
-                      onChange={(e) => setSelectedSentiment(e.target.value as SentimentFilter)}
-                    >
-                      <option value="all">All Quotes</option>
-                      <option value="positive">Positive Only</option>
-                      <option value="negative">Negative Only</option>
-                      <option value="neutral">Neutral Only</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {results.exampleQuotes.map((quote, index) => (
-                    <div 
-                      key={index} 
-                      className={`p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer ${getSentimentColor(quote.sentiment)}`}
-                      onClick={() => toast.info(`Viewing more similar to: "${quote.text.substring(0, 30)}..."`)}
-                    >
-                      <p className="text-base italic">"{quote.text}"</p>
-                      <div className="mt-2 flex justify-between text-sm">
-                        <span className="font-medium flex items-center gap-1">
-                          {quote.sentiment === "positive" && <ThumbsUp size={14} className="text-green-600" />}
-                          {quote.sentiment === "negative" && <ThumbsDown size={14} className="text-red-600" />}
-                          {quote.sentiment === "neutral" && <CircleEqual size={14} className="text-gray-600" />}
-                          {quote.sentiment}
-                        </span>
-                        <span>Source: {quote.source}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6 text-center">
-                  <Button 
-                    variant="outline" 
-                    className="mx-auto"
-                    onClick={() => toast.info("Loading more quotes...")}
-                  >
-                    Load More Quotes
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </Card>
-      </Reveal>
-    </div>
-  );
-};
-
-export default QualitativeAnalysis;
