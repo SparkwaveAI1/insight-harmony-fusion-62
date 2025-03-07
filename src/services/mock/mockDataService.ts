@@ -166,7 +166,7 @@ export function generateMockResults(query: ResearchQuery): AnalysisResults {
   const exampleQuotes = generateMockData(query, "quotes");
   const keyPhrases = generateMockData(query, "keywords");
   const aiInsights = generateAIInsights(topTopics, sentimentBreakdown, keyPhrases, query);
-  const trendsAnalysis = generateTrendsAnalysis(sentimentBreakdown, topTopics, query);
+  const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topTopics, query)]; // Fix: Wrapping in array
   
   return {
     topTopics,

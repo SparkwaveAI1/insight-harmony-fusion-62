@@ -1,4 +1,3 @@
-
 import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
@@ -100,7 +99,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     
     // Generate AI insights and trends analysis
     const aiInsights = generateAIInsights(topics, sentimentBreakdown, keywords, query);
-    const trendsAnalysis = generateTrendsAnalysis(sentimentBreakdown, topics, query);
+    const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)]; // Fix: Wrapping in array
     
     return {
       topTopics: topics,
