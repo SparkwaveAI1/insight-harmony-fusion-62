@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Menu, X, Wallet, HandCoins } from "lucide-react";
+import { Menu, X, Wallet, Search, Users, UserPlus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Logo from "../ui-custom/Logo";
@@ -29,6 +29,8 @@ const Header = () => {
 
   const navItems = [
     { label: "Home", href: "/" },
+    { label: "Research", href: "/research" },
+    { label: "Interviewer", href: "/interviewer" },
     { label: "Web3", href: "/earn-prsna" },
   ];
 
@@ -82,7 +84,10 @@ const Header = () => {
                 to={item.href}
                 className={cn(
                   "text-sm font-medium text-foreground/80 hover:text-foreground transition-colors",
-                  (item.href === '/earn-prsna' && isEarnPage)
+                  (item.href === '/earn-prsna' && isEarnPage) || 
+                  (item.href === '/research' && location.pathname === '/research') ||
+                  (item.href === '/interviewer' && location.pathname === '/interviewer') ||
+                  (item.href === '/' && location.pathname === '/')
                     ? "text-primary font-bold" 
                     : ""
                 )}
@@ -119,13 +124,17 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/earn-prsna">
+              <Link to="/research">
                 <Button variant="outline" size="sm">
-                  Open App
+                  <Search className="h-4 w-4 mr-1" />
+                  Research
                 </Button>
               </Link>
-              <Link to="/earn-prsna">
-                <Button size="sm">Get Started</Button>
+              <Link to="/interviewer">
+                <Button size="sm">
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Start
+                </Button>
               </Link>
             </>
           )}
@@ -168,7 +177,10 @@ const Header = () => {
                 to={item.href}
                 className={cn(
                   "text-xl font-medium text-foreground/80 hover:text-foreground transition-colors",
-                  (item.href === '/earn-prsna' && isEarnPage)
+                  (item.href === '/earn-prsna' && isEarnPage) || 
+                  (item.href === '/research' && location.pathname === '/research') ||
+                  (item.href === '/interviewer' && location.pathname === '/interviewer') ||
+                  (item.href === '/' && location.pathname === '/')
                     ? "text-primary font-bold" 
                     : ""
                 )}
@@ -200,11 +212,17 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Link to="/earn-prsna">
-                  <Button variant="outline">Open App</Button>
+                <Link to="/research">
+                  <Button variant="outline" className="w-full justify-center">
+                    <Search className="h-4 w-4 mr-2" />
+                    Research
+                  </Button>
                 </Link>
-                <Link to="/earn-prsna">
-                  <Button>Get Started</Button>
+                <Link to="/interviewer">
+                  <Button className="w-full justify-center">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Get Started
+                  </Button>
                 </Link>
               </>
             )}
