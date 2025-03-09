@@ -1,5 +1,5 @@
 
-import { Rocket, Sparkles, Lightbulb } from "lucide-react";
+import { Rocket, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -28,36 +28,26 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-wrap gap-6 justify-center">
               <Button 
                 size="lg" 
                 className="group"
                 as={Link}
-                to="/ai-focus-groups"
+                to="/research"
                 variant="primary"
               >
-                Run an AI Focus Group
+                PersonaAI Researcher
                 <Rocket className="ml-2 h-4 w-4 transition-transform group-hover:translate-y-[-2px]" />
               </Button>
               <Button 
                 variant="secondary" 
                 size="lg"
                 as={Link}
-                to="/persona-ai-interviewer"
+                to="/interviewer"
                 className="group"
               >
-                Try the PersonaAI Interviewer
-                <Sparkles className="ml-2 h-4 w-4 transition-transform group-hover:rotate-12" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                as="a"
-                href="#qualitative-analysis"
-                className="group"
-              >
-                Insights Conductor
-                <Lightbulb className="ml-2 h-4 w-4 transition-opacity group-hover:opacity-80" />
+                PersonaAI Interviewer
+                <Users className="ml-2 h-4 w-4 transition-transform group-hover:rotate-12" />
               </Button>
             </div>
           </Reveal>

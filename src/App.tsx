@@ -9,6 +9,7 @@ import Contact from "./pages/Contact";
 import Research from "./pages/Research";
 import Interviewer from "./pages/Interviewer";
 import YourPersona from "./pages/YourPersona";
+import Pricing from "./pages/Pricing";
 import "./App.css";
 import "./index.css";
 
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
   {
     path: "/contact",
     element: <Contact />,
+  },
+  {
+    path: "/pricing",
+    element: <Pricing />,
   },
 ]);
 

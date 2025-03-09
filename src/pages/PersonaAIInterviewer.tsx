@@ -1,4 +1,3 @@
-
 import { ArrowRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
@@ -62,7 +61,7 @@ const PersonaAIInterviewer = () => {
                   size="lg" 
                   className="group"
                 >
-                  Try the PersonaAI Interviewer
+                  Create a Persona
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Reveal>
@@ -146,7 +145,7 @@ const PersonaAIInterviewer = () => {
                   </div>
                   
                   <Button className="w-full justify-center group mt-auto">
-                    Launch a Research Interview
+                    Research Interviewer
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Card>

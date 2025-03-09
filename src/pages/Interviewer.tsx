@@ -22,7 +22,7 @@ const Interviewer = () => {
             <div className="max-w-4xl mx-auto text-center">
               <Reveal>
                 <p className="inline-block mb-4 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase bg-primary/10 rounded-full">
-                  AI Interviewer
+                  PersonaAI Interviewer
                 </p>
               </Reveal>
               
@@ -122,7 +122,7 @@ const Interviewer = () => {
                   </div>
                   
                   <Button className="w-full justify-center group mt-auto">
-                    Launch a Research Interview
+                    Research Interviewer
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Card>

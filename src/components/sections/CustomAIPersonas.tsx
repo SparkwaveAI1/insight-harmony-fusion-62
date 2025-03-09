@@ -46,8 +46,11 @@ const CustomAIPersonas = () => {
             </Reveal>
             
             <Reveal delay={200}>
+              <p className="text-xl text-gray-300 mb-4">
+                For research: Talk directly to our AI Research personas. Get qualitative insights, sentiment analysis, and predictive intelligence from deeply-trained personas.
+              </p>
               <p className="text-xl text-gray-300 mb-8">
-                Talk directly to our AI Research Agents. Get market insights, sentiment analysis, and Web3 intelligence from custom personas built for traders and DeFi enthusiasts.
+                Create your own persona for personal and business use.
               </p>
             </Reveal>
             
