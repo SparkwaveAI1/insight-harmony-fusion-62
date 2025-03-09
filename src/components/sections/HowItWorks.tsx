@@ -6,23 +6,27 @@ import Reveal from "../ui-custom/Reveal";
 const steps = [
   {
     icon: <FileText className="h-8 w-8 text-white" />,
-    title: "Define Your Research Goals",
-    description: "Select the type of research you need—focus group, concept testing, or sentiment analysis—and specify your target audience."
+    number: "1️⃣",
+    title: "Define Your Goals",
+    description: "Choose research type—focus group, concept testing, or sentiment analysis—and set your audience."
   },
   {
     icon: <Users className="h-8 w-8 text-white" />,
-    title: "AI-Driven Persona Interviews",
-    description: "Our AI personas engage in discussions, answer questions, and simulate market behaviors relevant to your study."
+    number: "2️⃣",
+    title: "AI Persona Interviews",
+    description: "Our AI personas engage in real-time discussions, simulating market behaviors."
   },
   {
     icon: <PieChart className="h-8 w-8 text-white" />,
-    title: "AI-Generated Insights & Analysis",
-    description: "PersonaAI analyzes the interactions to provide insights into sentiment shifts, decision-making drivers, and behavioral patterns."
+    number: "3️⃣",
+    title: "AI-Generated Insights",
+    description: "Analyze sentiment, decision drivers, and behavioral trends."
   },
   {
     icon: <ChartBar className="h-8 w-8 text-white" />,
+    number: "4️⃣",
     title: "Actionable Research Reports",
-    description: "Receive comprehensive reports with visualized data, key findings, and strategic recommendations for your business decisions."
+    description: "Receive structured reports with visual data, key findings, and strategic recommendations."
   }
 ];
 
@@ -39,9 +43,6 @@ const HowItWorks = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik text-white">
               How It Works
             </h2>
-            <p className="text-primary-foreground/90 text-pretty max-w-2xl mx-auto">
-              Our streamlined process makes qualitative research faster, more accurate, and more insightful than traditional methods.
-            </p>
           </div>
         </Reveal>
 
@@ -52,7 +53,7 @@ const HowItWorks = () => {
                 {/* Step number circle */}
                 <div className="relative">
                   <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0 border border-white/20">
-                    {step.icon}
+                    <span className="text-2xl font-bold">{step.number}</span>
                   </div>
                   
                   {/* Connector line */}

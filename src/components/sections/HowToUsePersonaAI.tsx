@@ -8,71 +8,65 @@ import {
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
 import Reveal from "../ui-custom/Reveal";
+import { Link } from "react-router-dom";
+import Button from "../ui-custom/Button";
 
 interface UseCase {
   icon: React.ReactNode;
   title: string;
   description: string;
-  actionText?: string;
-  details?: {
-    title: string;
-    description: string;
-    example?: string;
-  }[];
+  bullets: string[];
+  example?: string;
+  actionText: string;
+  actionLink: string;
 }
 
 const useCases: UseCase[] = [
   {
     icon: <Users className="h-10 w-10 text-primary" />,
     title: "Market Research & Consumer Insights",
-    description: "Understand your audience through AI-powered focus groups and messaging optimization.",
-    actionText: "Discover buyer personas",
-    details: [
-      {
-        title: "AI-Powered Focus Groups:",
-        description: "Scalable qualitative discussions to test product-market fit."
-      },
-      {
-        title: "Brand Messaging Optimization:",
-        description: "A/B test ad copy, pricing models, and branding with AI-driven feedback."
-      },
-      {
-        title: "Example:",
-        description: "Which messaging resonates better with Gen Z—'Sustainable Investing' or 'AI-Powered Portfolio Growth'?"
-      }
-    ]
+    description: "Get AI-powered focus groups for deeper, faster insights into buyer behavior.",
+    bullets: [
+      "Test product-market fit with scalable qualitative discussions.",
+      "Optimize messaging through AI-driven A/B testing."
+    ],
+    example: "What resonates more with Gen Z—\"Sustainable Investing\" or \"AI-Powered Portfolio Growth\"?",
+    actionText: "Discover Buyer Personas",
+    actionLink: "/research#insights-conductor"
   },
   {
     icon: <LightbulbIcon className="h-10 w-10 text-primary" />,
-    title: "Ideation, Strategy & Planning",
-    description: "Validate concepts, refine strategies, and optimize innovation with AI-driven persona feedback.",
-    actionText: "Validate your concepts",
-    details: [
-      {
-        title: "Concept Testing & Validation:",
-        description: "Assess early-stage ideas, product positioning, and go-to-market strategies with AI-powered feedback loops."
-      },
-      {
-        title: "Strategic Decision Optimization:",
-        description: "Refine business models, customer acquisition approaches, and messaging frameworks through AI-driven insights."
-      },
-      {
-        title: "Example:",
-        description: "Which product positioning works better? 'AI-Powered Investing' vs. 'Data-Driven Wealth Growth'?"
-      }
-    ]
+    title: "Strategy & Ideation",
+    description: "Refine business strategies with AI-powered feedback loops.",
+    bullets: [
+      "Validate concepts & positioning before launch.",
+      "Optimize acquisition & branding strategies with AI insights."
+    ],
+    example: "Which positioning performs better? \"AI-Powered Investing\" vs. \"Data-Driven Wealth Growth\"?",
+    actionText: "Validate Your Concepts",
+    actionLink: "/research#ai-focus-groups"
   },
   {
     icon: <TrendingUp className="h-10 w-10 text-primary" />,
-    title: "Long-term Consumer Intelligence",
-    description: "Develop an AI persona once and leverage it for years of consistent consumer insights.",
-    actionText: "Build lasting insights",
+    title: "Long-Term Consumer Intelligence",
+    description: "Develop AI personas that provide continuous insights over time.",
+    bullets: [
+      "Track shifting trends & behaviors using persistent AI personas.",
+      "Leverage qualitative AI analytics for smarter decision-making."
+    ],
+    actionText: "Build Lasting Insights",
+    actionLink: "/your-persona"
   },
   {
     icon: <SearchCode className="h-10 w-10 text-primary" />,
     title: "AI & Web3 Research",
-    description: "Conduct specialized research for emerging technologies, tokens, and community ecosystems.",
-    actionText: "Explore tech audiences",
+    description: "Conduct specialized research on AI tokens, blockchain ecosystems, and emerging tech communities.",
+    bullets: [
+      "Understand token incentives & retention strategies.",
+      "Simulate community sentiment & adoption trends."
+    ],
+    actionText: "Explore Tech Audiences",
+    actionLink: "/earn-prsna"
   },
 ];
 
@@ -82,20 +76,16 @@ const HowToUsePersonaAI = () => {
       <div className="container px-4 mx-auto">
         <Reveal>
           <div className="text-center mb-12">
-            <p className="text-primary font-medium text-lg mb-2">Features</p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 font-plasmik text-[#1d3a8a]">
-              How Can You Use Persona AI?
+              How You Can Use PersonaAI
             </h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Transform how you understand your audience with these powerful application areas
-            </p>
           </div>
         </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {useCases.map((useCase, index) => (
             <Reveal key={index} delay={index * 100}>
-              <Card className={`h-full border-2 ${index === 0 || index === 1 ? 'border-primary/20' : 'border-slate-200'} hover:border-primary/20 transition-all`}>
+              <Card className="h-full border-2 border-slate-200 hover:border-primary/20 transition-all">
                 <div className="flex flex-col h-full">
                   <div className="flex gap-4 items-start mb-4">
                     <div className="p-3 bg-blue-50 rounded-xl">
@@ -107,22 +97,29 @@ const HowToUsePersonaAI = () => {
                     </div>
                   </div>
 
-                  {useCase.actionText && (
-                    <p className="text-primary font-medium mt-auto pt-3">
-                      {useCase.actionText} →
-                    </p>
-                  )}
+                  <div className="mt-4 space-y-2">
+                    {useCase.bullets.map((bullet, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <span className="text-primary flex-shrink-0 pt-1">🔹</span>
+                        <p className="text-slate-600">{bullet}</p>
+                      </div>
+                    ))}
+                    
+                    {useCase.example && (
+                      <div className="flex items-start gap-2 mt-3">
+                        <span className="text-primary flex-shrink-0 pt-1">🔹</span>
+                        <p className="text-slate-600"><span className="font-medium">Example:</span> {useCase.example}</p>
+                      </div>
+                    )}
+                  </div>
 
-                  {(index === 0 || index === 1) && useCase.details && (
-                    <div className="mt-6 border-t pt-4 border-slate-100">
-                      {useCase.details.map((detail, idx) => (
-                        <div key={idx} className="mb-4 last:mb-0">
-                          <p className="font-medium">{detail.title}</p>
-                          <p className="text-slate-600">{detail.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="mt-auto pt-6">
+                    <Link to={useCase.actionLink}>
+                      <Button variant="link" className="text-primary p-0 font-medium hover:underline">
+                        [{useCase.actionText} →]
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </Card>
             </Reveal>

@@ -1,24 +1,23 @@
 
 import { User, Users, TrendingUp, Search, Briefcase } from "lucide-react";
 import Section from "../ui-custom/Section";
-import Card from "../ui-custom/Card";
 import Reveal from "../ui-custom/Reveal";
 
 const features = [
   {
     icon: <User className="h-6 w-6 text-primary" />,
     title: "AI Personas",
-    description: "High-fidelity consumer simulations built from structured interviews."
+    description: "High-fidelity consumer simulations."
   },
   {
     icon: <Users className="h-6 w-6 text-primary" />,
     title: "AI-Driven Focus Groups",
-    description: "Test messaging, branding, and concepts instantly."
+    description: "Instant insights into messaging, branding, and product fit."
   },
   {
     icon: <TrendingUp className="h-6 w-6 text-primary" />,
     title: "Market Simulation",
-    description: "Predict buying behavior using AI-driven personas."
+    description: "Predict buying behavior using AI models."
   },
   {
     icon: <Search className="h-6 w-6 text-primary" />,
@@ -27,8 +26,8 @@ const features = [
   },
   {
     icon: <Briefcase className="h-6 w-6 text-primary" />,
-    title: "Custom B2B Research Tools",
-    description: "Enterprise licensing, private research AI models."
+    title: "Enterprise Research Tools",
+    description: "Private AI models for B2B insights."
   }
 ];
 
@@ -38,28 +37,24 @@ const Features = () => {
       <div className="container px-4 mx-auto">
         <Reveal>
           <div className="max-w-2xl mx-auto text-center mb-16">
-            <p className="inline-block mb-4 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase bg-primary/10 rounded-full">
-              Features
-            </p>
             <h2 className="text-3xl md:text-4xl font-bold mb-4 font-plasmik">
-              Advanced Research Features
+              Features That Set Us Apart
             </h2>
-            <p className="text-muted-foreground text-pretty">
-              Our platform combines powerful AI-driven tools with an intuitive interface, making qualitative research more efficient and insightful.
-            </p>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {features.map((feature, index) => (
             <Reveal key={index} delay={100 * index}>
-              <Card className="h-full hover:shadow-md transition-all duration-300">
+              <div className="flex flex-col items-center text-center">
                 <div className="p-2 bg-primary/10 rounded-lg inline-block mb-4">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-medium mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </Card>
+                <p className="flex items-center gap-2 text-pretty">
+                  <span className="text-primary">🔹</span>
+                  <span><strong>{feature.title}</strong> – {feature.description}</span>
+                </p>
+              </div>
             </Reveal>
           ))}
         </div>
