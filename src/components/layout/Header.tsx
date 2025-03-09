@@ -57,14 +57,17 @@ const Header = () => {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4",
         isScrolled 
-          ? "bg-background/80 backdrop-blur-md border-b" 
-          : "bg-slate-900/80 backdrop-blur-md border-b border-slate-800"
+          ? "bg-background/95 backdrop-blur-md shadow-md" 
+          : "bg-slate-900/90 backdrop-blur-md"
       )}
     >
       <div className="container flex items-center justify-between">
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
-            <Logo size="md" />
+            <Logo 
+              size="md" 
+              className={isScrolled ? "text-foreground" : "text-white"}
+            />
           </Link>
         </div>
 
@@ -75,7 +78,12 @@ const Header = () => {
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item.href)}
-                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isScrolled 
+                    ? "text-foreground hover:text-primary" 
+                    : "text-white/90 hover:text-white"
+                )}
               >
                 {item.label}
               </button>
@@ -84,13 +92,15 @@ const Header = () => {
                 key={item.label}
                 to={item.href}
                 className={cn(
-                  "text-sm font-medium text-foreground/80 hover:text-foreground transition-colors",
+                  "text-sm font-medium transition-colors",
                   (item.href === '/earn-prsna' && isEarnPage) || 
                   (item.href === '/research' && location.pathname === '/research') ||
                   (item.href === '/interviewer' && location.pathname === '/interviewer') ||
                   (item.href === '/' && location.pathname === '/')
                     ? "text-primary font-bold" 
-                    : ""
+                    : isScrolled 
+                      ? "text-foreground/80 hover:text-foreground" 
+                      : "text-white/90 hover:text-white"
                 )}
               >
                 {item.label}
@@ -142,9 +152,9 @@ const Header = () => {
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? (
-            <X className="h-6 w-6" />
+            <X className={cn("h-6 w-6", isScrolled ? "text-foreground" : "text-white")} />
           ) : (
-            <Menu className="h-6 w-6" />
+            <Menu className={cn("h-6 w-6", isScrolled ? "text-foreground" : "text-white")} />
           )}
         </button>
       </div>

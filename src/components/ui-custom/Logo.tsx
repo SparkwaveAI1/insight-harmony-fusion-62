@@ -1,12 +1,14 @@
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  textClassName?: string;
 }
 
-const Logo: React.FC<LogoProps> = ({ className, size = 'md' }) => {
+const Logo: React.FC<LogoProps> = ({ className, size = 'md', textClassName }) => {
   const sizeClasses = {
     sm: 'h-6',
     md: 'h-8',
@@ -33,7 +35,7 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md' }) => {
           </div>
         </div>
       </div>
-      <span className="ml-2 font-medium text-xl">
+      <span className={cn("ml-2 font-medium text-xl", textClassName)}>
         Persona<span className="text-primary">AI</span>
       </span>
     </div>
