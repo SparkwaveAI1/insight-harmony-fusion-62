@@ -24,7 +24,7 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md">
-              AI-Powered Market Research with Research-Grade AI Personas
+              Market Research, Reimagined: AI-Driven Qualitative Insights
             </h1>
           </Reveal>
           
