@@ -13,7 +13,7 @@ const subsections = [
     description: "Simulate qualitative research with AI personas that respond like real consumers, giving you deep insights without the traditional time and cost constraints.",
     link: "/ai-focus-groups",
     linkText: "Run an AI Focus Group Now",
-    featured: true
+    featured: false
   },
   {
     icon: <Search className="h-10 w-10 text-primary" />,
@@ -59,41 +59,22 @@ const ExplanatorySubsections = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {subsections.map((subsection, index) => (
             <Reveal key={index} delay={index * 100}>
-              <div 
-                className={`
-                  ${subsection.featured 
-                    ? 'bg-gradient-to-br from-blue-700 to-blue-900 text-white border-blue-600' 
-                    : 'bg-background border'} 
-                  rounded-xl p-8 h-full flex flex-col transition-all hover:shadow-xl
-                  ${subsection.featured ? 'shadow-lg' : ''}
-                `}
-              >
-                {subsection.featured && (
-                  <div className="bg-accent text-accent-foreground text-sm font-bold px-3 py-1 rounded-full self-start mb-4">
-                    Recommended
-                  </div>
-                )}
-                
+              <div className="bg-background border rounded-xl p-8 h-full flex flex-col transition-all hover:shadow-xl">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className={`p-3 ${subsection.featured ? 'bg-white/10' : 'bg-primary/10'} rounded-lg inline-block`}>
+                  <div className="p-3 bg-primary/10 rounded-lg inline-block">
                     {subsection.icon}
                   </div>
                   <h3 className="text-2xl font-bold">{subsection.title}</h3>
                 </div>
                 
-                <p className={`${subsection.featured ? 'text-white/90' : 'text-muted-foreground'} mb-8 flex-grow text-lg`}>
+                <p className="text-muted-foreground mb-8 flex-grow text-lg">
                   {subsection.description}
                 </p>
                 
                 <Link to={subsection.link} className="mt-auto">
                   <Button 
-                    variant={subsection.featured ? "primary" : "outline"} 
-                    className={`
-                      w-full justify-center group text-base
-                      ${subsection.featured 
-                        ? 'bg-white text-blue-700 hover:bg-white/90 border border-white/20' 
-                        : 'hover:scale-[1.02] transition-transform'}
-                    `}
+                    variant="outline" 
+                    className="w-full justify-center group text-base hover:scale-[1.02] transition-transform"
                   >
                     {subsection.linkText}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />

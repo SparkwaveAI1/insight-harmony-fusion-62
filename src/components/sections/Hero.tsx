@@ -47,11 +47,11 @@ const Hero = () => {
                 <Rocket className="ml-2 h-5 w-5 transition-transform group-hover:translate-y-[-2px]" />
               </Button>
               <Button 
-                variant="secondary" 
+                variant="primary" 
                 size="lg"
                 as={Link}
                 to="/interviewer"
-                className="group py-6 px-8 text-lg bg-gray-600 hover:bg-gray-700 transition-all shadow-lg hover:shadow-gray-600/20"
+                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30"
               >
                 PersonaAI Interviewer
                 <Users className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
