@@ -101,7 +101,7 @@ const Pricing = () => {
               <Reveal>
                 <PricingTier
                   title="Basic"
-                  price="$99"
+                  price="$XX"
                   description="Perfect for individuals and small teams getting started with AI research."
                   features={[
                     "5 AI focus groups per month",
@@ -117,7 +117,7 @@ const Pricing = () => {
               <Reveal delay={200}>
                 <PricingTier
                   title="Professional"
-                  price="$249"
+                  price="$XX"
                   description="Ideal for growing businesses and research teams."
                   features={[
                     "15 AI focus groups per month",
