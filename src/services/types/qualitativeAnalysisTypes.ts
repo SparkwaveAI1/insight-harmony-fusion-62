@@ -18,7 +18,7 @@ export interface Quote {
   sentiment: "positive" | "negative" | "neutral";
 }
 
-// Added this new type for QuoteData that various services are using
+// QuoteData type with required date property
 export interface QuoteData {
   text: string;
   source: string;
@@ -50,7 +50,7 @@ export interface TopicInsight {
   sentiment: "positive" | "negative" | "neutral";
 }
 
-// Adding missing properties needed by InsightsGenerator
+// Adding all required properties for AnalysisResults
 export interface AnalysisResults {
   aiSummary: string;
   reportGeneratedAt: string;
@@ -74,16 +74,21 @@ export interface AnalysisResults {
   topTopics?: string[];
   exampleQuotes?: QuoteData[];
   trendsAnalysis?: string[];
+  keyPhrases?: string[];
 }
 
 // Adding constants needed by apiKeyUtils
 export const STORAGE_KEYS = {
   API_KEYS: "persona_api_keys",
-  USER_PREFERENCES: "persona_user_preferences"
+  USER_PREFERENCES: "persona_user_preferences",
+  NEWS_API_KEY: "news_api_key",
+  TWITTER_API_KEY: "twitter_api_key",
+  REDDIT_API_KEY: "reddit_api_key"
 };
 
 export const DEFAULT_API_KEYS = {
   OPENAI: "",
   TWITTER: "",
-  NEWS_API: ""
+  NEWS_API: "",
+  REDDIT: ""
 };
