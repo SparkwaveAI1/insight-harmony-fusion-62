@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Menu, X, Wallet, Search, Users, UserPlus } from "lucide-react";
+import { Menu, X, Wallet, UserPlus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Logo from "../ui-custom/Logo";
@@ -125,12 +125,6 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/research">
-                <Button variant="outline" size="sm">
-                  <Search className="h-4 w-4 mr-1" />
-                  Research
-                </Button>
-              </Link>
               <Link to="/interviewer">
                 <Button size="sm">
                   <UserPlus className="h-4 w-4 mr-1" />
@@ -213,12 +207,6 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Link to="/research">
-                  <Button variant="outline" className="w-full justify-center">
-                    <Search className="h-4 w-4 mr-2" />
-                    Research
-                  </Button>
-                </Link>
                 <Link to="/interviewer">
                   <Button className="w-full justify-center">
                     <UserPlus className="h-4 w-4 mr-2" />
