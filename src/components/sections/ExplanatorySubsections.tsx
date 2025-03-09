@@ -39,7 +39,7 @@ const subsections = [
 
 const ExplanatorySubsections = () => {
   return (
-    <Section className="py-20 bg-accent/20">
+    <Section className="py-20 bg-[#D3E4FD]">
       <div className="container px-4 mx-auto">
         <Reveal>
           <div className="max-w-2xl mx-auto text-center mb-16">

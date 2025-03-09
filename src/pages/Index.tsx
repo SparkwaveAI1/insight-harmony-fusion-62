@@ -2,8 +2,6 @@
 import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import CustomAIPersonas from "@/components/sections/CustomAIPersonas";
-import HowToUsePersonaAI from "@/components/sections/HowToUsePersonaAI";
-import Features from "@/components/sections/Features";
 import HowItWorks from "@/components/sections/HowItWorks";
 import TokenEcosystem from "@/components/sections/TokenEcosystem";
 import Footer from "@/components/sections/Footer";
@@ -94,7 +92,7 @@ const Index = () => {
                 <Reveal delay={100}>
                   <p className="text-muted-foreground text-pretty mb-8">
                     Use AI-driven interviews to build accurate personas or conduct research studies at scale—
-                    then leverage those personas for ongoing insights.
+                    then leverage those personas for ongoing insights. Use our Research Moderator for custom research with human participants.
                   </p>
                 </Reveal>
                 
@@ -148,8 +146,6 @@ const Index = () => {
         <ExplanatorySubsections />
         
         <CustomAIPersonas />
-        <HowToUsePersonaAI />
-        <Features />
         <HowItWorks />
         <TokenEcosystem />
       </main>
