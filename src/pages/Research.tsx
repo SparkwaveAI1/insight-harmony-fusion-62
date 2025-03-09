@@ -22,7 +22,7 @@ const Research = () => {
             <div className="max-w-4xl mx-auto text-center">
               <Reveal>
                 <p className="inline-block mb-4 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase bg-primary/10 rounded-full">
-                  Research Solutions
+                  PersonaAI Researcher
                 </p>
               </Reveal>
               
