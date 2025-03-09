@@ -52,7 +52,8 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
         return {
           text: article.description || article.title,
           sentiment,
-          source: "News: " + article.source.name
+          source: "News: " + article.source.name,
+          date: article.publishedAt ? new Date(article.publishedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
         };
       });
       
@@ -90,7 +91,8 @@ export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: 
       quotes: [{
         text: "Twitter API integration requires authentication. Please set up Twitter API credentials to access real data.",
         sentiment: "neutral",
-        source: "Twitter"
+        source: "Twitter",
+        date: new Date().toISOString().split('T')[0]
       }], 
       keywords: ["twitter", "api", "authentication"], 
       topics: ["Twitter API Integration"] 
@@ -131,7 +133,8 @@ export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: Q
           return {
             text: text.substring(0, 200) + (text.length > 200 ? "..." : ""),
             sentiment,
-            source: `Reddit: r/${post.data.subreddit}`
+            source: `Reddit: r/${post.data.subreddit}`,
+            date: post.data.created ? new Date(post.data.created * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
           };
         });
       

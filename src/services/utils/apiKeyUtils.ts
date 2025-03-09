@@ -5,9 +5,9 @@ import { STORAGE_KEYS, DEFAULT_API_KEYS } from "../types/qualitativeAnalysisType
 // Get API keys (user's keys if they exist, otherwise defaults)
 export const getApiKeys = () => {
   return {
-    newsApi: localStorage.getItem(STORAGE_KEYS.NEWS_API_KEY) || DEFAULT_API_KEYS.newsApi,
-    twitter: localStorage.getItem(STORAGE_KEYS.TWITTER_API_KEY) || DEFAULT_API_KEYS.twitter,
-    reddit: localStorage.getItem(STORAGE_KEYS.REDDIT_API_KEY) || DEFAULT_API_KEYS.reddit,
+    newsApi: localStorage.getItem(STORAGE_KEYS.NEWS_API_KEY) || DEFAULT_API_KEYS.NEWS_API,
+    twitter: localStorage.getItem(STORAGE_KEYS.TWITTER_API_KEY) || DEFAULT_API_KEYS.TWITTER,
+    reddit: localStorage.getItem(STORAGE_KEYS.REDDIT_API_KEY) || DEFAULT_API_KEYS.REDDIT,
   };
 };
 

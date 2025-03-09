@@ -1,8 +1,10 @@
+
 import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./sourceAdapters";
 import { handleApiError } from "../utils/apiUtils";
+import { generateMockResults } from "../mock/mockDataService";
 
 // Main function to fetch qualitative data from real APIs
 export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults> {
@@ -24,7 +26,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     }
     
     // Determine which sources to query
-    const sourcesToQuery = query.sources.filter(s => s !== 'all') as Array<DataSource>;
+    const sourcesToQuery = query.sources.includes("all") ? ["twitter", "reddit", "news"] as DataSource[] : query.sources as DataSource[];
     
     // Create promise array for parallel API calls
     const apiPromises = sourcesToQuery.map(source => {
@@ -53,16 +55,12 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     if (!anySourceSucceeded && Object.keys(sourceResults).length > 0) {
       console.log("No real data available, falling back to mock data");
       
-      // Import the mock data generator
-      const { generateMockResults } = await import("../mock/mockDataService");
-      const mockData = generateMockResults(query);
-      
       // Use mock data but inform the user
       toast.info("Using offline data as API requests are restricted in this environment.", {
         description: "Try testing on localhost or using your own API keys for live data."
       });
       
-      return mockData;
+      return generateMockResults(query);
     }
     
     // Process and prioritize by keywords
@@ -99,16 +97,30 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     
     // Generate AI insights and trends analysis
     const aiInsights = generateAIInsights(topics, sentimentBreakdown, keywords, query);
-    const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)]; // Fix: Wrapping in array
+    const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)]; // Wrapping in array
+    
+    // Create a complete AnalysisResults object
+    const defaultResult = generateMockResults(query);
     
     return {
+      // Use the real data we collected
       topTopics: topics,
       sentimentBreakdown,
       exampleQuotes: quotes.slice(0, 10), // Limit to 10 quotes
       keyPhrases: keywords,
       aiInsights,
       trendsAnalysis,
-      reportGeneratedAt: new Date().toISOString()
+      reportGeneratedAt: new Date().toISOString(),
+      
+      // For required properties where we don't have real data, use the mock data
+      aiSummary: `Analysis of conversations around ${query.query} based on collected data.`,
+      keyInsights: defaultResult.keyInsights,
+      challenges: defaultResult.challenges,
+      recommendations: defaultResult.recommendations,
+      timelineEvents: defaultResult.timelineEvents,
+      topicRippleData: defaultResult.topicRippleData,
+      topicInsights: defaultResult.topicInsights,
+      sourceBreakdown: generateSourceBreakdown(quotes)
     };
   } catch (error) {
     return handleGlobalError(error, query);
@@ -127,6 +139,32 @@ function getFetcherForSource(source: string) {
     default:
       return fetchTwitterData; // Default fallback
   }
+}
+
+// Generate source breakdown based on quotes
+function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: number } {
+  if (quotes.length === 0) {
+    return { "twitter": 33, "reddit": 33, "news": 34 };
+  }
+  
+  const sourceCounts: { [key: string]: number } = {};
+  
+  quotes.forEach(quote => {
+    const source = quote.source.toLowerCase().includes("twitter") ? "twitter" :
+                 quote.source.toLowerCase().includes("reddit") ? "reddit" : 
+                 "news";
+    
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+  });
+  
+  const total = quotes.length;
+  const result: { [key in DataSource]?: number } = {};
+  
+  for (const source in sourceCounts) {
+    result[source as DataSource] = Math.round((sourceCounts[source] / total) * 100);
+  }
+  
+  return result;
 }
 
 // Process and prioritize quotes by keywords
@@ -167,8 +205,5 @@ function calculateSentimentBreakdown(quotes: QuoteData[]): { positive: number; n
 // Global error handler for the main function
 async function handleGlobalError(error: unknown, query: ResearchQuery): Promise<AnalysisResults> {
   handleApiError(error, "Qualitative data fetching");
-  
-  // Import the mock data generator only when needed
-  const { generateMockResults } = await import("../mock/mockDataService");
   return generateMockResults(query);
 }

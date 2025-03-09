@@ -50,7 +50,7 @@ export interface TopicInsight {
   sentiment: "positive" | "negative" | "neutral";
 }
 
-// Adding all required properties for AnalysisResults
+// Complete AnalysisResults interface with all required properties
 export interface AnalysisResults {
   aiSummary: string;
   reportGeneratedAt: string;
@@ -70,10 +70,10 @@ export interface AnalysisResults {
   };
   
   // Additional properties needed by InsightsGenerator
-  aiInsights?: string[];
-  topTopics?: string[];
-  exampleQuotes?: QuoteData[];
-  trendsAnalysis?: string[];
+  aiInsights: string[];
+  topTopics: string[];
+  exampleQuotes: QuoteData[];
+  trendsAnalysis: string[];
   keyPhrases?: string[];
 }
 
