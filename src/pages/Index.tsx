@@ -88,8 +88,7 @@ const Index = () => {
                 
                 <Reveal delay={100}>
                   <p className="text-muted-foreground text-pretty mb-8 flex-grow">
-                    Use AI-driven interviews to build accurate personas or conduct research studies at scale—
-                    then leverage those personas for ongoing insights. Use our Research Moderator for custom research with human participants.
+                    Use AI-driven interviews to build accurate personas or conduct research studies at scale. Use our Research Moderator for custom research with human participants.
                   </p>
                 </Reveal>
                 

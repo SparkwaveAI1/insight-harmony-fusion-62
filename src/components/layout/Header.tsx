@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Menu, X, Wallet, UserPlus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -29,7 +28,6 @@ const Header = () => {
 
   const navItems = [
     { label: "Home", href: "/" },
-    { label: "Research", href: "/research" },
     { label: "AI Interviewer", href: "/interviewer" },
     { label: "Web3", href: "/earn-prsna" },
     { label: "Pricing", href: "/pricing" },
