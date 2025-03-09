@@ -12,28 +12,32 @@ const subsections = [
     title: "AI Focus Groups",
     description: "Simulate qualitative research with AI personas that respond like real consumers, giving you deep insights without the traditional time and cost constraints.",
     link: "/ai-focus-groups",
-    linkText: "Explore AI Focus Groups",
+    linkText: "Run an AI Focus Group Now",
+    featured: true
   },
   {
     icon: <Search className="h-10 w-10 text-primary" />,
     title: "Insights Conductor",
     description: "Extract actionable insights from your data with AI-driven analysis that identifies patterns, sentiment, and decision drivers at scale.",
     link: "/research#insights-conductor",
-    linkText: "Try Insights Conductor",
+    linkText: "Generate Insights Now",
+    featured: false
   },
   {
     icon: <UserPlus className="h-10 w-10 text-primary" />,
     title: "Persona Interviewer",
     description: "Build high-fidelity AI personas through structured interviews, creating digital twins that mirror real consumer behaviors and preferences.",
     link: "/persona-ai-interviewer",
-    linkText: "Use Persona Interviewer",
+    linkText: "Create Your First Persona",
+    featured: false
   },
   {
     icon: <Settings className="h-10 w-10 text-primary" />,
     title: "Research Moderator",
     description: "Guide and customize AI research sessions with precision, ensuring you get exactly the qualitative data you need for informed decisions.",
     link: "/interviewer",
-    linkText: "Access Research Moderator",
+    linkText: "Set Up Research Session",
+    featured: false
   },
 ];
 
@@ -46,7 +50,7 @@ const ExplanatorySubsections = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-4 font-plasmik">
               Our Research Toolkit
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               Comprehensive AI-powered solutions for every research need
             </p>
           </div>
@@ -55,22 +59,44 @@ const ExplanatorySubsections = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {subsections.map((subsection, index) => (
             <Reveal key={index} delay={index * 100}>
-              <div className="bg-background border rounded-xl p-6 h-full flex flex-col">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-2 bg-primary/10 rounded-lg inline-block">
+              <div 
+                className={`
+                  ${subsection.featured 
+                    ? 'bg-gradient-to-br from-blue-700 to-blue-900 text-white border-blue-600' 
+                    : 'bg-background border'} 
+                  rounded-xl p-8 h-full flex flex-col transition-all hover:shadow-xl
+                  ${subsection.featured ? 'shadow-lg' : ''}
+                `}
+              >
+                {subsection.featured && (
+                  <div className="bg-accent text-accent-foreground text-sm font-bold px-3 py-1 rounded-full self-start mb-4">
+                    Recommended
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-4 mb-6">
+                  <div className={`p-3 ${subsection.featured ? 'bg-white/10' : 'bg-primary/10'} rounded-lg inline-block`}>
                     {subsection.icon}
                   </div>
-                  <h3 className="text-xl font-bold">{subsection.title}</h3>
+                  <h3 className="text-2xl font-bold">{subsection.title}</h3>
                 </div>
                 
-                <p className="text-muted-foreground mb-6 flex-grow">
+                <p className={`${subsection.featured ? 'text-white/90' : 'text-muted-foreground'} mb-8 flex-grow text-lg`}>
                   {subsection.description}
                 </p>
                 
                 <Link to={subsection.link} className="mt-auto">
-                  <Button variant="outline" className="w-full justify-center group">
+                  <Button 
+                    variant={subsection.featured ? "primary" : "outline"} 
+                    className={`
+                      w-full justify-center group text-base
+                      ${subsection.featured 
+                        ? 'bg-white text-blue-700 hover:bg-white/90 border border-white/20' 
+                        : 'hover:scale-[1.02] transition-transform'}
+                    `}
+                  >
                     {subsection.linkText}
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
               </div>
