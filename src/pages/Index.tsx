@@ -24,7 +24,7 @@ const Index = () => {
           <div className="container px-4 mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
               {/* PersonaAI Researcher Section */}
-              <div className="bg-primary/5 rounded-xl p-8">
+              <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
                 <Reveal>
                   <h2 className="text-3xl font-bold mb-6 font-plasmik">
                     PersonaAI Researcher
@@ -32,46 +32,41 @@ const Index = () => {
                 </Reveal>
                 
                 <Reveal delay={100}>
-                  <p className="text-muted-foreground text-pretty mb-8">
+                  <p className="text-muted-foreground text-pretty mb-8 flex-grow">
                     Leverage our AI-powered research tools to uncover qualitative insights at scale. 
                     From the Insights Conductor to AI Focus Groups, get the data you need fast.
                   </p>
                 </Reveal>
                 
                 <Reveal delay={200}>
-                  <div className="flex flex-col gap-4">
-                    <Link to="/research#insights-conductor">
+                  <div className="space-y-4 mt-auto">
+                    <Link to="/research#insights-conductor" className="block">
                       <Button 
                         variant="outline" 
                         size="lg" 
-                        className="w-full group"
+                        className="w-full group flex items-center justify-center"
                       >
                         <Search className="mr-2 h-4 w-4" />
                         Insights Conductor
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </Link>
-                    <Link to="/research#ai-focus-groups">
+                    <Link to="/research#ai-focus-groups" className="block">
                       <Button 
                         variant="outline" 
                         size="lg" 
-                        className="w-full group"
+                        className="w-full group flex items-center justify-center"
                       >
                         <Users className="mr-2 h-4 w-4" />
                         AI Focus Groups
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </Link>
-                  </div>
-                </Reveal>
-                
-                <Reveal delay={300}>
-                  <div className="mt-6">
-                    <Link to="/research">
+                    <Link to="/research" className="block mt-6">
                       <Button 
                         variant="primary" 
                         size="lg" 
-                        className="w-full group"
+                        className="w-full group flex items-center justify-center"
                       >
                         Explore All Research Solutions
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -82,7 +77,7 @@ const Index = () => {
               </div>
               
               {/* AI Interviewer Section */}
-              <div className="bg-primary/5 rounded-xl p-8">
+              <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
                 <Reveal>
                   <h2 className="text-3xl font-bold mb-6 font-plasmik">
                     PersonaAI Interviewer
@@ -90,46 +85,41 @@ const Index = () => {
                 </Reveal>
                 
                 <Reveal delay={100}>
-                  <p className="text-muted-foreground text-pretty mb-8">
+                  <p className="text-muted-foreground text-pretty mb-8 flex-grow">
                     Use AI-driven interviews to build accurate personas or conduct research studies at scale—
                     then leverage those personas for ongoing insights. Use our Research Moderator for custom research with human participants.
                   </p>
                 </Reveal>
                 
                 <Reveal delay={200}>
-                  <div className="flex flex-col gap-4">
-                    <Link to="/persona-ai-interviewer">
+                  <div className="space-y-4 mt-auto">
+                    <Link to="/persona-ai-interviewer" className="block">
                       <Button 
                         variant="outline" 
                         size="lg" 
-                        className="w-full group"
+                        className="w-full group flex items-center justify-center"
                       >
                         <UserPlus className="mr-2 h-4 w-4" />
                         PersonaAI Interviewer
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </Link>
-                    <Link to="/interviewer">
+                    <Link to="/interviewer" className="block">
                       <Button 
                         variant="outline" 
                         size="lg" 
-                        className="w-full group"
+                        className="w-full group flex items-center justify-center"
                       >
                         <Settings className="mr-2 h-4 w-4" />
                         Research Moderator
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </Link>
-                  </div>
-                </Reveal>
-                
-                <Reveal delay={300}>
-                  <div className="mt-6">
-                    <Link to="/interviewer">
+                    <Link to="/interviewer" className="block mt-6">
                       <Button 
                         variant="primary" 
                         size="lg" 
-                        className="w-full group"
+                        className="w-full group flex items-center justify-center"
                       >
                         Explore AI Interviewer
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
