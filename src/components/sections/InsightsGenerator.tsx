@@ -120,7 +120,10 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {results.aiInsights.map((insight, index) => (
+              {results.aiInsights && results.aiInsights.map((insight, index) => (
+                <p key={index} className="text-sm">• {insight}</p>
+              ))}
+              {!results.aiInsights && results.keyInsights && results.keyInsights.map((insight, index) => (
                 <p key={index} className="text-sm">• {insight}</p>
               ))}
             </div>
@@ -134,8 +137,11 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {results.topTopics.map((topic, index) => (
+                {results.topTopics && results.topTopics.map((topic, index) => (
                   <Badge key={index} variant="secondary">{topic}</Badge>
+                ))}
+                {!results.topTopics && results.topicInsights && results.topicInsights.map((insight, index) => (
+                  <Badge key={index} variant="secondary">{insight.topic}</Badge>
                 ))}
               </div>
             </CardContent>
@@ -194,7 +200,7 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {results.exampleQuotes.map((quote, index) => (
+              {results.exampleQuotes && results.exampleQuotes.map((quote, index) => (
                 <Card key={index} className={`border-l-4 ${
                   quote.sentiment === 'positive' ? 'border-l-green-500' :
                   quote.sentiment === 'negative' ? 'border-l-red-500' : 'border-l-gray-500'
@@ -213,6 +219,27 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
                   </CardContent>
                 </Card>
               ))}
+              {!results.exampleQuotes && results.timelineEvents && results.timelineEvents.map((event) => (
+                event.quotes && event.quotes.map((quote, index) => (
+                  <Card key={index} className={`border-l-4 ${
+                    quote.sentiment === 'positive' ? 'border-l-green-500' :
+                    quote.sentiment === 'negative' ? 'border-l-red-500' : 'border-l-gray-500'
+                  }`}>
+                    <CardContent className="py-4">
+                      <p className="italic text-sm mb-2">"{quote.text}"</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground">{quote.source}</span>
+                        <Badge variant={
+                          quote.sentiment === 'positive' ? 'default' :
+                          quote.sentiment === 'negative' ? 'destructive' : 'secondary'
+                        }>
+                          {quote.sentiment.charAt(0).toUpperCase() + quote.sentiment.slice(1)}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -226,8 +253,16 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {results.trendsAnalysis.map((trend, index) => (
+              {results.trendsAnalysis && results.trendsAnalysis.map((trend, index) => (
                 <div key={index} className="whitespace-pre-line text-sm">{trend}</div>
+              ))}
+              {!results.trendsAnalysis && results.topicInsights && results.topicInsights.map((insight, index) => (
+                <div key={index} className="whitespace-pre-line text-sm">
+                  <strong>{insight.topic}:</strong> {insight.description} 
+                  <span className="ml-1 text-xs">
+                    (Trend: {insight.trend}, Sentiment: {insight.sentiment})
+                  </span>
+                </div>
               ))}
             </div>
           </CardContent>

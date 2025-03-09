@@ -1,5 +1,5 @@
 
-export type DataSource = "twitter" | "reddit" | "news" | "forums" | "blogs";
+export type DataSource = "twitter" | "reddit" | "news" | "forums" | "blogs" | "all";
 export type SentimentFilter = "positive" | "negative" | "neutral" | "all";
 export type TimeFrame = "real-time" | "short-term" | "medium-term" | "long-term" | "historical" | "deep-historical";
 
@@ -12,6 +12,14 @@ export interface ResearchQuery {
 }
 
 export interface Quote {
+  text: string;
+  source: string;
+  date: string;
+  sentiment: "positive" | "negative" | "neutral";
+}
+
+// Added this new type for QuoteData that various services are using
+export interface QuoteData {
   text: string;
   source: string;
   date: string;
@@ -42,6 +50,7 @@ export interface TopicInsight {
   sentiment: "positive" | "negative" | "neutral";
 }
 
+// Adding missing properties needed by InsightsGenerator
 export interface AnalysisResults {
   aiSummary: string;
   reportGeneratedAt: string;
@@ -59,4 +68,22 @@ export interface AnalysisResults {
   sourceBreakdown: {
     [key in DataSource]?: number;
   };
+  
+  // Additional properties needed by InsightsGenerator
+  aiInsights?: string[];
+  topTopics?: string[];
+  exampleQuotes?: QuoteData[];
+  trendsAnalysis?: string[];
 }
+
+// Adding constants needed by apiKeyUtils
+export const STORAGE_KEYS = {
+  API_KEYS: "persona_api_keys",
+  USER_PREFERENCES: "persona_user_preferences"
+};
+
+export const DEFAULT_API_KEYS = {
+  OPENAI: "",
+  TWITTER: "",
+  NEWS_API: ""
+};

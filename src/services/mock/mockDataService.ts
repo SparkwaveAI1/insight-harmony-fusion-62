@@ -1,12 +1,8 @@
+import { AnalysisResults, ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
 
-import { AnalysisResults, ResearchQuery } from "../types/qualitativeAnalysisTypes";
-
-export const fetchQualitativeData = async (query: ResearchQuery): Promise<AnalysisResults> => {
-  // This simulates an API call with a small delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
+export const generateMockResults = (query: ResearchQuery): AnalysisResults => {
   return {
-    aiSummary: "Analysis of conversations around Web3 and AI token incentives reveals a mix of enthusiasm and caution. Users are excited about potential rewards from staking and participation, but express concerns about security, regulatory clarity, and project sustainability. Community sentiment has notably improved since March's introduction of clearer documentation and governance mechanisms. The most discussed topics include token utility, governance rights, and passive income opportunities.",
+    aiSummary: `Analysis of conversations around ${query.query} reveals a mix of enthusiasm and caution. Users are excited about potential rewards from staking and participation, but express concerns about security, regulatory clarity, and project sustainability.`,
     
     reportGeneratedAt: new Date().toISOString(),
     
@@ -34,7 +30,43 @@ export const fetchQualitativeData = async (query: ResearchQuery): Promise<Analys
       "Consider tiered incentive structures to reward both short and long-term participation."
     ],
     
-    // Timeline events for the Storyline visualization
+    aiInsights: [
+      "Over 60% of discussions focus on practical token applications rather than speculative value.",
+      "Educational content about staking has seen 3x more engagement than price discussions.",
+      "Community governance proposals have increased by 47% quarter-over-quarter.",
+      "Technical documentation improvements have reduced basic support questions by 35%.",
+      "Early adopters are showing strong brand loyalty with 76% participation in community activities."
+    ],
+    
+    topTopics: ["Token Utility", "Governance", "Staking Rewards", "Security", "Community Growth"],
+    
+    exampleQuotes: [
+      {
+        text: "The tokenomics look promising and well-thought-out compared to many other projects I've seen.",
+        source: "Twitter",
+        date: "Jan 12, 2023",
+        sentiment: "positive"
+      },
+      {
+        text: "Excited to see another project embracing the token ecosystem model, but show me the real utility first.",
+        source: "Reddit",
+        date: "Jan 13, 2023",
+        sentiment: "neutral"
+      },
+      {
+        text: "The APY rates for early stakers are incredible! Already moved my tokens into the staking contract.",
+        source: "Reddit",
+        date: "Feb 9, 2023",
+        sentiment: "positive"
+      }
+    ],
+    
+    trendsAnalysis: [
+      "Token utility discussions have grown 45% over the past quarter, indicating increased focus on real-world applications.",
+      "The sentiment around governance proposals has shifted from 62% skeptical to 71% supportive following the recent voting system improvements.",
+      "Community growth metrics show a sustained 12% month-over-month increase in active participation across all platform activities."
+    ],
+    
     timelineEvents: [
       {
         id: "event1",
@@ -182,7 +214,6 @@ export const fetchQualitativeData = async (query: ResearchQuery): Promise<Analys
       }
     ],
     
-    // Topic ripple data for the visualization
     topicRippleData: [
       { 
         name: "Jan", 
@@ -249,7 +280,6 @@ export const fetchQualitativeData = async (query: ResearchQuery): Promise<Analys
       }
     ],
     
-    // Insights about each topic for the Topic section
     topicInsights: [
       {
         topic: "User Adoption",
@@ -301,4 +331,12 @@ export const fetchQualitativeData = async (query: ResearchQuery): Promise<Analys
       "news": 20
     }
   };
+};
+
+export const fetchQualitativeData = async (query: ResearchQuery): Promise<AnalysisResults> => {
+  // This simulates an API call with a small delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Use the generateMockResults function to maintain consistency
+  return generateMockResults(query);
 };
