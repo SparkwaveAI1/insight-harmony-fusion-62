@@ -88,7 +88,7 @@ export const STORAGE_KEYS = {
 
 export const DEFAULT_API_KEYS = {
   OPENAI: "",
-  TWITTER: "",
-  NEWS_API: "",
-  REDDIT: ""
+  twitter: "",
+  newsApi: "",
+  reddit: ""
 };

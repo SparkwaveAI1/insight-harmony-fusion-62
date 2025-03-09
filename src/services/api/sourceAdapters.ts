@@ -30,7 +30,7 @@ export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: 
   try {
     const apiKeys = getApiKeys();
     
-    if (!apiKeys.TWITTER) {
+    if (!apiKeys.twitter) {
       toast.error("Twitter API key is missing. Please add your key in the API Keys settings.");
       return { quotes: [], keywords: [], topics: [] };
     }
@@ -53,7 +53,7 @@ export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: Q
   try {
     const apiKeys = getApiKeys();
     
-    if (!apiKeys.REDDIT) {
+    if (!apiKeys.reddit) {
       toast.error("Reddit API key is missing. Please add your key in the API Keys settings.");
       return { quotes: [], keywords: [], topics: [] };
     }
@@ -76,7 +76,7 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
   try {
     const apiKeys = getApiKeys();
     
-    if (!apiKeys.NEWS_API) {
+    if (!apiKeys.newsApi) {
       toast.error("News API key is missing. Please add your key in the API Keys settings.");
       return { quotes: [], keywords: [], topics: [] };
     }
