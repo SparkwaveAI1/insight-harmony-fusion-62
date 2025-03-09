@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { Button } from "./ui/button";
-import { clearApiKeys, hasValidApiKey, saveApiKey } from "@/services/utils/apiKeyUtils";
+import { clearApiKeys, saveApiKey } from "@/services/utils/apiKeyUtils";
 import { Input } from "./ui/input";
 import { toast } from "sonner";
 
@@ -10,11 +11,11 @@ interface ApiKeyManagerProps {
 
 const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
   const [apiKey, setApiKey] = useState<string>("");
-  const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(hasValidApiKey());
+  const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
 
   const handleSaveApiKey = async () => {
     if (apiKey) {
-      saveApiKey(apiKey);
+      saveApiKey(apiKey, "openai");
       setIsApiKeyValid(true);
       onApiKeyUpdate(apiKey);
       toast.success("API Key saved successfully!");

@@ -5,7 +5,6 @@ import CustomAIPersonas from "@/components/sections/CustomAIPersonas";
 import HowToUsePersonaAI from "@/components/sections/HowToUsePersonaAI";
 import Features from "@/components/sections/Features";
 import HowItWorks from "@/components/sections/HowItWorks";
-import ProductShowcase from "@/components/sections/ProductShowcase";
 import TokenEcosystem from "@/components/sections/TokenEcosystem";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
@@ -87,7 +86,7 @@ const Index = () => {
               <div className="bg-primary/5 rounded-xl p-8">
                 <Reveal>
                   <h2 className="text-3xl font-bold mb-6 font-plasmik">
-                    AI Interviewer
+                    PersonaAI Interviewer
                   </h2>
                 </Reveal>
                 
@@ -148,7 +147,6 @@ const Index = () => {
         <HowToUsePersonaAI />
         <Features />
         <HowItWorks />
-        <ProductShowcase />
         <TokenEcosystem />
       </main>
       <Footer />

@@ -32,6 +32,7 @@ const Header = () => {
     { label: "Research", href: "/research" },
     { label: "AI Interviewer", href: "/interviewer" },
     { label: "Web3", href: "/earn-prsna" },
+    { label: "Pricing", href: "/pricing" },
   ];
 
   const handleNavClick = (href: string) => {
