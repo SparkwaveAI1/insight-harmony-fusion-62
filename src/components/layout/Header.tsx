@@ -30,7 +30,7 @@ const Header = () => {
   const navItems = [
     { label: "Home", href: "/" },
     { label: "Research", href: "/research" },
-    { label: "Interviewer", href: "/interviewer" },
+    { label: "AI Interviewer", href: "/interviewer" },
     { label: "Web3", href: "/earn-prsna" },
   ];
 

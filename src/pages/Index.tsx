@@ -23,7 +23,7 @@ const Index = () => {
         <CustomAIPersonas />
         <HowToUsePersonaAI />
         
-        {/* New Research Section */}
+        {/* Research Section */}
         <Section className="py-20 md:py-28 bg-primary/5">
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center">
@@ -85,13 +85,13 @@ const Index = () => {
           </div>
         </Section>
         
-        {/* New Interviewer Section */}
+        {/* AI Interviewer Section - Updated name from "Interview Solutions" */}
         <Section className="py-20 md:py-28">
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center">
               <Reveal>
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
-                  AI Interview Solutions
+                  AI Interviewer
                 </h2>
               </Reveal>
               
@@ -137,7 +137,7 @@ const Index = () => {
                       size="lg" 
                       className="group"
                     >
-                      Explore All Interview Solutions
+                      Explore AI Interviewer
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>

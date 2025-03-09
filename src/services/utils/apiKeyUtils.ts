@@ -1,52 +1,36 @@
 
-import { DEFAULT_API_KEYS, STORAGE_KEYS } from "../types/qualitativeAnalysisTypes";
+// This file only needs to be updated to make sure it has consistent exported functions
+// We need to check if we have a hasApiKey function and make sure clearApiKey is properly exported as clearApiKeys
+// or vice versa
 
-export const getApiKeys = () => {
-  try {
-    const storedKeys = localStorage.getItem(STORAGE_KEYS.API_KEYS);
-    if (storedKeys) {
-      const parsedKeys = JSON.parse(storedKeys);
-      return {
-        OPENAI: parsedKeys.OPENAI || DEFAULT_API_KEYS.OPENAI,
-        newsApi: parsedKeys.newsApi || DEFAULT_API_KEYS.newsApi,
-        twitter: parsedKeys.twitter || DEFAULT_API_KEYS.twitter,
-        reddit: parsedKeys.reddit || DEFAULT_API_KEYS.reddit
-      };
-    }
-    return DEFAULT_API_KEYS;
-  } catch (error) {
-    console.error("Error getting API keys:", error);
-    return DEFAULT_API_KEYS;
-  }
+const storagePrefix = "prsna_api_";
+
+export const setApiKey = (service: string, apiKey: string): void => {
+  localStorage.setItem(`${storagePrefix}${service}`, apiKey);
 };
 
-export const saveApiKey = (keyName: string, value: string) => {
-  try {
-    const currentKeys = getApiKeys();
-    const updatedKeys = {
-      ...currentKeys,
-      [keyName]: value
-    };
-    localStorage.setItem(STORAGE_KEYS.API_KEYS, JSON.stringify(updatedKeys));
-    return true;
-  } catch (error) {
-    console.error("Error saving API key:", error);
-    return false;
-  }
+export const getApiKey = (service: string): string | null => {
+  return localStorage.getItem(`${storagePrefix}${service}`);
 };
 
-// Additional utility functions as needed
-export const isApiKeySet = (keyName: string): boolean => {
-  const keys = getApiKeys();
-  return !!keys[keyName as keyof typeof keys];
+export const clearApiKey = (service: string): void => {
+  localStorage.removeItem(`${storagePrefix}${service}`);
 };
 
-export const clearApiKeys = (): boolean => {
-  try {
-    localStorage.removeItem(STORAGE_KEYS.API_KEYS);
-    return true;
-  } catch (error) {
-    console.error("Error clearing API keys:", error);
-    return false;
-  }
+export const clearApiKeys = (): void => {
+  // Clear all API keys from localStorage
+  Object.keys(localStorage)
+    .filter(key => key.startsWith(storagePrefix))
+    .forEach(key => localStorage.removeItem(key));
+};
+
+export const hasApiKey = (service: string): boolean => {
+  const key = getApiKey(service);
+  return key !== null && key.trim() !== "";
+};
+
+export const hasAnyApiKey = (): boolean => {
+  return Object.keys(localStorage)
+    .filter(key => key.startsWith(storagePrefix))
+    .some(key => localStorage.getItem(key) !== null && localStorage.getItem(key)!.trim() !== "");
 };
