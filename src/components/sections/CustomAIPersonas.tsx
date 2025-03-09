@@ -1,5 +1,5 @@
 
-import { User, Bot, ArrowRight, Video, Sparkles } from "lucide-react";
+import { User, Bot, ArrowRight, Video, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
@@ -55,17 +55,31 @@ const CustomAIPersonas = () => {
             </Reveal>
             
             <Reveal delay={300}>
-              <Link to="/contact">
-                <Button 
-                  size="lg" 
-                  variant="primary" 
-                  className="rounded-full px-8 py-3 bg-gradient-to-r from-primary to-primary/70 border-none shadow-lg shadow-primary/20"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Talk to AI Avatars
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/your-persona">
+                  <Button 
+                    size="lg" 
+                    variant="primary" 
+                    className="rounded-full px-8 py-3 bg-gradient-to-r from-primary to-primary/70 border-none shadow-lg shadow-primary/20 w-full sm:w-auto"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Create a Persona
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                
+                <Link to="/ai-focus-groups">
+                  <Button 
+                    size="lg" 
+                    variant="secondary" 
+                    className="rounded-full px-8 py-3 shadow-lg w-full sm:w-auto"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    AI Focus Groups
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
             </Reveal>
           </div>
         </div>

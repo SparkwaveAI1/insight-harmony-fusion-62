@@ -1,172 +1,56 @@
-
-import React, { useState, useEffect } from "react";
-import { saveApiKey, clearApiKey, hasApiKey } from "@/services/utils/apiKeyUtils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Settings } from "lucide-react";
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import { clearApiKeys, hasValidApiKey, saveApiKey } from "@/services/utils/apiKeyUtils";
+import { Input } from "./ui/input";
 import { toast } from "sonner";
 
-const ApiKeyManager = () => {
-  const [open, setOpen] = useState(false);
-  const [newsApiKey, setNewsApiKey] = useState("");
-  const [hasNewsKey, setHasNewsKey] = useState(false);
-  const [twitterApiKey, setTwitterApiKey] = useState("");
-  const [hasTwitterKey, setHasTwitterKey] = useState(false);
-  const [redditApiKey, setRedditApiKey] = useState("");
-  const [hasRedditKey, setHasRedditKey] = useState(false);
-  
-  // Check for existing API keys
-  useEffect(() => {
-    setHasNewsKey(hasApiKey("newsApi"));
-    setHasTwitterKey(hasApiKey("twitter"));
-    setHasRedditKey(hasApiKey("reddit"));
-  }, [open]);
-  
-  const handleSaveNewsKey = () => {
-    if (newsApiKey.trim()) {
-      saveApiKey("newsApi", newsApiKey.trim());
-      setNewsApiKey("");
-      setHasNewsKey(true);
-    } else {
-      toast.error("Please enter a valid News API key");
-    }
-  };
-  
-  const handleClearNewsKey = () => {
-    clearApiKey("newsApi");
-    setHasNewsKey(false);
-  };
-  
-  const handleSaveTwitterKey = () => {
-    if (twitterApiKey.trim()) {
-      saveApiKey("twitter", twitterApiKey.trim());
-      setTwitterApiKey("");
-      setHasTwitterKey(true);
-    } else {
-      toast.error("Please enter a valid Twitter API key");
-    }
-  };
-  
-  const handleClearTwitterKey = () => {
-    clearApiKey("twitter");
-    setHasTwitterKey(false);
-  };
-  
-  const handleSaveRedditKey = () => {
-    if (redditApiKey.trim()) {
-      saveApiKey("reddit", redditApiKey.trim());
-      setRedditApiKey("");
-      setHasRedditKey(true);
-    } else {
-      toast.error("Please enter a valid Reddit API key");
-    }
-  };
-  
-  const handleClearRedditKey = () => {
-    clearApiKey("reddit");
-    setHasRedditKey(false);
-  };
-  
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings size={16} />
-          API Keys
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Manage API Keys</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="space-y-4">
-            <Label htmlFor="newsApiKey" className="text-base">News API Key</Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Get your free News API key at <a href="https://newsapi.org/" target="_blank" rel="noopener noreferrer" className="text-primary underline">newsapi.org</a>
-            </p>
-            <div className="flex gap-2">
-              <Input
-                id="newsApiKey"
-                value={newsApiKey}
-                onChange={(e) => setNewsApiKey(e.target.value)}
-                placeholder={hasNewsKey ? "••••••••••••••••••••" : "Enter News API key"}
-                type="password"
-                className="flex-grow"
-              />
-              {hasNewsKey ? (
-                <Button variant="destructive" onClick={handleClearNewsKey} type="button">
-                  Clear
-                </Button>
-              ) : (
-                <Button variant="default" onClick={handleSaveNewsKey} type="button">
-                  Save
-                </Button>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <Label htmlFor="twitterApiKey" className="text-base">Twitter API Key</Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Requires a Twitter developer account. <a href="https://developer.twitter.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Learn more</a>
-            </p>
-            <div className="flex gap-2">
-              <Input
-                id="twitterApiKey"
-                value={twitterApiKey}
-                onChange={(e) => setTwitterApiKey(e.target.value)}
-                placeholder={hasTwitterKey ? "••••••••••••••••••••" : "Enter Twitter API key"}
-                type="password"
-                className="flex-grow"
-              />
-              {hasTwitterKey ? (
-                <Button variant="destructive" onClick={handleClearTwitterKey} type="button">
-                  Clear
-                </Button>
-              ) : (
-                <Button variant="default" onClick={handleSaveTwitterKey} type="button">
-                  Save
-                </Button>
-              )}
-            </div>
-          </div>
+interface ApiKeyManagerProps {
+  onApiKeyUpdate: (apiKey: string | null) => void;
+}
 
-          <div className="space-y-4">
-            <Label htmlFor="redditApiKey" className="text-base">Reddit API Key</Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Requires a Reddit developer account. <a href="https://www.reddit.com/dev/api/" target="_blank" rel="noopener noreferrer" className="text-primary underline">Learn more</a>
-            </p>
-            <div className="flex gap-2">
-              <Input
-                id="redditApiKey"
-                value={redditApiKey}
-                onChange={(e) => setRedditApiKey(e.target.value)}
-                placeholder={hasRedditKey ? "••••••••••••••••••••" : "Enter Reddit API key"}
-                type="password"
-                className="flex-grow"
-              />
-              {hasRedditKey ? (
-                <Button variant="destructive" onClick={handleClearRedditKey} type="button">
-                  Clear
-                </Button>
-              ) : (
-                <Button variant="default" onClick={handleSaveRedditKey} type="button">
-                  Save
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
+  const [apiKey, setApiKey] = useState<string>("");
+  const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(hasValidApiKey());
+
+  const handleSaveApiKey = async () => {
+    if (apiKey) {
+      saveApiKey(apiKey);
+      setIsApiKeyValid(true);
+      onApiKeyUpdate(apiKey);
+      toast.success("API Key saved successfully!");
+    } else {
+      toast.error("API Key cannot be empty.");
+    }
+  };
+
+  const handleClearApiKey = () => {
+    clearApiKeys();
+    setIsApiKeyValid(false);
+    onApiKeyUpdate(null);
+    toast.success("API Key cleared successfully!");
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <Input
+          type="password"
+          placeholder="Enter your API Key"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          disabled={isApiKeyValid}
+        />
+        <Button onClick={handleSaveApiKey} disabled={isApiKeyValid}>
+          Save API Key
+        </Button>
+      </div>
+      {isApiKeyValid && (
+        <div className="text-green-500">API Key is valid.</div>
+      )}
+      <Button variant="destructive" onClick={handleClearApiKey}>
+        Clear API Key
+      </Button>
+    </div>
   );
 };
 
