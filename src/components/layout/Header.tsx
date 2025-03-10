@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Menu, X, Wallet, UserPlus } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import Button from "../ui-custom/Button";
-import Logo from "../ui-custom/Logo";
 import { cn } from "@/lib/utils";
+import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
+import NavigationItems from "./navigation/NavigationItems";
+import ActionButtons from "./navigation/ActionButtons";
+import MobileMenu from "./navigation/MobileMenu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -72,161 +73,34 @@ const Header = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            item.href.startsWith("#") ? (
-              <button
-                key={item.label}
-                onClick={() => handleNavClick(item.href)}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  isScrolled 
-                    ? "text-foreground hover:text-primary" 
-                    : "text-white/90 hover:text-white"
-                )}
-              >
-                {item.label}
-              </button>
-            ) : (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  (item.href === '/earn-prsna' && isEarnPage) || 
-                  (item.href === '/research' && location.pathname === '/research') ||
-                  (item.href === '/interviewer' && location.pathname === '/interviewer') ||
-                  (item.href === '/' && location.pathname === '/')
-                    ? "text-primary font-bold" 
-                    : isScrolled 
-                      ? "text-foreground/80 hover:text-foreground" 
-                      : "text-white/90 hover:text-white"
-                )}
-              >
-                {item.label}
-              </Link>
-            )
-          ))}
-        </nav>
+        <NavigationItems 
+          navItems={navItems} 
+          isScrolled={isScrolled} 
+          isEarnPage={isEarnPage}
+          className="hidden md:flex"
+        />
 
-        <div className="hidden md:flex items-center gap-3">
-          {isEarnPage ? (
-            <>
-              {isWalletConnected ? (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
-                  onClick={disconnectWallet}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Disconnect
-                </Button>
-              ) : (
-                <Button 
-                  size="sm"
-                  className="bg-gradient-to-r from-primary to-primary/80 border-none"
-                  onClick={connectWallet}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Connect Wallet
-                </Button>
-              )}
-            </>
-          ) : (
-            <>
-              <Link to="/interviewer">
-                <Button size="sm">
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  Start
-                </Button>
-              </Link>
-            </>
-          )}
-        </div>
+        {/* Desktop Action Buttons */}
+        <ActionButtons 
+          isEarnPage={isEarnPage}
+          isWalletConnected={isWalletConnected}
+          connectWallet={connectWallet}
+          disconnectWallet={disconnectWallet}
+          className="hidden md:flex items-center gap-3"
+        />
 
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? (
-            <X className={cn("h-6 w-6", isScrolled ? "text-foreground" : "text-white")} />
-          ) : (
-            <Menu className={cn("h-6 w-6", isScrolled ? "text-foreground" : "text-white")} />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      <div 
-        className={cn(
-          "fixed inset-0 z-40 bg-background/95 backdrop-blur-md pt-20 px-6 transition-all duration-300 md:hidden",
-          mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-      >
-        <nav className="flex flex-col space-y-6">
-          {navItems.map((item) => (
-            item.href.startsWith("#") ? (
-              <button
-                key={item.label}
-                onClick={() => handleNavClick(item.href)}
-                className="text-xl font-medium text-foreground/80 hover:text-foreground transition-colors"
-              >
-                {item.label}
-              </button>
-            ) : (
-              <Link
-                key={item.label}
-                to={item.href}
-                className={cn(
-                  "text-xl font-medium text-foreground/80 hover:text-foreground transition-colors",
-                  (item.href === '/earn-prsna' && isEarnPage) || 
-                  (item.href === '/research' && location.pathname === '/research') ||
-                  (item.href === '/interviewer' && location.pathname === '/interviewer') ||
-                  (item.href === '/' && location.pathname === '/')
-                    ? "text-primary font-bold" 
-                    : ""
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            )
-          ))}
-          <div className="flex flex-col gap-4 pt-4">
-            {isEarnPage ? (
-              <>
-                {isWalletConnected ? (
-                  <Button 
-                    variant="outline"
-                    onClick={disconnectWallet}
-                  >
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Disconnect Wallet
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={connectWallet}
-                  >
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Connect Wallet
-                  </Button>
-                )}
-              </>
-            ) : (
-              <>
-                <Link to="/interviewer">
-                  <Button className="w-full justify-center">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Get Started
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </nav>
+        {/* Mobile Menu */}
+        <MobileMenu 
+          isOpen={mobileMenuOpen}
+          isScrolled={isScrolled}
+          isEarnPage={isEarnPage}
+          navItems={navItems}
+          isWalletConnected={isWalletConnected}
+          connectWallet={connectWallet}
+          disconnectWallet={disconnectWallet}
+          onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onNavClick={handleNavClick}
+        />
       </div>
     </header>
   );
