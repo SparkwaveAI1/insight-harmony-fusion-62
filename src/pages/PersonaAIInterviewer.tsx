@@ -1,3 +1,4 @@
+
 import { ArrowRight } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
@@ -72,14 +73,16 @@ const PersonaAIInterviewer = () => {
               </Reveal>
               
               <Reveal delay={200}>
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  className="group"
-                >
-                  Create a Persona
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Button>
+                <Link to="/interview-process">
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    className="group"
+                  >
+                    Create a Persona
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </Reveal>
             </div>
           </div>

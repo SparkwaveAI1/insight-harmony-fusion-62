@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, ArrowRight, Send, Mic, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -34,6 +35,10 @@ const InterviewProcess = () => {
   const [userInput, setUserInput] = useState("");
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [summary, setSummary] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const { toast } = useToast();
 
   // Parse questions from custom input or use defaults
   const getQuestions = () => {
@@ -46,6 +51,15 @@ const InterviewProcess = () => {
   const questions = getQuestions();
   
   const startInterview = () => {
+    if (!topic.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide an interview topic",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setStep("interview");
     // Add first question to messages
     setMessages([
@@ -57,20 +71,18 @@ const InterviewProcess = () => {
     ]);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!userInput.trim()) return;
     
     // Add user message
-    const newMessages = [
-      ...messages,
-      {
-        id: Date.now().toString(),
-        role: "user",
-        content: userInput
-      }
-    ];
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: userInput
+    };
     
-    setMessages(newMessages);
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
     setUserInput("");
     
     // Move to next question or finish interview
@@ -80,31 +92,148 @@ const InterviewProcess = () => {
       
       // Add next AI question after a short delay
       setTimeout(() => {
-        setMessages([
-          ...newMessages,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "ai",
-            content: questions[nextQuestion]
-          }
-        ]);
+        const nextAiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "ai",
+          content: questions[nextQuestion]
+        };
+        setMessages(prevMessages => [...prevMessages, nextAiMessage]);
       }, 500);
     } else {
       // Interview is complete
       setInterviewComplete(true);
+      setIsLoading(true);
       
-      // Generate a summary (in a real application, this would be done by an AI)
-      setTimeout(() => {
-        const userResponses = newMessages.filter(m => m.role === "user").map(m => m.content);
-        const mockSummary = `Based on your responses, we've identified the following key points:\n\n` +
-          `- You appear to be interested in ${topic}\n` +
-          `- You've shared ${userResponses.length} responses that help us understand your perspective\n` +
-          `- We can now build a persona based on this information`;
-          
-        setSummary(mockSummary);
-        setStep("summary");
-      }, 1500);
+      try {
+        // Generate a summary using OpenAI
+        await generateAiSummary(updatedMessages);
+      } catch (error) {
+        console.error("Error generating summary:", error);
+        toast({
+          title: "Error",
+          description: "Failed to generate summary. Please check your API key or try again.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
     }
+  };
+
+  const generateAiSummary = async (interviewMessages: Message[]) => {
+    if (!apiKey && !showApiKeyInput) {
+      setShowApiKeyInput(true);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!apiKey && showApiKeyInput) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key to generate a summary",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Format the conversation for OpenAI
+    const userResponses = interviewMessages.filter(m => m.role === "user").map(m => m.content);
+    const aiQuestions = interviewMessages.filter(m => m.role === "ai").map(m => m.content);
+    
+    const prompt = `
+    You are an expert qualitative researcher analyzing an interview about ${topic}.
+    
+    Interview questions:
+    ${aiQuestions.map((q, i) => `${i+1}. ${q}`).join('\n')}
+    
+    Responses:
+    ${userResponses.map((r, i) => `Response ${i+1}: ${r}`).join('\n')}
+    
+    Based on this interview, generate a detailed qualitative analysis including:
+    1. Key insights and themes
+    2. Needs, pain points, and motivations
+    3. Recommendations based on the responses
+    4. A brief persona description that summarizes who this person is and what they care about
+    
+    Format your analysis with markdown headings and bullet points for easy reading.
+    `;
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4-turbo-preview",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert qualitative researcher who analyzes interview responses to generate insights."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Failed to connect to OpenAI");
+      }
+
+      const data = await response.json();
+      const generatedSummary = data.choices[0].message.content;
+      
+      setSummary(generatedSummary);
+      setStep("summary");
+      toast({
+        title: "Success",
+        description: "AI summary generated successfully",
+      });
+    } catch (error) {
+      console.error("Error calling OpenAI API:", error);
+      // Fallback to a basic summary if OpenAI fails
+      const basicSummary = `Based on your responses about ${topic}, we've identified the following key points:\n\n` +
+        `- You've shared ${userResponses.length} responses that help us understand your perspective\n` +
+        `- We can now build a persona based on this information\n\n` +
+        `Note: This is a basic summary as there was an issue connecting to the AI service. Please check your API key or try again later.`;
+      
+      setSummary(basicSummary);
+      setStep("summary");
+      
+      toast({
+        title: "Limited Functionality",
+        description: "Using basic summary due to API connection issues",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApiKeySubmit = () => {
+    if (!apiKey.trim()) {
+      toast({
+        title: "API Key Required",
+        description: "Please enter your OpenAI API key",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "API Key Added",
+      description: "Your API key has been set. Generating summary now."
+    });
+
+    setIsLoading(true);
+    generateAiSummary(messages);
   };
 
   return (
@@ -147,6 +276,20 @@ const InterviewProcess = () => {
                     value={customQuestions}
                     onChange={(e) => setCustomQuestions(e.target.value)}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="apiKey">OpenAI API Key (optional for now)</Label>
+                  <Input 
+                    id="apiKey"
+                    type="password"
+                    placeholder="sk-..." 
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Used for AI analysis at the end of the interview. You can also add this later.
+                  </p>
                 </div>
                 
                 <Button 
@@ -201,9 +344,33 @@ const InterviewProcess = () => {
                   </div>
                 ))}
                 
-                {interviewComplete && (
+                {interviewComplete && !showApiKeyInput && (
                   <div className="text-center p-4 text-muted-foreground">
                     <p>Interview complete. Generating summary...</p>
+                  </div>
+                )}
+
+                {showApiKeyInput && (
+                  <div className="bg-card p-4 rounded-lg border">
+                    <h3 className="font-medium mb-2">OpenAI API Key Required</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      To generate an AI-powered summary of this interview, please enter your OpenAI API key:
+                    </p>
+                    <div className="space-y-4">
+                      <Input 
+                        type="password"
+                        placeholder="sk-..." 
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                      />
+                      <Button 
+                        onClick={handleApiKeySubmit}
+                        className="w-full"
+                        disabled={!apiKey.trim()}
+                      >
+                        Generate AI Summary
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -217,7 +384,7 @@ const InterviewProcess = () => {
                     placeholder="Type your response..."
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   />
-                  <Button onClick={handleSendMessage} disabled={!userInput.trim()}>
+                  <Button onClick={handleSendMessage} disabled={!userInput.trim() || isLoading}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
@@ -237,8 +404,14 @@ const InterviewProcess = () => {
               
               <div className="bg-card p-6 rounded-lg shadow-sm">
                 <h3 className="text-lg font-medium mb-4">AI-Generated Insights</h3>
-                <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap">
-                  {summary}
+                <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap prose max-w-none dark:prose-invert">
+                  {isLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }} />
+                  )}
                 </div>
                 
                 <div className="mt-8 space-y-4">
