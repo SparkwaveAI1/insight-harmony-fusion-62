@@ -34,7 +34,7 @@ const PersonaAIInterviewer = () => {
               
               <Reveal delay={200}>
                 <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
-                  Conduct structured AI-driven interviews to create high-fidelity Personas or unlock deep qualitative insights—all without the delays and costs of traditional research.
+                  Our AI conducts standardized interviews to create high-fidelity Personas or unlock deep qualitative insights—all without the delays and costs of traditional research.
                 </p>
               </Reveal>
               
@@ -46,7 +46,7 @@ const PersonaAIInterviewer = () => {
                       size="lg" 
                       className="group w-full sm:w-auto"
                     >
-                      Start Interview Process
+                      Start Standard Interview
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
@@ -79,7 +79,7 @@ const PersonaAIInterviewer = () => {
                     size="lg" 
                     className="group"
                   >
-                    Create a Persona
+                    Take an Interview
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
@@ -104,7 +104,7 @@ const PersonaAIInterviewer = () => {
                     <ul className="space-y-4">
                       <li className="flex items-start gap-3">
                         <span className="text-primary text-lg">•</span>
-                        <p>AI-powered persona creation based on structured interviews.</p>
+                        <p>AI-powered persona creation based on standardized interviews.</p>
                       </li>
                       <li className="flex items-start gap-3">
                         <span className="text-primary text-lg">•</span>
@@ -126,7 +126,7 @@ const PersonaAIInterviewer = () => {
                   
                   <Link to="/interview-process">
                     <Button className="w-full justify-center group mt-auto">
-                      Create a Persona
+                      Take Standard Interview
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
@@ -167,7 +167,7 @@ const PersonaAIInterviewer = () => {
                   
                   <Link to="/interview-process">
                     <Button className="w-full justify-center group mt-auto">
-                      Research Interviewer
+                      Start Interview
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
