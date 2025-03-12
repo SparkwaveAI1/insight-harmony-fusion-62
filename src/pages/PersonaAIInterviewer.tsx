@@ -5,6 +5,7 @@ import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import Footer from "@/components/sections/Footer";
+import { Link } from "react-router-dom";
 
 const PersonaAIInterviewer = () => {
   return (
@@ -34,6 +35,21 @@ const PersonaAIInterviewer = () => {
                 <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
                   Conduct structured AI-driven interviews to create high-fidelity Personas or unlock deep qualitative insights—all without the delays and costs of traditional research.
                 </p>
+              </Reveal>
+              
+              <Reveal delay={300}>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Link to="/interview-process">
+                    <Button 
+                      variant="primary" 
+                      size="lg" 
+                      className="group w-full sm:w-auto"
+                    >
+                      Start Interview Process
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                </div>
               </Reveal>
             </div>
           </div>
@@ -105,10 +121,12 @@ const PersonaAIInterviewer = () => {
                     </div>
                   </div>
                   
-                  <Button className="w-full justify-center group mt-auto">
-                    Create a Persona
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  <Link to="/interview-process">
+                    <Button className="w-full justify-center group mt-auto">
+                      Create a Persona
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
                 </Card>
               </Reveal>
               
@@ -144,10 +162,12 @@ const PersonaAIInterviewer = () => {
                     </div>
                   </div>
                   
-                  <Button className="w-full justify-center group mt-auto">
-                    Research Interviewer
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  <Link to="/interview-process">
+                    <Button className="w-full justify-center group mt-auto">
+                      Research Interviewer
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
                 </Card>
               </Reveal>
             </div>
