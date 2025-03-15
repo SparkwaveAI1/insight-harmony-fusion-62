@@ -3,7 +3,7 @@ import React from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
-import Card from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Linkedin, Twitter } from "lucide-react";
 import Reveal from "@/components/ui-custom/Reveal";
