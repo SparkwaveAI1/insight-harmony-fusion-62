@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Wallet, UserPlus } from "lucide-react";
+import { Wallet, Users } from "lucide-react";
 import Button from "@/components/ui-custom/Button";
 
 interface ActionButtonsProps {
@@ -46,10 +46,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         </>
       ) : (
         <>
-          <Link to="/interviewer">
+          <Link to="/team">
             <Button size="sm">
-              <UserPlus className="h-4 w-4 mr-1" />
-              Start
+              <Users className="h-4 w-4 mr-1" />
+              Team
             </Button>
           </Link>
         </>

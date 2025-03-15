@@ -12,6 +12,7 @@ import YourPersona from "./pages/YourPersona";
 import Pricing from "./pages/Pricing";
 import InterviewProcess from "./pages/InterviewProcess";
 import ParticipateResearch from "./pages/ParticipateResearch";
+import Team from "./pages/Team";
 import "./App.css";
 import "./index.css";
 
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
   {
     path: "/participate-research",
     element: <ParticipateResearch />,
+  },
+  {
+    path: "/team",
+    element: <Team />,
   },
 ]);
 

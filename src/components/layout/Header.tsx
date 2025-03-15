@@ -33,6 +33,7 @@ const Header = () => {
     { label: "AI Interviewer", href: "/interviewer" },
     { label: "AI Researcher", href: "/research" },
     { label: "Web3", href: "/earn-prsna" },
+    { label: "Team", href: "/team" },
     { label: "Pricing", href: "/pricing" },
   ];
 
