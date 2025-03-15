@@ -1,3 +1,4 @@
+
 import React from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -152,13 +153,7 @@ const Team = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex justify-center lg:justify-end">
-                        <img 
-                          src={partner.logo} 
-                          alt={partner.name} 
-                          className="max-w-[240px] max-h-[240px] object-contain" 
-                        />
-                      </div>
+                      {/* Removed the image div that was here */}
                     </div>
                   </Card>
                 </Reveal>
