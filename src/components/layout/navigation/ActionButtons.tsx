@@ -1,7 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Wallet, Users } from "lucide-react";
+import { Wallet } from "lucide-react";
 import Button from "@/components/ui-custom/Button";
 
 interface ActionButtonsProps {
@@ -46,12 +45,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         </>
       ) : (
         <>
-          <Link to="/team">
-            <Button size="sm">
-              <Users className="h-4 w-4 mr-1" />
-              Team
-            </Button>
-          </Link>
+          {/* Team button has been removed */}
         </>
       )}
     </div>

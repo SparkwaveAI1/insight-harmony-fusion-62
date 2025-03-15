@@ -37,18 +37,6 @@ interface Partner {
 const Team = () => {
   const teamMembers: TeamMember[] = [
     {
-      name: "Michaelyn Williams",
-      title: "Chief Research Strategist",
-      image: michaelyImg,
-      bio: [
-        "Michaelyn is a seasoned entrepreneur and co-founder of Amplify Research Partners, a company focused on precision, quality, and seamless execution of qualitative market research projects. With 25 years of experience overseeing reliable, high-impact research studies, she has built a reputation for creating innovative solutions tailored to client needs.",
-        "At PersonaAI, Michaelyn leverages her extensive expertise in qualitative research to guide the development of AI-driven insights. Her dedication to precision and client-focused solutions helps bridge the gap between advanced technology and actionable research outcomes, ensuring PersonaAI delivers meaningful value across industries."
-      ],
-      socials: {
-        linkedin: "https://linkedin.com"
-      }
-    },
-    {
       name: "Scott Johnson",
       title: "Founder",
       image: scottImg,
@@ -59,6 +47,18 @@ const Team = () => {
       socials: {
         linkedin: "https://linkedin.com",
         twitter: "https://twitter.com"
+      }
+    },
+    {
+      name: "Michaelyn Williams",
+      title: "Chief Research Strategist",
+      image: michaelyImg,
+      bio: [
+        "Michaelyn is a seasoned entrepreneur and co-founder of Amplify Research Partners, a company focused on precision, quality, and seamless execution of qualitative market research projects. With 25 years of experience overseeing reliable, high-impact research studies, she has built a reputation for creating innovative solutions tailored to client needs.",
+        "At PersonaAI, Michaelyn leverages her extensive expertise in qualitative research to guide the development of AI-driven insights. Her dedication to precision and client-focused solutions helps bridge the gap between advanced technology and actionable research outcomes, ensuring PersonaAI delivers meaningful value across industries."
+      ],
+      socials: {
+        linkedin: "https://linkedin.com"
       }
     }
   ];
