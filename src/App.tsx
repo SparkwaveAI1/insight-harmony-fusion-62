@@ -11,6 +11,7 @@ import Interviewer from "./pages/Interviewer";
 import YourPersona from "./pages/YourPersona";
 import Pricing from "./pages/Pricing";
 import InterviewProcess from "./pages/InterviewProcess";
+import ParticipateResearch from "./pages/ParticipateResearch";
 import "./App.css";
 import "./index.css";
 
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
   {
     path: "/interview-process",
     element: <InterviewProcess />,
+  },
+  {
+    path: "/participate-research",
+    element: <ParticipateResearch />,
   },
 ]);
 

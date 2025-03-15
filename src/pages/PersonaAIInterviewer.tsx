@@ -1,5 +1,5 @@
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageSquare } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
@@ -126,7 +126,7 @@ const PersonaAIInterviewer = () => {
                   
                   <Link to="/interview-process">
                     <Button className="w-full justify-center group mt-auto">
-                      Take Standard Interview
+                      Create a Persona
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
@@ -165,12 +165,20 @@ const PersonaAIInterviewer = () => {
                     </div>
                   </div>
                   
-                  <Link to="/interview-process">
-                    <Button className="w-full justify-center group mt-auto">
-                      Start Interview
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
+                  <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                    <Link to="/contact" className="flex-1">
+                      <Button variant="outline" className="w-full justify-center group">
+                        <MessageSquare className="w-4 h-4 mr-1" />
+                        Request for Companies
+                      </Button>
+                    </Link>
+                    <Link to="/participate-research" className="flex-1">
+                      <Button className="w-full justify-center group">
+                        Participate as Subject
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  </div>
                 </Card>
               </Reveal>
             </div>
