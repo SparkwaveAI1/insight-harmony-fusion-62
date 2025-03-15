@@ -1,4 +1,3 @@
-
 import React from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -129,12 +128,6 @@ const Team = () => {
         {/* Partners Section */}
         <Section className="py-16 bg-muted/30">
           <div className="container px-4 mx-auto">
-            <Reveal>
-              <h2 className="text-4xl md:text-5xl font-bold mb-12 text-center font-plasmik">
-                Technology Partners
-              </h2>
-            </Reveal>
-
             <div className="space-y-16">
               {partners.map((partner, index) => (
                 <Reveal key={partner.name} delay={index * 100}>
