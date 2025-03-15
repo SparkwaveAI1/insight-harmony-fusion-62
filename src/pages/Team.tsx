@@ -1,3 +1,4 @@
+
 import React from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -9,7 +10,7 @@ import Reveal from "@/components/ui-custom/Reveal";
 
 // Images uploaded by the user
 const scottImg = "/lovable-uploads/983bcfc1-e817-46a1-a6a6-4d175257b1dc.png";
-const michaelyImg = "/lovable-uploads/b7844130-55da-478c-85f1-8d8c8d31728a.png";
+const michaelyImg = "/lovable-uploads/bf89dba3-10dc-400d-98f1-2c0464e1f005.png";
 const company365Img = "/lovable-uploads/287c4b95-3d95-4659-9ead-d91d9ae4a9d7.png";
 
 interface TeamMember {
