@@ -1,4 +1,3 @@
-
 import React from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -9,8 +8,8 @@ import { Linkedin, Twitter } from "lucide-react";
 import Reveal from "@/components/ui-custom/Reveal";
 
 // Images uploaded by the user
-const michaelyImg = "/lovable-uploads/ee1ed526-f01e-476f-9b4f-0ac7cce96639.png";
-const scottImg = "/lovable-uploads/bf3445f9-f84c-4460-8e7d-813f56b7960b.png";
+const scottImg = "/lovable-uploads/983bcfc1-e817-46a1-a6a6-4d175257b1dc.png";
+const michaelyImg = "/lovable-uploads/b7844130-55da-478c-85f1-8d8c8d31728a.png";
 const company365Img = "/lovable-uploads/287c4b95-3d95-4659-9ead-d91d9ae4a9d7.png";
 
 interface TeamMember {
