@@ -12,7 +12,12 @@ import ExplanatorySubsections from "@/components/sections/ExplanatorySubsections
 import { Link } from "react-router-dom";
 import { ArrowRight, Search, Users, UserPlus, Settings, Bot } from "lucide-react";
 
+// Add console log for debugging
+console.log('Index.tsx is being rendered');
+
 const Index = () => {
+  console.log('Index component function executing');
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

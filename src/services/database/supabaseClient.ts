@@ -7,6 +7,9 @@ import type { Database } from './supabaseTypes';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+// Add console log for debugging
+console.log('Supabase client initialization. URL exists:', !!supabaseUrl, 'Key exists:', !!supabaseAnonKey);
+
 // Create a mock client when credentials are missing
 const createMockClient = () => {
   console.warn('Supabase credentials missing. Using mock client.');

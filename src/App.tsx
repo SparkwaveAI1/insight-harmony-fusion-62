@@ -19,6 +19,9 @@ import ResearchAvatar from "./pages/ResearchAvatar";
 import "./App.css";
 import "./index.css";
 
+// Add console log for debugging
+console.log('App.tsx is executing and setting up router');
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -88,6 +91,7 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  console.log('App component rendered');
   return <RouterProvider router={router} />;
 }
 
