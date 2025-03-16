@@ -8,7 +8,7 @@ import Reveal from "@/components/ui-custom/Reveal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Mic, MicOff, Send, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Mic, MicOff, Pause, Play, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Pre-defined interview questions
@@ -33,18 +33,28 @@ const AIVoiceInterview = () => {
   const [progress, setProgress] = useState(0);
   const [isInterviewComplete, setIsInterviewComplete] = useState(false);
   const [transcription, setTranscription] = useState("");
-  const [responses, setResponses] = useState<string[]>([]);
+  const [responses, setResponses] = useState<string[]>(Array(INTERVIEW_QUESTIONS.length).fill(""));
   const [isProcessing, setIsProcessing] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   
   const email = location.state?.email || "";
   const audioRef = useRef<HTMLAudioElement>(null);
   
+  // When component mounts or when user resumes after pausing
   useEffect(() => {
-    // Calculate interview progress
-    setProgress((currentQuestion / INTERVIEW_QUESTIONS.length) * 100);
-  }, [currentQuestion]);
+    if (isInterviewStarted && !isPaused) {
+      // Calculate interview progress
+      setProgress((currentQuestion / INTERVIEW_QUESTIONS.length) * 100);
+      
+      // Play current question if not paused
+      if (!isPaused) {
+        speakQuestion(INTERVIEW_QUESTIONS[currentQuestion]);
+      }
+    }
+  }, [currentQuestion, isPaused, isInterviewStarted]);
   
   useEffect(() => {
     // Redirect if no email is provided
@@ -57,12 +67,42 @@ const AIVoiceInterview = () => {
       navigate("/interview-landing");
     }
     
-    // Play first question when component mounts
-    const timeout = setTimeout(() => {
-      speakQuestion(INTERVIEW_QUESTIONS[0]);
-    }, 1000);
-    
-    return () => clearTimeout(timeout);
+    // Save interview state to localStorage when paused
+    if (isPaused) {
+      localStorage.setItem('interviewState', JSON.stringify({
+        currentQuestion,
+        responses,
+        email
+      }));
+      
+      toast({
+        title: "Interview Paused",
+        description: "Your progress has been saved. You can resume later.",
+      });
+    }
+  }, [isPaused]);
+  
+  // Check for existing interview on component mount
+  useEffect(() => {
+    const savedInterview = localStorage.getItem('interviewState');
+    if (savedInterview) {
+      try {
+        const { currentQuestion: savedQuestion, responses: savedResponses, email: savedEmail } = JSON.parse(savedInterview);
+        
+        // If there's a saved state and the emails match, restore the state
+        if (savedEmail === email) {
+          setCurrentQuestion(savedQuestion);
+          setResponses(savedResponses);
+          setProgress((savedQuestion / INTERVIEW_QUESTIONS.length) * 100);
+          toast({
+            title: "Interview Restored",
+            description: "Continuing from where you left off.",
+          });
+        }
+      } catch (error) {
+        console.error("Error restoring interview state:", error);
+      }
+    }
   }, []);
   
   const speakQuestion = (question: string) => {
@@ -72,25 +112,63 @@ const AIVoiceInterview = () => {
     speech.pitch = 1;
     speech.volume = isMuted ? 0 : 1;
     window.speechSynthesis.speak(speech);
+    
+    // Set up event for when speech ends to automatically start recording
+    speech.onend = () => {
+      if (!isPaused && isInterviewStarted) {
+        startRecording();
+      }
+    };
+  };
+  
+  const startRecording = () => {
+    setIsRecording(true);
+    // In a real implementation, you would start recording the user's voice here
+    
+    // Simulate recording for a set duration (e.g., 30 seconds)
+    setTimeout(() => {
+      if (isRecording) {
+        stopRecording();
+      }
+    }, 30000); // Auto-stop after 30 seconds
+  };
+  
+  const stopRecording = () => {
+    setIsRecording(false);
+    setIsProcessing(true);
+    
+    // Simulate processing of recorded audio
+    setTimeout(() => {
+      const simulatedResponse = `This is a simulated transcription of the user's response to question ${currentQuestion + 1}.`;
+      setTranscription(simulatedResponse);
+      
+      // Update the responses array with this transcription
+      const updatedResponses = [...responses];
+      updatedResponses[currentQuestion] = simulatedResponse;
+      setResponses(updatedResponses);
+      
+      setIsProcessing(false);
+      
+      // Auto-advance to next question after a delay
+      setTimeout(() => {
+        if (currentQuestion < INTERVIEW_QUESTIONS.length - 1 && !isPaused) {
+          setCurrentQuestion(prev => prev + 1);
+        } else if (currentQuestion === INTERVIEW_QUESTIONS.length - 1) {
+          setIsInterviewComplete(true);
+          setShowApiKeyInput(true);
+          
+          // Clear saved interview state when complete
+          localStorage.removeItem('interviewState');
+        }
+      }, 3000);
+    }, 1500);
   };
   
   const toggleRecording = () => {
     if (isRecording) {
-      // Stop recording logic
-      setIsRecording(false);
-      // In a real implementation, you would stop the recording and process the audio
-      // Simulating a transcription after a delay
-      setIsProcessing(true);
-      setTimeout(() => {
-        const simulatedResponse = `This is a simulated response to question ${currentQuestion + 1}.`;
-        setTranscription(simulatedResponse);
-        setIsProcessing(false);
-      }, 1500);
+      stopRecording();
     } else {
-      // Start recording logic
-      setIsRecording(true);
-      // In a real implementation, you would start recording the user's voice
-      setTranscription("");
+      startRecording();
     }
   };
   
@@ -101,24 +179,41 @@ const AIVoiceInterview = () => {
     }
   };
   
-  const handleNextQuestion = () => {
-    // Save current response
-    setResponses([...responses, transcription]);
-    setTranscription("");
+  const togglePause = () => {
+    // If we're currently recording when pausing, stop the recording
+    if (isRecording) {
+      stopRecording();
+    }
     
-    // Move to next question or complete interview
+    // Toggle the pause state
+    setIsPaused(!isPaused);
+    
+    // Cancel any ongoing speech when pausing
+    if (!isPaused) {
+      window.speechSynthesis.cancel();
+    }
+  };
+  
+  const startInterview = () => {
+    setIsInterviewStarted(true);
+    setIsPaused(false);
+    speakQuestion(INTERVIEW_QUESTIONS[currentQuestion]);
+  };
+  
+  const handleSkipQuestion = () => {
+    // Skip current question
+    if (isRecording) {
+      stopRecording();
+    }
+    
+    window.speechSynthesis.cancel();
+    
     if (currentQuestion < INTERVIEW_QUESTIONS.length - 1) {
-      const nextQuestion = currentQuestion + 1;
-      setCurrentQuestion(nextQuestion);
+      const updatedResponses = [...responses];
+      updatedResponses[currentQuestion] = "[Question skipped]";
+      setResponses(updatedResponses);
       
-      // Play next question after a short delay
-      setTimeout(() => {
-        speakQuestion(INTERVIEW_QUESTIONS[nextQuestion]);
-      }, 500);
-    } else {
-      // Interview is complete
-      setIsInterviewComplete(true);
-      setShowApiKeyInput(true);
+      setCurrentQuestion(prev => prev + 1);
     }
   };
   
@@ -184,45 +279,101 @@ const AIVoiceInterview = () => {
                         <span className="text-sm font-medium">
                           Question {currentQuestion + 1} of {INTERVIEW_QUESTIONS.length}
                         </span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={toggleMute}
-                          className="h-8 w-8 p-0"
-                        >
-                          {isMuted ? (
-                            <VolumeX className="h-4 w-4" />
-                          ) : (
-                            <Volume2 className="h-4 w-4" />
-                          )}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={toggleMute}
+                            className="h-8 w-8 p-0"
+                          >
+                            {isMuted ? (
+                              <VolumeX className="h-4 w-4" />
+                            ) : (
+                              <Volume2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={togglePause}
+                            className="h-8 w-8 p-0"
+                          >
+                            {isPaused ? (
+                              <Play className="h-4 w-4" />
+                            ) : (
+                              <Pause className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                       <Progress value={progress} className="h-2" />
                     </div>
                     
-                    <div className="bg-muted/30 rounded-lg p-4 mb-6">
-                      <h3 className="font-medium mb-2">Question:</h3>
-                      <p className="text-lg">{INTERVIEW_QUESTIONS[currentQuestion]}</p>
-                    </div>
+                    {isPaused && (
+                      <div className="bg-muted/30 p-4 rounded-lg mb-8 text-center">
+                        <h3 className="font-medium mb-2">Interview Paused</h3>
+                        <p className="text-muted-foreground mb-4">Your progress has been saved. You can resume the interview when you're ready.</p>
+                        <Button onClick={togglePause}>
+                          <Play className="mr-2 h-4 w-4" />
+                          Resume Interview
+                        </Button>
+                      </div>
+                    )}
                     
-                    <div className="mb-8">
-                      <h3 className="font-medium mb-2">Your Response:</h3>
-                      {isProcessing ? (
-                        <div className="flex justify-center py-8">
-                          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    {!isPaused && (
+                      <>
+                        <div className="bg-muted/30 rounded-lg p-4 mb-6">
+                          <h3 className="font-medium mb-2">Question:</h3>
+                          <p className="text-lg">{INTERVIEW_QUESTIONS[currentQuestion]}</p>
                         </div>
-                      ) : transcription ? (
-                        <div className="bg-card border rounded-lg p-4">
-                          <p>{transcription}</p>
-                        </div>
-                      ) : (
-                        <div className="border border-dashed border-muted-foreground/40 rounded-lg p-6 text-center">
-                          <p className="text-muted-foreground">
-                            {isRecording ? "Listening..." : "Click the microphone button to start recording your answer"}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                        
+                        {!isInterviewStarted ? (
+                          <div className="mb-8 text-center">
+                            <p className="mb-4 text-muted-foreground">
+                              When you start the interview, the AI will read each question aloud and automatically record your voice response.
+                            </p>
+                            <Button 
+                              onClick={startInterview}
+                              size="lg"
+                              className="mx-auto"
+                            >
+                              Start Voice Interview
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="mb-8">
+                            <h3 className="font-medium mb-2">Status:</h3>
+                            {isProcessing ? (
+                              <div className="flex justify-center py-8">
+                                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                <p className="ml-3 text-muted-foreground">Processing your response...</p>
+                              </div>
+                            ) : isRecording ? (
+                              <div className="border border-primary rounded-lg p-6 text-center bg-primary/5">
+                                <div className="flex items-center justify-center mb-2">
+                                  <span className="h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
+                                  <p className="ml-2 font-medium">Recording your answer...</p>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Speak clearly into your microphone. Recording will automatically stop after you finish.
+                                </p>
+                              </div>
+                            ) : responses[currentQuestion] ? (
+                              <div className="bg-card border rounded-lg p-4">
+                                <p className="text-muted-foreground text-sm mb-1">Your response:</p>
+                                <p>{responses[currentQuestion]}</p>
+                              </div>
+                            ) : (
+                              <div className="border border-dashed border-muted-foreground/40 rounded-lg p-6 text-center">
+                                <p className="text-muted-foreground">
+                                  The AI will ask the question and automatically start recording
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
                     
                     <div className="flex justify-between items-center">
                       <Button
@@ -230,8 +381,6 @@ const AIVoiceInterview = () => {
                         onClick={() => {
                           if (currentQuestion > 0) {
                             setCurrentQuestion(currentQuestion - 1);
-                            setTranscription(responses[currentQuestion - 1] || "");
-                            setResponses(responses.slice(0, -1));
                           } else {
                             navigate(-1);
                           }
@@ -243,30 +392,31 @@ const AIVoiceInterview = () => {
                       </Button>
                       
                       <div className="flex gap-2">
-                        <Button
-                          variant={isRecording ? "destructive" : "secondary"}
-                          className="rounded-full h-12 w-12 p-0"
-                          onClick={toggleRecording}
-                          disabled={isProcessing}
-                        >
-                          {isRecording ? (
-                            <MicOff className="h-5 w-5" />
-                          ) : (
-                            <Mic className="h-5 w-5" />
-                          )}
-                        </Button>
-                        
-                        <Button
-                          onClick={handleNextQuestion}
-                          disabled={!transcription || isRecording || isProcessing}
-                        >
-                          {currentQuestion < INTERVIEW_QUESTIONS.length - 1 ? (
-                            "Next Question"
-                          ) : (
-                            "Complete Interview"
-                          )}
-                          <Send className="ml-2 h-4 w-4" />
-                        </Button>
+                        {isInterviewStarted && !isPaused && (
+                          <>
+                            <Button
+                              variant={isRecording ? "destructive" : "secondary"}
+                              className="rounded-full h-12 w-12 p-0"
+                              onClick={toggleRecording}
+                              disabled={isProcessing || isPaused}
+                            >
+                              {isRecording ? (
+                                <MicOff className="h-5 w-5" />
+                              ) : (
+                                <Mic className="h-5 w-5" />
+                              )}
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              onClick={handleSkipQuestion}
+                              disabled={isProcessing || isPaused || currentQuestion >= INTERVIEW_QUESTIONS.length - 1}
+                            >
+                              <SkipForward className="mr-2 h-4 w-4" />
+                              Skip Question
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </>

@@ -13,7 +13,7 @@ const FormSubmitSection = ({ isSubmitting, email }: FormSubmitSectionProps) => {
     <div className="pt-6">
       <p className="text-center text-muted-foreground mb-8">
         This helps us build a realistic, thoughtful AI version of you for research purposes. 
-        The next step is a guided interview—focused on your experiences, insights, and unique perspective.
+        The next step is a guided voice interview—focused on your experiences, insights, and unique perspective.
       </p>
       
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
