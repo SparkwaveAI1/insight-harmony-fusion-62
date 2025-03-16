@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -17,6 +16,8 @@ import InterviewLanding from "./pages/InterviewLanding";
 import PreInterviewQuestionnaire from "./pages/PreInterviewQuestionnaire";
 import ResearchAvatar from "./pages/ResearchAvatar";
 import AIVoiceInterview from "./pages/AIVoiceInterview";
+import VoiceInterviewSession from "./pages/VoiceInterviewSession";
+import InterviewComplete from "./pages/InterviewComplete";
 import "./App.css";
 import "./index.css";
 
@@ -81,6 +82,14 @@ const router = createBrowserRouter([
   {
     path: "/ai-voice-interview",
     element: <AIVoiceInterview />,
+  },
+  {
+    path: "/voice-interview-session",
+    element: <VoiceInterviewSession />,
+  },
+  {
+    path: "/interview-complete",
+    element: <InterviewComplete />,
   },
   {
     path: "/participate-research",
