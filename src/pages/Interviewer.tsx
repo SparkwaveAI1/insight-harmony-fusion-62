@@ -79,7 +79,7 @@ const Interviewer = () => {
                     </div>
                   </div>
                   
-                  <Link to="/interview-process">
+                  <Link to="/interview-landing">
                     <Button className="w-full justify-center group mt-auto">
                       Create a Persona
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -159,7 +159,7 @@ const Interviewer = () => {
                   <p className="text-muted-foreground mb-4">
                     Generate content tailored to your target audience—using their language, addressing their pain points, and matching their tone.
                   </p>
-                  <Link to="/interview-process" className="text-primary font-medium inline-flex items-center group">
+                  <Link to="/interview-landing" className="text-primary font-medium inline-flex items-center group">
                     Try Content Creation
                     <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
@@ -175,7 +175,7 @@ const Interviewer = () => {
                   <p className="text-muted-foreground mb-4">
                     Discover adjacent audiences and strategies to expand your market reach based on your AI Persona's network and interests.
                   </p>
-                  <Link to="/interview-process" className="text-primary font-medium inline-flex items-center group">
+                  <Link to="/interview-landing" className="text-primary font-medium inline-flex items-center group">
                     Expand Your Audience
                     <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
@@ -191,7 +191,7 @@ const Interviewer = () => {
                   <p className="text-muted-foreground mb-4">
                     Test new concepts and ideas with your AI Persona to predict market reception before investing in development.
                   </p>
-                  <Link to="/interview-process" className="text-primary font-medium inline-flex items-center group">
+                  <Link to="/interview-landing" className="text-primary font-medium inline-flex items-center group">
                     Validate Your Ideas
                     <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
@@ -201,7 +201,7 @@ const Interviewer = () => {
 
             <div className="text-center mt-12">
               <Reveal delay={300}>
-                <Link to="/interview-process">
+                <Link to="/interview-landing">
                   <Button size="lg" className="group">
                     Explore Your Persona
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
