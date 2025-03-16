@@ -1,12 +1,14 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FormSubmitSectionProps {
   isSubmitting: boolean;
+  email?: string;
 }
 
-const FormSubmitSection = ({ isSubmitting }: FormSubmitSectionProps) => {
+const FormSubmitSection = ({ isSubmitting, email }: FormSubmitSectionProps) => {
   return (
     <div className="pt-6">
       <p className="text-center text-muted-foreground mb-8">
@@ -14,11 +16,28 @@ const FormSubmitSection = ({ isSubmitting }: FormSubmitSectionProps) => {
         The next step is a guided interview—focused on your experiences, insights, and unique perspective.
       </p>
       
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <Link 
+          to="/ai-voice-interview" 
+          state={{ email }} 
+          className="w-full sm:w-auto"
+        >
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="lg" 
+            className="group w-full sm:w-auto"
+            disabled={isSubmitting}
+          >
+            Continue to AI Voice Interview
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </Link>
+        
         <Button 
           type="submit" 
           size="lg" 
-          className="group"
+          className="group w-full sm:w-auto"
           disabled={isSubmitting}
         >
           {isSubmitting ? (

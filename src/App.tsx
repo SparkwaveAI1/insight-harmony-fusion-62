@@ -16,6 +16,7 @@ import Team from "./pages/Team";
 import InterviewLanding from "./pages/InterviewLanding";
 import PreInterviewQuestionnaire from "./pages/PreInterviewQuestionnaire";
 import ResearchAvatar from "./pages/ResearchAvatar";
+import AIVoiceInterview from "./pages/AIVoiceInterview";
 import "./App.css";
 import "./index.css";
 
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
   {
     path: "/pre-interview-questionnaire",
     element: <PreInterviewQuestionnaire />,
+  },
+  {
+    path: "/ai-voice-interview",
+    element: <AIVoiceInterview />,
   },
   {
     path: "/participate-research",

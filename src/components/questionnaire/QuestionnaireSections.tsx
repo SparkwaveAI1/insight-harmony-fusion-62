@@ -16,6 +16,7 @@ interface QuestionnaireSectionsProps {
   hasChildren: string;
   watchesMedia: string;
   travelFrequency: string;
+  email?: string;
 }
 
 const QuestionnaireSections = ({ 
@@ -23,7 +24,8 @@ const QuestionnaireSections = ({
   isSubmitting, 
   hasChildren, 
   watchesMedia, 
-  travelFrequency 
+  travelFrequency,
+  email
 }: QuestionnaireSectionsProps) => {
   return (
     <>
@@ -34,7 +36,7 @@ const QuestionnaireSections = ({
       <InterestsPreferencesSection form={form} watchesMedia={watchesMedia} />
       <InformationMediaSection form={form} />
       <LifePerspectiveSection form={form} travelFrequency={travelFrequency} />
-      <FormSubmitSection isSubmitting={isSubmitting} />
+      <FormSubmitSection isSubmitting={isSubmitting} email={email} />
     </>
   );
 };

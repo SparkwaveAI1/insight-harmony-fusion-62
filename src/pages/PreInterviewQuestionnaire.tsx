@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -212,6 +211,7 @@ const PreInterviewQuestionnaire = () => {
                         hasChildren={hasChildren}
                         watchesMedia={watchesMedia}
                         travelFrequency={travelFrequency}
+                        email={email}
                       />
                     </form>
                   </Form>
