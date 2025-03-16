@@ -1,3 +1,4 @@
+
 import { ArrowRight, Bot, CheckCircle, Clipboard, Clock, FileText, MessageSquare, Sparkles, UserCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -12,12 +13,33 @@ import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { participantOperations } from "@/services/database/supabaseClient";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ScreenerForm = {
-  email: string;
-  age: string;
-  occupation: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  city: string;
+  state: string;
+  county: string;
+  zipCode: string;
+  gender: "male" | "female" | "other";
+  mobileNumber?: string;
+  hasTelegram: "yes" | "no";
+  telegramUsername?: string;
 };
+
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
+  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
+  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", 
+  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
+  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", 
+  "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", 
+  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", 
+  "Wisconsin", "Wyoming", "District of Columbia"
+];
 
 const InterviewLanding = () => {
   const [step, setStep] = useState<"intro" | "screener" | "loading" | "success" | "error">("intro");
@@ -26,23 +48,37 @@ const InterviewLanding = () => {
 
   const form = useForm<ScreenerForm>({
     defaultValues: {
-      email: "",
-      age: "",
-      occupation: ""
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      city: "",
+      state: "",
+      county: "",
+      zipCode: "",
+      gender: undefined,
+      mobileNumber: "",
+      hasTelegram: undefined,
+      telegramUsername: "",
     }
   });
+
+  // Watch the hasTelegram field to conditionally display the Telegram username field
+  const hasTelegram = form.watch("hasTelegram");
 
   const onSubmit = async (data: ScreenerForm) => {
     setStep("loading");
     
     try {
+      // Use email as unique identifier (firstName.lastName@persona-ai.example)
+      const email = `${data.firstName.toLowerCase()}.${data.lastName.toLowerCase()}@persona-ai.example`;
+      
       // Check if participant already exists
-      const existingParticipant = await participantOperations.getParticipantByEmail(data.email);
+      const existingParticipant = await participantOperations.getParticipantByEmail(email);
       
       if (existingParticipant) {
         toast({
-          title: "Email already registered",
-          description: "This email is already registered in our system. Please use a different email or contact support.",
+          title: "Already registered",
+          description: "It looks like you've already registered for this study.",
           variant: "destructive",
         });
         setStep("screener");
@@ -51,11 +87,20 @@ const InterviewLanding = () => {
 
       // Create new participant
       const screenerData = {
-        age: data.age,
-        occupation: data.occupation
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: data.dateOfBirth,
+        city: data.city,
+        state: data.state,
+        county: data.county,
+        zipCode: data.zipCode,
+        gender: data.gender,
+        mobileNumber: data.mobileNumber || null,
+        hasTelegram: data.hasTelegram,
+        telegramUsername: data.telegramUsername || null
       };
       
-      const participant = await participantOperations.createParticipant(data.email, screenerData);
+      const participant = await participantOperations.createParticipant(email, screenerData);
 
       if (!participant) {
         throw new Error("Failed to create participant");
@@ -71,7 +116,7 @@ const InterviewLanding = () => {
       
       // Redirect to the questionnaire page after a brief delay
       setTimeout(() => {
-        navigate("/interview-process");
+        navigate("/pre-interview-questionnaire", { state: { email } });
       }, 2000);
     } catch (err) {
       console.error("Error:", err);
@@ -185,8 +230,8 @@ const InterviewLanding = () => {
                 <div className="space-y-6">
                   <Reveal>
                     <div className="text-center mb-8">
-                      <h2 className="text-2xl font-bold mb-2">Participant Screening</h2>
-                      <p className="text-muted-foreground">Please answer these questions to see if you qualify for our study.</p>
+                      <h2 className="text-2xl font-bold mb-2">Research Study Screening Form</h2>
+                      <p className="text-muted-foreground">Please complete this form to see if you qualify for our study.</p>
                     </div>
                   </Reveal>
                   
@@ -194,16 +239,52 @@ const InterviewLanding = () => {
                     <div className="p-6 border rounded-lg bg-card">
                       <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <FormField
+                              control={form.control}
+                              name="firstName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>First Name</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Your first name" 
+                                      required
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="lastName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Last Name</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Your last name" 
+                                      required
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
                           <FormField
                             control={form.control}
-                            name="email"
+                            name="dateOfBirth"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Email Address</FormLabel>
+                                <FormLabel>What is your date of birth?</FormLabel>
                                 <FormControl>
                                   <Input 
-                                    placeholder="your@email.com" 
-                                    type="email" 
+                                    placeholder="mm/dd/yyyy" 
+                                    type="date"
                                     required
                                     {...field} 
                                   />
@@ -214,13 +295,13 @@ const InterviewLanding = () => {
                           
                           <FormField
                             control={form.control}
-                            name="age"
+                            name="city"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Age Group</FormLabel>
+                                <FormLabel>What city or town do you live in?</FormLabel>
                                 <FormControl>
                                   <Input 
-                                    placeholder="e.g., 25-34" 
+                                    placeholder="Your city" 
                                     required
                                     {...field} 
                                   />
@@ -231,13 +312,39 @@ const InterviewLanding = () => {
                           
                           <FormField
                             control={form.control}
-                            name="occupation"
+                            name="state"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Occupation</FormLabel>
+                                <FormLabel>What state do you live in?</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                  required
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Choose" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {US_STATES.map((state) => (
+                                      <SelectItem key={state} value={state}>{state}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="county"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What COUNTY do you live in?</FormLabel>
                                 <FormControl>
                                   <Input 
-                                    placeholder="e.g., Marketing Manager" 
+                                    placeholder="Your county" 
                                     required
                                     {...field} 
                                   />
@@ -245,6 +352,137 @@ const InterviewLanding = () => {
                               </FormItem>
                             )}
                           />
+                          
+                          <FormField
+                            control={form.control}
+                            name="zipCode"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What is your Zip Code?</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Your zip code" 
+                                    required
+                                    {...field} 
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="gender"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>What gender do you identify as?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                    required
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="male" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        Male
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="female" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        Female
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="other" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        Other
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="mobileNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What is your mobile number? (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Your mobile number" 
+                                    type="tel"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="hasTelegram"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Do you have a Telegram username?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                    required
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="yes" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        Yes
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="no" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal">
+                                        No
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          
+                          {hasTelegram === "yes" && (
+                            <FormField
+                              control={form.control}
+                              name="telegramUsername"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>What is your Telegram username?</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Your Telegram username"
+                                      required 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          )}
                           
                           <div className="flex justify-between">
                             <Button 
