@@ -67,8 +67,8 @@ const PreInterviewQuestionnaire = () => {
         throw new Error("Participant not found");
       }
 
-      // Save questionnaire responses
-      await questionnaireOperations.saveResponses(participant.id, data);
+      // Save questionnaire responses - using the correct method name
+      await questionnaireOperations.saveQuestionnaire(participant.id, data);
 
       toast({
         title: "Questionnaire Submitted",
