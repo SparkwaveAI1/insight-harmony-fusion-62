@@ -10,7 +10,7 @@ import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import ExplanatorySubsections from "@/components/sections/ExplanatorySubsections";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Users, UserPlus, Settings } from "lucide-react";
+import { ArrowRight, Search, Users, UserPlus, Settings, Bot } from "lucide-react";
 
 const Index = () => {
   return (
@@ -60,6 +60,17 @@ const Index = () => {
                         >
                           <Users className="mr-2 h-4 w-4" />
                           AI Focus Groups
+                          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </Button>
+                      </Link>
+                      <Link to="/research-avatar" className="block">
+                        <Button 
+                          variant="outline" 
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
+                        >
+                          <Bot className="mr-2 h-4 w-4" />
+                          Research AI Avatar
                           <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
                       </Link>

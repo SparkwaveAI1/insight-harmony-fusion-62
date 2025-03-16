@@ -15,6 +15,7 @@ import ParticipateResearch from "./pages/ParticipateResearch";
 import Team from "./pages/Team";
 import InterviewLanding from "./pages/InterviewLanding";
 import PreInterviewQuestionnaire from "./pages/PreInterviewQuestionnaire";
+import ResearchAvatar from "./pages/ResearchAvatar";
 import "./App.css";
 import "./index.css";
 
@@ -79,6 +80,10 @@ const router = createBrowserRouter([
   {
     path: "/team",
     element: <Team />,
+  },
+  {
+    path: "/research-avatar",
+    element: <ResearchAvatar />,
   },
 ]);
 
