@@ -14,6 +14,7 @@ import InterviewProcess from "./pages/InterviewProcess";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import Team from "./pages/Team";
 import InterviewLanding from "./pages/InterviewLanding";
+import PreInterviewQuestionnaire from "./pages/PreInterviewQuestionnaire";
 import "./App.css";
 import "./index.css";
 
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
   {
     path: "/interview-landing",
     element: <InterviewLanding />,
+  },
+  {
+    path: "/pre-interview-questionnaire",
+    element: <PreInterviewQuestionnaire />,
   },
   {
     path: "/participate-research",

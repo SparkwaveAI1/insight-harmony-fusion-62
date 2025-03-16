@@ -1,24 +1,17 @@
-
 import { ArrowRight, Bot, CheckCircle, Clipboard, Clock, FileText, MessageSquare, Sparkles, UserCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
-import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
-import { Button as ShadcnButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import { participantOperations } from "@/services/database/supabaseClient";
 
 type ScreenerForm = {
   email: string;
@@ -43,28 +36,29 @@ const InterviewLanding = () => {
     setStep("loading");
     
     try {
-      // Add the participant to Supabase
-      const { data: participant, error } = await supabase
-        .from('participants')
-        .insert([
-          { 
-            email: data.email,
-            screener_data: { age: data.age, occupation: data.occupation },
-            screener_passed: true,
-            interview_unlocked: false
-          }
-        ])
-        .select();
-
-      if (error) {
-        console.error("Error saving participant:", error);
+      // Check if participant already exists
+      const existingParticipant = await participantOperations.getParticipantByEmail(data.email);
+      
+      if (existingParticipant) {
         toast({
-          title: "Error",
-          description: "There was a problem saving your information. Please try again.",
+          title: "Email already registered",
+          description: "This email is already registered in our system. Please use a different email or contact support.",
           variant: "destructive",
         });
-        setStep("error");
+        setStep("screener");
         return;
+      }
+
+      // Create new participant
+      const screenerData = {
+        age: data.age,
+        occupation: data.occupation
+      };
+      
+      const participant = await participantOperations.createParticipant(data.email, screenerData);
+
+      if (!participant) {
+        throw new Error("Failed to create participant");
       }
 
       // Success - participant created
@@ -174,14 +168,14 @@ const InterviewLanding = () => {
                     </div>
                     
                     <div className="flex justify-center mt-8">
-                      <ShadcnButton 
+                      <Button 
                         size="lg" 
                         className="group"
                         onClick={() => setStep("screener")}
                       >
                         Start Screening
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </ShadcnButton>
+                      </Button>
                     </div>
                   </Reveal>
                 </div>
@@ -253,17 +247,17 @@ const InterviewLanding = () => {
                           />
                           
                           <div className="flex justify-between">
-                            <ShadcnButton 
+                            <Button 
                               type="button" 
                               variant="outline"
                               onClick={() => setStep("intro")}
                             >
                               Back
-                            </ShadcnButton>
+                            </Button>
                             
-                            <ShadcnButton type="submit">
+                            <Button type="submit">
                               Submit
-                            </ShadcnButton>
+                            </Button>
                           </div>
                         </form>
                       </Form>
@@ -294,9 +288,9 @@ const InterviewLanding = () => {
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <h2 className="text-2xl font-bold mb-2">Something went wrong</h2>
                   <p className="text-muted-foreground mb-6">We encountered an error processing your application. Please try again.</p>
-                  <ShadcnButton onClick={() => setStep("screener")}>
+                  <Button onClick={() => setStep("screener")}>
                     Try Again
-                  </ShadcnButton>
+                  </Button>
                 </div>
               )}
             </div>
