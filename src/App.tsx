@@ -13,6 +13,7 @@ import Pricing from "./pages/Pricing";
 import InterviewProcess from "./pages/InterviewProcess";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import Team from "./pages/Team";
+import InterviewLanding from "./pages/InterviewLanding";
 import "./App.css";
 import "./index.css";
 
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
   {
     path: "/interview-process",
     element: <InterviewProcess />,
+  },
+  {
+    path: "/interview-landing",
+    element: <InterviewLanding />,
   },
   {
     path: "/participate-research",

@@ -56,7 +56,7 @@ const CustomAIPersonas = () => {
             
             <Reveal delay={300}>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/interview-process">
+                <Link to="/interview-landing">
                   <Button 
                     size="lg" 
                     variant="primary" 
