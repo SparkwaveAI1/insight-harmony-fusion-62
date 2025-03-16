@@ -363,7 +363,7 @@ const VoiceInterviewSession = () => {
           </Button>
           
           <Button
-            variant="primary"
+            variant="default"
             onClick={goToNextQuestion}
             disabled={isRecording || isPaused}
           >
