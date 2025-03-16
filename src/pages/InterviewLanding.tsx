@@ -109,12 +109,12 @@ const InterviewLanding = () => {
       // Success - participant created
       toast({
         title: "Success!",
-        description: "Your application has been submitted. You can now proceed to the interview process.",
+        description: "Your application has been submitted. You can now proceed to the pre-interview questionnaire.",
       });
       
       setStep("success");
       
-      // Redirect to the questionnaire page after a brief delay
+      // Redirect to the pre-interview questionnaire page after a brief delay
       setTimeout(() => {
         navigate("/pre-interview-questionnaire", { state: { email } });
       }, 2000);
