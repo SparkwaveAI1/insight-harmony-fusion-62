@@ -1,3 +1,4 @@
+
 import { getApiKey } from '../utils/apiKeyUtils';
 import { toast } from 'sonner';
 
@@ -5,6 +6,23 @@ const AZURE_SPEECH_ENDPOINT = 'https://eastus.api.cognitive.microsoft.com/sts/v1
 const AZURE_SPEECH_REGION = 'eastus';
 
 let activeAudioElement: HTMLAudioElement | null = null;
+
+export const validateApiKey = async (apiKey: string): Promise<boolean> => {
+  try {
+    const tokenResponse = await fetch(AZURE_SPEECH_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    return tokenResponse.ok;
+  } catch (error) {
+    console.error('Error validating Azure API key:', error);
+    return false;
+  }
+};
 
 export const generateSpeech = async (text: string): Promise<ArrayBuffer | null> => {
   const apiKey = getApiKey('azure');
@@ -77,14 +95,14 @@ export const playAudioBuffer = async (audioBuffer: ArrayBuffer): Promise<void> =
       const audioUrl = URL.createObjectURL(blob);
       
       // Create a new audio element and play it
-      const audio = new HTMLAudioElement();
+      const audio = new Audio();
       audio.src = audioUrl;
 
       // Important: Set audio output to speakers only to reduce echo
-      if (audio.setSinkId && typeof audio.setSinkId === 'function') {
+      if ('setSinkId' in audio && typeof (audio as any).setSinkId === 'function') {
         try {
           // This will ensure audio goes to speakers if the browser supports it
-          audio.setSinkId('default');
+          (audio as any).setSinkId('default');
         } catch (e) {
           console.log('Could not set audio output device', e);
         }

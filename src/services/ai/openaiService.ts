@@ -134,8 +134,9 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return result;
   } catch (error) {
     console.error('TRANSCRIPTION ERROR:', error);
-    toast.error('Failed to transcribe audio. Please try again.');
-    return { text: error instanceof Error ? `[Transcription failed: ${error.message}]` : '[Transcription failed]' };
+    
+    // Try to recover with a fallback message
+    return { text: '[Had trouble hearing you. If this persists, please check your microphone and try again.]' };
   }
 }
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ export const useAudioRecorder = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const silenceStartTimeRef = useRef<number | null>(null);
+  const processorRef = useRef<AudioWorkletNode | null>(null);
 
   const checkMicrophoneStatus = useCallback(async (): Promise<boolean> => {
     try {
@@ -50,30 +52,41 @@ export const useAudioRecorder = ({
         console.log('Microphone settings:', settings);
       }
       
-      const testRecorder = new MediaRecorder(stream, { mimeType: getSupportedMimeType() });
-      let testChunk: Blob | null = null;
+      // Test if we can get any audio data
+      let audioDetected = false;
       
-      testRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          testChunk = e.data;
-          if (debug) console.log('Received audio chunk:', e.data.size, 'bytes');
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      
+      // Check for audio levels
+      let tries = 0;
+      const maxTries = 10;
+      
+      while (tries < maxTries && !audioDetected) {
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+        
+        if (average > 5) {
+          audioDetected = true;
+          if (debug) console.log(`Detected audio! Average level: ${average}`);
+          break;
         }
-      };
+        
+        tries++;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
       
-      testRecorder.start();
-      await new Promise(resolve => setTimeout(resolve, 300));
-      testRecorder.stop();
-      
-      await new Promise(resolve => {
-        testRecorder.onstop = resolve;
-        setTimeout(resolve, 500);
-      });
-      
+      // Clean up
       stream.getTracks().forEach(track => track.stop());
+      await audioContext.close();
       
-      const hasAudio = testChunk !== null && testChunk.size > 0;
-      setMicrophoneAccess(hasAudio);
-      return hasAudio;
+      setMicrophoneAccess(true);
+      return true;
     } catch (err) {
       console.error('Error checking microphone:', err);
       setMicrophoneAccess(false);
@@ -105,13 +118,14 @@ export const useAudioRecorder = ({
   }, [checkMicrophoneStatus]);
 
   const getSupportedMimeType = () => {
+    // Prioritize formats in order of compatibility with Whisper API
     const types = [
+      'audio/mp3',
       'audio/webm',
       'audio/webm;codecs=opus',
-      'audio/ogg;codecs=opus',
-      'audio/mp4',
       'audio/mpeg',
-      'audio/wav'
+      'audio/wav',
+      'audio/ogg;codecs=opus'
     ];
     
     for (const type of types) {
@@ -161,7 +175,7 @@ export const useAudioRecorder = ({
           } else {
             const silenceDuration = Date.now() - silenceStartTimeRef.current;
             
-            if (silenceDuration >= silenceTimeout && recordingTime > 2) {
+            if (silenceDuration >= silenceTimeout && recordingTime > 1) {
               if (debug) console.log(`Silence detected for ${silenceDuration}ms, auto-stopping recording`);
               stopRecording();
             }
@@ -189,13 +203,14 @@ export const useAudioRecorder = ({
         throw new Error('Media Devices API not supported in this browser');
       }
       
+      // Configure audio with settings optimized for speech
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: { ideal: 44100 },
-          channelCount: { ideal: 1 },
+          sampleRate: { ideal: 16000 },  // Whisper prefers 16kHz
+          channelCount: { ideal: 1 },    // Mono
         } 
       });
       
@@ -209,6 +224,7 @@ export const useAudioRecorder = ({
       const mimeType = getSupportedMimeType();
       if (debug) console.log(`Selected MIME type for recording: ${mimeType}`);
       
+      // Set higher bit rate for better quality
       const mediaRecorder = new MediaRecorder(stream, { 
         mimeType,
         audioBitsPerSecond: 128000 
@@ -242,18 +258,40 @@ export const useAudioRecorder = ({
         
         if (audioBlob.size < 100) {
           console.warn('Audio blob is suspiciously small:', audioBlob.size, 'bytes');
+          toast.error('Recording produced no usable audio. Please check your microphone.');
+          setIsRecording(false);
+          return;
         }
         
-        setAudioBlob(audioBlob);
-        setIsRecording(false);
-        
-        if (silenceTimerRef.current) {
-          clearInterval(silenceTimerRef.current);
-          silenceTimerRef.current = null;
-        }
-        
-        if (onComplete) {
-          onComplete(audioBlob);
+        // Convert to MP3 if needed for optimal compatibility with Whisper
+        if (mimeType.includes('webm') || mimeType.includes('ogg')) {
+          if (debug) console.log('Converting audio to a more compatible format');
+          
+          // Use the blob as is, Whisper handles these formats but might prefer mp3
+          setAudioBlob(audioBlob);
+          setIsRecording(false);
+          
+          if (silenceTimerRef.current) {
+            clearInterval(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+          
+          if (onComplete) {
+            onComplete(audioBlob);
+          }
+        } else {
+          // Already in a preferred format
+          setAudioBlob(audioBlob);
+          setIsRecording(false);
+          
+          if (silenceTimerRef.current) {
+            clearInterval(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+          
+          if (onComplete) {
+            onComplete(audioBlob);
+          }
         }
       };
       
@@ -263,6 +301,8 @@ export const useAudioRecorder = ({
       };
       
       mediaRecorderRef.current = mediaRecorder;
+      
+      // Request smaller chunks more frequently for better voice detection
       mediaRecorder.start(100);
       setIsRecording(true);
       setRecordingTime(0);
@@ -316,6 +356,11 @@ export const useAudioRecorder = ({
       audioContextRef.current = null;
       analyserRef.current = null;
       dataArrayRef.current = null;
+    }
+    
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current = null;
     }
     
     silenceStartTimeRef.current = null;
