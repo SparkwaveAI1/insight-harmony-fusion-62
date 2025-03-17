@@ -4,16 +4,27 @@ import { Bot, Zap, MessageSquare } from "lucide-react";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import { Input } from "@/components/ui/input";
+import { getApiKey } from "@/services/utils/apiKeyUtils";
+import { toast } from "sonner";
+import { generateResponse } from "@/services/ai/openaiService";
+import { generateSpeech, playAudioBuffer } from "@/services/ai/textToSpeechService";
 
 const AIAgentTab = () => {
   const [chatMessage, setChatMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<{role: "user" | "assistant"; content: string}[]>([
     {role: "assistant", content: "Hello! I'm your PersonaAI research agent. How can I help with market insights today?"}
   ]);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
+    
+    const apiKey = getApiKey('openai');
+    if (!apiKey) {
+      toast.error('OpenAI API key is required for chat interactions');
+      return;
+    }
     
     // Add user message to chat
     const newChatHistory = [
@@ -21,16 +32,36 @@ const AIAgentTab = () => {
       {role: "user" as const, content: chatMessage}
     ];
     setChatHistory(newChatHistory);
-    
-    // Mock AI response
-    setTimeout(() => {
-      setChatHistory([
-        ...newChatHistory,
-        {role: "assistant" as const, content: "Thank you for your message. Based on current market sentiment analysis, DeFi projects are showing increased user engagement despite market volatility. NFT sentiment trends indicate a shift toward utility-focused collections."}
-      ]);
-    }, 1000);
-    
     setChatMessage("");
+    setIsLoading(true);
+    
+    try {
+      // Get AI response
+      const messages = newChatHistory.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'assistant', 
+        content: msg.content
+      }));
+      
+      const response = await generateResponse(messages);
+      
+      // Update chat with AI response
+      const updatedHistory = [
+        ...newChatHistory,
+        {role: "assistant" as const, content: response}
+      ];
+      setChatHistory(updatedHistory);
+      
+      // Generate and play speech
+      const audioBuffer = await generateSpeech(response);
+      if (audioBuffer) {
+        await playAudioBuffer(audioBuffer);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast.error('Failed to get AI response');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -91,13 +122,24 @@ const AIAgentTab = () => {
                 onChange={(e) => setChatMessage(e.target.value)}
                 placeholder="Ask about market research, sentiment analysis, or Web3 trends..."
                 className="flex-1 bg-white border-amber-200/50 text-gray-800 placeholder:text-gray-400"
+                disabled={isLoading}
               />
               <Button 
                 type="submit" 
                 className="bg-gradient-to-r from-amber-600 to-amber-500 border-none"
+                disabled={isLoading}
               >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Send
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    Processing...
+                  </span>
+                ) : (
+                  <>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Send
+                  </>
+                )}
               </Button>
             </form>
           </div>

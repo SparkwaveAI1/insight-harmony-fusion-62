@@ -32,7 +32,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
         setIsValidating(true);
         setValidationMessage("Validating stored API key...");
         try {
-          console.log("API KEY MANAGER: Validating stored API key");
+          console.log("API KEY MANAGER: Validating stored OpenAI API key");
           const isValid = await validateApiKey(storedApiKey);
           setIsApiKeyValid(isValid);
           if (isValid) {
