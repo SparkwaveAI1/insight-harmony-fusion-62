@@ -1,327 +1,239 @@
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
-interface AudioRecorderOptions {
-  onDataAvailable?: (data: Blob) => void;
-  onComplete?: (recording: Blob) => void;
-  mimeType?: string;
-  timeSlice?: number;
+interface UseAudioRecorderProps {
+  onComplete?: (blob: Blob) => void;
   debug?: boolean;
 }
 
-export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
-  const {
-    onDataAvailable,
-    onComplete,
-    timeSlice = 1000,
-    debug = true, // Enable debug mode by default
-  } = options;
-  
-  // Use a supported mime type that works across browsers
-  const mimeType = 'audio/webm';
-
+export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorderProps = {}) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [microphoneAccess, setMicrophoneAccess] = useState<boolean | null>(null);
+  const [microphoneAccess, setMicrophoneAccess] = useState<boolean>(false);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<number | null>(null);
 
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const mediaStream = useRef<MediaStream | null>(null);
-  const audioChunks = useRef<Blob[]>([]);
-  const timerInterval = useRef<NodeJS.Timeout | null>(null);
-
-  // Check browser compatibility at initialization
-  useEffect(() => {
-    const checkBrowserCompatibility = () => {
-      const isMediaRecorderSupported = typeof MediaRecorder !== 'undefined';
-      const isUserMediaSupported = navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia;
-      
-      if (!isMediaRecorderSupported || !isUserMediaSupported) {
-        const errorMsg = !isMediaRecorderSupported 
-          ? 'MediaRecorder API is not supported in this browser.' 
-          : 'Media devices API is not supported in this browser.';
-        
-        console.error(errorMsg);
-        setError(new Error(errorMsg));
-        return false;
-      }
-      
-      return true;
-    };
-    
-    const isCompatible = checkBrowserCompatibility();
-    if (debug && isCompatible) {
-      console.log('Browser supports required audio recording APIs');
-    }
-  }, [debug]);
-
-  // Check if the browser supports the specified mime type
-  const checkMimeTypeSupport = useCallback(() => {
-    if (typeof MediaRecorder === 'undefined') {
-      return false;
-    }
-    
+  // Check microphone status
+  const checkMicrophoneStatus = useCallback(async (): Promise<boolean> => {
     try {
-      return MediaRecorder.isTypeSupported(mimeType);
-    } catch (e) {
-      return false;
-    }
-  }, [mimeType]);
-
-  // Request microphone access separately to handle permissions explicitly
-  const requestMicrophoneAccess = useCallback(async (): Promise<MediaStream | null> => {
-    try {
-      if (debug) console.log('Requesting microphone access...');
+      if (debug) console.log('Checking microphone status...');
       
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
         } 
       });
       
-      if (debug) console.log('Microphone access granted');
-      setMicrophoneAccess(true);
-      return stream;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Error accessing microphone:', errorMessage);
-      
-      let userFriendlyMessage = 'Failed to access your microphone.';
-      
-      if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
-        userFriendlyMessage = 'Microphone access denied. Please allow microphone access in your browser settings and try again.';
-      } else if (errorMessage.includes('NotFoundError')) {
-        userFriendlyMessage = 'No microphone found. Please connect a microphone and try again.';
-      } else if (errorMessage.includes('NotReadableError')) {
-        userFriendlyMessage = 'Your microphone is busy or not functioning properly. Please check your device.';
+      // Log microphone settings for debugging
+      if (debug) {
+        const audioTrack = stream.getAudioTracks()[0];
+        const settings = audioTrack.getSettings();
+        console.log('Microphone settings:', settings);
       }
       
-      setError(new Error(userFriendlyMessage));
-      setMicrophoneAccess(false);
-      toast.error(userFriendlyMessage);
-      return null;
-    }
-  }, [debug]);
-
-  // Start recording
-  const startRecording = useCallback(async () => {
-    // If already recording, stop first
-    if (isRecording) {
-      if (debug) console.log('Already recording, stopping first');
-      await stopRecording();
-    }
-    
-    try {
-      // Reset state for new recording
-      audioChunks.current = [];
-      setAudioBlob(null);
-      setError(null);
-      setRecordingTime(0);
-
-      // Request microphone access
-      const stream = await requestMicrophoneAccess();
-      if (!stream) {
-        throw new Error('Failed to access microphone');
-      }
+      // Get a sample audio chunk to verify the mic is working
+      const testRecorder = new MediaRecorder(stream, { mimeType: getSupportedMimeType() });
+      let testChunk: Blob | null = null;
       
-      mediaStream.current = stream;
-
-      // Check if mime type is supported, fallback if not
-      const isMimeTypeSupported = checkMimeTypeSupport();
-      const recorderOptions = isMimeTypeSupported ? { mimeType } : {};
-      
-      if (debug) console.log(`Using mime type: ${isMimeTypeSupported ? mimeType : 'browser default'}`);
-
-      // Create a new MediaRecorder instance
-      const recorder = new MediaRecorder(stream, recorderOptions);
-      mediaRecorder.current = recorder;
-
-      // Add chunks as they become available
-      recorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          audioChunks.current.push(event.data);
-          if (onDataAvailable) {
-            onDataAvailable(event.data);
-          }
-          if (debug) console.log(`Received audio chunk: ${event.data.size} bytes`);
-        } else {
-          console.warn('Empty audio data received');
+      testRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          testChunk = e.data;
+          if (debug) console.log('Received audio chunk:', e.data.size, 'bytes');
         }
       };
-
-      // Handle recording stop event
-      recorder.onstop = () => {
-        if (debug) console.log(`Recording stopped. Total chunks: ${audioChunks.current.length}`);
-        
-        // Ensure we have data before creating a blob
-        if (audioChunks.current.length > 0) {
-          // Create blob with explicit mime type to ensure compatibility
-          const recording = new Blob(audioChunks.current, { type: mimeType });
-          if (debug) console.log(`Recording completed: ${recording.size} bytes, type: ${recording.type}`);
-          setAudioBlob(recording);
-          if (onComplete) {
-            onComplete(recording);
-          }
-        } else {
-          console.error("No audio data recorded");
-          setError(new Error("No audio data recorded. Please check your microphone settings and try again."));
-          toast.error("No audio data was recorded. Please check your microphone.");
-        }
-
-        // Stop the media stream
-        stopMediaTracks();
-
-        // Clear the timer
-        if (timerInterval.current) {
-          clearInterval(timerInterval.current);
-          timerInterval.current = null;
-        }
-      };
-
-      // Log state changes
-      recorder.onstart = () => {
-        if (debug) console.log('MediaRecorder started');
-      };
       
-      recorder.onpause = () => {
-        if (debug) console.log('MediaRecorder paused');
-      };
+      testRecorder.start();
+      await new Promise(resolve => setTimeout(resolve, 300));
+      testRecorder.stop();
       
-      recorder.onresume = () => {
-        if (debug) console.log('MediaRecorder resumed');
-      };
-      
-      recorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
-        setError(new Error('Recording error occurred'));
-        toast.error("An error occurred during recording.");
-      };
-
-      // Start recording immediately with chunks delivered every timeSlice ms
-      recorder.start(timeSlice);
-      setIsRecording(true);
-      if (debug) console.log('Recording started');
-
-      // Start the timer
-      timerInterval.current = setInterval(() => {
-        setRecordingTime((prevTime) => prevTime + 1);
-      }, 1000);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Error starting recording:', errorMessage);
-      setError(err instanceof Error ? err : new Error('Failed to start recording'));
-      
-      if (mediaStream.current) {
-        stopMediaTracks();
-      }
-      
-      toast.error(err instanceof Error ? err.message : 'Failed to start recording');
-    }
-  }, [mimeType, onDataAvailable, onComplete, timeSlice, checkMimeTypeSupport, requestMicrophoneAccess, debug, isRecording]);
-
-  // Helper function to stop media tracks
-  const stopMediaTracks = useCallback(() => {
-    if (mediaStream.current) {
-      if (debug) console.log('Stopping media tracks');
-      mediaStream.current.getTracks().forEach((track) => {
-        track.stop();
-        if (debug) console.log(`Stopped ${track.kind} track`);
+      await new Promise(resolve => {
+        testRecorder.onstop = resolve;
+        setTimeout(resolve, 500); // Fallback in case onstop doesn't fire
       });
-      mediaStream.current = null;
-    }
-  }, [debug]);
-
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    if (mediaRecorder.current && (mediaRecorder.current.state === 'recording' || mediaRecorder.current.state === 'paused')) {
-      if (debug) console.log('Stopping recording...');
-      mediaRecorder.current.stop();
-      setIsRecording(false);
-    } else {
-      console.warn('Attempted to stop recording, but no active recorder found. Current state:', 
-                  mediaRecorder.current ? mediaRecorder.current.state : 'no recorder');
-    }
-  }, [debug]);
-
-  // Pause recording
-  const pauseRecording = useCallback(() => {
-    if (mediaRecorder.current && isRecording && mediaRecorder.current.state === 'recording') {
-      mediaRecorder.current.pause();
-      if (debug) console.log('Recording paused');
-    }
-  }, [isRecording, debug]);
-
-  // Resume recording
-  const resumeRecording = useCallback(() => {
-    if (mediaRecorder.current && isRecording && mediaRecorder.current.state === 'paused') {
-      mediaRecorder.current.resume();
-      if (debug) console.log('Recording resumed');
-    }
-  }, [isRecording, debug]);
-
-  // Check microphone status
-  const checkMicrophoneStatus = useCallback(async () => {
-    if (debug) console.log('Checking microphone status...');
-    
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioTracks = stream.getAudioTracks();
       
-      if (audioTracks.length === 0) {
-        setError(new Error('No audio tracks found. Please check your microphone.'));
-        setMicrophoneAccess(false);
-        return false;
-      }
-      
-      // Check if any track is actually receiving data
-      const trackSettings = audioTracks[0].getSettings();
-      if (debug) console.log('Microphone settings:', trackSettings);
-      
-      // Stop the test stream
+      // Clean up the test stream
       stream.getTracks().forEach(track => track.stop());
       
-      setMicrophoneAccess(true);
-      return true;
+      const hasAudio = testChunk !== null && testChunk.size > 0;
+      setMicrophoneAccess(hasAudio);
+      return hasAudio;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Microphone check error:', errorMessage);
-      setError(new Error('Failed to access microphone: ' + errorMessage));
+      console.error('Error checking microphone:', err);
       setMicrophoneAccess(false);
+      setError(err instanceof Error ? err : new Error('Unknown error checking microphone'));
       return false;
     }
   }, [debug]);
 
-  // Clean up on unmount
+  // Init: check microphone on mount
   useEffect(() => {
+    checkMicrophoneStatus();
+    
     return () => {
-      if (debug) console.log('Cleaning up audio recorder');
-      
-      if (mediaRecorder.current && (mediaRecorder.current.state === 'recording' || mediaRecorder.current.state === 'paused')) {
-        mediaRecorder.current.stop();
+      // Cleanup stream on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
       
-      stopMediaTracks();
-      
-      if (timerInterval.current) {
-        clearInterval(timerInterval.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
       }
     };
-  }, [stopMediaTracks, debug]);
+  }, [checkMicrophoneStatus]);
+
+  const getSupportedMimeType = () => {
+    const types = [
+      'audio/webm',
+      'audio/webm;codecs=opus',
+      'audio/ogg;codecs=opus',
+      'audio/mp4',
+      'audio/mpeg',
+      'audio/wav'
+    ];
+    
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        if (debug) console.log('Using MIME type:', type);
+        return type;
+      }
+    }
+    
+    // Fallback
+    return 'audio/webm';
+  };
+
+  const startRecording = useCallback(async () => {
+    try {
+      audioChunksRef.current = [];
+      setAudioBlob(null);
+      setError(null);
+      
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Media Devices API not supported in this browser');
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        } 
+      });
+      
+      streamRef.current = stream;
+      setMicrophoneAccess(true);
+      
+      const mimeType = getSupportedMimeType();
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+          if (debug) console.log(`Recording chunk received: ${e.data.size} bytes`);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        if (debug) console.log('Recording stopped, processing audio...');
+        const totalChunks = audioChunksRef.current.length;
+        
+        if (totalChunks === 0) {
+          console.error('No audio chunks collected during recording');
+          setError(new Error('No audio was captured. Please check your microphone.'));
+          toast.error('No audio was captured. Please check your microphone.');
+          setIsRecording(false);
+          return;
+        }
+        
+        // Create combined blob from all chunks
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        
+        if (debug) {
+          console.log(`Recording complete: ${audioBlob.size} bytes, ${totalChunks} chunks`);
+          console.log(`Audio MIME type: ${audioBlob.type}`);
+        }
+        
+        if (audioBlob.size < 100) {
+          console.warn('Audio blob is suspiciously small:', audioBlob.size, 'bytes');
+        }
+        
+        setAudioBlob(audioBlob);
+        setIsRecording(false);
+        
+        if (onComplete) {
+          onComplete(audioBlob);
+        }
+      };
+      
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        setError(new Error('Recording error occurred'));
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(100); // Collect data in chunks of 100ms
+      setIsRecording(true);
+      setRecordingTime(0);
+      
+      // Start a timer to track recording duration
+      timerRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      if (debug) console.log('Recording started successfully');
+      
+    } catch (err) {
+      console.error('Error starting recording:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error starting recording'));
+      setMicrophoneAccess(false);
+      setIsRecording(false);
+      toast.error('Failed to access microphone. Please check your browser permissions.');
+    }
+  }, [debug, onComplete]);
+
+  const stopRecording = useCallback(() => {
+    if (debug) console.log('Stopping recording...');
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    if (mediaRecorderRef.current && isRecording) {
+      try {
+        mediaRecorderRef.current.stop();
+        // Note: onstop handler will handle the blob creation and callback
+      } catch (err) {
+        console.error('Error stopping recording:', err);
+        setError(err instanceof Error ? err : new Error('Error stopping recording'));
+      }
+    } else {
+      if (debug) console.log('No active recorder to stop');
+    }
+    
+    // Always clean up the stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }, [isRecording, debug]);
 
   return {
     isRecording,
     recordingTime,
     audioBlob,
     error,
-    microphoneAccess,
     startRecording,
     stopRecording,
-    pauseRecording,
-    resumeRecording,
-    checkMicrophoneStatus
+    checkMicrophoneStatus,
+    microphoneAccess
   };
 };

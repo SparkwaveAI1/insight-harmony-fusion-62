@@ -5,7 +5,8 @@ import { getApiKey, saveApiKey, clearApiKeys } from "@/services/utils/apiKeyUtil
 import { Input } from "./ui/input";
 import { toast } from "sonner";
 import { validateApiKey } from "@/services/ai/textToSpeechService";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { Alert, AlertDescription } from "./ui/alert";
 
 interface ApiKeyManagerProps {
   onApiKeyUpdate: (apiKey: string | null) => void;
@@ -57,6 +58,12 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       return;
     }
     
+    if (!apiKey.startsWith('sk-')) {
+      toast.error("API Key should start with 'sk-'. Please check your OpenAI API key.");
+      setValidationMessage("Invalid API Key format. It should start with 'sk-'.");
+      return;
+    }
+    
     setIsValidating(true);
     setValidationMessage("Validating API key...");
     try {
@@ -91,8 +98,17 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
     toast.success("API Key cleared successfully!");
   };
 
+  const isStructurallyValidKey = apiKey.startsWith('sk-') && apiKey.length > 10;
+
   return (
     <div className="space-y-4">
+      <Alert className="bg-muted">
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          You need an OpenAI API key with access to speech models (tts-1 and whisper-1) and GPT-4o Mini.
+        </AlertDescription>
+      </Alert>
+      
       <div className="flex items-center space-x-2">
         <Input
           type="password"
@@ -100,6 +116,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           disabled={isApiKeyValid || isValidating}
+          className={isStructurallyValidKey ? "border-green-400" : ""}
         />
         <Button 
           onClick={handleSaveApiKey} 

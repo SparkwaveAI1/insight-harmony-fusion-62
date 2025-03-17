@@ -24,8 +24,10 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return { text: '[No audio data to transcribe]' };
   }
 
+  // Create a clean, optimized FormData object
   const formData = new FormData();
   
+  // Determine appropriate filename based on MIME type
   let filename = 'recording.webm';
   if (audioBlob.type.includes('mp3')) {
     filename = 'recording.mp3';
@@ -33,15 +35,18 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     filename = 'recording.wav';
   }
   
-  formData.append('file', audioBlob, filename);
+  // Create a clean copy of the blob to avoid potential issues
+  const cleanBlob = new Blob([await audioBlob.arrayBuffer()], { type: audioBlob.type });
+  formData.append('file', cleanBlob, filename);
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'json');
-  formData.append('language', 'en'); // Optional: specify language
+  formData.append('language', 'en');
 
   try {
-    console.log(`Sending transcription request with ${filename}`);
+    console.log(`Sending transcription request for ${filename}, size: ${cleanBlob.size} bytes`);
     console.log(`Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
     
+    // Make the API request with proper error handling
     const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/transcriptions`, {
       method: 'POST',
       headers: {
@@ -52,18 +57,26 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
 
     // Log the response status and headers for debugging
     console.log(`Transcription API response status: ${response.status}`);
+    console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
     
     if (!response.ok) {
       let errorMessage = 'Failed to transcribe audio';
+      let errorDetails = '';
+      
       try {
         const errorData = await response.json();
         errorMessage = errorData.error?.message || errorMessage;
+        errorDetails = JSON.stringify(errorData);
         console.error('Transcription API error:', errorData);
       } catch (parseError) {
         console.error('Error parsing API error response:', parseError);
-        console.error('Raw response:', await response.text().catch(() => 'Unable to get response text'));
+        const rawText = await response.text().catch(() => 'Unable to get response text');
+        console.error('Raw response:', rawText);
+        errorDetails = rawText;
       }
-      throw new Error(errorMessage);
+      
+      toast.error(`Transcription failed: ${errorMessage}`);
+      throw new Error(`${errorMessage}\nDetails: ${errorDetails}`);
     }
 
     const result = await response.json();
@@ -71,9 +84,12 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     
     if (!result.text || result.text.trim() === '') {
       console.warn('Empty transcription received from API');
+      toast.warning('No speech detected. Please speak more clearly or check your microphone.');
       return { text: '[No speech detected]' };
     }
     
+    // Show success message
+    toast.success(`Speech detected: "${result.text.substring(0, 30)}${result.text.length > 30 ? '...' : ''}"`);
     return result;
   } catch (error) {
     console.error('Transcription error:', error);
