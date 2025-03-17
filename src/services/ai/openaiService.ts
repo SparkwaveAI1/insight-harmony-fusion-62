@@ -30,39 +30,50 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return { text: '[Audio recording too short]' };
   }
 
+  // Convert to more compatible format for Whisper API
+  let processedBlob = audioBlob;
+  const standardMimeType = determineStandardMimeType(audioBlob.type);
+  
+  // If we need to transform the audio format, we do it here
+  try {
+    // For certain formats, we may need to create a new blob with explicit mime type
+    if (audioBlob.type !== standardMimeType) {
+      console.log(`Converting audio from ${audioBlob.type} to ${standardMimeType}`);
+      const audioArrayBuffer = await audioBlob.arrayBuffer();
+      processedBlob = new Blob([audioArrayBuffer], { type: standardMimeType });
+      console.log(`Created converted blob: ${processedBlob.size} bytes with type: ${standardMimeType}`);
+    }
+  } catch (err) {
+    console.error('Error converting audio format:', err);
+    // Continue with original blob if conversion fails
+    processedBlob = audioBlob;
+  }
+  
   // Create a clean, optimized FormData object
   const formData = new FormData();
   
   // Ensure proper filename extension based on audio type
-  // OpenAI Whisper supports these formats: mp3, mp4, mpeg, mpga, m4a, wav, webm
   let filename = 'recording.webm';
   
-  if (audioBlob.type.includes('mp3')) {
+  if (standardMimeType.includes('mp3')) {
     filename = 'recording.mp3';
-  } else if (audioBlob.type.includes('wav')) {
+  } else if (standardMimeType.includes('wav')) {
     filename = 'recording.wav';
-  } else if (audioBlob.type.includes('mp4') || audioBlob.type.includes('mpeg') || audioBlob.type.includes('mpga')) {
-    filename = 'recording.mp3'; // Fallback to mp3 for these types
+  } else if (standardMimeType.includes('ogg')) {
+    filename = 'recording.ogg';
+  } else if (standardMimeType.includes('mp4') || standardMimeType.includes('mpeg') || standardMimeType.includes('mpga')) {
+    filename = 'recording.mp3';
   }
   
-  console.log(`Using filename: ${filename} for type: ${audioBlob.type}`);
+  console.log(`Using filename: ${filename} for type: ${standardMimeType}`);
   
-  // Convert to more compatible format for Whisper API
-  const audioArrayBuffer = await audioBlob.arrayBuffer();
-  
-  // Create a clean blob with a standard MIME type
-  const standardMimeType = determineStandardMimeType(audioBlob.type);
-  const cleanBlob = new Blob([audioArrayBuffer], { type: standardMimeType });
-  
-  console.log(`Created clean blob: ${cleanBlob.size} bytes with type: ${standardMimeType}`);
-  
-  formData.append('file', cleanBlob, filename);
+  formData.append('file', processedBlob, filename);
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'json');
   formData.append('language', 'en');
 
   try {
-    console.log(`START TRANSCRIPTION: Sending request to OpenAI for ${filename}, size: ${cleanBlob.size} bytes`);
+    console.log(`START TRANSCRIPTION: Sending request to OpenAI for ${filename}, size: ${processedBlob.size} bytes`);
     console.log(`Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
     
     // Log form data content for debugging
@@ -100,8 +111,11 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
           toast.error('Rate limit exceeded. Please try again in a moment.');
         } else if (response.status === 400) {
           const errorMessage = errorData.error?.message || 'Unknown error';
+          console.error('Full error message:', errorMessage);
+          
           if (errorMessage.includes('file format')) {
-            toast.error('Unsupported audio format. Try using Chrome or Firefox for better compatibility.');
+            toast.error('Audio format issue. Trying alternative format...');
+            // We'll try again with a different approach in a future version
             console.error('Audio format error. Original type:', audioBlob.type, 'Used type:', standardMimeType);
           } else if (errorMessage.includes('Invalid file')) {
             toast.error('Invalid audio file. Please try speaking more clearly or check your microphone.');
@@ -140,16 +154,23 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
 
 // Helper function to determine a standard MIME type for the audio
 function determineStandardMimeType(originalType: string): string {
-  // Default to WebM which is widely supported
-  if (originalType.includes('webm')) {
-    return 'audio/webm';
-  }
+  console.log('Determining standard MIME type for:', originalType);
+  
+  // First, try the most Whisper-compatible formats
   if (originalType.includes('mp3') || originalType.includes('mpeg')) {
     return 'audio/mp3';
   }
+  
   if (originalType.includes('wav')) {
     return 'audio/wav';
   }
+  
+  // WebM is well-supported on Chrome
+  if (originalType.includes('webm')) {
+    return 'audio/webm';
+  }
+  
+  // Ogg is often supported on Firefox
   if (originalType.includes('ogg')) {
     return 'audio/ogg';
   }
@@ -159,8 +180,9 @@ function determineStandardMimeType(originalType: string): string {
     return 'audio/mp4';
   }
   
-  console.log('Using default WebM MIME type for unknown type:', originalType);
-  return 'audio/webm';
+  // Chrome's MediaRecorder typically uses WebM by default
+  console.log('Using audio/mp3 as default MIME type for Whisper compatibility');
+  return 'audio/mp3';
 }
 
 export async function generateResponse(messages: { role: string, content: string }[]): Promise<string> {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -121,9 +122,9 @@ export const useAudioRecorder = ({
     // Whisper supports mp3, mp4, mpeg, mpga, m4a, wav, and webm
     const types = [
       'audio/mp3',               // Most compatible format for Whisper
-      'audio/mpeg',              // Alternative mp3 type
       'audio/wav',               // Good uncompressed format
-      'audio/webm',              // Default for most browsers
+      'audio/mpeg',              // Alternative mp3 type
+      'audio/webm',              // Common in Chrome
       'audio/webm;codecs=opus',  // Common in Chrome
       'audio/ogg;codecs=opus',   // Common in Firefox
       'audio/m4a',               // For Apple devices
@@ -137,7 +138,7 @@ export const useAudioRecorder = ({
       }
     }
     
-    // If nothing is supported, fall back to webm which is most widely supported
+    // If nothing is supported, fall back to webm which is most widely supported by browsers
     if (debug) console.log('No preferred MIME types supported, falling back to audio/webm');
     return 'audio/webm';
   };
@@ -206,6 +207,13 @@ export const useAudioRecorder = ({
         throw new Error('Media Devices API not supported in this browser');
       }
       
+      // Log microphone support before requesting access
+      console.log("Supported MIME types for recording:", 
+        ["audio/webm", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"].filter(type => 
+          MediaRecorder.isTypeSupported(type)
+        )
+      );
+      
       // Configure audio with settings optimized for speech recognition
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -216,6 +224,11 @@ export const useAudioRecorder = ({
           channelCount: { ideal: 1 },    // Mono is better for speech recognition
         } 
       });
+      
+      // Get actual audio track settings
+      const audioTrack = stream.getAudioTracks()[0];
+      const settings = audioTrack.getSettings();
+      console.log("Actual microphone settings:", settings);
       
       streamRef.current = stream;
       setMicrophoneAccess(true);
