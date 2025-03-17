@@ -10,14 +10,9 @@ import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import ExplanatorySubsections from "@/components/sections/ExplanatorySubsections";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Users, UserPlus, Settings, Bot } from "lucide-react";
-
-// Add console log for debugging
-console.log('Index.tsx is being rendered');
+import { ArrowRight, Search, Users, UserPlus, Settings } from "lucide-react";
 
 const Index = () => {
-  console.log('Index component function executing');
-  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -25,19 +20,19 @@ const Index = () => {
         <Hero />
         
         {/* Main Features Section - Place both sections side by side under hero */}
-        <Section className="py-20 md:py-28 bg-gray-50">
+        <Section className="py-20 md:py-28">
           <div className="container px-4 mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
               {/* PersonaAI Researcher Section */}
-              <div className="bg-white rounded-xl p-8 flex flex-col h-full shadow-sm border border-gray-100">
+              <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
                 <Reveal>
-                  <h2 className="text-3xl font-bold mb-6 font-plasmik text-gray-800">
+                  <h2 className="text-3xl font-bold mb-6 font-plasmik">
                     PersonaAI Researcher
                   </h2>
                 </Reveal>
                 
                 <Reveal delay={100}>
-                  <p className="text-gray-600 text-pretty mb-8 flex-grow">
+                  <p className="text-muted-foreground text-pretty mb-8 flex-grow">
                     Leverage our AI-powered research tools to uncover qualitative insights at scale. 
                     From the Insights Conductor to AI Focus Groups, get the data you need fast.
                   </p>
@@ -49,7 +44,8 @@ const Index = () => {
                       <Link to="/research#insights-conductor" className="block">
                         <Button 
                           variant="outline" 
-                          className="w-full group flex items-center justify-center border-gray-300 text-gray-700 hover:text-blue-600 hover:border-blue-600"
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
                         >
                           <Search className="mr-2 h-4 w-4" />
                           Insights Conductor
@@ -59,26 +55,19 @@ const Index = () => {
                       <Link to="/research#ai-focus-groups" className="block">
                         <Button 
                           variant="outline" 
-                          className="w-full group flex items-center justify-center border-gray-300 text-gray-700 hover:text-blue-600 hover:border-blue-600"
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
                         >
                           <Users className="mr-2 h-4 w-4" />
                           AI Focus Groups
                           <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Button>
                       </Link>
-                      <Link to="/research-avatar" className="block">
-                        <Button 
-                          variant="outline" 
-                          className="w-full group flex items-center justify-center border-gray-300 text-gray-700 hover:text-blue-600 hover:border-blue-600"
-                        >
-                          <Bot className="mr-2 h-4 w-4" />
-                          Research AI Avatar
-                          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Button>
-                      </Link>
                       <Link to="/research" className="block mt-6">
                         <Button 
-                          className="w-full group flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white"
+                          variant="primary" 
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
                         >
                           Explore All Research Solutions
                           <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -90,15 +79,15 @@ const Index = () => {
               </div>
               
               {/* AI Interviewer Section */}
-              <div className="bg-white rounded-xl p-8 flex flex-col h-full shadow-sm border border-gray-100">
+              <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
                 <Reveal>
-                  <h2 className="text-3xl font-bold mb-6 font-plasmik text-gray-800">
+                  <h2 className="text-3xl font-bold mb-6 font-plasmik">
                     PersonaAI Interviewer
                   </h2>
                 </Reveal>
                 
                 <Reveal delay={100}>
-                  <p className="text-gray-600 text-pretty mb-8 flex-grow">
+                  <p className="text-muted-foreground text-pretty mb-8 flex-grow">
                     Use AI-driven interviews to build accurate personas or conduct research studies at scale. Use our Research Moderator for custom research with human participants.
                   </p>
                 </Reveal>
@@ -109,7 +98,8 @@ const Index = () => {
                       <Link to="/persona-ai-interviewer" className="block">
                         <Button 
                           variant="outline" 
-                          className="w-full group flex items-center justify-center border-gray-300 text-gray-700 hover:text-blue-600 hover:border-blue-600"
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
                         >
                           <UserPlus className="mr-2 h-4 w-4" />
                           PersonaAI Interviewer
@@ -119,7 +109,8 @@ const Index = () => {
                       <Link to="/interviewer" className="block">
                         <Button 
                           variant="outline" 
-                          className="w-full group flex items-center justify-center border-gray-300 text-gray-700 hover:text-blue-600 hover:border-blue-600"
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
                         >
                           <Settings className="mr-2 h-4 w-4" />
                           Research Moderator
@@ -128,7 +119,9 @@ const Index = () => {
                       </Link>
                       <Link to="/interviewer" className="block mt-6">
                         <Button 
-                          className="w-full group flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white"
+                          variant="primary" 
+                          size="lg" 
+                          className="w-full group flex items-center justify-center"
                         >
                           Explore AI Interviewer
                           <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -142,7 +135,7 @@ const Index = () => {
           </div>
         </Section>
         
-        {/* ExplanatorySubsections */}
+        {/* New Explanatory Subsections */}
         <ExplanatorySubsections />
         
         <CustomAIPersonas />

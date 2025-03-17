@@ -92,16 +92,14 @@ const TokenEcosystem = () => {
                   <p className="text-sm text-gray-300">
                     Create your own AI personas for research or participate in AI-powered focus groups to earn $PRSNA tokens. Help shape the future of AI research while getting rewarded.
                   </p>
-                  <Link to="/interview-process">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-4 border-blue-500/50 hover:bg-blue-500/20"
-                    >
-                      Create a Persona
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4 border-blue-500/50 hover:bg-blue-500/20"
+                  >
+                    Create a Persona
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>

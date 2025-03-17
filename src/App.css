@@ -9,27 +9,4 @@ body {
 #root {
   width: 100%;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-/* Fix for potentially hidden content */
-.container {
-  width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
-  margin-right: auto;
-  margin-left: auto;
-}
-
-/* Ensure content is visible */
-main {
-  display: block;
-  flex: 1 0 auto;
-}
-
-/* Debug outline - temporarily add to see if elements are rendering */
-.debug-outline * {
-  outline: 1px solid rgba(255, 0, 0, 0.1);
 }

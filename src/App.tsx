@@ -1,3 +1,4 @@
+
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -12,19 +13,9 @@ import Pricing from "./pages/Pricing";
 import InterviewProcess from "./pages/InterviewProcess";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import Team from "./pages/Team";
-import InterviewLanding from "./pages/InterviewLanding";
-import PreInterviewQuestionnaire from "./pages/PreInterviewQuestionnaire";
-import ResearchAvatar from "./pages/ResearchAvatar";
-import AIVoiceInterview from "./pages/AIVoiceInterview";
-import VoiceInterviewSession from "./pages/VoiceInterviewSession";
-import InterviewComplete from "./pages/InterviewComplete";
 import "./App.css";
 import "./index.css";
 
-// Add detailed console logs for debugging
-console.log('App.tsx is executing and setting up router');
-
-// Create router configuration
 const router = createBrowserRouter([
   {
     path: "/",
@@ -72,26 +63,6 @@ const router = createBrowserRouter([
     element: <InterviewProcess />,
   },
   {
-    path: "/interview-landing",
-    element: <InterviewLanding />,
-  },
-  {
-    path: "/pre-interview-questionnaire",
-    element: <PreInterviewQuestionnaire />,
-  },
-  {
-    path: "/ai-voice-interview",
-    element: <AIVoiceInterview />,
-  },
-  {
-    path: "/voice-interview-session",
-    element: <VoiceInterviewSession />,
-  },
-  {
-    path: "/interview-complete",
-    element: <InterviewComplete />,
-  },
-  {
     path: "/participate-research",
     element: <ParticipateResearch />,
   },
@@ -99,22 +70,10 @@ const router = createBrowserRouter([
     path: "/team",
     element: <Team />,
   },
-  {
-    path: "/research-avatar",
-    element: <ResearchAvatar />,
-  },
 ]);
 
 function App() {
-  console.log('App component rendered');
-  
-  try {
-    console.log('About to return RouterProvider');
-    return <RouterProvider router={router} />;
-  } catch (error) {
-    console.error('Error rendering RouterProvider:', error);
-    return <div>Error loading application. Check console for details.</div>;
-  }
+  return <RouterProvider router={router} />;
 }
 
 export default App;

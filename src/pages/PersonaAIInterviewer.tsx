@@ -40,7 +40,7 @@ const PersonaAIInterviewer = () => {
               
               <Reveal delay={300}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Link to="/interview-landing">
+                  <Link to="/interview-process">
                     <Button 
                       variant="primary" 
                       size="lg" 
@@ -73,7 +73,7 @@ const PersonaAIInterviewer = () => {
               </Reveal>
               
               <Reveal delay={200}>
-                <Link to="/interview-landing">
+                <Link to="/interview-process">
                   <Button 
                     variant="primary" 
                     size="lg" 
@@ -124,7 +124,7 @@ const PersonaAIInterviewer = () => {
                     </div>
                   </div>
                   
-                  <Link to="/interview-landing">
+                  <Link to="/interview-process">
                     <Button className="w-full justify-center group mt-auto">
                       Create a Persona
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

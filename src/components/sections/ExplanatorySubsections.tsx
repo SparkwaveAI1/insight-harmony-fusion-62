@@ -47,10 +47,10 @@ const ExplanatorySubsections = () => {
       <div className="container px-4 mx-auto">
         <Reveal>
           <div className="max-w-2xl mx-auto text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-plasmik text-gray-800">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-plasmik">
               Our Research Toolkit
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-muted-foreground text-lg">
               Comprehensive AI-powered solutions for every research need
             </p>
           </div>
@@ -59,22 +59,22 @@ const ExplanatorySubsections = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {subsections.map((subsection, index) => (
             <Reveal key={index} delay={index * 100}>
-              <div className="bg-white border rounded-xl p-8 h-full flex flex-col transition-all hover:shadow-xl">
+              <div className="bg-background border rounded-xl p-8 h-full flex flex-col transition-all hover:shadow-xl">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-blue-50 rounded-lg inline-block">
+                  <div className="p-3 bg-primary/10 rounded-lg inline-block">
                     {subsection.icon}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800">{subsection.title}</h3>
+                  <h3 className="text-2xl font-bold">{subsection.title}</h3>
                 </div>
                 
-                <p className="text-gray-600 mb-8 flex-grow text-lg">
+                <p className="text-muted-foreground mb-8 flex-grow text-lg">
                   {subsection.description}
                 </p>
                 
                 <Link to={subsection.link} className="mt-auto">
                   <Button 
                     variant="outline" 
-                    className="w-full justify-center group text-base hover:scale-[1.02] transition-transform border-gray-300 text-gray-700 hover:text-blue-600 hover:border-blue-600"
+                    className="w-full justify-center group text-base hover:scale-[1.02] transition-transform"
                   >
                     {subsection.linkText}
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />

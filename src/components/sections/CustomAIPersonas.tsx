@@ -1,5 +1,5 @@
 
-import { User, Bot, ArrowRight, Users } from "lucide-react";
+import { User, Bot, ArrowRight, Video, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
@@ -13,72 +13,18 @@ const CustomAIPersonas = () => {
           {/* Left side with persona image grid */}
           <div className="w-full md:w-1/2 relative">
             <Reveal>
-              <div className="grid grid-cols-3 grid-rows-3 gap-2 rounded-xl overflow-hidden">
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/89382b41-5306-4a11-90a8-df0b7128dfa3.png" 
-                    alt="Older woman with gray hair" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/fd27e5a9-684b-43f2-b9a5-585d9fba51cd.png" 
-                    alt="Middle-aged woman with gray and black hair" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md relative">
-                  <img 
-                    src="/lovable-uploads/c502dfc9-1f4d-4a3b-bede-1d793c65d9f8.png" 
-                    alt="Older man in outdoor clothing" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-black/80 border border-primary/30 rounded-full flex items-center text-xs">
-                    <span className="text-xs font-medium text-primary">Video Avatar</span>
-                  </div>
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/f5f1463f-b7ed-41b8-b223-4c9dff9a4549.png" 
-                    alt="Young man with curly hair and glasses" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" 
-                    alt="Young woman with curly hair and glasses" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/f5f1463f-b7ed-41b8-b223-4c9dff9a4549.png" 
-                    alt="Young man with headphones" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/89382b41-5306-4a11-90a8-df0b7128dfa3.png" 
-                    alt="Elderly woman with glasses" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/fd27e5a9-684b-43f2-b9a5-585d9fba51cd.png" 
-                    alt="Young Asian man" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src="/lovable-uploads/c502dfc9-1f4d-4a3b-bede-1d793c65d9f8.png" 
-                    alt="Middle-aged man with beard" 
-                    className="w-full h-full object-cover"
-                  />
+              <div className="rounded-xl overflow-hidden shadow-xl border border-gray-800 hover:border-primary/40 transition-all">
+                <img 
+                  src="/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png" 
+                  alt="Grid of diverse AI personas representing different demographics" 
+                  className="w-full h-auto"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-70"></div>
+                
+                {/* Video avatar badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-black/80 border border-primary/30 rounded-full flex items-center">
+                  <Video className="h-4 w-4 text-primary mr-2" />
+                  <span className="text-xs font-medium text-primary">Video Avatar</span>
                 </div>
               </div>
             </Reveal>
@@ -95,7 +41,7 @@ const CustomAIPersonas = () => {
             
             <Reveal delay={100}>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 font-plasmik">
-                <span className="text-primary">Custom AI Personas</span>
+                <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">Custom AI Personas</span>
               </h2>
             </Reveal>
             
@@ -110,9 +56,11 @@ const CustomAIPersonas = () => {
             
             <Reveal delay={300}>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/interview-landing">
+                <Link to="/your-persona">
                   <Button 
-                    className="rounded-full px-8 py-3 bg-blue-600 hover:bg-blue-700 border-none shadow-lg shadow-primary/20 w-full sm:w-auto flex items-center"
+                    size="lg" 
+                    variant="primary" 
+                    className="rounded-full px-8 py-3 bg-gradient-to-r from-primary to-primary/70 border-none shadow-lg shadow-primary/20 w-full sm:w-auto"
                   >
                     <User className="w-4 h-4 mr-2" />
                     Create a Persona
@@ -122,8 +70,9 @@ const CustomAIPersonas = () => {
                 
                 <Link to="/ai-focus-groups">
                   <Button 
+                    size="lg" 
                     variant="secondary" 
-                    className="rounded-full px-8 py-3 shadow-lg w-full sm:w-auto flex items-center"
+                    className="rounded-full px-8 py-3 shadow-lg w-full sm:w-auto"
                   >
                     <Users className="w-4 h-4 mr-2" />
                     AI Focus Groups

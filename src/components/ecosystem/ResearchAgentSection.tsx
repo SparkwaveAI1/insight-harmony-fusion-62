@@ -18,7 +18,7 @@ const ResearchAgentSection = () => {
                   {/* Main image */}
                   <div className="aspect-[4/3] lg:aspect-square overflow-hidden">
                     <img 
-                      src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" 
+                      src="/lovable-uploads/71730aa8-fe82-45fd-8644-de4add24519b.png" 
                       alt="AI Research Agent" 
                       className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-500"
                     />
