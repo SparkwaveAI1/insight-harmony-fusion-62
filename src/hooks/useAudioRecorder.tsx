@@ -5,9 +5,18 @@ import { toast } from 'sonner';
 interface UseAudioRecorderProps {
   onComplete?: (blob: Blob) => void;
   debug?: boolean;
+  silenceDetectionEnabled?: boolean;
+  silenceThreshold?: number; // 0-100, default 15
+  silenceTimeout?: number; // in ms, default 2500
 }
 
-export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorderProps = {}) => {
+export const useAudioRecorder = ({ 
+  onComplete, 
+  debug = false,
+  silenceDetectionEnabled = true,
+  silenceThreshold = 15,
+  silenceTimeout = 2500
+}: UseAudioRecorderProps = {}) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -18,6 +27,11 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
+  const silenceTimerRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const silenceStartTimeRef = useRef<number | null>(null);
 
   // Check microphone status
   const checkMicrophoneStatus = useCallback(async (): Promise<boolean> => {
@@ -86,6 +100,14 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      
+      if (silenceTimerRef.current) {
+        clearInterval(silenceTimerRef.current);
+      }
+      
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
     };
   }, [checkMicrophoneStatus]);
 
@@ -110,11 +132,76 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
     return 'audio/webm';
   };
 
+  // Setup voice activity detection
+  const setupVoiceActivityDetection = (stream: MediaStream) => {
+    if (!silenceDetectionEnabled) return;
+    
+    try {
+      // Create audio context and analyzer
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      audioContextRef.current = new AudioContext();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      
+      // Connect the stream to the analyzer
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      
+      // Configure analyzer
+      analyserRef.current.fftSize = 256;
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      dataArrayRef.current = new Uint8Array(bufferLength);
+      
+      // Start monitoring for silence
+      silenceTimerRef.current = window.setInterval(() => {
+        if (!isRecording || !analyserRef.current || !dataArrayRef.current) return;
+        
+        // Get current audio levels
+        analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+        
+        // Calculate average volume level (0-255)
+        const average = dataArrayRef.current.reduce((sum, value) => sum + value, 0) / 
+                        dataArrayRef.current.length;
+        
+        // Convert to percentage (0-100)
+        const volumePercent = (average / 255) * 100;
+        
+        if (debug && recordingTime % 2 === 0) {
+          console.log(`Current volume: ${Math.round(volumePercent)}%`);
+        }
+        
+        // Check if volume is below threshold (silence)
+        if (volumePercent < silenceThreshold) {
+          if (silenceStartTimeRef.current === null) {
+            silenceStartTimeRef.current = Date.now();
+            if (debug) console.log('Silence detected, starting silence timer');
+          } else {
+            const silenceDuration = Date.now() - silenceStartTimeRef.current;
+            
+            // If silence persists for the timeout period, stop recording
+            if (silenceDuration >= silenceTimeout && recordingTime > 2) {
+              if (debug) console.log(`Silence detected for ${silenceDuration}ms, auto-stopping recording`);
+              stopRecording();
+            }
+          }
+        } else {
+          // Reset silence timer if volume goes above threshold
+          if (silenceStartTimeRef.current !== null) {
+            if (debug) console.log('Voice activity detected, resetting silence timer');
+            silenceStartTimeRef.current = null;
+          }
+        }
+      }, 200);
+    } catch (err) {
+      console.error('Error setting up voice activity detection:', err);
+    }
+  };
+
   const startRecording = useCallback(async () => {
     try {
       audioChunksRef.current = [];
       setAudioBlob(null);
       setError(null);
+      silenceStartTimeRef.current = null;
       
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Media Devices API not supported in this browser');
@@ -130,6 +217,11 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
       
       streamRef.current = stream;
       setMicrophoneAccess(true);
+      
+      // Setup voice activity detection
+      if (silenceDetectionEnabled) {
+        setupVoiceActivityDetection(stream);
+      }
       
       const mimeType = getSupportedMimeType();
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -168,6 +260,12 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
         setAudioBlob(audioBlob);
         setIsRecording(false);
         
+        // Cleanup silence detection
+        if (silenceTimerRef.current) {
+          clearInterval(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        
         if (onComplete) {
           onComplete(audioBlob);
         }
@@ -197,7 +295,7 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
       setIsRecording(false);
       toast.error('Failed to access microphone. Please check your browser permissions.');
     }
-  }, [debug, onComplete]);
+  }, [debug, onComplete, silenceDetectionEnabled]);
 
   const stopRecording = useCallback(() => {
     if (debug) console.log('Stopping recording...');
@@ -205,6 +303,11 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+    }
+    
+    if (silenceTimerRef.current) {
+      clearInterval(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
     
     if (mediaRecorderRef.current && isRecording) {
@@ -224,6 +327,16 @@ export const useAudioRecorder = ({ onComplete, debug = false }: UseAudioRecorder
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+      analyserRef.current = null;
+      dataArrayRef.current = null;
+    }
+    
+    silenceStartTimeRef.current = null;
   }, [isRecording, debug]);
 
   return {

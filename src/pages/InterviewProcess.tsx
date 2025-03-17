@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -23,6 +22,7 @@ const INTERVIEW_QUESTIONS = [
   "Tell me the story of your life in your own words.",
   "What were the biggest turning points in your life, moments when everything changed?",
   "Who or what has had the biggest influence on shaping who you are today?",
+  "Have you ever made a decision that felt small at the time but turned out to be life-changing?",
   "Tell me about your first job. What did you learn from it?",
   "What motivates you to work beyond earning money?",
   "Have you ever struggled financially? What was that experience like for you?",
@@ -37,7 +37,6 @@ const INTERVIEW_QUESTIONS = [
   "Do you prefer handling problems alone, or do you ask for help?",
   "Where do you see yourself in five years?",
   "What is the biggest lesson life has taught you?",
-  "What motivates you the most?",
   "What does success mean to you?"
 ];
 
@@ -50,6 +49,9 @@ const InterviewProcess = () => {
   const [useVoice, setUseVoice] = useState(true);
   const [showDebugging, setShowDebugging] = useState(false);
   const [microphoneStatus, setMicrophoneStatus] = useState<string>("unknown");
+  const [silenceThreshold, setSilenceThreshold] = useState(15);
+  const [silenceTimeout, setSilenceTimeout] = useState(2500);
+  const [silenceDetectionEnabled, setSilenceDetectionEnabled] = useState(true);
   const audioVisualizer = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,7 +76,10 @@ const InterviewProcess = () => {
           variant: "destructive"
         });
       }
-    }
+    },
+    silenceDetectionEnabled,
+    silenceThreshold,
+    silenceTimeout
   });
 
   useEffect(() => {
@@ -188,7 +193,10 @@ const InterviewProcess = () => {
     participantId: participantData?.id,
     initialQuestions: INTERVIEW_QUESTIONS,
     onComplete: handleInterviewComplete,
-    useVoice
+    useVoice,
+    silenceDetectionEnabled,
+    silenceThreshold,
+    silenceTimeout
   });
 
   useEffect(() => {
@@ -348,6 +356,18 @@ const InterviewProcess = () => {
     }
   };
 
+  const toggleSilenceDetection = () => {
+    if (interviewState === InterviewState.IDLE) {
+      setSilenceDetectionEnabled(!silenceDetectionEnabled);
+    } else {
+      toast({
+        title: "Settings",
+        description: "Settings cannot be changed during an active interview.",
+        variant: "default"
+      });
+    }
+  };
+
   const currentQuestionText = messages.length > 0 
     ? messages[messages.length - 1]?.role === 'ai' 
       ? messages[messages.length - 1]?.content 
@@ -417,16 +437,62 @@ const InterviewProcess = () => {
               </p>
               <ApiKeyManager onApiKeyUpdate={handleApiKeyUpdate} />
               
-              <div className="mt-6 flex items-center space-x-2 pt-4 border-t">
-                <Switch 
-                  id="voice-toggle" 
-                  checked={useVoice} 
-                  onCheckedChange={toggleVoice} 
-                />
-                <label htmlFor="voice-toggle" className="cursor-pointer flex items-center">
-                  {useVoice ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
-                  {useVoice ? "Voice enabled" : "Voice disabled"}
-                </label>
+              <div className="mt-6 space-y-4 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="voice-toggle" className="cursor-pointer flex items-center">
+                    {useVoice ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+                    {useVoice ? "Voice enabled" : "Voice disabled"}
+                  </label>
+                  <Switch 
+                    id="voice-toggle" 
+                    checked={useVoice} 
+                    onCheckedChange={toggleVoice} 
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <label htmlFor="silence-detection-toggle" className="cursor-pointer flex items-center">
+                    <Mic className="h-4 w-4 mr-2" />
+                    Auto-stop on silence
+                  </label>
+                  <Switch 
+                    id="silence-detection-toggle" 
+                    checked={silenceDetectionEnabled} 
+                    onCheckedChange={toggleSilenceDetection} 
+                  />
+                </div>
+                
+                {silenceDetectionEnabled && (
+                  <div className="space-y-3 pl-6 mt-2">
+                    <div>
+                      <label className="text-sm text-muted-foreground">
+                        Silence threshold: {silenceThreshold}%
+                      </label>
+                      <input 
+                        type="range" 
+                        min="5" 
+                        max="30" 
+                        value={silenceThreshold} 
+                        onChange={e => setSilenceThreshold(Number(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground">
+                        Silence timeout: {silenceTimeout/1000}s
+                      </label>
+                      <input 
+                        type="range" 
+                        min="1500" 
+                        max="5000" 
+                        step="500"
+                        value={silenceTimeout} 
+                        onChange={e => setSilenceTimeout(Number(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="mt-6 pt-4 border-t">
@@ -556,6 +622,11 @@ const InterviewProcess = () => {
                         <div className="flex items-center justify-center">
                           <Mic className="h-4 w-4 mr-2 text-red-400 animate-pulse" />
                           <span>Listening to your response...</span>
+                          {silenceDetectionEnabled && (
+                            <span className="ml-1 text-xs text-white/50">
+                              (Will auto-advance after {silenceTimeout/1000}s of silence)
+                            </span>
+                          )}
                         </div>
                       )}
                       
@@ -573,13 +644,14 @@ const InterviewProcess = () => {
                   <div className="mt-6 bg-black/50 p-4 rounded-lg border border-white/10 w-full">
                     <h3 className="text-white font-medium mb-2">Debug Info</h3>
                     <div className="text-xs text-white/70 space-y-1 font-mono">
-                      <div>State: {interviewState}</div>
+                      <div>State: {InterviewState[interviewState]}</div>
                       <div>Mic Access: {testAudioRecorder.microphoneAccess ? "Granted" : "Not Granted"}</div>
                       <div>Recording: {isRecording ? "Yes" : "No"}</div>
                       <div>Messages: {messages.length}</div>
-                      <div>Current Q: {currentQuestion}</div>
+                      <div>Current Q: {currentQuestion + 1} of {INTERVIEW_QUESTIONS.length}</div>
                       <div>API Key: {apiKey ? "Set" : "Not Set"}</div>
                       <div>Voice: {useVoice ? "Enabled" : "Disabled"}</div>
+                      <div>Silence Detection: {silenceDetectionEnabled ? `Enabled (${silenceThreshold}%, ${silenceTimeout/1000}s)` : "Disabled"}</div>
                       {testAudioRecorder.error && (
                         <div className="text-red-400">Error: {testAudioRecorder.error.message}</div>
                       )}

@@ -29,13 +29,19 @@ interface UseInterviewSessionProps {
   initialQuestions: string[];
   onComplete?: (transcript: Message[]) => void;
   useVoice?: boolean;
+  silenceDetectionEnabled?: boolean;
+  silenceThreshold?: number;
+  silenceTimeout?: number;
 }
 
 export const useInterviewSession = ({
   participantId,
   initialQuestions,
   onComplete,
-  useVoice = true
+  useVoice = true,
+  silenceDetectionEnabled = true,
+  silenceThreshold = 15,
+  silenceTimeout = 2500
 }: UseInterviewSessionProps) => {
   const [interviewState, setInterviewState] = useState<InterviewState>(InterviewState.IDLE);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,15 +52,21 @@ export const useInterviewSession = ({
   const [audioBuffer, setAudioBuffer] = useState<ArrayBuffer | null>(null);
   const { toast } = useToast();
 
-  // Initialize audio recorder
+  // Initialize audio recorder with silence detection
   const { 
     isRecording, 
     recordingTime, 
     audioBlob, 
+    error: recorderError,
     startRecording, 
-    stopRecording 
+    stopRecording,
+    microphoneAccess 
   } = useAudioRecorder({
-    onComplete: handleRecordingComplete
+    onComplete: handleRecordingComplete,
+    debug: true,
+    silenceDetectionEnabled,
+    silenceThreshold,
+    silenceTimeout
   });
 
   // Timer for the interview
@@ -81,7 +93,18 @@ export const useInterviewSession = ({
       
       return () => clearTimeout(skipTimer);
     }
-  }, [interviewState, currentQuestion]);
+    
+    if (interviewState === InterviewState.LISTENING) {
+      // Also enable skip for listening state after 5 seconds
+      if (!canSkip) {
+        const listeningSkipTimer = setTimeout(() => {
+          setCanSkip(true);
+        }, 5000);
+        
+        return () => clearTimeout(listeningSkipTimer);
+      }
+    }
+  }, [interviewState, currentQuestion, canSkip]);
 
   // Log state changes for debugging
   useEffect(() => {
@@ -106,6 +129,37 @@ export const useInterviewSession = ({
       console.log(`Message ${messages.length} (${lastMessage.role}): "${lastMessage.content.slice(0, 40)}..."`);
     }
   }, [messages]);
+
+  // Handle recorder errors
+  useEffect(() => {
+    if (recorderError) {
+      console.error('Recorder error:', recorderError);
+      toast({
+        title: "Recording Error",
+        description: recorderError.message,
+        variant: "destructive"
+      });
+      
+      // Try to recover by moving to the next question if we're stuck
+      if (interviewState === InterviewState.LISTENING) {
+        console.log('Attempting to recover from recording error by skipping');
+        skipQuestion();
+      }
+    }
+  }, [recorderError]);
+
+  // Monitor silence detection settings
+  useEffect(() => {
+    console.log(`Silence detection settings: ${silenceDetectionEnabled ? 'enabled' : 'disabled'}, threshold: ${silenceThreshold}%, timeout: ${silenceTimeout}ms`);
+  }, [silenceDetectionEnabled, silenceThreshold, silenceTimeout]);
+
+  // Max duration safeguard - automatically stop if recording for too long
+  useEffect(() => {
+    if (isRecording && recordingTime > 45) {
+      console.log('Recording has exceeded maximum allowed time (45s), auto-stopping');
+      stopRecording();
+    }
+  }, [isRecording, recordingTime, stopRecording]);
 
   // Start the interview
   const startInterview = useCallback(async () => {
@@ -172,11 +226,10 @@ export const useInterviewSession = ({
         variant: "destructive"
       });
       
-      // Give a brief pause then try again
+      // Skip to the next question after a short delay
       setTimeout(() => {
-        console.log('Restarting recording after error');
-        setInterviewState(InterviewState.LISTENING);
-        startRecording();
+        console.log('Skipping to next question due to recording error');
+        skipQuestion();
       }, 1000);
       return;
     }
@@ -237,15 +290,14 @@ export const useInterviewSession = ({
       console.error('Error processing recording:', error);
       toast({
         title: "Error",
-        description: "Failed to process your response. Please try again.",
+        description: "Failed to process your response. Skipping to next question.",
         variant: "destructive"
       });
       
-      // Attempt to recover by moving back to listening state
+      // Skip to the next question
       setTimeout(() => {
-        console.log('Restarting recording after error');
-        setInterviewState(InterviewState.LISTENING);
-        startRecording();
+        console.log('Skipping to next question due to transcription error');
+        skipQuestion();
       }, 1000);
     }
   }
@@ -378,10 +430,17 @@ export const useInterviewSession = ({
 
   // Skip to the next question
   const skipQuestion = useCallback(() => {
-    if (!canSkip || interviewState !== InterviewState.LISTENING) return;
+    if (interviewState !== InterviewState.LISTENING && interviewState !== InterviewState.PROCESSING) {
+      console.log(`Cannot skip in current state: ${InterviewState[interviewState]}`);
+      return;
+    }
     
     console.log('Skipping current question');
-    stopRecording();
+    
+    // Stop recording if active
+    if (isRecording) {
+      stopRecording();
+    }
     
     // Add a placeholder user response
     const skippedMessage: Message = {
@@ -470,7 +529,7 @@ export const useInterviewSession = ({
         completeInterview([...messages, skippedMessage, finalMessage]);
       }
     }
-  }, [canSkip, interviewState, currentQuestion, initialQuestions, messages, stopRecording, startRecording, useVoice]);
+  }, [canSkip, interviewState, currentQuestion, initialQuestions, messages, stopRecording, startRecording, useVoice, isRecording]);
 
   // Replay the current question
   const replayQuestion = useCallback(() => {
