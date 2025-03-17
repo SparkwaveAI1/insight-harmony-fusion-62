@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
@@ -38,21 +37,21 @@ const DatabaseSetupInstructions = () => (
     <div className="max-w-3xl bg-white rounded-lg shadow-xl p-6 md:p-8">
       <h1 className="text-2xl font-bold text-primary mb-4">Supabase Setup Required</h1>
       
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Step 1: Create the participants table</h2>
-        <p className="mb-4">Go to your Supabase dashboard (https://app.supabase.com), navigate to the SQL Editor, and run the following SQL script:</p>
-        <div className="bg-gray-50 rounded p-4 overflow-x-auto">
-          <pre className="text-sm">{getSetupSQLScripts()}</pre>
-        </div>
-      </div>
-      
       <div className="mb-6 bg-green-50 p-4 rounded border border-green-200">
-        <h2 className="text-lg font-semibold mb-2 text-green-800">✅ Step 2: Create storage buckets</h2>
+        <h2 className="text-lg font-semibold mb-2 text-green-800">✅ Step 1: Create storage buckets</h2>
         <p className="text-green-800">Great! We've detected both required storage buckets:</p>
         <ul className="list-disc pl-6 mt-2 text-green-800">
           <li><strong>transcripts</strong> - For storing interview transcripts</li>
           <li><strong>interview-audio</strong> - For storing interview recordings</li>
         </ul>
+      </div>
+      
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Step 2: Create the participants table</h2>
+        <p className="mb-4">Go to your Supabase dashboard (https://app.supabase.com), navigate to the SQL Editor, and run the following SQL script:</p>
+        <div className="bg-gray-50 rounded p-4 overflow-x-auto">
+          <pre className="text-sm">{getSetupSQLScripts()}</pre>
+        </div>
       </div>
       
       <div className="mb-6">
@@ -205,7 +204,9 @@ function App() {
   useEffect(() => {
     const checkDatabase = async () => {
       try {
+        console.log('Checking database setup...');
         const isReady = await ensureTablesExist();
+        console.log('Database ready:', isReady);
         setIsDbReady(isReady);
       } catch (error) {
         console.error("Database setup error:", error);

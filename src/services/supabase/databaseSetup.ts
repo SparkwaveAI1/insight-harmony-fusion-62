@@ -8,6 +8,14 @@ import { toast } from 'sonner';
  */
 export async function ensureTablesExist(): Promise<boolean> {
   try {
+    // First check if storage buckets exist since they're essential
+    const bucketsReady = await checkStorageBuckets();
+
+    if (!bucketsReady) {
+      console.log('Storage buckets not ready');
+      return false;
+    }
+    
     // Check if participants table exists
     const { data: tables, error } = await supabase
       .from('participants')
@@ -33,10 +41,9 @@ export async function ensureTablesExist(): Promise<boolean> {
       }
     }
     
-    // Check if storage buckets exist
-    const bucketsReady = await checkStorageBuckets();
-    
-    return bucketsReady;
+    // All checks passed
+    console.log('All database checks passed, database is ready');
+    return true;
   } catch (error) {
     console.error('Database setup error:', error);
     toast.error('Failed to set up database. Please check your Supabase configuration.');
@@ -82,8 +89,9 @@ async function createParticipantsTable() {
  */
 async function checkStorageBuckets() {
   try {
-    // Instead of trying to get each bucket (which seems to be causing 404 errors),
-    // let's try listing buckets first to see what's available
+    console.log('Checking storage buckets...');
+    
+    // List available buckets to see what we have
     const { data: bucketList, error: listError } = await supabase
       .storage
       .listBuckets();
@@ -96,10 +104,14 @@ async function checkStorageBuckets() {
       return false;
     }
     
+    console.log('Available buckets:', bucketList);
+    
     // Check if our required buckets exist in the list
     const bucketNames = bucketList?.map(bucket => bucket.name) || [];
     const hasTranscriptsBucket = bucketNames.includes('transcripts');
     const hasAudioBucket = bucketNames.includes('interview-audio');
+    
+    console.log('Bucket check results:', { hasTranscriptsBucket, hasAudioBucket });
     
     if (!hasTranscriptsBucket || !hasAudioBucket) {
       const missingBuckets = [];
@@ -127,7 +139,7 @@ async function checkStorageBuckets() {
       }
     }
     
-    console.log('All required storage buckets exist:', { hasTranscriptsBucket, hasAudioBucket });
+    console.log('All required storage buckets exist');
     return true;
   } catch (error) {
     console.error('Error checking storage buckets:', error);
