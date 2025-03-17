@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -42,7 +41,6 @@ const VoiceInterviewSession = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Session state management
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [responses, setResponses] = useState<Record<number, string>>({});
@@ -50,7 +48,6 @@ const VoiceInterviewSession = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [sessionId] = useState<string>(() => `session_${Date.now()}`);
   
-  // UI state
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -60,11 +57,9 @@ const VoiceInterviewSession = () => {
   const [interviewTime, setInterviewTime] = useState<number>(0);
   const [qualityScore, setQualityScore] = useState<number>(0);
 
-  // Refs
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
   const timerIntervalRef = useRef<number | null>(null);
   
-  // Speech recognition hook
   const { 
     isListening, 
     transcript, 
@@ -72,7 +67,6 @@ const VoiceInterviewSession = () => {
     stopListening 
   } = useSpeechRecognition({
     onResult: (text) => {
-      // Update the current user message with the transcript
       if (messages.length && messages[messages.length - 1].role === 'user') {
         setMessages(prev => 
           prev.map((msg, i) => 
@@ -83,14 +77,6 @@ const VoiceInterviewSession = () => {
     },
     onEnd: () => {
       if (messages.length && messages[messages.length - 1].role === 'user') {
-        // Mark the message as complete
-        setMessages(prev => 
-          prev.map((msg, i) => 
-            i === prev.length - 1 ? { ...msg, isComplete: true } : msg
-          )
-        );
-        
-        // Save the response
         if (transcript.trim()) {
           setResponses(prev => ({
             ...prev,
@@ -100,7 +86,6 @@ const VoiceInterviewSession = () => {
           if (!completedQuestions.includes(currentQuestionIndex)) {
             setCompletedQuestions(prev => [...prev, currentQuestionIndex]);
             
-            // Increase quality score when question is answered
             const newQualityScore = Math.min(
               100, 
               qualityScore + Math.floor(100 / INTERVIEW_QUESTIONS.length) + Math.floor(Math.random() * 5)
@@ -108,7 +93,6 @@ const VoiceInterviewSession = () => {
             setQualityScore(newQualityScore);
           }
           
-          // Move to next question after a brief pause
           setTimeout(() => {
             if (currentQuestionIndex < INTERVIEW_QUESTIONS.length - 1) {
               goToNextQuestion();
@@ -121,22 +105,18 @@ const VoiceInterviewSession = () => {
     }
   });
   
-  // Computed state
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const progressPercentage = Math.round(((completedQuestions.length) / INTERVIEW_QUESTIONS.length) * 100);
   
-  // Format interview time
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Initialize speech synthesis and timer
   useEffect(() => {
     speechSynthesisRef.current = window.speechSynthesis;
     
-    // Load interview state from local storage
     loadInterviewState();
     
     return () => {
@@ -149,7 +129,6 @@ const VoiceInterviewSession = () => {
     };
   }, []);
   
-  // Interview timer
   useEffect(() => {
     if (!showWelcome && !isPaused && !interviewComplete) {
       timerIntervalRef.current = window.setInterval(() => {
@@ -166,21 +145,17 @@ const VoiceInterviewSession = () => {
     };
   }, [showWelcome, isPaused, interviewComplete]);
   
-  // Save state when interview is paused or when moving between questions
   useEffect(() => {
     if (isPaused || completedQuestions.length > 0) {
       saveInterviewState();
     }
   }, [isPaused, responses, currentQuestionIndex, completedQuestions, messages]);
   
-  // Speak the current question when it changes
   useEffect(() => {
     if (!isPaused && !showWelcome && currentQuestionIndex < INTERVIEW_QUESTIONS.length && !isListening) {
       const currentQuestion = INTERVIEW_QUESTIONS[currentQuestionIndex];
       
-      // Add AI message if it doesn't exist
-      const lastMessage = messages[messages.length - 1];
-      if (!lastMessage || lastMessage.role !== 'ai' || lastMessage.content !== currentQuestion) {
+      if (!messages[messages.length - 1] || messages[messages.length - 1].role !== 'ai' || messages[messages.length - 1].content !== currentQuestion) {
         setMessages(prev => [
           ...prev,
           {
@@ -205,10 +180,9 @@ const VoiceInterviewSession = () => {
         setMessages(parsedState.messages);
         setResponses(parsedState.responses);
         setCompletedQuestions(parsedState.completedQuestions);
-        setIsPaused(false); // Always start unpaused when loading
-        setShowWelcome(false); // Skip welcome screen if we're loading a saved session
+        setIsPaused(false);
+        setShowWelcome(false);
         
-        // Calculate quality score based on completed questions
         const newQualityScore = Math.min(
           100, 
           Math.floor((parsedState.completedQuestions.length / INTERVIEW_QUESTIONS.length) * 100)
@@ -235,20 +209,16 @@ const VoiceInterviewSession = () => {
   const speakText = (text: string) => {
     if (isMuted || !speechSynthesisRef.current) return;
     
-    // Cancel any ongoing speech
     speechSynthesisRef.current.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     
-    // Track speaking state
     setIsSpeaking(true);
     
-    // Start recording after the AI finishes speaking
     utterance.onend = () => {
       setIsSpeaking(false);
-      // Small delay before starting recording
       setTimeout(() => {
         if (!isPaused) {
           startUserResponse();
@@ -260,7 +230,6 @@ const VoiceInterviewSession = () => {
   };
   
   const startUserResponse = () => {
-    // Add a new user message placeholder
     setMessages(prev => [
       ...prev,
       {
@@ -271,7 +240,6 @@ const VoiceInterviewSession = () => {
       }
     ]);
     
-    // Start recording
     startListening();
   };
   
@@ -281,7 +249,6 @@ const VoiceInterviewSession = () => {
       if (!isMuted) {
         speechSynthesisRef.current.cancel();
       } else if (!isListening && !isPaused) {
-        // If unmuting and not currently listening, repeat the current question
         speakText(INTERVIEW_QUESTIONS[currentQuestionIndex]);
       }
     }
@@ -289,13 +256,11 @@ const VoiceInterviewSession = () => {
   
   const handlePauseResume = () => {
     if (isPaused) {
-      // Resuming
       setIsPaused(false);
       if (!isListening && !isMuted) {
         speakText(INTERVIEW_QUESTIONS[currentQuestionIndex]);
       }
     } else {
-      // Pausing
       setIsPauseDialogOpen(true);
       if (isListening) {
         stopListening();
@@ -335,17 +300,15 @@ const VoiceInterviewSession = () => {
       }
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Handle interview completion
       handleInterviewComplete();
     }
   };
   
   const handleInterviewComplete = () => {
     setInterviewComplete(true);
-    localStorage.removeItem('voiceInterviewState'); // Clear saved state
+    localStorage.removeItem('voiceInterviewState');
     setIsLoading(true);
     
-    // Simulate sending data to server
     setTimeout(() => {
       setIsLoading(false);
       navigate('/interview-complete', { 
@@ -374,7 +337,6 @@ const VoiceInterviewSession = () => {
   
   const startInterview = () => {
     setShowWelcome(false);
-    // Add welcome message
     setMessages([
       {
         id: `ai_${Date.now()}`,
@@ -384,7 +346,6 @@ const VoiceInterviewSession = () => {
       }
     ]);
     
-    // Start the first question after a brief delay
     setTimeout(() => {
       if (!isPaused) {
         speakText(INTERVIEW_QUESTIONS[currentQuestionIndex]);
@@ -392,7 +353,6 @@ const VoiceInterviewSession = () => {
     }, 1000);
   };
 
-  // Welcome screen
   if (showWelcome) {
     return (
       <div className="container max-w-2xl mx-auto py-12 px-4 text-center bg-[#1a1a1a] min-h-screen flex flex-col items-center justify-center text-[#f5f5f5]">
@@ -449,7 +409,6 @@ const VoiceInterviewSession = () => {
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyYTJhMmEiIGZpbGwtb3BhY2l0eT0iMC4yIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIgMS44LTQgNC00czQgMS44IDQgNC0xLjggNC00IDQtNC0xLjgtNC00eiIvPjwvZz48L2c+PC9zdmc+')] opacity-20 pointer-events-none"></div>
       
       <div className="container max-w-3xl mx-auto py-8 px-4 h-screen flex flex-col relative z-10">
-        {/* Top Bar */}
         <div className="bg-[#2a2a2a] rounded-lg border border-[#3b82f6]/10 shadow-md p-4 mb-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
@@ -495,13 +454,11 @@ const VoiceInterviewSession = () => {
             </div>
           </div>
           
-          {/* Progress bar */}
           <div className="mt-3">
             <Progress value={progressPercentage} className="h-1.5 bg-[#2a2a2a]" />
           </div>
         </div>
         
-        {/* Quality meter */}
         <div className="mb-4 flex items-center justify-between">
           <div className="text-xs text-[#a0a0a0]">Persona Quality</div>
           <div className="flex-1 mx-3">
@@ -512,7 +469,6 @@ const VoiceInterviewSession = () => {
           <div className="text-xs font-medium text-[#f5f5f5]">{qualityScore}%</div>
         </div>
         
-        {/* Avatar-centric view */}
         <div className="flex-grow overflow-hidden flex flex-col bg-[#2a2a2a] rounded-lg border border-[#3b82f6]/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
           <div className="p-4 border-b border-[#3b82f6]/10 flex justify-between items-center">
             <h2 className="font-semibold text-[#f5f5f5] flex items-center">
@@ -550,9 +506,8 @@ const VoiceInterviewSession = () => {
             />
           ) : (
             <div className="flex-grow flex flex-col items-center justify-center p-6 text-center">
-              {/* AI Avatar */}
               <div className="mb-6 relative">
-                <Avatar className="h-64 w-64 mx-auto shadow-lg relative">
+                <div className="relative w-64 h-64 mx-auto">
                   <div className="absolute inset-0 rounded-full bg-[#3b82f6]/5 animate-pulse" 
                        style={{
                          boxShadow: isSpeaking 
@@ -560,37 +515,32 @@ const VoiceInterviewSession = () => {
                            : '0 0 20px rgba(59, 130, 246, 0.2)'
                        }}>
                   </div>
-                  <AvatarFallback className="bg-[#2a2a2a] text-[#3b82f6] text-5xl font-light border-2 border-[#3b82f6]/30">
-                    <Bot size={100} strokeWidth={1} />
-                  </AvatarFallback>
-                </Avatar>
+                  <img 
+                    src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" 
+                    alt="AI Interviewer Avatar" 
+                    className="w-full h-full object-cover rounded-full border-2 border-[#3b82f6]/30"
+                  />
+                </div>
                 
-                {/* Voice wave around avatar when speaking */}
-                {isSpeaking && (
-                  <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
-                    <AudioWave 
-                      isActive={true} 
-                      type="speaking" 
-                      color="bg-[#3b82f6]" 
-                      className="scale-150" 
-                    />
-                  </div>
-                )}
+                <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
+                  <AudioWave 
+                    isActive={true} 
+                    type="speaking" 
+                    color="bg-[#3b82f6]" 
+                    className="scale-150" 
+                  />
+                </div>
                 
-                {/* Mic indicator when listening */}
-                {isListening && (
-                  <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
-                    <AudioWave 
-                      isActive={true} 
-                      type="listening" 
-                      color="bg-[#3b82f6]" 
-                      className="scale-150" 
-                    />
-                  </div>
-                )}
+                <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
+                  <AudioWave 
+                    isActive={true} 
+                    type="listening" 
+                    color="bg-[#3b82f6]" 
+                    className="scale-150" 
+                  />
+                </div>
               </div>
               
-              {/* Current Question Display */}
               <div className="max-w-xl mx-auto mb-6 animate-fade-in">
                 <h3 className="text-xl font-medium text-[#f5f5f5] mb-3">
                   {INTERVIEW_QUESTIONS[currentQuestionIndex]}
@@ -608,7 +558,6 @@ const VoiceInterviewSession = () => {
             </div>
           )}
           
-          {/* Bottom controls bar */}
           <div className="p-4 border-t border-[#3b82f6]/10">
             <div className="flex justify-between items-center">
               <Button
@@ -664,7 +613,6 @@ const VoiceInterviewSession = () => {
         </div>
       </div>
       
-      {/* Pause dialog */}
       <Dialog open={isPauseDialogOpen} onOpenChange={setIsPauseDialogOpen}>
         <DialogContent className="bg-[#2a2a2a] text-[#f5f5f5] border border-[#3b82f6]/10">
           <DialogHeader>
@@ -691,7 +639,6 @@ const VoiceInterviewSession = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Loading overlay */}
       {isLoading && (
         <div className="fixed inset-0 bg-[#1a1a1a]/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center">
