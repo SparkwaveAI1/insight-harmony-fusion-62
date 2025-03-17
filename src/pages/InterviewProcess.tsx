@@ -186,7 +186,7 @@ const InterviewProcess = () => {
     stopInterview
   } = useInterviewSession({
     participantId: participantData?.id,
-    initialQuestions: STANDARD_QUESTIONS,
+    initialQuestions: INTERVIEW_QUESTIONS,
     onComplete: handleInterviewComplete,
     useVoice
   });
