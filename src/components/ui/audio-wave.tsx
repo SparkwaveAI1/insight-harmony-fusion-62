@@ -18,13 +18,13 @@ export const AudioWave = ({
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Different animations based on whether AI is speaking or user is talking
-  const barCount = type === 'speaking' ? 4 : 6;
+  const barCount = type === 'speaking' ? 5 : 6;
   
   return (
     <div 
       ref={containerRef}
       className={cn(
-        'flex items-center justify-center gap-[2px] h-6 transition-opacity',
+        'flex items-center justify-center gap-[3px] h-8 transition-opacity',
         isActive ? 'opacity-100' : 'opacity-30',
         className
       )}
@@ -33,17 +33,17 @@ export const AudioWave = ({
         <div
           key={i}
           className={cn(
-            'w-1 rounded-full transition-all duration-75',
+            'w-1.5 rounded-full transition-all duration-150',
             color,
             isActive ? 'animate-pulse' : 'h-2'
           )}
           style={{
             height: isActive 
-              ? `${Math.max(8, Math.floor(Math.random() * 24))}px` 
+              ? `${Math.max(8, Math.floor(Math.random() * 28))}px` 
               : '8px',
-            animationDelay: `${i * 0.1}s`,
-            animationDuration: `${0.5 + Math.random() * 0.5}s`,
-            boxShadow: isActive ? `0 0 8px ${color.replace('bg-', '')}` : 'none'
+            animationDelay: `${i * 0.15}s`,
+            animationDuration: `${0.6 + Math.random() * 0.5}s`,
+            boxShadow: isActive ? `0 0 10px ${color.replace('bg-', '')}` : 'none'
           }}
         />
       ))}

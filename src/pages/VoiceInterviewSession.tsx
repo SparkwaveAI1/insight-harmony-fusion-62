@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -13,6 +14,7 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { ConversationDisplay, Message } from "@/components/interview/ConversationDisplay";
 import { useToast } from "@/hooks/use-toast";
 import { AudioWave } from "@/components/ui/audio-wave";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const INTERVIEW_QUESTIONS = [
   "Tell me about yourself and what interests you most about participating in this research?",
@@ -54,7 +56,7 @@ const VoiceInterviewSession = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showWelcome, setShowWelcome] = useState<boolean>(true);
   const [interviewComplete, setInterviewComplete] = useState<boolean>(false);
-  const [showTranscription, setShowTranscription] = useState<boolean>(true);
+  const [showTranscription, setShowTranscription] = useState<boolean>(false);
   const [interviewTime, setInterviewTime] = useState<number>(0);
   const [qualityScore, setQualityScore] = useState<number>(0);
 
@@ -510,7 +512,7 @@ const VoiceInterviewSession = () => {
           <div className="text-xs font-medium text-[#f5f5f5]">{qualityScore}%</div>
         </div>
         
-        {/* Conversation display */}
+        {/* Avatar-centric view */}
         <div className="flex-grow overflow-hidden flex flex-col bg-[#2a2a2a] rounded-lg border border-[#3b82f6]/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
           <div className="p-4 border-b border-[#3b82f6]/10 flex justify-between items-center">
             <h2 className="font-semibold text-[#f5f5f5] flex items-center">
@@ -548,40 +550,65 @@ const VoiceInterviewSession = () => {
             />
           ) : (
             <div className="flex-grow flex flex-col items-center justify-center p-6 text-center">
-              <div className="rounded-full bg-[#3b82f6]/10 p-3 mb-3">
-                {isSpeaking ? (
-                  <Volume2 className="h-6 w-6 text-[#3b82f6]" />
-                ) : isListening ? (
-                  <Mic className="h-6 w-6 text-[#3b82f6]" />
-                ) : (
-                  <Bot className="h-6 w-6 text-[#3b82f6]" />
+              {/* AI Avatar */}
+              <div className="mb-6 relative">
+                <Avatar className="h-64 w-64 mx-auto shadow-lg relative">
+                  <div className="absolute inset-0 rounded-full bg-[#3b82f6]/5 animate-pulse" 
+                       style={{
+                         boxShadow: isSpeaking 
+                           ? '0 0 40px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.2) inset' 
+                           : '0 0 20px rgba(59, 130, 246, 0.2)'
+                       }}>
+                  </div>
+                  <AvatarFallback className="bg-[#2a2a2a] text-[#3b82f6] text-5xl font-light border-2 border-[#3b82f6]/30">
+                    <Bot size={100} strokeWidth={1} />
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Voice wave around avatar when speaking */}
+                {isSpeaking && (
+                  <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
+                    <AudioWave 
+                      isActive={true} 
+                      type="speaking" 
+                      color="bg-[#3b82f6]" 
+                      className="scale-150" 
+                    />
+                  </div>
+                )}
+                
+                {/* Mic indicator when listening */}
+                {isListening && (
+                  <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2">
+                    <AudioWave 
+                      isActive={true} 
+                      type="listening" 
+                      color="bg-[#3b82f6]" 
+                      className="scale-150" 
+                    />
+                  </div>
                 )}
               </div>
               
-              <h3 className="text-lg font-medium text-[#f5f5f5] mb-2">
-                {isSpeaking ? "AI is speaking..." : isListening ? "Listening to you..." : "Interview in progress"}
-              </h3>
-              
-              <p className="text-sm text-[#a0a0a0] max-w-md">
-                {isSpeaking ? 
-                  "Please wait for the AI to finish speaking before you respond." :
-                  isListening ?
-                    "Please speak clearly into your microphone. Your response is being recorded." :
-                    "Press the button below to toggle transcript visibility."
-                }
-              </p>
-              
-              <div className="mt-4">
-                <AudioWave 
-                  isActive={isSpeaking || isListening} 
-                  type={isSpeaking ? "speaking" : "listening"} 
-                  color="bg-[#3b82f6]" 
-                  className="h-8" 
-                />
+              {/* Current Question Display */}
+              <div className="max-w-xl mx-auto mb-6 animate-fade-in">
+                <h3 className="text-xl font-medium text-[#f5f5f5] mb-3">
+                  {INTERVIEW_QUESTIONS[currentQuestionIndex]}
+                </h3>
+                
+                <p className="text-sm text-[#a0a0a0]">
+                  {isSpeaking ? 
+                    "Please listen to the question..." : 
+                    isListening ? 
+                      "Please speak clearly into your microphone to respond." : 
+                      "Preparing next question..."
+                  }
+                </p>
               </div>
             </div>
           )}
           
+          {/* Bottom controls bar */}
           <div className="p-4 border-t border-[#3b82f6]/10">
             <div className="flex justify-between items-center">
               <Button
@@ -592,6 +619,13 @@ const VoiceInterviewSession = () => {
               >
                 <ArrowLeft className="h-4 w-4 mr-1" /> Exit
               </Button>
+              
+              <div className="flex items-center gap-2 text-sm text-[#a0a0a0]">
+                <Clock className="h-4 w-4 text-[#3b82f6]" />
+                <span>{formatTime(interviewTime)}</span>
+                <span className="text-[#a0a0a0]/50">/</span>
+                <span>~15:00</span>
+              </div>
               
               <div className="flex gap-2">
                 <Button
