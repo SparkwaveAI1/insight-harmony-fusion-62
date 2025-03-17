@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseService';
 import { toast } from 'sonner';
 
@@ -11,6 +12,7 @@ export async function ensureTablesExist(): Promise<boolean> {
     
     // First check if we can connect to Supabase at all
     try {
+      console.log('Checking Supabase connection with URL:', supabase.supabaseUrl);
       const { data: healthCheck, error: healthError } = await supabase.rpc('healthcheck', {});
       
       if (healthError) {
@@ -150,7 +152,7 @@ async function createStorageBuckets(): Promise<boolean> {
       console.log('Created transcripts bucket ✅');
     } catch (error: any) {
       // If bucket already exists, that's fine
-      if (error.message.includes('already exists')) {
+      if (error.message && error.message.includes('already exists')) {
         console.log('Transcripts bucket already exists ✅');
       } else {
         console.error('Error creating transcripts bucket:', error);
@@ -167,7 +169,7 @@ async function createStorageBuckets(): Promise<boolean> {
       console.log('Created interview-audio bucket ✅');
     } catch (error: any) {
       // If bucket already exists, that's fine
-      if (error.message.includes('already exists')) {
+      if (error.message && error.message.includes('already exists')) {
         console.log('Interview-audio bucket already exists ✅');
       } else {
         console.error('Error creating interview-audio bucket:', error);
@@ -252,3 +254,4 @@ ON participants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update for existing participants" 
 ON participants FOR UPDATE USING (true);
 `;
+}

@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize the Supabase client with your provided credentials
+// Updated URL from .com to .co which is the correct Supabase domain
 const supabaseUrl = 'https://wgerdrdsuusnrdnwwelt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY';
 
