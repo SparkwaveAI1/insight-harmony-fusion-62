@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Reveal from "@/components/ui-custom/Reveal";
 import ApiKeyManager from "@/components/ApiKeyManager";
+import OpenAITester from "@/components/OpenAITester";
 import { useInterviewSession, InterviewState, Message } from "@/hooks/useInterviewSession";
 import { generateResponse } from "@/services/ai/openaiService";
 import { getApiKey } from "@/services/utils/apiKeyUtils";
@@ -357,7 +358,7 @@ const InterviewProcess = () => {
         return "bg-red-500";
       case "error":
         return "bg-red-500";
-      default:
+      default":
         return "bg-yellow-500";
     }
   };
@@ -370,7 +371,7 @@ const InterviewProcess = () => {
         return "Microphone Unavailable";
       case "error":
         return "Microphone Error";
-      default:
+      default":
         return "Checking Microphone...";
     }
   };
@@ -436,6 +437,12 @@ const InterviewProcess = () => {
                     Error: {testAudioRecorder.error.message}
                   </div>
                 )}
+              </div>
+              
+              {/* Add the OpenAI Tester component */}
+              <div className="mt-6 pt-4 border-t">
+                <h4 className="font-medium mb-4">Troubleshoot API Connection</h4>
+                <OpenAITester />
               </div>
             </div>
           ) : isLoading ? (
@@ -634,7 +641,3 @@ const InterviewProcess = () => {
 };
 
 export default InterviewProcess;
-
-
-
-

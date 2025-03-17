@@ -6,7 +6,7 @@ const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1';
 
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   try {
-    console.log('Validating API key...');
+    console.log('VALIDATING API KEY: Starting validation...');
     const response = await fetch(`${OPENAI_API_ENDPOINT}/models`, {
       method: 'GET',
       headers: {
@@ -19,7 +19,7 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
     
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unable to get response text');
-      console.error('API key validation error response:', errorText);
+      console.error('API KEY VALIDATION ERROR: Response:', errorText);
       
       if (response.status === 401) {
         toast.error('Invalid API key. Please check your OpenAI API key.');
@@ -30,19 +30,23 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
       }
       return false;
     } else {
-      console.log('API key validated successfully');
+      console.log('API KEY VALIDATION SUCCESS: Key is valid');
       toast.success('OpenAI API key is valid!');
       
       // Check if the response includes models list
       try {
         const models = await response.json();
+        console.log('AVAILABLE MODELS:', models.data.map((m: any) => m.id).join(', '));
+        
         const hasAudioModels = models.data.some((model: any) => 
           model.id === 'tts-1' || model.id === 'whisper-1'
         );
         
         if (!hasAudioModels) {
-          console.warn('API key does not have access to required audio models');
+          console.warn('API KEY ISSUE: Key does not have access to required audio models');
           toast.warning('Your API key may not have access to required audio models (tts-1, whisper-1)');
+        } else {
+          console.log('API KEY HAS AUDIO MODELS: tts-1 and whisper-1 available');
         }
       } catch (err) {
         console.error('Error checking models access:', err);
@@ -51,7 +55,7 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
       return true;
     }
   } catch (error) {
-    console.error('API key validation error:', error);
+    console.error('API KEY VALIDATION ERROR:', error);
     toast.error('API key validation error: Network issue');
     return false;
   }
@@ -67,6 +71,7 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
   }
 
   try {
+    console.log('SPEECH GENERATION: Starting...');
     console.log('Using API key for text-to-speech (first 5 chars):', apiKey.substring(0, 5) + '...');
     console.log('Generating speech for text:', text.substring(0, 30) + '...');
     
@@ -83,14 +88,14 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
       })
     });
 
-    console.log(`Speech API response status: ${response.status}`);
+    console.log(`SPEECH GENERATION RESPONSE: Status: ${response.status}`);
 
     if (!response.ok) {
       let errorMessage = 'Failed to generate speech';
       try {
         const errorData = await response.json();
         errorMessage = errorData.error?.message || errorMessage;
-        console.error('Speech API error:', errorData);
+        console.error('SPEECH GENERATION ERROR:', errorData);
         
         if (response.status === 401) {
           toast.error('Invalid API key. Please check your OpenAI API key.');
@@ -111,16 +116,16 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
     const buffer = await response.arrayBuffer();
     
     if (buffer.byteLength === 0) {
-      console.error('Received empty audio buffer from OpenAI');
+      console.error('SPEECH GENERATION ERROR: Received empty audio buffer from OpenAI');
       toast.error('Received empty audio from TTS service');
       return null;
     }
     
     const copy = buffer.slice(0);
-    console.log(`Received speech audio data: ${copy.byteLength} bytes`);
+    console.log(`SPEECH GENERATION SUCCESS: Received audio data: ${copy.byteLength} bytes`);
     return copy;
   } catch (error) {
-    console.error('Speech generation error:', error);
+    console.error('SPEECH GENERATION ERROR:', error);
     toast.error('Failed to generate AI voice. Using text only.');
     return null;
   }
@@ -129,10 +134,10 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
 export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      console.log(`Attempting to play audio buffer: ${audioBuffer.byteLength} bytes`);
+      console.log(`AUDIO PLAYBACK: Attempting to play audio buffer: ${audioBuffer.byteLength} bytes`);
       
       if (audioBuffer.byteLength === 0) {
-        console.error('Cannot play empty audio buffer');
+        console.error('AUDIO PLAYBACK ERROR: Cannot play empty audio buffer');
         toast.error('Audio data is empty, cannot play');
         reject(new Error('Empty audio buffer'));
         return;
@@ -146,7 +151,7 @@ export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
                                ((window as any).webkitAudioContext as typeof AudioContext);
       
       if (!AudioContextClass) {
-        console.error('AudioContext not supported in this browser');
+        console.error('AUDIO PLAYBACK ERROR: AudioContext not supported in this browser');
         toast.error('Audio playback not supported in this browser');
         throw new Error('AudioContext not supported in this browser');
       }
@@ -154,19 +159,19 @@ export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
       // Using standard AudioContext
       const audioContext = new AudioContextClass();
       
-      console.log('AudioContext created, decoding audio data...');
+      console.log('AUDIO PLAYBACK: AudioContext created, decoding audio data...');
       
       audioContext.decodeAudioData(
         bufferCopy, 
         (buffer) => {
           try {
-            console.log('Audio data decoded successfully, creating source node...');
+            console.log('AUDIO PLAYBACK: Audio data decoded successfully, creating source node...');
             const source = audioContext.createBufferSource();
             source.buffer = buffer;
             source.connect(audioContext.destination);
             
             source.onended = () => {
-              console.log('Audio playback completed');
+              console.log('AUDIO PLAYBACK: Completed');
               audioContext.close().catch(err => console.error('Error closing AudioContext:', err));
               resolve();
             };
@@ -174,38 +179,38 @@ export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
             // Fix: Using addEventListener instead of the non-standard onerror property
             // This is the TypeScript-compliant way to handle errors
             source.addEventListener('error', (err) => {
-              console.error('Audio playback error:', err);
+              console.error('AUDIO PLAYBACK ERROR:', err);
               audioContext.close().catch(e => console.error('Error closing AudioContext after playback error:', e));
               reject(err);
             });
             
-            console.log('Starting audio playback...');
+            console.log('AUDIO PLAYBACK: Starting...');
             source.start(0);
-            console.log('Audio playback started');
+            console.log('AUDIO PLAYBACK: Started');
             
             // Add a safety timeout in case onended doesn't fire
             setTimeout(() => {
               if (audioContext.state !== 'closed') {
-                console.log('Audio playback timeout reached, closing context');
+                console.log('AUDIO PLAYBACK: Timeout reached, closing context');
                 audioContext.close().catch(err => console.error('Error closing AudioContext on timeout:', err));
                 resolve();
               }
             }, buffer.duration * 1000 + 2000); // Add 2 seconds buffer
           } catch (err) {
-            console.error('Error playing audio:', err);
+            console.error('AUDIO PLAYBACK ERROR:', err);
             audioContext.close().catch(e => console.error('Error closing AudioContext after error:', e));
             reject(err);
           }
         }, 
         (err) => {
-          console.error('Error decoding audio:', err);
+          console.error('AUDIO PLAYBACK ERROR: Decoding failed:', err);
           audioContext.close().catch(e => console.error('Error closing AudioContext after decode error:', e));
           toast.error('Failed to decode audio. Please try again.');
           reject(err);
         }
       );
     } catch (err) {
-      console.error('Error initializing audio context:', err);
+      console.error('AUDIO PLAYBACK ERROR: Initialization failed:', err);
       toast.error('Failed to initialize audio playback. Check your speakers.');
       reject(err);
     }

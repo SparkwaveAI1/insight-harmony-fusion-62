@@ -50,7 +50,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
   formData.append('language', 'en');
 
   try {
-    console.log(`Sending transcription request for ${filename}, size: ${cleanBlob.size} bytes`);
+    console.log(`START TRANSCRIPTION: Sending request to OpenAI for ${filename}, size: ${cleanBlob.size} bytes`);
     console.log(`Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
     
     // Additional logging to verify request details
@@ -72,7 +72,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     });
 
     // Log the response status and headers for debugging
-    console.log(`Transcription API response status: ${response.status}`);
+    console.log(`TRANSCRIPTION RESPONSE: Status: ${response.status}`);
     console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
     
     if (!response.ok) {
@@ -83,7 +83,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
         const errorData = await response.json();
         errorMessage = errorData.error?.message || errorMessage;
         errorDetails = JSON.stringify(errorData);
-        console.error('Transcription API error:', errorData);
+        console.error('TRANSCRIPTION ERROR:', errorData);
         
         // Check for common issues
         if (response.status === 401) {
@@ -105,7 +105,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     }
 
     const result = await response.json();
-    console.log('Transcription result:', result);
+    console.log('TRANSCRIPTION SUCCESS: Result:', result);
     
     if (!result.text || result.text.trim() === '') {
       console.warn('Empty transcription received from API');
@@ -117,7 +117,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     toast.success(`Speech detected: "${result.text.substring(0, 30)}${result.text.length > 30 ? '...' : ''}"`);
     return result;
   } catch (error) {
-    console.error('Transcription error:', error);
+    console.error('TRANSCRIPTION ERROR:', error);
     toast.error('Failed to transcribe audio. Please try again.');
     return { text: error instanceof Error ? `[Transcription failed: ${error.message}]` : '[Transcription failed]' };
   }
@@ -132,7 +132,7 @@ export async function generateResponse(messages: { role: string, content: string
     return "I'm sorry, I can't generate a response right now. Please check your API key settings.";
   }
 
-  console.log(`Using API key for chat (first 5 chars): ${apiKey.substring(0, 5)}...`);
+  console.log(`START GENERATING RESPONSE: Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
   console.log('Sending messages to OpenAI:', JSON.stringify(messages, null, 2));
 
   try {
@@ -159,14 +159,14 @@ export async function generateResponse(messages: { role: string, content: string
     });
     
     // Log the response status for debugging
-    console.log(`Chat API response status: ${response.status}`);
+    console.log(`CHAT RESPONSE: Status: ${response.status}`);
 
     if (!response.ok) {
       let errorMessage = 'Failed to generate response';
       try {
         const errorData = await response.json();
         errorMessage = errorData.error?.message || errorMessage;
-        console.error('Chat API error:', errorData);
+        console.error('CHAT ERROR:', errorData);
         
         // Check for common issues
         if (response.status === 401) {
@@ -185,10 +185,10 @@ export async function generateResponse(messages: { role: string, content: string
     }
 
     const data = await response.json();
-    console.log('OpenAI response:', data);
+    console.log('CHAT SUCCESS: OpenAI response:', data);
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Response generation error:', error);
+    console.error('CHAT ERROR: Response generation error:', error);
     toast.error('Failed to generate AI response. Please try again.');
     return "I'm sorry, I couldn't process your response right now. Let's try again.";
   }
