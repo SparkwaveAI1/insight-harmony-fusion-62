@@ -1,9 +1,10 @@
+
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
-import { ensureTablesExist } from "./services/supabase/databaseSetup";
+import { ensureTablesExist, getSetupSQLScripts } from "./services/supabase/databaseSetup";
 
 // Use lazy loading for routes to improve initial load time
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
@@ -27,6 +28,40 @@ const LoadingFallback = () => (
     <div className="text-center">
       <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
+
+// Database setup instructions component
+const DatabaseSetupInstructions = () => (
+  <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="max-w-3xl bg-white rounded-lg shadow-xl p-6 md:p-8">
+      <h1 className="text-2xl font-bold text-primary mb-4">Supabase Setup Required</h1>
+      
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Step 1: Create the participants table</h2>
+        <p className="mb-4">Go to your Supabase dashboard, navigate to the SQL Editor, and run the following SQL script:</p>
+        <div className="bg-gray-50 rounded p-4 overflow-x-auto">
+          <pre className="text-sm">{getSetupSQLScripts()}</pre>
+        </div>
+      </div>
+      
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Step 2: Create storage buckets</h2>
+        <p className="mb-2">Create the following storage buckets in Supabase:</p>
+        <ul className="list-disc pl-6 mb-4 space-y-2">
+          <li><strong>transcripts</strong> - For storing interview transcripts</li>
+          <li><strong>interview_audio</strong> - For storing interview recordings</li>
+        </ul>
+        <p>Set both buckets with "Public" access to allow reading files without authentication.</p>
+      </div>
+      
+      <button 
+        onClick={() => window.location.reload()} 
+        className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+      >
+        Refresh after setup
+      </button>
     </div>
   </div>
 );
@@ -176,6 +211,10 @@ function App() {
 
   if (isLoading) {
     return <LoadingFallback />;
+  }
+
+  if (!isDbReady) {
+    return <DatabaseSetupInstructions />;
   }
 
   return (

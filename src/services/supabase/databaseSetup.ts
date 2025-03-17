@@ -17,12 +17,15 @@ export async function ensureTablesExist(): Promise<boolean> {
     if (error && error.code === '42P01') {
       // Table doesn't exist, create it
       await createParticipantsTable();
-      return true;
+      return false; // Return false to indicate setup is needed
     } else if (error) {
       console.error('Error checking participants table:', error);
       toast.error('Database connection error. Please check your configuration.');
       return false;
     }
+    
+    // Check if storage buckets exist
+    await checkStorageBuckets();
     
     return true;
   } catch (error) {
@@ -58,5 +61,93 @@ async function createParticipantsTable() {
     - created_at: timestamp with time zone (default: now())
   `);
   
+  toast.info('After creating the table, reload this page to continue setup.', {
+    duration: 5000,
+  });
+  
   return;
+}
+
+/**
+ * Checks if required storage buckets exist and creates them if not
+ */
+async function checkStorageBuckets() {
+  try {
+    // Check for the transcripts bucket
+    const { data: transcriptsBucket, error: transcriptsError } = await supabase
+      .storage
+      .getBucket('transcripts');
+    
+    if (transcriptsError && transcriptsError.code === 'PGRST116') {
+      // Storage bucket doesn't exist
+      toast.info('Please create a "transcripts" storage bucket in your Supabase dashboard', {
+        duration: 5000,
+      });
+      console.info('Create a "transcripts" storage bucket with public read access for storing interview transcripts');
+    }
+    
+    // Check for the interview_audio bucket
+    const { data: audioBucket, error: audioError } = await supabase
+      .storage
+      .getBucket('interview_audio');
+    
+    if (audioError && audioError.code === 'PGRST116') {
+      // Storage bucket doesn't exist
+      toast.info('Please create an "interview_audio" storage bucket in your Supabase dashboard', {
+        duration: 5000,
+      });
+      console.info('Create an "interview_audio" storage bucket with public read access for storing interview recordings');
+    }
+    
+    if ((transcriptsError && transcriptsError.code === 'PGRST116') || 
+        (audioError && audioError.code === 'PGRST116')) {
+      toast.info('After creating the storage buckets, reload this page to continue setup.', {
+        duration: 5000,
+      });
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error checking storage buckets:', error);
+    return false;
+  }
+}
+
+/**
+ * Provides SQL scripts to create tables in Supabase SQL Editor
+ * This is an alternative to manual table creation
+ */
+export function getSetupSQLScripts(): string {
+  return `
+-- Create participants table
+CREATE TABLE participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  screener_passed BOOLEAN DEFAULT FALSE,
+  questionnaire_data JSONB DEFAULT '{}'::jsonb,
+  interview_unlocked BOOLEAN DEFAULT FALSE,
+  unlock_code TEXT,
+  interview_completed BOOLEAN DEFAULT FALSE,
+  transcript_url TEXT,
+  audio_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create index on email for faster lookups
+CREATE UNIQUE INDEX participants_email_idx ON participants (email);
+
+-- Set up Row Level Security (RLS)
+ALTER TABLE participants ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow anonymous reads but restrict writes
+CREATE POLICY "Allow anonymous read access" 
+ON participants FOR SELECT USING (true);
+
+CREATE POLICY "Allow insert for new participants" 
+ON participants FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow update for existing participants" 
+ON participants FOR UPDATE USING (true);
+`;
 }
