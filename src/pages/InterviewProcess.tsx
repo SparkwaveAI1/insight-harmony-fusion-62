@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -15,7 +14,6 @@ import { generateResponse } from "@/services/ai/openaiService";
 import { getApiKey } from "@/services/utils/apiKeyUtils";
 import { Switch } from "@/components/ui/switch";
 
-// Standard predefined interview questions
 const STANDARD_QUESTIONS = [
   "What's your name and what do you do for work?",
   "What brings you here today? What problem are you trying to solve?",
@@ -38,24 +36,23 @@ const InterviewProcess = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Get participant data from location state
   useEffect(() => {
     if (location.state?.participantData) {
       setParticipantData(location.state.participantData);
     }
   }, [location]);
 
-  // Check for API key
   useEffect(() => {
     const storedApiKey = getApiKey('openai');
     if (storedApiKey) {
+      console.log("API key found in storage, validating...");
       setApiKey(storedApiKey);
     } else {
+      console.log("No API key found, showing input form");
       setShowApiKeyInput(true);
     }
   }, []);
 
-  // Interview session hook
   const {
     interviewState,
     messages,
@@ -74,9 +71,9 @@ const InterviewProcess = () => {
     useVoice
   });
 
-  // Start the interview when component mounts and API key is available
   useEffect(() => {
     if (apiKey && interviewState === InterviewState.IDLE && !showApiKeyInput) {
+      console.log("Starting interview with API key");
       startInterview();
     }
   }, [apiKey, interviewState, showApiKeyInput, startInterview]);
@@ -104,7 +101,6 @@ const InterviewProcess = () => {
       return;
     }
 
-    // Format the conversation for OpenAI
     const userResponses = interviewMessages.filter(m => m.role === "user").map(m => m.content);
     const aiQuestions = interviewMessages.filter(m => m.role === "ai").map(m => m.content);
     
@@ -166,7 +162,6 @@ const InterviewProcess = () => {
       });
     } catch (error) {
       console.error("Error calling OpenAI API:", error);
-      // Fallback to a basic summary if OpenAI fails
       const basicSummary = `Based on your responses, we've identified the following key points:\n\n` +
         `- You've shared ${userResponses.length} responses that help us understand your perspective\n` +
         `- We can now build a persona based on this information\n\n` +
@@ -184,30 +179,16 @@ const InterviewProcess = () => {
     }
   };
 
-  const handleApiKeySubmit = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your OpenAI API key",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "API Key Added",
-      description: "Your API key has been set. Starting interview now."
-    });
-
-    setShowApiKeyInput(false);
-    startInterview();
-  };
-
   const handleApiKeyUpdate = (newApiKey: string | null) => {
     if (newApiKey) {
+      console.log("API key updated, starting interview");
       setApiKey(newApiKey);
       setShowApiKeyInput(false);
-      startInterview();
+      setTimeout(() => {
+        startInterview();
+      }, 100);
+    } else {
+      console.log("API key cleared");
     }
   };
 
@@ -221,9 +202,7 @@ const InterviewProcess = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Toggle voice functionality
   const toggleVoice = () => {
-    // If interview hasn't started yet, allow toggling voice
     if (interviewState === InterviewState.IDLE) {
       setUseVoice(!useVoice);
     } else {
@@ -235,7 +214,6 @@ const InterviewProcess = () => {
     }
   };
 
-  // Current question text
   const currentQuestionText = messages.length > 0 
     ? messages[messages.length - 1]?.role === 'ai' 
       ? messages[messages.length - 1]?.content 
@@ -300,9 +278,7 @@ const InterviewProcess = () => {
             </div>
           ) : (
             <>
-              {/* Avatar and Question */}
               <div className="flex flex-col items-center max-w-xl w-full mb-12">
-                {/* AI Avatar */}
                 <div className="relative mb-10">
                   <Avatar className={`w-64 h-64 rounded-full ${interviewState === InterviewState.SPEAKING ? 'animate-pulse' : ''}`}>
                     <AvatarImage
@@ -313,20 +289,17 @@ const InterviewProcess = () => {
                     <AvatarFallback className="bg-primary/10 text-primary text-4xl">AI</AvatarFallback>
                   </Avatar>
                   
-                  {/* Voice indicator */}
                   {useVoice && (
                     <div className="absolute bottom-4 right-4 bg-black/60 p-2 rounded-full">
                       <Volume2 className="h-5 w-5 text-white" />
                     </div>
                   )}
                   
-                  {/* Glowing outline when speaking */}
                   <div className={`absolute inset-0 rounded-full ring-4 ring-primary shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-opacity duration-500 ${
                     interviewState === InterviewState.SPEAKING ? 'opacity-100' : 'opacity-0'
                   }`}></div>
                 </div>
                 
-                {/* Current Question */}
                 <Reveal animation="fade-in-up">
                   <div className="bg-black/30 p-6 rounded-xl backdrop-blur-sm border border-white/10 max-w-2xl">
                     <h2 className="text-2xl text-center text-white font-medium mb-2 max-w-[600px] mx-auto">
@@ -359,7 +332,6 @@ const InterviewProcess = () => {
                 </Reveal>
               </div>
               
-              {/* Bottom Controls */}
               <div className="w-full fixed bottom-0 left-0 bg-black/60 backdrop-blur-md p-4 border-t border-white/10">
                 <div className="container mx-auto max-w-4xl flex items-center justify-between">
                   <Button 

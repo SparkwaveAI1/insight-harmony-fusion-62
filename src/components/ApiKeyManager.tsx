@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { clearApiKeys, saveApiKey } from "@/services/utils/apiKeyUtils";
+import { getApiKey, saveApiKey, clearApiKeys } from "@/services/utils/apiKeyUtils";
 import { Input } from "./ui/input";
 import { toast } from "sonner";
 
@@ -13,9 +13,19 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
   const [apiKey, setApiKey] = useState<string>("");
   const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
 
+  // Check if API key exists on mount
+  useEffect(() => {
+    const storedApiKey = getApiKey("openai");
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+      setIsApiKeyValid(true);
+      onApiKeyUpdate(storedApiKey);
+    }
+  }, [onApiKeyUpdate]);
+
   const handleSaveApiKey = async () => {
     if (apiKey) {
-      saveApiKey(apiKey, "openai");
+      saveApiKey("openai", apiKey);
       setIsApiKeyValid(true);
       onApiKeyUpdate(apiKey);
       toast.success("API Key saved successfully!");
@@ -26,6 +36,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
 
   const handleClearApiKey = () => {
     clearApiKeys();
+    setApiKey("");
     setIsApiKeyValid(false);
     onApiKeyUpdate(null);
     toast.success("API Key cleared successfully!");

@@ -4,6 +4,23 @@ import { toast } from 'sonner';
 
 const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1';
 
+export async function validateApiKey(apiKey: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${OPENAI_API_ENDPOINT}/models`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('API key validation error:', error);
+    return false;
+  }
+}
+
 export async function generateSpeech(text: string): Promise<ArrayBuffer | null> {
   const apiKey = getApiKey('openai');
   
@@ -13,6 +30,8 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
   }
 
   try {
+    console.log('Using API key for text-to-speech (first 5 chars):', apiKey.substring(0, 5) + '...');
+    
     const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/speech`, {
       method: 'POST',
       headers: {
