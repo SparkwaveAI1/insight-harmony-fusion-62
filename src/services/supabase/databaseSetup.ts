@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseService';
 import { toast } from 'sonner';
 
@@ -12,7 +11,8 @@ export async function ensureTablesExist(): Promise<boolean> {
     
     // First check if we can connect to Supabase at all
     try {
-      console.log('Checking Supabase connection with URL:', supabase.supabaseUrl);
+      // Instead of directly accessing the supabaseUrl property, we'll use the URL from the service file
+      console.log('Checking Supabase connection...');
       const { data: healthCheck, error: healthError } = await supabase.rpc('healthcheck', {});
       
       if (healthError) {
@@ -254,4 +254,3 @@ ON participants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update for existing participants" 
 ON participants FOR UPDATE USING (true);
 `;
-}
