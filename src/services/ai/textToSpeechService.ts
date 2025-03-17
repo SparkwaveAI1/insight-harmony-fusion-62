@@ -1,218 +1,131 @@
-
 import { getApiKey } from '../utils/apiKeyUtils';
 import { toast } from 'sonner';
 
-const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1';
+const AZURE_SPEECH_ENDPOINT = 'https://eastus.api.cognitive.microsoft.com/sts/v1.0/issuetoken';
+const AZURE_SPEECH_REGION = 'eastus';
 
-export async function validateApiKey(apiKey: string): Promise<boolean> {
-  try {
-    console.log('VALIDATING API KEY: Starting validation...');
-    const response = await fetch(`${OPENAI_API_ENDPOINT}/models`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    console.log(`API key validation response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unable to get response text');
-      console.error('API KEY VALIDATION ERROR: Response:', errorText);
-      
-      if (response.status === 401) {
-        toast.error('Invalid API key. Please check your OpenAI API key.');
-      } else if (response.status === 429) {
-        toast.error('Rate limit exceeded. Please try again later.');
-      } else {
-        toast.error(`API key validation failed: ${response.status}`);
-      }
-      return false;
-    } else {
-      console.log('API KEY VALIDATION SUCCESS: Key is valid');
-      toast.success('OpenAI API key is valid!');
-      
-      // Check if the response includes models list
-      try {
-        const models = await response.json();
-        console.log('AVAILABLE MODELS:', models.data.map((m: any) => m.id).join(', '));
-        
-        const hasAudioModels = models.data.some((model: any) => 
-          model.id === 'tts-1' || model.id === 'whisper-1'
-        );
-        
-        if (!hasAudioModels) {
-          console.warn('API KEY ISSUE: Key does not have access to required audio models');
-          toast.warning('Your API key may not have access to required audio models (tts-1, whisper-1)');
-        } else {
-          console.log('API KEY HAS AUDIO MODELS: tts-1 and whisper-1 available');
-        }
-      } catch (err) {
-        console.error('Error checking models access:', err);
-      }
-      
-      return true;
-    }
-  } catch (error) {
-    console.error('API KEY VALIDATION ERROR:', error);
-    toast.error('API key validation error: Network issue');
-    return false;
-  }
-}
+let activeAudioElement: HTMLAudioElement | null = null;
 
-export async function generateSpeech(text: string): Promise<ArrayBuffer | null> {
-  const apiKey = getApiKey('openai');
-  
+export const generateSpeech = async (text: string): Promise<ArrayBuffer | null> => {
+  const apiKey = getApiKey('azure');
+
   if (!apiKey) {
-    console.error('OpenAI API key is missing');
-    toast.error('OpenAI API key is required for text-to-speech');
+    console.error('Azure API key is missing');
+    toast.error('Azure API key is required for AI responses');
     return null;
   }
 
   try {
-    console.log('SPEECH GENERATION: Starting...');
-    console.log('Using API key for text-to-speech (first 5 chars):', apiKey.substring(0, 5) + '...');
-    console.log('Generating speech for text:', text.substring(0, 30) + '...');
-    
-    const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/speech`, {
+    const tokenResponse = await fetch(AZURE_SPEECH_ENDPOINT, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'tts-1',
-        voice: 'nova',
-        input: text
-      })
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
 
-    console.log(`SPEECH GENERATION RESPONSE: Status: ${response.status}`);
-
-    if (!response.ok) {
-      let errorMessage = 'Failed to generate speech';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error?.message || errorMessage;
-        console.error('SPEECH GENERATION ERROR:', errorData);
-        
-        if (response.status === 401) {
-          toast.error('Invalid API key. Please check your OpenAI API key.');
-        } else if (response.status === 429) {
-          toast.error('Rate limit exceeded. Please try again later.');
-        } else {
-          toast.error(`TTS error: ${errorMessage}`);
-        }
-      } catch (parseError) {
-        console.error('Error parsing API error response:', parseError);
-        console.error('Raw response:', await response.text().catch(() => 'Unable to get response text'));
-        toast.error('Failed to parse TTS error response');
-      }
-      throw new Error(errorMessage);
-    }
-
-    // Create a fresh copy of the ArrayBuffer to prevent "detached ArrayBuffer" errors
-    const buffer = await response.arrayBuffer();
-    
-    if (buffer.byteLength === 0) {
-      console.error('SPEECH GENERATION ERROR: Received empty audio buffer from OpenAI');
-      toast.error('Received empty audio from TTS service');
+    if (!tokenResponse.ok) {
+      console.error('Failed to get Azure token', tokenResponse.status, tokenResponse.statusText);
+      toast.error('Failed to authenticate with Azure Speech Services.');
       return null;
     }
-    
-    const copy = buffer.slice(0);
-    console.log(`SPEECH GENERATION SUCCESS: Received audio data: ${copy.byteLength} bytes`);
-    return copy;
+
+    const accessToken = await tokenResponse.text();
+
+    const ssml = `<speak version='1.0' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Female' name='en-US-JennyNeural'>${text}</voice></speak>`;
+
+    const response = await fetch(`https://${AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
+        'X-Search-AppId': '07D3234E49CE426DAA29772419F43675',
+        'X-Search-ClientId': '1ECFAE91408841A480F00935DC390960',
+        'User-Agent': 'Lovable'
+      },
+      body: ssml
+    });
+
+    if (!response.ok) {
+      console.error('Speech generation failed', response.status, response.statusText);
+      toast.error('Failed to generate speech. Please check your API key and settings.');
+      return null;
+    }
+
+    const audioArrayBuffer = await response.arrayBuffer();
+    return audioArrayBuffer;
   } catch (error) {
-    console.error('SPEECH GENERATION ERROR:', error);
-    toast.error('Failed to generate AI voice. Using text only.');
+    console.error('Error generating speech:', error);
+    toast.error('Failed to generate speech. Please try again.');
     return null;
   }
-}
+};
 
-export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
+export const playAudioBuffer = async (audioBuffer: ArrayBuffer): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
-      console.log(`AUDIO PLAYBACK: Attempting to play audio buffer: ${audioBuffer.byteLength} bytes`);
-      
-      if (audioBuffer.byteLength === 0) {
-        console.error('AUDIO PLAYBACK ERROR: Cannot play empty audio buffer');
-        toast.error('Audio data is empty, cannot play');
-        reject(new Error('Empty audio buffer'));
-        return;
+      // Stop any currently playing audio first
+      if (activeAudioElement) {
+        activeAudioElement.pause();
+        activeAudioElement.remove();
+        activeAudioElement = null;
       }
+
+      // Create a Blob and URL from the audio buffer
+      const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(blob);
       
-      // Create a fresh copy of the ArrayBuffer to avoid "detached ArrayBuffer" errors
-      const bufferCopy = audioBuffer.slice(0);
-      
-      // Use a standard AudioContext with proper type handling
-      const AudioContextClass = window.AudioContext || 
-                               ((window as any).webkitAudioContext as typeof AudioContext);
-      
-      if (!AudioContextClass) {
-        console.error('AUDIO PLAYBACK ERROR: AudioContext not supported in this browser');
-        toast.error('Audio playback not supported in this browser');
-        throw new Error('AudioContext not supported in this browser');
-      }
-      
-      // Using standard AudioContext
-      const audioContext = new AudioContextClass();
-      
-      console.log('AUDIO PLAYBACK: AudioContext created, decoding audio data...');
-      
-      audioContext.decodeAudioData(
-        bufferCopy, 
-        (buffer) => {
-          try {
-            console.log('AUDIO PLAYBACK: Audio data decoded successfully, creating source node...');
-            const source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioContext.destination);
-            
-            source.onended = () => {
-              console.log('AUDIO PLAYBACK: Completed');
-              audioContext.close().catch(err => console.error('Error closing AudioContext:', err));
-              resolve();
-            };
-            
-            // Fix: Using addEventListener instead of the non-standard onerror property
-            // This is the TypeScript-compliant way to handle errors
-            source.addEventListener('error', (err) => {
-              console.error('AUDIO PLAYBACK ERROR:', err);
-              audioContext.close().catch(e => console.error('Error closing AudioContext after playback error:', e));
-              reject(err);
-            });
-            
-            console.log('AUDIO PLAYBACK: Starting...');
-            source.start(0);
-            console.log('AUDIO PLAYBACK: Started');
-            
-            // Add a safety timeout in case onended doesn't fire
-            setTimeout(() => {
-              if (audioContext.state !== 'closed') {
-                console.log('AUDIO PLAYBACK: Timeout reached, closing context');
-                audioContext.close().catch(err => console.error('Error closing AudioContext on timeout:', err));
-                resolve();
-              }
-            }, buffer.duration * 1000 + 2000); // Add 2 seconds buffer
-          } catch (err) {
-            console.error('AUDIO PLAYBACK ERROR:', err);
-            audioContext.close().catch(e => console.error('Error closing AudioContext after error:', e));
-            reject(err);
-          }
-        }, 
-        (err) => {
-          console.error('AUDIO PLAYBACK ERROR: Decoding failed:', err);
-          audioContext.close().catch(e => console.error('Error closing AudioContext after decode error:', e));
-          toast.error('Failed to decode audio. Please try again.');
-          reject(err);
+      // Create a new audio element and play it
+      const audio = new HTMLAudioElement();
+      audio.src = audioUrl;
+
+      // Important: Set audio output to speakers only to reduce echo
+      if (audio.setSinkId && typeof audio.setSinkId === 'function') {
+        try {
+          // This will ensure audio goes to speakers if the browser supports it
+          audio.setSinkId('default');
+        } catch (e) {
+          console.log('Could not set audio output device', e);
         }
-      );
-    } catch (err) {
-      console.error('AUDIO PLAYBACK ERROR: Initialization failed:', err);
-      toast.error('Failed to initialize audio playback. Check your speakers.');
-      reject(err);
+      }
+
+      activeAudioElement = audio;
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        if (activeAudioElement === audio) {
+          activeAudioElement = null;
+        }
+        resolve();
+      };
+      
+      audio.onerror = (e) => {
+        URL.revokeObjectURL(audioUrl);
+        console.error('Audio playback error:', e);
+        reject(new Error('Failed to play audio'));
+      };
+      
+      // Play audio
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Audio play error:', error);
+          reject(error);
+        });
+      }
+    } catch (error) {
+      console.error('Error playing audio buffer:', error);
+      reject(error);
     }
   });
-}
+};
+
+// Function to stop any playing audio
+export const stopAnyPlayingAudio = (): void => {
+  if (activeAudioElement) {
+    activeAudioElement.pause();
+    activeAudioElement.remove();
+    activeAudioElement = null;
+  }
+};

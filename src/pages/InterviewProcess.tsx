@@ -3,7 +3,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Mic, Play, SkipForward, VolumeX, Volume2, X, MicOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, Mic, Play, SkipForward, VolumeX, Volume2, X, MicOff, RefreshCw, Headphones } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -16,6 +16,7 @@ import { getApiKey } from "@/services/utils/apiKeyUtils";
 import { Switch } from "@/components/ui/switch";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { Badge } from "@/components/ui/badge";
+import { stopAnyPlayingAudio } from "@/services/ai/textToSpeechService";
 
 const INTERVIEW_QUESTIONS = [
   "Thank you for joining. We are here to understand how you think, make decisions, and approach different areas of life. There are no right or wrong answers. Just speak naturally and share your experiences. Let's begin.",
@@ -52,6 +53,8 @@ const InterviewProcess = () => {
   const [silenceThreshold, setSilenceThreshold] = useState(15);
   const [silenceTimeout, setSilenceTimeout] = useState(2500);
   const [silenceDetectionEnabled, setSilenceDetectionEnabled] = useState(true);
+  const [useHeadphones, setUseHeadphones] = useState<boolean>(false);
+  const [recordingDelay, setRecordingDelay] = useState(800);
   const audioVisualizer = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -196,7 +199,8 @@ const InterviewProcess = () => {
     useVoice,
     silenceDetectionEnabled,
     silenceThreshold,
-    silenceTimeout
+    silenceTimeout,
+    recordingDelay: useHeadphones ? 300 : recordingDelay
   });
 
   useEffect(() => {
@@ -423,6 +427,12 @@ const InterviewProcess = () => {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      stopAnyPlayingAudio();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -449,6 +459,24 @@ const InterviewProcess = () => {
                     onCheckedChange={toggleVoice} 
                   />
                 </div>
+                
+                <div className="flex items-center justify-between">
+                  <label htmlFor="headphones-toggle" className="cursor-pointer flex items-center">
+                    <Headphones className="h-4 w-4 mr-2" />
+                    Using headphones
+                  </label>
+                  <Switch 
+                    id="headphones-toggle" 
+                    checked={useHeadphones} 
+                    onCheckedChange={setUseHeadphones} 
+                  />
+                </div>
+                
+                {!useHeadphones && (
+                  <div className="text-sm text-amber-500 pl-6">
+                    Using headphones is recommended to prevent echo.
+                  </div>
+                )}
                 
                 <div className="flex items-center justify-between">
                   <label htmlFor="silence-detection-toggle" className="cursor-pointer flex items-center">
@@ -491,6 +519,26 @@ const InterviewProcess = () => {
                         className="w-full"
                       />
                     </div>
+                    
+                    {!useHeadphones && (
+                      <div>
+                        <label className="text-sm text-muted-foreground">
+                          Mic activation delay: {recordingDelay}ms
+                        </label>
+                        <input 
+                          type="range" 
+                          min="300" 
+                          max="1500" 
+                          step="100"
+                          value={recordingDelay} 
+                          onChange={e => setRecordingDelay(Number(e.target.value))}
+                          className="w-full"
+                        />
+                        <div className="text-xs text-amber-400 mt-1">
+                          Increase delay if you're experiencing echo
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -710,6 +758,16 @@ const InterviewProcess = () => {
                         disabled={interviewState !== InterviewState.IDLE}
                       >
                         {useVoice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/80 hover:text-white"
+                        onClick={() => setUseHeadphones(!useHeadphones)}
+                        title={useHeadphones ? "Using headphones" : "Not using headphones"}
+                      >
+                        <Headphones className={`h-4 w-4 ${useHeadphones ? "text-green-400" : "text-white/60"}`} />
                       </Button>
                       
                       <Button

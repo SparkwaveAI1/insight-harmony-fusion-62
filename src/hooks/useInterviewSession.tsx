@@ -1,8 +1,11 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAudioRecorder } from './useAudioRecorder';
 import { transcribeAudio, generateResponse } from '../services/ai/openaiService';
-import { generateSpeech, playAudioBuffer } from '../services/ai/textToSpeechService';
+import { 
+  generateSpeech, 
+  playAudioBuffer, 
+  stopAnyPlayingAudio 
+} from '../services/ai/textToSpeechService';
 import { 
   saveTranscript, 
   saveAudio, 
@@ -24,7 +27,7 @@ export interface Message {
   content: string;
 }
 
-interface UseInterviewSessionProps {
+export interface UseInterviewSessionProps {
   participantId?: string;
   initialQuestions: string[];
   onComplete?: (transcript: Message[]) => void;
@@ -32,6 +35,7 @@ interface UseInterviewSessionProps {
   silenceDetectionEnabled?: boolean;
   silenceThreshold?: number;
   silenceTimeout?: number;
+  recordingDelay?: number; // Added parameter for recording delay
 }
 
 export const useInterviewSession = ({
@@ -41,7 +45,8 @@ export const useInterviewSession = ({
   useVoice = true,
   silenceDetectionEnabled = true,
   silenceThreshold = 15,
-  silenceTimeout = 2500
+  silenceTimeout = 2500,
+  recordingDelay = 800 // Default to 800ms delay
 }: UseInterviewSessionProps) => {
   const [interviewState, setInterviewState] = useState<InterviewState>(InterviewState.IDLE);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -146,7 +151,7 @@ export const useInterviewSession = ({
         skipQuestion();
       }
     }
-  }, [recorderError]);
+  }, [recorderError, skipQuestion, interviewState, toast]);
 
   // Monitor silence detection settings
   useEffect(() => {
@@ -181,6 +186,9 @@ export const useInterviewSession = ({
       if (useVoice) {
         try {
           console.log('Generating speech for first question');
+          // Stop any existing audio before generating new speech
+          stopAnyPlayingAudio();
+          
           // Generate and play speech for the first question
           const speechBuffer = await generateSpeech(firstQuestion);
           if (speechBuffer) {
@@ -199,20 +207,20 @@ export const useInterviewSession = ({
         }
       }
       
-      // After speech finishes or after delay if no voice, move to listening state
+      // Add a delay after speech finishes to prevent picking up audio echo
       console.log('Scheduling transition to LISTENING state');
       setTimeout(() => {
         console.log('Transitioning to LISTENING state after first question');
         setInterviewState(InterviewState.LISTENING);
         
-        // Add a small delay before starting recording to ensure UI is updated
+        // Add a delay before starting recording to ensure speaker audio has stopped completely
         setTimeout(() => {
           console.log('Starting recording for first response');
           startRecording();
-        }, 300);
-      }, useVoice ? 1500 : 2000);
+        }, recordingDelay); // Increased delay to further reduce echo chance
+      }, useVoice ? 2000 : 2000); // Add more time when using voice
     }
-  }, [interviewState, initialQuestions, startRecording, useVoice, toast]);
+  }, [interviewState, initialQuestions, startRecording, useVoice, toast, recordingDelay]);
 
   // Handle recording completion
   async function handleRecordingComplete(recording: Blob) {
@@ -347,6 +355,9 @@ export const useInterviewSession = ({
       
       if (useVoice) {
         try {
+          // Stop any existing audio before playing new audio
+          stopAnyPlayingAudio();
+          
           // Generate and play speech for the next question
           console.log('Generating speech for next question');
           const speechBuffer = await generateSpeech(nextQuestion);
@@ -365,8 +376,8 @@ export const useInterviewSession = ({
             setTimeout(() => {
               console.log('Starting recording for user response');
               startRecording();
-            }, 300); // Small delay to ensure state has updated
-          }, 1000);
+            }, recordingDelay); // Increased delay to reduce echo
+          }, 1500); // Increased delay after speech
         } catch (error) {
           console.error('Error playing voice:', error);
           // In case of speech error, still move to listening state
@@ -374,7 +385,7 @@ export const useInterviewSession = ({
           setInterviewState(InterviewState.LISTENING);
           setTimeout(() => {
             startRecording();
-          }, 500);
+          }, recordingDelay);
         }
       } else {
         // If no voice, just wait a bit and move to listening state
@@ -383,7 +394,7 @@ export const useInterviewSession = ({
           setInterviewState(InterviewState.LISTENING);
           setTimeout(() => {
             startRecording();
-          }, 300);
+          }, 500);
         }, 2000);
       }
     } catch (error) {
@@ -466,6 +477,9 @@ export const useInterviewSession = ({
       setInterviewState(InterviewState.SPEAKING);
       
       if (useVoice) {
+        // Stop any existing audio before playing new audio
+        stopAnyPlayingAudio();
+        
         // Generate and play speech for the next question
         generateSpeech(nextQuestion)
           .then(speechBuffer => {
@@ -529,7 +543,7 @@ export const useInterviewSession = ({
         completeInterview([...messages, skippedMessage, finalMessage]);
       }
     }
-  }, [canSkip, interviewState, currentQuestion, initialQuestions, messages, stopRecording, startRecording, useVoice, isRecording]);
+  }, [canSkip, interviewState, currentQuestion, initialQuestions, messages, stopRecording, startRecording, useVoice, isRecording, recordingDelay]);
 
   // Replay the current question
   const replayQuestion = useCallback(() => {
@@ -545,6 +559,9 @@ export const useInterviewSession = ({
       const currentQuestionText = messages[messages.length - 1]?.content || "";
       
       if (useVoice && audioBuffer) {
+        // Stop any existing audio before replaying
+        stopAnyPlayingAudio();
+        
         // Replay the current audio if available
         playAudioBuffer(audioBuffer)
           .then(() => {
@@ -553,7 +570,7 @@ export const useInterviewSession = ({
             setInterviewState(InterviewState.LISTENING);
             setTimeout(() => {
               startRecording();
-            }, 300);
+            }, recordingDelay); // Increased delay to reduce echo
           })
           .catch(error => {
             console.error('Error replaying voice:', error);
@@ -562,6 +579,9 @@ export const useInterviewSession = ({
             startRecording();
           });
       } else if (useVoice) {
+        // Stop any existing audio before generating new speech
+        stopAnyPlayingAudio();
+        
         // Generate speech if no audio buffer is available
         generateSpeech(currentQuestionText)
           .then(speechBuffer => {
@@ -576,7 +596,7 @@ export const useInterviewSession = ({
             setInterviewState(InterviewState.LISTENING);
             setTimeout(() => {
               startRecording();
-            }, 300);
+            }, recordingDelay); // Increased delay to reduce echo
           })
           .catch(error => {
             console.error('Error playing voice:', error);
@@ -592,10 +612,13 @@ export const useInterviewSession = ({
         }, 2000);
       }
     }
-  }, [interviewState, messages, stopRecording, startRecording, useVoice, audioBuffer]);
+  }, [interviewState, messages, stopRecording, startRecording, useVoice, audioBuffer, recordingDelay]);
 
   // Complete the interview
   const completeInterview = async (finalMessages: Message[], finalAudio?: Blob) => {
+    // Stop any playing audio 
+    stopAnyPlayingAudio();
+    
     console.log('Completing interview with', finalMessages.length, 'total messages');
     setInterviewState(InterviewState.COMPLETE);
     setIsCompleted(true);
