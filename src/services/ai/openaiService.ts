@@ -1,3 +1,4 @@
+
 import { getApiKey } from '../utils/apiKeyUtils';
 import { toast } from 'sonner';
 
@@ -39,6 +40,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
 
   try {
     console.log(`Sending transcription request with ${filename}`);
+    console.log(`Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
     
     const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/transcriptions`, {
       method: 'POST',
@@ -48,10 +50,20 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
       body: formData
     });
 
+    // Log the response status and headers for debugging
+    console.log(`Transcription API response status: ${response.status}`);
+    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
-      console.error('Transcription API error:', errorData);
-      throw new Error(errorData.error?.message || 'Failed to transcribe audio');
+      let errorMessage = 'Failed to transcribe audio';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error?.message || errorMessage;
+        console.error('Transcription API error:', errorData);
+      } catch (parseError) {
+        console.error('Error parsing API error response:', parseError);
+        console.error('Raw response:', await response.text().catch(() => 'Unable to get response text'));
+      }
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
@@ -78,7 +90,11 @@ export async function generateResponse(messages: { role: string, content: string
     return "I'm sorry, I can't generate a response right now. Please check your API key settings.";
   }
 
+  console.log(`Using API key for chat (first 5 chars): ${apiKey.substring(0, 5)}...`);
+
   try {
+    console.log('Sending chat request to OpenAI API');
+    
     const response = await fetch(`${OPENAI_API_ENDPOINT}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -98,10 +114,21 @@ export async function generateResponse(messages: { role: string, content: string
         max_tokens: 300
       })
     });
+    
+    // Log the response status for debugging
+    console.log(`Chat API response status: ${response.status}`);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'Failed to generate response');
+      let errorMessage = 'Failed to generate response';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error?.message || errorMessage;
+        console.error('Chat API error:', errorData);
+      } catch (parseError) {
+        console.error('Error parsing API error response:', parseError);
+        console.error('Raw response:', await response.text().catch(() => 'Unable to get response text'));
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

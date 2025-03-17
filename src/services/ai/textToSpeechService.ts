@@ -6,6 +6,7 @@ const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1';
 
 export async function validateApiKey(apiKey: string): Promise<boolean> {
   try {
+    console.log('Validating API key...');
     const response = await fetch(`${OPENAI_API_ENDPOINT}/models`, {
       method: 'GET',
       headers: {
@@ -13,6 +14,13 @@ export async function validateApiKey(apiKey: string): Promise<boolean> {
         'Content-Type': 'application/json'
       }
     });
+    
+    console.log(`API key validation response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unable to get response text');
+      console.error('API key validation error response:', errorText);
+    }
     
     return response.ok;
   } catch (error) {
@@ -31,6 +39,7 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
 
   try {
     console.log('Using API key for text-to-speech (first 5 chars):', apiKey.substring(0, 5) + '...');
+    console.log('Generating speech for text:', text.substring(0, 30) + '...');
     
     const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/speech`, {
       method: 'POST',
@@ -45,9 +54,19 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
       })
     });
 
+    console.log(`Speech API response status: ${response.status}`);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'Failed to generate speech');
+      let errorMessage = 'Failed to generate speech';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error?.message || errorMessage;
+        console.error('Speech API error:', errorData);
+      } catch (parseError) {
+        console.error('Error parsing API error response:', parseError);
+        console.error('Raw response:', await response.text().catch(() => 'Unable to get response text'));
+      }
+      throw new Error(errorMessage);
     }
 
     // Create a fresh copy of the ArrayBuffer to prevent "detached ArrayBuffer" errors

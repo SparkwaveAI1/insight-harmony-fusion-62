@@ -5,6 +5,7 @@ import { getApiKey, saveApiKey, clearApiKeys } from "@/services/utils/apiKeyUtil
 import { Input } from "./ui/input";
 import { toast } from "sonner";
 import { validateApiKey } from "@/services/ai/textToSpeechService";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface ApiKeyManagerProps {
   onApiKeyUpdate: (apiKey: string | null) => void;
@@ -14,6 +15,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
   const [apiKey, setApiKey] = useState<string>("");
   const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
   const [isValidating, setIsValidating] = useState<boolean>(false);
+  const [validationMessage, setValidationMessage] = useState<string>("");
 
   // Check if API key exists on mount
   useEffect(() => {
@@ -24,17 +26,21 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
         
         // Validate the stored API key
         setIsValidating(true);
+        setValidationMessage("Validating stored API key...");
         try {
           const isValid = await validateApiKey(storedApiKey);
           setIsApiKeyValid(isValid);
           if (isValid) {
+            setValidationMessage("API Key is valid");
             onApiKeyUpdate(storedApiKey);
             toast.success("API Key validated successfully");
           } else {
+            setValidationMessage("Stored API Key is invalid. Please enter a new one.");
             toast.error("Stored API Key is invalid. Please enter a new one.");
           }
         } catch (error) {
           console.error("API key validation error:", error);
+          setValidationMessage("Failed to validate API Key. Please try again.");
           toast.error("Failed to validate API Key");
         } finally {
           setIsValidating(false);
@@ -52,6 +58,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
     }
     
     setIsValidating(true);
+    setValidationMessage("Validating API key...");
     try {
       // Validate the API key
       const isValid = await validateApiKey(apiKey);
@@ -59,13 +66,16 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       if (isValid) {
         saveApiKey("openai", apiKey);
         setIsApiKeyValid(true);
+        setValidationMessage("API Key is valid");
         onApiKeyUpdate(apiKey);
         toast.success("API Key saved and validated successfully!");
       } else {
+        setValidationMessage("Invalid API Key. Please check and try again.");
         toast.error("Invalid API Key. Please check and try again.");
       }
     } catch (error) {
       console.error("API key validation error:", error);
+      setValidationMessage("Failed to validate API Key. Please try again.");
       toast.error("Failed to validate API Key. Please try again.");
     } finally {
       setIsValidating(false);
@@ -76,6 +86,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
     clearApiKeys();
     setApiKey("");
     setIsApiKeyValid(false);
+    setValidationMessage("");
     onApiKeyUpdate(null);
     toast.success("API Key cleared successfully!");
   };
@@ -85,24 +96,39 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       <div className="flex items-center space-x-2">
         <Input
           type="password"
-          placeholder="Enter your API Key"
+          placeholder="Enter your OpenAI API Key"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           disabled={isApiKeyValid || isValidating}
         />
         <Button 
           onClick={handleSaveApiKey} 
-          disabled={isApiKeyValid || isValidating}
+          disabled={isApiKeyValid || isValidating || !apiKey}
         >
           {isValidating ? "Validating..." : "Save API Key"}
         </Button>
       </div>
-      {isApiKeyValid && (
-        <div className="text-green-500">API Key is valid.</div>
+      
+      {validationMessage && (
+        <div className={`flex items-center ${isApiKeyValid ? "text-green-500" : "text-amber-500"}`}>
+          {isApiKeyValid ? (
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+          ) : (
+            <AlertCircle className="h-4 w-4 mr-2" />
+          )}
+          {validationMessage}
+        </div>
       )}
-      <Button variant="destructive" onClick={handleClearApiKey}>
-        Clear API Key
-      </Button>
+      
+      <div className="text-sm text-gray-400 mt-1">
+        Your API key should start with "sk-" and must have access to OpenAI's audio and chat models.
+      </div>
+      
+      {isApiKeyValid && (
+        <Button variant="destructive" onClick={handleClearApiKey}>
+          Clear API Key
+        </Button>
+      )}
     </div>
   );
 };
