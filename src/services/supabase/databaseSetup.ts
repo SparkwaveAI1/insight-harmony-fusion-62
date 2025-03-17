@@ -25,9 +25,9 @@ export async function ensureTablesExist(): Promise<boolean> {
     }
     
     // Check if storage buckets exist
-    await checkStorageBuckets();
+    const bucketsReady = await checkStorageBuckets();
     
-    return true;
+    return bucketsReady;
   } catch (error) {
     console.error('Database setup error:', error);
     toast.error('Failed to set up database. Please check your Supabase configuration.');
@@ -72,14 +72,17 @@ async function createParticipantsTable() {
  * Checks if required storage buckets exist and creates them if not
  */
 async function checkStorageBuckets() {
+  let allBucketsExist = true;
+  
   try {
     // Check for the transcripts bucket
     const { data: transcriptsBucket, error: transcriptsError } = await supabase
       .storage
       .getBucket('transcripts');
     
-    if (transcriptsError && transcriptsError.code === 'PGRST116') {
+    if (transcriptsError) {
       // Storage bucket doesn't exist
+      allBucketsExist = false;
       toast.info('Please create a "transcripts" storage bucket in your Supabase dashboard', {
         duration: 5000,
       });
@@ -91,16 +94,16 @@ async function checkStorageBuckets() {
       .storage
       .getBucket('interview_audio');
     
-    if (audioError && audioError.code === 'PGRST116') {
+    if (audioError) {
       // Storage bucket doesn't exist
+      allBucketsExist = false;
       toast.info('Please create an "interview_audio" storage bucket in your Supabase dashboard', {
         duration: 5000,
       });
       console.info('Create an "interview_audio" storage bucket with public read access for storing interview recordings');
     }
     
-    if ((transcriptsError && transcriptsError.code === 'PGRST116') || 
-        (audioError && audioError.code === 'PGRST116')) {
+    if (!allBucketsExist) {
       toast.info('After creating the storage buckets, reload this page to continue setup.', {
         duration: 5000,
       });
