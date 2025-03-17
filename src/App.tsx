@@ -1,23 +1,35 @@
 
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
+import { Suspense, lazy } from "react";
+import { Toaster } from "sonner";
 import NotFound from "./pages/NotFound";
-import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
-import AIFocusGroups from "./pages/AIFocusGroups";
-import EarnPRSNA from "./pages/EarnPRSNA";
-import Contact from "./pages/Contact";
-import Research from "./pages/Research";
-import Interviewer from "./pages/Interviewer";
-import YourPersona from "./pages/YourPersona";
-import Pricing from "./pages/Pricing";
-import InterviewProcess from "./pages/InterviewProcess";
-import ParticipateResearch from "./pages/ParticipateResearch";
-import Team from "./pages/Team";
-import PersonaCreationLanding from "./pages/persona-creation/PersonaCreationLanding";
-import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScreener";
-import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
-import "./App.css";
-import "./index.css";
+import Index from "./pages/Index";
+
+// Use lazy loading for routes to improve initial load time
+const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
+const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
+const EarnPRSNA = lazy(() => import("./pages/EarnPRSNA"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Research = lazy(() => import("./pages/Research"));
+const Interviewer = lazy(() => import("./pages/Interviewer"));
+const YourPersona = lazy(() => import("./pages/YourPersona"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const InterviewProcess = lazy(() => import("./pages/InterviewProcess"));
+const ParticipateResearch = lazy(() => import("./pages/ParticipateResearch"));
+const Team = lazy(() => import("./pages/Team"));
+const PersonaCreationLanding = lazy(() => import("./pages/persona-creation/PersonaCreationLanding"));
+const PersonaCreationScreener = lazy(() => import("./pages/persona-creation/PersonaCreationScreener"));
+const PersonaCreationQuestionnaire = lazy(() => import("./pages/persona-creation/PersonaCreationQuestionnaire"));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
 
 const router = createBrowserRouter([
   {
@@ -27,23 +39,43 @@ const router = createBrowserRouter([
   },
   {
     path: "/research",
-    element: <Research />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <Research />
+      </Suspense>
+    ),
   },
   {
     path: "/interviewer",
-    element: <Interviewer />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <Interviewer />
+      </Suspense>
+    ),
   },
   {
     path: "/your-persona",
-    element: <YourPersona />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <YourPersona />
+      </Suspense>
+    ),
   },
   {
     path: "/persona-ai-interviewer",
-    element: <PersonaAIInterviewer />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PersonaAIInterviewer />
+      </Suspense>
+    ),
   },
   {
     path: "/ai-focus-groups",
-    element: <AIFocusGroups />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <AIFocusGroups />
+      </Suspense>
+    ),
   },
   {
     path: "/prsna-ecosystem",
@@ -51,44 +83,85 @@ const router = createBrowserRouter([
   },
   {
     path: "/earn-prsna",
-    element: <EarnPRSNA />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <EarnPRSNA />
+      </Suspense>
+    ),
   },
   {
     path: "/contact",
-    element: <Contact />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <Contact />
+      </Suspense>
+    ),
   },
   {
     path: "/pricing",
-    element: <Pricing />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <Pricing />
+      </Suspense>
+    ),
   },
   {
     path: "/interview-process",
-    element: <InterviewProcess />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <InterviewProcess />
+      </Suspense>
+    ),
   },
   {
     path: "/participate-research",
-    element: <ParticipateResearch />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ParticipateResearch />
+      </Suspense>
+    ),
   },
   {
     path: "/team",
-    element: <Team />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <Team />
+      </Suspense>
+    ),
   },
   {
     path: "/persona-creation/landing",
-    element: <PersonaCreationLanding />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PersonaCreationLanding />
+      </Suspense>
+    ),
   },
   {
     path: "/persona-creation/screener",
-    element: <PersonaCreationScreener />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PersonaCreationScreener />
+      </Suspense>
+    ),
   },
   {
     path: "/persona-creation/questionnaire",
-    element: <PersonaCreationQuestionnaire />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PersonaCreationQuestionnaire />
+      </Suspense>
+    ),
   },
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster position="top-center" richColors />
+    </>
+  );
 }
 
 export default App;

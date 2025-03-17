@@ -1,5 +1,6 @@
 
 import { getApiKey } from '../utils/apiKeyUtils';
+import { toast } from 'sonner';
 
 const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1';
 
@@ -11,7 +12,8 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
   const apiKey = getApiKey('openai');
   
   if (!apiKey) {
-    throw new Error('OpenAI API key is required');
+    toast.error('OpenAI API key is required for transcription');
+    return { text: '[Transcription unavailable - API key missing]' };
   }
 
   const formData = new FormData();
@@ -36,7 +38,8 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return await response.json();
   } catch (error) {
     console.error('Transcription error:', error);
-    throw error;
+    toast.error('Failed to transcribe audio. Please try again.');
+    return { text: '[Transcription failed]' };
   }
 }
 
@@ -44,7 +47,8 @@ export async function generateResponse(messages: { role: string, content: string
   const apiKey = getApiKey('openai');
   
   if (!apiKey) {
-    throw new Error('OpenAI API key is required');
+    toast.error('OpenAI API key is required for AI responses');
+    return "I'm sorry, I can't generate a response right now. Please check your API key settings.";
   }
 
   try {
@@ -77,6 +81,7 @@ export async function generateResponse(messages: { role: string, content: string
     return data.choices[0].message.content;
   } catch (error) {
     console.error('Response generation error:', error);
-    throw error;
+    toast.error('Failed to generate AI response. Please try again.');
+    return "I'm sorry, I couldn't process your response right now. Let's try again.";
   }
 }
