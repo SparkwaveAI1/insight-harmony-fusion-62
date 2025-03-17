@@ -1,4 +1,3 @@
-
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
@@ -79,7 +78,7 @@ const Interviewer = () => {
                     </div>
                   </div>
                   
-                  <Link to="/persona-ai-interviewer">
+                  <Link to="/persona-creation/landing">
                     <Button className="w-full justify-center group mt-auto">
                       Create a Persona
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
