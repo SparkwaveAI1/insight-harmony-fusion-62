@@ -50,7 +50,10 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
       throw new Error(errorData.error?.message || 'Failed to generate speech');
     }
 
-    return await response.arrayBuffer();
+    // Create a fresh copy of the ArrayBuffer to prevent "detached ArrayBuffer" errors
+    const buffer = await response.arrayBuffer();
+    const copy = buffer.slice(0);
+    return copy;
   } catch (error) {
     console.error('Speech generation error:', error);
     toast.error('Failed to generate AI voice. Using text only.');
@@ -60,33 +63,39 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
 
 export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Define a type for the AudioContext constructor to handle browser prefixes
-    const AudioContextConstructor = window.AudioContext || 
-      (window as any).webkitAudioContext;
-    
-    if (!AudioContextConstructor) {
-      reject(new Error('Web Audio API is not supported in this browser'));
-      return;
-    }
-    
-    const audioContext = new AudioContextConstructor();
-    
-    audioContext.decodeAudioData(audioBuffer, (buffer) => {
-      const source = audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContext.destination);
+    try {
+      // Create a fresh copy of the ArrayBuffer to avoid "detached ArrayBuffer" errors
+      const bufferCopy = audioBuffer.slice(0);
       
-      source.onended = () => {
-        resolve();
-      };
+      // Using standard AudioContext (supported in modern browsers)
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      source.onerror = (err) => {
-        reject(err);
-      };
-      
-      source.start(0);
-    }, (err) => {
+      audioContext.decodeAudioData(
+        bufferCopy, 
+        (buffer) => {
+          try {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            
+            source.onended = () => {
+              resolve();
+            };
+            
+            source.start(0);
+          } catch (err) {
+            console.error('Error playing audio:', err);
+            reject(err);
+          }
+        }, 
+        (err) => {
+          console.error('Error decoding audio:', err);
+          reject(err);
+        }
+      );
+    } catch (err) {
+      console.error('Error initializing audio context:', err);
       reject(err);
-    });
+    }
   });
 }

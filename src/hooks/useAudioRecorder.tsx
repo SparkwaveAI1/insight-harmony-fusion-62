@@ -12,9 +12,11 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
   const {
     onDataAvailable,
     onComplete,
-    mimeType = 'audio/webm',
     timeSlice = 1000,
   } = options;
+  
+  // Use a supported mime type that works across browsers
+  const mimeType = 'audio/webm';
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -25,6 +27,19 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
   const mediaStream = useRef<MediaStream | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Check if the browser supports the specified mime type
+  const checkMimeTypeSupport = useCallback(() => {
+    if (typeof MediaRecorder === 'undefined') {
+      return false;
+    }
+    
+    try {
+      return MediaRecorder.isTypeSupported(mimeType);
+    } catch (e) {
+      return false;
+    }
+  }, [mimeType]);
 
   // Start recording
   const startRecording = useCallback(async () => {
@@ -38,8 +53,14 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStream.current = stream;
 
+      // Check if mime type is supported, fallback if not
+      const isMimeTypeSupported = checkMimeTypeSupport();
+      const recorderOptions = isMimeTypeSupported ? { mimeType } : {};
+      
+      console.log(`Using mime type: ${isMimeTypeSupported ? mimeType : 'browser default'}`);
+
       // Create a new MediaRecorder instance
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const recorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorder.current = recorder;
 
       // Handle data available event
@@ -52,9 +73,17 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
 
       // Handle recording stop event
       recorder.onstop = () => {
-        const recording = new Blob(audioChunks.current, { type: mimeType });
-        setAudioBlob(recording);
-        onComplete?.(recording);
+        // Ensure we have data before creating a blob
+        if (audioChunks.current.length > 0) {
+          // Create blob with explicit mime type to ensure compatibility
+          const recording = new Blob(audioChunks.current, { type: mimeType });
+          console.log(`Recording completed: ${recording.size} bytes, type: ${recording.type}`);
+          setAudioBlob(recording);
+          onComplete?.(recording);
+        } else {
+          console.error("No audio data recorded");
+          setError(new Error("No audio data recorded"));
+        }
 
         // Stop the media stream
         if (mediaStream.current) {
@@ -80,7 +109,7 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
       setError(err instanceof Error ? err : new Error('Failed to start recording'));
       console.error('Error starting recording:', err);
     }
-  }, [mimeType, onDataAvailable, onComplete, timeSlice]);
+  }, [mimeType, onDataAvailable, onComplete, timeSlice, checkMimeTypeSupport]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
