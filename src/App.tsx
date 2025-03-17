@@ -1,9 +1,9 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import { ensureTablesExist } from "./services/supabase/databaseSetup";
 
 // Use lazy loading for routes to improve initial load time
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
@@ -156,6 +156,28 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  const [isDbReady, setIsDbReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkDatabase = async () => {
+      try {
+        const isReady = await ensureTablesExist();
+        setIsDbReady(isReady);
+      } catch (error) {
+        console.error("Database setup error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkDatabase();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
   return (
     <>
       <RouterProvider router={router} />
