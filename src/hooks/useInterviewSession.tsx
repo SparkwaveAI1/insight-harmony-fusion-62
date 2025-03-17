@@ -113,9 +113,10 @@ export const useInterviewSession = ({
       
       // After speech finishes or after delay if no voice, move to listening state
       setTimeout(() => {
+        console.log('Moving to LISTENING state after first question');
         setInterviewState(InterviewState.LISTENING);
         startRecording();
-      }, useVoice ? 500 : 4000);
+      }, useVoice ? 1000 : 4000);
     }
   }, [interviewState, initialQuestions, startRecording, useVoice]);
 
@@ -227,8 +228,11 @@ export const useInterviewSession = ({
         content: nextQuestion
       };
       
+      // Update messages with the new AI question
       setMessages(prev => [...prev, aiMessage]);
       setInterviewState(InterviewState.SPEAKING);
+      
+      console.log('Starting speech for next question:', nextQuestion);
       
       if (useVoice) {
         try {
@@ -237,24 +241,29 @@ export const useInterviewSession = ({
           if (speechBuffer) {
             setAudioBuffer(speechBuffer);
             await playAudioBuffer(speechBuffer);
+            console.log('Finished playing speech for question');
           }
           
-          // Add a small delay after speech finishes before recording
+          // Ensure we wait for the speech to finish before starting to listen
           setTimeout(() => {
-            console.log('Starting recording after speech playback');
+            console.log('Moving to LISTENING state after playing question');
             setInterviewState(InterviewState.LISTENING);
-            startRecording();
-          }, 1000); // Slightly longer delay after speech
+            setTimeout(() => {
+              console.log('Starting recording for user response');
+              startRecording();
+            }, 300); // Small delay to ensure state has updated
+          }, 500);
         } catch (error) {
           console.error('Error playing voice:', error);
           // In case of speech error, still move to listening state
+          console.log('Error in speech playback, moving to LISTENING state anyway');
           setInterviewState(InterviewState.LISTENING);
           startRecording();
         }
       } else {
         // If no voice, just wait a bit and move to listening state
         setTimeout(() => {
-          console.log('Starting recording (no voice mode)');
+          console.log('Moving to LISTENING state (no voice mode)');
           setInterviewState(InterviewState.LISTENING);
           startRecording();
         }, 2000);
