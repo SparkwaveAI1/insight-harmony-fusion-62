@@ -4,7 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Mic, Play, SkipForward, X } from "lucide-react";
+import { ArrowLeft, Mic, Play, SkipForward, VolumeX, Volume2, X } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -13,6 +13,7 @@ import ApiKeyManager from "@/components/ApiKeyManager";
 import { useInterviewSession, InterviewState, Message } from "@/hooks/useInterviewSession";
 import { generateResponse } from "@/services/ai/openaiService";
 import { getApiKey } from "@/services/utils/apiKeyUtils";
+import { Switch } from "@/components/ui/switch";
 
 // Standard predefined interview questions
 const STANDARD_QUESTIONS = [
@@ -32,6 +33,7 @@ const InterviewProcess = () => {
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [participantData, setParticipantData] = useState<any>(null);
+  const [useVoice, setUseVoice] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -68,7 +70,8 @@ const InterviewProcess = () => {
   } = useInterviewSession({
     participantId: participantData?.id,
     initialQuestions: STANDARD_QUESTIONS,
-    onComplete: handleInterviewComplete
+    onComplete: handleInterviewComplete,
+    useVoice
   });
 
   // Start the interview when component mounts and API key is available
@@ -218,6 +221,20 @@ const InterviewProcess = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Toggle voice functionality
+  const toggleVoice = () => {
+    // If interview hasn't started yet, allow toggling voice
+    if (interviewState === InterviewState.IDLE) {
+      setUseVoice(!useVoice);
+    } else {
+      toast({
+        title: "Voice Settings",
+        description: "Voice settings cannot be changed during an active interview.",
+        variant: "default"
+      });
+    }
+  };
+
   // Current question text
   const currentQuestionText = messages.length > 0 
     ? messages[messages.length - 1]?.role === 'ai' 
@@ -238,6 +255,18 @@ const InterviewProcess = () => {
                 To use the AI interviewer, please provide your OpenAI API key. This key is required for processing audio and generating questions.
               </p>
               <ApiKeyManager onApiKeyUpdate={handleApiKeyUpdate} />
+              
+              <div className="mt-6 flex items-center space-x-2 pt-4 border-t">
+                <Switch 
+                  id="voice-toggle" 
+                  checked={useVoice} 
+                  onCheckedChange={toggleVoice} 
+                />
+                <label htmlFor="voice-toggle" className="cursor-pointer flex items-center">
+                  {useVoice ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+                  {useVoice ? "Voice enabled" : "Voice disabled"}
+                </label>
+              </div>
             </div>
           ) : isLoading ? (
             <div className="text-center space-y-6">
@@ -283,6 +312,13 @@ const InterviewProcess = () => {
                     />
                     <AvatarFallback className="bg-primary/10 text-primary text-4xl">AI</AvatarFallback>
                   </Avatar>
+                  
+                  {/* Voice indicator */}
+                  {useVoice && (
+                    <div className="absolute bottom-4 right-4 bg-black/60 p-2 rounded-full">
+                      <Volume2 className="h-5 w-5 text-white" />
+                    </div>
+                  )}
                   
                   {/* Glowing outline when speaking */}
                   <div className={`absolute inset-0 rounded-full ring-4 ring-primary shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-opacity duration-500 ${
@@ -355,6 +391,18 @@ const InterviewProcess = () => {
                       <SkipForward className="h-4 w-4 mr-2" />
                       Skip
                     </Button>
+                    
+                    <div className="flex items-center ml-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/80 hover:text-white"
+                        onClick={toggleVoice}
+                        disabled={interviewState !== InterviewState.IDLE}
+                      >
+                        {useVoice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="text-white/80 font-mono">
