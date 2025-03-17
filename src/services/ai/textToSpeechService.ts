@@ -171,12 +171,13 @@ export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
               resolve();
             };
             
-            // Add error handler for audio playback
-            source.onerror = (err) => {
+            // Fix: Using addEventListener instead of the non-standard onerror property
+            // This is the TypeScript-compliant way to handle errors
+            source.addEventListener('error', (err) => {
               console.error('Audio playback error:', err);
               audioContext.close().catch(e => console.error('Error closing AudioContext after playback error:', e));
               reject(err);
-            };
+            });
             
             console.log('Starting audio playback...');
             source.start(0);
