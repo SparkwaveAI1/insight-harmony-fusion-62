@@ -41,8 +41,16 @@ export async function generateSpeech(text: string): Promise<ArrayBuffer | null> 
 
 export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Convert the ArrayBuffer to an AudioBuffer and play it
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Define a type for the AudioContext constructor to handle browser prefixes
+    const AudioContextConstructor = window.AudioContext || 
+      (window as any).webkitAudioContext;
+    
+    if (!AudioContextConstructor) {
+      reject(new Error('Web Audio API is not supported in this browser'));
+      return;
+    }
+    
+    const audioContext = new AudioContextConstructor();
     
     audioContext.decodeAudioData(audioBuffer, (buffer) => {
       const source = audioContext.createBufferSource();
