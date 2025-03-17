@@ -1,12 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ArrowRight, Send, Mic, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Mic, Pause, Play, SkipForward, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Reveal from "@/components/ui-custom/Reveal";
 
 interface Message {
   id: string;
@@ -26,6 +28,13 @@ const STANDARD_QUESTIONS = [
   "Is there anything else you'd like to share about your needs or expectations?"
 ];
 
+enum InterviewState {
+  SPEAKING,
+  LISTENING,
+  PROCESSING,
+  COMPLETE
+}
+
 const InterviewProcess = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -35,12 +44,52 @@ const InterviewProcess = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [interviewState, setInterviewState] = useState<InterviewState>(InterviewState.SPEAKING);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [canSkip, setCanSkip] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const skipTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Start the interview automatically when component mounts
   useEffect(() => {
     startInterview();
+    
+    // Start the interview timer
+    timerRef.current = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (skipTimerRef.current) clearTimeout(skipTimerRef.current);
+    };
   }, []);
+
+  // Enable skip button after 10 seconds
+  useEffect(() => {
+    if (currentQuestion >= 0 && !canSkip) {
+      skipTimerRef.current = setTimeout(() => {
+        setCanSkip(true);
+      }, 10000);
+    }
+    
+    return () => {
+      if (skipTimerRef.current) clearTimeout(skipTimerRef.current);
+    };
+  }, [currentQuestion, canSkip]);
+  
+  // Simulate AI speaking for 4 seconds, then switch to listening mode
+  useEffect(() => {
+    if (interviewState === InterviewState.SPEAKING) {
+      const speakingTimeout = setTimeout(() => {
+        setInterviewState(InterviewState.LISTENING);
+      }, 4000);
+      
+      return () => clearTimeout(speakingTimeout);
+    }
+  }, [interviewState]);
 
   const startInterview = () => {
     // Add first question to messages
@@ -51,6 +100,8 @@ const InterviewProcess = () => {
         content: STANDARD_QUESTIONS[0]
       }
     ]);
+    setInterviewState(InterviewState.SPEAKING);
+    setCanSkip(false);
   };
 
   const handleSendMessage = async () => {
@@ -66,11 +117,13 @@ const InterviewProcess = () => {
     const updatedMessages = [...messages, newUserMessage];
     setMessages(updatedMessages);
     setUserInput("");
+    setInterviewState(InterviewState.PROCESSING);
     
     // Move to next question or finish interview
     if (currentQuestion < STANDARD_QUESTIONS.length - 1) {
       const nextQuestion = currentQuestion + 1;
       setCurrentQuestion(nextQuestion);
+      setCanSkip(false);
       
       // Add next AI question after a short delay
       setTimeout(() => {
@@ -80,7 +133,8 @@ const InterviewProcess = () => {
           content: STANDARD_QUESTIONS[nextQuestion]
         };
         setMessages(prevMessages => [...prevMessages, nextAiMessage]);
-      }, 500);
+        setInterviewState(InterviewState.SPEAKING);
+      }, 1000);
     } else {
       // Interview is complete
       setInterviewComplete(true);
@@ -217,63 +271,71 @@ const InterviewProcess = () => {
     generateAiSummary(messages);
   };
 
+  const handleSkipQuestion = () => {
+    if (!canSkip) return;
+    
+    // Skip to next question
+    if (currentQuestion < STANDARD_QUESTIONS.length - 1) {
+      const nextQuestion = currentQuestion + 1;
+      setCurrentQuestion(nextQuestion);
+      setCanSkip(false);
+      
+      // Add next AI question
+      const nextAiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content: STANDARD_QUESTIONS[nextQuestion]
+      };
+      setMessages(prevMessages => [...prevMessages, nextAiMessage]);
+      setInterviewState(InterviewState.SPEAKING);
+    }
+  };
+
+  const handleReplayQuestion = () => {
+    // Replay current question (simulate AI speaking again)
+    setInterviewState(InterviewState.SPEAKING);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleExit = () => {
+    navigate("/persona-ai-interviewer");
+  };
+
+  // Current question text
+  const currentQuestionText = STANDARD_QUESTIONS[currentQuestion];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow pt-24 pb-16">
-        <div className="container max-w-4xl mx-auto px-4">
-          {/* Interview Interface */}
-          <div className="flex flex-col h-[70vh]">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">AI Interview Session</h2>
-              <div className="text-sm text-muted-foreground">
-                Question {currentQuestion + 1} of {STANDARD_QUESTIONS.length}
-              </div>
+      
+      <main className="flex-grow bg-[#1a1a1a] flex flex-col">
+        <div className="container max-w-4xl mx-auto px-4 py-12 flex-grow flex flex-col items-center justify-center">
+          {interviewComplete && !summary ? (
+            <div className="text-center space-y-6">
+              <Reveal>
+                <h2 className="text-2xl font-bold text-white">Interview Complete</h2>
+              </Reveal>
+              <Reveal delay={100}>
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+              </Reveal>
+              <Reveal delay={200}>
+                <p className="text-white/80">Analyzing your responses...</p>
+              </Reveal>
             </div>
-            
-            {/* Messages Container */}
-            <div className="flex-grow overflow-y-auto bg-muted/30 rounded-lg p-4 mb-4 space-y-4">
-              {messages.map((message) => (
-                <div 
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`
-                    max-w-[80%] p-3 rounded-lg 
-                    ${message.role === 'user' 
-                      ? 'bg-primary text-primary-foreground ml-12' 
-                      : 'bg-card text-card-foreground mr-12 border'}
-                  `}>
-                    {message.role === 'ai' && (
-                      <div className="flex items-center gap-2 mb-1 text-sm font-medium text-muted-foreground">
-                        <Mic className="h-4 w-4" />
-                        AI Interviewer
-                      </div>
-                    )}
-                    {message.role === 'user' && (
-                      <div className="flex items-center justify-end gap-2 mb-1 text-sm font-medium text-primary-foreground/80">
-                        You
-                        <User className="h-4 w-4" />
-                      </div>
-                    )}
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                </div>
-              ))}
-              
-              {interviewComplete && !showApiKeyInput && (
-                <div className="text-center p-4 text-muted-foreground">
-                  <p>Interview complete. Generating summary...</p>
-                </div>
-              )}
-
-              {showApiKeyInput && (
-                <div className="bg-card p-4 rounded-lg border">
-                  <h3 className="font-medium mb-2">OpenAI API Key Required</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    To generate an AI-powered summary of this interview, please enter your OpenAI API key:
-                  </p>
+          ) : interviewComplete && summary ? (
+            <div className="w-full space-y-6">
+              <div className="bg-card p-6 rounded-lg border">
+                <h3 className="font-medium mb-2 text-xl">Interview Summary</h3>
+                {showApiKeyInput ? (
                   <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      To generate an AI-powered summary of this interview, please enter your OpenAI API key:
+                    </p>
                     <Input 
                       type="password"
                       placeholder="sk-..." 
@@ -283,57 +345,149 @@ const InterviewProcess = () => {
                     <Button 
                       onClick={handleApiKeySubmit}
                       className="w-full"
-                      disabled={!apiKey.trim()}
+                      disabled={!apiKey.trim() || isLoading}
                     >
-                      Generate AI Summary
+                      {isLoading ? "Generating..." : "Generate AI Summary"}
                     </Button>
                   </div>
+                ) : (
+                  <>
+                    <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap prose max-w-none dark:prose-invert">
+                      <div dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }} />
+                    </div>
+                    
+                    <div className="mt-8 space-y-4">
+                      <Button className="w-full">Save Persona</Button>
+                      <Link to="/persona-ai-interviewer">
+                        <Button variant="outline" className="w-full">
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Back to Interviewer
+                        </Button>
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Avatar and Question */}
+              <div className="flex flex-col items-center max-w-xl w-full mb-12">
+                {/* AI Avatar */}
+                <div className="relative mb-10">
+                  <Avatar className={`w-64 h-64 rounded-full ${interviewState === InterviewState.SPEAKING ? 'animate-pulse' : ''}`}>
+                    <AvatarImage
+                      src="/lovable-uploads/0082cb4d-cc17-46da-8c05-508924cdc668.png"
+                      alt="AI Avatar"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary text-4xl">AI</AvatarFallback>
+                  </Avatar>
+                  
+                  {/* Glowing outline when speaking */}
+                  <div className={`absolute inset-0 rounded-full ring-4 ring-primary shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-opacity duration-500 ${
+                    interviewState === InterviewState.SPEAKING ? 'opacity-100' : 'opacity-0'
+                  }`}></div>
                 </div>
-              )}
-
-              {isLoading && (
-                <div className="flex justify-center items-center py-8">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-
-              {summary && (
-                <div className="bg-card p-4 rounded-lg border">
-                  <h3 className="font-medium mb-2">Interview Summary</h3>
-                  <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap prose max-w-none dark:prose-invert">
-                    <div dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }} />
+                
+                {/* Current Question */}
+                <Reveal animation="fade-in-up">
+                  <div className="bg-black/30 p-6 rounded-xl backdrop-blur-sm border border-white/10 max-w-2xl">
+                    <h2 className="text-2xl text-center text-white font-medium mb-2 max-w-[600px] mx-auto">
+                      {currentQuestionText}
+                    </h2>
+                    
+                    <div className="text-center mt-4 text-white/70 text-sm">
+                      {interviewState === InterviewState.SPEAKING && (
+                        <div className="flex items-center justify-center">
+                          <Play className="h-4 w-4 mr-2 text-primary animate-pulse" />
+                          <span>AI is speaking...</span>
+                        </div>
+                      )}
+                      
+                      {interviewState === InterviewState.LISTENING && (
+                        <div className="flex items-center justify-center">
+                          <Mic className="h-4 w-4 mr-2 text-red-400 animate-pulse" />
+                          <span>Listening to your response...</span>
+                        </div>
+                      )}
+                      
+                      {interviewState === InterviewState.PROCESSING && (
+                        <div className="flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full border-2 border-white/70 border-t-transparent animate-spin mr-2"></div>
+                          <span>Processing...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Reveal>
+                
+                {/* Input area (only shown when listening) */}
+                {interviewState === InterviewState.LISTENING && (
+                  <div className="mt-8 w-full max-w-md mx-auto">
+                    <div className="flex gap-2">
+                      <Input
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="Type your response..."
+                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                        className="bg-black/40 border-white/20 text-white"
+                      />
+                      <Button 
+                        onClick={handleSendMessage} 
+                        disabled={!userInput.trim()}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        <ArrowLeft className="rotate-180 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Bottom Controls */}
+              <div className="w-full fixed bottom-0 left-0 bg-black/60 backdrop-blur-md p-4 border-t border-white/10">
+                <div className="container mx-auto max-w-4xl flex items-center justify-between">
+                  <Button 
+                    variant="outline" 
+                    className="border-white/20 bg-transparent text-white hover:bg-white/10"
+                    onClick={handleExit}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Exit
+                  </Button>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      className="border-white/20 bg-transparent text-white hover:bg-white/10"
+                      onClick={handleReplayQuestion}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Replay
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="border-white/20 bg-transparent text-white hover:bg-white/10"
+                      onClick={handleSkipQuestion}
+                      disabled={!canSkip}
+                    >
+                      <SkipForward className="h-4 w-4 mr-2" />
+                      Skip
+                    </Button>
                   </div>
                   
-                  <div className="mt-8 space-y-4">
-                    <Button className="w-full">Save Persona</Button>
-                    <Link to="/persona-ai-interviewer">
-                      <Button variant="outline" className="w-full">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Interviewer
-                      </Button>
-                    </Link>
+                  <div className="text-white/80 font-mono">
+                    {formatTime(elapsedTime)} / 60:00
                   </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Input area */}
-            {!interviewComplete && !summary && (
-              <div className="flex gap-2">
-                <Input
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  placeholder="Type your response..."
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                />
-                <Button onClick={handleSendMessage} disabled={!userInput.trim() || isLoading}>
-                  <Send className="h-4 w-4" />
-                </Button>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </main>
+      
       <Footer />
     </div>
   );
