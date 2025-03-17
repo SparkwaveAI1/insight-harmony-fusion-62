@@ -51,9 +51,20 @@ const DatabaseSetupInstructions = () => (
         <p className="mb-2">Create the following storage buckets in Supabase:</p>
         <ul className="list-disc pl-6 mb-4 space-y-2">
           <li><strong>transcripts</strong> - For storing interview transcripts</li>
-          <li><strong>interview_audio</strong> - For storing interview recordings</li>
+          <li><strong>interview-audio</strong> - For storing interview recordings</li>
         </ul>
         <p>Set both buckets with "Public" access to allow reading files without authentication.</p>
+      </div>
+      
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Step 3: Verify your Supabase configuration</h2>
+        <p className="mb-2">Make sure your Supabase URL and API key are correct in the supabaseService.ts file.</p>
+        <p className="mb-2">The current configuration is:</p>
+        <ul className="list-disc pl-6 mb-4 space-y-2">
+          <li>URL: wgerdrdsuusnrdnwwelt.supabase.co</li>
+          <li>API Key: <span className="font-mono text-xs">eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...</span> (check supabaseService.ts for the full key)</li>
+        </ul>
+        <p>These should match your Supabase project settings.</p>
       </div>
       
       <button 

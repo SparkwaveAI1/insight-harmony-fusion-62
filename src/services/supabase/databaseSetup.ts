@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseService';
 import { toast } from 'sonner';
 
@@ -14,14 +13,23 @@ export async function ensureTablesExist(): Promise<boolean> {
       .select('id')
       .limit(1);
     
-    if (error && error.code === '42P01') {
-      // Table doesn't exist, create it
-      await createParticipantsTable();
-      return false; // Return false to indicate setup is needed
-    } else if (error) {
+    // If we get a PostgreSQL error code (table doesn't exist)
+    if (error) {
       console.error('Error checking participants table:', error);
-      toast.error('Database connection error. Please check your configuration.');
-      return false;
+      
+      if (error.code === '42P01' || error.message.includes('relation "participants" does not exist')) {
+        // Table doesn't exist, show setup instructions
+        toast.error('Participants table does not exist. Please create it in Supabase.', {
+          duration: 8000,
+        });
+        return false;
+      } else {
+        // Other error (connection issues, etc.)
+        toast.error(`Database connection error: ${error.message}`, {
+          duration: 5000,
+        });
+        return false;
+      }
     }
     
     // Check if storage buckets exist
@@ -81,12 +89,21 @@ async function checkStorageBuckets() {
       .getBucket('transcripts');
     
     if (transcriptsError) {
-      // Storage bucket doesn't exist
-      allBucketsExist = false;
-      toast.info('Please create a "transcripts" storage bucket in your Supabase dashboard', {
-        duration: 5000,
-      });
-      console.info('Create a "transcripts" storage bucket with public read access for storing interview transcripts');
+      // Check if the error indicates the bucket doesn't exist
+      if (transcriptsError.message.includes('Bucket not found')) {
+        allBucketsExist = false;
+        toast.info('Please create a "transcripts" storage bucket in your Supabase dashboard', {
+          duration: 5000,
+        });
+        console.info('Create a "transcripts" storage bucket with public read access for storing interview transcripts');
+      } else {
+        // Other error (connection issues, etc.)
+        console.error('Error checking transcripts bucket:', transcriptsError);
+        toast.error(`Storage error: ${transcriptsError.message}`, {
+          duration: 5000,
+        });
+        return false;
+      }
     }
     
     // Check for the interview-audio bucket (note the dash instead of underscore)
@@ -95,12 +112,21 @@ async function checkStorageBuckets() {
       .getBucket('interview-audio');
     
     if (audioError) {
-      // Storage bucket doesn't exist
-      allBucketsExist = false;
-      toast.info('Please create an "interview-audio" storage bucket in your Supabase dashboard', {
-        duration: 5000,
-      });
-      console.info('Create an "interview-audio" storage bucket with public read access for storing interview recordings');
+      // Check if the error indicates the bucket doesn't exist
+      if (audioError.message.includes('Bucket not found')) {
+        allBucketsExist = false;
+        toast.info('Please create an "interview-audio" storage bucket in your Supabase dashboard', {
+          duration: 5000,
+        });
+        console.info('Create an "interview-audio" storage bucket with public read access for storing interview recordings');
+      } else {
+        // Other error (connection issues, etc.)
+        console.error('Error checking interview-audio bucket:', audioError);
+        toast.error(`Storage error: ${audioError.message}`, {
+          duration: 5000,
+        });
+        return false;
+      }
     }
     
     if (!allBucketsExist) {
@@ -113,6 +139,7 @@ async function checkStorageBuckets() {
     return true;
   } catch (error) {
     console.error('Error checking storage buckets:', error);
+    toast.error('Failed to check storage buckets. Please check your Supabase configuration.');
     return false;
   }
 }
@@ -153,4 +180,3 @@ ON participants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update for existing participants" 
 ON participants FOR UPDATE USING (true);
 `;
-}
