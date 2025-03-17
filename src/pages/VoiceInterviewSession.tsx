@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Mic, MicOff, Pause, Play, 
   Volume2, VolumeX, Clock,
-  ArrowLeft, SkipForward, RefreshCw
+  ArrowLeft, SkipForward, RefreshCw,
+  Bot, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -12,8 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { ConversationDisplay, Message } from "@/components/interview/ConversationDisplay";
 import { useToast } from "@/hooks/use-toast";
+import { AudioWave } from "@/components/ui/audio-wave";
 
-// Sample interview questions
 const INTERVIEW_QUESTIONS = [
   "Tell me about yourself and what interests you most about participating in this research?",
   "What topics or issues are you most passionate about in today's world?",
@@ -597,7 +597,7 @@ const VoiceInterviewSession = () => {
                 <Button
                   variant="outline"
                   onClick={replayCurrentQuestion}
-                  disabled={isPaused || isSpeaking || isListening}
+                  disabled={isPaused || isSpeaking}
                   className="border-[#3b82f6]/20 hover:bg-[#3b82f6]/5 text-[#a0a0a0] hover:text-[#f5f5f5]"
                 >
                   <RefreshCw className="h-4 w-4 mr-1" /> Replay
