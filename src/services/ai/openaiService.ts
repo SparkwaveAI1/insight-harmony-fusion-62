@@ -1,4 +1,3 @@
-
 import { getApiKey } from '../utils/apiKeyUtils';
 import { toast } from 'sonner';
 
@@ -35,7 +34,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
   const formData = new FormData();
   
   // Ensure proper filename extension based on audio type
-  // OpenAI supports various formats including mp3, mp4, mpeg, mpga, m4a, wav, and webm
+  // OpenAI Whisper supports these formats: mp3, mp4, mpeg, mpga, m4a, wav, webm
   let filename = 'recording.webm';
   
   if (audioBlob.type.includes('mp3')) {
@@ -48,13 +47,13 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
   
   console.log(`Using filename: ${filename} for type: ${audioBlob.type}`);
   
-  // Create a clean copy of the blob with explicit type to avoid MIME type issues
-  // Some browsers may use non-standard MIME types that OpenAI doesn't recognize
-  const standardMimeType = audioBlob.type.includes('webm') ? 'audio/webm' : 
-                          audioBlob.type.includes('mp3') ? 'audio/mp3' : 
-                          audioBlob.type.includes('wav') ? 'audio/wav' : 'audio/webm';
+  // Convert to more compatible format for Whisper API
+  const audioArrayBuffer = await audioBlob.arrayBuffer();
   
-  const cleanBlob = new Blob([await audioBlob.arrayBuffer()], { type: standardMimeType });
+  // Create a clean blob with a standard MIME type
+  const standardMimeType = determineStandardMimeType(audioBlob.type);
+  const cleanBlob = new Blob([audioArrayBuffer], { type: standardMimeType });
+  
   console.log(`Created clean blob: ${cleanBlob.size} bytes with type: ${standardMimeType}`);
   
   formData.append('file', cleanBlob, filename);
@@ -66,16 +65,17 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     console.log(`START TRANSCRIPTION: Sending request to OpenAI for ${filename}, size: ${cleanBlob.size} bytes`);
     console.log(`Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
     
-    // Additional logging to verify request details
-    const formDataEntries = Array.from(formData.entries()).map(entry => {
-      if (entry[0] === 'file') {
-        return [entry[0], `[File: ${(entry[1] as File).size} bytes]`];
+    // Log form data content for debugging
+    for (const [key, value] of formData.entries()) {
+      if (key === 'file') {
+        const fileObj = value as File;
+        console.log(`FormData - ${key}: ${fileObj.name}, size: ${fileObj.size}, type: ${fileObj.type}`);
+      } else {
+        console.log(`FormData - ${key}: ${value}`);
       }
-      return entry;
-    });
-    console.log('FormData entries:', Object.fromEntries(formDataEntries as [string, string][]));
+    }
 
-    // Make the API request with proper error handling
+    // Make the API request
     const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/transcriptions`, {
       method: 'POST',
       headers: {
@@ -84,40 +84,41 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
       body: formData
     });
 
-    // Log the response status and headers for debugging
+    // Log the response status for debugging
     console.log(`TRANSCRIPTION RESPONSE: Status: ${response.status}`);
-    console.log('Response headers:', Object.fromEntries([...response.headers.entries()]));
     
     if (!response.ok) {
-      let errorMessage = 'Failed to transcribe audio';
-      let errorDetails = '';
-      
+      const errorText = await response.text();
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.error?.message || errorMessage;
-        errorDetails = JSON.stringify(errorData);
+        const errorData = JSON.parse(errorText);
         console.error('TRANSCRIPTION ERROR:', errorData);
         
-        // Check for common issues
+        // User-friendly error messages
         if (response.status === 401) {
           toast.error('API key is invalid or expired. Please check your OpenAI API key.');
         } else if (response.status === 429) {
           toast.error('Rate limit exceeded. Please try again in a moment.');
-        } else if (response.status === 400 && errorMessage.includes('file format')) {
-          toast.error('Unsupported audio format. Try a different browser or microphone.');
-          console.error('Audio format error. Type:', audioBlob.type, 'Size:', audioBlob.size);
+        } else if (response.status === 400) {
+          const errorMessage = errorData.error?.message || 'Unknown error';
+          if (errorMessage.includes('file format')) {
+            toast.error('Unsupported audio format. Try using Chrome or Firefox for better compatibility.');
+            console.error('Audio format error. Original type:', audioBlob.type, 'Used type:', standardMimeType);
+          } else if (errorMessage.includes('Invalid file')) {
+            toast.error('Invalid audio file. Please try speaking more clearly or check your microphone.');
+          } else {
+            toast.error(`Transcription failed: ${errorMessage}`);
+          }
         } else {
-          toast.error(`Transcription failed: ${errorMessage}`);
+          toast.error('Failed to transcribe speech. Please try again.');
         }
-      } catch (parseError) {
-        console.error('Error parsing API error response:', parseError);
-        const rawText = await response.text().catch(() => 'Unable to get response text');
-        console.error('Raw response:', rawText);
-        errorDetails = rawText;
-        toast.error('Failed to transcribe speech. Check console for details.');
+        
+        // Provide a placeholder text so the interview can continue
+        return { text: "[I couldn't hear what you said. Could you repeat that more clearly?]" };
+      } catch (e) {
+        console.error('Error parsing API error response:', e, 'Raw:', errorText);
+        toast.error('Failed to transcribe speech. Please check your microphone and try again.');
+        return { text: "[I couldn't hear what you said. Could you repeat that more clearly?]" };
       }
-      
-      throw new Error(`${errorMessage}\nDetails: ${errorDetails}`);
     }
 
     const result = await response.json();
@@ -126,18 +127,40 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     if (!result.text || result.text.trim() === '') {
       console.warn('Empty transcription received from API');
       toast.warning('No speech detected. Please speak more clearly or check your microphone.');
-      return { text: '[No speech detected]' };
+      return { text: '[No speech detected. Please speak more clearly.]' };
     }
     
-    // Show success message
-    toast.success(`Speech detected: "${result.text.substring(0, 30)}${result.text.length > 30 ? '...' : ''}"`);
     return result;
   } catch (error) {
     console.error('TRANSCRIPTION ERROR:', error);
-    
-    // Try to recover with a fallback message
-    return { text: '[Had trouble hearing you. If this persists, please check your microphone and try again.]' };
+    toast.error('Failed to connect to transcription service. Please check your internet connection.');
+    return { text: '[Had trouble hearing you. Please check your microphone and try again.]' };
   }
+}
+
+// Helper function to determine a standard MIME type for the audio
+function determineStandardMimeType(originalType: string): string {
+  // Default to WebM which is widely supported
+  if (originalType.includes('webm')) {
+    return 'audio/webm';
+  }
+  if (originalType.includes('mp3') || originalType.includes('mpeg')) {
+    return 'audio/mp3';
+  }
+  if (originalType.includes('wav')) {
+    return 'audio/wav';
+  }
+  if (originalType.includes('ogg')) {
+    return 'audio/ogg';
+  }
+  
+  // Apple devices often use audio/mp4
+  if (originalType.includes('mp4') || originalType.includes('m4a')) {
+    return 'audio/mp4';
+  }
+  
+  console.log('Using default WebM MIME type for unknown type:', originalType);
+  return 'audio/webm';
 }
 
 export async function generateResponse(messages: { role: string, content: string }[]): Promise<string> {

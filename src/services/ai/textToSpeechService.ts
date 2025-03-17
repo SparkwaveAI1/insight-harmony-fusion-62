@@ -17,7 +17,13 @@ export const validateApiKey = async (apiKey: string): Promise<boolean> => {
       }
     });
 
-    return response.ok;
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      console.error('API key validation failed:', response.status, error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error validating OpenAI API key:', error);
     return false;
@@ -52,7 +58,14 @@ export const generateSpeech = async (text: string): Promise<ArrayBuffer | null> 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('Speech generation failed', response.status, response.statusText, errorData);
-      toast.error('Failed to generate speech. Please check your API key and settings.');
+      
+      if (response.status === 401) {
+        toast.error('Invalid API key. Please check your OpenAI API key.');
+      } else if (response.status === 429) {
+        toast.error('Rate limit exceeded. Please try again in a moment.');
+      } else {
+        toast.error('Failed to generate speech. Please check your API key and settings.');
+      }
       return null;
     }
 
@@ -69,11 +82,7 @@ export const playAudioBuffer = async (audioBuffer: ArrayBuffer): Promise<void> =
   return new Promise((resolve, reject) => {
     try {
       // Stop any currently playing audio first
-      if (activeAudioElement) {
-        activeAudioElement.pause();
-        activeAudioElement.remove();
-        activeAudioElement = null;
-      }
+      stopAnyPlayingAudio();
 
       // Create a Blob and URL from the audio buffer
       const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
@@ -106,14 +115,23 @@ export const playAudioBuffer = async (audioBuffer: ArrayBuffer): Promise<void> =
       audio.onerror = (e) => {
         URL.revokeObjectURL(audioUrl);
         console.error('Audio playback error:', e);
+        if (activeAudioElement === audio) {
+          activeAudioElement = null;
+        }
         reject(new Error('Failed to play audio'));
       };
+      
+      // Set volume to an appropriate level
+      audio.volume = 0.8;
       
       // Play audio
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error('Audio play error:', error);
+          if (activeAudioElement === audio) {
+            activeAudioElement = null;
+          }
           reject(error);
         });
       }
@@ -127,6 +145,7 @@ export const playAudioBuffer = async (audioBuffer: ArrayBuffer): Promise<void> =
 // Function to stop any playing audio
 export const stopAnyPlayingAudio = (): void => {
   if (activeAudioElement) {
+    console.log('Stopping currently playing audio');
     activeAudioElement.pause();
     activeAudioElement.remove();
     activeAudioElement = null;

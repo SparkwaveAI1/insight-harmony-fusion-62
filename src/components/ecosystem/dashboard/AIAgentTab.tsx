@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { getApiKey } from "@/services/utils/apiKeyUtils";
 import { toast } from "sonner";
 import { generateResponse } from "@/services/ai/openaiService";
-import { generateSpeech, playAudioBuffer } from "@/services/ai/textToSpeechService";
+import { generateSpeech, playAudioBuffer, stopAnyPlayingAudio } from "@/services/ai/textToSpeechService";
 
 const AIAgentTab = () => {
   const [chatMessage, setChatMessage] = useState("");
@@ -52,6 +52,7 @@ const AIAgentTab = () => {
       setChatHistory(updatedHistory);
       
       // Generate and play speech
+      stopAnyPlayingAudio(); // Stop any currently playing audio
       const audioBuffer = await generateSpeech(response);
       if (audioBuffer) {
         await playAudioBuffer(audioBuffer);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -118,14 +117,17 @@ export const useAudioRecorder = ({
   }, [checkMicrophoneStatus]);
 
   const getSupportedMimeType = () => {
-    // Prioritize formats in order of compatibility with Whisper API
+    // We need to check what's supported on this browser for the best compatibility with Whisper
+    // Whisper supports mp3, mp4, mpeg, mpga, m4a, wav, and webm
     const types = [
-      'audio/mp3',
-      'audio/webm',
-      'audio/webm;codecs=opus',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/ogg;codecs=opus'
+      'audio/mp3',               // Most compatible format for Whisper
+      'audio/mpeg',              // Alternative mp3 type
+      'audio/wav',               // Good uncompressed format
+      'audio/webm',              // Default for most browsers
+      'audio/webm;codecs=opus',  // Common in Chrome
+      'audio/ogg;codecs=opus',   // Common in Firefox
+      'audio/m4a',               // For Apple devices
+      'audio/mp4',               // For Apple devices
     ];
     
     for (const type of types) {
@@ -135,6 +137,7 @@ export const useAudioRecorder = ({
       }
     }
     
+    // If nothing is supported, fall back to webm which is most widely supported
     if (debug) console.log('No preferred MIME types supported, falling back to audio/webm');
     return 'audio/webm';
   };
@@ -203,14 +206,14 @@ export const useAudioRecorder = ({
         throw new Error('Media Devices API not supported in this browser');
       }
       
-      // Configure audio with settings optimized for speech
+      // Configure audio with settings optimized for speech recognition
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
           sampleRate: { ideal: 16000 },  // Whisper prefers 16kHz
-          channelCount: { ideal: 1 },    // Mono
+          channelCount: { ideal: 1 },    // Mono is better for speech recognition
         } 
       });
       
@@ -224,10 +227,10 @@ export const useAudioRecorder = ({
       const mimeType = getSupportedMimeType();
       if (debug) console.log(`Selected MIME type for recording: ${mimeType}`);
       
-      // Set higher bit rate for better quality
+      // Create a MediaRecorder with optimal settings for Whisper API
       const mediaRecorder = new MediaRecorder(stream, { 
         mimeType,
-        audioBitsPerSecond: 128000 
+        audioBitsPerSecond: 128000  // Higher bitrate for better quality
       });
       
       mediaRecorder.ondataavailable = (e) => {
@@ -249,6 +252,7 @@ export const useAudioRecorder = ({
           return;
         }
         
+        // Create a blob from the audio chunks
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         
         if (debug) {
@@ -258,40 +262,21 @@ export const useAudioRecorder = ({
         
         if (audioBlob.size < 100) {
           console.warn('Audio blob is suspiciously small:', audioBlob.size, 'bytes');
-          toast.error('Recording produced no usable audio. Please check your microphone.');
+          toast.error('Recording produced no usable audio. Please check your microphone and speak louder.');
           setIsRecording(false);
           return;
         }
         
-        // Convert to MP3 if needed for optimal compatibility with Whisper
-        if (mimeType.includes('webm') || mimeType.includes('ogg')) {
-          if (debug) console.log('Converting audio to a more compatible format');
-          
-          // Use the blob as is, Whisper handles these formats but might prefer mp3
-          setAudioBlob(audioBlob);
-          setIsRecording(false);
-          
-          if (silenceTimerRef.current) {
-            clearInterval(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-          }
-          
-          if (onComplete) {
-            onComplete(audioBlob);
-          }
-        } else {
-          // Already in a preferred format
-          setAudioBlob(audioBlob);
-          setIsRecording(false);
-          
-          if (silenceTimerRef.current) {
-            clearInterval(silenceTimerRef.current);
-            silenceTimerRef.current = null;
-          }
-          
-          if (onComplete) {
-            onComplete(audioBlob);
-          }
+        setAudioBlob(audioBlob);
+        setIsRecording(false);
+        
+        if (silenceTimerRef.current) {
+          clearInterval(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        
+        if (onComplete) {
+          onComplete(audioBlob);
         }
       };
       
