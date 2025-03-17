@@ -34,16 +34,29 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
   // Create a clean, optimized FormData object
   const formData = new FormData();
   
-  // Determine appropriate filename based on MIME type
+  // Ensure proper filename extension based on audio type
+  // OpenAI supports various formats including mp3, mp4, mpeg, mpga, m4a, wav, and webm
   let filename = 'recording.webm';
+  
   if (audioBlob.type.includes('mp3')) {
     filename = 'recording.mp3';
   } else if (audioBlob.type.includes('wav')) {
     filename = 'recording.wav';
+  } else if (audioBlob.type.includes('mp4') || audioBlob.type.includes('mpeg') || audioBlob.type.includes('mpga')) {
+    filename = 'recording.mp3'; // Fallback to mp3 for these types
   }
   
-  // Create a clean copy of the blob to avoid potential issues
-  const cleanBlob = new Blob([await audioBlob.arrayBuffer()], { type: audioBlob.type });
+  console.log(`Using filename: ${filename} for type: ${audioBlob.type}`);
+  
+  // Create a clean copy of the blob with explicit type to avoid MIME type issues
+  // Some browsers may use non-standard MIME types that OpenAI doesn't recognize
+  const standardMimeType = audioBlob.type.includes('webm') ? 'audio/webm' : 
+                          audioBlob.type.includes('mp3') ? 'audio/mp3' : 
+                          audioBlob.type.includes('wav') ? 'audio/wav' : 'audio/webm';
+  
+  const cleanBlob = new Blob([await audioBlob.arrayBuffer()], { type: standardMimeType });
+  console.log(`Created clean blob: ${cleanBlob.size} bytes with type: ${standardMimeType}`);
+  
   formData.append('file', cleanBlob, filename);
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'json');
@@ -90,6 +103,9 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
           toast.error('API key is invalid or expired. Please check your OpenAI API key.');
         } else if (response.status === 429) {
           toast.error('Rate limit exceeded. Please try again in a moment.');
+        } else if (response.status === 400 && errorMessage.includes('file format')) {
+          toast.error('Unsupported audio format. Try a different browser or microphone.');
+          console.error('Audio format error. Type:', audioBlob.type, 'Size:', audioBlob.size);
         } else {
           toast.error(`Transcription failed: ${errorMessage}`);
         }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -33,7 +32,6 @@ export const useAudioRecorder = ({
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const silenceStartTimeRef = useRef<number | null>(null);
 
-  // Check microphone status
   const checkMicrophoneStatus = useCallback(async (): Promise<boolean> => {
     try {
       if (debug) console.log('Checking microphone status...');
@@ -46,14 +44,12 @@ export const useAudioRecorder = ({
         } 
       });
       
-      // Log microphone settings for debugging
       if (debug) {
         const audioTrack = stream.getAudioTracks()[0];
         const settings = audioTrack.getSettings();
         console.log('Microphone settings:', settings);
       }
       
-      // Get a sample audio chunk to verify the mic is working
       const testRecorder = new MediaRecorder(stream, { mimeType: getSupportedMimeType() });
       let testChunk: Blob | null = null;
       
@@ -70,10 +66,9 @@ export const useAudioRecorder = ({
       
       await new Promise(resolve => {
         testRecorder.onstop = resolve;
-        setTimeout(resolve, 500); // Fallback in case onstop doesn't fire
+        setTimeout(resolve, 500);
       });
       
-      // Clean up the test stream
       stream.getTracks().forEach(track => track.stop());
       
       const hasAudio = testChunk !== null && testChunk.size > 0;
@@ -87,12 +82,10 @@ export const useAudioRecorder = ({
     }
   }, [debug]);
 
-  // Init: check microphone on mount
   useEffect(() => {
     checkMicrophoneStatus();
     
     return () => {
-      // Cleanup stream on unmount
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -128,48 +121,39 @@ export const useAudioRecorder = ({
       }
     }
     
-    // Fallback
+    if (debug) console.log('No preferred MIME types supported, falling back to audio/webm');
     return 'audio/webm';
   };
 
-  // Setup voice activity detection
   const setupVoiceActivityDetection = (stream: MediaStream) => {
     if (!silenceDetectionEnabled) return;
     
     try {
-      // Create audio context and analyzer
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       
-      // Connect the stream to the analyzer
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
       
-      // Configure analyzer
       analyserRef.current.fftSize = 256;
       const bufferLength = analyserRef.current.frequencyBinCount;
       dataArrayRef.current = new Uint8Array(bufferLength);
       
-      // Start monitoring for silence
       silenceTimerRef.current = window.setInterval(() => {
         if (!isRecording || !analyserRef.current || !dataArrayRef.current) return;
         
-        // Get current audio levels
         analyserRef.current.getByteFrequencyData(dataArrayRef.current);
         
-        // Calculate average volume level (0-255)
         const average = dataArrayRef.current.reduce((sum, value) => sum + value, 0) / 
                         dataArrayRef.current.length;
         
-        // Convert to percentage (0-100)
         const volumePercent = (average / 255) * 100;
         
         if (debug && recordingTime % 2 === 0) {
           console.log(`Current volume: ${Math.round(volumePercent)}%`);
         }
         
-        // Check if volume is below threshold (silence)
         if (volumePercent < silenceThreshold) {
           if (silenceStartTimeRef.current === null) {
             silenceStartTimeRef.current = Date.now();
@@ -177,14 +161,12 @@ export const useAudioRecorder = ({
           } else {
             const silenceDuration = Date.now() - silenceStartTimeRef.current;
             
-            // If silence persists for the timeout period, stop recording
             if (silenceDuration >= silenceTimeout && recordingTime > 2) {
               if (debug) console.log(`Silence detected for ${silenceDuration}ms, auto-stopping recording`);
               stopRecording();
             }
           }
         } else {
-          // Reset silence timer if volume goes above threshold
           if (silenceStartTimeRef.current !== null) {
             if (debug) console.log('Voice activity detected, resetting silence timer');
             silenceStartTimeRef.current = null;
@@ -212,19 +194,25 @@ export const useAudioRecorder = ({
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          sampleRate: { ideal: 44100 },
+          channelCount: { ideal: 1 },
         } 
       });
       
       streamRef.current = stream;
       setMicrophoneAccess(true);
       
-      // Setup voice activity detection
       if (silenceDetectionEnabled) {
         setupVoiceActivityDetection(stream);
       }
       
       const mimeType = getSupportedMimeType();
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      if (debug) console.log(`Selected MIME type for recording: ${mimeType}`);
+      
+      const mediaRecorder = new MediaRecorder(stream, { 
+        mimeType,
+        audioBitsPerSecond: 128000 
+      });
       
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -245,7 +233,6 @@ export const useAudioRecorder = ({
           return;
         }
         
-        // Create combined blob from all chunks
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         
         if (debug) {
@@ -260,7 +247,6 @@ export const useAudioRecorder = ({
         setAudioBlob(audioBlob);
         setIsRecording(false);
         
-        // Cleanup silence detection
         if (silenceTimerRef.current) {
           clearInterval(silenceTimerRef.current);
           silenceTimerRef.current = null;
@@ -277,11 +263,10 @@ export const useAudioRecorder = ({
       };
       
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start(100); // Collect data in chunks of 100ms
+      mediaRecorder.start(100);
       setIsRecording(true);
       setRecordingTime(0);
       
-      // Start a timer to track recording duration
       timerRef.current = window.setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -313,7 +298,6 @@ export const useAudioRecorder = ({
     if (mediaRecorderRef.current && isRecording) {
       try {
         mediaRecorderRef.current.stop();
-        // Note: onstop handler will handle the blob creation and callback
       } catch (err) {
         console.error('Error stopping recording:', err);
         setError(err instanceof Error ? err : new Error('Error stopping recording'));
@@ -322,13 +306,11 @@ export const useAudioRecorder = ({
       if (debug) console.log('No active recorder to stop');
     }
     
-    // Always clean up the stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
     
-    // Clean up audio context
     if (audioContextRef.current) {
       audioContextRef.current.close();
       audioContextRef.current = null;
