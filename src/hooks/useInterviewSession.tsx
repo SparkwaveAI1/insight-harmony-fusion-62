@@ -119,15 +119,22 @@ export const useInterviewSession = ({
     }
   }, [interviewState, initialQuestions, startRecording, useVoice]);
 
-  // Handle recording completion
+  // Handle recording completion - Fixed to ensure proper state transitions
   async function handleRecordingComplete(recording: Blob) {
-    if (!recording) return;
+    if (!recording) {
+      console.error('No recording blob received');
+      setInterviewState(InterviewState.LISTENING);
+      startRecording();
+      return;
+    }
     
+    console.log(`Recording completed, size: ${recording.size} bytes`);
     setInterviewState(InterviewState.PROCESSING);
     
     try {
       // Transcribe the audio
       const transcription = await transcribeAudio(recording);
+      console.log(`Transcription result: "${transcription.text}"`);
       
       // Add user message
       const userMessage: Message = {
@@ -136,7 +143,9 @@ export const useInterviewSession = ({
         content: transcription.text
       };
       
-      setMessages(prev => [...prev, userMessage]);
+      // Update messages state with the new user message
+      const updatedMessages = [...messages, userMessage];
+      setMessages(updatedMessages);
       
       // Check if this was the last predefined question
       if (currentQuestion >= initialQuestions.length - 1) {
@@ -147,7 +156,8 @@ export const useInterviewSession = ({
           content: "Thank you for participating in this interview. Your responses have been recorded."
         };
         
-        setMessages(prev => [...prev, finalMessage]);
+        const finalMessages = [...updatedMessages, finalMessage];
+        setMessages(finalMessages);
         
         // Generate and play the final message if voice is enabled
         if (useVoice) {
@@ -162,10 +172,11 @@ export const useInterviewSession = ({
           }
         }
         
-        completeInterview([...messages, userMessage, finalMessage], recording);
+        completeInterview(finalMessages, recording);
       } else {
         // Move to next question
-        await processNextQuestion([...messages, userMessage], recording);
+        console.log(`Moving to next question (${currentQuestion + 1})`);
+        await processNextQuestion(updatedMessages, recording);
       }
     } catch (error) {
       console.error('Error processing recording:', error);
@@ -180,9 +191,11 @@ export const useInterviewSession = ({
     }
   }
 
-  // Process the next question
+  // Process the next question - Fixed timings and added better error handling
   const processNextQuestion = async (currentMessages: Message[], audioRecording: Blob) => {
     try {
+      console.log('Processing next question');
+      
       // Save the audio chunk
       if (participantId) {
         await saveAudio(participantId, audioRecording);
@@ -194,7 +207,8 @@ export const useInterviewSession = ({
       if (currentQuestion < initialQuestions.length - 1) {
         // Use next predefined question
         nextQuestion = initialQuestions[currentQuestion + 1];
-        setCurrentQuestion(currentQuestion + 1);
+        console.log(`Using predefined question: "${nextQuestion}"`);
+        setCurrentQuestion(prevQuestion => prevQuestion + 1);
       } else {
         // Generate a follow-up question based on conversation
         const messageHistory = currentMessages.map(msg => ({
@@ -202,6 +216,7 @@ export const useInterviewSession = ({
           content: msg.content
         }));
         
+        console.log('Generating follow-up question based on conversation');
         nextQuestion = await generateResponse(messageHistory);
       }
       
@@ -223,16 +238,27 @@ export const useInterviewSession = ({
             setAudioBuffer(speechBuffer);
             await playAudioBuffer(speechBuffer);
           }
+          
+          // Add a small delay after speech finishes before recording
+          setTimeout(() => {
+            console.log('Starting recording after speech playback');
+            setInterviewState(InterviewState.LISTENING);
+            startRecording();
+          }, 1000); // Slightly longer delay after speech
         } catch (error) {
           console.error('Error playing voice:', error);
+          // In case of speech error, still move to listening state
+          setInterviewState(InterviewState.LISTENING);
+          startRecording();
         }
+      } else {
+        // If no voice, just wait a bit and move to listening state
+        setTimeout(() => {
+          console.log('Starting recording (no voice mode)');
+          setInterviewState(InterviewState.LISTENING);
+          startRecording();
+        }, 2000);
       }
-      
-      // After speech finishes or after delay if no voice, move to listening state
-      setTimeout(() => {
-        setInterviewState(InterviewState.LISTENING);
-        startRecording();
-      }, useVoice ? 500 : 4000);
     } catch (error) {
       console.error('Error processing next question:', error);
       toast({
@@ -269,7 +295,7 @@ export const useInterviewSession = ({
       setTimeout(() => {
         setInterviewState(InterviewState.LISTENING);
         startRecording();
-      }, useVoice ? 500 : 4000);
+      }, useVoice ? 1000 : 2000);
     }
   };
 
@@ -462,7 +488,7 @@ export const useInterviewSession = ({
     messages,
     currentQuestion,
     elapsedTime,
-    isRecording, // Explicitly return isRecording from the hook
+    isRecording,
     canSkip,
     isCompleted,
     startInterview,

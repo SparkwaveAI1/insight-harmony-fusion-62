@@ -179,6 +179,20 @@ const InterviewProcess = () => {
   });
 
   useEffect(() => {
+    console.log(`Interview state changed to: ${InterviewState[interviewState]}`);
+    if (interviewState === InterviewState.PROCESSING) {
+      console.log('Processing user response...');
+    }
+  }, [interviewState]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      console.log(`New message (${lastMessage.role}): "${lastMessage.content.substring(0, 50)}${lastMessage.content.length > 50 ? '...' : ''}"`);
+    }
+  }, [messages]);
+
+  useEffect(() => {
     if (apiKey && interviewState === InterviewState.IDLE && !showApiKeyInput) {
       console.log("Starting interview with API key");
       startInterview();
