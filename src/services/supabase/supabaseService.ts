@@ -163,10 +163,10 @@ export async function saveAudio(participantId: string, audioBlob: Blob): Promise
   try {
     const fileName = `audio_${participantId}_${Date.now()}.mp3`;
     
-    // Upload audio to Supabase storage
+    // Upload audio to Supabase storage - updated to use 'interview-audio' bucket
     const { data, error } = await supabase
       .storage
-      .from('interview_audio')
+      .from('interview-audio')
       .upload(fileName, audioBlob, {
         contentType: 'audio/mpeg',
       });
@@ -176,7 +176,7 @@ export async function saveAudio(participantId: string, audioBlob: Blob): Promise
     // Get the public URL for the uploaded file
     const { data: urlData } = supabase
       .storage
-      .from('interview_audio')
+      .from('interview-audio')
       .getPublicUrl(fileName);
       
     // Update the participant record with the audio URL

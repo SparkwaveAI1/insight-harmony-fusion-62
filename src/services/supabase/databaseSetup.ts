@@ -89,18 +89,18 @@ async function checkStorageBuckets() {
       console.info('Create a "transcripts" storage bucket with public read access for storing interview transcripts');
     }
     
-    // Check for the interview_audio bucket
+    // Check for the interview-audio bucket (note the dash instead of underscore)
     const { data: audioBucket, error: audioError } = await supabase
       .storage
-      .getBucket('interview_audio');
+      .getBucket('interview-audio');
     
     if (audioError) {
       // Storage bucket doesn't exist
       allBucketsExist = false;
-      toast.info('Please create an "interview_audio" storage bucket in your Supabase dashboard', {
+      toast.info('Please create an "interview-audio" storage bucket in your Supabase dashboard', {
         duration: 5000,
       });
-      console.info('Create an "interview_audio" storage bucket with public read access for storing interview recordings');
+      console.info('Create an "interview-audio" storage bucket with public read access for storing interview recordings');
     }
     
     if (!allBucketsExist) {
