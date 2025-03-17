@@ -44,6 +44,7 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
   // Start recording
   const startRecording = useCallback(async () => {
     try {
+      // Reset state for new recording
       audioChunks.current = [];
       setAudioBlob(null);
       setError(null);
@@ -63,23 +64,32 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
       const recorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorder.current = recorder;
 
-      // Handle data available event
+      // Add chunks as they become available
       recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunks.current.push(event.data);
-          onDataAvailable?.(event.data);
+          if (onDataAvailable) {
+            onDataAvailable(event.data);
+          }
+          console.log(`Received audio chunk: ${event.data.size} bytes`);
+        } else {
+          console.warn('Empty audio data received');
         }
       };
 
       // Handle recording stop event
       recorder.onstop = () => {
+        console.log(`Recording stopped. Total chunks: ${audioChunks.current.length}`);
+        
         // Ensure we have data before creating a blob
         if (audioChunks.current.length > 0) {
           // Create blob with explicit mime type to ensure compatibility
           const recording = new Blob(audioChunks.current, { type: mimeType });
           console.log(`Recording completed: ${recording.size} bytes, type: ${recording.type}`);
           setAudioBlob(recording);
-          onComplete?.(recording);
+          if (onComplete) {
+            onComplete(recording);
+          }
         } else {
           console.error("No audio data recorded");
           setError(new Error("No audio data recorded"));
@@ -97,32 +107,42 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
         }
       };
 
-      // Start recording
+      // Start recording immediately with chunks delivered every timeSlice ms
       recorder.start(timeSlice);
       setIsRecording(true);
+      console.log('Recording started');
 
       // Start the timer
       timerInterval.current = setInterval(() => {
         setRecordingTime((prevTime) => prevTime + 1);
       }, 1000);
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Error starting recording:', errorMessage);
       setError(err instanceof Error ? err : new Error('Failed to start recording'));
-      console.error('Error starting recording:', err);
+      
+      if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
+        setError(new Error('Microphone access denied. Please allow microphone access and try again.'));
+      }
     }
   }, [mimeType, onDataAvailable, onComplete, timeSlice, checkMimeTypeSupport]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
-    if (mediaRecorder.current && isRecording) {
+    if (mediaRecorder.current && (mediaRecorder.current.state === 'recording' || mediaRecorder.current.state === 'paused')) {
+      console.log('Stopping recording...');
       mediaRecorder.current.stop();
       setIsRecording(false);
+    } else {
+      console.warn('Attempted to stop recording, but no active recorder found');
     }
-  }, [isRecording]);
+  }, []);
 
   // Pause recording
   const pauseRecording = useCallback(() => {
     if (mediaRecorder.current && isRecording && mediaRecorder.current.state === 'recording') {
       mediaRecorder.current.pause();
+      console.log('Recording paused');
     }
   }, [isRecording]);
 
@@ -130,13 +150,14 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
   const resumeRecording = useCallback(() => {
     if (mediaRecorder.current && isRecording && mediaRecorder.current.state === 'paused') {
       mediaRecorder.current.resume();
+      console.log('Recording resumed');
     }
   }, [isRecording]);
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (mediaRecorder.current && isRecording) {
+      if (mediaRecorder.current && (mediaRecorder.current.state === 'recording' || mediaRecorder.current.state === 'paused')) {
         mediaRecorder.current.stop();
       }
       if (mediaStream.current) {
@@ -146,7 +167,7 @@ export const useAudioRecorder = (options: AudioRecorderOptions = {}) => {
         clearInterval(timerInterval.current);
       }
     };
-  }, [isRecording]);
+  }, []);
 
   return {
     isRecording,
