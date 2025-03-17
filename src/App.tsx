@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
@@ -40,7 +39,7 @@ const DatabaseSetupInstructions = () => (
       
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Step 1: Create the participants table</h2>
-        <p className="mb-4">Go to your Supabase dashboard, navigate to the SQL Editor, and run the following SQL script:</p>
+        <p className="mb-4">Go to your Supabase dashboard (https://app.supabase.com), navigate to the SQL Editor, and run the following SQL script:</p>
         <div className="bg-gray-50 rounded p-4 overflow-x-auto">
           <pre className="text-sm">{getSetupSQLScripts()}</pre>
         </div>
@@ -48,23 +47,21 @@ const DatabaseSetupInstructions = () => (
       
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Step 2: Create storage buckets</h2>
-        <p className="mb-2">Create the following storage buckets in Supabase:</p>
+        <p className="mb-2">Go to the Storage section in your Supabase dashboard and create these buckets:</p>
         <ul className="list-disc pl-6 mb-4 space-y-2">
           <li><strong>transcripts</strong> - For storing interview transcripts</li>
-          <li><strong>interview-audio</strong> - For storing interview recordings</li>
+          <li><strong>interview-audio</strong> - For storing interview recordings (note: use a dash, not an underscore)</li>
         </ul>
-        <p>Set both buckets with "Public" access to allow reading files without authentication.</p>
+        <p className="text-sm text-gray-600">For each bucket, click "Create New Bucket", enter the bucket name exactly as shown above, and set the bucket's privacy to "Public" to allow reading files without authentication.</p>
       </div>
       
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Step 3: Verify your Supabase configuration</h2>
-        <p className="mb-2">Make sure your Supabase URL and API key are correct in the supabaseService.ts file.</p>
-        <p className="mb-2">The current configuration is:</p>
-        <ul className="list-disc pl-6 mb-4 space-y-2">
-          <li>URL: wgerdrdsuusnrdnwwelt.supabase.co</li>
-          <li>API Key: <span className="font-mono text-xs">eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...</span> (check supabaseService.ts for the full key)</li>
-        </ul>
-        <p>These should match your Supabase project settings.</p>
+        <p className="mb-2">Make sure your Supabase URL and API key are correct. They should match these values:</p>
+        <div className="bg-gray-50 rounded p-4 mb-4">
+          <p className="mb-2"><strong>URL:</strong> <code className="text-sm">https://wgerdrdsuusnrdnwwelt.supabase.co</code></p>
+          <p><strong>API Key:</strong> <code className="text-sm break-all">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY</code></p>
+        </div>
       </div>
       
       <button 

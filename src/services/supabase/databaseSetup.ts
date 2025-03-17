@@ -91,7 +91,7 @@ async function checkStorageBuckets() {
     
     if (transcriptsError) {
       // Check if the error indicates the bucket doesn't exist
-      if (transcriptsError.message.includes('Bucket not found')) {
+      if (transcriptsError.message && transcriptsError.message.includes('Bucket not found')) {
         allBucketsExist = false;
         toast.info('Please create a "transcripts" storage bucket in your Supabase dashboard', {
           duration: 5000,
@@ -114,7 +114,7 @@ async function checkStorageBuckets() {
     
     if (audioError) {
       // Check if the error indicates the bucket doesn't exist
-      if (audioError.message.includes('Bucket not found')) {
+      if (audioError.message && audioError.message.includes('Bucket not found')) {
         allBucketsExist = false;
         toast.info('Please create an "interview-audio" storage bucket in your Supabase dashboard', {
           duration: 5000,
