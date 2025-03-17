@@ -12,13 +12,13 @@ const PersonaAIInterviewerSection = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
             <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
-              AI Interviews at Scale—Instant Insights, No Delays.
+              Deep Interview AI—Uncover Authentic Human Insights
             </h2>
           </Reveal>
           
           <Reveal delay={100}>
             <p className="text-muted-foreground text-pretty max-w-2xl mx-auto mb-10">
-              Get real consumer opinions, motivations, and decision-making patterns through AI-driven interviews—then analyze responses instantly with our research-grade AI Personas.
+              Conduct in-depth interviews covering life stories, values, decision-making, emotional resilience, and future outlook—then analyze responses instantly with our research-grade AI.
             </p>
           </Reveal>
           

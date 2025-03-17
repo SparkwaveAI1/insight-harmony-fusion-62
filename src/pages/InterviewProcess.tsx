@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -17,15 +18,27 @@ import { Switch } from "@/components/ui/switch";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
 import { Badge } from "@/components/ui/badge";
 
-const STANDARD_QUESTIONS = [
-  "What's your name and what do you do for work?",
-  "What brings you here today? What problem are you trying to solve?",
-  "Could you describe your typical day and how this problem affects it?",
-  "Have you tried any solutions to this problem before? How did they work out?",
-  "What would an ideal solution look like for you?",
-  "How do you make decisions about products or services like this?",
-  "What factors are most important to you when choosing a solution?",
-  "Is there anything else you'd like to share about your needs or expectations?"
+const INTERVIEW_QUESTIONS = [
+  "Thank you for joining. We are here to understand how you think, make decisions, and approach different areas of life. There are no right or wrong answers. Just speak naturally and share your experiences. Let's begin.",
+  "Tell me the story of your life in your own words.",
+  "What were the biggest turning points in your life, moments when everything changed?",
+  "Who or what has had the biggest influence on shaping who you are today?",
+  "Tell me about your first job. What did you learn from it?",
+  "What motivates you to work beyond earning money?",
+  "Have you ever struggled financially? What was that experience like for you?",
+  "What are the three most important values in your life?",
+  "Have your values changed over time? If so, what influenced that change?",
+  "How do you decide who to trust?",
+  "How do you typically approach big decisions—quick gut feeling or careful analysis?",
+  "What is the hardest decision you have ever had to make?",
+  "Do you believe in taking big risks for big rewards, or do you prefer playing it safe?",
+  "Tell me about a time when you had to stay calm under pressure.",
+  "What is your go-to coping mechanism when life becomes difficult?",
+  "Do you prefer handling problems alone, or do you ask for help?",
+  "Where do you see yourself in five years?",
+  "What is the biggest lesson life has taught you?",
+  "What motivates you the most?",
+  "What does success mean to you?"
 ];
 
 const InterviewProcess = () => {
