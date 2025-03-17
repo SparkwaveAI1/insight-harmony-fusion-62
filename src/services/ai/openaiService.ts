@@ -30,50 +30,33 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return { text: '[Audio recording too short]' };
   }
 
-  // Convert to more compatible format for Whisper API
-  let processedBlob = audioBlob;
-  const standardMimeType = determineStandardMimeType(audioBlob.type);
-  
-  // If we need to transform the audio format, we do it here
-  try {
-    // For certain formats, we may need to create a new blob with explicit mime type
-    if (audioBlob.type !== standardMimeType) {
-      console.log(`Converting audio from ${audioBlob.type} to ${standardMimeType}`);
-      const audioArrayBuffer = await audioBlob.arrayBuffer();
-      processedBlob = new Blob([audioArrayBuffer], { type: standardMimeType });
-      console.log(`Created converted blob: ${processedBlob.size} bytes with type: ${standardMimeType}`);
-    }
-  } catch (err) {
-    console.error('Error converting audio format:', err);
-    // Continue with original blob if conversion fails
-    processedBlob = audioBlob;
-  }
-  
-  // Create a clean, optimized FormData object
+  // Ensure we're using the correct format - WebM is preferred for browser compatibility 
+  // with Whisper API
   const formData = new FormData();
   
-  // Ensure proper filename extension based on audio type
-  let filename = 'recording.webm';
+  // Use the explicit file extension based on the MIME type
+  let filename = 'audio.webm';
+  const blobType = audioBlob.type.toLowerCase();
   
-  if (standardMimeType.includes('mp3')) {
-    filename = 'recording.mp3';
-  } else if (standardMimeType.includes('wav')) {
-    filename = 'recording.wav';
-  } else if (standardMimeType.includes('ogg')) {
-    filename = 'recording.ogg';
-  } else if (standardMimeType.includes('mp4') || standardMimeType.includes('mpeg') || standardMimeType.includes('mpga')) {
-    filename = 'recording.mp3';
+  if (blobType.includes('webm')) {
+    filename = 'audio.webm';
+  } else if (blobType.includes('wav') || blobType.includes('wave')) {
+    filename = 'audio.wav';
+  } else if (blobType.includes('mp3') || blobType.includes('mpeg')) {
+    filename = 'audio.mp3';
+  } else {
+    console.warn(`Unknown audio type: ${blobType}, defaulting to webm`);
   }
   
-  console.log(`Using filename: ${filename} for type: ${standardMimeType}`);
+  console.log(`Using filename: ${filename} for blob type: ${blobType}`);
   
-  formData.append('file', processedBlob, filename);
+  formData.append('file', audioBlob, filename);
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'json');
   formData.append('language', 'en');
 
   try {
-    console.log(`START TRANSCRIPTION: Sending request to OpenAI for ${filename}, size: ${processedBlob.size} bytes`);
+    console.log(`START TRANSCRIPTION: Sending request to OpenAI for ${filename}, size: ${audioBlob.size} bytes`);
     console.log(`Using API key (first 5 chars): ${apiKey.substring(0, 5)}...`);
     
     // Log form data content for debugging
@@ -113,10 +96,9 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
           const errorMessage = errorData.error?.message || 'Unknown error';
           console.error('Full error message:', errorMessage);
           
-          if (errorMessage.includes('file format')) {
-            toast.error('Audio format issue. Trying alternative format...');
-            // We'll try again with a different approach in a future version
-            console.error('Audio format error. Original type:', audioBlob.type, 'Used type:', standardMimeType);
+          if (errorMessage.includes('file format') || errorMessage.includes('audio format')) {
+            toast.error('Audio format issue. Please use Chrome for best compatibility.');
+            console.error('Audio format error. Original type:', audioBlob.type);
           } else if (errorMessage.includes('Invalid file')) {
             toast.error('Invalid audio file. Please try speaking more clearly or check your microphone.');
           } else {

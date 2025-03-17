@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -117,30 +116,36 @@ export const useAudioRecorder = ({
     };
   }, [checkMicrophoneStatus]);
 
-  const getSupportedMimeType = () => {
-    // We need to check what's supported on this browser for the best compatibility with Whisper
-    // Whisper supports mp3, mp4, mpeg, mpga, m4a, wav, and webm
+  const getSupportedMimeType = (): string => {
+    // First check if WebM is supported, which is the most reliable format for Chrome and Whisper
+    if (MediaRecorder.isTypeSupported('audio/webm')) {
+      if (debug) console.log('Using audio/webm for recording');
+      return 'audio/webm';
+    }
+    
+    // Then check WAV which is also well supported by Whisper
+    if (MediaRecorder.isTypeSupported('audio/wav')) {
+      if (debug) console.log('Using audio/wav for recording');
+      return 'audio/wav';
+    }
+    
+    // Check other formats as fallbacks
     const types = [
-      'audio/mp3',               // Most compatible format for Whisper
-      'audio/wav',               // Good uncompressed format
-      'audio/mpeg',              // Alternative mp3 type
-      'audio/webm',              // Common in Chrome
-      'audio/webm;codecs=opus',  // Common in Chrome
-      'audio/ogg;codecs=opus',   // Common in Firefox
-      'audio/m4a',               // For Apple devices
+      'audio/ogg;codecs=opus',  // Common in Firefox
+      'audio/mpeg',              // MP3
       'audio/mp4',               // For Apple devices
     ];
     
     for (const type of types) {
       if (MediaRecorder.isTypeSupported(type)) {
-        if (debug) console.log('Using MIME type:', type);
+        if (debug) console.log('Using fallback MIME type:', type);
         return type;
       }
     }
     
-    // If nothing is supported, fall back to webm which is most widely supported by browsers
-    if (debug) console.log('No preferred MIME types supported, falling back to audio/webm');
-    return 'audio/webm';
+    // If nothing specific is supported, use the browser default
+    console.warn('No preferred MIME types supported, using default browser format');
+    return '';  // Let the browser decide
   };
 
   const setupVoiceActivityDetection = (stream: MediaStream) => {
@@ -207,12 +212,14 @@ export const useAudioRecorder = ({
         throw new Error('Media Devices API not supported in this browser');
       }
       
-      // Log microphone support before requesting access
-      console.log("Supported MIME types for recording:", 
-        ["audio/webm", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"].filter(type => 
-          MediaRecorder.isTypeSupported(type)
-        )
-      );
+      // Log supported MIME types
+      if (debug) {
+        console.log("Supported MIME types for recording:", 
+          ["audio/webm", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4"].filter(type => 
+            MediaRecorder.isTypeSupported(type)
+          )
+        );
+      }
       
       // Configure audio with settings optimized for speech recognition
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -228,7 +235,7 @@ export const useAudioRecorder = ({
       // Get actual audio track settings
       const audioTrack = stream.getAudioTracks()[0];
       const settings = audioTrack.getSettings();
-      console.log("Actual microphone settings:", settings);
+      if (debug) console.log("Actual microphone settings:", settings);
       
       streamRef.current = stream;
       setMicrophoneAccess(true);
@@ -238,13 +245,15 @@ export const useAudioRecorder = ({
       }
       
       const mimeType = getSupportedMimeType();
-      if (debug) console.log(`Selected MIME type for recording: ${mimeType}`);
       
-      // Create a MediaRecorder with optimal settings for Whisper API
-      const mediaRecorder = new MediaRecorder(stream, { 
-        mimeType,
-        audioBitsPerSecond: 128000  // Higher bitrate for better quality
-      });
+      // Create MediaRecorder with appropriate options
+      const options: MediaRecorderOptions = {};
+      if (mimeType) {
+        options.mimeType = mimeType;
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, options);
+      console.log(`Created MediaRecorder with MIME type: ${mediaRecorder.mimeType}`);
       
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -265,8 +274,8 @@ export const useAudioRecorder = ({
           return;
         }
         
-        // Create a blob from the audio chunks
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        // Create a blob with explicit MIME type from the MediaRecorder
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
         
         if (debug) {
           console.log(`Recording complete: ${audioBlob.size} bytes, ${totalChunks} chunks`);
@@ -318,7 +327,7 @@ export const useAudioRecorder = ({
       setIsRecording(false);
       toast.error('Failed to access microphone. Please check your browser permissions.');
     }
-  }, [debug, onComplete, silenceDetectionEnabled]);
+  }, [debug, onComplete, silenceDetectionEnabled, setupVoiceActivityDetection]);
 
   const stopRecording = useCallback(() => {
     if (debug) console.log('Stopping recording...');
