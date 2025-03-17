@@ -11,7 +11,7 @@ interface AudioWaveProps {
 
 export const AudioWave = ({ 
   isActive, 
-  color = 'bg-primary', 
+  color = 'bg-[#3b82f6]', 
   className,
   type = 'speaking'
 }: AudioWaveProps) => {
@@ -42,7 +42,8 @@ export const AudioWave = ({
               ? `${Math.max(8, Math.floor(Math.random() * 24))}px` 
               : '8px',
             animationDelay: `${i * 0.1}s`,
-            animationDuration: `${0.5 + Math.random() * 0.5}s`
+            animationDuration: `${0.5 + Math.random() * 0.5}s`,
+            boxShadow: isActive ? `0 0 8px ${color.replace('bg-', '')}` : 'none'
           }}
         />
       ))}
