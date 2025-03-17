@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const CustomAIPersonas = () => {
   return (
@@ -14,12 +15,14 @@ const CustomAIPersonas = () => {
           <div className="w-full md:w-1/2 relative">
             <Reveal>
               <div className="rounded-xl overflow-hidden shadow-xl border border-gray-800 hover:border-primary/40 transition-all">
-                <img 
-                  src="/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png" 
-                  alt="Grid of diverse AI personas representing different demographics" 
-                  className="w-full h-auto"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-70"></div>
+                <div className="relative">
+                  <img 
+                    src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" 
+                    alt="AI avatar with digital effects" 
+                    className="w-full h-auto"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent opacity-70"></div>
+                </div>
                 
                 {/* Video avatar badge */}
                 <div className="absolute top-4 right-4 px-3 py-1 bg-black/80 border border-primary/30 rounded-full flex items-center">

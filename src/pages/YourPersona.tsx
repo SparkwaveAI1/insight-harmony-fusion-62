@@ -126,7 +126,7 @@ const YourPersona = () => {
                     <div className="flex flex-col">
                       <div className="text-center mb-6">
                         <Avatar className="w-24 h-24 mb-4 mx-auto">
-                          <AvatarImage src="/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png" />
+                          <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" />
                           <AvatarFallback>AI</AvatarFallback>
                         </Avatar>
                         <h2 className="text-2xl font-bold mb-2">Gen Z Investor Persona</h2>
@@ -256,6 +256,12 @@ const YourPersona = () => {
                             key={index}
                             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                           >
+                            {message.role === 'assistant' && (
+                              <Avatar className="h-8 w-8 mr-2">
+                                <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" alt="AI" />
+                                <AvatarFallback>AI</AvatarFallback>
+                              </Avatar>
+                            )}
                             <div 
                               className={`max-w-[80%] rounded-lg p-3 ${
                                 message.role === 'user' 
@@ -270,6 +276,10 @@ const YourPersona = () => {
                       )}
                       {isLoading && (
                         <div className="flex justify-start">
+                          <Avatar className="h-8 w-8 mr-2">
+                            <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" alt="AI" />
+                            <AvatarFallback>AI</AvatarFallback>
+                          </Avatar>
                           <div className="max-w-[80%] rounded-lg p-3 bg-muted/50">
                             <div className="flex gap-1">
                               <span className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce"></span>

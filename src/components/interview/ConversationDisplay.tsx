@@ -3,6 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { AudioWave } from '@/components/ui/audio-wave';
 import { Bot, User } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export interface Message {
   id: string;
@@ -47,9 +48,12 @@ export const ConversationDisplay = ({
           }}
         >
           {message.role === 'ai' && (
-            <div className="rounded-full bg-[#3b82f6]/10 p-2 mt-1 border border-[#3b82f6]/30">
-              <Bot className="h-4 w-4 text-[#3b82f6]" />
-            </div>
+            <Avatar className="rounded-full h-10 w-10 border border-[#3b82f6]/30 overflow-hidden">
+              <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" alt="AI Interviewer" />
+              <AvatarFallback className="bg-[#3b82f6]/10">
+                <Bot className="h-4 w-4 text-[#3b82f6]" />
+              </AvatarFallback>
+            </Avatar>
           )}
           
           <div className="flex-1">
@@ -84,9 +88,11 @@ export const ConversationDisplay = ({
           </div>
           
           {message.role === 'user' && (
-            <div className="rounded-full bg-[#3b82f6]/10 p-2 mt-1 border border-[#3b82f6]/30">
-              <User className="h-4 w-4 text-[#3b82f6]" />
-            </div>
+            <Avatar className="rounded-full h-10 w-10 border border-[#3b82f6]/30">
+              <AvatarFallback className="bg-[#3b82f6]/10">
+                <User className="h-4 w-4 text-[#3b82f6]" />
+              </AvatarFallback>
+            </Avatar>
           )}
         </div>
       ))}

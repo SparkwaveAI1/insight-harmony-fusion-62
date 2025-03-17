@@ -27,7 +27,7 @@ const AvatarFeature = () => {
         <div className="flex flex-col items-center justify-center">
           <div className="relative w-full max-w-2xl mx-auto mb-10 aspect-square sm:aspect-video rounded-2xl overflow-hidden shadow-2xl border border-amber-200">
             <img 
-              src="/lovable-uploads/71730aa8-fe82-45fd-8644-de4add24519b.png" 
+              src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" 
               alt="AI Research Avatar" 
               className="object-cover w-full h-full"
             />

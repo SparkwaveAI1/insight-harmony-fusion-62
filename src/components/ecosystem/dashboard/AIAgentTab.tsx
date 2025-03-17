@@ -4,6 +4,7 @@ import { Bot, Zap, MessageSquare } from "lucide-react";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const AIAgentTab = () => {
   const [chatMessage, setChatMessage] = useState("");
@@ -39,7 +40,7 @@ const AIAgentTab = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="relative aspect-square rounded-xl overflow-hidden shadow-xl border border-amber-200/50">
             <img 
-              src="/lovable-uploads/71730aa8-fe82-45fd-8644-de4add24519b.png" 
+              src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" 
               alt="AI Research Avatar" 
               className="object-cover w-full h-full"
             />
@@ -72,6 +73,12 @@ const AIAgentTab = () => {
                   key={index} 
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
+                  {message.role === "assistant" && (
+                    <Avatar className="h-8 w-8 mr-2">
+                      <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" alt="AI" />
+                      <AvatarFallback>AI</AvatarFallback>
+                    </Avatar>
+                  )}
                   <div 
                     className={`rounded-lg px-4 py-2 max-w-[80%] ${
                       message.role === "user" 

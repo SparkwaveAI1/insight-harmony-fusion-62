@@ -156,7 +156,7 @@ const AvatarChat = () => {
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8 border">
-            <AvatarImage src="/lovable-uploads/71730aa8-fe82-45fd-8644-de4add24519b.png" alt="AI Avatar" />
+            <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" alt="AI Avatar" />
             <AvatarFallback>AI</AvatarFallback>
           </Avatar>
           <div>
@@ -187,7 +187,7 @@ const AvatarChat = () => {
               >
                 {message.sender === "ai" && (
                   <Avatar className="h-8 w-8 mt-0.5 border">
-                    <AvatarImage src="/lovable-uploads/71730aa8-fe82-45fd-8644-de4add24519b.png" alt="AI Avatar" />
+                    <AvatarImage src="/lovable-uploads/c58004f6-798b-47c0-be8b-701e182b6c62.png" alt="AI Avatar" />
                     <AvatarFallback><Bot className="h-4 w-4" /></AvatarFallback>
                   </Avatar>
                 )}
