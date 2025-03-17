@@ -1,3 +1,4 @@
+
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
@@ -34,22 +35,37 @@ const DatabaseSetupInstructions = () => (
     <div className="max-w-3xl bg-white rounded-lg shadow-xl p-6 md:p-8">
       <h1 className="text-2xl font-bold text-primary mb-4">Supabase Setup Required</h1>
       
-      <div className="mb-6 bg-green-50 p-4 rounded border border-green-200">
-        <h2 className="text-lg font-semibold mb-2 text-green-800">✅ Step 1: Create storage buckets</h2>
-        <p className="text-green-800">Great! We've detected both required storage buckets:</p>
-        <ul className="list-disc pl-6 mt-2 text-green-800">
-          <li><strong>transcripts</strong> - For storing interview transcripts</li>
-          <li><strong>interview-audio</strong> - For storing interview recordings</li>
+      <div className="mb-6 bg-yellow-50 p-4 rounded border border-yellow-200">
+        <h2 className="text-lg font-semibold mb-2 text-yellow-800">⚠️ Database Connection Issue</h2>
+        <p className="text-yellow-800 mb-2">We're having trouble connecting to your Supabase project. This could be due to:</p>
+        <ul className="list-disc pl-6 text-yellow-800">
+          <li>Incorrect Supabase URL or API key</li>
+          <li>Networking issues</li>
+          <li>Supabase is down or restarting</li>
         </ul>
       </div>
       
-      <div className="mb-6 bg-green-50 p-4 rounded border border-green-200">
-        <h2 className="text-lg font-semibold mb-2 text-green-800">✅ Step 2: Create the participants table</h2>
-        <p className="text-green-800">Great! The participants table is set up correctly.</p>
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Required Storage Buckets</h2>
+        <p className="mb-2">Check that you have these buckets in your Supabase storage:</p>
+        <ul className="list-disc pl-6 mb-4">
+          <li><strong>transcripts</strong> - For storing interview transcripts</li>
+          <li><strong>interview-audio</strong> - For storing interview recordings</li>
+        </ul>
+        <p className="text-sm text-gray-600">If they don't exist, the app will try to create them automatically if it has permission.</p>
       </div>
       
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Step 3: Verify your Supabase configuration</h2>
+        <h2 className="text-lg font-semibold mb-2">Required Database Tables</h2>
+        <p className="mb-2">Check that the participants table exists with the required structure.</p>
+        <div className="bg-gray-50 rounded p-4 overflow-x-auto mb-2">
+          <pre className="text-xs">{getSetupSQLScripts()}</pre>
+        </div>
+        <p className="text-sm text-gray-600">You can run this SQL in the Supabase SQL Editor if the table doesn't exist.</p>
+      </div>
+      
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Verify your Supabase configuration</h2>
         <p className="mb-2">Make sure your Supabase URL and API key are correct. They should match these values:</p>
         <div className="bg-gray-50 rounded p-4 mb-4">
           <p className="mb-2"><strong>URL:</strong> <code className="text-sm">https://wgerdrdsuusnrdnwwelt.supabase.co</code></p>
@@ -61,7 +77,7 @@ const DatabaseSetupInstructions = () => (
         onClick={() => window.location.reload()} 
         className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
       >
-        Refresh after setup
+        Refresh and try again
       </button>
     </div>
   </div>
@@ -194,14 +210,46 @@ const router = createBrowserRouter([
 function App() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [setupAttempts, setSetupAttempts] = useState(0);
 
   useEffect(() => {
     const checkDatabase = async () => {
       try {
-        console.log('Checking database setup...');
-        const isReady = await ensureTablesExist();
-        console.log('Database ready:', isReady);
+        console.log('Checking database setup (attempt ' + (setupAttempts + 1) + ')...');
+        setIsLoading(true);
+        
+        // Allow up to 3 attempts to connect to Supabase
+        // This helps with intermittent connection issues
+        let isReady = false;
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (!isReady && attempts < maxAttempts) {
+          attempts++;
+          try {
+            isReady = await ensureTablesExist();
+            if (isReady) break;
+            
+            // Wait a bit before retrying
+            if (attempts < maxAttempts) {
+              console.log(`Database not ready, retrying in 1s (attempt ${attempts}/${maxAttempts})...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          } catch (attemptError) {
+            console.error(`Setup attempt ${attempts} failed:`, attemptError);
+          }
+        }
+        
+        console.log('Database ready status:', isReady);
         setIsDbReady(isReady);
+        
+        if (!isReady && setupAttempts < 2) {
+          // Schedule another attempt after a few seconds
+          // This helps if Supabase is still initializing
+          setTimeout(() => {
+            setSetupAttempts(prev => prev + 1);
+          }, 3000);
+        }
       } catch (error) {
         console.error("Database setup error:", error);
       } finally {
@@ -210,7 +258,7 @@ function App() {
     };
 
     checkDatabase();
-  }, []);
+  }, [setupAttempts]);
 
   if (isLoading) {
     return <LoadingFallback />;

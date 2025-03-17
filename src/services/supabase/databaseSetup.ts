@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseService';
 import { toast } from 'sonner';
 
@@ -8,53 +7,178 @@ import { toast } from 'sonner';
  */
 export async function ensureTablesExist(): Promise<boolean> {
   try {
-    // First check if storage buckets exist since they're essential
-    const bucketsReady = await checkStorageBuckets();
-
+    console.log('Starting complete database check...');
+    
+    // First check if we can connect to Supabase at all
+    try {
+      const { data: healthCheck, error: healthError } = await supabase.rpc('healthcheck', {});
+      
+      if (healthError) {
+        console.error('Supabase connection error:', healthError);
+        // If we can't connect, try to create the buckets manually instead of failing
+        console.log('Attempting to create storage buckets directly...');
+        await createStorageBuckets();
+      } else {
+        console.log('Supabase connection is healthy');
+      }
+    } catch (healthErr) {
+      // RPC might not exist, which is fine, we'll try direct API calls
+      console.log('Health check not available, continuing with direct checks');
+    }
+    
+    // Create storage buckets if they don't exist
+    const bucketsReady = await ensureStorageBuckets();
     if (!bucketsReady) {
-      console.log('Storage buckets not ready');
+      console.log('Failed to ensure storage buckets');
       return false;
     }
-    
-    // Check if participants table exists
+
+    // Now check if participants table exists
     console.log('Checking participants table...');
-    const { data: tables, error } = await supabase
-      .from('participants')
-      .select('id')
-      .limit(1);
-    
-    // If we get an error that's not "relation already exists"
-    if (error) {
-      console.error('Error checking participants table:', error);
+    try {
+      const { data: tables, error } = await supabase
+        .from('participants')
+        .select('id')
+        .limit(1);
       
-      if (error.code === '42P01' || error.message.includes('relation "participants" does not exist')) {
-        // Table doesn't exist, show setup instructions
-        toast.error('Participants table does not exist. Please create it in Supabase.', {
-          duration: 8000,
-        });
-        return false;
-      } else if (error.code === '42P07' || error.message.includes('relation "participants" already exists')) {
-        // Table already exists, which is what we want
-        console.log('Participants table already exists');
-        return true;
-      } else {
-        // Other error (connection issues, etc.)
-        toast.error(`Database connection error: ${error.message}`, {
-          duration: 5000,
-        });
-        return false;
+      if (error) {
+        console.error('Error checking participants table:', error);
+        
+        if (error.code === '42P01' || error.message.includes('relation "participants" does not exist')) {
+          // Table doesn't exist
+          toast.error('Participants table does not exist. Please create it in Supabase.', {
+            duration: 8000,
+          });
+          return false;
+        } else if (error.code === '42P07' || error.message.includes('relation "participants" already exists')) {
+          // Table already exists, which is what we want
+          console.log('Participants table exists (code indicated)');
+          return true;
+        } else {
+          // Other error (connection issues, etc.)
+          toast.error(`Database connection error: ${error.message}`, {
+            duration: 5000,
+          });
+          return false;
+        }
       }
+      
+      // If we got here, the query succeeded which means the table exists
+      console.log('Participants table exists and accessible ✅');
+      return true;
+    } catch (tableErr) {
+      console.error('Exception during table check:', tableErr);
+      
+      // As a fallback, try to query another way
+      try {
+        const { data: tablesData, error: tablesError } = await supabase
+          .rpc('get_tables', {});
+        
+        if (!tablesError && tablesData && tablesData.includes('participants')) {
+          console.log('Participants table exists (alternate check) ✅');
+          return true;
+        }
+      } catch (fallbackErr) {
+        // Fallback didn't work either
+      }
+      
+      toast.error('Could not verify database setup. Please check your Supabase configuration.');
+      return false;
     }
-    
-    // If we got here, the query succeeded which means the table exists
-    console.log('Participants table exists and is accessible');
-    
-    // All checks passed
-    console.log('All database checks passed, database is ready');
-    return true;
   } catch (error) {
     console.error('Database setup error:', error);
     toast.error('Failed to set up database. Please check your Supabase configuration.');
+    return false;
+  }
+}
+
+/**
+ * Ensures the required storage buckets exist and creates them if they don't
+ */
+async function ensureStorageBuckets(): Promise<boolean> {
+  try {
+    console.log('Checking and ensuring storage buckets exist...');
+    
+    // List available buckets to see what we have
+    const { data: bucketList, error: listError } = await supabase
+      .storage
+      .listBuckets();
+    
+    if (listError) {
+      console.error('Error listing storage buckets:', listError);
+      
+      // Create buckets if we couldn't list them (might be permissions)
+      return await createStorageBuckets();
+    }
+    
+    console.log('Available buckets:', bucketList || []);
+    
+    // Check if our required buckets exist in the list
+    const bucketNames = bucketList?.map(bucket => bucket.name) || [];
+    const hasTranscriptsBucket = bucketNames.includes('transcripts');
+    const hasAudioBucket = bucketNames.includes('interview-audio');
+    
+    console.log('Bucket check results:', { hasTranscriptsBucket, hasAudioBucket });
+    
+    // If buckets don't exist, try to create them
+    if (!hasTranscriptsBucket || !hasAudioBucket) {
+      return await createStorageBuckets();
+    }
+    
+    console.log('All required storage buckets exist ✅');
+    return true;
+  } catch (error) {
+    console.error('Error checking storage buckets:', error);
+    return await createStorageBuckets(); // Try creating as a fallback
+  }
+}
+
+/**
+ * Creates the required storage buckets if they don't exist
+ */
+async function createStorageBuckets(): Promise<boolean> {
+  try {
+    console.log('Creating storage buckets...');
+    let success = true;
+    
+    // Create transcripts bucket if needed
+    try {
+      await supabase.storage.createBucket('transcripts', {
+        public: true,
+        fileSizeLimit: 5242880, // 5MB
+      });
+      console.log('Created transcripts bucket ✅');
+    } catch (error: any) {
+      // If bucket already exists, that's fine
+      if (error.message.includes('already exists')) {
+        console.log('Transcripts bucket already exists ✅');
+      } else {
+        console.error('Error creating transcripts bucket:', error);
+        success = false;
+      }
+    }
+    
+    // Create interview-audio bucket if needed
+    try {
+      await supabase.storage.createBucket('interview-audio', {
+        public: true,
+        fileSizeLimit: 52428800, // 50MB
+      });
+      console.log('Created interview-audio bucket ✅');
+    } catch (error: any) {
+      // If bucket already exists, that's fine
+      if (error.message.includes('already exists')) {
+        console.log('Interview-audio bucket already exists ✅');
+      } else {
+        console.error('Error creating interview-audio bucket:', error);
+        success = false;
+      }
+    }
+    
+    return success;
+  } catch (error) {
+    console.error('Error creating storage buckets:', error);
+    toast.error('Failed to create storage buckets. Please check your Supabase permissions.');
     return false;
   }
 }
@@ -93,70 +217,6 @@ async function createParticipantsTable() {
 }
 
 /**
- * Checks if required storage buckets exist and creates them if not
- */
-async function checkStorageBuckets() {
-  try {
-    console.log('Checking storage buckets...');
-    
-    // List available buckets to see what we have
-    const { data: bucketList, error: listError } = await supabase
-      .storage
-      .listBuckets();
-    
-    if (listError) {
-      console.error('Error listing storage buckets:', listError);
-      toast.error(`Storage error: ${listError.message}`, {
-        duration: 5000,
-      });
-      return false;
-    }
-    
-    console.log('Available buckets:', bucketList);
-    
-    // Check if our required buckets exist in the list
-    const bucketNames = bucketList?.map(bucket => bucket.name) || [];
-    const hasTranscriptsBucket = bucketNames.includes('transcripts');
-    const hasAudioBucket = bucketNames.includes('interview-audio');
-    
-    console.log('Bucket check results:', { hasTranscriptsBucket, hasAudioBucket });
-    
-    if (!hasTranscriptsBucket || !hasAudioBucket) {
-      const missingBuckets = [];
-      
-      if (!hasTranscriptsBucket) {
-        missingBuckets.push('"transcripts"');
-      }
-      
-      if (!hasAudioBucket) {
-        missingBuckets.push('"interview-audio"');
-      }
-      
-      if (missingBuckets.length > 0) {
-        toast.info(`Please create the following storage ${missingBuckets.length > 1 ? 'buckets' : 'bucket'} in your Supabase dashboard: ${missingBuckets.join(' and ')}`, {
-          duration: 5000,
-        });
-        
-        console.info(`Create the ${missingBuckets.join(' and ')} storage ${missingBuckets.length > 1 ? 'buckets' : 'bucket'} with public read access for storing interview data`);
-        
-        toast.info('After creating the storage buckets, reload this page to continue setup.', {
-          duration: 5000,
-        });
-        
-        return false;
-      }
-    }
-    
-    console.log('All required storage buckets exist');
-    return true;
-  } catch (error) {
-    console.error('Error checking storage buckets:', error);
-    toast.error('Failed to check storage buckets. Please check your Supabase configuration.');
-    return false;
-  }
-}
-
-/**
  * Provides SQL scripts to create tables in Supabase SQL Editor
  * This is an alternative to manual table creation
  */
@@ -192,4 +252,3 @@ ON participants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update for existing participants" 
 ON participants FOR UPDATE USING (true);
 `;
-}
