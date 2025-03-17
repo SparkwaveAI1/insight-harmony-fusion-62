@@ -358,7 +358,7 @@ const InterviewProcess = () => {
         return "bg-red-500";
       case "error":
         return "bg-red-500";
-      default":
+      default:
         return "bg-yellow-500";
     }
   };
@@ -371,7 +371,7 @@ const InterviewProcess = () => {
         return "Microphone Unavailable";
       case "error":
         return "Microphone Error";
-      default":
+      default:
         return "Checking Microphone...";
     }
   };
@@ -439,7 +439,6 @@ const InterviewProcess = () => {
                 )}
               </div>
               
-              {/* Add the OpenAI Tester component */}
               <div className="mt-6 pt-4 border-t">
                 <h4 className="font-medium mb-4">Troubleshoot API Connection</h4>
                 <OpenAITester />
