@@ -1,4 +1,3 @@
-
 import { supabase } from './supabaseService';
 import { toast } from 'sonner';
 
@@ -81,62 +80,53 @@ async function createParticipantsTable() {
  * Checks if required storage buckets exist and creates them if not
  */
 async function checkStorageBuckets() {
-  let allBucketsExist = true;
-  
   try {
-    // Check for the transcripts bucket
-    const { data: transcriptsBucket, error: transcriptsError } = await supabase
+    // Instead of trying to get each bucket (which seems to be causing 404 errors),
+    // let's try listing buckets first to see what's available
+    const { data: bucketList, error: listError } = await supabase
       .storage
-      .getBucket('transcripts');
+      .listBuckets();
     
-    if (transcriptsError) {
-      // Check if the error indicates the bucket doesn't exist
-      if (transcriptsError.message && transcriptsError.message.includes('Bucket not found')) {
-        allBucketsExist = false;
-        toast.info('Please create a "transcripts" storage bucket in your Supabase dashboard', {
-          duration: 5000,
-        });
-        console.info('Create a "transcripts" storage bucket with public read access for storing interview transcripts');
-      } else {
-        // Other error (connection issues, etc.)
-        console.error('Error checking transcripts bucket:', transcriptsError);
-        toast.error(`Storage error: ${transcriptsError.message}`, {
-          duration: 5000,
-        });
-        return false;
-      }
-    }
-    
-    // Check for the interview-audio bucket (note the dash instead of underscore)
-    const { data: audioBucket, error: audioError } = await supabase
-      .storage
-      .getBucket('interview-audio');
-    
-    if (audioError) {
-      // Check if the error indicates the bucket doesn't exist
-      if (audioError.message && audioError.message.includes('Bucket not found')) {
-        allBucketsExist = false;
-        toast.info('Please create an "interview-audio" storage bucket in your Supabase dashboard', {
-          duration: 5000,
-        });
-        console.info('Create an "interview-audio" storage bucket with public read access for storing interview recordings');
-      } else {
-        // Other error (connection issues, etc.)
-        console.error('Error checking interview-audio bucket:', audioError);
-        toast.error(`Storage error: ${audioError.message}`, {
-          duration: 5000,
-        });
-        return false;
-      }
-    }
-    
-    if (!allBucketsExist) {
-      toast.info('After creating the storage buckets, reload this page to continue setup.', {
+    if (listError) {
+      console.error('Error listing storage buckets:', listError);
+      toast.error(`Storage error: ${listError.message}`, {
         duration: 5000,
       });
       return false;
     }
     
+    // Check if our required buckets exist in the list
+    const bucketNames = bucketList?.map(bucket => bucket.name) || [];
+    const hasTranscriptsBucket = bucketNames.includes('transcripts');
+    const hasAudioBucket = bucketNames.includes('interview-audio');
+    
+    if (!hasTranscriptsBucket || !hasAudioBucket) {
+      const missingBuckets = [];
+      
+      if (!hasTranscriptsBucket) {
+        missingBuckets.push('"transcripts"');
+      }
+      
+      if (!hasAudioBucket) {
+        missingBuckets.push('"interview-audio"');
+      }
+      
+      if (missingBuckets.length > 0) {
+        toast.info(`Please create the following storage ${missingBuckets.length > 1 ? 'buckets' : 'bucket'} in your Supabase dashboard: ${missingBuckets.join(' and ')}`, {
+          duration: 5000,
+        });
+        
+        console.info(`Create the ${missingBuckets.join(' and ')} storage ${missingBuckets.length > 1 ? 'buckets' : 'bucket'} with public read access for storing interview data`);
+        
+        toast.info('After creating the storage buckets, reload this page to continue setup.', {
+          duration: 5000,
+        });
+        
+        return false;
+      }
+    }
+    
+    console.log('All required storage buckets exist:', { hasTranscriptsBucket, hasAudioBucket });
     return true;
   } catch (error) {
     console.error('Error checking storage buckets:', error);
@@ -181,4 +171,3 @@ ON participants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update for existing participants" 
 ON participants FOR UPDATE USING (true);
 `;
-}

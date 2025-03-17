@@ -1,3 +1,4 @@
+
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
@@ -45,14 +46,13 @@ const DatabaseSetupInstructions = () => (
         </div>
       </div>
       
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Step 2: Create storage buckets</h2>
-        <p className="mb-2">Go to the Storage section in your Supabase dashboard and create these buckets:</p>
-        <ul className="list-disc pl-6 mb-4 space-y-2">
+      <div className="mb-6 bg-green-50 p-4 rounded border border-green-200">
+        <h2 className="text-lg font-semibold mb-2 text-green-800">✅ Step 2: Create storage buckets</h2>
+        <p className="text-green-800">Great! We've detected both required storage buckets:</p>
+        <ul className="list-disc pl-6 mt-2 text-green-800">
           <li><strong>transcripts</strong> - For storing interview transcripts</li>
-          <li><strong>interview-audio</strong> - For storing interview recordings (note: use a dash, not an underscore)</li>
+          <li><strong>interview-audio</strong> - For storing interview recordings</li>
         </ul>
-        <p className="text-sm text-gray-600">For each bucket, click "Create New Bucket", enter the bucket name exactly as shown above, and set the bucket's privacy to "Public" to allow reading files without authentication.</p>
       </div>
       
       <div className="mb-6">
