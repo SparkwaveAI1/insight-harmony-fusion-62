@@ -1,20 +1,18 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Mic, Pause, Play, SkipForward, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Mic, Play, SkipForward, X } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Reveal from "@/components/ui-custom/Reveal";
-
-interface Message {
-  id: string;
-  role: "user" | "ai";
-  content: string;
-}
+import ApiKeyManager from "@/components/ApiKeyManager";
+import { useInterviewSession, InterviewState, Message } from "@/hooks/useInterviewSession";
+import { generateResponse } from "@/services/ai/openaiService";
+import { getApiKey } from "@/services/utils/apiKeyUtils";
 
 // Standard predefined interview questions
 const STANDARD_QUESTIONS = [
@@ -28,146 +26,77 @@ const STANDARD_QUESTIONS = [
   "Is there anything else you'd like to share about your needs or expectations?"
 ];
 
-enum InterviewState {
-  SPEAKING,
-  LISTENING,
-  PROCESSING,
-  COMPLETE
-}
-
 const InterviewProcess = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [userInput, setUserInput] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [interviewComplete, setInterviewComplete] = useState(false);
   const [summary, setSummary] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-  const [interviewState, setInterviewState] = useState<InterviewState>(InterviewState.SPEAKING);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [canSkip, setCanSkip] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const skipTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [participantData, setParticipantData] = useState<any>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Start the interview automatically when component mounts
+  // Get participant data from location state
   useEffect(() => {
-    startInterview();
-    
-    // Start the interview timer
-    timerRef.current = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-    
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (skipTimerRef.current) clearTimeout(skipTimerRef.current);
-    };
+    if (location.state?.participantData) {
+      setParticipantData(location.state.participantData);
+    }
+  }, [location]);
+
+  // Check for API key
+  useEffect(() => {
+    const storedApiKey = getApiKey('openai');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+    } else {
+      setShowApiKeyInput(true);
+    }
   }, []);
 
-  // Enable skip button after 10 seconds
+  // Interview session hook
+  const {
+    interviewState,
+    messages,
+    currentQuestion,
+    elapsedTime,
+    canSkip,
+    isCompleted,
+    startInterview,
+    skipQuestion,
+    replayQuestion,
+    stopInterview
+  } = useInterviewSession({
+    participantId: participantData?.id,
+    initialQuestions: STANDARD_QUESTIONS,
+    onComplete: handleInterviewComplete
+  });
+
+  // Start the interview when component mounts and API key is available
   useEffect(() => {
-    if (currentQuestion >= 0 && !canSkip) {
-      skipTimerRef.current = setTimeout(() => {
-        setCanSkip(true);
-      }, 10000);
+    if (apiKey && interviewState === InterviewState.IDLE && !showApiKeyInput) {
+      startInterview();
     }
-    
-    return () => {
-      if (skipTimerRef.current) clearTimeout(skipTimerRef.current);
-    };
-  }, [currentQuestion, canSkip]);
-  
-  // Simulate AI speaking for 4 seconds, then switch to listening mode
-  useEffect(() => {
-    if (interviewState === InterviewState.SPEAKING) {
-      const speakingTimeout = setTimeout(() => {
-        setInterviewState(InterviewState.LISTENING);
-      }, 4000);
-      
-      return () => clearTimeout(speakingTimeout);
-    }
-  }, [interviewState]);
+  }, [apiKey, interviewState, showApiKeyInput, startInterview]);
 
-  const startInterview = () => {
-    // Add first question to messages
-    setMessages([
-      {
-        id: "1",
-        role: "ai",
-        content: STANDARD_QUESTIONS[0]
-      }
-    ]);
-    setInterviewState(InterviewState.SPEAKING);
-    setCanSkip(false);
-  };
-
-  const handleSendMessage = async () => {
-    if (!userInput.trim()) return;
+  async function handleInterviewComplete(transcript: Message[]) {
+    setIsLoading(true);
     
-    // Add user message
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: userInput
-    };
-    
-    const updatedMessages = [...messages, newUserMessage];
-    setMessages(updatedMessages);
-    setUserInput("");
-    setInterviewState(InterviewState.PROCESSING);
-    
-    // Move to next question or finish interview
-    if (currentQuestion < STANDARD_QUESTIONS.length - 1) {
-      const nextQuestion = currentQuestion + 1;
-      setCurrentQuestion(nextQuestion);
-      setCanSkip(false);
-      
-      // Add next AI question after a short delay
-      setTimeout(() => {
-        const nextAiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "ai",
-          content: STANDARD_QUESTIONS[nextQuestion]
-        };
-        setMessages(prevMessages => [...prevMessages, nextAiMessage]);
-        setInterviewState(InterviewState.SPEAKING);
-      }, 1000);
-    } else {
-      // Interview is complete
-      setInterviewComplete(true);
-      setIsLoading(true);
-      
-      try {
-        // Generate a summary using OpenAI
-        await generateAiSummary(updatedMessages);
-      } catch (error) {
-        console.error("Error generating summary:", error);
-        toast({
-          title: "Error",
-          description: "Failed to generate summary. Please check your API key or try again.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const generateAiSummary = async (interviewMessages: Message[]) => {
-    if (!apiKey && !showApiKeyInput) {
-      setShowApiKeyInput(true);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!apiKey && showApiKeyInput) {
+    try {
+      await generateAiSummary(transcript);
+    } catch (error) {
+      console.error("Error generating summary:", error);
       toast({
-        title: "API Key Required",
-        description: "Please enter your OpenAI API key to generate a summary",
+        title: "Error",
+        description: "Failed to generate summary. Please check your API key or try again.",
         variant: "destructive"
       });
+      setIsLoading(false);
+    }
+  }
+
+  const generateAiSummary = async (interviewMessages: Message[]) => {
+    if (!apiKey) {
+      setShowApiKeyInput(true);
       setIsLoading(false);
       return;
     }
@@ -202,7 +131,7 @@ const InterviewProcess = () => {
           "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "gpt-4-turbo-preview",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
@@ -264,36 +193,23 @@ const InterviewProcess = () => {
 
     toast({
       title: "API Key Added",
-      description: "Your API key has been set. Generating summary now."
+      description: "Your API key has been set. Starting interview now."
     });
 
-    setIsLoading(true);
-    generateAiSummary(messages);
+    setShowApiKeyInput(false);
+    startInterview();
   };
 
-  const handleSkipQuestion = () => {
-    if (!canSkip) return;
-    
-    // Skip to next question
-    if (currentQuestion < STANDARD_QUESTIONS.length - 1) {
-      const nextQuestion = currentQuestion + 1;
-      setCurrentQuestion(nextQuestion);
-      setCanSkip(false);
-      
-      // Add next AI question
-      const nextAiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "ai",
-        content: STANDARD_QUESTIONS[nextQuestion]
-      };
-      setMessages(prevMessages => [...prevMessages, nextAiMessage]);
-      setInterviewState(InterviewState.SPEAKING);
+  const handleApiKeyUpdate = (newApiKey: string | null) => {
+    if (newApiKey) {
+      setApiKey(newApiKey);
+      setShowApiKeyInput(false);
+      startInterview();
     }
   };
 
-  const handleReplayQuestion = () => {
-    // Replay current question (simulate AI speaking again)
-    setInterviewState(InterviewState.SPEAKING);
+  const handleExit = () => {
+    navigate("/persona-ai-interviewer");
   };
 
   const formatTime = (seconds: number) => {
@@ -302,12 +218,12 @@ const InterviewProcess = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleExit = () => {
-    navigate("/persona-ai-interviewer");
-  };
-
   // Current question text
-  const currentQuestionText = STANDARD_QUESTIONS[currentQuestion];
+  const currentQuestionText = messages.length > 0 
+    ? messages[messages.length - 1]?.role === 'ai' 
+      ? messages[messages.length - 1]?.content 
+      : "" 
+    : "";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -315,7 +231,15 @@ const InterviewProcess = () => {
       
       <main className="flex-grow bg-[#1a1a1a] flex flex-col">
         <div className="container max-w-4xl mx-auto px-4 py-12 flex-grow flex flex-col items-center justify-center">
-          {interviewComplete && !summary ? (
+          {showApiKeyInput ? (
+            <div className="bg-card p-6 rounded-lg border w-full max-w-md">
+              <h3 className="font-medium mb-4 text-xl">OpenAI API Key Required</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                To use the AI interviewer, please provide your OpenAI API key. This key is required for processing audio and generating questions.
+              </p>
+              <ApiKeyManager onApiKeyUpdate={handleApiKeyUpdate} />
+            </div>
+          ) : isLoading ? (
             <div className="text-center space-y-6">
               <Reveal>
                 <h2 className="text-2xl font-bold text-white">Interview Complete</h2>
@@ -327,46 +251,22 @@ const InterviewProcess = () => {
                 <p className="text-white/80">Analyzing your responses...</p>
               </Reveal>
             </div>
-          ) : interviewComplete && summary ? (
+          ) : isCompleted && summary ? (
             <div className="w-full space-y-6">
               <div className="bg-card p-6 rounded-lg border">
                 <h3 className="font-medium mb-2 text-xl">Interview Summary</h3>
-                {showApiKeyInput ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      To generate an AI-powered summary of this interview, please enter your OpenAI API key:
-                    </p>
-                    <Input 
-                      type="password"
-                      placeholder="sk-..." 
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                    />
-                    <Button 
-                      onClick={handleApiKeySubmit}
-                      className="w-full"
-                      disabled={!apiKey.trim() || isLoading}
-                    >
-                      {isLoading ? "Generating..." : "Generate AI Summary"}
+                <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap prose max-w-none dark:prose-invert">
+                  <div dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }} />
+                </div>
+                <div className="mt-8 space-y-4">
+                  <Button className="w-full">Save Persona</Button>
+                  <Link to="/persona-ai-interviewer">
+                    <Button variant="outline" className="w-full">
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back to Interviewer
                     </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap prose max-w-none dark:prose-invert">
-                      <div dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }} />
-                    </div>
-                    
-                    <div className="mt-8 space-y-4">
-                      <Button className="w-full">Save Persona</Button>
-                      <Link to="/persona-ai-interviewer">
-                        <Button variant="outline" className="w-full">
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                          Back to Interviewer
-                        </Button>
-                      </Link>
-                    </div>
-                  </>
-                )}
+                  </Link>
+                </div>
               </div>
             </div>
           ) : (
@@ -421,28 +321,6 @@ const InterviewProcess = () => {
                     </div>
                   </div>
                 </Reveal>
-                
-                {/* Input area (only shown when listening) */}
-                {interviewState === InterviewState.LISTENING && (
-                  <div className="mt-8 w-full max-w-md mx-auto">
-                    <div className="flex gap-2">
-                      <Input
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        placeholder="Type your response..."
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        className="bg-black/40 border-white/20 text-white"
-                      />
-                      <Button 
-                        onClick={handleSendMessage} 
-                        disabled={!userInput.trim()}
-                        className="bg-primary hover:bg-primary/90"
-                      >
-                        <ArrowLeft className="rotate-180 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
               
               {/* Bottom Controls */}
@@ -461,7 +339,8 @@ const InterviewProcess = () => {
                     <Button 
                       variant="outline" 
                       className="border-white/20 bg-transparent text-white hover:bg-white/10"
-                      onClick={handleReplayQuestion}
+                      onClick={replayQuestion}
+                      disabled={interviewState !== InterviewState.LISTENING}
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Replay
@@ -470,8 +349,8 @@ const InterviewProcess = () => {
                     <Button 
                       variant="outline" 
                       className="border-white/20 bg-transparent text-white hover:bg-white/10"
-                      onClick={handleSkipQuestion}
-                      disabled={!canSkip}
+                      onClick={skipQuestion}
+                      disabled={!canSkip || interviewState !== InterviewState.LISTENING}
                     >
                       <SkipForward className="h-4 w-4 mr-2" />
                       Skip
