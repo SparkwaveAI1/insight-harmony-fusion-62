@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Mic, Play, SkipForward, VolumeX, Volume2, X } from "lucide-react";
+import { ArrowLeft, Mic, Play, SkipForward, VolumeX, Volume2, X, MicOff, RefreshCw } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -13,6 +13,8 @@ import { useInterviewSession, InterviewState, Message } from "@/hooks/useIntervi
 import { generateResponse } from "@/services/ai/openaiService";
 import { getApiKey } from "@/services/utils/apiKeyUtils";
 import { Switch } from "@/components/ui/switch";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import { Badge } from "@/components/ui/badge";
 
 const STANDARD_QUESTIONS = [
   "What's your name and what do you do for work?",
@@ -32,9 +34,34 @@ const InterviewProcess = () => {
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [participantData, setParticipantData] = useState<any>(null);
   const [useVoice, setUseVoice] = useState(true);
+  const [showDebugging, setShowDebugging] = useState(false);
+  const [microphoneStatus, setMicrophoneStatus] = useState<string>("unknown");
+  const audioVisualizer = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const testAudioRecorder = useAudioRecorder({
+    debug: true,
+    onComplete: (blob) => {
+      console.log("Test recording complete", blob.size, "bytes");
+      if (blob.size > 0) {
+        toast({
+          title: "Test Recording",
+          description: `Successfully recorded ${Math.round(blob.size / 1024)} KB of audio`,
+        });
+        
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+      } else {
+        toast({
+          title: "Test Recording Failed",
+          description: "No audio data was captured. Please check your microphone.",
+          variant: "destructive"
+        });
+      }
+    }
+  });
 
   useEffect(() => {
     if (location.state?.participantData) {
@@ -52,6 +79,84 @@ const InterviewProcess = () => {
       setShowApiKeyInput(true);
     }
   }, []);
+
+  useEffect(() => {
+    const checkMic = async () => {
+      try {
+        const result = await testAudioRecorder.checkMicrophoneStatus();
+        setMicrophoneStatus(result ? "ready" : "unavailable");
+      } catch (err) {
+        console.error("Error checking microphone:", err);
+        setMicrophoneStatus("error");
+      }
+    };
+    
+    checkMic();
+  }, [testAudioRecorder]);
+
+  useEffect(() => {
+    if (!audioVisualizer.current || !testAudioRecorder.isRecording) return;
+    
+    let animationFrame: number;
+    let audioContext: AudioContext;
+    let analyser: AnalyserNode;
+    let dataArray: Uint8Array;
+    
+    const setupVisualizer = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        analyser.fftSize = 256;
+        
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+        
+        const canvas = audioVisualizer.current;
+        if (!canvas) return;
+        
+        const canvasCtx = canvas.getContext('2d');
+        if (!canvasCtx) return;
+        
+        const draw = () => {
+          if (!canvas) return;
+          
+          animationFrame = requestAnimationFrame(draw);
+          analyser.getByteFrequencyData(dataArray);
+          
+          canvasCtx.fillStyle = 'rgb(20, 20, 20)';
+          canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          const barWidth = (canvas.width / bufferLength) * 2.5;
+          let x = 0;
+          
+          for (let i = 0; i < bufferLength; i++) {
+            const barHeight = dataArray[i] / 2;
+            canvasCtx.fillStyle = `rgb(${barHeight + 100}, 100, 200)`;
+            canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+            x += barWidth + 1;
+          }
+        };
+        
+        draw();
+      } catch (err) {
+        console.error("Error setting up audio visualizer:", err);
+      }
+    };
+    
+    setupVisualizer();
+    
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+      if (audioContext) {
+        audioContext.close();
+      }
+    };
+  }, [testAudioRecorder.isRecording]);
 
   const {
     interviewState,
@@ -220,6 +325,55 @@ const InterviewProcess = () => {
       : "" 
     : "";
 
+  const testMicrophone = () => {
+    if (testAudioRecorder.isRecording) {
+      testAudioRecorder.stopRecording();
+    } else {
+      toast({
+        title: "Testing Microphone",
+        description: "Recording for 5 seconds to test your microphone...",
+      });
+      
+      testAudioRecorder.startRecording();
+      
+      setTimeout(() => {
+        if (testAudioRecorder.isRecording) {
+          testAudioRecorder.stopRecording();
+        }
+      }, 5000);
+    }
+  };
+
+  const toggleDebugging = () => {
+    setShowDebugging(!showDebugging);
+  };
+
+  const getMicStatusColor = () => {
+    switch (microphoneStatus) {
+      case "ready":
+        return "bg-green-500";
+      case "unavailable":
+        return "bg-red-500";
+      case "error":
+        return "bg-red-500";
+      default:
+        return "bg-yellow-500";
+    }
+  };
+
+  const getMicStatusText = () => {
+    switch (microphoneStatus) {
+      case "ready":
+        return "Microphone Ready";
+      case "unavailable":
+        return "Microphone Unavailable";
+      case "error":
+        return "Microphone Error";
+      default:
+        return "Checking Microphone...";
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -244,6 +398,43 @@ const InterviewProcess = () => {
                   {useVoice ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
                   {useVoice ? "Voice enabled" : "Voice disabled"}
                 </label>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full ${getMicStatusColor()} mr-2`}></div>
+                    <span className="text-sm">{getMicStatusText()}</span>
+                  </div>
+                  <Button onClick={testMicrophone} size="sm" variant={testAudioRecorder.isRecording ? "destructive" : "outline"}>
+                    {testAudioRecorder.isRecording ? (
+                      <>
+                        <MicOff className="h-4 w-4 mr-2" />
+                        Stop Test
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="h-4 w-4 mr-2" />
+                        Test Mic
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {testAudioRecorder.isRecording && (
+                  <canvas 
+                    ref={audioVisualizer}
+                    width="300"
+                    height="60"
+                    className="w-full h-[60px] bg-black/20 rounded-md mb-2"
+                  ></canvas>
+                )}
+                
+                {testAudioRecorder.error && (
+                  <div className="text-red-500 text-sm mt-2">
+                    Error: {testAudioRecorder.error.message}
+                  </div>
+                )}
               </div>
             </div>
           ) : isLoading ? (
@@ -298,6 +489,19 @@ const InterviewProcess = () => {
                   <div className={`absolute inset-0 rounded-full ring-4 ring-primary shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-opacity duration-500 ${
                     interviewState === InterviewState.SPEAKING ? 'opacity-100' : 'opacity-0'
                   }`}></div>
+                  
+                  {interviewState === InterviewState.LISTENING && (
+                    <div className="absolute top-0 right-0">
+                      <Badge variant={testAudioRecorder.microphoneAccess ? "default" : "destructive"}>
+                        {testAudioRecorder.microphoneAccess ? (
+                          <Mic className="h-3 w-3 mr-1 animate-pulse text-green-300" />
+                        ) : (
+                          <MicOff className="h-3 w-3 mr-1 text-red-300" />
+                        )}
+                        {testAudioRecorder.microphoneAccess ? "Mic Active" : "Mic Issue"}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
                 
                 <Reveal animation="fade-in-up">
@@ -330,6 +534,33 @@ const InterviewProcess = () => {
                     </div>
                   </div>
                 </Reveal>
+                
+                {showDebugging && (
+                  <div className="mt-6 bg-black/50 p-4 rounded-lg border border-white/10 w-full">
+                    <h3 className="text-white font-medium mb-2">Debug Info</h3>
+                    <div className="text-xs text-white/70 space-y-1 font-mono">
+                      <div>State: {interviewState}</div>
+                      <div>Mic Access: {testAudioRecorder.microphoneAccess ? "Granted" : "Not Granted"}</div>
+                      <div>Recording: {isRecording ? "Yes" : "No"}</div>
+                      <div>Messages: {messages.length}</div>
+                      <div>Current Q: {currentQuestion}</div>
+                      <div>API Key: {apiKey ? "Set" : "Not Set"}</div>
+                      <div>Voice: {useVoice ? "Enabled" : "Disabled"}</div>
+                      {testAudioRecorder.error && (
+                        <div className="text-red-400">Error: {testAudioRecorder.error.message}</div>
+                      )}
+                    </div>
+                    <div className="mt-2 flex space-x-2">
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={testMicrophone}>
+                        {testAudioRecorder.isRecording ? "Stop Test" : "Test Mic"}
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={testAudioRecorder.checkMicrophoneStatus}>
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Check Mic
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="w-full fixed bottom-0 left-0 bg-black/60 backdrop-blur-md p-4 border-t border-white/10">
@@ -373,6 +604,15 @@ const InterviewProcess = () => {
                         disabled={interviewState !== InterviewState.IDLE}
                       >
                         {useVoice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white/80 hover:text-white"
+                        onClick={toggleDebugging}
+                      >
+                        <span className="text-xs font-mono">{showDebugging ? "Hide Debug" : "Debug"}</span>
                       </Button>
                     </div>
                   </div>

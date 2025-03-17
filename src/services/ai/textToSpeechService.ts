@@ -67,29 +67,34 @@ export function playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
       // Create a fresh copy of the ArrayBuffer to avoid "detached ArrayBuffer" errors
       const bufferCopy = audioBuffer.slice(0);
       
-      // Define AudioContext with proper type handling
-      const AudioContextConstructor = window.AudioContext || 
-                                     ((window as any).webkitAudioContext as typeof AudioContext);
+      // Use a standard AudioContext with proper type handling
+      const AudioContextClass = window.AudioContext || 
+                               ((window as any).webkitAudioContext as typeof AudioContext);
       
-      if (!AudioContextConstructor) {
+      if (!AudioContextClass) {
         throw new Error('AudioContext not supported in this browser');
       }
       
       // Using standard AudioContext
-      const audioContext = new AudioContextConstructor();
+      const audioContext = new AudioContextClass();
+      
+      console.log('AudioContext created, decoding audio data...');
       
       audioContext.decodeAudioData(
         bufferCopy, 
         (buffer) => {
           try {
+            console.log('Audio data decoded successfully, creating source node...');
             const source = audioContext.createBufferSource();
             source.buffer = buffer;
             source.connect(audioContext.destination);
             
             source.onended = () => {
+              console.log('Audio playback completed');
               resolve();
             };
             
+            console.log('Starting audio playback...');
             source.start(0);
             console.log('Audio playback started');
           } catch (err) {

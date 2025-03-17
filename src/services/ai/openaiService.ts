@@ -1,4 +1,3 @@
-
 import { getApiKey } from '../utils/apiKeyUtils';
 import { toast } from 'sonner';
 
@@ -16,12 +15,31 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     return { text: '[Transcription unavailable - API key missing]' };
   }
 
+  console.log(`Transcribing audio: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
+
+  if (audioBlob.size === 0) {
+    console.error('Empty audio blob received for transcription');
+    toast.error('No audio data to transcribe. Please check your microphone.');
+    return { text: '[No audio data to transcribe]' };
+  }
+
   const formData = new FormData();
-  formData.append('file', audioBlob, 'recording.mp3');
+  
+  let filename = 'recording.webm';
+  if (audioBlob.type.includes('mp3')) {
+    filename = 'recording.mp3';
+  } else if (audioBlob.type.includes('wav')) {
+    filename = 'recording.wav';
+  }
+  
+  formData.append('file', audioBlob, filename);
   formData.append('model', 'whisper-1');
   formData.append('response_format', 'json');
+  formData.append('language', 'en'); // Optional: specify language
 
   try {
+    console.log(`Sending transcription request with ${filename}`);
+    
     const response = await fetch(`${OPENAI_API_ENDPOINT}/audio/transcriptions`, {
       method: 'POST',
       headers: {
@@ -31,15 +49,24 @@ export async function transcribeAudio(audioBlob: Blob): Promise<TranscriptionRes
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+      console.error('Transcription API error:', errorData);
       throw new Error(errorData.error?.message || 'Failed to transcribe audio');
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('Transcription result:', result);
+    
+    if (!result.text || result.text.trim() === '') {
+      console.warn('Empty transcription received from API');
+      return { text: '[No speech detected]' };
+    }
+    
+    return result;
   } catch (error) {
     console.error('Transcription error:', error);
     toast.error('Failed to transcribe audio. Please try again.');
-    return { text: '[Transcription failed]' };
+    return { text: error instanceof Error ? `[Transcription failed: ${error.message}]` : '[Transcription failed]' };
   }
 }
 
