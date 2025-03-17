@@ -165,6 +165,7 @@ const InterviewProcess = () => {
     elapsedTime,
     canSkip,
     isCompleted,
+    isRecording,
     startInterview,
     skipQuestion,
     replayQuestion,
@@ -633,3 +634,7 @@ const InterviewProcess = () => {
 };
 
 export default InterviewProcess;
+
+
+
+

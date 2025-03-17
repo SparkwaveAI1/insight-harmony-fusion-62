@@ -462,7 +462,7 @@ export const useInterviewSession = ({
     messages,
     currentQuestion,
     elapsedTime,
-    isRecording,
+    isRecording, // Explicitly return isRecording from the hook
     canSkip,
     isCompleted,
     startInterview,
