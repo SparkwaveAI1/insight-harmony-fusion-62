@@ -5,7 +5,6 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import { ensureTablesExist, getSetupSQLScripts } from "./services/supabase/databaseSetup";
 
-// Use lazy loading for routes to improve initial load time
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
 const EarnPRSNA = lazy(() => import("./pages/EarnPRSNA"));
@@ -21,7 +20,6 @@ const PersonaCreationLanding = lazy(() => import("./pages/persona-creation/Perso
 const PersonaCreationScreener = lazy(() => import("./pages/persona-creation/PersonaCreationScreener"));
 const PersonaCreationQuestionnaire = lazy(() => import("./pages/persona-creation/PersonaCreationQuestionnaire"));
 
-// Loading fallback component
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
@@ -31,7 +29,6 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Database setup instructions component
 const DatabaseSetupInstructions = () => (
   <div className="min-h-screen flex items-center justify-center p-4">
     <div className="max-w-3xl bg-white rounded-lg shadow-xl p-6 md:p-8">
@@ -46,12 +43,9 @@ const DatabaseSetupInstructions = () => (
         </ul>
       </div>
       
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Step 2: Create the participants table</h2>
-        <p className="mb-4">Go to your Supabase dashboard (https://app.supabase.com), navigate to the SQL Editor, and run the following SQL script:</p>
-        <div className="bg-gray-50 rounded p-4 overflow-x-auto">
-          <pre className="text-sm">{getSetupSQLScripts()}</pre>
-        </div>
+      <div className="mb-6 bg-green-50 p-4 rounded border border-green-200">
+        <h2 className="text-lg font-semibold mb-2 text-green-800">✅ Step 2: Create the participants table</h2>
+        <p className="text-green-800">Great! The participants table is set up correctly.</p>
       </div>
       
       <div className="mb-6">

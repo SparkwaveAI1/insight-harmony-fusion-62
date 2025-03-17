@@ -17,12 +17,13 @@ export async function ensureTablesExist(): Promise<boolean> {
     }
     
     // Check if participants table exists
+    console.log('Checking participants table...');
     const { data: tables, error } = await supabase
       .from('participants')
       .select('id')
       .limit(1);
     
-    // If we get a PostgreSQL error code (table doesn't exist)
+    // If we get an error that's not "relation already exists"
     if (error) {
       console.error('Error checking participants table:', error);
       
@@ -32,6 +33,10 @@ export async function ensureTablesExist(): Promise<boolean> {
           duration: 8000,
         });
         return false;
+      } else if (error.code === '42P07' || error.message.includes('relation "participants" already exists')) {
+        // Table already exists, which is what we want
+        console.log('Participants table already exists');
+        return true;
       } else {
         // Other error (connection issues, etc.)
         toast.error(`Database connection error: ${error.message}`, {
@@ -40,6 +45,9 @@ export async function ensureTablesExist(): Promise<boolean> {
         return false;
       }
     }
+    
+    // If we got here, the query succeeded which means the table exists
+    console.log('Participants table exists and is accessible');
     
     // All checks passed
     console.log('All database checks passed, database is ready');
