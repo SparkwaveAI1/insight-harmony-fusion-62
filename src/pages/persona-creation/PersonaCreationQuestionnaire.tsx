@@ -53,10 +53,9 @@ const PersonaCreationQuestionnaire = () => {
       // Store data in Supabase (this would be implemented later)
       console.log("Form values to save:", values);
       
-      // In a real implementation, we would save this data and then navigate to the interview
+      // Navigate to the interview process
       setTimeout(() => {
-        // Navigate to the PersonaAI Interviewer
-        navigate("/persona-ai-interviewer");
+        navigate("/interview-process");
       }, 1500);
     } catch (error) {
       console.error("Error in questionnaire submission:", error);
