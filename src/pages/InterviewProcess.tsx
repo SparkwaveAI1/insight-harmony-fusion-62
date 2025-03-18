@@ -438,7 +438,7 @@ const InterviewProcess = () => {
       <Header />
       
       <main className="flex-grow bg-[#1a1a1a] flex flex-col">
-        <div className="container max-w-4xl mx-auto px-4 py-12 flex-grow flex flex-col items-center justify-center">
+        <div className="container max-w-4xl mx-auto px-4 py-12 pt-24 flex-grow flex flex-col items-center justify-center">
           {showApiKeyInput ? (
             <div className="bg-card p-6 rounded-lg border w-full max-w-md">
               <h3 className="font-medium mb-4 text-xl">OpenAI API Key Required</h3>
@@ -617,7 +617,7 @@ const InterviewProcess = () => {
             </div>
           ) : (
             <>
-              <div className="flex flex-col items-center max-w-xl w-full mb-12">
+              <div className="flex flex-col items-center max-w-xl w-full mb-12 mt-8">
                 <div className="relative mb-10">
                   <Avatar className={`w-64 h-64 rounded-full ${interviewState === InterviewState.SPEAKING ? 'animate-pulse' : ''}`}>
                     <AvatarImage
