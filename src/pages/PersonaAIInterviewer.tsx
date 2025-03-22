@@ -172,9 +172,9 @@ const PersonaAIInterviewer = () => {
                         Request for Companies
                       </Button>
                     </Link>
-                    <Link to="/participate-research" className="flex-1">
+                    <Link to="/custom-research" className="flex-1">
                       <Button className="w-full justify-center group">
-                        Participate as Subject
+                        Custom Research
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </Link>

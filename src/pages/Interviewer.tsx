@@ -1,3 +1,4 @@
+
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
@@ -120,10 +121,12 @@ const Interviewer = () => {
                     </div>
                   </div>
                   
-                  <Button className="w-full justify-center group mt-auto">
-                    Research Interviewer
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  <Link to="/custom-research">
+                    <Button className="w-full justify-center group mt-auto">
+                      Research Interviewer
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
                 </Card>
               </Reveal>
             </div>
