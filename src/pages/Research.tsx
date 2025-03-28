@@ -4,8 +4,6 @@ import Section from "@/components/ui-custom/Section";
 import Reveal from "@/components/ui-custom/Reveal";
 import Footer from "@/components/sections/Footer";
 import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
-import InsightsConductorSection from "@/components/ecosystem/InsightsConductorSection";
-import InsightsGenerator from "@/components/sections/InsightsGenerator";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "@/components/ui-custom/Button";
@@ -61,11 +59,10 @@ const Research = () => {
           </div>
         </section>
 
-        {/* Insights Conductor Section - Explicitly set with ID and visible styles */}
-        <section id="insights-conductor" className="py-16 w-full block">
-          <InsightsConductorSection />
-          <InsightsGenerator />
-        </section>
+        {/* Insights Conductor Section */}
+        <div id="insights-conductor">
+          <QualitativeAnalysis />
+        </div>
 
         {/* AI Focus Groups Section - Using the existing component */}
         <div id="ai-focus-groups">
