@@ -1,3 +1,4 @@
+
 import { ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { detectSentiment } from "../utils/sentimentUtils";
@@ -26,16 +27,18 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     params.append("pageSize", "25");
     
     try {
-      // Call the Supabase Edge Function with the correct params format
+      // Create a complete URL with query parameters
+      const urlWithParams = `/newsapi-proxy?${params.toString()}`;
+      console.log("Calling Edge Function with URL:", urlWithParams);
+      
+      // Call the Supabase Edge Function with the correct format
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         "newsapi-proxy",
         {
           method: "GET",
           headers: { 
             "Content-Type": "application/json" 
-          },
-          // Fix: Change queryParams to query which is the correct property name
-          query: Object.fromEntries(params)
+          }
         }
       );
       
