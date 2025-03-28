@@ -2,31 +2,26 @@
 import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter } from "../types/qualitativeAnalysisTypes";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
-import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./sourceAdapters";
+import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./dataSourceApi";
 import { handleApiError } from "../utils/apiUtils";
 import { generateMockResults } from "../mock/mockDataService";
 
 // Main function to fetch qualitative data from real APIs
 export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults> {
   try {
+    console.log("Fetching qualitative data for query:", query);
+    
     // Track which sources successfully returned data
     const sourceResults: { [key: string]: boolean } = {};
     let quotes: QuoteData[] = [];
     let keywords: string[] = [];
     let topics: string[] = [];
     
-    // Prioritize crypto-specific keywords for Web3 queries
-    if (query.query.toLowerCase().includes("crypto") || 
-        query.query.toLowerCase().includes("defi") || 
-        query.query.toLowerCase().includes("web3") || 
-        query.query.toLowerCase().includes("nft")) {
-      if (!query.keywords.includes("defi")) query.keywords.push("defi");
-      if (!query.keywords.includes("crypto")) query.keywords.push("crypto");
-      if (!query.keywords.includes("blockchain")) query.keywords.push("blockchain");
-    }
+    // Focus on News API only for now
+    // Override sources to only use 'news'
+    const sourcesToQuery = ["news"] as DataSource[];
     
-    // Determine which sources to query
-    const sourcesToQuery = query.sources.includes("all") ? ["twitter", "reddit", "news"] as DataSource[] : query.sources as DataSource[];
+    console.log("Using data sources:", sourcesToQuery);
     
     // Create promise array for parallel API calls
     const apiPromises = sourcesToQuery.map(source => {
@@ -36,6 +31,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
         quotes = [...quotes, ...result.quotes];
         keywords = [...keywords, ...result.keywords];
         topics = [...topics, ...result.topics];
+        console.log(`Data from ${source}:`, result);
       }).catch(error => {
         handleApiError(error, `${source} API`);
         sourceResults[source] = false;
@@ -56,40 +52,11 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       console.log("No real data available, falling back to mock data");
       
       // Use mock data but inform the user
-      toast.info("Using offline data as API requests are restricted in this environment.", {
-        description: "Try testing on localhost or using your own API keys for live data."
+      toast.info("No data found from News API, using sample data instead.", {
+        description: "Try a different search query or check API connectivity."
       });
       
       return generateMockResults(query);
-    }
-    
-    // Process and prioritize by keywords
-    processKeywords(quotes, query);
-    
-    // For crypto queries, prioritize quotes mentioning specific crypto terms
-    if (query.query.toLowerCase().includes("crypto") || 
-        query.query.toLowerCase().includes("defi") || 
-        query.query.toLowerCase().includes("web3")) {
-      const cryptoTerms = ["token", "staking", "yield", "apy", "liquidity", "dex", "defi", "nft"];
-      quotes.sort((a, b) => {
-        const aMentionsCrypto = cryptoTerms.some(term => a.text.toLowerCase().includes(term));
-        const bMentionsCrypto = cryptoTerms.some(term => b.text.toLowerCase().includes(term));
-        return (bMentionsCrypto ? 1 : 0) - (aMentionsCrypto ? 1 : 0);
-      });
-    }
-    
-    // Deduplicate and limit keywords and topics
-    keywords = Array.from(new Set(keywords)).slice(0, 15);
-    topics = Array.from(new Set(topics)).slice(0, 5);
-    
-    // If this is a crypto query, add relevant topics if missing
-    if (query.query.toLowerCase().includes("crypto") || query.query.toLowerCase().includes("web3")) {
-      const cryptoTopics = ["DeFi Trends", "Market Sentiment", "Token Utility", "On-chain Metrics"];
-      for (const topic of cryptoTopics) {
-        if (!topics.includes(topic) && topics.length < 5) {
-          topics.push(topic);
-        }
-      }
     }
     
     // Calculate sentiment breakdown
@@ -99,21 +66,21 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     const aiInsights = generateAIInsights(topics, sentimentBreakdown, keywords, query);
     const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)]; // Wrapping in array
     
-    // Create a complete AnalysisResults object
+    // Use the default mock result as a base and override with our real data
     const defaultResult = generateMockResults(query);
     
     return {
       // Use the real data we collected
-      topTopics: topics,
+      topTopics: topics.length > 0 ? topics : defaultResult.topTopics,
       sentimentBreakdown,
-      exampleQuotes: quotes.slice(0, 10), // Limit to 10 quotes
-      keyPhrases: keywords,
-      aiInsights,
+      exampleQuotes: quotes.length > 0 ? quotes.slice(0, 10) : defaultResult.exampleQuotes, // Limit to 10 quotes
+      keyPhrases: keywords.length > 0 ? keywords : defaultResult.keyPhrases,
+      aiInsights: aiInsights.length > 0 ? aiInsights : defaultResult.aiInsights,
       trendsAnalysis,
       reportGeneratedAt: new Date().toISOString(),
       
-      // For required properties where we don't have real data, use the mock data
-      aiSummary: `Analysis of conversations around ${query.query} based on collected data.`,
+      // For properties where we don't have real data, use the mock data
+      aiSummary: `Analysis of conversations around "${query.query}" based on ${quotes.length} collected articles.`,
       keyInsights: defaultResult.keyInsights,
       challenges: defaultResult.challenges,
       recommendations: defaultResult.recommendations,
@@ -137,14 +104,14 @@ function getFetcherForSource(source: string) {
     case "news":
       return fetchNewsData;
     default:
-      return fetchTwitterData; // Default fallback
+      return fetchNewsData; // Default to news API
   }
 }
 
 // Generate source breakdown based on quotes
 function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: number } {
   if (quotes.length === 0) {
-    return { "twitter": 33, "reddit": 33, "news": 34 };
+    return { "news": 100 }; // Default to 100% news if no quotes
   }
   
   const sourceCounts: { [key: string]: number } = {};
@@ -165,19 +132,6 @@ function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: n
   }
   
   return result;
-}
-
-// Process and prioritize quotes by keywords
-function processKeywords(quotes: QuoteData[], query: ResearchQuery): void {
-  if (query.keywords.length > 0) {
-    // If user specified keywords, prioritize content containing those keywords
-    const keywordRegex = new RegExp(query.keywords.join("|"), "i");
-    quotes.sort((a, b) => {
-      const aHasKeyword = keywordRegex.test(a.text);
-      const bHasKeyword = keywordRegex.test(b.text);
-      return (bHasKeyword ? 1 : 0) - (aHasKeyword ? 1 : 0);
-    });
-  }
 }
 
 // Calculate sentiment breakdown from quotes

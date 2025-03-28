@@ -39,7 +39,7 @@ import {
   TimelineEvent,
   TopicRippleData
 } from "@/services/types/qualitativeAnalysisTypes";
-import { fetchQualitativeData } from "@/services/mock/mockDataService";
+import { fetchQualitativeData } from "@/services/api/dataSourceService"; // Updated to use real service
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -99,7 +99,9 @@ const QualitativeAnalysis: React.FC = () => {
     
     setIsLoading(true);
     try {
+      // Use the actual data service instead of mock data
       const data = await fetchQualitativeData(query);
+      console.log("Analysis data received:", data);
       setResults(data);
       setShowResults(true);
       toast.success("Analysis completed successfully");

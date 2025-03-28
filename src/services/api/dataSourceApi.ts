@@ -1,4 +1,3 @@
-
 import { ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { detectSentiment } from "../utils/sentimentUtils";
@@ -8,8 +7,8 @@ import { toast } from "sonner";
 // News API integration
 export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
   try {
-    // Get API key (user's key if they provided one, otherwise default)
-    const apiKeys = getApiKeys();
+    // Use the provided API key
+    const newsApiKey = "fd3f81fca8ee4433b1400b634aee7d2e";
     
     // Convert timeframe to date range for News API
     const from = getDateFromTimeFrame(query.timeFrame);
@@ -20,8 +19,10 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     url.searchParams.append("from", from);
     url.searchParams.append("sortBy", "relevancy");
     url.searchParams.append("language", "en");
-    url.searchParams.append("pageSize", "10");
-    url.searchParams.append("apiKey", apiKeys.newsApi);
+    url.searchParams.append("pageSize", "25");
+    url.searchParams.append("apiKey", newsApiKey);
+    
+    console.log("Fetching news data with URL:", url.toString());
     
     const response = await fetch(url.toString());
     
@@ -45,7 +46,7 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     
     if (data.articles && data.articles.length > 0) {
       // Extract quotes from articles
-      const quotes: QuoteData[] = data.articles.slice(0, 5).map((article: any) => {
+      const quotes: QuoteData[] = data.articles.slice(0, 10).map((article: any) => {
         // Simple sentiment detection based on title and description
         const sentiment = detectSentiment(article.title + " " + (article.description || ""));
         
@@ -69,95 +70,36 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     return { quotes: [], keywords: [], topics: [] };
   } catch (error) {
     console.error("Error fetching news data:", error);
+    toast.error("Failed to fetch news data. Please try again later.");
     return { quotes: [], keywords: [], topics: [] };
   }
 }
 
-// Twitter API integration
+// Placeholder functions for Twitter and Reddit (not used but keeping them for future)
 export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  // Twitter API requires authentication and the free tier is limited
-  // For now, we'll return a message explaining the limitation
-  
-  // In a real implementation, you would:
-  // 1. Set up proper Twitter API authentication
-  // 2. Use the Twitter API v2 search endpoint
-  // 3. Process the tweets and extract sentiment
-  
-  const apiKeys = getApiKeys();
-  
-  if (!apiKeys.twitter) {
-    console.log("Twitter API integration requires authentication setup");
-    return { 
-      quotes: [{
-        text: "Twitter API integration requires authentication. Please set up Twitter API credentials to access real data.",
-        sentiment: "neutral",
-        source: "Twitter",
-        date: new Date().toISOString().split('T')[0]
-      }], 
-      keywords: ["twitter", "api", "authentication"], 
-      topics: ["Twitter API Integration"] 
-    };
-  }
-  
-  // Mock implementation - would be replaced with real API call
-  return { quotes: [], keywords: [], topics: [] };
+  // Not implementing Twitter API for now
+  return { 
+    quotes: [{
+      text: "Twitter API is not available in this version.",
+      sentiment: "neutral",
+      source: "Twitter",
+      date: new Date().toISOString().split('T')[0]
+    }], 
+    keywords: [], 
+    topics: [] 
+  };
 }
 
-// Reddit API integration
 export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  try {
-    // Reddit's API allows some access without authentication
-    const searchTerm = encodeURIComponent(`${query.query} ${query.keywords.join(" ")}`);
-    const url = `https://www.reddit.com/search.json?q=${searchTerm}&sort=relevance&limit=10`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      console.error("Reddit API error:", response.statusText);
-      return { quotes: [], keywords: [], topics: [] };
-    }
-    
-    const data = await response.json();
-    console.log("Reddit API response received");
-    
-    if (data.data && data.data.children && data.data.children.length > 0) {
-      // Extract quotes from posts
-      const quotes: QuoteData[] = data.data.children
-        .filter((post: any) => post.data.selftext || post.data.title)
-        .slice(0, 5)
-        .map((post: any) => {
-          const text = post.data.selftext || post.data.title;
-          // Simple sentiment detection
-          const sentiment = detectSentiment(text);
-          
-          return {
-            text: text.substring(0, 200) + (text.length > 200 ? "..." : ""),
-            sentiment,
-            source: `Reddit: r/${post.data.subreddit}`,
-            date: post.data.created ? new Date(post.data.created * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-          };
-        });
-      
-      // Extract keywords from titles and texts
-      const keywords = extractKeywords(
-        data.data.children.map((post: any) => 
-          post.data.title + " " + (post.data.selftext || "")
-        ).join(" ")
-      );
-      
-      // Extract potential topics
-      const topics = extractTopics(
-        data.data.children.map((post: any) => 
-          post.data.title + " " + (post.data.selftext || "")
-        ).join(" ")
-      );
-      
-      return { quotes, keywords, topics };
-    }
-    
-    return { quotes: [], keywords: [], topics: [] };
-  } catch (error) {
-    console.error("Error fetching Reddit data:", error);
-    return { quotes: [], keywords: [], topics: [] };
-  }
+  // Not implementing Reddit API for now
+  return { 
+    quotes: [{
+      text: "Reddit API is not available in this version.",
+      sentiment: "neutral",
+      source: "Reddit",
+      date: new Date().toISOString().split('T')[0]
+    }], 
+    keywords: [], 
+    topics: [] 
+  };
 }

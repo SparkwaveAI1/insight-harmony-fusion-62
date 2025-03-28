@@ -7,6 +7,7 @@ import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "@/components/ui-custom/Button";
+import InsightsConductorSection from "@/components/ecosystem/InsightsConductorSection";
 
 const Research = () => {
   return (
@@ -60,8 +61,13 @@ const Research = () => {
         </section>
 
         {/* Insights Conductor Section */}
-        <div id="insights-conductor">
+        <section id="insights-conductor" className="py-16 w-full block">
           <QualitativeAnalysis />
+        </section>
+        
+        {/* Add the InsightsConductor component */}
+        <div className="w-full py-10 bg-gradient-to-b from-background to-accent/5">
+          <InsightsConductorSection />
         </div>
 
         {/* AI Focus Groups Section - Using the existing component */}
