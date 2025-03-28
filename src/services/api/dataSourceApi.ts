@@ -18,27 +18,35 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     
     console.log("Using Supabase Edge Function for News API request");
     
-    // Build the params for the Edge Function
-    const params = new URLSearchParams();
-    params.append("q", `${query.query} ${query.keywords.join(" ")}`);
-    if (from) params.append("from", from);
-    params.append("sortBy", "relevancy");
-    params.append("language", "en");
-    params.append("pageSize", "25");
+    // Format the search query properly - ensure it's not empty
+    const searchQuery = `${query.query} ${query.keywords.join(" ")}`.trim();
+    
+    if (!searchQuery) {
+      toast.error("Search query cannot be empty", {
+        description: "Please provide a search term or keywords",
+      });
+      return { quotes: [], keywords: [], topics: [] };
+    }
     
     try {
-      // Create a complete URL with query parameters
-      const urlWithParams = `/newsapi-proxy?${params.toString()}`;
-      console.log("Calling Edge Function with URL:", urlWithParams);
+      console.log("Calling Edge Function with search query:", searchQuery);
       
-      // Call the Supabase Edge Function with the correct format
+      // Call the Supabase Edge Function directly without query parameters
+      // The Edge Function will get the query parameters from the request body
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         "newsapi-proxy",
         {
-          method: "GET",
+          method: "POST",
           headers: { 
             "Content-Type": "application/json" 
-          }
+          },
+          body: JSON.stringify({
+            q: searchQuery,
+            from: from || undefined,
+            sortBy: "relevancy",
+            language: "en",
+            pageSize: "25"
+          })
         }
       );
       

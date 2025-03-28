@@ -17,16 +17,57 @@ serve(async (req) => {
   }
 
   try {
-    // Get URL with search parameters
-    const url = new URL(req.url);
+    let searchParams;
+    let requestBody = {};
     
-    // Get parameters from the URL
-    const searchParams = url.searchParams;
-    const query = searchParams.get("q") || "";
-    const from = searchParams.get("from") || "";
-    const sortBy = searchParams.get("sortBy") || "relevancy";
-    const language = searchParams.get("language") || "en";
-    const pageSize = searchParams.get("pageSize") || "25";
+    if (req.method === "POST") {
+      // Get parameters from request body
+      try {
+        requestBody = await req.json();
+        console.log("Request body:", requestBody);
+      } catch (error) {
+        console.error("Error parsing request body:", error);
+        return new Response(
+          JSON.stringify({ error: "Invalid request body" }),
+          { 
+            status: 400, 
+            headers: { 
+              ...corsHeaders, 
+              "Content-Type": "application/json" 
+            } 
+          }
+        );
+      }
+    } else {
+      // Get URL with search parameters for GET requests
+      const url = new URL(req.url);
+      searchParams = url.searchParams;
+    }
+    
+    // Extract parameters (either from query params or request body)
+    const query = requestBody.q || searchParams?.get("q") || "";
+    const from = requestBody.from || searchParams?.get("from") || "";
+    const sortBy = requestBody.sortBy || searchParams?.get("sortBy") || "relevancy";
+    const language = requestBody.language || searchParams?.get("language") || "en";
+    const pageSize = requestBody.pageSize || searchParams?.get("pageSize") || "25";
+    
+    // Validate that we have a query
+    if (!query) {
+      console.error("Missing required parameter: q");
+      return new Response(
+        JSON.stringify({ 
+          status: "error", 
+          message: "Missing required parameter: q (query)" 
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
     
     // Get API key from environment variable or request headers
     const newsApiKey = Deno.env.get("NEWS_API_KEY") || "fd3f81fca8ee4433b1400b634aee7d2e";
