@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,6 @@ const InsightsGenerator = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
-  const [edgeFunctionDeployed, setEdgeFunctionDeployed] = useState(true);
   
   const generateInsights = async () => {
     if (!query.trim()) {
