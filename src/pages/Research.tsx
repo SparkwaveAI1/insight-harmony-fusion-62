@@ -61,11 +61,11 @@ const Research = () => {
           </div>
         </section>
 
-        {/* Insights Conductor Section */}
-        <div id="insights-conductor">
+        {/* Insights Conductor Section - Explicitly set with ID and visible styles */}
+        <section id="insights-conductor" className="py-16 w-full block">
           <InsightsConductorSection />
           <InsightsGenerator />
-        </div>
+        </section>
 
         {/* AI Focus Groups Section - Using the existing component */}
         <div id="ai-focus-groups">
