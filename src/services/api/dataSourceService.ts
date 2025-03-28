@@ -32,6 +32,11 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
         keywords = [...keywords, ...result.keywords];
         topics = [...topics, ...result.topics];
         console.log(`Data from ${source}:`, result);
+        
+        // Show toast with data source information
+        if (result.quotes.length > 0) {
+          toast.success(`Retrieved ${result.quotes.length} quotes from ${source}`);
+        }
       }).catch(error => {
         handleApiError(error, `${source} API`);
         sourceResults[source] = false;
@@ -52,7 +57,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       console.log("No real data available, falling back to mock data");
       
       // Use mock data but inform the user
-      toast.info("No data found from News API, using sample data instead.", {
+      toast.info("No data found from available sources, using sample data instead.", {
         description: "Try a different search query or check API connectivity."
       });
       
@@ -80,7 +85,9 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       reportGeneratedAt: new Date().toISOString(),
       
       // For properties where we don't have real data, use the mock data
-      aiSummary: `Analysis of conversations around "${query.query}" based on ${quotes.length} collected articles.`,
+      aiSummary: quotes.length > 0 
+        ? `Analysis of conversations around "${query.query}" based on ${quotes.length} collected articles.`
+        : defaultResult.aiSummary,
       keyInsights: defaultResult.keyInsights,
       challenges: defaultResult.challenges,
       recommendations: defaultResult.recommendations,

@@ -15,7 +15,8 @@ export const handleApiError = (error: unknown, service: string): void => {
 export const showApiRestrictionNotice = (apiName: string): void => {
   console.log(`${apiName} API has CORS restrictions in browser environment`);
   toast.warning(`${apiName} API requires a backend proxy for browser requests`, {
-    duration: 3000,
+    description: "To use real data, deploy a proxy server or connect through Supabase Edge Functions",
+    duration: 5000,
     id: `${apiName.toLowerCase()}-api-cors-warning`
   });
 };
@@ -26,7 +27,8 @@ export const generatePlaceholderData = (apiName: string) => {
     quotes: [{ 
       text: `${apiName} API has CORS restrictions in this environment. Using simulated data instead.`, 
       sentiment: "neutral" as SentimentFilter, 
-      source: `${apiName}: System Notice` 
+      source: `${apiName}: System Notice`,
+      date: new Date().toISOString().split('T')[0]
     }],
     keywords: ["CORS", "API", apiName, "restrictions", "browser"],
     topics: ["API Access Limitations"]
