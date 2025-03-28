@@ -21,6 +21,15 @@ export const showApiRestrictionNotice = (apiName: string): void => {
   });
 };
 
+// Edge Function deployment notification
+export const showEdgeFunctionNotice = (): void => {
+  toast.info("Edge Function needs deployment", {
+    description: "Deploy the 'newsapi-proxy' Edge Function to your Supabase project for real data",
+    duration: 7000,
+    id: "edge-function-deploy-notice"
+  });
+};
+
 // Placeholder data generator for when APIs are inaccessible
 export const generatePlaceholderData = (apiName: string) => {
   return {

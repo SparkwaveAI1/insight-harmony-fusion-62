@@ -1,19 +1,27 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchQualitativeData } from "@/services/mock/mockDataService";
+import { fetchQualitativeData } from "@/services/api/dataSourceService";
 import { ResearchQuery, AnalysisResults } from "@/services/types/qualitativeAnalysisTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { showEdgeFunctionNotice } from "@/services/utils/apiUtils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const InsightsGenerator = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
+  
+  // Show Edge Function notice on component mount
+  useEffect(() => {
+    showEdgeFunctionNotice();
+  }, []);
   
   const generateInsights = async () => {
     if (!query.trim()) {
@@ -24,10 +32,10 @@ const InsightsGenerator = () => {
     setIsLoading(true);
     
     try {
-      // Using the mock data service for now
+      // Using the real data service (which falls back to mock data if needed)
       const researchQuery: ResearchQuery = {
         query: query,
-        sources: ["twitter", "reddit", "news"],
+        sources: ["news"], // Focus on News API for now
         sentiment: "all",
         timeFrame: "medium-term",
         keywords: []
@@ -55,6 +63,15 @@ const InsightsGenerator = () => {
             Enter any topic to generate AI-powered analysis from social media, news, and forums in seconds.
           </p>
         </div>
+        
+        <Alert className="mb-6 bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Supabase Edge Function Required</AlertTitle>
+          <AlertDescription>
+            To fully utilize this feature, deploy the "newsapi-proxy" Edge Function to your Supabase project. 
+            Until then, the application will use simulated data.
+          </AlertDescription>
+        </Alert>
         
         <div className="max-w-4xl mx-auto">
           <div className="flex space-x-2 mb-8">
