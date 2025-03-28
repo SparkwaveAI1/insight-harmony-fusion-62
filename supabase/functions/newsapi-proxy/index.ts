@@ -17,18 +17,23 @@ serve(async (req) => {
   }
 
   try {
-    let searchParams;
-    let requestBody = {};
+    console.log(`Handling ${req.method} request to newsapi-proxy`);
     
+    let queryParams = {};
+    
+    // Process request based on HTTP method
     if (req.method === "POST") {
-      // Get parameters from request body
       try {
-        requestBody = await req.json();
-        console.log("Request body:", requestBody);
-      } catch (error) {
-        console.error("Error parsing request body:", error);
+        const requestBody = await req.json();
+        console.log("POST request body:", JSON.stringify(requestBody));
+        queryParams = requestBody;
+      } catch (parseError) {
+        console.error("Error parsing request body:", parseError);
         return new Response(
-          JSON.stringify({ error: "Invalid request body" }),
+          JSON.stringify({ 
+            status: "error", 
+            message: "Invalid request body format" 
+          }),
           { 
             status: 400, 
             headers: { 
@@ -38,18 +43,30 @@ serve(async (req) => {
           }
         );
       }
-    } else {
+    } else if (req.method === "GET") {
       // Get URL with search parameters for GET requests
       const url = new URL(req.url);
-      searchParams = url.searchParams;
+      // Convert URLSearchParams to a regular object
+      url.searchParams.forEach((value, key) => {
+        queryParams[key] = value;
+      });
+      console.log("GET request params:", JSON.stringify(queryParams));
+    } else {
+      return new Response(
+        JSON.stringify({ status: "error", message: "Method not allowed" }),
+        { 
+          status: 405, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
     
-    // Extract parameters (either from query params or request body)
-    const query = requestBody.q || searchParams?.get("q") || "";
-    const from = requestBody.from || searchParams?.get("from") || "";
-    const sortBy = requestBody.sortBy || searchParams?.get("sortBy") || "relevancy";
-    const language = requestBody.language || searchParams?.get("language") || "en";
-    const pageSize = requestBody.pageSize || searchParams?.get("pageSize") || "25";
+    // Extract parameters from query params or request body
+    const query = queryParams.q || "";
+    const from = queryParams.from || "";
+    const sortBy = queryParams.sortBy || "relevancy";
+    const language = queryParams.language || "en";
+    const pageSize = queryParams.pageSize || "25";
     
     // Validate that we have a query
     if (!query) {
@@ -69,13 +86,13 @@ serve(async (req) => {
       );
     }
     
-    // Get API key from environment variable or request headers
+    // Get API key from environment variable
     const newsApiKey = Deno.env.get("NEWS_API_KEY") || "fd3f81fca8ee4433b1400b634aee7d2e";
     
     // Log the parameters being used
     console.log("Processing News API request with parameters:");
-    console.log(`Query: ${query}`);
-    console.log(`From: ${from}`);
+    console.log(`Query: "${query}"`);
+    console.log(`From: ${from || 'not specified'}`);
     console.log(`Sort By: ${sortBy}`);
     console.log(`Language: ${language}`);
     console.log(`Page Size: ${pageSize}`);
@@ -91,38 +108,68 @@ serve(async (req) => {
     
     console.log(`Proxying request to News API: ${newsApiUrl.toString().replace(newsApiKey, "API_KEY_REDACTED")}`);
     
-    // Make the request to the News API
-    const response = await fetch(newsApiUrl.toString());
+    // Make the request to the News API with a timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     
-    // Get the response data
-    const data = await response.json();
-    
-    // Log the response status
-    console.log(`News API response status: ${response.status}`);
-    
-    // If we got an error response, log it clearly
-    if (!response.ok) {
-      console.error("News API error:", data);
-    } else {
-      console.log(`Retrieved ${data.articles?.length || 0} articles from News API`);
-    }
-    
-    // Return the response from the News API
-    return new Response(
-      JSON.stringify(data),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
-        },
-        status: response.status
+    try {
+      const response = await fetch(newsApiUrl.toString(), {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      // Get the response data
+      const data = await response.json();
+      
+      // Log the response status
+      console.log(`News API response status: ${response.status}`);
+      
+      // If we got an error response, log it clearly
+      if (!response.ok) {
+        console.error("News API error:", JSON.stringify(data));
+      } else {
+        console.log(`Retrieved ${data.articles?.length || 0} articles from News API`);
       }
-    );
+      
+      // Return the response from the News API
+      return new Response(
+        JSON.stringify(data),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          },
+          status: response.status
+        }
+      );
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error("Error fetching from News API:", fetchError);
+      
+      return new Response(
+        JSON.stringify({ 
+          status: "error", 
+          message: fetchError.name === "AbortError" 
+            ? "Request to News API timed out" 
+            : `Error fetching from News API: ${fetchError.message}` 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
   } catch (error) {
-    console.error("Error in newsapi-proxy:", error);
+    console.error("Unhandled error in newsapi-proxy:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message || "An error occurred while proxying the request" }),
+      JSON.stringify({ 
+        status: "error", 
+        message: error.message || "An error occurred while proxying the request" 
+      }),
       { 
         status: 500, 
         headers: { 

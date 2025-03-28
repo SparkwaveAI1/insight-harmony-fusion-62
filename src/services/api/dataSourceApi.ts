@@ -1,4 +1,3 @@
-
 import { ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { detectSentiment } from "../utils/sentimentUtils";
@@ -10,9 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 // News API integration using Supabase Edge Function as a proxy
 export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
   try {
-    // Store the API key for potential backend usage
-    const newsApiKey = "fd3f81fca8ee4433b1400b634aee7d2e";
-    
     // Convert timeframe to date range for News API
     const from = getDateFromTimeFrame(query.timeFrame);
     
@@ -31,22 +27,18 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     try {
       console.log("Calling Edge Function with search query:", searchQuery);
       
-      // Call the Supabase Edge Function directly without query parameters
-      // The Edge Function will get the query parameters from the request body
+      // Call the Supabase Edge Function with all necessary parameters in the body
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         "newsapi-proxy",
         {
           method: "POST",
-          headers: { 
-            "Content-Type": "application/json" 
-          },
-          body: JSON.stringify({
+          body: {
             q: searchQuery,
             from: from || undefined,
             sortBy: "relevancy",
             language: "en",
             pageSize: "25"
-          })
+          }
         }
       );
       
@@ -82,9 +74,11 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
         // Extract potential topics
         const topics = extractTopics(functionData.articles.map((a: any) => a.title + " " + (a.description || "")).join(" "));
         
+        toast.success(`Retrieved ${quotes.length} articles from News API`);
         return { quotes, keywords, topics };
       }
       
+      // If we get here but don't have articles, it means the API returned a success response but no data
       toast.warning("No articles found matching your search criteria", {
         description: "Try broadening your search terms or timeframe",
       });
@@ -104,7 +98,7 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
   }
 }
 
-// Generate fallback data for News API when CORS restrictions prevent direct access
+// Generate fallback data for News API when API restrictions prevent direct access
 function generateFallbackNewsData(query: ResearchQuery): { quotes: QuoteData[], keywords: string[], topics: string[] } {
   const currentDate = new Date().toISOString().split('T')[0];
   const searchTerms = query.query.toLowerCase();
@@ -139,7 +133,7 @@ function generateFallbackNewsData(query: ResearchQuery): { quotes: QuoteData[], 
   const topics = ["Economic Impact", "Political Discussion", "Social Implications", "Global Trends", "Market Analysis"];
   
   toast.info("Using simulated news data due to API restrictions", {
-    description: "Deploy the Edge Function for real data access",
+    description: "Please check Edge Function deployment status",
     duration: 5000
   });
   

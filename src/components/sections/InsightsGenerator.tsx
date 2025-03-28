@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,11 +10,36 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const InsightsGenerator = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
+  const [edgeFunctionStatus, setEdgeFunctionStatus] = useState<"checking" | "available" | "unavailable">("checking");
+  
+  useEffect(() => {
+    const checkEdgeFunction = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("newsapi-proxy", {
+          method: "GET"
+        });
+        
+        if (error) {
+          console.warn("Edge Function check error:", error);
+          setEdgeFunctionStatus("unavailable");
+        } else {
+          console.log("Edge Function is available:", data);
+          setEdgeFunctionStatus("available");
+        }
+      } catch (err) {
+        console.error("Error checking Edge Function:", err);
+        setEdgeFunctionStatus("unavailable");
+      }
+    };
+    
+    checkEdgeFunction();
+  }, []);
   
   const generateInsights = async () => {
     if (!query.trim()) {
@@ -26,7 +50,6 @@ const InsightsGenerator = () => {
     setIsLoading(true);
     
     try {
-      // Using the real data service (which falls back to mock data if needed)
       const researchQuery: ResearchQuery = {
         query: query,
         sources: ["news"], // Focus on News API for now
@@ -58,14 +81,31 @@ const InsightsGenerator = () => {
           </p>
         </div>
         
-        <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
-          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-          <AlertTitle>Edge Function Deployed</AlertTitle>
-          <AlertDescription>
-            The "newsapi-proxy" Edge Function has been deployed to your Supabase project and is now in use. 
-            This allows real-time news data access without CORS issues.
-          </AlertDescription>
-        </Alert>
+        {edgeFunctionStatus === "available" ? (
+          <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertTitle>Edge Function Deployed</AlertTitle>
+            <AlertDescription>
+              The "newsapi-proxy" Edge Function is active and ready to fetch real-time news data.
+            </AlertDescription>
+          </Alert>
+        ) : edgeFunctionStatus === "unavailable" ? (
+          <Alert className="mb-6 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+            <InfoIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertTitle>Using Simulated Data</AlertTitle>
+            <AlertDescription>
+              The "newsapi-proxy" Edge Function could not be reached. Simulated data will be used for demonstrations.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+            <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertTitle>Checking Edge Function Status</AlertTitle>
+            <AlertDescription>
+              Verifying connection to the "newsapi-proxy" Edge Function...
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="max-w-4xl mx-auto">
           <div className="flex space-x-2 mb-8">
