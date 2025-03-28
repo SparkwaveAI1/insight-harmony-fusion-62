@@ -17,9 +17,10 @@ serve(async (req) => {
   }
 
   try {
+    // Get URL with search parameters
     const url = new URL(req.url);
     
-    // Get parameters from the request
+    // Get parameters from the URL
     const searchParams = url.searchParams;
     const query = searchParams.get("q") || "";
     const from = searchParams.get("from") || "";

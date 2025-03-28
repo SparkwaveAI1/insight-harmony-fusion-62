@@ -17,10 +17,6 @@ const InsightsGenerator = () => {
   const [results, setResults] = useState<AnalysisResults | null>(null);
   const [edgeFunctionDeployed, setEdgeFunctionDeployed] = useState(true);
   
-  useEffect(() => {
-    showEdgeFunctionNotice();
-  }, []);
-  
   const generateInsights = async () => {
     if (!query.trim()) {
       toast.error("Please enter a research query");
@@ -288,4 +284,3 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
 };
 
 export default InsightsGenerator;
-
