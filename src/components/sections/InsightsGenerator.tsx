@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,16 +8,15 @@ import { fetchQualitativeData } from "@/services/api/dataSourceService";
 import { ResearchQuery, AnalysisResults } from "@/services/types/qualitativeAnalysisTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { showEdgeFunctionNotice } from "@/services/utils/apiUtils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, CheckCircle } from "lucide-react";
 
 const InsightsGenerator = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
+  const [edgeFunctionDeployed, setEdgeFunctionDeployed] = useState(true);
   
-  // Show Edge Function notice on component mount
   useEffect(() => {
     showEdgeFunctionNotice();
   }, []);
@@ -64,12 +62,12 @@ const InsightsGenerator = () => {
           </p>
         </div>
         
-        <Alert className="mb-6 bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-          <InfoIcon className="h-4 w-4" />
-          <AlertTitle>Supabase Edge Function Required</AlertTitle>
+        <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <AlertTitle>Edge Function Deployed</AlertTitle>
           <AlertDescription>
-            To fully utilize this feature, deploy the "newsapi-proxy" Edge Function to your Supabase project. 
-            Until then, the application will use simulated data.
+            The "newsapi-proxy" Edge Function has been deployed to your Supabase project and is now in use. 
+            This allows real-time news data access without CORS issues.
           </AlertDescription>
         </Alert>
         

@@ -4,7 +4,7 @@ import { detectSentiment } from "../utils/sentimentUtils";
 import { extractKeywords, extractTopics, getDateFromTimeFrame } from "../utils/textAnalysisUtils";
 import { toast } from "sonner";
 import { showApiRestrictionNotice, generatePlaceholderData, handleApiError } from "../utils/apiUtils";
-import { supabase } from "../supabase/supabaseService";
+import { supabase } from "@/integrations/supabase/client";
 
 // News API integration using Supabase Edge Function as a proxy
 export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
@@ -15,153 +15,73 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     // Convert timeframe to date range for News API
     const from = getDateFromTimeFrame(query.timeFrame);
     
-    // Check if we should use the Supabase Edge Function or direct API
-    const useEdgeFunction = true; // Always use Edge Function to avoid CORS
+    console.log("Using Supabase Edge Function for News API request");
     
-    if (useEdgeFunction) {
-      console.log("Using Supabase Edge Function for News API request");
-      
-      // Build the URL for the Supabase Edge Function
-      const params = new URLSearchParams();
-      params.append("q", `${query.query} ${query.keywords.join(" ")}`);
-      params.append("from", from);
-      params.append("sortBy", "relevancy");
-      params.append("language", "en");
-      params.append("pageSize", "25");
-      
-      try {
-        // Call the Supabase Edge Function
-        const { data: functionData, error: functionError } = await supabase.functions.invoke(
-          "newsapi-proxy",
-          {
-            body: {
-              query: params.toString()
-            }
-          }
-        );
-        
-        if (functionError) {
-          console.error("Supabase Edge Function error:", functionError);
-          toast.error("Error calling News API via Supabase", {
-            description: functionError.message || "Check the console for details",
-          });
-          
-          // Fallback to simulated data
-          return generateFallbackNewsData(query);
+    // Build the params for the Edge Function
+    const params = new URLSearchParams();
+    params.append("q", `${query.query} ${query.keywords.join(" ")}`);
+    if (from) params.append("from", from);
+    params.append("sortBy", "relevancy");
+    params.append("language", "en");
+    params.append("pageSize", "25");
+    
+    try {
+      // Call the Supabase Edge Function
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        "newsapi-proxy",
+        {
+          method: "GET",
+          query: params
         }
-        
-        console.log("Edge Function response:", functionData);
-        
-        // Process the response data the same way as direct API
-        if (functionData.articles && functionData.articles.length > 0) {
-          // Extract quotes from articles
-          const quotes: QuoteData[] = functionData.articles.slice(0, 10).map((article: any) => {
-            const sentiment = detectSentiment(article.title + " " + (article.description || ""));
-            
-            return {
-              text: article.description || article.title,
-              sentiment,
-              source: "News: " + article.source.name,
-              date: article.publishedAt ? new Date(article.publishedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-            };
-          });
-          
-          // Extract keywords from titles
-          const keywords = extractKeywords(functionData.articles.map((a: any) => a.title).join(" "));
-          
-          // Extract potential topics
-          const topics = extractTopics(functionData.articles.map((a: any) => a.title + " " + (a.description || "")).join(" "));
-          
-          return { quotes, keywords, topics };
-        }
-        
-        toast.warning("No articles found matching your search criteria", {
-          description: "Try broadening your search terms or timeframe",
+      );
+      
+      if (functionError) {
+        console.error("Supabase Edge Function error:", functionError);
+        toast.error("Error calling News API via Supabase", {
+          description: functionError.message || "Check the console for details",
         });
         
-        return { quotes: [], keywords: [], topics: [] };
-      } catch (error) {
-        console.error("Error invoking Supabase Edge Function:", error);
-        toast.error("Error connecting to Supabase Edge Function", {
-          description: "Falling back to simulated data",
-        });
-        
+        // Fallback to simulated data
         return generateFallbackNewsData(query);
       }
-    } else {
-      // Direct API call code - kept as fallback but not used anymore
-      // Build News API URL
-      const url = new URL("https://newsapi.org/v2/everything");
-      url.searchParams.append("q", `${query.query} ${query.keywords.join(" ")}`);
-      url.searchParams.append("from", from);
-      url.searchParams.append("sortBy", "relevancy");
-      url.searchParams.append("language", "en");
-      url.searchParams.append("pageSize", "25");
-      url.searchParams.append("apiKey", newsApiKey);
       
-      console.log("Fetching news data with URL:", url.toString());
+      console.log("Edge Function response:", functionData);
       
-      try {
-        const response = await fetch(url.toString());
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("News API error:", errorData);
+      // Process the response data
+      if (functionData.articles && functionData.articles.length > 0) {
+        // Extract quotes from articles
+        const quotes: QuoteData[] = functionData.articles.slice(0, 10).map((article: any) => {
+          const sentiment = detectSentiment(article.title + " " + (article.description || ""));
           
-          if (response.status === 401) {
-            toast.error("News API key is invalid or missing. Please update your API key.");
-          } else if (response.status === 429) {
-            toast.error("News API rate limit exceeded. Try again later or use a different API key.");
-          } else if (errorData && errorData.code === "corsNotAllowed") {
-            // Handle CORS restriction specifically
-            showApiRestrictionNotice("News API");
-            return generateFallbackNewsData(query);
-          } else {
-            toast.error(`News API error: ${errorData.message || response.statusText}`);
-          }
-          
-          return { quotes: [], keywords: [], topics: [] };
-        }
+          return {
+            text: article.description || article.title,
+            sentiment,
+            source: "News: " + article.source.name,
+            date: article.publishedAt ? new Date(article.publishedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+          };
+        });
         
-        const data = await response.json();
-        console.log("News API response:", data);
+        // Extract keywords from titles
+        const keywords = extractKeywords(functionData.articles.map((a: any) => a.title).join(" "));
         
-        if (data.articles && data.articles.length > 0) {
-          // Extract quotes from articles
-          const quotes: QuoteData[] = data.articles.slice(0, 10).map((article: any) => {
-            // Simple sentiment detection based on title and description
-            const sentiment = detectSentiment(article.title + " " + (article.description || ""));
-            
-            return {
-              text: article.description || article.title,
-              sentiment,
-              source: "News: " + article.source.name,
-              date: article.publishedAt ? new Date(article.publishedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-            };
-          });
-          
-          // Extract keywords from titles
-          const keywords = extractKeywords(data.articles.map((a: any) => a.title).join(" "));
-          
-          // Extract potential topics
-          const topics = extractTopics(data.articles.map((a: any) => a.title + " " + (a.description || "")).join(" "));
-          
-          return { quotes, keywords, topics };
-        }
+        // Extract potential topics
+        const topics = extractTopics(functionData.articles.map((a: any) => a.title + " " + (a.description || "")).join(" "));
         
-        return { quotes: [], keywords: [], topics: [] };
-      } catch (error) {
-        console.error("News API fetch error:", error);
-        
-        // Check if the error is CORS-related
-        if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
-          console.log("CORS issue detected with News API");
-          showApiRestrictionNotice("News API");
-          return generateFallbackNewsData(query);
-        }
-        
-        throw error;
+        return { quotes, keywords, topics };
       }
+      
+      toast.warning("No articles found matching your search criteria", {
+        description: "Try broadening your search terms or timeframe",
+      });
+      
+      return { quotes: [], keywords: [], topics: [] };
+    } catch (error) {
+      console.error("Error invoking Supabase Edge Function:", error);
+      toast.error("Error connecting to Supabase Edge Function", {
+        description: "Falling back to simulated data",
+      });
+      
+      return generateFallbackNewsData(query);
     }
   } catch (error) {
     handleApiError(error, "News API");

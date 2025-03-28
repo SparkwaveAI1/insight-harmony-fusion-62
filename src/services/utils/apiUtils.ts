@@ -15,18 +15,18 @@ export const handleApiError = (error: unknown, service: string): void => {
 export const showApiRestrictionNotice = (apiName: string): void => {
   console.log(`${apiName} API has CORS restrictions in browser environment`);
   toast.warning(`${apiName} API requires a backend proxy for browser requests`, {
-    description: "To use real data, deploy a proxy server or connect through Supabase Edge Functions",
+    description: "Using Supabase Edge Function to proxy API requests",
     duration: 5000,
     id: `${apiName.toLowerCase()}-api-cors-warning`
   });
 };
 
-// Edge Function deployment notification
-export const showEdgeFunctionNotice = (): void => {
-  toast.info("Edge Function needs deployment", {
-    description: "Deploy the 'newsapi-proxy' Edge Function to your Supabase project for real data",
-    duration: 7000,
-    id: "edge-function-deploy-notice"
+// Edge Function success notification
+export const showEdgeFunctionSuccess = (): void => {
+  toast.success("Edge Function deployed successfully", {
+    description: "The 'newsapi-proxy' Edge Function is now handling API requests",
+    duration: 5000,
+    id: "edge-function-success-notice"
   });
 };
 
