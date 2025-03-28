@@ -10,12 +10,13 @@ import { ResearchQuery, AnalysisResults } from "@/services/types/qualitativeAnal
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, CheckCircle, AlertTriangle } from "lucide-react";
+import { InfoIcon, CheckCircle, AlertTriangle, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const InsightsGenerator = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
   const [edgeFunctionStatus, setEdgeFunctionStatus] = useState<"checking" | "available" | "unavailable" | "error">("checking");
   const [lastPolledTime, setLastPolledTime] = useState<Date | null>(null);
@@ -103,8 +104,9 @@ const InsightsGenerator = () => {
       console.log("Research query parameters:", researchQuery);
       
       const data = await fetchQualitativeData(researchQuery);
-      console.log("Insights generation returned data:", data);
+      setHasGenerated(true);
       
+      console.log("Insights generation returned data:", data);
       setResults(data);
       
       if (data) {
@@ -123,6 +125,12 @@ const InsightsGenerator = () => {
       setResults(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isLoading) {
+      generateInsights();
     }
   };
   
@@ -199,17 +207,36 @@ const InsightsGenerator = () => {
               placeholder="E.g., AI tokens fear and regulation, Zelenskyy administration strategy..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
               className="flex-grow"
             />
-            <Button onClick={generateInsights} disabled={isLoading}>
-              {isLoading ? "Generating..." : "Generate Insights"}
+            <Button 
+              onClick={generateInsights} 
+              disabled={isLoading}
+              className="flex gap-2 items-center"
+            >
+              {isLoading ? (
+                <>
+                  <span className="animate-spin h-4 w-4 border-2 border-t-transparent rounded-full"></span>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  Generate Insights
+                </>
+              )}
             </Button>
           </div>
           
           {isLoading ? (
             <InsightsLoadingState />
-          ) : results ? (
-            <InsightsResults results={results} />
+          ) : hasGenerated ? (
+            results ? (
+              <InsightsResults results={results} />
+            ) : (
+              <NoResultsState query={query} />
+            )
           ) : (
             <EmptyState edgeFunctionStatus={edgeFunctionStatus} />
           )}
@@ -235,6 +262,21 @@ const EmptyState = ({ edgeFunctionStatus }: { edgeFunctionStatus: string }) => (
           </AlertDescription>
         </Alert>
       )}
+    </CardContent>
+  </Card>
+);
+
+const NoResultsState = ({ query }: { query: string }) => (
+  <Card className="border-dashed border-2 bg-transparent">
+    <CardContent className="pt-6 text-center py-16">
+      <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+      <h3 className="text-xl font-semibold mb-2">No Results Found</h3>
+      <p className="text-muted-foreground mb-4">
+        We couldn't find any data for "{query}". Please try a different search term or check the Edge Function deployment.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Try more popular topics or broader search terms to get better results.
+      </p>
     </CardContent>
   </Card>
 );

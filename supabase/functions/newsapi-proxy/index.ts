@@ -38,6 +38,9 @@ serve(async (req) => {
     // Process request based on HTTP method
     if (req.method === "POST") {
       try {
+        // Log the start of the POST request processing
+        console.log("Processing POST request");
+        
         const requestText = await req.text();
         console.log("Raw POST request body:", requestText);
         

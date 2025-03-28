@@ -1,3 +1,4 @@
+
 import { ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { detectSentiment } from "../utils/sentimentUtils";
@@ -48,14 +49,22 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
           description: functionError.message || "Check the console for details",
         });
         
-        // Return empty result instead of simulated data
         return { quotes: [], keywords: [], topics: [] };
       }
       
       console.log("Edge Function response:", functionData);
       
+      // Check if response is empty or invalid
+      if (!functionData) {
+        console.error("Empty response from Edge Function");
+        toast.error("No data received from News API", {
+          description: "The API response was empty",
+        });
+        return { quotes: [], keywords: [], topics: [] };
+      }
+      
       // Process the response data
-      if (functionData && functionData.articles && functionData.articles.length > 0) {
+      if (functionData.articles && functionData.articles.length > 0) {
         // Extract quotes from articles
         const quotes: QuoteData[] = functionData.articles.slice(0, 10).map((article: any) => {
           const sentiment = detectSentiment(article.title + " " + (article.description || ""));
@@ -76,21 +85,27 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
         
         toast.success(`Retrieved ${quotes.length} articles from News API`);
         return { quotes, keywords, topics };
+      } else if (functionData.status === "error") {
+        // Handle API error response
+        console.error("News API returned an error:", functionData.message || "Unknown error");
+        toast.error("News API error", {
+          description: functionData.message || "Unknown error occurred",
+        });
+        return { quotes: [], keywords: [], topics: [] };
+      } else {
+        // API returned success but no articles
+        console.warn("News API returned no articles");
+        toast.warning("No articles found matching your search criteria", {
+          description: "Try broadening your search terms or timeframe",
+        });
+        return { quotes: [], keywords: [], topics: [] };
       }
-      
-      // If we get here but don't have articles, it means the API returned a success response but no data
-      toast.warning("No articles found matching your search criteria", {
-        description: "Try broadening your search terms or timeframe",
-      });
-      
-      return { quotes: [], keywords: [], topics: [] };
     } catch (error) {
       console.error("Error invoking Supabase Edge Function:", error);
       toast.error("Error connecting to Supabase Edge Function", {
         description: "Check connection and deployment status",
       });
       
-      // Return empty result instead of simulated data
       return { quotes: [], keywords: [], topics: [] };
     }
   } catch (error) {

@@ -22,19 +22,25 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     
     console.log("Using data sources:", sourcesToQuery);
     
-    // Create promise array for parallel API calls
+    // Create promise array for parallel API calls (though we're currently only using News API)
     const apiPromises = sourcesToQuery.map(source => {
       const fetcher = getFetcherForSource(source);
       return fetcher(query).then(result => {
-        sourceResults[source] = result.quotes.length > 0;
-        quotes = [...quotes, ...result.quotes];
-        keywords = [...keywords, ...result.keywords];
-        topics = [...topics, ...result.topics];
-        console.log(`Data from ${source}:`, result);
+        console.log(`Received data from ${source}:`, result);
         
-        // Show toast with data source information
+        // Mark this source as successful only if it returned quotes
+        sourceResults[source] = result.quotes.length > 0;
+        
+        // Only add data if we actually got quotes
         if (result.quotes.length > 0) {
+          quotes = [...quotes, ...result.quotes];
+          keywords = [...keywords, ...result.keywords];
+          topics = [...topics, ...result.topics];
+          
+          // Show toast with data source information
           toast.success(`Retrieved ${result.quotes.length} quotes from ${source}`);
+        } else {
+          console.warn(`No quotes returned from ${source}`);
         }
       }).catch(error => {
         handleApiError(error, `${source} API`);
@@ -45,22 +51,30 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     // Wait for all API calls to complete
     await Promise.all(apiPromises);
     
-    // Filter quotes by sentiment if specified
-    if (query.sentiment !== "all") {
-      quotes = quotes.filter(quote => quote.sentiment === query.sentiment);
-    }
-    
-    // If no data returned from any source, don't fall back to mock data
+    // If no data returned from any source, return null
     const anySourceSucceeded = Object.values(sourceResults).some(success => success);
-    if (!anySourceSucceeded) {
-      console.log("No real data available, NOT using mock data as fallback");
+    if (!anySourceSucceeded || quotes.length === 0) {
+      console.log("No data returned from any source");
       
-      // Inform the user
       toast.info("No data found from available sources. Try a different search query or check Edge Function deployment.", {
         duration: 5000
       });
       
       return null;
+    }
+    
+    // Filter quotes by sentiment if specified
+    if (query.sentiment !== "all") {
+      quotes = quotes.filter(quote => quote.sentiment === query.sentiment);
+      
+      // If filtering left us with no quotes, return null
+      if (quotes.length === 0) {
+        toast.info(`No ${query.sentiment} sentiment quotes found in the results`, {
+          description: "Try selecting 'all' for sentiment filtering",
+          duration: 5000
+        });
+        return null;
+      }
     }
     
     // Calculate sentiment breakdown
@@ -110,7 +124,7 @@ function getFetcherForSource(source: string) {
 // Generate source breakdown based on quotes
 function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: number } {
   if (quotes.length === 0) {
-    return { "news": 100 }; // Default to 100% news if no quotes
+    return {}; // Return empty object if no quotes
   }
   
   const sourceCounts: { [key: string]: number } = {};
@@ -136,7 +150,7 @@ function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: n
 // Calculate sentiment breakdown from quotes
 function calculateSentimentBreakdown(quotes: QuoteData[]): { positive: number; neutral: number; negative: number } {
   if (quotes.length === 0) {
-    return { positive: 0, neutral: 0, negative: 0 }; // Return zeros instead of default distribution
+    return { positive: 0, neutral: 0, negative: 0 }; // Return zeros for empty quotes
   }
   
   const sentimentCounts = quotes.reduce(
