@@ -288,3 +288,4 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
 };
 
 export default InsightsGenerator;
+

@@ -1,3 +1,4 @@
+
 import { ResearchQuery, QuoteData } from "../types/qualitativeAnalysisTypes";
 import { getApiKeys } from "../utils/apiKeyUtils";
 import { detectSentiment } from "../utils/sentimentUtils";
@@ -34,7 +35,8 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
           headers: { 
             "Content-Type": "application/json" 
           },
-          queryParams: params
+          // Fix: Change queryParams to query which is the correct property name
+          query: Object.fromEntries(params)
         }
       );
       
