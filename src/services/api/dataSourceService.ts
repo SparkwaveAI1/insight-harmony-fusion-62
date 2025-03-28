@@ -4,10 +4,9 @@ import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./dataSourceApi";
 import { handleApiError } from "../utils/apiUtils";
-import { generateMockResults } from "../mock/mockDataService";
 
 // Main function to fetch qualitative data from real APIs
-export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults> {
+export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults | null> {
   try {
     console.log("Fetching qualitative data for query:", query);
     
@@ -51,17 +50,17 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       quotes = quotes.filter(quote => quote.sentiment === query.sentiment);
     }
     
-    // If no data returned from any source, fall back to mock data
+    // If no data returned from any source, don't fall back to mock data
     const anySourceSucceeded = Object.values(sourceResults).some(success => success);
-    if (!anySourceSucceeded && Object.keys(sourceResults).length > 0) {
-      console.log("No real data available, falling back to mock data");
+    if (!anySourceSucceeded) {
+      console.log("No real data available, NOT using mock data as fallback");
       
-      // Use mock data but inform the user
-      toast.info("No data found from available sources, using sample data instead.", {
-        description: "Try a different search query or check API connectivity."
+      // Inform the user
+      toast.info("No data found from available sources. Try a different search query or check Edge Function deployment.", {
+        duration: 5000
       });
       
-      return generateMockResults(query);
+      return null;
     }
     
     // Calculate sentiment breakdown
@@ -69,35 +68,28 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     
     // Generate AI insights and trends analysis
     const aiInsights = generateAIInsights(topics, sentimentBreakdown, keywords, query);
-    const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)]; // Wrapping in array
-    
-    // Use the default mock result as a base and override with our real data
-    const defaultResult = generateMockResults(query);
+    const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)];
     
     return {
-      // Use the real data we collected
-      topTopics: topics.length > 0 ? topics : defaultResult.topTopics,
+      topTopics: topics,
       sentimentBreakdown,
-      exampleQuotes: quotes.length > 0 ? quotes.slice(0, 10) : defaultResult.exampleQuotes, // Limit to 10 quotes
-      keyPhrases: keywords.length > 0 ? keywords : defaultResult.keyPhrases,
-      aiInsights: aiInsights.length > 0 ? aiInsights : defaultResult.aiInsights,
+      exampleQuotes: quotes.slice(0, 10), // Limit to 10 quotes
+      keyPhrases: keywords,
+      aiInsights,
       trendsAnalysis,
       reportGeneratedAt: new Date().toISOString(),
-      
-      // For properties where we don't have real data, use the mock data
-      aiSummary: quotes.length > 0 
-        ? `Analysis of conversations around "${query.query}" based on ${quotes.length} collected articles.`
-        : defaultResult.aiSummary,
-      keyInsights: defaultResult.keyInsights,
-      challenges: defaultResult.challenges,
-      recommendations: defaultResult.recommendations,
-      timelineEvents: defaultResult.timelineEvents,
-      topicRippleData: defaultResult.topicRippleData,
-      topicInsights: defaultResult.topicInsights,
+      aiSummary: `Analysis of conversations around "${query.query}" based on ${quotes.length} collected articles.`,
+      keyInsights: [],
+      challenges: [],
+      recommendations: [],
+      timelineEvents: [],
+      topicRippleData: [],
+      topicInsights: [],
       sourceBreakdown: generateSourceBreakdown(quotes)
     };
   } catch (error) {
-    return handleGlobalError(error, query);
+    handleApiError(error, "Qualitative data fetching");
+    return null;
   }
 }
 
@@ -144,7 +136,7 @@ function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: n
 // Calculate sentiment breakdown from quotes
 function calculateSentimentBreakdown(quotes: QuoteData[]): { positive: number; neutral: number; negative: number } {
   if (quotes.length === 0) {
-    return { positive: 33, neutral: 34, negative: 33 }; // Default even distribution
+    return { positive: 0, neutral: 0, negative: 0 }; // Return zeros instead of default distribution
   }
   
   const sentimentCounts = quotes.reduce(
@@ -161,10 +153,4 @@ function calculateSentimentBreakdown(quotes: QuoteData[]): { positive: number; n
     neutral: Math.round((sentimentCounts.neutral / total) * 100),
     negative: Math.round((sentimentCounts.negative / total) * 100)
   };
-}
-
-// Global error handler for the main function
-async function handleGlobalError(error: unknown, query: ResearchQuery): Promise<AnalysisResults> {
-  handleApiError(error, "Qualitative data fetching");
-  return generateMockResults(query);
 }

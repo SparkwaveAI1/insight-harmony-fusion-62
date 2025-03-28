@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,36 +10,62 @@ import { ResearchQuery, AnalysisResults } from "@/services/types/qualitativeAnal
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, CheckCircle } from "lucide-react";
+import { InfoIcon, CheckCircle, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const InsightsGenerator = () => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
-  const [edgeFunctionStatus, setEdgeFunctionStatus] = useState<"checking" | "available" | "unavailable">("checking");
+  const [edgeFunctionStatus, setEdgeFunctionStatus] = useState<"checking" | "available" | "unavailable" | "error">("checking");
+  const [lastPolledTime, setLastPolledTime] = useState<Date | null>(null);
+  
+  // Function to check if Edge Function is available
+  const checkEdgeFunction = async () => {
+    try {
+      setEdgeFunctionStatus("checking");
+      
+      console.log("Checking if newsapi-proxy Edge Function is available...");
+      const { data, error } = await supabase.functions.invoke("newsapi-proxy", {
+        method: "OPTIONS"
+      });
+      
+      if (error) {
+        console.warn("Edge Function check error:", error);
+        setEdgeFunctionStatus("unavailable");
+        toast.error("Edge Function is not available", {
+          description: "Please make sure the newsapi-proxy function is deployed",
+          duration: 5000
+        });
+      } else {
+        console.log("Edge Function is available:", data);
+        setEdgeFunctionStatus("available");
+        toast.success("Edge Function is available", {
+          description: "Ready to fetch real news data",
+          duration: 3000
+        });
+      }
+      
+      setLastPolledTime(new Date());
+    } catch (err) {
+      console.error("Error checking Edge Function:", err);
+      setEdgeFunctionStatus("error");
+      toast.error("Error checking Edge Function", {
+        description: "An unexpected error occurred",
+        duration: 5000
+      });
+    }
+  };
   
   useEffect(() => {
-    const checkEdgeFunction = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("newsapi-proxy", {
-          method: "GET"
-        });
-        
-        if (error) {
-          console.warn("Edge Function check error:", error);
-          setEdgeFunctionStatus("unavailable");
-        } else {
-          console.log("Edge Function is available:", data);
-          setEdgeFunctionStatus("available");
-        }
-      } catch (err) {
-        console.error("Error checking Edge Function:", err);
-        setEdgeFunctionStatus("unavailable");
-      }
-    };
-    
     checkEdgeFunction();
+    
+    // Poll the edge function status every 60 seconds
+    const interval = setInterval(() => {
+      checkEdgeFunction();
+    }, 60000);
+    
+    return () => clearInterval(interval);
   }, []);
   
   const generateInsights = async () => {
@@ -47,9 +74,23 @@ const InsightsGenerator = () => {
       return;
     }
     
+    // Check if edge function is available before proceeding
+    if (edgeFunctionStatus !== "available") {
+      const proceed = window.confirm(
+        "The Edge Function appears to be unavailable, which may result in no data. Would you still like to proceed?"
+      );
+      
+      if (!proceed) {
+        return;
+      }
+    }
+    
     setIsLoading(true);
+    setResults(null); // Clear any previous results
     
     try {
+      console.log("Starting insight generation process for query:", query);
+      
       const researchQuery: ResearchQuery = {
         query: query,
         sources: ["news"], // Focus on News API for now
@@ -58,12 +99,27 @@ const InsightsGenerator = () => {
         keywords: []
       };
       
+      console.log("Research query parameters:", researchQuery);
+      
       const data = await fetchQualitativeData(researchQuery);
+      console.log("Insights generation returned data:", data);
+      
       setResults(data);
-      toast.success("Insights generated successfully!");
+      
+      if (data) {
+        toast.success("Insights generated successfully!");
+      } else {
+        toast.info("No data available for this query", {
+          description: "Try a different search term or check the Edge Function deployment",
+          duration: 5000
+        });
+      }
     } catch (error) {
       console.error("Error generating insights:", error);
-      toast.error("Failed to generate insights. Please try again.");
+      toast.error("Failed to generate insights", {
+        description: "Please try again or check the console for details"
+      });
+      setResults(null);
     } finally {
       setIsLoading(false);
     }
@@ -87,14 +143,43 @@ const InsightsGenerator = () => {
             <AlertTitle>Edge Function Deployed</AlertTitle>
             <AlertDescription>
               The "newsapi-proxy" Edge Function is active and ready to fetch real-time news data.
+              {lastPolledTime && (
+                <span className="text-xs block mt-1">
+                  Last checked: {lastPolledTime.toLocaleTimeString()}
+                </span>
+              )}
             </AlertDescription>
           </Alert>
         ) : edgeFunctionStatus === "unavailable" ? (
           <Alert className="mb-6 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
-            <InfoIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <AlertTitle>Using Simulated Data</AlertTitle>
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertTitle>Edge Function Not Available</AlertTitle>
             <AlertDescription>
-              The "newsapi-proxy" Edge Function could not be reached. Simulated data will be used for demonstrations.
+              The "newsapi-proxy" Edge Function could not be reached. No data will be available.
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 h-7 px-2 text-xs" 
+                onClick={checkEdgeFunction}
+              >
+                Check Again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : edgeFunctionStatus === "error" ? (
+          <Alert className="mb-6 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800">
+            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <AlertTitle>Error Checking Edge Function</AlertTitle>
+            <AlertDescription>
+              An error occurred while checking the Edge Function status.
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 h-7 px-2 text-xs" 
+                onClick={checkEdgeFunction}
+              >
+                Retry
+              </Button>
             </AlertDescription>
           </Alert>
         ) : (
@@ -125,7 +210,7 @@ const InsightsGenerator = () => {
           ) : results ? (
             <InsightsResults results={results} />
           ) : (
-            <EmptyState />
+            <EmptyState edgeFunctionStatus={edgeFunctionStatus} />
           )}
         </div>
       </div>
@@ -133,12 +218,22 @@ const InsightsGenerator = () => {
   );
 };
 
-const EmptyState = () => (
+const EmptyState = ({ edgeFunctionStatus }: { edgeFunctionStatus: string }) => (
   <Card className="border-dashed border-2 bg-transparent">
     <CardContent className="pt-6 text-center py-16">
       <p className="text-muted-foreground mb-4">
         Enter a query above and click "Generate Insights" to see AI-powered analysis
       </p>
+      
+      {edgeFunctionStatus !== "available" && (
+        <Alert className="mt-4 bg-amber-50/50 border-amber-200 dark:bg-amber-900/10">
+          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <AlertTitle className="text-sm">Edge Function Status: {edgeFunctionStatus}</AlertTitle>
+          <AlertDescription className="text-xs">
+            The Edge Function may not be properly deployed. Results may be limited.
+          </AlertDescription>
+        </Alert>
+      )}
     </CardContent>
   </Card>
 );
@@ -171,12 +266,13 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {results.aiInsights && results.aiInsights.map((insight, index) => (
-                <p key={index} className="text-sm">• {insight}</p>
-              ))}
-              {!results.aiInsights && results.keyInsights && results.keyInsights.map((insight, index) => (
-                <p key={index} className="text-sm">• {insight}</p>
-              ))}
+              {results.aiInsights && results.aiInsights.length > 0 ? (
+                results.aiInsights.map((insight, index) => (
+                  <p key={index} className="text-sm">• {insight}</p>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No insights available for this query.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -187,14 +283,15 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
               <CardTitle>Top Topics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {results.topTopics && results.topTopics.map((topic, index) => (
-                  <Badge key={index} variant="secondary">{topic}</Badge>
-                ))}
-                {!results.topTopics && results.topicInsights && results.topicInsights.map((insight, index) => (
-                  <Badge key={index} variant="secondary">{insight.topic}</Badge>
-                ))}
-              </div>
+              {results.topTopics && results.topTopics.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {results.topTopics.map((topic, index) => (
+                    <Badge key={index} variant="secondary">{topic}</Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No topics identified for this query.</p>
+              )}
             </CardContent>
           </Card>
           
@@ -203,41 +300,49 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
               <CardTitle>Sentiment Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                  <div 
-                    className="bg-green-500 h-2.5 rounded-full" 
-                    style={{ width: `${results.sentimentBreakdown.positive}%` }}
-                  ></div>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {results.sentimentBreakdown.positive}% Positive
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                  <div 
-                    className="bg-gray-400 h-2.5 rounded-full" 
-                    style={{ width: `${results.sentimentBreakdown.neutral}%` }}
-                  ></div>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {results.sentimentBreakdown.neutral}% Neutral
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                  <div 
-                    className="bg-red-500 h-2.5 rounded-full" 
-                    style={{ width: `${results.sentimentBreakdown.negative}%` }}
-                  ></div>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {results.sentimentBreakdown.negative}% Negative
-                </span>
-              </div>
+              {results.sentimentBreakdown.positive > 0 || 
+               results.sentimentBreakdown.neutral > 0 || 
+               results.sentimentBreakdown.negative > 0 ? (
+                <>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                      <div 
+                        className="bg-green-500 h-2.5 rounded-full" 
+                        style={{ width: `${results.sentimentBreakdown.positive}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {results.sentimentBreakdown.positive}% Positive
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                      <div 
+                        className="bg-gray-400 h-2.5 rounded-full" 
+                        style={{ width: `${results.sentimentBreakdown.neutral}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {results.sentimentBreakdown.neutral}% Neutral
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                      <div 
+                        className="bg-red-500 h-2.5 rounded-full" 
+                        style={{ width: `${results.sentimentBreakdown.negative}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {results.sentimentBreakdown.negative}% Negative
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No sentiment data available for this query.</p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -251,27 +356,8 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {results.exampleQuotes && results.exampleQuotes.map((quote, index) => (
-                <Card key={index} className={`border-l-4 ${
-                  quote.sentiment === 'positive' ? 'border-l-green-500' :
-                  quote.sentiment === 'negative' ? 'border-l-red-500' : 'border-l-gray-500'
-                }`}>
-                  <CardContent className="py-4">
-                    <p className="italic text-sm mb-2">"{quote.text}"</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-muted-foreground">{quote.source}</span>
-                      <Badge variant={
-                        quote.sentiment === 'positive' ? 'default' :
-                        quote.sentiment === 'negative' ? 'destructive' : 'secondary'
-                      }>
-                        {quote.sentiment.charAt(0).toUpperCase() + quote.sentiment.slice(1)}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {!results.exampleQuotes && results.timelineEvents && results.timelineEvents.map((event) => (
-                event.quotes && event.quotes.map((quote, index) => (
+              {results.exampleQuotes && results.exampleQuotes.length > 0 ? (
+                results.exampleQuotes.map((quote, index) => (
                   <Card key={index} className={`border-l-4 ${
                     quote.sentiment === 'positive' ? 'border-l-green-500' :
                     quote.sentiment === 'negative' ? 'border-l-red-500' : 'border-l-gray-500'
@@ -290,7 +376,9 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
                     </CardContent>
                   </Card>
                 ))
-              ))}
+              ) : (
+                <p className="text-sm text-muted-foreground">No quotes found for this query.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -304,17 +392,13 @@ const InsightsResults = ({ results }: { results: AnalysisResults }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {results.trendsAnalysis && results.trendsAnalysis.map((trend, index) => (
-                <div key={index} className="whitespace-pre-line text-sm">{trend}</div>
-              ))}
-              {!results.trendsAnalysis && results.topicInsights && results.topicInsights.map((insight, index) => (
-                <div key={index} className="whitespace-pre-line text-sm">
-                  <strong>{insight.topic}:</strong> {insight.description} 
-                  <span className="ml-1 text-xs">
-                    (Trend: {insight.trend}, Sentiment: {insight.sentiment})
-                  </span>
-                </div>
-              ))}
+              {results.trendsAnalysis && results.trendsAnalysis.length > 0 ? (
+                results.trendsAnalysis.map((trend, index) => (
+                  <div key={index} className="whitespace-pre-line text-sm">{trend}</div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No trend analysis available for this query.</p>
+              )}
             </div>
           </CardContent>
         </Card>

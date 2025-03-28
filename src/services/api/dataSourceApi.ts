@@ -3,7 +3,7 @@ import { getApiKeys } from "../utils/apiKeyUtils";
 import { detectSentiment } from "../utils/sentimentUtils";
 import { extractKeywords, extractTopics, getDateFromTimeFrame } from "../utils/textAnalysisUtils";
 import { toast } from "sonner";
-import { showApiRestrictionNotice, generatePlaceholderData, handleApiError } from "../utils/apiUtils";
+import { handleApiError } from "../utils/apiUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 // News API integration using Supabase Edge Function as a proxy
@@ -48,14 +48,14 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
           description: functionError.message || "Check the console for details",
         });
         
-        // Fallback to simulated data
-        return generateFallbackNewsData(query);
+        // Return empty result instead of simulated data
+        return { quotes: [], keywords: [], topics: [] };
       }
       
       console.log("Edge Function response:", functionData);
       
       // Process the response data
-      if (functionData.articles && functionData.articles.length > 0) {
+      if (functionData && functionData.articles && functionData.articles.length > 0) {
         // Extract quotes from articles
         const quotes: QuoteData[] = functionData.articles.slice(0, 10).map((article: any) => {
           const sentiment = detectSentiment(article.title + " " + (article.description || ""));
@@ -87,69 +87,23 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     } catch (error) {
       console.error("Error invoking Supabase Edge Function:", error);
       toast.error("Error connecting to Supabase Edge Function", {
-        description: "Falling back to simulated data",
+        description: "Check connection and deployment status",
       });
       
-      return generateFallbackNewsData(query);
+      // Return empty result instead of simulated data
+      return { quotes: [], keywords: [], topics: [] };
     }
   } catch (error) {
     handleApiError(error, "News API");
-    return generateFallbackNewsData(query);
+    return { quotes: [], keywords: [], topics: [] };
   }
-}
-
-// Generate fallback data for News API when API restrictions prevent direct access
-function generateFallbackNewsData(query: ResearchQuery): { quotes: QuoteData[], keywords: string[], topics: string[] } {
-  const currentDate = new Date().toISOString().split('T')[0];
-  const searchTerms = query.query.toLowerCase();
-  
-  // Create synthetic articles based on query terms
-  const quotes: QuoteData[] = [
-    {
-      text: `Recent discussions about ${query.query} have shown increased interest across multiple sectors.`,
-      sentiment: "positive",
-      source: "News: Simulated Data (CORS Restriction)",
-      date: currentDate
-    },
-    {
-      text: `Analysts remain divided on the implications of ${query.query} for long-term market stability.`,
-      sentiment: "neutral",
-      source: "News: Simulated Data (CORS Restriction)",
-      date: currentDate
-    },
-    {
-      text: `Concerns have been raised regarding potential negative effects of ${query.query} on international relations.`,
-      sentiment: "negative",
-      source: "News: Simulated Data (CORS Restriction)",
-      date: currentDate
-    }
-  ];
-  
-  // Generate plausible keywords from the query
-  const queryWords = query.query.split(/\s+/);
-  const keywords = [...queryWords, ...query.keywords].filter(Boolean);
-  
-  // Generate plausible topics
-  const topics = ["Economic Impact", "Political Discussion", "Social Implications", "Global Trends", "Market Analysis"];
-  
-  toast.info("Using simulated news data due to API restrictions", {
-    description: "Please check Edge Function deployment status",
-    duration: 5000
-  });
-  
-  return { quotes, keywords, topics };
 }
 
 // Placeholder functions for Twitter and Reddit (not used but keeping them for future)
 export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
   // Not implementing Twitter API for now
   return { 
-    quotes: [{
-      text: "Twitter API is not available in this version.",
-      sentiment: "neutral",
-      source: "Twitter",
-      date: new Date().toISOString().split('T')[0]
-    }], 
+    quotes: [], 
     keywords: [], 
     topics: [] 
   };
@@ -158,12 +112,7 @@ export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: 
 export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
   // Not implementing Reddit API for now
   return { 
-    quotes: [{
-      text: "Reddit API is not available in this version.",
-      sentiment: "neutral",
-      source: "Reddit",
-      date: new Date().toISOString().split('T')[0]
-    }], 
+    quotes: [], 
     keywords: [], 
     topics: [] 
   };
