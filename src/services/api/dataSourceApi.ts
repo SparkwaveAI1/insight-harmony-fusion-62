@@ -26,12 +26,15 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
     params.append("pageSize", "25");
     
     try {
-      // Call the Supabase Edge Function
+      // Call the Supabase Edge Function with the correct params format
       const { data: functionData, error: functionError } = await supabase.functions.invoke(
         "newsapi-proxy",
         {
           method: "GET",
-          query: params
+          headers: { 
+            "Content-Type": "application/json" 
+          },
+          queryParams: params
         }
       );
       
