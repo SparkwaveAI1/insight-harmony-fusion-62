@@ -26,8 +26,9 @@ const InsightsGenerator = () => {
       setEdgeFunctionStatus("checking");
       
       console.log("Checking if newsapi-proxy Edge Function is available...");
+      // Using GET method instead of OPTIONS since OPTIONS is not supported by the invoke method
       const { data, error } = await supabase.functions.invoke("newsapi-proxy", {
-        method: "OPTIONS"
+        method: "GET"
       });
       
       if (error) {

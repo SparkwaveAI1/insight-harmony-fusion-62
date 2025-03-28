@@ -21,6 +21,18 @@ serve(async (req) => {
   try {
     console.log(`Handling ${req.method} request to newsapi-proxy`);
     
+    // Handle health check GET requests with no parameters (used for availability checks)
+    if (req.method === "GET" && new URL(req.url).searchParams.size === 0) {
+      console.log("Handling health check GET request");
+      return new Response(
+        JSON.stringify({ status: "ok", message: "Edge Function is available" }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200
+        }
+      );
+    }
+    
     let queryParams = {};
     
     // Process request based on HTTP method
