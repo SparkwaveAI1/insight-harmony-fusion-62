@@ -141,7 +141,23 @@ serve(async (req) => {
     }
     
     // Get API key from environment variable
-    const newsApiKey = Deno.env.get("NEWS_API_KEY") || "fd3f81fca8ee4433b1400b634aee7d2e";
+    const newsApiKey = Deno.env.get("NEWS_API_KEY");
+    if (!newsApiKey) {
+      console.error("NEWS_API_KEY environment variable is not set");
+      return new Response(
+        JSON.stringify({ 
+          status: "error", 
+          message: "News API key is not configured on the server" 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
     
     // Log the parameters being used
     console.log("Processing News API request with parameters:");

@@ -16,13 +16,12 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     let keywords: string[] = [];
     let topics: string[] = [];
     
-    // Focus on News API only for now
-    // Override sources to only use 'news'
-    const sourcesToQuery = ["news"] as DataSource[];
+    // Use the sources that the user has selected
+    const sourcesToQuery = query.sources || ["news"];
     
     console.log("Using data sources:", sourcesToQuery);
     
-    // Create promise array for parallel API calls (though we're currently only using News API)
+    // Create promise array for parallel API calls
     const apiPromises = sourcesToQuery.map(source => {
       const fetcher = getFetcherForSource(source);
       return fetcher(query).then(result => {

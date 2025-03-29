@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -39,7 +38,7 @@ import {
   TimelineEvent,
   TopicRippleData
 } from "@/services/types/qualitativeAnalysisTypes";
-import { fetchQualitativeData } from "@/services/api/dataSourceService"; // Updated to use real service
+import { fetchQualitativeData } from "@/services/api/dataSourceService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -99,7 +98,6 @@ const QualitativeAnalysis: React.FC = () => {
     
     setIsLoading(true);
     try {
-      // Use the actual data service instead of mock data
       const data = await fetchQualitativeData(query);
       console.log("Analysis data received:", data);
       setResults(data);
@@ -580,9 +578,52 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
   const [selectedSentiment, setSelectedSentiment] = useState<SentimentFilter>(query.sentiment);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
 
+  if (!results) {
+    return (
+      <div className="space-y-8">
+        <Reveal>
+          <Card className="shadow-lg border-primary/20 p-8">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={onNewSearch}
+                  className="text-primary hover:text-primary/80"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h3 className="text-xl font-semibold text-[#221F26]">Results for: "{query.query}"</h3>
+              </div>
+              <Button 
+                variant="primary" 
+                onClick={onNewSearch}
+                className="flex items-center gap-2"
+              >
+                New Search
+              </Button>
+            </div>
+            
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-500 mb-4">
+                <Info size={32} />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Analysis Results</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                We couldn't find any results matching your search criteria. Try broadening your search terms, 
+                changing the time frame, or selecting different data sources.
+              </p>
+              <Button variant="outline" onClick={onNewSearch}>
+                Try a Different Search
+              </Button>
+            </div>
+          </Card>
+        </Reveal>
+      </div>
+    );
+  }
+
   useEffect(() => {
-    // We don't need to generate timeline events here anymore
-    // as they'll come from the mock data service
   }, [results]);
 
   const getSentimentColor = (sentiment: string) => {
@@ -595,14 +636,12 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
 
   const handleExportPDF = () => {
     toast.success("Report export started. Your PDF will download shortly.");
-    // In a real implementation, this would call a PDF generation service
     setTimeout(() => {
       toast.success("Report exported successfully!");
     }, 2000);
   };
 
   const filterByKeyword = (keyword: string) => {
-    // This would filter the results based on the keyword
     toast.info(`Filtering results for: ${keyword}`);
   };
 
@@ -615,7 +654,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
     toast.info(`Viewing details for: ${event.label}`);
   };
   
-  // Get colors for topic ripple chart
   const getTopicColor = (topic: string) => {
     const colorMap: {[key: string]: string} = {
       "User Adoption": "#3182CE", // blue
@@ -629,7 +667,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
     return colorMap[topic] || "#718096"; // default gray
   };
   
-  // Filter topic ripple data based on selected topic
   const getFilteredTopicData = () => {
     if (!selectedTopic) return results.topicRippleData;
     
@@ -657,7 +694,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
               <h3 className="text-xl font-semibold text-[#221F26]">Results for: "{query.query}"</h3>
             </div>
             <div className="flex gap-2">
-              {results.reportGeneratedAt && (
+              {results && results.reportGeneratedAt && (
                 <p className="text-xs text-muted-foreground self-center">
                   Generated: {new Date(results.reportGeneratedAt).toLocaleString()}
                 </p>
@@ -680,7 +717,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
             </div>
           </div>
           
-          {/* Filter Bar */}
           <div className="bg-primary/5 p-3 rounded-md mb-6 flex flex-wrap gap-3 items-center">
             <div className="font-medium text-primary text-sm">Filter Results:</div>
             
@@ -716,7 +752,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
             </div>
           </div>
           
-          {/* Tabs Navigation */}
           <Tabs defaultValue="summary" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-5 mb-6">
               <TabsTrigger value="summary" className="flex items-center gap-1.5">
@@ -741,7 +776,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
               </TabsTrigger>
             </TabsList>
             
-            {/* Tab Content */}
             <TabsContent value="summary" className="space-y-6">
               <div className="space-y-6">
                 <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
@@ -815,12 +849,9 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                   </p>
                 </div>
                 
-                {/* Timeline Visualization */}
                 <div className="relative">
-                  {/* Timeline bar */}
                   <div className="absolute top-11 left-0 right-0 h-1.5 bg-primary/20 rounded-full"></div>
                   
-                  {/* Timeline Events */}
                   <div className="relative pt-6 pb-12">
                     {results.timelineEvents.map((event) => (
                       <div 
@@ -848,7 +879,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                   </div>
                 </div>
                 
-                {/* Selected Event Details */}
                 {selectedEvent && (
                   <Card className="p-4 bg-primary/5 border-primary/20">
                     <div className="flex justify-between items-start mb-3">
@@ -898,7 +928,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                   </p>
                 </div>
                 
-                {/* Topic Filters */}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant={selectedTopic === null ? "secondary" : "outline"}
@@ -928,7 +957,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                   }
                 </div>
                 
-                {/* Topic Ripple Visualization */}
                 <div className="h-80 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -969,7 +997,6 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                   </ResponsiveContainer>
                 </div>
                 
-                {/* Topic Insights */}
                 {results.topicInsights && results.topicInsights.length > 0 && (
                   <div className="space-y-4">
                     <h4 className="font-semibold">Topic Insights:</h4>

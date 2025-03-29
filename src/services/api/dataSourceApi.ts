@@ -116,19 +116,27 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
 
 // Placeholder functions for Twitter and Reddit (not used but keeping them for future)
 export async function fetchTwitterData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  // Not implementing Twitter API for now
-  return { 
-    quotes: [], 
-    keywords: [], 
-    topics: [] 
-  };
+  try {
+    console.log("Twitter API is not implemented yet");
+    toast.warning("Twitter API is not yet implemented", {
+      description: "This is a placeholder for future functionality"
+    });
+    return { quotes: [], keywords: [], topics: [] };
+  } catch (error) {
+    handleApiError(error, "Twitter API");
+    return { quotes: [], keywords: [], topics: [] };
+  }
 }
 
 export async function fetchRedditData(query: ResearchQuery): Promise<{ quotes: QuoteData[], keywords: string[], topics: string[] }> {
-  // Not implementing Reddit API for now
-  return { 
-    quotes: [], 
-    keywords: [], 
-    topics: [] 
-  };
+  try {
+    console.log("Reddit API is not implemented yet");
+    toast.warning("Reddit API is not yet implemented", {
+      description: "This is a placeholder for future functionality"
+    });
+    return { quotes: [], keywords: [], topics: [] };
+  } catch (error) {
+    handleApiError(error, "Reddit API");
+    return { quotes: [], keywords: [], topics: [] };
+  }
 }
