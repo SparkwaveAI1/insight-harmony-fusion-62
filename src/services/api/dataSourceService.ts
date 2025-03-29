@@ -30,7 +30,8 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
           // Clean and enhance quotes before adding them
           const enhancedQuotes = result.quotes.map(quote => {
             // Ensure quotes have proper sentiment analysis
-            if (!quote.sentiment || quote.sentiment === "") {
+            if (!quote.sentiment) {
+              // Use detectSentiment instead of directly assigning a string
               quote.sentiment = detectSentiment(quote.text);
             }
             
