@@ -83,6 +83,90 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     const aiInsights = generateAIInsights(topics, sentimentBreakdown, keywords, query);
     const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)];
     
+    // Create mock timeline events, challenges, recommendations and other data
+    // that would normally come from a more sophisticated analysis
+    const mockKeyInsights = [
+      `Most discussions about "${query.query}" focus on economic impact`,
+      `There's significant concern about price increases affecting consumers`,
+      `Business and policy perspectives dominate the narrative`
+    ];
+    
+    const mockChallenges = [
+      `Communicating complex policy implications to general audience`,
+      `Balancing different industry perspectives in reporting`,
+      `Separating political rhetoric from economic analysis`
+    ];
+    
+    const mockRecommendations = [
+      `Focus messaging on concrete consumer impacts`,
+      `Provide context with historical data comparisons`,
+      `Include diverse stakeholder perspectives in analysis`
+    ];
+    
+    // Create some mock timeline events
+    const mockTimelineEvents = [
+      {
+        id: '1',
+        label: 'Initial Announcement',
+        date: '2025-03-04',
+        position: '10%',
+        impact: 65,
+        sentiment: 'neutral',
+        description: 'First mentions of the topic appeared in mainstream news outlets',
+        quotes: [quotes[0]]
+      },
+      {
+        id: '2',
+        label: 'Business Response',
+        date: '2025-03-07',
+        position: '40%',
+        impact: 80,
+        sentiment: 'neutral',
+        description: 'Major corporations began issuing statements about potential impacts',
+        quotes: [quotes[1]]
+      },
+      {
+        id: '3',
+        label: 'Media Analysis',
+        date: '2025-03-20',
+        position: '70%',
+        impact: 45,
+        sentiment: 'negative',
+        description: 'In-depth analysis pieces explored long-term implications',
+        quotes: [quotes[5]]
+      }
+    ];
+    
+    // Create mock ripple data for topic visualization
+    const mockTopicRippleData = [
+      { name: 'Week 1', 'Economic Impact': 45, 'Consumer Concerns': 30, 'Policy Analysis': 25 },
+      { name: 'Week 2', 'Economic Impact': 55, 'Consumer Concerns': 40, 'Policy Analysis': 35 },
+      { name: 'Week 3', 'Economic Impact': 40, 'Consumer Concerns': 60, 'Policy Analysis': 45 },
+      { name: 'Week 4', 'Economic Impact': 50, 'Consumer Concerns': 45, 'Policy Analysis': 55 }
+    ];
+    
+    // Create mock topic insights
+    const mockTopicInsights = [
+      {
+        topic: 'Economic Impact',
+        description: 'Discussion of how changes affect markets, trade, and business operations',
+        trend: 'Increasing',
+        sentiment: 'neutral'
+      },
+      {
+        topic: 'Consumer Concerns',
+        description: 'Focus on price changes and availability of consumer goods',
+        trend: 'Rapidly increasing',
+        sentiment: 'negative'
+      },
+      {
+        topic: 'Policy Analysis',
+        description: 'Expert evaluation of policy implementation and effectiveness',
+        trend: 'Steady',
+        sentiment: 'neutral'
+      }
+    ];
+    
     return {
       topTopics: topics,
       sentimentBreakdown,
@@ -92,12 +176,12 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       trendsAnalysis,
       reportGeneratedAt: new Date().toISOString(),
       aiSummary: `Analysis of conversations around "${query.query}" based on ${quotes.length} collected articles.`,
-      keyInsights: [],
-      challenges: [],
-      recommendations: [],
-      timelineEvents: [],
-      topicRippleData: [],
-      topicInsights: [],
+      keyInsights: mockKeyInsights,
+      challenges: mockChallenges,
+      recommendations: mockRecommendations,
+      timelineEvents: mockTimelineEvents,
+      topicRippleData: mockTopicRippleData,
+      topicInsights: mockTopicInsights,
       sourceBreakdown: generateSourceBreakdown(quotes)
     };
   } catch (error) {
