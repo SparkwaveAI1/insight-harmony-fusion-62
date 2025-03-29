@@ -1,153 +1,10 @@
 
-import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter, TimelineEvent, TopicInsight } from "../types/qualitativeAnalysisTypes";
-import { toast } from "sonner";
-import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
-import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./dataSourceApi";
-import { handleApiError } from "../utils/apiUtils";
-import { detectSentiment, calculateSentimentBreakdown } from "../utils/sentimentUtils";
+import { QuoteData, DataSource, ResearchQuery, TimelineEvent, TopicInsight } from "../types/qualitativeAnalysisTypes";
 
-export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults | null> {
-  try {
-    console.log("Fetching qualitative data for query:", query);
-    
-    const sourceResults: { [key: string]: boolean } = {};
-    let quotes: QuoteData[] = [];
-    let keywords: string[] = [];
-    let topics: string[] = [];
-    
-    const sourcesToQuery = query.sources || ["news"];
-    
-    console.log("Using data sources:", sourcesToQuery);
-    
-    const apiPromises = sourcesToQuery.map(source => {
-      const fetcher = getFetcherForSource(source);
-      return fetcher(query).then(result => {
-        console.log(`Received data from ${source}:`, result);
-        
-        sourceResults[source] = result.quotes.length > 0;
-        
-        if (result.quotes.length > 0) {
-          // Clean and enhance quotes before adding them
-          const enhancedQuotes = result.quotes.map(quote => {
-            // Ensure quotes have proper sentiment analysis
-            if (!quote.sentiment) {
-              // Use detectSentiment which now returns the correct type
-              quote.sentiment = detectSentiment(quote.text);
-            }
-            
-            // Ensure quote text isn't too long for display
-            if (quote.text.length > 300) {
-              quote.text = quote.text.substring(0, 297) + "...";
-            }
-            
-            return quote;
-          });
-          
-          quotes = [...quotes, ...enhancedQuotes];
-          keywords = [...keywords, ...result.keywords];
-          topics = [...topics, ...result.topics];
-          
-          toast.success(`Retrieved ${result.quotes.length} quotes from ${source}`);
-        } else {
-          console.warn(`No quotes returned from ${source}`);
-        }
-      }).catch(error => {
-        handleApiError(error, `${source} API`);
-        sourceResults[source] = false;
-      });
-    });
-    
-    await Promise.all(apiPromises);
-    
-    const anySourceSucceeded = Object.values(sourceResults).some(success => success);
-    if (!anySourceSucceeded || quotes.length === 0) {
-      console.log("No data returned from any source");
-      
-      toast.info("No data found from available sources. Try a different search query or check Edge Function deployment.", {
-        duration: 5000
-      });
-      
-      return null;
-    }
-    
-    if (query.sentiment !== "all") {
-      quotes = quotes.filter(quote => quote.sentiment === query.sentiment);
-      
-      if (quotes.length === 0) {
-        toast.info(`No ${query.sentiment} sentiment quotes found in the results`, {
-          description: "Try selecting 'all' for sentiment filtering",
-          duration: 5000
-        });
-        return null;
-      }
-    }
-    
-    // Sort quotes by relevance and sentiment for better presentation
-    quotes = sortQuotesByRelevance(quotes, query.query);
-    
-    const sentimentBreakdown = calculateSentimentBreakdown(quotes);
-    
-    // Group topics to identify top themes
-    const topTopics = consolidateTopics(topics);
-    
-    const aiInsights = generateAIInsights(topTopics, sentimentBreakdown, keywords, query);
-    const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topTopics, query)];
-    
-    // Extract real key insights from the quotes
-    const keyInsights = extractKeyInsights(quotes, query);
-    
-    // Identify challenges based on negative sentiment quotes
-    const challenges = identifyChallenges(quotes.filter(q => q.sentiment === "negative"), query);
-    
-    // Generate actionable recommendations
-    const recommendations = generateRecommendations(quotes, topTopics, query);
-    
-    // Generate timeline events based on actual quotes
-    const timelineEvents = generateTimelineFromQuotes(quotes);
-    
-    // Generate topic ripple data from actual topics
-    const topicRippleData = generateTopicRippleData(topTopics);
-    
-    // Generate topic insights from actual data
-    const topicInsights = generateTopicInsights(topTopics, quotes);
-    
-    return {
-      topTopics,
-      sentimentBreakdown,
-      exampleQuotes: quotes.slice(0, 10),
-      keyPhrases: keywords,
-      aiInsights,
-      trendsAnalysis,
-      reportGeneratedAt: new Date().toISOString(),
-      aiSummary: `Analysis of conversations around "${query.query}" based on ${quotes.length} collected quotes.`,
-      keyInsights,
-      challenges,
-      recommendations,
-      timelineEvents,
-      topicRippleData,
-      topicInsights,
-      sourceBreakdown: generateSourceBreakdown(quotes)
-    };
-  } catch (error) {
-    handleApiError(error, "Qualitative data fetching");
-    return null;
-  }
-}
-
-function getFetcherForSource(source: string) {
-  switch (source) {
-    case "twitter":
-      return fetchTwitterData;
-    case "reddit":
-      return fetchRedditData;
-    case "news":
-      return fetchNewsData;
-    default:
-      return fetchNewsData;
-  }
-}
-
-function sortQuotesByRelevance(quotes: QuoteData[], queryText: string): QuoteData[] {
+/**
+ * Sort quotes by relevance to query and other factors
+ */
+export function sortQuotesByRelevance(quotes: QuoteData[], queryText: string): QuoteData[] {
   // Sort quotes putting the most relevant and representative ones first
   return [...quotes].sort((a, b) => {
     // Prioritize quotes that contain the query terms
@@ -169,7 +26,10 @@ function sortQuotesByRelevance(quotes: QuoteData[], queryText: string): QuoteDat
   });
 }
 
-function consolidateTopics(topics: string[]): string[] {
+/**
+ * Consolidate topics by frequency and select the most common ones
+ */
+export function consolidateTopics(topics: string[]): string[] {
   // Count topic frequency
   const topicCounts: Record<string, number> = {};
   
@@ -185,7 +45,10 @@ function consolidateTopics(topics: string[]): string[] {
     .map(([topic]) => topic);
 }
 
-function extractKeyInsights(quotes: QuoteData[], query: ResearchQuery): string[] {
+/**
+ * Extract key insights from the quotes
+ */
+export function extractKeyInsights(quotes: QuoteData[], query: ResearchQuery): string[] {
   // Extract insights based on the actual content of quotes
   const insights: string[] = [];
   
@@ -217,7 +80,10 @@ function extractKeyInsights(quotes: QuoteData[], query: ResearchQuery): string[]
   return insights;
 }
 
-function identifyChallenges(negativeQuotes: QuoteData[], query: ResearchQuery): string[] {
+/**
+ * Identify challenges from negative sentiment quotes
+ */
+export function identifyChallenges(negativeQuotes: QuoteData[], query: ResearchQuery): string[] {
   // Extract challenges from negative sentiment quotes
   if (negativeQuotes.length === 0) {
     return [`Limited critical discourse around "${query.query}" may indicate insufficient analysis of potential challenges.`];
@@ -232,7 +98,10 @@ function identifyChallenges(negativeQuotes: QuoteData[], query: ResearchQuery): 
   return challenges;
 }
 
-function generateRecommendations(quotes: QuoteData[], topics: string[], query: ResearchQuery): string[] {
+/**
+ * Generate recommendations based on quotes and topics
+ */
+export function generateRecommendations(quotes: QuoteData[], topics: string[], query: ResearchQuery): string[] {
   // Generate actionable recommendations based on the data
   return [
     `Focus communication on addressing the economic concerns while highlighting positive outcomes.`,
@@ -241,7 +110,10 @@ function generateRecommendations(quotes: QuoteData[], topics: string[], query: R
   ];
 }
 
-function generateTimelineFromQuotes(quotes: QuoteData[]): TimelineEvent[] {
+/**
+ * Generate timeline events from quotes
+ */
+export function generateTimelineFromQuotes(quotes: QuoteData[]): TimelineEvent[] {
   // Create timeline events from the actual quotes
   if (quotes.length < 3) {
     // Not enough quotes to make a meaningful timeline
@@ -295,7 +167,10 @@ function generateTimelineFromQuotes(quotes: QuoteData[]): TimelineEvent[] {
   ];
 }
 
-function defaultTimelineEvents(quotes: QuoteData[]): TimelineEvent[] {
+/**
+ * Generate default timeline events when there aren't enough quotes
+ */
+export function defaultTimelineEvents(quotes: QuoteData[]): TimelineEvent[] {
   // Fallback timeline when we don't have enough data
   return [
     {
@@ -334,7 +209,10 @@ function defaultTimelineEvents(quotes: QuoteData[]): TimelineEvent[] {
   ];
 }
 
-function generateTopicRippleData(topics: string[]): any[] {
+/**
+ * Generate topic ripple data for visualization
+ */
+export function generateTopicRippleData(topics: string[]): any[] {
   // Generate visualization data for topic trends over time
   if (topics.length < 2) {
     return defaultTopicRippleData();
@@ -349,7 +227,10 @@ function generateTopicRippleData(topics: string[]): any[] {
   ];
 }
 
-function defaultTopicRippleData(): any[] {
+/**
+ * Generate default topic ripple data
+ */
+export function defaultTopicRippleData(): any[] {
   return [
     { name: 'Week 1', 'Economic Impact': 45, 'Consumer Concerns': 30, 'Policy Analysis': 25 },
     { name: 'Week 2', 'Economic Impact': 55, 'Consumer Concerns': 40, 'Policy Analysis': 35 },
@@ -358,7 +239,10 @@ function defaultTopicRippleData(): any[] {
   ];
 }
 
-function generateTopicInsights(topics: string[], quotes: QuoteData[]): TopicInsight[] {
+/**
+ * Generate topic insights from topics and quotes
+ */
+export function generateTopicInsights(topics: string[], quotes: QuoteData[]): TopicInsight[] {
   // Generate insights for each top topic based on the quotes
   if (topics.length < 2) {
     return defaultTopicInsights();
@@ -391,7 +275,10 @@ function generateTopicInsights(topics: string[], quotes: QuoteData[]): TopicInsi
   });
 }
 
-function defaultTopicInsights(): TopicInsight[] {
+/**
+ * Generate default topic insights
+ */
+export function defaultTopicInsights(): TopicInsight[] {
   return [
     {
       topic: 'Economic Impact',
@@ -414,7 +301,10 @@ function defaultTopicInsights(): TopicInsight[] {
   ];
 }
 
-function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: number } {
+/**
+ * Generate source breakdown from quotes
+ */
+export function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: number } {
   if (quotes.length === 0) {
     return {};
   }
