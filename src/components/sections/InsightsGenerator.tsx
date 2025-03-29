@@ -10,7 +10,7 @@ import { ResearchQuery, AnalysisResults } from "@/services/types/qualitativeAnal
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, CheckCircle, AlertTriangle, Search } from "lucide-react";
+import { InfoIcon, CheckCircle, AlertTriangle, Search, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const InsightsGenerator = () => {
@@ -18,7 +18,7 @@ const InsightsGenerator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [results, setResults] = useState<AnalysisResults | null>(null);
-  const [edgeFunctionStatus, setEdgeFunctionStatus] = useState<"checking" | "available" | "unavailable" | "error">("checking");
+  const [edgeFunctionStatus, setEdgeFunctionStatus] = useState<"checking" | "available" | "available-no-key" | "unavailable" | "error">("checking");
   const [lastPolledTime, setLastPolledTime] = useState<Date | null>(null);
   
   // Function to check if Edge Function is available
@@ -27,7 +27,7 @@ const InsightsGenerator = () => {
       setEdgeFunctionStatus("checking");
       
       console.log("Checking if newsapi-proxy Edge Function is available...");
-      // Using GET method instead of OPTIONS since OPTIONS is not supported by the invoke method
+      // Using GET method for the health check
       const { data, error } = await supabase.functions.invoke("newsapi-proxy", {
         method: "GET"
       });
@@ -41,11 +41,21 @@ const InsightsGenerator = () => {
         });
       } else {
         console.log("Edge Function is available:", data);
-        setEdgeFunctionStatus("available");
-        toast.success("Edge Function is available", {
-          description: "Ready to fetch real news data",
-          duration: 3000
-        });
+        
+        // Check if the API key is available in the edge function
+        if (data.apiKeyStatus === "missing") {
+          setEdgeFunctionStatus("available-no-key");
+          toast.warning("Edge Function is available but API key is missing", {
+            description: "Please configure the NEWS_API_KEY in the Edge Function secrets",
+            duration: 5000
+          });
+        } else {
+          setEdgeFunctionStatus("available");
+          toast.success("Edge Function is available", {
+            description: "Ready to fetch real news data",
+            duration: 3000
+          });
+        }
       }
       
       setLastPolledTime(new Date());
@@ -77,7 +87,7 @@ const InsightsGenerator = () => {
     }
     
     // Check if edge function is available before proceeding
-    if (edgeFunctionStatus !== "available") {
+    if (edgeFunctionStatus === "unavailable" || edgeFunctionStatus === "error") {
       const proceed = window.confirm(
         "The Edge Function appears to be unavailable, which may result in no data. Would you still like to proceed?"
       );
@@ -85,6 +95,14 @@ const InsightsGenerator = () => {
       if (!proceed) {
         return;
       }
+    }
+    
+    // Special warning for missing API key
+    if (edgeFunctionStatus === "available-no-key") {
+      toast.warning("NEWS_API_KEY is not configured", {
+        description: "The Edge Function will not be able to fetch data from News API",
+        duration: 5000
+      });
     }
     
     setIsLoading(true);
@@ -157,6 +175,22 @@ const InsightsGenerator = () => {
                   Last checked: {lastPolledTime.toLocaleTimeString()}
                 </span>
               )}
+            </AlertDescription>
+          </Alert>
+        ) : edgeFunctionStatus === "available-no-key" ? (
+          <Alert className="mb-6 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+            <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertTitle>API Key Missing</AlertTitle>
+            <AlertDescription>
+              The Edge Function is deployed but the NEWS_API_KEY is missing. Add it to your Edge Function secrets.
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 h-7 px-2 text-xs" 
+                onClick={checkEdgeFunction}
+              >
+                Check Again
+              </Button>
             </AlertDescription>
           </Alert>
         ) : edgeFunctionStatus === "unavailable" ? (

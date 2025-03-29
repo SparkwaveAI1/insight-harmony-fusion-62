@@ -22,15 +22,29 @@ serve(async (req) => {
     console.log(`Handling ${req.method} request to newsapi-proxy`);
     
     // Handle health check GET requests with no parameters (used for availability checks)
-    if (req.method === "GET" && new URL(req.url).searchParams.size === 0) {
-      console.log("Handling health check GET request");
-      return new Response(
-        JSON.stringify({ status: "ok", message: "Edge Function is available" }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200
-        }
-      );
+    if (req.method === "GET") {
+      const url = new URL(req.url);
+      
+      // If no parameters provided, it's a health check
+      if (url.searchParams.size === 0) {
+        console.log("Handling health check GET request");
+        
+        // Check if the API key is available
+        const newsApiKey = Deno.env.get("NEWS_API_KEY");
+        const apiKeyStatus = newsApiKey ? "available" : "missing";
+        
+        return new Response(
+          JSON.stringify({ 
+            status: "ok", 
+            message: "Edge Function is available",
+            apiKeyStatus: apiKeyStatus
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200
+          }
+        );
+      }
     }
     
     let queryParams = {};
@@ -97,7 +111,7 @@ serve(async (req) => {
           }
         );
       }
-    } else if (req.method === "GET") {
+    } else if (req.method === "GET" && req.url.includes("?")) {
       // Get URL with search parameters for GET requests
       const url = new URL(req.url);
       // Convert URLSearchParams to a regular object
@@ -105,7 +119,7 @@ serve(async (req) => {
         queryParams[key] = value;
       });
       console.log("GET request params:", JSON.stringify(queryParams));
-    } else {
+    } else if (req.method !== "GET") {
       return new Response(
         JSON.stringify({ status: "error", message: "Method not allowed" }),
         { 
@@ -147,10 +161,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           status: "error", 
-          message: "News API key is not configured on the server" 
+          message: "News API key is not configured on the server",
+          code: "MISSING_API_KEY"
         }),
         { 
-          status: 500, 
+          status: 503,  // Service Unavailable is more appropriate than 500
           headers: { 
             ...corsHeaders, 
             "Content-Type": "application/json" 

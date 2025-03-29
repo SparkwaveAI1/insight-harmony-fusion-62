@@ -63,6 +63,16 @@ export async function fetchNewsData(query: ResearchQuery): Promise<{ quotes: Quo
         return { quotes: [], keywords: [], topics: [] };
       }
       
+      // If the API key is missing, show a special error
+      if (functionData.code === "MISSING_API_KEY") {
+        console.error("NEWS_API_KEY is not configured in the Edge Function");
+        toast.error("News API key is not configured", {
+          description: "An API key must be added to the Edge Function secrets",
+          duration: 6000
+        });
+        return { quotes: [], keywords: [], topics: [] };
+      }
+      
       // Process the response data
       if (functionData.articles && functionData.articles.length > 0) {
         // Extract quotes from articles
