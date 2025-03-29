@@ -31,7 +31,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
           const enhancedQuotes = result.quotes.map(quote => {
             // Ensure quotes have proper sentiment analysis
             if (!quote.sentiment) {
-              // Use detectSentiment instead of directly assigning a string
+              // Use detectSentiment which now returns the correct type
               quote.sentiment = detectSentiment(quote.text);
             }
             

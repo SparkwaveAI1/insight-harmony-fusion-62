@@ -2,7 +2,7 @@
 import { QuoteData } from "../types/qualitativeAnalysisTypes";
 
 // Simple sentiment analysis
-export function detectSentiment(text: string): string {
+export function detectSentiment(text: string): "positive" | "negative" | "neutral" {
   const positiveWords = ['good', 'great', 'excellent', 'positive', 'amazing', 'wonderful', 'love', 'enjoy', 'happy', 'success', 'improve', 'benefit', 'opportunity'];
   const negativeWords = ['bad', 'poor', 'terrible', 'negative', 'awful', 'horrible', 'hate', 'dislike', 'sad', 'failure', 'decline', 'risk', 'problem', 'issue', 'concern'];
   
