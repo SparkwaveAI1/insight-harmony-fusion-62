@@ -5,75 +5,71 @@ export function generateAIInsights(topics: string[], sentimentBreakdown: any, ke
   const insights: string[] = [];
   const queryText = query.query.toLowerCase();
   
+  // First insight always describes sentiment distribution
+  if (sentimentBreakdown.positive > sentimentBreakdown.negative && sentimentBreakdown.positive > sentimentBreakdown.neutral) {
+    insights.push(`The conversation around "${query.query}" is predominantly positive (${sentimentBreakdown.positive}%), suggesting general approval or favorable reception among stakeholders.`);
+  } else if (sentimentBreakdown.negative > sentimentBreakdown.positive && sentimentBreakdown.negative > sentimentBreakdown.neutral) {
+    insights.push(`The discourse surrounding "${query.query}" shows a negative sentiment trend (${sentimentBreakdown.negative}%), indicating significant concerns or criticisms that should be addressed.`);
+  } else if (sentimentBreakdown.neutral > sentimentBreakdown.positive && sentimentBreakdown.neutral > sentimentBreakdown.negative) {
+    insights.push(`Discussions about "${query.query}" demonstrate a largely neutral tone (${sentimentBreakdown.neutral}%), suggesting a balanced or analytical approach to the topic rather than strong opinions.`);
+  } else {
+    insights.push(`Sentiment around "${query.query}" is mixed (${sentimentBreakdown.positive}% positive, ${sentimentBreakdown.neutral}% neutral, ${sentimentBreakdown.negative}% negative), indicating a complex topic with diverse perspectives.`);
+  }
+  
   // Special case for crypto/DeFi related queries
   if (queryText.includes("crypto") || queryText.includes("defi") || queryText.includes("web3") || queryText.includes("nft")) {
-    insights.push(`Current market sentiment around "${query.query}" shows ${sentimentBreakdown.positive}% bullish, ${sentimentBreakdown.neutral}% neutral, and ${sentimentBreakdown.negative}% bearish perspectives.`);
-    insights.push(`On-chain metrics and social sentiment are showing increasing interest in "${topics[0]}", suggesting potential market movement in the coming days.`);
-    insights.push(`Trading volumes across major DEXs correlate strongly with social media mentions of key topics like "${keyPhrases[0]}" and "${keyPhrases[1]}".`);
-    insights.push(`Base Chain ecosystem projects are showing particularly strong sentiment scores compared to other L2 solutions.`);
-    insights.push(`Based on transaction volume analysis and social data, we recommend monitoring ${topics[1]} development closely for potential investment opportunities.`);
+    insights.push(`Market sentiment analysis shows ${sentimentBreakdown.positive}% bullish, ${sentimentBreakdown.neutral}% neutral, and ${sentimentBreakdown.negative}% bearish perspectives around "${query.query}".`);
+    insights.push(`Social media discussions about "${topics[0] || 'blockchain technologies'}" correlate with increased trading activity, suggesting market participants are actively monitoring social signals.`);
+    insights.push(`Key topics like "${keyPhrases[0] || 'trading volume'}" and "${keyPhrases[1] || 'adoption'}" appear frequently, indicating their importance in the current market narrative.`);
     return insights;
   }
   
   // Special case for Zelenskyy/Ukraine related queries
   if (queryText.includes("zelenskyy") || queryText.includes("ukraine")) {
-    insights.push(`Current discourse around "${query.query}" shows a complex mixture of ${sentimentBreakdown.positive}% supportive, ${sentimentBreakdown.neutral}% analytical, and ${sentimentBreakdown.negative}% critical perspectives.`);
-    insights.push(`The international community's perceptions appear to focus primarily on "${topics[0]}", which suggests significant attention to diplomatic and geopolitical developments.`);
-    insights.push(`Media coverage tends to emphasize different aspects depending on regional interests and political alignments, particularly regarding defense strategies and aid packages.`);
-    insights.push(`Public sentiment analysis shows fluctuations that correlate with major battlefield developments and diplomatic announcements.`);
-    insights.push(`Based on the data patterns, we recommend focusing communication on humanitarian impacts and reconstruction plans alongside strategic military updates.`);
+    insights.push(`Media coverage demonstrates a complex mixture of ${sentimentBreakdown.positive}% supportive, ${sentimentBreakdown.neutral}% analytical, and ${sentimentBreakdown.negative}% critical perspectives on "${query.query}".`);
+    insights.push(`International narratives focus primarily on "${topics[0] || 'diplomatic developments'}", while domestic coverage emphasizes different priorities.`);
+    insights.push(`Communication strategy analysis suggests emphasizing humanitarian impact and reconstruction initiatives alongside strategic updates.`);
     return insights;
-  }
-  
-  // Analyze sentiment distribution
-  if (sentimentBreakdown.positive > 60) {
-    insights.push(`There is a strong positive sentiment (${sentimentBreakdown.positive}%) around "${query.query}", indicating general approval or excitement in the community.`);
-  } else if (sentimentBreakdown.negative > 60) {
-    insights.push(`There is significant negative sentiment (${sentimentBreakdown.negative}%) surrounding "${query.query}", suggesting potential concerns or criticism that should be addressed.`);
-  } else if (sentimentBreakdown.neutral > 60) {
-    insights.push(`The high neutral sentiment (${sentimentBreakdown.neutral}%) around "${query.query}" indicates either a lack of strong opinions or a balanced view of pros and cons.`);
-  } else {
-    insights.push(`The sentiment around "${query.query}" is mixed, with ${sentimentBreakdown.positive}% positive, ${sentimentBreakdown.neutral}% neutral, and ${sentimentBreakdown.negative}% negative opinions, suggesting a complex and nuanced topic.`);
   }
   
   // Topic-based insights
   if (topics.length > 0) {
-    insights.push(`The most prominent theme emerging from the data is "${topics[0]}", which appears frequently in discussions about "${query.query}".`);
+    insights.push(`The most prominent topic in the discourse is "${topics[0]}", appearing consistently across multiple sources and contexts.`);
     
-    // Add specific insights based on top topic with new crypto-focused conditionals
-    if (topics[0].includes("Regulatory")) {
-      insights.push("Regulatory developments are significantly impacting market sentiment. Monitor policy announcements closely as they appear to be driving current price action.");
-    } else if (topics[0].includes("Security")) {
-      insights.push("Security considerations remain paramount in the Web3 space. Projects emphasizing robust security measures are receiving more positive mentions.");
-    } else if (topics[0].includes("Adoption")) {
-      insights.push("Mainstream adoption signals are increasing, with institutional interest correlating to positive sentiment spikes on social platforms.");
-    } else if (topics[0].includes("DeFi")) {
-      insights.push("DeFi protocols showing innovation in capital efficiency are generating the strongest positive sentiment among traders and developers alike.");
-    } else if (topics[0].includes("NFT")) {
-      insights.push("The NFT narrative is shifting toward utility and integration with DeFi, moving away from pure collectibles toward productive assets.");
+    if (topics.length > 1) {
+      insights.push(`There's a notable relationship between "${topics[0]}" and "${topics[1]}", with discussions often addressing how these aspects interact.`);
     }
   }
   
   // Keyword-based insights
-  if (keyPhrases.length > 3) {
-    insights.push(`Key terminology frequently associated with "${query.query}" includes "${keyPhrases.slice(0, 3).join('", "')}", which could be important for messaging alignment.`);
+  if (keyPhrases.length > 2) {
+    insights.push(`Key terminology frequently appearing in discussions includes "${keyPhrases.slice(0, 3).join('", "')}", suggesting these concepts are central to the current narrative.`);
   }
   
   // Source-specific insights
   if (query.sources.includes("twitter") || query.sources.includes("all")) {
-    insights.push("Social media conversations tend to focus on immediate reactions and emerging trends, providing early signals of shifting sentiments.");
+    insights.push(`Social media conversations reveal immediate public reactions that often precede formal media coverage, providing early signals of shifting sentiments.`);
   }
   if (query.sources.includes("news") || query.sources.includes("all")) {
-    insights.push("News coverage offers a more structured narrative that may influence broader public perception and formal discourse.");
+    insights.push(`News coverage tends to focus on broader implications and expert analysis, shaping the formal narrative around "${query.query}".`);
+  }
+  
+  // Context-specific insights based on query keywords
+  if (queryText.includes("economy") || queryText.includes("economic") || queryText.includes("business")) {
+    insights.push(`Economic stakeholders express particularly ${sentimentBreakdown.positive > sentimentBreakdown.negative ? "optimistic" : "cautious"} views, with specific attention to long-term growth projections and market stability.`);
+  }
+  
+  if (queryText.includes("policy") || queryText.includes("regulation") || queryText.includes("law")) {
+    insights.push(`Regulatory aspects generate the most ${sentimentBreakdown.negative > sentimentBreakdown.positive ? "concern" : "discussion"}, highlighting the importance of clear communication around compliance requirements and implementation timelines.`);
   }
   
   // AI recommendation
-  insights.push(`Based on the collected data, we recommend focusing communication on ${sentimentBreakdown.positive > sentimentBreakdown.negative ? "the positive aspects while addressing specific concerns" : "addressing the prevalent concerns while highlighting positive developments"} related to "${query.query}".`);
+  insights.push(`Based on comprehensive analysis, we recommend focusing communication on ${sentimentBreakdown.positive > sentimentBreakdown.negative ? "amplifying positive narratives while addressing specific concerns" : "directly addressing prevalent concerns while highlighting positive developments"} related to "${query.query}".`);
   
   return insights;
 }
 
-// Generate trends analysis with crypto-focused content
+// Generate trends analysis with more specific content
 export function generateTrendsAnalysis(sentimentBreakdown: any, topics: string[], query: ResearchQuery): string {
   const queryText = query.query.toLowerCase();
   let analysis = `## Trend Analysis for "${query.query}"\n\n`;
@@ -128,29 +124,29 @@ export function generateTrendsAnalysis(sentimentBreakdown: any, topics: string[]
   // Sentiment trend analysis
   analysis += "### Sentiment Trends\n";
   if (sentimentBreakdown.positive > sentimentBreakdown.negative) {
-    analysis += `The overall sentiment is leaning positive (${sentimentBreakdown.positive}%), which suggests favorable reception. `;
-    analysis += `This positive trend indicates potential opportunities for growth and expansion in related areas.\n\n`;
+    analysis += `The overall sentiment is predominantly positive (${sentimentBreakdown.positive}%), which suggests favorable reception to the topic. `;
+    analysis += `This positive trend provides an opportunity to build momentum and expand messaging around the benefits and opportunities associated with "${query.query}".\n\n`;
   } else if (sentimentBreakdown.negative > sentimentBreakdown.positive) {
-    analysis += `The overall sentiment is leaning negative (${sentimentBreakdown.negative}%), which suggests there are concerns or criticisms that need addressing. `;
-    analysis += `This negative trend may indicate potential risks or challenges that should be monitored closely.\n\n`;
+    analysis += `The overall sentiment leans negative (${sentimentBreakdown.negative}%), indicating significant concerns or criticisms that require attention. `;
+    analysis += `This negative trend suggests a need for proactive communication that acknowledges and addresses the specific concerns identified in the analysis.\n\n`;
   } else {
-    analysis += `The sentiment is relatively balanced, which suggests a mature discourse with recognized pros and cons. `;
-    analysis += `This balanced trend indicates a nuanced understanding of the topic among the audience.\n\n`;
+    analysis += `The sentiment distribution is balanced, suggesting a mature and nuanced discourse with recognition of both benefits and challenges. `;
+    analysis += `This balanced trend indicates an opportunity for detailed, fact-based communication that can influence the developing narrative.\n\n`;
   }
   
   // Topic trend analysis
   analysis += "### Topic Trends\n";
   if (topics.length > 0) {
-    analysis += `The emerging topics (${topics.slice(0, 3).join(", ")}) suggest that the conversation is primarily focused on `;
+    analysis += `The emerging topics (${topics.slice(0, 3).join(", ")}) reveal that the conversation is primarily focused on `;
     
-    if (topics.some(t => t.includes("Regulatory") || t.includes("Security"))) {
-      analysis += "risk factors and governance aspects. This indicates a maturing market that is becoming increasingly concerned with sustainability and compliance.\n\n";
-    } else if (topics.some(t => t.includes("Adoption") || t.includes("Community"))) {
-      analysis += "user engagement and practical applications. This suggests the market is in a growth phase with emphasis on expanding the user base.\n\n";
-    } else if (topics.some(t => t.includes("Technology") || t.includes("Future"))) {
-      analysis += "innovation and development roadmaps. This indicates a forward-looking community focused on technological advancement.\n\n";
+    if (topics.some(t => t.toLowerCase().includes("regulat") || t.toLowerCase().includes("security"))) {
+      analysis += "governance and compliance considerations. This indicates growing attention to the formal frameworks and potential constraints affecting this area.\n\n";
+    } else if (topics.some(t => t.toLowerCase().includes("adopt") || t.toLowerCase().includes("community"))) {
+      analysis += "implementation and adoption patterns. This suggests the discourse is moving from theoretical discussion to practical application considerations.\n\n";
+    } else if (topics.some(t => t.toLowerCase().includes("technolog") || t.toLowerCase().includes("future"))) {
+      analysis += "innovation and development trajectories. This indicates a forward-looking conversation focused on possibilities rather than current limitations.\n\n";
     } else {
-      analysis += "various aspects of implementation and impact. This suggests a diverse range of interests and concerns within the community.\n\n";
+      analysis += "various practical aspects and implications. This suggests a multifaceted conversation addressing different dimensions of the topic.\n\n";
     }
   }
   
@@ -158,35 +154,35 @@ export function generateTrendsAnalysis(sentimentBreakdown: any, topics: string[]
   analysis += "### Timeline Projection\n";
   switch (query.timeFrame) {
     case "real-time":
-      analysis += "The real-time data captures immediate reactions which may be volatile but provides early indicators of potential issues or opportunities that could develop in the coming days.\n\n";
+      analysis += "Real-time data provides immediate visibility into emerging reactions and concerns, allowing for rapid response to developing narratives before they become established.\n\n";
       break;
     case "short-term":
-      analysis += "The short-term trend over the past week shows a snapshot of current conversations that may be influenced by recent events or announcements, providing context for near-term planning.\n\n";
+      analysis += "The short-term trend analysis reveals active discussion patterns that will likely influence near-term decisions and perceptions, making this a critical window for messaging.\n\n";
       break;
     case "medium-term":
-      analysis += "The medium-term analysis over the past month reveals more sustained patterns of discussion that can inform strategic adjustments over the coming quarter.\n\n";
+      analysis += "Medium-term analysis shows more sustained conversation patterns that are shaping the foundational narrative, indicating which aspects are gaining traction versus fading.\n\n";
       break;
     case "long-term":
-      analysis += "The long-term perspective over several months highlights enduring themes and concerns that should be addressed in long-range planning and positioning.\n\n";
+      analysis += "The long-term perspective highlights enduring themes and concerns that have consistently appeared in the discourse, representing the core issues that must be addressed in strategic planning.\n\n";
       break;
   }
   
-  // AI-powered recommendation
-  analysis += "### AI-Powered Recommendation\n";
-  analysis += "Based on the pattern analysis performed by our AI system, we recommend:\n\n";
+  // Contextual recommendations
+  analysis += "### Strategic Recommendations\n";
+  analysis += "Based on comprehensive trend analysis, we recommend:\n\n";
   
   if (sentimentBreakdown.positive > 50) {
-    analysis += "1. Leverage the positive sentiment by amplifying success stories and case studies\n";
-    analysis += "2. Address the minority concerns proactively to maintain the positive momentum\n";
-    analysis += "3. Consider expanding into adjacent areas where the positive reception may transfer\n";
+    analysis += "1. Leverage the positive momentum by amplifying success stories and specific benefits\n";
+    analysis += "2. Address the minority concerns proactively to prevent them from growing\n";
+    analysis += "3. Develop detailed content around the top topics that are driving positive sentiment\n";
   } else if (sentimentBreakdown.negative > 50) {
-    analysis += "1. Directly address the top concerns identified in the negative sentiments\n";
-    analysis += "2. Highlight planned improvements or corrections related to the criticism\n";
-    analysis += "3. Engage with critics constructively to demonstrate responsiveness\n";
+    analysis += "1. Directly address the top concerns with transparent, factual information\n";
+    analysis += "2. Highlight tangible progress and improvements related to the criticized aspects\n";
+    analysis += "3. Engage with skeptical stakeholders to demonstrate responsiveness and build credibility\n";
   } else {
-    analysis += "1. Clarify your position on the topics generating mixed reactions\n";
-    analysis += "2. Emphasize the positive aspects while acknowledging legitimate concerns\n";
-    analysis += "3. Provide more educational content to help audiences form informed opinions\n";
+    analysis += "1. Develop nuanced messaging that acknowledges both opportunities and challenges\n";
+    analysis += "2. Focus on data-driven analysis to shift discussion from speculation to evidence\n";
+    analysis += "3. Create educational content that helps audiences develop informed perspectives\n";
   }
   
   return analysis;
