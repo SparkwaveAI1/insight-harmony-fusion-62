@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -38,7 +39,7 @@ import {
   TimelineEvent,
   TopicRippleData
 } from "@/services/types/qualitativeAnalysisTypes";
-import { fetchQualitativeData } from "@/services/api/dataSourceService";
+import { fetchQualitativeData } from "@/services/api/qualitativeDataService";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

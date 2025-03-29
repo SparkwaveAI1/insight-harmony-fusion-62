@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fetchQualitativeData } from "@/services/api/dataSourceService";
+import { fetchQualitativeData } from "@/services/api/qualitativeDataService";
 import { ResearchQuery, AnalysisResults } from "@/services/types/qualitativeAnalysisTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
