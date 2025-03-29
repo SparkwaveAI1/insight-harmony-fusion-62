@@ -1,42 +1,34 @@
-
-import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter } from "../types/qualitativeAnalysisTypes";
+import { ResearchQuery, AnalysisResults, QuoteData, DataSource, SentimentFilter, TimelineEvent, TopicInsight } from "../types/qualitativeAnalysisTypes";
 import { toast } from "sonner";
 import { generateAIInsights, generateTrendsAnalysis } from "../ai/aiInsightsService";
 import { fetchTwitterData, fetchRedditData, fetchNewsData } from "./dataSourceApi";
 import { handleApiError } from "../utils/apiUtils";
 
-// Main function to fetch qualitative data from real APIs
 export async function fetchQualitativeData(query: ResearchQuery): Promise<AnalysisResults | null> {
   try {
     console.log("Fetching qualitative data for query:", query);
     
-    // Track which sources successfully returned data
     const sourceResults: { [key: string]: boolean } = {};
     let quotes: QuoteData[] = [];
     let keywords: string[] = [];
     let topics: string[] = [];
     
-    // Use the sources that the user has selected
     const sourcesToQuery = query.sources || ["news"];
     
     console.log("Using data sources:", sourcesToQuery);
     
-    // Create promise array for parallel API calls
     const apiPromises = sourcesToQuery.map(source => {
       const fetcher = getFetcherForSource(source);
       return fetcher(query).then(result => {
         console.log(`Received data from ${source}:`, result);
         
-        // Mark this source as successful only if it returned quotes
         sourceResults[source] = result.quotes.length > 0;
         
-        // Only add data if we actually got quotes
         if (result.quotes.length > 0) {
           quotes = [...quotes, ...result.quotes];
           keywords = [...keywords, ...result.keywords];
           topics = [...topics, ...result.topics];
           
-          // Show toast with data source information
           toast.success(`Retrieved ${result.quotes.length} quotes from ${source}`);
         } else {
           console.warn(`No quotes returned from ${source}`);
@@ -47,10 +39,8 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       });
     });
     
-    // Wait for all API calls to complete
     await Promise.all(apiPromises);
     
-    // If no data returned from any source, return null
     const anySourceSucceeded = Object.values(sourceResults).some(success => success);
     if (!anySourceSucceeded || quotes.length === 0) {
       console.log("No data returned from any source");
@@ -62,11 +52,9 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       return null;
     }
     
-    // Filter quotes by sentiment if specified
     if (query.sentiment !== "all") {
       quotes = quotes.filter(quote => quote.sentiment === query.sentiment);
       
-      // If filtering left us with no quotes, return null
       if (quotes.length === 0) {
         toast.info(`No ${query.sentiment} sentiment quotes found in the results`, {
           description: "Try selecting 'all' for sentiment filtering",
@@ -76,15 +64,11 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       }
     }
     
-    // Calculate sentiment breakdown
     const sentimentBreakdown = calculateSentimentBreakdown(quotes);
     
-    // Generate AI insights and trends analysis
     const aiInsights = generateAIInsights(topics, sentimentBreakdown, keywords, query);
     const trendsAnalysis = [generateTrendsAnalysis(sentimentBreakdown, topics, query)];
     
-    // Create mock timeline events, challenges, recommendations and other data
-    // that would normally come from a more sophisticated analysis
     const mockKeyInsights = [
       `Most discussions about "${query.query}" focus on economic impact`,
       `There's significant concern about price increases affecting consumers`,
@@ -103,12 +87,12 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       `Include diverse stakeholder perspectives in analysis`
     ];
     
-    // Create some mock timeline events
-    const mockTimelineEvents = [
+    const mockTimelineEvents: TimelineEvent[] = [
       {
         id: '1',
         label: 'Initial Announcement',
         date: '2025-03-04',
+        timestamp: '2025-03-04T08:00:00Z',
         position: '10%',
         impact: 65,
         sentiment: 'neutral',
@@ -119,6 +103,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
         id: '2',
         label: 'Business Response',
         date: '2025-03-07',
+        timestamp: '2025-03-07T14:30:00Z',
         position: '40%',
         impact: 80,
         sentiment: 'neutral',
@@ -129,15 +114,15 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
         id: '3',
         label: 'Media Analysis',
         date: '2025-03-20',
+        timestamp: '2025-03-20T09:15:00Z',
         position: '70%',
         impact: 45,
         sentiment: 'negative',
         description: 'In-depth analysis pieces explored long-term implications',
-        quotes: [quotes[5]]
+        quotes: quotes.length > 5 ? [quotes[5]] : [quotes[0]]
       }
     ];
     
-    // Create mock ripple data for topic visualization
     const mockTopicRippleData = [
       { name: 'Week 1', 'Economic Impact': 45, 'Consumer Concerns': 30, 'Policy Analysis': 25 },
       { name: 'Week 2', 'Economic Impact': 55, 'Consumer Concerns': 40, 'Policy Analysis': 35 },
@@ -145,24 +130,23 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
       { name: 'Week 4', 'Economic Impact': 50, 'Consumer Concerns': 45, 'Policy Analysis': 55 }
     ];
     
-    // Create mock topic insights
-    const mockTopicInsights = [
+    const mockTopicInsights: TopicInsight[] = [
       {
         topic: 'Economic Impact',
         description: 'Discussion of how changes affect markets, trade, and business operations',
-        trend: 'Increasing',
+        trend: 'rising',
         sentiment: 'neutral'
       },
       {
         topic: 'Consumer Concerns',
         description: 'Focus on price changes and availability of consumer goods',
-        trend: 'Rapidly increasing',
+        trend: 'rising',
         sentiment: 'negative'
       },
       {
         topic: 'Policy Analysis',
         description: 'Expert evaluation of policy implementation and effectiveness',
-        trend: 'Steady',
+        trend: 'stable',
         sentiment: 'neutral'
       }
     ];
@@ -170,7 +154,7 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
     return {
       topTopics: topics,
       sentimentBreakdown,
-      exampleQuotes: quotes.slice(0, 10), // Limit to 10 quotes
+      exampleQuotes: quotes.slice(0, 10),
       keyPhrases: keywords,
       aiInsights,
       trendsAnalysis,
@@ -190,7 +174,6 @@ export async function fetchQualitativeData(query: ResearchQuery): Promise<Analys
   }
 }
 
-// Helper function to get the appropriate fetcher for each source
 function getFetcherForSource(source: string) {
   switch (source) {
     case "twitter":
@@ -200,14 +183,13 @@ function getFetcherForSource(source: string) {
     case "news":
       return fetchNewsData;
     default:
-      return fetchNewsData; // Default to news API
+      return fetchNewsData;
   }
 }
 
-// Generate source breakdown based on quotes
 function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: number } {
   if (quotes.length === 0) {
-    return {}; // Return empty object if no quotes
+    return {};
   }
   
   const sourceCounts: { [key: string]: number } = {};
@@ -230,10 +212,9 @@ function generateSourceBreakdown(quotes: QuoteData[]): { [key in DataSource]?: n
   return result;
 }
 
-// Calculate sentiment breakdown from quotes
 function calculateSentimentBreakdown(quotes: QuoteData[]): { positive: number; neutral: number; negative: number } {
   if (quotes.length === 0) {
-    return { positive: 0, neutral: 0, negative: 0 }; // Return zeros for empty quotes
+    return { positive: 0, neutral: 0, negative: 0 };
   }
   
   const sentimentCounts = quotes.reduce(
