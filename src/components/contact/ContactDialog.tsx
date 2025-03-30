@@ -37,7 +37,7 @@ const ContactDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {triggerButton || (
-          <Button variant="primary" className={className}>
+          <Button variant="default" className={className}>
             <User className="mr-2 h-4 w-4" />
             Contact Us
           </Button>
