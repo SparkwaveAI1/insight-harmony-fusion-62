@@ -95,7 +95,7 @@ const CustomAIPersonas = () => {
                     className="rounded-full px-8 py-3 bg-gradient-to-r from-primary to-primary/70 border-none shadow-lg shadow-primary/20 w-full sm:w-auto"
                   >
                     <User className="w-4 h-4 mr-2" />
-                    Create a Persona
+                    Contact us to scope your custom persona project
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
