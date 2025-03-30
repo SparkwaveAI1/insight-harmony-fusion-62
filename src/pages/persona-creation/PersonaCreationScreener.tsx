@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Info } from "lucide-react";
@@ -31,7 +32,7 @@ const formSchema = z.object({
   community: z.string().min(1, "Please select your community type"),
   ethnicity: z.string().optional(),
   walletAddress: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().email("Please enter a valid email").optional(),
   phone: z.string().optional(),
   telegramId: z.string().optional(),
 });
@@ -459,7 +460,7 @@ const PersonaCreationScreener = () => {
                         name="ethnicity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>What is your ethnicity or cultural background?</FormLabel>
+                            <FormLabel>What is your ethnicity or cultural background? <span className="text-muted-foreground">(Optional)</span></FormLabel>
                             <FormControl>
                               <Input placeholder="Your ethnicity or cultural background" {...field} />
                             </FormControl>
