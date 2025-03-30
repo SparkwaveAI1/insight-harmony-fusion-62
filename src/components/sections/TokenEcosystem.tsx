@@ -1,5 +1,5 @@
 
-import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins, Coins, Zap, LineChart } from "lucide-react";
+import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins, Coins, Zap, LineChart, ExternalLink, Twitter, MessageCircle } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -24,14 +24,48 @@ const TokenEcosystem = () => {
           </Reveal>
           
           <Reveal delay={200}>
-            <p className="text-gray-300 text-pretty mb-10 max-w-2xl mx-auto text-lg">
+            <p className="text-gray-300 text-pretty mb-8 max-w-2xl mx-auto text-lg">
               $PRSNA is the native token powering AI-driven qualitative research across Web3 and beyond. 
               It's your key to unlocking access to custom personas, premium insights, and future rewards 
               for contributing to next-gen market intelligence.
             </p>
           </Reveal>
           
-          {/* Removed the buttons section */}
+          {/* New action buttons */}
+          <Reveal delay={250}>
+            <div className="flex flex-wrap justify-center gap-4 mb-10">
+              <a href="https://app.virtuals.io/virtuals/18846" target="_blank" rel="noopener noreferrer">
+                <Button 
+                  variant="primary" 
+                  className="group flex items-center gap-2"
+                >
+                  <Coins className="h-4 w-4" />
+                  Buy $PRSNA
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </a>
+              
+              <a href="https://x.com/PersonaAI_agent" target="_blank" rel="noopener noreferrer">
+                <Button 
+                  variant="outline" 
+                  className="group flex items-center gap-2 border-gray-500"
+                >
+                  <Twitter className="h-4 w-4" />
+                  PersonaAI Agent on X
+                </Button>
+              </a>
+              
+              <a href="https://t.me/personaAIportal" target="_blank" rel="noopener noreferrer">
+                <Button 
+                  variant="outline" 
+                  className="group flex items-center gap-2 border-gray-500"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Telegram Community
+                </Button>
+              </a>
+            </div>
+          </Reveal>
         </div>
         
         <Reveal delay={400}>
@@ -89,8 +123,6 @@ const TokenEcosystem = () => {
             </div>
           </div>
         </Reveal>
-        
-        {/* Removed the AI Avatar Preview card */}
       </div>
     </Section>
   );
