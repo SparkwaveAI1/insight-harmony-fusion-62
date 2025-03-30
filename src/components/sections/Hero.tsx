@@ -1,5 +1,5 @@
 
-import { Rocket, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -35,25 +35,15 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex flex-wrap gap-6 justify-center">
+            <div className="flex justify-center">
               <Button 
                 size="lg" 
                 className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30"
                 as={Link}
-                to="/research"
+                to="/interviewer"
                 variant="primary"
               >
-                PersonaAI Researcher
-                <Rocket className="ml-2 h-5 w-5 transition-transform group-hover:translate-y-[-2px]" />
-              </Button>
-              <Button 
-                variant="primary" 
-                size="lg"
-                as={Link}
-                to="/interviewer"
-                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30"
-              >
-                PersonaAI Interviewer
+                Contribute Interview
                 <Users className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
             </div>
