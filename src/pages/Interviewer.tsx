@@ -1,12 +1,13 @@
-
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import Footer from "@/components/sections/Footer";
+import ContactDialog from "@/components/contact/ContactDialog";
 import { ArrowRight, MessageSquare, UserPlus, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
 
 const Interviewer = () => {
   return (
@@ -121,12 +122,16 @@ const Interviewer = () => {
                     </div>
                   </div>
                   
-                  <Link to="/custom-research">
-                    <Button className="w-full justify-center group mt-auto">
-                      Research Interviewer
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
+                  <ContactDialog 
+                    triggerButton={
+                      <Button className="w-full justify-center group mt-auto">
+                        Conduct Custom Research
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    }
+                    title="Start Custom Research Project"
+                    formType="custom-persona"
+                  />
                 </Card>
               </Reveal>
             </div>
@@ -215,6 +220,7 @@ const Interviewer = () => {
         </Section>
       </main>
       <Footer />
+      <Toaster />
     </div>
   );
 };
