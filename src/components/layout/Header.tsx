@@ -6,11 +6,9 @@ import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import NavigationItems from "./navigation/NavigationItems";
 import ActionButtons from "./navigation/ActionButtons";
-import MobileMenu from "./navigation/MobileMenu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
   const isEarnPage = location.pathname === "/earn-prsna" || location.pathname === "/prsna-ecosystem";
@@ -37,22 +35,6 @@ const Header = () => {
     { label: "Pricing", href: "/pricing" },
   ];
 
-  const handleNavClick = (href: string) => {
-    setMobileMenuOpen(false);
-    
-    // If it's a hash link, handle smooth scrolling
-    if (href.startsWith("#")) {
-      const element = document.querySelector(href);
-      if (element) {
-        const offsetTop = element.getBoundingClientRect().top + window.pageYOffset;
-        window.scrollTo({
-          top: offsetTop,
-          behavior: "smooth",
-        });
-      }
-    }
-  };
-
   return (
     <header
       className={cn(
@@ -72,36 +54,21 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <NavigationItems 
-          navItems={navItems} 
-          isScrolled={isScrolled} 
-          isEarnPage={isEarnPage}
-          className="hidden md:flex"
-          onNavClick={handleNavClick}
-        />
+        {/* Desktop Navigation - Always visible now */}
+        <div className="flex items-center gap-6">
+          <NavigationItems 
+            navItems={navItems} 
+            isScrolled={isScrolled} 
+            isEarnPage={isEarnPage}
+          />
 
-        {/* Desktop Action Buttons */}
-        <ActionButtons 
-          isEarnPage={isEarnPage}
-          isWalletConnected={isWalletConnected}
-          connectWallet={connectWallet}
-          disconnectWallet={disconnectWallet}
-          className="hidden md:flex items-center gap-3"
-        />
-
-        {/* Mobile Menu */}
-        <MobileMenu 
-          isOpen={mobileMenuOpen}
-          isScrolled={isScrolled}
-          isEarnPage={isEarnPage}
-          navItems={navItems}
-          isWalletConnected={isWalletConnected}
-          connectWallet={connectWallet}
-          disconnectWallet={disconnectWallet}
-          onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-          onNavClick={handleNavClick}
-        />
+          <ActionButtons 
+            isEarnPage={isEarnPage}
+            isWalletConnected={isWalletConnected}
+            connectWallet={connectWallet}
+            disconnectWallet={disconnectWallet}
+          />
+        </div>
       </div>
     </header>
   );

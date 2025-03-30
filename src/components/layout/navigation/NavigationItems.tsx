@@ -26,7 +26,7 @@ const NavigationItems: React.FC<NavigationItemsProps> = ({
   const location = useLocation();
 
   return (
-    <nav className={cn("flex items-center gap-8", className)}>
+    <nav className={cn("flex items-center gap-6", className)}>
       {navItems.map((item) => (
         <Link
           key={item.label}
