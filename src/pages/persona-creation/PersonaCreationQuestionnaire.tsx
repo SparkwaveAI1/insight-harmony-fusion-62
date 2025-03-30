@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -22,6 +21,7 @@ import FinalSection from "@/components/persona-creation/questionnaire/FinalSecti
 const formSchema = z.object({
   identification: z.object({
     name: z.string().min(1, { message: "Name is required" }),
+    email: z.string().email({ message: "Valid email is required" }),
   }),
   dailyLife: z.object({
     dayStructure: z.string().optional(),
@@ -95,7 +95,7 @@ const formSchema = z.object({
   final: z.object({
     additionalInfo: z.string().optional(),
     openToFollowups: z.string().optional(),
-    contactInfo: z.string().optional(),
+    telegramContact: z.string().optional(),
   }),
 });
 
@@ -110,7 +110,7 @@ const PersonaCreationQuestionnaire = () => {
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      identification: { name: "" },
+      identification: { name: "", email: "" },
       dailyLife: {},
       decisionMaking: {},
       spending: { worthItPurchases: {}, productFrustrations: {} },

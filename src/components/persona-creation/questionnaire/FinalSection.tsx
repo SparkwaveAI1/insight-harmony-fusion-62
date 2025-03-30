@@ -25,7 +25,7 @@ const FinalSection = ({ form, open, onOpenChange }: FinalSectionProps) => {
         name="final.additionalInfo"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel>Is there anything else we should know to better understand your mindset or behavior?</FormLabel>
+            <FormLabel>Is there anything else that it is important for us to know about you?</FormLabel>
             <FormControl>
               <Textarea placeholder="Your answer (optional)" {...field} />
             </FormControl>
@@ -67,12 +67,12 @@ const FinalSection = ({ form, open, onOpenChange }: FinalSectionProps) => {
 
       <FormField
         control={form.control}
-        name="final.contactInfo"
+        name="final.telegramContact"
         render={({ field }) => (
           <FormItem className="mt-6">
-            <FormLabel>(Optional) Email, Telegram, or other contact info</FormLabel>
+            <FormLabel>(Optional) Telegram username</FormLabel>
             <FormControl>
-              <Input placeholder="Your contact info" {...field} />
+              <Input placeholder="Your Telegram username" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

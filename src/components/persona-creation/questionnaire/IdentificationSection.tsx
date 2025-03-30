@@ -32,6 +32,21 @@ const IdentificationSection = ({ form, open, onOpenChange }: IdentificationSecti
           </FormItem>
         )}
       />
+
+      <FormField
+        control={form.control}
+        name="identification.email"
+        render={({ field }) => (
+          <FormItem className="mt-6">
+            <FormLabel>Email address</FormLabel>
+            <FormDescription>We need your email to contact you to schedule the conversational interview</FormDescription>
+            <FormControl>
+              <Input type="email" placeholder="Your email address" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </FormSectionWrapper>
   );
 };
