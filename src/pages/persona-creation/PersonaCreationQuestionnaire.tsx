@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -16,6 +17,7 @@ import InformationSection from "@/components/persona-creation/questionnaire/Info
 import ValuesSection from "@/components/persona-creation/questionnaire/ValuesSection";
 import DeeperInsightSection from "@/components/persona-creation/questionnaire/DeeperInsightSection";
 import WorldviewSection from "@/components/persona-creation/questionnaire/WorldviewSection";
+import BackgroundSection from "@/components/persona-creation/questionnaire/BackgroundSection";
 import FinalSection from "@/components/persona-creation/questionnaire/FinalSection";
 
 const formSchema = z.object({
@@ -82,6 +84,21 @@ const formSchema = z.object({
     industryUnderstanding: z.string().optional(),
     misunderstanding: z.string().optional(),
   }),
+  background: z.object({
+    disability: z.string().optional(),
+    healthImpact: z.string().optional(),
+    mentalHealth: z.string().optional(),
+    mentalHealthInfluence: z.string().optional(),
+    bornInCurrentCountry: z.string().optional(),
+    multipleCultures: z.string().optional(),
+    immigrationExperience: z.string().optional(),
+    financialBackground: z.string().optional(), 
+    backgroundInfluence: z.string().optional(),
+    lgbtqia: z.string().optional(),
+    identityImpact: z.string().optional(),
+    discrimination: z.string().optional(),
+    invisibilityContext: z.string().optional(),
+  }),
   worldview: z.object({
     politicalWorldview: z.string().optional(),
     politicalWorldviewOther: z.string().optional(),
@@ -117,6 +134,7 @@ const PersonaCreationQuestionnaire = () => {
       information: { newsSources: {}, contentFormats: {} },
       values: {},
       deeperInsight: {},
+      background: {},
       worldview: { politicalExpression: {} },
       final: {},
     },
@@ -142,6 +160,7 @@ const PersonaCreationQuestionnaire = () => {
     { id: "information", label: "Information" },
     { id: "values", label: "Values" },
     { id: "deeperInsight", label: "Deeper Insight" },
+    { id: "background", label: "Background" },
     { id: "worldview", label: "Worldview" },
     { id: "final", label: "Final" },
   ];
@@ -216,6 +235,12 @@ const PersonaCreationQuestionnaire = () => {
             form={form}
             open={activeSection === "deeperInsight"} 
             onOpenChange={(open) => open && setActiveSection("deeperInsight")}
+          />
+          
+          <BackgroundSection 
+            form={form}
+            open={activeSection === "background"} 
+            onOpenChange={(open) => open && setActiveSection("background")}
           />
           
           <WorldviewSection 
