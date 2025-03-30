@@ -28,11 +28,14 @@ const formSchema = z.object({
   industry: z.string().min(1, "Please select your industry"),
   jobTitle: z.string().min(1, "Please enter your job title"),
   yearsExperience: z.string().min(1, "Please select your years of experience"),
-  income: z.string().optional(),
+  income: z.string().min(1, "Please select your income range"),
   children: z.string().min(1, "Please select if you have children"),
   community: z.string().min(1, "Please select your community type"),
   ethnicity: z.string().optional(),
   walletAddress: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  telegramId: z.string().optional(),
 });
 
 type ScreenerFormValues = z.infer<typeof formSchema>;
@@ -53,11 +56,14 @@ const PersonaCreationScreener = () => {
       industry: "",
       jobTitle: "",
       yearsExperience: "",
-      income: "prefer not to say",
+      income: "",
       children: "",
       community: "",
       ethnicity: "",
       walletAddress: "",
+      email: "",
+      phone: "",
+      telegramId: "",
     },
   });
 
@@ -377,7 +383,7 @@ const PersonaCreationScreener = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
-                              Household Income Range <span className="text-muted-foreground">(Optional)</span>
+                              Household Income Range
                             </FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
@@ -507,6 +513,58 @@ const PersonaCreationScreener = () => {
                             <FormDescription>
                               Used for optional $PRSNA research rewards. This is not required to participate.
                             </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* 15. Email - New field */}
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Are you interested in using your AI Persona for business or personal purposes? 
+                              If yes, please provide your email address. <span className="text-muted-foreground">(Optional)</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="your.email@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* 16. Phone - New field */}
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Phone Number <span className="text-muted-foreground">(Optional)</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="+1 (555) 555-5555" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* 17. Telegram ID - New field */}
+                      <FormField
+                        control={form.control}
+                        name="telegramId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Telegram ID <span className="text-muted-foreground">(Optional)</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="@yourtelegramid" {...field} />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
