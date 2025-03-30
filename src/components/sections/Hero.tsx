@@ -24,13 +24,13 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md">
-              Market Research, Reimagined: AI-Driven Qualitative Insights
+              Market Research, Reimagined: Insight from Digital Minds
             </h1>
           </Reveal>
           
           <Reveal delay={200}>
             <p className="mb-10 text-lg md:text-xl text-gray-300 text-pretty max-w-2xl mx-auto">
-              AI Personas—digital consumers built from real human interviews. Run AI-driven focus groups, analyze sentiment shifts, and predict market behavior—faster and at scale.
+              Digital personas built from real human interviews. Help create them by contributing your insights. Interviews and surveys are live now.
             </p>
           </Reveal>
           
