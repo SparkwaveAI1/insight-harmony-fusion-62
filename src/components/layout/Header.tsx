@@ -51,7 +51,6 @@ const Header = () => {
         });
       }
     }
-    // External links will be handled by Link component
   };
 
   return (
