@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Save } from "lucide-react";
@@ -642,6 +643,1746 @@ const PersonaCreationQuestionnaire = () => {
                                       </FormLabel>
                                     </FormItem>
                                   </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="newProductTrial"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How often do you try new products or tools?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Very frequently" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Very frequently
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Occasionally" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Occasionally
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Rarely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Rarely
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Almost never" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Almost never
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="decisionMakingStyle"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>What's your decision-making style?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Logical" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Logical</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Intuitive" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Intuitive</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Fast" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Fast</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Methodical" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Methodical</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Depends" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Depends</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="brandTrust"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How much do you trust brands to act in your best interest?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Almost always" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Almost always</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Sometimes" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Sometimes</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Rarely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Rarely</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Never" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Never</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="trustFactors"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What makes you instantly trust or distrust a product or brand?</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share your thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      {currentSection === 3 && (
+                        <div className="space-y-6">
+                          <h2 className="text-xl font-medium mb-4 flex items-center">
+                            <span className="bg-primary/10 text-primary rounded-full w-7 h-7 inline-flex items-center justify-center mr-2">🔹</span>
+                            Section 3: Spending, Budgeting & Value
+                          </h2>
+                          
+                          <FormField
+                            control={form.control}
+                            name="moneyAttitude"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How do you think about money?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I budget carefully" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I budget carefully
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I'm mindful but flexible" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I'm mindful but flexible
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I spend freely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I spend freely
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I try not to think about it" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I try not to think about it
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="worthItPurchases"
+                            render={() => (
+                              <FormItem>
+                                <div className="mb-4">
+                                  <FormLabel>Which purchases do you consider "worth it"? (Pick up to 3)</FormLabel>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {[
+                                    { id: "saves-time", label: "Saves time" },
+                                    { id: "high-quality", label: "High-quality / durable" },
+                                    { id: "well-designed", label: "Beautiful / well-designed" },
+                                    { id: "brings-joy", label: "Brings joy" },
+                                    { id: "health-wellness", label: "Health/wellness" },
+                                    { id: "growth-tools", label: "Growth tools" },
+                                    { id: "experiences", label: "Experiences" }
+                                  ].map((item) => (
+                                    <FormField
+                                      key={item.id}
+                                      control={form.control}
+                                      name="worthItPurchases"
+                                      render={({ field }) => {
+                                        return (
+                                          <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(item.label)}
+                                                onCheckedChange={(checked) => {
+                                                  const currentValues = field.value || [];
+                                                  if (checked && currentValues.length < 3) {
+                                                    field.onChange([...currentValues, item.label]);
+                                                  } else if (!checked) {
+                                                    field.onChange(
+                                                      currentValues.filter(
+                                                        (value) => value !== item.label
+                                                      )
+                                                    );
+                                                  }
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <FormLabel className="font-normal cursor-pointer">
+                                              {item.label}
+                                            </FormLabel>
+                                          </FormItem>
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="impulseBuying"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How often do you impulse buy?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Very often" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Very often</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Occasionally" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Occasionally</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Rarely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Rarely</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Never" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Never</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="noRegretPurchase"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What's one recent purchase you don't regret at all? Why?</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share your thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="productFrustrations"
+                            render={() => (
+                              <FormItem>
+                                <div className="mb-4">
+                                  <FormLabel>What frustrates you most in a product or platform? (Pick up to 3)</FormLabel>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {[
+                                    { id: "unclear-pricing", label: "Unclear pricing" },
+                                    { id: "bad-onboarding", label: "Bad onboarding" },
+                                    { id: "poor-support", label: "Poor support" },
+                                    { id: "buggy-features", label: "Buggy features" },
+                                    { id: "overcomplicated-ui", label: "Overcomplicated UI" },
+                                    { id: "pushy-marketing", label: "Pushy marketing" },
+                                    { id: "lack-of-transparency", label: "Lack of transparency" },
+                                    { id: "other", label: "Other" }
+                                  ].map((item) => (
+                                    <FormField
+                                      key={item.id}
+                                      control={form.control}
+                                      name="productFrustrations"
+                                      render={({ field }) => {
+                                        return (
+                                          <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(item.label)}
+                                                onCheckedChange={(checked) => {
+                                                  const currentValues = field.value || [];
+                                                  if (checked && currentValues.length < 3) {
+                                                    field.onChange([...currentValues, item.label]);
+                                                  } else if (!checked) {
+                                                    field.onChange(
+                                                      currentValues.filter(
+                                                        (value) => value !== item.label
+                                                      )
+                                                    );
+                                                  }
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <FormLabel className="font-normal cursor-pointer">
+                                              {item.label}
+                                            </FormLabel>
+                                          </FormItem>
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      {currentSection === 4 && (
+                        <div className="space-y-6">
+                          <h2 className="text-xl font-medium mb-4 flex items-center">
+                            <span className="bg-primary/10 text-primary rounded-full w-7 h-7 inline-flex items-center justify-center mr-2">🔹</span>
+                            Section 4: Information & Content Habits
+                          </h2>
+                          
+                          <FormField
+                            control={form.control}
+                            name="newsSources"
+                            render={() => (
+                              <FormItem>
+                                <div className="mb-4">
+                                  <FormLabel>Where do you get news and updates? (Pick up to 3)</FormLabel>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {[
+                                    { id: "twitter-x", label: "Twitter / X" },
+                                    { id: "podcasts", label: "Podcasts" },
+                                    { id: "reddit-discord", label: "Reddit / Discord" },
+                                    { id: "news-apps", label: "News apps" },
+                                    { id: "youtube", label: "YouTube" },
+                                    { id: "newsletters", label: "Newsletters" },
+                                    { id: "tv-radio", label: "TV / Radio" },
+                                    { id: "group-chats", label: "Group chats" },
+                                    { id: "dont-follow", label: "I don't follow news" }
+                                  ].map((item) => (
+                                    <FormField
+                                      key={item.id}
+                                      control={form.control}
+                                      name="newsSources"
+                                      render={({ field }) => {
+                                        return (
+                                          <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(item.label)}
+                                                onCheckedChange={(checked) => {
+                                                  const currentValues = field.value || [];
+                                                  if (checked && currentValues.length < 3) {
+                                                    field.onChange([...currentValues, item.label]);
+                                                  } else if (!checked) {
+                                                    field.onChange(
+                                                      currentValues.filter(
+                                                        (value) => value !== item.label
+                                                      )
+                                                    );
+                                                  }
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <FormLabel className="font-normal cursor-pointer">
+                                              {item.label}
+                                            </FormLabel>
+                                          </FormItem>
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="contentFormats"
+                            render={() => (
+                              <FormItem>
+                                <div className="mb-4">
+                                  <FormLabel>Which content formats do you enjoy most? (Pick up to 2)</FormLabel>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {[
+                                    { id: "video", label: "Video" },
+                                    { id: "podcasts", label: "Podcasts" },
+                                    { id: "articles", label: "Articles" },
+                                    { id: "visual-posts", label: "Visual posts" },
+                                    { id: "threads-comments", label: "Threads/comments" }
+                                  ].map((item) => (
+                                    <FormField
+                                      key={item.id}
+                                      control={form.control}
+                                      name="contentFormats"
+                                      render={({ field }) => {
+                                        return (
+                                          <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(item.label)}
+                                                onCheckedChange={(checked) => {
+                                                  const currentValues = field.value || [];
+                                                  if (checked && currentValues.length < 2) {
+                                                    field.onChange([...currentValues, item.label]);
+                                                  } else if (!checked) {
+                                                    field.onChange(
+                                                      currentValues.filter(
+                                                        (value) => value !== item.label
+                                                      )
+                                                    );
+                                                  }
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <FormLabel className="font-normal cursor-pointer">
+                                              {item.label}
+                                            </FormLabel>
+                                          </FormItem>
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="contentConsumption"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How much non-work content do you consume daily?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="<1hr" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">&lt;1hr</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="1-2hrs" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">1–2hrs</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="3-4hrs" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">3–4hrs</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="5+hrs" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">5+hrs</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="influencerFollowing"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Do you follow any influencers or thought leaders?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Yes - closely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Yes – closely
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Yes - casually" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Yes – casually
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="No" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        No
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="trustSource"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Who do you trust most for advice or insight?</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share your thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      {currentSection === 5 && (
+                        <div className="space-y-6">
+                          <h2 className="text-xl font-medium mb-4 flex items-center">
+                            <span className="bg-primary/10 text-primary rounded-full w-7 h-7 inline-flex items-center justify-center mr-2">🔹</span>
+                            Section 5: Values, Identity & Mindset
+                          </h2>
+                          
+                          <FormField
+                            control={form.control}
+                            name="successDefinition"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>How do you define success for yourself right now?</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share your thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="lifeImprovement"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>If you could instantly improve one area of your life, what would it be?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Physical health" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Physical health</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Mental health" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Mental health</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Finances" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Finances</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Relationships" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Relationships</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Career" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Career</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Time/focus" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Time/focus</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Creativity" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Creativity</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Other" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Other</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="worldview"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Which of these worldviews resonates most with you?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Work hard, play hard" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        "Work hard, play hard"
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Do no harm, take no shit" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        "Do no harm, take no shit"
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Everything happens for a reason" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        "Everything happens for a reason"
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="We make our own meaning" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        "We make our own meaning"
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Don't trust the system" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        "Don't trust the system"
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Just keep moving forward" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        "Just keep moving forward"
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Other / None" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Other / None
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="workIdentity"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How much is your identity tied to your work?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Very much" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Very much</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Somewhat" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Somewhat</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Not much" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Not much</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Not at all" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Not at all</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="personalityDifference"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How different are you at work vs. at home?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Same person" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Same person
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="More formal at work" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        More formal at work
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="More relaxed at work" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        More relaxed at work
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Completely different" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Completely different
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      {currentSection === 6 && (
+                        <div className="space-y-6">
+                          <h2 className="text-xl font-medium mb-4 flex items-center">
+                            <span className="bg-primary/10 text-primary rounded-full w-7 h-7 inline-flex items-center justify-center mr-2">🔹</span>
+                            Section 6: Deeper Insight
+                          </h2>
+                          
+                          <FormField
+                            control={form.control}
+                            name="confidenceSource"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>When do you feel most confident in decisions?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="After research" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        After research
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Gut instinct" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Gut instinct
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Group support" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Group support
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Values alignment" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Values alignment
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Rarely confident" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Rarely confident
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="noveltyPreference"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Do you seek out new experiences or stick with the familiar?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Actively seek novelty" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Actively seek novelty
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Occasionally try new things" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Occasionally try new things
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Prefer what I know" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Prefer what I know
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Avoid change" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Avoid change
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="learningStyle"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How do you usually learn something new?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Hands-on" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Hands-on
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Tutorials / guides" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Tutorials / guides
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Someone shows me" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Someone shows me
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I need to see it in action" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I need to see it in action
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I struggle with new things" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I struggle with new things
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="mindChangeExample"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What's something you've changed your mind about in the last few years?</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share your thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="groupBehavior"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How do you act in group settings?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I lead" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">I lead</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I support" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">I support</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I go solo" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">I go solo</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Depends" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Depends</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="stressReaction"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How do you react to stress?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Focused" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Focused</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Overwhelmed" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Overwhelmed</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Distracted" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Distracted</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Quiet" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Quiet</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Push through" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Push through</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="opinionSharing"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How comfortable are you sharing opinions in public settings?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Very" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Very</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Somewhat" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Somewhat</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Only with people I trust" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Only with people I trust</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Not at all" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Not at all</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="friendDescription"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>How would close friends describe you in 3 words?</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="E.g., loyal, thoughtful, energetic" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="communityUnderstanding"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Do people in your industry or community "get" people like you?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Yes" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Sometimes" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Sometimes</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Rarely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Rarely</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Not at all" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Not at all</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="misunderstanding"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>What do people often misunderstand about you?</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share your thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      {currentSection === 7 && (
+                        <div className="space-y-6">
+                          <h2 className="text-xl font-medium mb-4 flex items-center">
+                            <span className="bg-primary/10 text-primary rounded-full w-7 h-7 inline-flex items-center justify-center mr-2">🔹</span>
+                            Section 7: Worldview & Politics
+                          </h2>
+                          
+                          <FormField
+                            control={form.control}
+                            name="politicalWorldview"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Which statement best reflects your political worldview?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="The system mostly works, but needs fixing" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        The system mostly works, but needs fixing
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="The system is broken and needs rebuilding" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        The system is broken and needs rebuilding
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="It serves some and ignores others" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        It serves some and ignores others
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Politics is a distraction" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Politics is a distraction
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="I don't think about politics much" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        I don't think about politics much
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Other" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Other
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="politicalAffiliation"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How do you relate to political groups or parties?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Strongly identify with one" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Strongly identify with one
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Lean toward one, but flexible" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Lean toward one, but flexible
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Don't trust parties" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Don't trust parties
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Stay independent" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Stay independent
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Avoid politics" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Avoid politics
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="institutionalTrust"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>How much trust do you have in major institutions?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="High" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">High</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Moderate" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Moderate</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Low" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Low</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="None" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">None</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Don't think about it" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Don't think about it</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="valueExpression"
+                            render={() => (
+                              <FormItem>
+                                <div className="mb-4">
+                                  <FormLabel>How do you express your political/social values? (Pick up to 2)</FormLabel>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {[
+                                    { id: "voting", label: "Voting" },
+                                    { id: "posting-online", label: "Posting online" },
+                                    { id: "conversations", label: "Conversations" },
+                                    { id: "protests-activism", label: "Protests / activism" },
+                                    { id: "financial-choices", label: "Financial choices" },
+                                    { id: "creative-work", label: "Creative work" },
+                                    { id: "keep-private", label: "Keep views private" }
+                                  ].map((item) => (
+                                    <FormField
+                                      key={item.id}
+                                      control={form.control}
+                                      name="valueExpression"
+                                      render={({ field }) => {
+                                        return (
+                                          <FormItem
+                                            key={item.id}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                          >
+                                            <FormControl>
+                                              <Checkbox
+                                                checked={field.value?.includes(item.label)}
+                                                onCheckedChange={(checked) => {
+                                                  const currentValues = field.value || [];
+                                                  if (checked && currentValues.length < 2) {
+                                                    field.onChange([...currentValues, item.label]);
+                                                  } else if (!checked) {
+                                                    field.onChange(
+                                                      currentValues.filter(
+                                                        (value) => value !== item.label
+                                                      )
+                                                    );
+                                                  }
+                                                }}
+                                              />
+                                            </FormControl>
+                                            <FormLabel className="font-normal cursor-pointer">
+                                              {item.label}
+                                            </FormLabel>
+                                          </FormItem>
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="politicalStance"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Which label best matches your social/political stance?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-col space-y-1"
+                                  >
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Progressive" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Progressive
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Libertarian" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Libertarian
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Conservative" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Conservative
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Anti-establishment" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Anti-establishment
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Centrist" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Centrist
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Apolitical" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Apolitical
+                                      </FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-3 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Other" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">
+                                        Other
+                                      </FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="politicalRepresentation"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Do you feel represented in mainstream politics?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex flex-wrap gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Yes" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Somewhat" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Somewhat</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Rarely" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Rarely</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="No" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Not sure" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Not sure</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      {currentSection === 8 && (
+                        <div className="space-y-6">
+                          <h2 className="text-xl font-medium mb-4 flex items-center">
+                            <span className="bg-primary/10 text-primary rounded-full w-7 h-7 inline-flex items-center justify-center mr-2">🔹</span>
+                            Final: Optional
+                          </h2>
+                          
+                          <FormField
+                            control={form.control}
+                            name="additionalInfo"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Is there anything else we should know to better understand your mindset or behavior? <span className="text-muted-foreground">(Optional)</span></FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Share any additional thoughts here..." 
+                                    className="h-24 resize-none"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="openToFollowups"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel>Would you be open to follow-ups or paid research?</FormLabel>
+                                <FormControl>
+                                  <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex gap-4"
+                                  >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="Yes" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">Yes</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                      <FormControl>
+                                        <RadioGroupItem value="No" />
+                                      </FormControl>
+                                      <FormLabel className="font-normal cursor-pointer">No</FormLabel>
+                                    </FormItem>
+                                  </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="contactInfo"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>(Optional) Email, Telegram, or other contact info</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Your contact information" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
