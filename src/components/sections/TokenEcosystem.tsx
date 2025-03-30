@@ -1,5 +1,4 @@
 
-import { Link } from "react-router-dom";
 import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins, Coins, Zap, LineChart } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
@@ -32,31 +31,7 @@ const TokenEcosystem = () => {
             </p>
           </Reveal>
           
-          <Reveal delay={300}>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/prsna-ecosystem">
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  className="group bg-gradient-to-r from-blue-600 to-blue-700 border-none w-60 h-14 text-lg shadow-lg hover:shadow-blue-600/30 transition-all"
-                >
-                  Connect Wallet
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-              <Link to="/earn-prsna">
-                <Button 
-                  variant="secondary" 
-                  size="lg" 
-                  className="group w-60 h-14 text-lg"
-                >
-                  <HandCoins className="w-5 h-5 mr-2" />
-                  Earn $PRSNA
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </Reveal>
+          {/* Removed the buttons section */}
         </div>
         
         <Reveal delay={400}>
@@ -115,29 +90,7 @@ const TokenEcosystem = () => {
           </div>
         </Reveal>
         
-        {/* AI Avatar Preview */}
-        <Reveal delay={500}>
-          <div className="mt-12 p-6 bg-gradient-to-br from-blue-900/50 to-slate-800/50 border border-blue-500/20 rounded-2xl max-w-2xl mx-auto shadow-lg">
-            <div className="flex items-center mb-4">
-              <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center mr-3">
-                <Lightbulb className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold">AI Avatar Agent</h3>
-            </div>
-            <p className="text-gray-300 mb-4">Talk to our AI research agent to explore market insights and token utility</p>
-            <div className="flex justify-center">
-              <Link to="/prsna-ecosystem">
-                <Button 
-                  variant="secondary" 
-                  className="group bg-blue-600/20 hover:bg-blue-600/30 text-white border-blue-500/30 shadow-md"
-                >
-                  Meet the AI Agent
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </Reveal>
+        {/* Removed the AI Avatar Preview card */}
       </div>
     </Section>
   );
