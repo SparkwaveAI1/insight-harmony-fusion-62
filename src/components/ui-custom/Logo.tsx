@@ -10,9 +10,9 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className, size = 'md', textClassName }) => {
   const sizeClasses = {
-    sm: 'h-6',
-    md: 'h-8',
-    lg: 'h-10'
+    sm: 'h-7 w-7',
+    md: 'h-9 w-9',
+    lg: 'h-11 w-11'
   };
 
   // Calculate frame size based on logo size
@@ -26,7 +26,7 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md', textClassName }) =>
     <div className={`flex items-center ${className}`}>
       <div className="relative">
         <div className={`rounded-full bg-white p-1 flex items-center justify-center shadow-sm ${frameClasses[size]}`}>
-          <div className="overflow-hidden flex items-center justify-center w-full h-full">
+          <div className="flex items-center justify-center w-full h-full">
             <img 
               src="/lovable-uploads/aec5484d-4b9b-4169-a74e-c3ceaf1a1d54.png" 
               alt="PersonaAI Logo" 

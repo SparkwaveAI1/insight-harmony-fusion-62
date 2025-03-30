@@ -73,7 +73,7 @@ const TokenEcosystem = () => {
                 <img 
                   src="/lovable-uploads/aec5484d-4b9b-4169-a74e-c3ceaf1a1d54.png" 
                   alt="PersonaAI Logo" 
-                  className="h-16 w-16 object-contain"
+                  className="w-16 h-16 object-contain"
                 />
               </div>
             </div>
