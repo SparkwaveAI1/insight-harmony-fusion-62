@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
+import ContactDialog from "../contact/ContactDialog";
 
 const CustomAIPersonas = () => {
   return (
@@ -88,17 +89,21 @@ const CustomAIPersonas = () => {
             
             <Reveal delay={400}>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/contact">
-                  <Button 
-                    size="lg" 
-                    variant="primary" 
-                    className="rounded-full px-8 py-3 bg-gradient-to-r from-primary to-primary/70 border-none shadow-lg shadow-primary/20 w-full sm:w-auto"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Contact us to scope your custom persona project
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
+                <ContactDialog
+                  formType="custom-persona"
+                  title="Request Custom AI Personas"
+                  triggerButton={
+                    <Button 
+                      size="lg" 
+                      variant="primary" 
+                      className="rounded-full px-8 py-3 bg-gradient-to-r from-primary to-primary/70 border-none shadow-lg shadow-primary/20 w-full sm:w-auto"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Contact us to scope your custom persona project
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  }
+                />
               </div>
             </Reveal>
           </div>

@@ -11,6 +11,7 @@ import Reveal from "@/components/ui-custom/Reveal";
 import ExplanatorySubsections from "@/components/sections/ExplanatorySubsections";
 import { Link } from "react-router-dom";
 import { ArrowRight, Search, Users } from "lucide-react";
+import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
   return (
@@ -105,6 +106,7 @@ const Index = () => {
         <TokenEcosystem />
       </main>
       <Footer />
+      <Toaster />
     </div>
   );
 };
