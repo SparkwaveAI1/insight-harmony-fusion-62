@@ -1,3 +1,4 @@
+
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
@@ -133,87 +134,6 @@ const Interviewer = () => {
                     formType="custom-persona"
                   />
                 </Card>
-              </Reveal>
-            </div>
-          </div>
-        </Section>
-
-        {/* Your Persona Section */}
-        <Section className="bg-muted/30">
-          <div className="container px-4 mx-auto">
-            <div className="max-w-4xl mx-auto text-center mb-12">
-              <Reveal>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
-                  Your AI Persona—Put It to Work
-                </h2>
-              </Reveal>
-              
-              <Reveal delay={100}>
-                <p className="text-muted-foreground text-pretty max-w-2xl mx-auto mb-10">
-                  After creating your AI Persona, leverage it for a wide range of tasks—from content creation 
-                  to decision validation and ongoing research.
-                </p>
-              </Reveal>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Reveal>
-                <Card className="p-6 h-full">
-                  <div className="mb-4 p-3 bg-primary/10 rounded-lg inline-flex">
-                    <MessageSquare className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">Content Creation</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Generate content tailored to your target audience—using their language, addressing their pain points, and matching their tone.
-                  </p>
-                  <Link to="/your-persona" className="text-primary font-medium inline-flex items-center group">
-                    Try Content Creation
-                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Card>
-              </Reveal>
-
-              <Reveal delay={100}>
-                <Card className="p-6 h-full">
-                  <div className="mb-4 p-3 bg-primary/10 rounded-lg inline-flex">
-                    <UserPlus className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">Audience Expansion</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Discover adjacent audiences and strategies to expand your market reach based on your AI Persona's network and interests.
-                  </p>
-                  <Link to="/your-persona" className="text-primary font-medium inline-flex items-center group">
-                    Expand Your Audience
-                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Card>
-              </Reveal>
-
-              <Reveal delay={200}>
-                <Card className="p-6 h-full">
-                  <div className="mb-4 p-3 bg-primary/10 rounded-lg inline-flex">
-                    <Sparkles className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">Idea Validation</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Test new concepts and ideas with your AI Persona to predict market reception before investing in development.
-                  </p>
-                  <Link to="/your-persona" className="text-primary font-medium inline-flex items-center group">
-                    Validate Your Ideas
-                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Card>
-              </Reveal>
-            </div>
-
-            <div className="text-center mt-12">
-              <Reveal delay={300}>
-                <Link to="/your-persona">
-                  <Button size="lg" className="group">
-                    Explore Your Persona
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
               </Reveal>
             </div>
           </div>
