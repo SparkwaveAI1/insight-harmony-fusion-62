@@ -20,7 +20,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
 }) => {
   return (
     <div className={className}>
-      {isEarnPage ? (
+      {isEarnPage && (
         <>
           {isWalletConnected ? (
             <Button 
@@ -42,10 +42,6 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
               Connect Wallet
             </Button>
           )}
-        </>
-      ) : (
-        <>
-          {/* Team button has been removed */}
         </>
       )}
     </div>
