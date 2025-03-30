@@ -33,7 +33,7 @@ const TokenEcosystem = () => {
           
           {/* New action buttons */}
           <Reveal delay={250}>
-            <div className="flex flex-wrap justify-center gap-4 mb-6">
+            <div className="flex flex-wrap justify-center gap-4 mb-10">
               <a href="https://app.virtuals.io/virtuals/18846" target="_blank" rel="noopener noreferrer">
                 <Button 
                   variant="primary" 
@@ -64,17 +64,6 @@ const TokenEcosystem = () => {
                   Telegram Community
                 </Button>
               </a>
-            </div>
-            
-            {/* Added logo below buttons */}
-            <div className="flex justify-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-white p-1 flex items-center justify-center shadow-md">
-                <img 
-                  src="/lovable-uploads/d746ea4b-385a-4812-8505-d28e05739c9f.png" 
-                  alt="PersonaAI Logo" 
-                  className="w-full h-full object-contain" 
-                />
-              </div>
             </div>
           </Reveal>
         </div>
