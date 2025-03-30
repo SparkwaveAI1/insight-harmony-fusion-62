@@ -77,7 +77,7 @@ const PersonaCreationScreener = () => {
       
       console.log("Form values:", values);
       
-      navigate("/persona-creation/questionnaire");
+      navigate("/persona-creation/consent-form");
     } catch (error) {
       console.error("Error in screener submission:", error);
     } finally {
@@ -559,7 +559,7 @@ const PersonaCreationScreener = () => {
                             "Processing..."
                           ) : (
                             <>
-                              Continue to Questionnaire
+                              Next Step
                               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </>
                           )}

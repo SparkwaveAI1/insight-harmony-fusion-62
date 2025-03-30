@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "sonner";
@@ -21,6 +20,7 @@ const CustomResearch = lazy(() => import("./pages/CustomResearch"));
 const PersonaCreationLanding = lazy(() => import("./pages/persona-creation/PersonaCreationLanding"));
 const PersonaCreationScreener = lazy(() => import("./pages/persona-creation/PersonaCreationScreener"));
 const PersonaCreationQuestionnaire = lazy(() => import("./pages/persona-creation/PersonaCreationQuestionnaire"));
+const ConsentForm = lazy(() => import("./pages/persona-creation/ConsentForm"));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -203,6 +203,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <PersonaCreationScreener />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/persona-creation/consent-form",
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ConsentForm />
       </Suspense>
     ),
   },
