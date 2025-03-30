@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Info } from "lucide-react";
@@ -17,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Form schema
 const formSchema = z.object({
   name: z.string().min(1, "Please enter your name"),
   age: z.string().min(1, "Please select your age"),
@@ -71,17 +69,14 @@ const PersonaCreationScreener = () => {
     setIsSubmitting(true);
     
     try {
-      // Check if user is eligible (under 18 is not eligible)
       if (values.age === "under 18") {
         alert("We're sorry, but participants must be 18 or older to participate in this study.");
         setIsSubmitting(false);
         return;
       }
       
-      // Store data in Supabase (this would be implemented later)
       console.log("Form values:", values);
       
-      // Navigate to the questionnaire
       navigate("/persona-creation/questionnaire");
     } catch (error) {
       console.error("Error in screener submission:", error);
@@ -95,7 +90,6 @@ const PersonaCreationScreener = () => {
       <Header />
       <main className="flex-grow">
         <section className="relative pt-24 pb-16">
-          {/* Background Gradient */}
           <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-background -z-10" />
           
           <div className="container px-4 mx-auto">
@@ -116,7 +110,6 @@ const PersonaCreationScreener = () => {
                 <Card className="p-6 md:p-8">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                      {/* 1. First Name & Last Initial */}
                       <FormField
                         control={form.control}
                         name="name"
@@ -132,7 +125,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 2. Age */}
                       <FormField
                         control={form.control}
                         name="age"
@@ -168,7 +160,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 3. Gender */}
                       <FormField
                         control={form.control}
                         name="gender"
@@ -201,7 +192,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 4. City, State, Country */}
                       <FormField
                         control={form.control}
                         name="location"
@@ -217,7 +207,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 5. Education */}
                       <FormField
                         control={form.control}
                         name="education"
@@ -247,7 +236,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 6. Employment Status */}
                       <FormField
                         control={form.control}
                         name="employmentStatus"
@@ -276,7 +264,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 7. Industry */}
                       <FormField
                         control={form.control}
                         name="industry"
@@ -327,7 +314,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 8. Job Title */}
                       <FormField
                         control={form.control}
                         name="jobTitle"
@@ -342,7 +328,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 9. Years of Experience */}
                       <FormField
                         control={form.control}
                         name="yearsExperience"
@@ -376,14 +361,13 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 10. Income Range */}
                       <FormField
                         control={form.control}
                         name="income"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
-                              Household Income Range
+                              Annual Household Income Range
                             </FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
@@ -393,7 +377,8 @@ const PersonaCreationScreener = () => {
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
-                                <SelectItem value="under 25k">Under $25,000</SelectItem>
+                                <SelectItem value="under 10k">Under $10,000</SelectItem>
+                                <SelectItem value="10k-25k">$10,000–25,000</SelectItem>
                                 <SelectItem value="25k-50k">$25,000–49,999</SelectItem>
                                 <SelectItem value="50k-75k">$50,000–74,999</SelectItem>
                                 <SelectItem value="75k-100k">$75,000–99,999</SelectItem>
@@ -407,7 +392,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 11. Children */}
                       <FormField
                         control={form.control}
                         name="children"
@@ -439,7 +423,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 12. Community */}
                       <FormField
                         control={form.control}
                         name="community"
@@ -471,7 +454,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 13. Ethnicity */}
                       <FormField
                         control={form.control}
                         name="ethnicity"
@@ -486,7 +468,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 14. Ethereum Wallet */}
                       <FormField
                         control={form.control}
                         name="walletAddress"
@@ -518,7 +499,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 15. Email - New field */}
                       <FormField
                         control={form.control}
                         name="email"
@@ -536,7 +516,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 16. Phone - New field */}
                       <FormField
                         control={form.control}
                         name="phone"
@@ -553,7 +532,6 @@ const PersonaCreationScreener = () => {
                         )}
                       />
                       
-                      {/* 17. Telegram ID - New field */}
                       <FormField
                         control={form.control}
                         name="telegramId"
