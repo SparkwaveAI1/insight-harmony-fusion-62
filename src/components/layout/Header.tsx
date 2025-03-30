@@ -79,6 +79,7 @@ const Header = () => {
           isScrolled={isScrolled} 
           isEarnPage={isEarnPage}
           className="hidden md:flex"
+          onNavClick={handleNavClick}
         />
 
         {/* Desktop Action Buttons */}
