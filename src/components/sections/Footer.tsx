@@ -1,6 +1,7 @@
 
 import Reveal from "../ui-custom/Reveal";
 import { Twitter, Linkedin, MessageCircle } from "lucide-react";
+import Logo from "../ui-custom/Logo";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -11,9 +12,9 @@ const Footer = () => {
         <div className="flex flex-col items-center">
           <Reveal className="max-w-xl mx-auto text-center">
             <div>
-              <a href="#" className="inline-block text-xl font-medium mb-4">
-                Persona<span className="text-primary">AI</span>
-              </a>
+              <div className="flex justify-center mb-4">
+                <Logo size="sm" />
+              </div>
               <p className="text-muted-foreground mb-6">
                 Transforming qualitative data into strategic insights through elegant design and powerful analysis.
               </p>
