@@ -88,7 +88,7 @@ const CustomAIPersonas = () => {
             
             <Reveal delay={400}>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/your-persona">
+                <Link to="/contact">
                   <Button 
                     size="lg" 
                     variant="primary" 
