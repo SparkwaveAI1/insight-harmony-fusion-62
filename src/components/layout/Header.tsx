@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
-import NavigationItems from "./navigation/NavigationItems";
 import ActionButtons from "./navigation/ActionButtons";
 
 const Header = () => {
@@ -26,15 +25,6 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navItems = [
-    { label: "Home", href: "/" },
-    { label: "AI Interviewer", href: "/interviewer" },
-    { label: "AI Researcher", href: "/research" },
-    { label: "Web3", href: "/earn-prsna" },
-    { label: "Team", href: "/team" },
-    { label: "Pricing", href: "/pricing" },
-  ];
-
   return (
     <header
       className={cn(
@@ -54,14 +44,8 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Desktop Navigation - Always visible now */}
-        <div className="flex items-center gap-6">
-          <NavigationItems 
-            navItems={navItems} 
-            isScrolled={isScrolled} 
-            isEarnPage={isEarnPage}
-          />
-
+        {/* Action Buttons (right side) */}
+        <div className="flex items-center">
           <ActionButtons 
             isEarnPage={isEarnPage}
             isWalletConnected={isWalletConnected}
