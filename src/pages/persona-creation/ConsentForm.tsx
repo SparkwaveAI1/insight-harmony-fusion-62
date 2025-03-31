@@ -63,7 +63,7 @@ const ConsentForm = () => {
           duration: 5000,
         });
         
-        // CHANGED: Navigate to questionnaire instead of interview
+        // Navigate directly to the questionnaire route
         navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to save consent information");
