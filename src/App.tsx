@@ -1,5 +1,6 @@
+
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy } from "react";
 import { Toaster } from "sonner";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
@@ -84,6 +85,7 @@ const DatabaseSetupInstructions = () => (
   </div>
 );
 
+// Create the router outside of the component function
 const router = createBrowserRouter([
   {
     path: "/",
@@ -232,15 +234,15 @@ const router = createBrowserRouter([
   },
 ]);
 
-function App() {
+// Separate the database checking logic into a custom hook
+function useSupabaseStatus() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [setupAttempts, setSetupAttempts] = useState(0);
 
   useEffect(() => {
     const checkDatabase = async () => {
       try {
-        console.log('Checking database setup (attempt ' + (setupAttempts + 1) + ')...');
+        console.log('Checking database setup...');
         setIsLoading(true);
         
         let isReady = false;
@@ -264,12 +266,6 @@ function App() {
         
         console.log('Database ready status:', isReady);
         setIsDbReady(isReady);
-        
-        if (!isReady && setupAttempts < 2) {
-          setTimeout(() => {
-            setSetupAttempts(prev => prev + 1);
-          }, 3000);
-        }
       } catch (error) {
         console.error("Database setup error:", error);
       } finally {
@@ -278,7 +274,14 @@ function App() {
     };
 
     checkDatabase();
-  }, [setupAttempts]);
+  }, []);
+
+  return { isDbReady, isLoading };
+}
+
+// App component properly using React hooks
+function App() {
+  const { isDbReady, isLoading } = useSupabaseStatus();
 
   if (isLoading) {
     return <LoadingFallback />;
