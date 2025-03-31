@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
+// Update the document title
+document.title = "PersonaAI - AI-Powered Qualitative Research";
+
 // Simple error boundary to catch and display errors
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
