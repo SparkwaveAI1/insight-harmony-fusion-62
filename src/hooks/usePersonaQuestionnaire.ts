@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,9 +55,8 @@ export const usePersonaQuestionnaire = () => {
     
     try {
       const currentValues = form.getValues();
-      console.log("Questionnaire - Auto-saving progress for participant ID:", participantId);
       await updateParticipantQuestionnaireById(participantId, currentValues);
-      console.log("Questionnaire - Progress auto-saved");
+      console.log("Progress auto-saved");
     } catch (error) {
       console.error("Error auto-saving progress:", error);
     }
@@ -67,9 +67,7 @@ export const usePersonaQuestionnaire = () => {
     const id = sessionStorage.getItem("participant_id");
     const email = sessionStorage.getItem("participant_email");
     
-    console.log("Questionnaire - Retrieved from session storage:", { id, email });
-    
-    if (!id) {
+    if (!id || !email) {
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -80,20 +78,16 @@ export const usePersonaQuestionnaire = () => {
     }
 
     setParticipantId(id);
-    if (email) setParticipantEmail(email);
-    console.log("Questionnaire - Set participant ID:", id);
+    setParticipantEmail(email);
 
     // Try to load existing data if available
     const loadExistingData = async () => {
       try {
-        console.log("Questionnaire - Attempting to load existing data for participant ID:", id);
         const participant = await getParticipantById(id);
-        console.log("Questionnaire - Retrieved participant data:", participant);
-        
         if (participant && participant.questionnaire_data) {
           // Merge existing questionnaire data with form defaults
           const existingData = participant.questionnaire_data;
-          if (Object.keys(existingData).length > 0) {
+          if (existingData.identification) {
             form.reset({
               ...defaultFormValues,
               ...existingData,
@@ -102,19 +96,7 @@ export const usePersonaQuestionnaire = () => {
               title: "Data Loaded",
               description: "We've loaded your previous responses.",
             });
-            console.log("Questionnaire - Loaded existing data successfully");
           }
-        }
-
-        // Check if consent was given
-        if (participant && !participant.consent_accepted) {
-          console.log("Questionnaire - Consent not given, redirecting to consent form");
-          toast({
-            title: "Consent Required",
-            description: "You need to provide consent before completing the questionnaire.",
-            variant: "destructive",
-          });
-          navigate("/persona-creation/consent-form");
         }
       } catch (error) {
         console.error("Error loading participant data:", error);
@@ -136,7 +118,6 @@ export const usePersonaQuestionnaire = () => {
     }
 
     setIsSubmitting(true);
-    console.log("Questionnaire - Submitting form for participant ID:", participantId);
 
     try {
       // Save questionnaire data to Supabase using participant ID
@@ -150,12 +131,10 @@ export const usePersonaQuestionnaire = () => {
         });
         
         // Clear session storage
-        // Keep participant_id for future reference but remove email
         sessionStorage.removeItem("participant_email");
         
-        // Navigate to a thank you page or back to home
-        // For now, just navigate back to consent form as a placeholder
-        navigate("/");
+        // Navigate to the next step 
+        navigate("/persona-creation/consent");
       } else {
         throw new Error("Failed to save questionnaire data");
       }

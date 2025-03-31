@@ -12,8 +12,6 @@ export type Database = {
       participants: {
         Row: {
           audio_url: string | null
-          consent_accepted: boolean | null
-          consent_date: string | null
           created_at: string | null
           email: string
           id: string
@@ -26,8 +24,6 @@ export type Database = {
         }
         Insert: {
           audio_url?: string | null
-          consent_accepted?: boolean | null
-          consent_date?: string | null
           created_at?: string | null
           email: string
           id?: string
@@ -40,8 +36,6 @@ export type Database = {
         }
         Update: {
           audio_url?: string | null
-          consent_accepted?: boolean | null
-          consent_date?: string | null
           created_at?: string | null
           email?: string
           id?: string
