@@ -5,19 +5,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { updateParticipantConsent } from "@/services/supabase/supabaseService";
+import { updateParticipantConsentById } from "@/services/supabase/supabaseService";
 
 const ConsentForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
-  const [participantEmail, setParticipantEmail] = useState<string | null>(null);
+  const [participantId, setParticipantId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get participant email from session storage
-    const email = sessionStorage.getItem("participant_email");
-    if (!email) {
+    // Get participant ID from session storage
+    const id = sessionStorage.getItem("participant_id");
+    if (!id) {
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -27,7 +27,7 @@ const ConsentForm = () => {
       return;
     }
 
-    setParticipantEmail(email);
+    setParticipantId(id);
   }, [navigate, toast]);
 
   const handleConsent = async () => {
@@ -40,7 +40,7 @@ const ConsentForm = () => {
       return;
     }
 
-    if (!participantEmail) {
+    if (!participantId) {
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -53,8 +53,8 @@ const ConsentForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Save consent status to Supabase
-      const updated = await updateParticipantConsent(participantEmail, true);
+      // Save consent status to Supabase using participant ID
+      const updated = await updateParticipantConsentById(participantId, true);
       
       if (updated) {
         toast({
@@ -81,6 +81,7 @@ const ConsentForm = () => {
 
   const handleDecline = () => {
     // If they decline consent, take them back to the start
+    sessionStorage.removeItem("participant_id");
     sessionStorage.removeItem("participant_email");
     navigate("/persona-creation/screener");
     

@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 // Import schema and sections
 import { formSchema, defaultFormValues } from "@/schemas/personaQuestionnaireSchema";
 import { sections } from "@/constants/personaQuestionnaireSections";
-import { getParticipantByEmail, updateParticipantQuestionnaire } from "@/services/supabase/supabaseService";
+import { getParticipantById, getParticipantByEmail, updateParticipantQuestionnaireById } from "@/services/supabase/supabaseService";
 
 // Import section components
 import IdentificationSection from "@/components/persona-creation/questionnaire/IdentificationSection";
@@ -31,6 +31,7 @@ const PersonaCreationQuestionnaire = () => {
   
   const [activeSection, setActiveSection] = useState<string>("identification");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [participantId, setParticipantId] = useState<string | null>(null);
   const [participantEmail, setParticipantEmail] = useState<string | null>(null);
 
   const form = useForm({
@@ -39,9 +40,11 @@ const PersonaCreationQuestionnaire = () => {
   });
 
   useEffect(() => {
-    // Get participant email from session storage
+    // Get participant ID from session storage
+    const id = sessionStorage.getItem("participant_id");
     const email = sessionStorage.getItem("participant_email");
-    if (!email) {
+    
+    if (!id || !email) {
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -51,12 +54,13 @@ const PersonaCreationQuestionnaire = () => {
       return;
     }
 
+    setParticipantId(id);
     setParticipantEmail(email);
 
     // Try to load existing data if available
     const loadExistingData = async () => {
       try {
-        const participant = await getParticipantByEmail(email);
+        const participant = await getParticipantById(id);
         if (participant && participant.questionnaire_data) {
           // Merge existing questionnaire data with form defaults
           const existingData = participant.questionnaire_data;
@@ -80,7 +84,7 @@ const PersonaCreationQuestionnaire = () => {
   }, [navigate, toast, form]);
 
   const onSubmit = async (data: typeof defaultFormValues) => {
-    if (!participantEmail) {
+    if (!participantId) {
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -93,8 +97,8 @@ const PersonaCreationQuestionnaire = () => {
     setIsSubmitting(true);
 
     try {
-      // Save questionnaire data to Supabase
-      const updated = await updateParticipantQuestionnaire(participantEmail, data);
+      // Save questionnaire data to Supabase using participant ID
+      const updated = await updateParticipantQuestionnaireById(participantId, data);
       
       if (updated) {
         toast({

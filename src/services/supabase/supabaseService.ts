@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize the Supabase client with your provided credentials
@@ -60,6 +61,23 @@ export async function getParticipantByEmail(email: string): Promise<Participant 
   }
 }
 
+// Get a participant by ID
+export async function getParticipantById(id: string): Promise<Participant | null> {
+  try {
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error getting participant by ID:', error);
+    return null;
+  }
+}
+
 // Update a participant's questionnaire data
 export async function updateParticipantQuestionnaire(email: string, questionnaireData: Record<string, any>): Promise<boolean> {
   try {
@@ -84,6 +102,34 @@ export async function updateParticipantQuestionnaire(email: string, questionnair
     return true;
   } catch (error) {
     console.error('Error updating participant questionnaire:', error);
+    return false;
+  }
+}
+
+// Update participant questionnaire by ID
+export async function updateParticipantQuestionnaireById(id: string, questionnaireData: Record<string, any>): Promise<boolean> {
+  try {
+    // First get the existing participant data
+    const participant = await getParticipantById(id);
+    if (!participant) {
+      throw new Error(`Participant with ID ${id} not found`);
+    }
+
+    // Update the questionnaire data
+    const { error } = await supabase
+      .from('participants')
+      .update({
+        questionnaire_data: {
+          ...participant.questionnaire_data,
+          ...questionnaireData
+        }
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating participant questionnaire by ID:', error);
     return false;
   }
 }
@@ -126,6 +172,25 @@ export async function generateUnlockCode(email: string): Promise<string | null> 
   }
 }
 
+// Generate an unlock code by participant ID
+export async function generateUnlockCodeById(id: string): Promise<string | null> {
+  try {
+    // Generate a random 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    const { error } = await supabase
+      .from('participants')
+      .update({ unlock_code: code })
+      .eq('id', id);
+
+    if (error) throw error;
+    return code;
+  } catch (error) {
+    console.error('Error generating unlock code by ID:', error);
+    return null;
+  }
+}
+
 // Validate an unlock code
 export async function validateUnlockCode(email: string, code: string): Promise<boolean> {
   try {
@@ -151,6 +216,35 @@ export async function validateUnlockCode(email: string, code: string): Promise<b
     return false;
   } catch (error) {
     console.error('Error validating unlock code:', error);
+    return false;
+  }
+}
+
+// Validate unlock code by participant ID
+export async function validateUnlockCodeById(id: string, code: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('id', id)
+      .eq('unlock_code', code)
+      .single();
+
+    if (error) throw error;
+    
+    if (data) {
+      // If code is valid, mark the interview as unlocked
+      await supabase
+        .from('participants')
+        .update({ interview_unlocked: true })
+        .eq('id', data.id);
+        
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error validating unlock code by ID:', error);
     return false;
   }
 }
@@ -236,6 +330,25 @@ export async function updateParticipantConsent(email: string, consentAccepted: b
     return true;
   } catch (error) {
     console.error('Error updating participant consent:', error);
+    return false;
+  }
+}
+
+// Update participant consent by ID
+export async function updateParticipantConsentById(id: string, consentAccepted: boolean): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('participants')
+      .update({
+        consent_accepted: consentAccepted,
+        consent_date: consentAccepted ? new Date().toISOString() : null
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating participant consent by ID:', error);
     return false;
   }
 }

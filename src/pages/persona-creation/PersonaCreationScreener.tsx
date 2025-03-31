@@ -101,19 +101,21 @@ const PersonaCreationScreener = () => {
           });
         }
         
-        // Store email in session storage for the questionnaire
+        // Store participant ID and email in session storage
+        sessionStorage.setItem("participant_id", existingParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
+        
         navigate("/persona-creation/questionnaire");
         return;
       }
       
-      // Create new participant - Fixed by adding the interview_completed property
+      // Create new participant
       const newParticipant = await createParticipant({
         email: values.email,
         screener_passed: true,
         questionnaire_data: values,
         interview_unlocked: false,
-        interview_completed: false // Add the missing property
+        interview_completed: false
       });
       
       if (newParticipant) {
@@ -122,8 +124,10 @@ const PersonaCreationScreener = () => {
           description: "Your responses have been saved. Let's continue to the questionnaire.",
         });
         
-        // Store email in session storage for the questionnaire
+        // Store participant ID and email in session storage
+        sessionStorage.setItem("participant_id", newParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
+        
         navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to create participant record");
