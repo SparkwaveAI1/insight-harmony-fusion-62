@@ -12,7 +12,7 @@ export const formSchema = z.object({
     location: z.string().optional(),
     workHours: z.string().optional(),
     caregiving: z.string().optional(),
-    livingArrangement: z.string().optional(),
+    livingArrangement: z.record(z.boolean().optional()),
   }),
   decisionMaking: z.object({
     financialRisk: z.string().optional(),
@@ -20,7 +20,6 @@ export const formSchema = z.object({
     newProducts: z.string().optional(),
     style: z.string().optional(),
     trustBrands: z.string().optional(),
-    trustFactor: z.string().optional(),
   }),
   spending: z.object({
     moneyThoughts: z.string().optional(),
@@ -102,7 +101,7 @@ export type FormSchema = z.infer<typeof formSchema>;
 // Default form values
 export const defaultFormValues: FormSchema = {
   identification: { name: "", email: "" },
-  dailyLife: {},
+  dailyLife: { livingArrangement: {} },
   decisionMaking: {},
   spending: { worthItPurchases: {}, productFrustrations: {} },
   information: { newsSources: {}, contentFormats: {} },

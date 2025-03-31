@@ -3,7 +3,6 @@ import React from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Input } from "@/components/ui/input";
 import FormSectionWrapper from "@/components/ui-custom/FormSectionWrapper";
 
 interface DecisionMakingSectionProps {
@@ -265,19 +264,7 @@ const DecisionMakingSection = ({ form, open, onOpenChange }: DecisionMakingSecti
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="decisionMaking.trustFactor"
-        render={({ field }) => (
-          <FormItem className="mt-6">
-            <FormLabel>What makes you instantly trust or distrust a product or brand?</FormLabel>
-            <FormControl>
-              <Input placeholder="Your answer" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Removed the trustFactor field */}
     </FormSectionWrapper>
   );
 };
