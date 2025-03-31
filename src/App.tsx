@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "sonner";
@@ -22,6 +21,7 @@ const PersonaCreationLanding = lazy(() => import("./pages/persona-creation/Perso
 const PersonaCreationScreener = lazy(() => import("./pages/persona-creation/PersonaCreationScreener"));
 const PersonaCreationQuestionnaire = lazy(() => import("./pages/persona-creation/PersonaCreationQuestionnaire"));
 const ConsentForm = lazy(() => import("./pages/persona-creation/ConsentForm"));
+const PersonaCreationComplete = lazy(() => import("./pages/persona-creation/PersonaCreationComplete"));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -85,7 +85,6 @@ const DatabaseSetupInstructions = () => (
   </div>
 );
 
-// Create the router outside of the component function
 const router = createBrowserRouter([
   {
     path: "/",
@@ -232,9 +231,16 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: "/persona-creation/complete",
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PersonaCreationComplete />
+      </Suspense>
+    ),
+  },
 ]);
 
-// Separate the database checking logic into a custom hook
 function useSupabaseStatus() {
   const [isDbReady, setIsDbReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -279,7 +285,6 @@ function useSupabaseStatus() {
   return { isDbReady, isLoading };
 }
 
-// App component properly using React hooks
 function App() {
   const { isDbReady, isLoading } = useSupabaseStatus();
 

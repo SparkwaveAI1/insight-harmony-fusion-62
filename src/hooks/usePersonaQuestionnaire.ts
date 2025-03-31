@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -153,8 +154,8 @@ export const usePersonaQuestionnaire = () => {
         // Clear session storage
         sessionStorage.removeItem("participant_email");
         
-        // Navigate to the next step 
-        navigate("/persona-creation/consent");
+        // Navigate to the completion page instead of consent
+        navigate("/persona-creation/complete");
       } else {
         throw new Error("Failed to save questionnaire data");
       }
