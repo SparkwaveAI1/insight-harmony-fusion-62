@@ -71,8 +71,11 @@ const ConsentForm = () => {
         });
         
         console.log("Navigation to questionnaire initiated");
-        // Force a clean navigation with replace to avoid history issues
-        navigate("/persona-creation/questionnaire", { replace: true });
+        // Ensure navigation happens after state updates with a small delay
+        setTimeout(() => {
+          console.log("Executing delayed navigation to questionnaire");
+          navigate("/persona-creation/questionnaire", { replace: true });
+        }, 500);
       } else {
         throw new Error("Failed to save consent information");
       }
@@ -137,7 +140,10 @@ const ConsentForm = () => {
         <Checkbox 
           id="consent" 
           checked={consentChecked}
-          onCheckedChange={(checked) => setConsentChecked(checked === true)}
+          onCheckedChange={(checked) => {
+            console.log("Checkbox changed to:", checked);
+            setConsentChecked(checked === true);
+          }}
         />
         <label 
           htmlFor="consent" 
