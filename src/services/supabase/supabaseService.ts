@@ -59,6 +59,34 @@ export async function getParticipantByEmail(email: string): Promise<Participant 
   }
 }
 
+// Update a participant's questionnaire data
+export async function updateParticipantQuestionnaire(email: string, questionnaireData: Record<string, any>): Promise<boolean> {
+  try {
+    // First get the existing participant data
+    const participant = await getParticipantByEmail(email);
+    if (!participant) {
+      throw new Error(`Participant with email ${email} not found`);
+    }
+
+    // Update the questionnaire data
+    const { error } = await supabase
+      .from('participants')
+      .update({
+        questionnaire_data: {
+          ...participant.questionnaire_data,
+          ...questionnaireData
+        }
+      })
+      .eq('email', email);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating participant questionnaire:', error);
+    return false;
+  }
+}
+
 // Update a participant's interview data
 export async function updateParticipantInterview(
   participantId: string, 

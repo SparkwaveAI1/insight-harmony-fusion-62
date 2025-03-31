@@ -1,15 +1,17 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 // Import schema and sections
 import { formSchema, defaultFormValues } from "@/schemas/personaQuestionnaireSchema";
 import { sections } from "@/constants/personaQuestionnaireSections";
+import { getParticipantByEmail, updateParticipantQuestionnaire } from "@/services/supabase/supabaseService";
 
 // Import section components
 import IdentificationSection from "@/components/persona-creation/questionnaire/IdentificationSection";
@@ -28,22 +30,96 @@ const PersonaCreationQuestionnaire = () => {
   const { toast } = useToast();
   
   const [activeSection, setActiveSection] = useState<string>("identification");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [participantEmail, setParticipantEmail] = useState<string | null>(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: defaultFormValues,
   });
 
-  const onSubmit = (data: typeof defaultFormValues) => {
-    console.log("Form submitted:", data);
-    toast({
-      title: "Questionnaire Completed",
-      description: "Thank you for completing the questionnaire!",
-    });
-    
-    // In a real app, you'd save this data to your backend
-    // and then navigate to the next step
-    navigate("/persona-creation/consent");
+  useEffect(() => {
+    // Get participant email from session storage
+    const email = sessionStorage.getItem("participant_email");
+    if (!email) {
+      toast({
+        title: "Session Error",
+        description: "Your session information is missing. Please start from the screener.",
+        variant: "destructive",
+      });
+      navigate("/persona-creation/screener");
+      return;
+    }
+
+    setParticipantEmail(email);
+
+    // Try to load existing data if available
+    const loadExistingData = async () => {
+      try {
+        const participant = await getParticipantByEmail(email);
+        if (participant && participant.questionnaire_data) {
+          // Merge existing questionnaire data with form defaults
+          const existingData = participant.questionnaire_data;
+          if (existingData.identification) {
+            form.reset({
+              ...defaultFormValues,
+              ...existingData,
+            });
+            toast({
+              title: "Data Loaded",
+              description: "We've loaded your previous responses.",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error loading participant data:", error);
+      }
+    };
+
+    loadExistingData();
+  }, [navigate, toast, form]);
+
+  const onSubmit = async (data: typeof defaultFormValues) => {
+    if (!participantEmail) {
+      toast({
+        title: "Session Error",
+        description: "Your session information is missing. Please start from the screener.",
+        variant: "destructive",
+      });
+      navigate("/persona-creation/screener");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Save questionnaire data to Supabase
+      const updated = await updateParticipantQuestionnaire(participantEmail, data);
+      
+      if (updated) {
+        toast({
+          title: "Questionnaire Completed",
+          description: "Thank you for completing the questionnaire!",
+        });
+        
+        // Clear session storage
+        sessionStorage.removeItem("participant_email");
+        
+        // Navigate to the next step
+        navigate("/persona-creation/consent");
+      } else {
+        throw new Error("Failed to save questionnaire data");
+      }
+    } catch (error) {
+      console.error("Error saving questionnaire data:", error);
+      toast({
+        title: "Submission Error",
+        description: "There was an error saving your responses. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -144,7 +220,16 @@ const PersonaCreationQuestionnaire = () => {
             >
               Back
             </Button>
-            <Button type="submit">Complete Questionnaire</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Complete Questionnaire"
+              )}
+            </Button>
           </div>
         </form>
       </Form>

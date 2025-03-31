@@ -16,6 +16,8 @@ import Reveal from "@/components/ui-custom/Reveal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { createParticipant, getParticipantByEmail } from "@/services/supabase/supabaseService";
 
 const formSchema = z.object({
   name: z.string().min(1, "Please enter your name"),
@@ -32,7 +34,7 @@ const formSchema = z.object({
   community: z.string().min(1, "Please select your community type"),
   ethnicity: z.string().optional(),
   walletAddress: z.string().optional(),
-  email: z.string().email("Please enter a valid email").optional(),
+  email: z.string().email("Please enter a valid email"),
   phone: z.string().optional(),
   telegramId: z.string().optional(),
 });
@@ -42,6 +44,7 @@ type ScreenerFormValues = z.infer<typeof formSchema>;
 const PersonaCreationScreener = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
   const form = useForm<ScreenerFormValues>({
     resolver: zodResolver(formSchema),
@@ -71,16 +74,66 @@ const PersonaCreationScreener = () => {
     
     try {
       if (values.age === "under 18") {
-        alert("We're sorry, but participants must be 18 or older to participate in this study.");
+        toast({
+          title: "Age Requirement",
+          description: "We're sorry, but participants must be 18 or older to participate in this study.",
+          variant: "destructive"
+        });
         setIsSubmitting(false);
         return;
       }
       
-      console.log("Form values:", values);
+      // Check if participant already exists with this email
+      const existingParticipant = await getParticipantByEmail(values.email);
       
-      navigate("/persona-creation/consent-form");
+      if (existingParticipant) {
+        // If they exist but haven't completed the questionnaire, let them continue
+        if (existingParticipant.questionnaire_data && 
+            Object.keys(existingParticipant.questionnaire_data).length > 0) {
+          toast({
+            title: "Welcome Back",
+            description: "You've already completed the screening process. Proceeding to the next step.",
+          });
+        } else {
+          toast({
+            title: "Account Found",
+            description: "We found your existing account. Let's continue with the process.",
+          });
+        }
+        
+        // Store email in session storage for the questionnaire
+        sessionStorage.setItem("participant_email", values.email);
+        navigate("/persona-creation/questionnaire");
+        return;
+      }
+      
+      // Create new participant
+      const newParticipant = await createParticipant({
+        email: values.email,
+        screener_passed: true,
+        questionnaire_data: values,
+        interview_unlocked: false
+      });
+      
+      if (newParticipant) {
+        toast({
+          title: "Screener Completed",
+          description: "Your responses have been saved. Let's continue to the questionnaire.",
+        });
+        
+        // Store email in session storage for the questionnaire
+        sessionStorage.setItem("participant_email", values.email);
+        navigate("/persona-creation/questionnaire");
+      } else {
+        throw new Error("Failed to create participant record");
+      }
     } catch (error) {
       console.error("Error in screener submission:", error);
+      toast({
+        title: "Submission Error",
+        description: "There was an error submitting your responses. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
