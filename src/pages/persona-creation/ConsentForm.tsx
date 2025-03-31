@@ -63,8 +63,10 @@ const ConsentForm = () => {
           duration: 5000,
         });
         
-        // Navigate directly to the questionnaire route
-        navigate("/persona-creation/questionnaire");
+        // Ensure navigation happens after state updates
+        setTimeout(() => {
+          navigate("/persona-creation/questionnaire");
+        }, 100);
       } else {
         throw new Error("Failed to save consent information");
       }
