@@ -5,6 +5,7 @@ import { useQuestionnaireNavigation } from "./useQuestionnaireNavigation";
 import { useQuestionnaireSession } from "./useQuestionnaireSession";
 import { useQuestionnaireDataManagement } from "./useQuestionnaireDataManagement";
 import { useQuestionnaireSubmission } from "./useQuestionnaireSubmission";
+import { FormSchema } from "@/schemas/personaQuestionnaireSchema";
 
 export const usePersonaQuestionnaire = () => {
   const { form } = useQuestionnaireForm();
