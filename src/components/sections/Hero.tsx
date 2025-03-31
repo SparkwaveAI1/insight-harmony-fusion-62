@@ -50,15 +50,26 @@ const Hero = () => {
           </Reveal>
         </div>
         
-        {/* Hero Image */}
+        {/* Hero Image - Improved visualization */}
         <Reveal delay={400} className="mt-16 max-w-5xl w-full px-6">
           <div className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-2xl border border-white/10">
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent product-image-mask pointer-events-none z-10" />
             <div className="bg-gradient-to-tr from-primary/30 to-accent/40 absolute inset-0" />
             <div className="absolute inset-0 bg-grid-white/[0.03] bg-[length:20px_20px]" />
+            
+            {/* Abstract visualization instead of placeholder text */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-300">Product visualization will appear here</p>
+              <div className="relative w-4/5 h-4/5">
+                {/* Abstract data visualization elements */}
+                <div className="absolute top-1/4 left-1/4 w-20 h-20 bg-primary/30 rounded-full animate-pulse"></div>
+                <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-accent/40 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }}></div>
+                <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-primary/20 rounded-full animate-pulse" style={{ animationDelay: "1.2s" }}></div>
+                
+                {/* Connection lines */}
+                <div className="absolute inset-0 opacity-30">
+                  <div className="absolute top-1/3 left-1/3 w-[40%] h-[1px] bg-white rotate-45 transform-origin-left"></div>
+                  <div className="absolute top-1/2 left-1/2 w-[30%] h-[1px] bg-white -rotate-30 transform-origin-left"></div>
+                </div>
               </div>
             </div>
           </div>
