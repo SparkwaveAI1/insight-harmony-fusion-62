@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,7 +69,7 @@ export const usePersonaQuestionnaire = () => {
     
     console.log("Questionnaire - Retrieved from session storage:", { id, email });
     
-    if (!id || !email) {
+    if (!id) {
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -81,7 +80,7 @@ export const usePersonaQuestionnaire = () => {
     }
 
     setParticipantId(id);
-    setParticipantEmail(email);
+    if (email) setParticipantEmail(email);
     console.log("Questionnaire - Set participant ID:", id);
 
     // Try to load existing data if available
@@ -94,7 +93,7 @@ export const usePersonaQuestionnaire = () => {
         if (participant && participant.questionnaire_data) {
           // Merge existing questionnaire data with form defaults
           const existingData = participant.questionnaire_data;
-          if (existingData.identification) {
+          if (Object.keys(existingData).length > 0) {
             form.reset({
               ...defaultFormValues,
               ...existingData,
@@ -105,6 +104,17 @@ export const usePersonaQuestionnaire = () => {
             });
             console.log("Questionnaire - Loaded existing data successfully");
           }
+        }
+
+        // Check if consent was given
+        if (participant && !participant.consent_accepted) {
+          console.log("Questionnaire - Consent not given, redirecting to consent form");
+          toast({
+            title: "Consent Required",
+            description: "You need to provide consent before completing the questionnaire.",
+            variant: "destructive",
+          });
+          navigate("/persona-creation/consent-form");
         }
       } catch (error) {
         console.error("Error loading participant data:", error);
@@ -140,10 +150,12 @@ export const usePersonaQuestionnaire = () => {
         });
         
         // Clear session storage
+        // Keep participant_id for future reference but remove email
         sessionStorage.removeItem("participant_email");
         
-        // Navigate to the next step - if we had an interview page, we'd go there
-        navigate("/persona-creation/consent");
+        // Navigate to a thank you page or back to home
+        // For now, just navigate back to consent form as a placeholder
+        navigate("/");
       } else {
         throw new Error("Failed to save questionnaire data");
       }

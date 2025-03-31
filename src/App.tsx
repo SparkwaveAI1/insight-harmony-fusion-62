@@ -13,11 +13,8 @@ function App() {
         <Routes>
           <Route path="/" element={<PersonaCreationScreener />} />
           <Route path="/persona-creation/screener" element={<PersonaCreationScreener />} />
-          
-          {/* Fix the route to match what we're navigating to in the screener */}
           <Route path="/persona-creation/consent-form" element={<ConsentForm />} />
           <Route path="/persona-creation/consent" element={<ConsentForm />} /> {/* Alias for backward compatibility */}
-          
           <Route path="/persona-creation/questionnaire" element={<PersonaCreationQuestionnaire />} />
         </Routes>
       </Router>

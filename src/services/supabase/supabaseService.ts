@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize the Supabase client with your provided credentials
@@ -20,7 +19,7 @@ export interface Participant {
   interview_unlocked: boolean;
   unlock_code?: string;
   interview_completed: boolean;
-  consent_accepted?: boolean; // New field for consent form acceptance
+  consent_accepted: boolean; // Updated field for consent form acceptance
   consent_date?: string;      // Date when consent was given
   transcript_url?: string;
   audio_url?: string;
@@ -338,7 +337,10 @@ export async function updateParticipantConsent(email: string, consentAccepted: b
       })
       .eq('email', email);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error in updateParticipantConsent:', error);
+      throw error;
+    }
     return true;
   } catch (error) {
     console.error('Error updating participant consent:', error);
@@ -349,6 +351,8 @@ export async function updateParticipantConsent(email: string, consentAccepted: b
 // Update participant consent by ID
 export async function updateParticipantConsentById(id: string, consentAccepted: boolean): Promise<boolean> {
   try {
+    console.log(`Updating consent for participant ${id} to ${consentAccepted}`);
+    
     const { error } = await supabase
       .from('participants')
       .update({
@@ -357,7 +361,10 @@ export async function updateParticipantConsentById(id: string, consentAccepted: 
       })
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error in updateParticipantConsentById:', error);
+      throw error;
+    }
     return true;
   } catch (error) {
     console.error('Error updating participant consent by ID:', error);

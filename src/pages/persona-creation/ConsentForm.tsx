@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +18,7 @@ const ConsentForm = () => {
     // Get participant ID from session storage
     const id = sessionStorage.getItem("participant_id");
     if (!id) {
+      console.error("Consent Form - No participant ID found in session storage");
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -41,6 +43,7 @@ const ConsentForm = () => {
     }
 
     if (!participantId) {
+      console.error("Consent Form - No participant ID found");
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -58,6 +61,7 @@ const ConsentForm = () => {
       const updated = await updateParticipantConsentById(participantId, true);
       
       if (updated) {
+        console.log("Consent Form - Consent successfully recorded for ID:", participantId);
         toast({
           title: "Consent Recorded",
           description: "Thank you for providing your consent. You will now proceed to the questionnaire.",
