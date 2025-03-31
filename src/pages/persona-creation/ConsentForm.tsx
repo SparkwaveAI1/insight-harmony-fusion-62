@@ -1,143 +1,165 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ShieldCheck } from "lucide-react";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/sections/Footer";
-import Button from "@/components/ui-custom/Button";
-import Card from "@/components/ui-custom/Card";
-import Reveal from "@/components/ui-custom/Reveal";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { updateParticipantConsent } from "@/services/supabase/supabaseService";
 
 const ConsentForm = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [participantEmail, setParticipantEmail] = useState<string | null>(null);
 
-  const handleConsent = () => {
+  useEffect(() => {
+    // Get participant email from session storage
+    const email = sessionStorage.getItem("participant_email");
+    if (!email) {
+      toast({
+        title: "Session Error",
+        description: "Your session information is missing. Please start from the screener.",
+        variant: "destructive",
+      });
+      navigate("/persona-creation/screener");
+      return;
+    }
+
+    setParticipantEmail(email);
+  }, [navigate, toast]);
+
+  const handleConsent = async () => {
+    if (!consentChecked) {
+      toast({
+        title: "Consent Required",
+        description: "Please check the consent box to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!participantEmail) {
+      toast({
+        title: "Session Error",
+        description: "Your session information is missing. Please start from the screener.",
+        variant: "destructive",
+      });
+      navigate("/persona-creation/screener");
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
-      navigate("/persona-creation/questionnaire");
+      // Save consent status to Supabase
+      const updated = await updateParticipantConsent(participantEmail, true);
+      
+      if (updated) {
+        toast({
+          title: "Consent Recorded",
+          description: "Thank you for providing your consent.",
+        });
+        
+        // Navigate to the next step (interview)
+        navigate("/persona-creation/interview");
+      } else {
+        throw new Error("Failed to save consent information");
+      }
     } catch (error) {
-      console.error("Error in consent submission:", error);
+      console.error("Error saving consent information:", error);
+      toast({
+        title: "Submission Error",
+        description: "There was an error recording your consent. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleDecline = () => {
+    // If they decline consent, take them back to the start
+    sessionStorage.removeItem("participant_email");
+    navigate("/persona-creation/screener");
+    
+    toast({
+      title: "Consent Declined",
+      description: "You have declined to participate in this research. Thank you for your time.",
+    });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow">
-        <section className="relative pt-24 pb-16">
-          <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-background -z-10" />
-          
-          <div className="container px-4 mx-auto">
-            <div className="max-w-3xl mx-auto">
-              <Reveal>
-                <h1 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik text-center">
-                  Consent to Participate in the Persona Interview Process
-                </h1>
-                <p className="text-sm text-muted-foreground text-center mb-8">
-                  Last updated: {currentDate}
-                  <br />Contact: info@sparkwave-ai.com
-                </p>
-              </Reveal>
-              
-              <Reveal delay={100}>
-                <Card className="p-6 md:p-8 mb-8">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">1. Purpose of Participation</h3>
-                      <p className="text-muted-foreground">
-                        You understand that your responses will be used to create a simulated AI persona that reflects your background, perspective, and experiences. These personas are used for qualitative research, behavioral modeling, and strategic insight generation within the PersonaAI platform.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">2. Voluntary Participation</h3>
-                      <p className="text-muted-foreground">
-                        Your participation is entirely voluntary. You may choose to withdraw at any time prior to submission. You may also request deletion of your submitted data after the interview has been completed by contacting:
-                        <br />📧 info@sparkwave-ai.com
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">3. Use of Your Responses</h3>
-                      <p className="text-muted-foreground">
-                        Your responses may be used to develop anonymized personas, behavioral profiles, or qualitative insights.
-                        <br />These outputs may be shared with third parties (e.g., clients or research partners) in non-identifiable form.
-                        <br />Your personal identity will not be disclosed or made public.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">4. Token Incentives</h3>
-                      <p className="text-muted-foreground">
-                        If you provide an Ethereum wallet address, you may be eligible to receive $PRSNA tokens as a participation reward. Providing a wallet address is optional and not required to complete the interview.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">5. Data Handling</h3>
-                      <p className="text-muted-foreground">
-                        You confirm that you have read and agree to the Privacy Policy governing the collection, use, and storage of your data.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">6. Age Requirement</h3>
-                      <p className="text-muted-foreground">
-                        You confirm that you are 18 years of age or older, and legally eligible to participate in this research.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">7. No Financial or Legal Advice</h3>
-                      <p className="text-muted-foreground">
-                        The Persona Interview process is for research and development purposes only. Nothing in this process constitutes legal, financial, or investment advice.
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium text-lg mb-2">8. Consent</h3>
-                      <p className="text-muted-foreground">
-                        By clicking "I Agree" or proceeding with the interview, you consent to the collection and use of your data as described above and in the Privacy Policy.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </Reveal>
-              
-              <Reveal delay={200}>
-                <div className="flex justify-center">
-                  <Button 
-                    onClick={handleConsent}
-                    variant="primary"
-                    className="group"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      "Processing..."
-                    ) : (
-                      <>
-                        <ShieldCheck className="h-4 w-4 mr-2" />
-                        I Agree
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </Reveal>
-            </div>
+    <div className="container mx-auto p-4 max-w-3xl">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold mb-2">Research Consent Form</h1>
+        <p className="text-gray-600">Please review and provide your consent before proceeding.</p>
+      </div>
+
+      <div className="bg-muted/30 p-6 rounded-lg mb-6">
+        <h2 className="text-xl font-semibold mb-4">Study Information</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium">Purpose</h3>
+            <p className="text-gray-700">This research aims to understand user behaviors, preferences, and decision-making processes to develop accurate AI personas for product and service testing.</p>
           </div>
-        </section>
-      </main>
-      <Footer />
+          
+          <div>
+            <h3 className="font-medium">Process</h3>
+            <p className="text-gray-700">Participation involves completing a questionnaire and a conversational interview. The interview will be recorded for analysis purposes.</p>
+          </div>
+          
+          <div>
+            <h3 className="font-medium">Data Usage</h3>
+            <p className="text-gray-700">Information collected will be used to create anonymized AI models that simulate user behaviors. Your personal identifiers will be removed from any published results.</p>
+          </div>
+          
+          <div>
+            <h3 className="font-medium">Rights</h3>
+            <p className="text-gray-700">Participation is voluntary. You can withdraw at any time. You can request access to your data or ask for its deletion by contacting our research team.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-start space-x-2 mb-6">
+        <Checkbox 
+          id="consent" 
+          checked={consentChecked}
+          onCheckedChange={(checked) => setConsentChecked(checked === true)}
+        />
+        <label 
+          htmlFor="consent" 
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          I have read and understand the information above. I agree to participate in this research and allow my data to be used as described.
+        </label>
+      </div>
+
+      <div className="flex justify-between">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleDecline}
+          disabled={isSubmitting}
+        >
+          Decline
+        </Button>
+        <Button 
+          onClick={handleConsent} 
+          disabled={!consentChecked || isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "I Consent"
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

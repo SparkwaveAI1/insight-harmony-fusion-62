@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize the Supabase client with your provided credentials
@@ -20,6 +19,8 @@ export interface Participant {
   interview_unlocked: boolean;
   unlock_code?: string;
   interview_completed: boolean;
+  consent_accepted?: boolean; // New field for consent form acceptance
+  consent_date?: string;      // Date when consent was given
   transcript_url?: string;
   audio_url?: string;
   created_at?: string;
@@ -217,5 +218,24 @@ export async function saveAudio(participantId: string, audioBlob: Blob): Promise
   } catch (error) {
     console.error('Error saving audio:', error);
     return null;
+  }
+}
+
+// Update a participant's consent status
+export async function updateParticipantConsent(email: string, consentAccepted: boolean): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('participants')
+      .update({
+        consent_accepted: consentAccepted,
+        consent_date: consentAccepted ? new Date().toISOString() : null
+      })
+      .eq('email', email);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error updating participant consent:', error);
+    return false;
   }
 }
