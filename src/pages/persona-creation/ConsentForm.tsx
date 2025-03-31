@@ -59,7 +59,8 @@ const ConsentForm = () => {
       if (updated) {
         toast({
           title: "Consent Recorded",
-          description: "Thank you for providing your consent.",
+          description: "Thank you for providing your consent. You will now proceed to the interview phase.",
+          duration: 5000,
         });
         
         // Navigate to the next step (interview)

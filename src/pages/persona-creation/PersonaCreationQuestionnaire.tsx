@@ -103,7 +103,8 @@ const PersonaCreationQuestionnaire = () => {
       if (updated) {
         toast({
           title: "Questionnaire Completed",
-          description: "Thank you for completing the questionnaire!",
+          description: "Thank you for completing the questionnaire! We will be in touch within 24 hours with information about your Conversational Interview, the final step in creating your persona.",
+          duration: 10000, // Longer duration so they can read the full message
         });
         
         // Clear session storage
