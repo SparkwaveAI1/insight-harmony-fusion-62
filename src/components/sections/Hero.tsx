@@ -49,15 +49,6 @@ const Hero = () => {
             </div>
           </Reveal>
         </div>
-        
-        {/* Hero Image */}
-        <Reveal delay={400} className="mt-16 max-w-5xl w-full px-6">
-          <div className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-2xl border border-white/10">
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent product-image-mask pointer-events-none z-10" />
-            <div className="bg-gradient-to-tr from-primary/30 to-accent/40 absolute inset-0" />
-            <div className="absolute inset-0 bg-grid-white/[0.03] bg-[length:20px_20px]" />
-          </div>
-        </Reveal>
       </div>
     </section>
   );
