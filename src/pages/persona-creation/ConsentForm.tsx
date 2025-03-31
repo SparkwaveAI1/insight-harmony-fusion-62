@@ -59,12 +59,12 @@ const ConsentForm = () => {
       if (updated) {
         toast({
           title: "Consent Recorded",
-          description: "Thank you for providing your consent. You will now proceed to the interview phase.",
+          description: "Thank you for providing your consent. You will now proceed to the questionnaire.",
           duration: 5000,
         });
         
-        // Navigate to the next step (interview)
-        navigate("/persona-creation/interview");
+        // CHANGED: Navigate to questionnaire instead of interview
+        navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to save consent information");
       }

@@ -108,7 +108,8 @@ const PersonaCreationScreener = () => {
         sessionStorage.setItem("participant_id", existingParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
         
-        navigate("/persona-creation/questionnaire");
+        // CHANGED: Navigate to consent form instead of directly to questionnaire
+        navigate("/persona-creation/consent-form");
         return;
       }
       
@@ -127,15 +128,15 @@ const PersonaCreationScreener = () => {
       if (newParticipant) {
         toast({
           title: "Screener Completed",
-          description: "Your responses have been saved. Let's continue to the questionnaire.",
+          description: "Your responses have been saved. Let's continue to the consent form.",
         });
         
         // Store participant ID and email in session storage
         sessionStorage.setItem("participant_id", newParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
         
-        // Fixed navigation path to ensure it matches the route in App.tsx
-        navigate("/persona-creation/questionnaire");
+        // CHANGED: Navigate to consent form instead of directly to questionnaire
+        navigate("/persona-creation/consent-form");
       } else {
         throw new Error("Failed to create participant record");
       }
