@@ -58,7 +58,8 @@ export const usePersonaQuestionnaire = () => {
       const currentValues = form.getValues();
       
       // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
-      if (currentValues.values?.worldview === "Do no harm, take no shit") {
+      if (currentValues.values && 
+          currentValues.values.worldview === "Do no harm, take no shit") {
         currentValues.values.worldview = "Respect others, stand your ground";
       }
       
@@ -103,7 +104,8 @@ export const usePersonaQuestionnaire = () => {
           const existingData = participant.questionnaire_data;
           
           // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
-          if (existingData.values?.worldview === "Do no harm, take no shit") {
+          if (existingData.values && 
+              existingData.values.worldview === "Do no harm, take no shit") {
             existingData.values.worldview = "Respect others, stand your ground";
           }
           
@@ -154,7 +156,8 @@ export const usePersonaQuestionnaire = () => {
       };
       
       // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
-      if (dataWithId.values?.worldview === "Do no harm, take no shit") {
+      if (dataWithId.values && 
+          dataWithId.values.worldview === "Do no harm, take no shit") {
         dataWithId.values.worldview = "Respect others, stand your ground";
       }
 
