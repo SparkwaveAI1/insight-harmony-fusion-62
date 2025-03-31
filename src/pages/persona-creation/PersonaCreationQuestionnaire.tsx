@@ -23,81 +23,73 @@ import QuestionnaireNavigation from "@/components/persona-creation/questionnaire
 const PersonaCreationQuestionnaire = () => {
   const { 
     form, 
-    activeSection, 
+    activeSection,
     setActiveSection, 
     isSubmitting, 
-    onSubmit 
+    onSubmit,
+    isFirstSection,
+    isLastSection,
+    handleNext,
+    handlePrevious
   } = usePersonaQuestionnaire();
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <QuestionnaireHeader />
-      <QuestionnaireProgress activeSection={activeSection} setActiveSection={setActiveSection} />
+      <QuestionnaireProgress activeSection={activeSection} />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          {/* Section components */}
-          <IdentificationSection 
-            form={form} 
-            open={activeSection === "identification"}
-            onOpenChange={(open) => open && setActiveSection("identification")} 
-          />
+          {/* Only render the active section */}
+          {activeSection === "identification" && (
+            <IdentificationSection form={form} />
+          )}
           
-          <DailyLifeSection 
-            form={form} 
-            open={activeSection === "dailyLife"}
-            onOpenChange={(open) => open && setActiveSection("dailyLife")}
-          />
+          {activeSection === "dailyLife" && (
+            <DailyLifeSection form={form} />
+          )}
           
-          <DecisionMakingSection 
-            form={form} 
-            open={activeSection === "decisionMaking"}
-            onOpenChange={(open) => open && setActiveSection("decisionMaking")} 
-          />
+          {activeSection === "decisionMaking" && (
+            <DecisionMakingSection form={form} />
+          )}
           
-          <SpendingSection 
-            form={form}
-            open={activeSection === "spending"}
-            onOpenChange={(open) => open && setActiveSection("spending")}
-          />
+          {activeSection === "spending" && (
+            <SpendingSection form={form} />
+          )}
           
-          <InformationSection 
-            form={form}
-            open={activeSection === "information"} 
-            onOpenChange={(open) => open && setActiveSection("information")}
-          />
+          {activeSection === "information" && (
+            <InformationSection form={form} />
+          )}
           
-          <ValuesSection 
-            form={form}
-            open={activeSection === "values"}
-            onOpenChange={(open) => open && setActiveSection("values")} 
-          />
+          {activeSection === "values" && (
+            <ValuesSection form={form} />
+          )}
           
-          <DeeperInsightSection 
-            form={form}
-            open={activeSection === "deeperInsight"} 
-            onOpenChange={(open) => open && setActiveSection("deeperInsight")}
-          />
+          {activeSection === "deeperInsight" && (
+            <DeeperInsightSection form={form} />
+          )}
           
-          <BackgroundSection 
-            form={form}
-            open={activeSection === "background"} 
-            onOpenChange={(open) => open && setActiveSection("background")}
-          />
+          {activeSection === "background" && (
+            <BackgroundSection form={form} />
+          )}
           
-          <WorldviewSection 
-            form={form}
-            open={activeSection === "worldview"}
-            onOpenChange={(open) => open && setActiveSection("worldview")} 
-          />
+          {activeSection === "worldview" && (
+            <WorldviewSection form={form} />
+          )}
           
-          <FinalSection 
-            form={form}
-            open={activeSection === "final"} 
-            onOpenChange={(open) => open && setActiveSection("final")}
-          />
+          {activeSection === "final" && (
+            <FinalSection form={form} />
+          )}
 
-          <QuestionnaireNavigation isSubmitting={isSubmitting} />
+          <QuestionnaireNavigation 
+            isSubmitting={isSubmitting}
+            activeSection={activeSection}
+            setActiveSection={setActiveSection}
+            isFirstSection={isFirstSection}
+            isLastSection={isLastSection}
+            handleNext={handleNext}
+            handlePrevious={handlePrevious}
+          />
         </form>
       </Form>
     </div>

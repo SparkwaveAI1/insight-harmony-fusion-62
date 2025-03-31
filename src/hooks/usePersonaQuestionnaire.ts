@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { formSchema, defaultFormValues } from "@/schemas/personaQuestionnaireSchema";
 import { getParticipantById, updateParticipantQuestionnaireById } from "@/services/supabase/supabaseService";
+import { sections } from "@/constants/personaQuestionnaireSections";
 
 export const usePersonaQuestionnaire = () => {
   const navigate = useNavigate();
@@ -20,6 +21,46 @@ export const usePersonaQuestionnaire = () => {
     resolver: zodResolver(formSchema),
     defaultValues: defaultFormValues,
   });
+
+  // Determine if current section is first or last
+  const currentSectionIndex = sections.findIndex(section => section.id === activeSection);
+  const isFirstSection = currentSectionIndex === 0;
+  const isLastSection = currentSectionIndex === sections.length - 1;
+
+  // Handle next section navigation
+  const handleNext = () => {
+    // Validate current section fields before proceeding
+    const currentSection = sections[currentSectionIndex];
+    
+    // If not last section, move to next section
+    if (!isLastSection) {
+      const nextSection = sections[currentSectionIndex + 1];
+      setActiveSection(nextSection.id);
+      // Auto-save progress when moving to next section
+      saveProgress();
+    }
+  };
+
+  // Handle previous section navigation
+  const handlePrevious = () => {
+    if (!isFirstSection) {
+      const prevSection = sections[currentSectionIndex - 1];
+      setActiveSection(prevSection.id);
+    }
+  };
+
+  // Save progress without submitting the form
+  const saveProgress = async () => {
+    if (!participantId) return;
+    
+    try {
+      const currentValues = form.getValues();
+      await updateParticipantQuestionnaireById(participantId, currentValues);
+      console.log("Progress auto-saved");
+    } catch (error) {
+      console.error("Error auto-saving progress:", error);
+    }
+  };
 
   useEffect(() => {
     // Get participant ID from session storage
@@ -92,7 +133,7 @@ export const usePersonaQuestionnaire = () => {
         // Clear session storage
         sessionStorage.removeItem("participant_email");
         
-        // Navigate to the next step
+        // Navigate to the next step 
         navigate("/persona-creation/consent");
       } else {
         throw new Error("Failed to save questionnaire data");
@@ -115,6 +156,10 @@ export const usePersonaQuestionnaire = () => {
     setActiveSection,
     isSubmitting,
     participantId,
-    onSubmit
+    onSubmit,
+    isFirstSection,
+    isLastSection,
+    handleNext,
+    handlePrevious
   };
 };

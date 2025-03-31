@@ -3,21 +3,17 @@ import React from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-import FormSectionWrapper from "@/components/ui-custom/FormSectionWrapper";
+import { Card } from "@/components/ui/card";
 
 interface IdentificationSectionProps {
   form: UseFormReturn<any>;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
-const IdentificationSection = ({ form, open, onOpenChange }: IdentificationSectionProps) => {
+const IdentificationSection = ({ form }: IdentificationSectionProps) => {
   return (
-    <FormSectionWrapper 
-      title="🧾 Identification" 
-      open={open} 
-      onOpenChange={onOpenChange}
-    >
+    <Card className="p-6">
+      <h3 className="text-xl font-medium mb-6">🧾 Identification</h3>
+      
       <FormField
         control={form.control}
         name="identification.name"
@@ -47,7 +43,7 @@ const IdentificationSection = ({ form, open, onOpenChange }: IdentificationSecti
           </FormItem>
         )}
       />
-    </FormSectionWrapper>
+    </Card>
   );
 };
 
