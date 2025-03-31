@@ -22,6 +22,7 @@ export type Database = {
           questionnaire_data: Json | null
           screener_passed: boolean | null
           transcript_url: string | null
+          unique_identifier: string | null
           unlock_code: string | null
         }
         Insert: {
@@ -36,6 +37,7 @@ export type Database = {
           questionnaire_data?: Json | null
           screener_passed?: boolean | null
           transcript_url?: string | null
+          unique_identifier?: string | null
           unlock_code?: string | null
         }
         Update: {
@@ -50,6 +52,7 @@ export type Database = {
           questionnaire_data?: Json | null
           screener_passed?: boolean | null
           transcript_url?: string | null
+          unique_identifier?: string | null
           unlock_code?: string | null
         }
         Relationships: []

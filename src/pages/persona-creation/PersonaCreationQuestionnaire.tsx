@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Form } from "@/components/ui/form";
 import { usePersonaQuestionnaire } from "@/hooks/usePersonaQuestionnaire";
@@ -30,7 +29,8 @@ const PersonaCreationQuestionnaire = () => {
     isFirstSection,
     isLastSection,
     handleNext,
-    handlePrevious
+    handlePrevious,
+    participantIdentifier
   } = usePersonaQuestionnaire();
 
   return (
@@ -42,7 +42,7 @@ const PersonaCreationQuestionnaire = () => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           {/* Only render the active section */}
           {activeSection === "identification" && (
-            <IdentificationSection form={form} />
+            <IdentificationSection form={form} participantIdentifier={participantIdentifier} />
           )}
           
           {activeSection === "dailyLife" && (

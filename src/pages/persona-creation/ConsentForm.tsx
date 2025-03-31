@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { updateParticipantConsentById } from "@/services/supabase/supabaseService";
 
 const ConsentForm = () => {
@@ -13,10 +13,13 @@ const ConsentForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
   const [participantId, setParticipantId] = useState<string | null>(null);
+  const [participantIdentifier, setParticipantIdentifier] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get participant ID from session storage
+    // Get participant information from session storage
     const id = sessionStorage.getItem("participant_id");
+    const identifier = sessionStorage.getItem("participant_identifier");
+    
     if (!id) {
       toast({
         title: "Session Error",
@@ -28,6 +31,7 @@ const ConsentForm = () => {
     }
 
     setParticipantId(id);
+    setParticipantIdentifier(identifier);
   }, [navigate, toast]);
 
   const handleConsent = async () => {
@@ -63,7 +67,7 @@ const ConsentForm = () => {
           duration: 5000,
         });
         
-        // CHANGED: Navigate to questionnaire instead of interview
+        // Navigate to questionnaire
         navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to save consent information");
@@ -84,6 +88,7 @@ const ConsentForm = () => {
     // If they decline consent, take them back to the start
     sessionStorage.removeItem("participant_id");
     sessionStorage.removeItem("participant_email");
+    sessionStorage.removeItem("participant_identifier");
     navigate("/persona-creation/screener");
     
     toast({
@@ -98,6 +103,19 @@ const ConsentForm = () => {
         <h1 className="text-3xl font-bold mb-2">Research Consent Form</h1>
         <p className="text-gray-600">Please review and provide your consent before proceeding.</p>
       </div>
+
+      {participantIdentifier && (
+        <div className="bg-primary/10 p-4 rounded-lg mb-6">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={20} className="text-primary" />
+            <h3 className="font-medium">Your Participant Identifier</h3>
+          </div>
+          <p className="mt-2">Your unique participant identifier is: <span className="font-bold text-lg">{participantIdentifier}</span></p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Please make note of this number. It will be used to identify your responses while keeping your personal information private.
+          </p>
+        </div>
+      )}
 
       <div className="bg-muted/30 p-6 rounded-lg mb-6">
         <h2 className="text-xl font-semibold mb-4">Study Information</h2>

@@ -1,10 +1,10 @@
-
-import { z } from "zod";
+import * as z from "zod";
 
 export const formSchema = z.object({
   identification: z.object({
-    name: z.string().min(1, { message: "Name is required" }),
-    email: z.string().email({ message: "Valid email is required" }),
+    participantId: z.string().optional(),
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Please enter a valid email")
   }),
   dailyLife: z.object({
     dayStructure: z.string().optional(),
@@ -98,9 +98,12 @@ export const formSchema = z.object({
 
 export type FormSchema = z.infer<typeof formSchema>;
 
-// Default form values
-export const defaultFormValues: FormSchema = {
-  identification: { name: "", email: "" },
+export const defaultFormValues = {
+  identification: {
+    participantId: "",
+    name: "",
+    email: ""
+  },
   dailyLife: { livingArrangement: {} },
   decisionMaking: {},
   spending: { worthItPurchases: {}, productFrustrations: {} },

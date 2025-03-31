@@ -20,10 +20,11 @@ export interface Participant {
   interview_unlocked: boolean;
   unlock_code?: string;
   interview_completed: boolean;
-  consent_accepted?: boolean; // New field for consent form acceptance
-  consent_date?: string;      // Date when consent was given
+  consent_accepted?: boolean; 
+  consent_date?: string;
   transcript_url?: string;
   audio_url?: string;
+  unique_identifier?: string;
   created_at?: string;
 }
 

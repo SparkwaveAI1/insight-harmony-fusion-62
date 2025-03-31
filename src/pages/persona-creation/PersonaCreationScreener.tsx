@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Info } from "lucide-react";
@@ -18,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { createParticipant, getParticipantByEmail } from "@/services/supabase/supabaseService";
+import { generateUniqueIdentifier } from "@/utils/identifierUtils";
 
 const formSchema = z.object({
   name: z.string().min(1, "Please enter your name"),
@@ -104,23 +104,27 @@ const PersonaCreationScreener = () => {
           });
         }
         
-        // Store participant ID and email in session storage
+        // Store participant ID, email, and unique identifier in session storage
         sessionStorage.setItem("participant_id", existingParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
+        sessionStorage.setItem("participant_identifier", existingParticipant.unique_identifier || "");
         
-        // CHANGED: Navigate to consent form instead of directly to questionnaire
         navigate("/persona-creation/consent-form");
         return;
       }
       
-      // Create new participant
+      // Create a unique identifier for the new participant
+      const uniqueIdentifier = generateUniqueIdentifier();
+      
+      // Create new participant with the unique identifier
       console.log("Creating new participant with email:", values.email);
       const newParticipant = await createParticipant({
         email: values.email,
         screener_passed: true,
         questionnaire_data: values,
         interview_unlocked: false,
-        interview_completed: false
+        interview_completed: false,
+        unique_identifier: uniqueIdentifier
       });
       
       console.log("New participant created:", newParticipant);
@@ -131,11 +135,11 @@ const PersonaCreationScreener = () => {
           description: "Your responses have been saved. Let's continue to the consent form.",
         });
         
-        // Store participant ID and email in session storage
+        // Store participant ID, email, and unique identifier in session storage
         sessionStorage.setItem("participant_id", newParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
+        sessionStorage.setItem("participant_identifier", uniqueIdentifier);
         
-        // CHANGED: Navigate to consent form instead of directly to questionnaire
         navigate("/persona-creation/consent-form");
       } else {
         throw new Error("Failed to create participant record");

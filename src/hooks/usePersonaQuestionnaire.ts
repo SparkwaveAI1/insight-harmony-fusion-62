@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +15,7 @@ export const usePersonaQuestionnaire = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [participantEmail, setParticipantEmail] = useState<string | null>(null);
+  const [participantIdentifier, setParticipantIdentifier] = useState<string | null>(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -63,9 +63,10 @@ export const usePersonaQuestionnaire = () => {
   };
 
   useEffect(() => {
-    // Get participant ID from session storage
+    // Get participant information from session storage
     const id = sessionStorage.getItem("participant_id");
     const email = sessionStorage.getItem("participant_email");
+    const identifier = sessionStorage.getItem("participant_identifier");
     
     if (!id || !email) {
       toast({
@@ -79,6 +80,12 @@ export const usePersonaQuestionnaire = () => {
 
     setParticipantId(id);
     setParticipantEmail(email);
+    setParticipantIdentifier(identifier);
+
+    // Pre-fill the identifier in the form if available
+    if (identifier) {
+      form.setValue("identification.participantId", identifier);
+    }
 
     // Try to load existing data if available
     const loadExistingData = async () => {
@@ -91,6 +98,10 @@ export const usePersonaQuestionnaire = () => {
             form.reset({
               ...defaultFormValues,
               ...existingData,
+              identification: {
+                ...existingData.identification,
+                participantId: identifier || existingData.identification.participantId,
+              }
             });
             toast({
               title: "Data Loaded",
@@ -120,8 +131,17 @@ export const usePersonaQuestionnaire = () => {
     setIsSubmitting(true);
 
     try {
+      // Make sure the participant ID is included in the submitted data
+      const dataWithId = {
+        ...data,
+        identification: {
+          ...data.identification,
+          participantId: participantIdentifier || data.identification.participantId,
+        }
+      };
+
       // Save questionnaire data to Supabase using participant ID
-      const updated = await updateParticipantQuestionnaireById(participantId, data);
+      const updated = await updateParticipantQuestionnaireById(participantId, dataWithId);
       
       if (updated) {
         toast({
@@ -156,6 +176,7 @@ export const usePersonaQuestionnaire = () => {
     setActiveSection,
     isSubmitting,
     participantId,
+    participantIdentifier,
     onSubmit,
     isFirstSection,
     isLastSection,
