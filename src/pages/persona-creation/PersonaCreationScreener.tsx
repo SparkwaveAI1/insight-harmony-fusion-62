@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CheckCircle, Info } from "lucide-react";
+import { ArrowRight, CheckCircle, Info, AlertTriangle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -175,6 +176,15 @@ const PersonaCreationScreener = () => {
                 <p className="text-lg text-muted-foreground mb-8 text-center">
                   Please complete this form to participate in our research study. Your information helps us better understand our audience.
                 </p>
+              </Reveal>
+              
+              <Reveal delay={150}>
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-lg mb-8 flex items-start">
+                  <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">
+                    <strong>Important Notice:</strong> Due to legal restrictions on personal information, we're currently only collecting data from residents outside the EU and UK.
+                  </p>
+                </div>
               </Reveal>
               
               <Reveal delay={200}>
