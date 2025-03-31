@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { formSchema, defaultFormValues } from "@/schemas/personaQuestionnaireSchema";
+import { formSchema, defaultFormValues, FormSchema } from "@/schemas/personaQuestionnaireSchema";
 import { getParticipantById, updateParticipantQuestionnaireById } from "@/services/supabase/supabaseService";
 import { sections } from "@/constants/personaQuestionnaireSections";
 
@@ -58,9 +58,9 @@ export const usePersonaQuestionnaire = () => {
       const currentValues = form.getValues();
       
       // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
-      if (currentValues.values && 
-          currentValues.values.worldview === "Do no harm, take no shit") {
-        currentValues.values.worldview = "Respect others, stand your ground";
+      const valuesObj = currentValues.values as FormSchema['values'] | undefined;
+      if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
+        valuesObj.worldview = "Respect others, stand your ground";
       }
       
       await updateParticipantQuestionnaireById(participantId, currentValues);
@@ -104,9 +104,9 @@ export const usePersonaQuestionnaire = () => {
           const existingData = participant.questionnaire_data;
           
           // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
-          if (existingData.values && 
-              existingData.values.worldview === "Do no harm, take no shit") {
-            existingData.values.worldview = "Respect others, stand your ground";
+          const valuesObj = existingData.values as FormSchema['values'] | undefined;
+          if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
+            valuesObj.worldview = "Respect others, stand your ground";
           }
           
           if (existingData.identification) {
@@ -156,9 +156,9 @@ export const usePersonaQuestionnaire = () => {
       };
       
       // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
-      if (dataWithId.values && 
-          dataWithId.values.worldview === "Do no harm, take no shit") {
-        dataWithId.values.worldview = "Respect others, stand your ground";
+      const valuesObj = dataWithId.values as FormSchema['values'] | undefined;
+      if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
+        valuesObj.worldview = "Respect others, stand your ground";
       }
 
       // Save questionnaire data to Supabase using participant ID
