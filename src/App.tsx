@@ -1,6 +1,6 @@
 
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "sonner";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
