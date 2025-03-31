@@ -107,12 +107,13 @@ const PersonaCreationScreener = () => {
         return;
       }
       
-      // Create new participant
+      // Create new participant - Fixed by adding the interview_completed property
       const newParticipant = await createParticipant({
         email: values.email,
         screener_passed: true,
         questionnaire_data: values,
-        interview_unlocked: false
+        interview_unlocked: false,
+        interview_completed: false // Add the missing property
       });
       
       if (newParticipant) {
