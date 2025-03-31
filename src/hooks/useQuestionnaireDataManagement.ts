@@ -19,6 +19,7 @@ export const useQuestionnaireDataManagement = (
       if (participant && participant.questionnaire_data) {
         const existingData = participant.questionnaire_data;
         
+        // Check if values exists and handle the worldview text replacement
         const valuesObj = existingData.values as FormSchema['values'] | undefined;
         if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
           valuesObj.worldview = "Respect others, stand your ground";
@@ -49,6 +50,7 @@ export const useQuestionnaireDataManagement = (
     try {
       const currentValues = form.getValues();
       
+      // Check if values exists and handle the worldview text replacement
       const valuesObj = currentValues.values as FormSchema['values'] | undefined;
       if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
         valuesObj.worldview = "Respect others, stand your ground";
