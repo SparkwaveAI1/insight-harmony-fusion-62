@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { formSchema, defaultFormValues, FormSchema } from "@/schemas/personaQuestionnaireSchema";
-import { getParticipantById, updateParticipantQuestionnaireById } from "@/services/supabase/supabaseService";
+import { getParticipantById, updateParticipantQuestionnaireById, updateParticipantInterview } from "@/services/supabase/supabaseService";
 import { sections } from "@/constants/personaQuestionnaireSections";
 
 export const usePersonaQuestionnaire = () => {
@@ -23,26 +22,20 @@ export const usePersonaQuestionnaire = () => {
     defaultValues: defaultFormValues,
   });
 
-  // Determine if current section is first or last
   const currentSectionIndex = sections.findIndex(section => section.id === activeSection);
   const isFirstSection = currentSectionIndex === 0;
   const isLastSection = currentSectionIndex === sections.length - 1;
 
-  // Handle next section navigation
   const handleNext = () => {
-    // Validate current section fields before proceeding
     const currentSection = sections[currentSectionIndex];
     
-    // If not last section, move to next section
     if (!isLastSection) {
       const nextSection = sections[currentSectionIndex + 1];
       setActiveSection(nextSection.id);
-      // Auto-save progress when moving to next section
       saveProgress();
     }
   };
 
-  // Handle previous section navigation
   const handlePrevious = () => {
     if (!isFirstSection) {
       const prevSection = sections[currentSectionIndex - 1];
@@ -50,14 +43,12 @@ export const usePersonaQuestionnaire = () => {
     }
   };
 
-  // Save progress without submitting the form
   const saveProgress = async () => {
     if (!participantId) return;
     
     try {
       const currentValues = form.getValues();
       
-      // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
       const valuesObj = currentValues.values as FormSchema['values'] | undefined;
       if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
         valuesObj.worldview = "Respect others, stand your ground";
@@ -71,7 +62,6 @@ export const usePersonaQuestionnaire = () => {
   };
 
   useEffect(() => {
-    // Get participant information from session storage
     const id = sessionStorage.getItem("participant_id");
     const email = sessionStorage.getItem("participant_email");
     const identifier = sessionStorage.getItem("participant_identifier");
@@ -90,20 +80,16 @@ export const usePersonaQuestionnaire = () => {
     setParticipantEmail(email);
     setParticipantIdentifier(identifier);
 
-    // Pre-fill the identifier in the form if available
     if (identifier) {
       form.setValue("identification.participantId", identifier);
     }
 
-    // Try to load existing data if available
     const loadExistingData = async () => {
       try {
         const participant = await getParticipantById(id);
         if (participant && participant.questionnaire_data) {
-          // Merge existing questionnaire data with form defaults
           const existingData = participant.questionnaire_data;
           
-          // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
           const valuesObj = existingData.values as FormSchema['values'] | undefined;
           if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
             valuesObj.worldview = "Respect others, stand your ground";
@@ -146,7 +132,6 @@ export const usePersonaQuestionnaire = () => {
     setIsSubmitting(true);
 
     try {
-      // Make sure the participant ID is included in the submitted data
       const dataWithId = {
         ...data,
         identification: {
@@ -155,26 +140,24 @@ export const usePersonaQuestionnaire = () => {
         }
       };
       
-      // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
       const valuesObj = dataWithId.values as FormSchema['values'] | undefined;
       if (valuesObj && valuesObj.worldview === "Do no harm, take no shit") {
         valuesObj.worldview = "Respect others, stand your ground";
       }
 
-      // Save questionnaire data to Supabase using participant ID
       const updated = await updateParticipantQuestionnaireById(participantId, dataWithId);
       
       if (updated) {
+        await updateParticipantInterview(participantId, { interview_completed: true });
+        
         toast({
           title: "Questionnaire Completed",
           description: "Thank you for completing the questionnaire! We will be in touch within 24 hours with information about your Conversational Interview, the final step in creating your persona.",
-          duration: 10000, // Longer duration so they can read the full message
+          duration: 10000,
         });
         
-        // Clear session storage
         sessionStorage.removeItem("participant_email");
         
-        // Navigate to the completion page instead of consent
         navigate("/persona-creation/complete");
       } else {
         throw new Error("Failed to save questionnaire data");
