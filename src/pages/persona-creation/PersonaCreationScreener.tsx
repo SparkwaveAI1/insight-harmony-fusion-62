@@ -45,13 +45,12 @@ const PersonaCreationScreener = () => {
 
     try {
       // Create a new participant in the database with this email
-      // Added the required interview_completed field
       const participant = await createParticipant({
         email: values.email,
         screener_passed: true,
         questionnaire_data: {},
         interview_unlocked: false,
-        interview_completed: false, // Added this field that was missing
+        interview_completed: false, // This field is required
       });
 
       console.log("Participant created:", participant);

@@ -22,6 +22,7 @@ function App() {
           <Route path="/interview/unlock" element={<UnlockInterview />} />
           <Route path="/interview" element={<InterviewPage />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
+          <Route path="/persona-creation/landing" element={<PersonaCreationLanding />} />
         </Routes>
       </Router>
       <Toaster />
