@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize the Supabase client with your provided credentials
@@ -348,9 +349,7 @@ export async function updateParticipantConsent(email: string, consentAccepted: b
 // Update participant consent by ID
 export async function updateParticipantConsentById(id: string, consentAccepted: boolean): Promise<boolean> {
   try {
-    console.log(`Updating consent for participant ${id} to ${consentAccepted}`);
-    
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('participants')
       .update({
         consent_accepted: consentAccepted,
@@ -358,13 +357,7 @@ export async function updateParticipantConsentById(id: string, consentAccepted: 
       })
       .eq('id', id);
 
-    console.log("Update response:", { data, error });
-
-    if (error) {
-      console.error('Error updating participant consent by ID:', error);
-      throw error;
-    }
-    
+    if (error) throw error;
     return true;
   } catch (error) {
     console.error('Error updating participant consent by ID:', error);

@@ -17,8 +17,6 @@ const ConsentForm = () => {
   useEffect(() => {
     // Get participant ID from session storage
     const id = sessionStorage.getItem("participant_id");
-    console.log("ConsentForm - Participant ID from session:", id);
-    
     if (!id) {
       toast({
         title: "Session Error",
@@ -33,8 +31,6 @@ const ConsentForm = () => {
   }, [navigate, toast]);
 
   const handleConsent = async () => {
-    console.log("handleConsent called - Consent checked:", consentChecked);
-    
     if (!consentChecked) {
       toast({
         title: "Consent Required",
@@ -45,7 +41,6 @@ const ConsentForm = () => {
     }
 
     if (!participantId) {
-      console.error("No participant ID found when trying to submit consent");
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -56,12 +51,10 @@ const ConsentForm = () => {
     }
 
     setIsSubmitting(true);
-    console.log("Saving consent for participant ID:", participantId);
 
     try {
       // Save consent status to Supabase using participant ID
       const updated = await updateParticipantConsentById(participantId, true);
-      console.log("Consent update result:", updated);
       
       if (updated) {
         toast({
@@ -70,12 +63,8 @@ const ConsentForm = () => {
           duration: 5000,
         });
         
-        console.log("Navigation to questionnaire initiated");
-        // Ensure navigation happens after state updates with a small delay
-        setTimeout(() => {
-          console.log("Executing delayed navigation to questionnaire");
-          navigate("/persona-creation/questionnaire", { replace: true });
-        }, 500);
+        // CHANGED: Navigate to questionnaire instead of interview
+        navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to save consent information");
       }
@@ -140,10 +129,7 @@ const ConsentForm = () => {
         <Checkbox 
           id="consent" 
           checked={consentChecked}
-          onCheckedChange={(checked) => {
-            console.log("Checkbox changed to:", checked);
-            setConsentChecked(checked === true);
-          }}
+          onCheckedChange={(checked) => setConsentChecked(checked === true)}
         />
         <label 
           htmlFor="consent" 
