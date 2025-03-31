@@ -1,3 +1,4 @@
+
 import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins, Coins, Zap, LineChart, ExternalLink, Twitter, MessageCircle } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
@@ -68,11 +69,13 @@ const TokenEcosystem = () => {
 
           <Reveal delay={275}>
             <div className="flex justify-center mb-16">
-              <img 
-                src="/lovable-uploads/aec5484d-4b9b-4169-a74e-c3ceaf1a1d54.png" 
-                alt="PersonaAI Logo" 
-                className="w-16 h-16 object-contain"
-              />
+              <div className="w-16 h-16 rounded-full bg-white shadow-sm overflow-hidden flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/928af4dd-ec22-412b-98e0-57d4f08eb4b2.png" 
+                  alt="PersonaAI Logo" 
+                  className="w-16 h-16 object-contain"
+                />
+              </div>
             </div>
           </Reveal>
         </div>
