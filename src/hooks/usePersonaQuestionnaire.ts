@@ -55,8 +55,9 @@ export const usePersonaQuestionnaire = () => {
     
     try {
       const currentValues = form.getValues();
+      console.log("Questionnaire - Auto-saving progress for participant ID:", participantId);
       await updateParticipantQuestionnaireById(participantId, currentValues);
-      console.log("Progress auto-saved");
+      console.log("Questionnaire - Progress auto-saved");
     } catch (error) {
       console.error("Error auto-saving progress:", error);
     }
@@ -66,6 +67,8 @@ export const usePersonaQuestionnaire = () => {
     // Get participant ID from session storage
     const id = sessionStorage.getItem("participant_id");
     const email = sessionStorage.getItem("participant_email");
+    
+    console.log("Questionnaire - Retrieved from session storage:", { id, email });
     
     if (!id || !email) {
       toast({
@@ -79,11 +82,15 @@ export const usePersonaQuestionnaire = () => {
 
     setParticipantId(id);
     setParticipantEmail(email);
+    console.log("Questionnaire - Set participant ID:", id);
 
     // Try to load existing data if available
     const loadExistingData = async () => {
       try {
+        console.log("Questionnaire - Attempting to load existing data for participant ID:", id);
         const participant = await getParticipantById(id);
+        console.log("Questionnaire - Retrieved participant data:", participant);
+        
         if (participant && participant.questionnaire_data) {
           // Merge existing questionnaire data with form defaults
           const existingData = participant.questionnaire_data;
@@ -96,6 +103,7 @@ export const usePersonaQuestionnaire = () => {
               title: "Data Loaded",
               description: "We've loaded your previous responses.",
             });
+            console.log("Questionnaire - Loaded existing data successfully");
           }
         }
       } catch (error) {
@@ -118,6 +126,7 @@ export const usePersonaQuestionnaire = () => {
     }
 
     setIsSubmitting(true);
+    console.log("Questionnaire - Submitting form for participant ID:", participantId);
 
     try {
       // Save questionnaire data to Supabase using participant ID
@@ -133,7 +142,7 @@ export const usePersonaQuestionnaire = () => {
         // Clear session storage
         sessionStorage.removeItem("participant_email");
         
-        // Navigate to the next step 
+        // Navigate to the next step - if we had an interview page, we'd go there
         navigate("/persona-creation/consent");
       } else {
         throw new Error("Failed to save questionnaire data");

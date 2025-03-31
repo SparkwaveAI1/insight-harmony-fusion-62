@@ -73,7 +73,7 @@ const PersonaCreationScreener = () => {
     setIsSubmitting(true);
     
     try {
-      console.log("Submitting screener form with values:", values);
+      console.log("Screener - Submitting screener form with values:", values);
       
       if (values.age === "under 18") {
         toast({
@@ -87,7 +87,7 @@ const PersonaCreationScreener = () => {
       
       // Check if participant already exists with this email
       const existingParticipant = await getParticipantByEmail(values.email);
-      console.log("Existing participant check:", existingParticipant);
+      console.log("Screener - Existing participant check:", existingParticipant);
       
       if (existingParticipant) {
         // If they exist but haven't completed the questionnaire, let them continue
@@ -105,16 +105,17 @@ const PersonaCreationScreener = () => {
         }
         
         // Store participant ID and email in session storage
+        console.log("Screener - Using existing participant ID:", existingParticipant.id);
         sessionStorage.setItem("participant_id", existingParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
         
-        // CHANGED: Navigate to consent form instead of directly to questionnaire
+        // Navigate to consent form
         navigate("/persona-creation/consent-form");
         return;
       }
       
       // Create new participant
-      console.log("Creating new participant with email:", values.email);
+      console.log("Screener - Creating new participant with email:", values.email);
       const newParticipant = await createParticipant({
         email: values.email,
         screener_passed: true,
@@ -123,7 +124,7 @@ const PersonaCreationScreener = () => {
         interview_completed: false
       });
       
-      console.log("New participant created:", newParticipant);
+      console.log("Screener - New participant created:", newParticipant);
       
       if (newParticipant) {
         toast({
@@ -132,10 +133,11 @@ const PersonaCreationScreener = () => {
         });
         
         // Store participant ID and email in session storage
+        console.log("Screener - Storing new participant ID:", newParticipant.id);
         sessionStorage.setItem("participant_id", newParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
         
-        // CHANGED: Navigate to consent form instead of directly to questionnaire
+        // Navigate to consent form
         navigate("/persona-creation/consent-form");
       } else {
         throw new Error("Failed to create participant record");

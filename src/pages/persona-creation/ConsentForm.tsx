@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,6 +26,7 @@ const ConsentForm = () => {
       return;
     }
 
+    console.log("Consent Form - Retrieved participant ID:", id);
     setParticipantId(id);
   }, [navigate, toast]);
 
@@ -51,6 +51,7 @@ const ConsentForm = () => {
     }
 
     setIsSubmitting(true);
+    console.log("Consent Form - Submitting consent for participant ID:", participantId);
 
     try {
       // Save consent status to Supabase using participant ID
@@ -63,7 +64,8 @@ const ConsentForm = () => {
           duration: 5000,
         });
         
-        // CHANGED: Navigate to questionnaire instead of interview
+        // Make sure we're still keeping the participant_id in session storage for the questionnaire
+        console.log("Consent Form - Navigating to questionnaire with participant ID:", participantId);
         navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to save consent information");
