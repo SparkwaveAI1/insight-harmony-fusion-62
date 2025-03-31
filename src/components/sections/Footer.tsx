@@ -11,11 +11,13 @@ const Footer = () => {
         <div className="flex flex-col items-center">
           <Reveal className="max-w-xl mx-auto text-center">
             <div className="flex flex-col items-center">
-              <img 
-                src="/lovable-uploads/aec5484d-4b9b-4169-a74e-c3ceaf1a1d54.png" 
-                alt="PersonaAI Logo" 
-                className="h-10 w-10 object-contain mb-3"
-              />
+              <div className="rounded-full bg-white shadow-sm overflow-hidden mb-3 h-10 w-10 flex items-center justify-center">
+                <img 
+                  src="/lovable-uploads/928af4dd-ec22-412b-98e0-57d4f08eb4b2.png" 
+                  alt="PersonaAI Logo" 
+                  className="h-10 w-10 object-contain"
+                />
+              </div>
               <a href="#" className="inline-block text-xl font-medium mb-4">
                 Persona<span className="text-primary">AI</span>
               </a>

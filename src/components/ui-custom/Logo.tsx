@@ -17,9 +17,9 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md', textClassName }) =>
 
   return (
     <div className={`flex items-center ${className}`}>
-      <div className="relative">
+      <div className="relative rounded-full bg-white shadow-sm overflow-hidden">
         <img 
-          src="/lovable-uploads/aec5484d-4b9b-4169-a74e-c3ceaf1a1d54.png" 
+          src="/lovable-uploads/928af4dd-ec22-412b-98e0-57d4f08eb4b2.png" 
           alt="PersonaAI Logo" 
           className={`${sizeClasses[size]} object-contain`}
         />
