@@ -222,6 +222,14 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: "/persona-creation/consent",
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ConsentForm />
+      </Suspense>
+    ),
+  },
 ]);
 
 function App() {
@@ -235,8 +243,6 @@ function App() {
         console.log('Checking database setup (attempt ' + (setupAttempts + 1) + ')...');
         setIsLoading(true);
         
-        // Allow up to 3 attempts to connect to Supabase
-        // This helps with intermittent connection issues
         let isReady = false;
         let attempts = 0;
         const maxAttempts = 3;
@@ -247,7 +253,6 @@ function App() {
             isReady = await ensureTablesExist();
             if (isReady) break;
             
-            // Wait a bit before retrying
             if (attempts < maxAttempts) {
               console.log(`Database not ready, retrying in 1s (attempt ${attempts}/${maxAttempts})...`);
               await new Promise(resolve => setTimeout(resolve, 1000));
@@ -261,8 +266,6 @@ function App() {
         setIsDbReady(isReady);
         
         if (!isReady && setupAttempts < 2) {
-          // Schedule another attempt after a few seconds
-          // This helps if Supabase is still initializing
           setTimeout(() => {
             setSetupAttempts(prev => prev + 1);
           }, 3000);

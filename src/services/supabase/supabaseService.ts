@@ -30,13 +30,19 @@ export interface Participant {
 // Create a new participant
 export async function createParticipant(participant: Omit<Participant, 'id' | 'created_at'>): Promise<Participant | null> {
   try {
+    console.log("Creating participant in Supabase:", participant);
     const { data, error } = await supabase
       .from('participants')
       .insert(participant)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating participant:', error);
+      throw error;
+    }
+    
+    console.log("Participant created successfully:", data);
     return data;
   } catch (error) {
     console.error('Error creating participant:', error);
@@ -47,13 +53,19 @@ export async function createParticipant(participant: Omit<Participant, 'id' | 'c
 // Get a participant by email
 export async function getParticipantByEmail(email: string): Promise<Participant | null> {
   try {
+    console.log("Getting participant by email:", email);
     const { data, error } = await supabase
       .from('participants')
       .select('*')
       .eq('email', email)
       .single();
 
-    if (error) throw error;
+    if (error && error.code !== 'PGRST116') {  // PGRST116 is "no rows returned" error
+      console.error('Error getting participant:', error);
+      throw error;
+    }
+    
+    console.log("Participant retrieved:", data);
     return data;
   } catch (error) {
     console.error('Error getting participant:', error);

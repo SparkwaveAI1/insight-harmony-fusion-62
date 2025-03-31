@@ -73,6 +73,8 @@ const PersonaCreationScreener = () => {
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting screener form with values:", values);
+      
       if (values.age === "under 18") {
         toast({
           title: "Age Requirement",
@@ -85,6 +87,7 @@ const PersonaCreationScreener = () => {
       
       // Check if participant already exists with this email
       const existingParticipant = await getParticipantByEmail(values.email);
+      console.log("Existing participant check:", existingParticipant);
       
       if (existingParticipant) {
         // If they exist but haven't completed the questionnaire, let them continue
@@ -110,6 +113,7 @@ const PersonaCreationScreener = () => {
       }
       
       // Create new participant
+      console.log("Creating new participant with email:", values.email);
       const newParticipant = await createParticipant({
         email: values.email,
         screener_passed: true,
@@ -117,6 +121,8 @@ const PersonaCreationScreener = () => {
         interview_unlocked: false,
         interview_completed: false
       });
+      
+      console.log("New participant created:", newParticipant);
       
       if (newParticipant) {
         toast({
@@ -128,6 +134,7 @@ const PersonaCreationScreener = () => {
         sessionStorage.setItem("participant_id", newParticipant.id as string);
         sessionStorage.setItem("participant_email", values.email);
         
+        // Fixed navigation path to ensure it matches the route in App.tsx
         navigate("/persona-creation/questionnaire");
       } else {
         throw new Error("Failed to create participant record");
