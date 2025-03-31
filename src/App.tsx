@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PersonaCreationScreener from './pages/persona-creation/PersonaCreationScreener';
 import ConsentForm from './pages/persona-creation/ConsentForm';
 import PersonaCreationQuestionnaire from './pages/persona-creation/PersonaCreationQuestionnaire';
+import PersonaCreationLanding from './pages/persona-creation/PersonaCreationLanding';
 import { Toaster } from "@/components/ui/toaster";
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
@@ -15,6 +16,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/persona-creation" element={<PersonaCreationLanding />} />
           <Route path="/persona-creation/screener" element={<PersonaCreationScreener />} />
           <Route path="/persona-creation/consent-form" element={<ConsentForm />} />
           <Route path="/persona-creation/consent" element={<ConsentForm />} /> {/* Alias for backward compatibility */}

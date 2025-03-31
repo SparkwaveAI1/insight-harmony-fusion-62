@@ -10,7 +10,7 @@ import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import ExplanatorySubsections from "@/components/sections/ExplanatorySubsections";
 import { Link } from "react-router-dom";
-import { ArrowRight, Search, Users } from "lucide-react";
+import { ArrowRight, Search, Users, UserPlus } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 
 const Index = () => {
@@ -54,7 +54,38 @@ const Index = () => {
                 </Reveal>
               </div>
               
-              {/* PersonaAI Researcher Section - Now Second */}
+              {/* PersonaAI Creation Section */}
+              <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
+                <Reveal>
+                  <h2 className="text-3xl font-bold mb-6 font-plasmik">
+                    Persona Creation
+                  </h2>
+                </Reveal>
+                
+                <Reveal delay={100}>
+                  <p className="text-muted-foreground text-pretty mb-8 flex-grow">
+                    Create your own AI persona through our structured process. Help us build 
+                    research-grade personas by sharing your insights and experiences.
+                  </p>
+                </Reveal>
+                
+                <Reveal delay={200}>
+                  <div className="mt-auto">
+                    <Link to="/persona-creation" className="block mt-6">
+                      <Button 
+                        variant="primary" 
+                        size="lg" 
+                        className="w-full group flex items-center justify-center"
+                      >
+                        Create Your Persona
+                        <UserPlus className="ml-2 h-4 w-4 transition-transform group-hover:rotate-12" />
+                      </Button>
+                    </Link>
+                  </div>
+                </Reveal>
+              </div>
+              
+              {/* PersonaAI Researcher Section - Now Third */}
               <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
                 <Reveal>
                   <h2 className="text-3xl font-bold mb-6 font-plasmik">
@@ -91,6 +122,37 @@ const Index = () => {
                         AI Focus Groups - coming soon!
                       </Button>
                     </div>
+                  </div>
+                </Reveal>
+              </div>
+              
+              {/* Quick Contact Section */}
+              <div className="bg-primary/5 rounded-xl p-8 flex flex-col h-full">
+                <Reveal>
+                  <h2 className="text-3xl font-bold mb-6 font-plasmik">
+                    Custom Research
+                  </h2>
+                </Reveal>
+                
+                <Reveal delay={100}>
+                  <p className="text-muted-foreground text-pretty mb-8 flex-grow">
+                    Need personalized research assistance? Get in touch with our team 
+                    to discuss custom personas, research studies, or enterprise solutions.
+                  </p>
+                </Reveal>
+                
+                <Reveal delay={200}>
+                  <div className="mt-auto">
+                    <Link to="/contact" className="block mt-6">
+                      <Button 
+                        variant="primary" 
+                        size="lg" 
+                        className="w-full group flex items-center justify-center"
+                      >
+                        Contact Our Team
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
                   </div>
                 </Reveal>
               </div>
