@@ -7,6 +7,8 @@ interface FormSectionWrapperProps {
   title: string;
   children: React.ReactNode;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const FormSectionWrapper = ({
