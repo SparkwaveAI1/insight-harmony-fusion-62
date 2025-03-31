@@ -20,7 +20,7 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="container px-4 mx-auto">
+      <div className="container px-4 mx-auto w-full">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md">
@@ -35,10 +35,10 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex justify-center">
+            <div className="flex justify-center w-full">
               <Button 
                 size="lg" 
-                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30"
+                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
                 as={Link}
                 to="/interviewer"
                 variant="primary"
@@ -52,7 +52,7 @@ const Hero = () => {
       </div>
       
       {/* Hero Image */}
-      <Reveal delay={400} className="mt-16 max-w-5xl mx-auto px-6">
+      <Reveal delay={400} className="mt-16 max-w-5xl mx-auto px-6 w-full">
         <div className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-2xl border border-white/10">
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent product-image-mask pointer-events-none z-10" />
           <div className="bg-gradient-to-tr from-primary/30 to-accent/40 absolute inset-0" />
