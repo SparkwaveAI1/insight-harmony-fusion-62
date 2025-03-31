@@ -1,3 +1,4 @@
+
 import * as z from "zod";
 
 export const formSchema = z.object({
@@ -60,9 +61,11 @@ export const formSchema = z.object({
     groupBehavior: z.string().optional(),
     stressReaction: z.string().optional(),
     opinionSharing: z.string().optional(),
-    friendsDescription: z.string().optional(),
+    friendsDescription: z.record(z.boolean().optional()),
     industryUnderstanding: z.string().optional(),
     misunderstanding: z.string().optional(),
+    misunderstandingReason: z.string().optional(),
+    invisibilityContext: z.string().optional(),
   }),
   background: z.object({
     disability: z.string().optional(),
@@ -109,8 +112,9 @@ export const defaultFormValues = {
   spending: { worthItPurchases: {}, productFrustrations: {} },
   information: { newsSources: {}, contentFormats: {} },
   values: {},
-  deeperInsight: {},
+  deeperInsight: { friendsDescription: {} },
   background: {},
   worldview: { politicalExpression: {} },
   final: {},
 };
+

@@ -56,6 +56,12 @@ export const usePersonaQuestionnaire = () => {
     
     try {
       const currentValues = form.getValues();
+      
+      // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
+      if (currentValues.values?.worldview === "Do no harm, take no shit") {
+        currentValues.values.worldview = "Respect others, stand your ground";
+      }
+      
       await updateParticipantQuestionnaireById(participantId, currentValues);
       console.log("Progress auto-saved");
     } catch (error) {
@@ -95,6 +101,12 @@ export const usePersonaQuestionnaire = () => {
         if (participant && participant.questionnaire_data) {
           // Merge existing questionnaire data with form defaults
           const existingData = participant.questionnaire_data;
+          
+          // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
+          if (existingData.values?.worldview === "Do no harm, take no shit") {
+            existingData.values.worldview = "Respect others, stand your ground";
+          }
+          
           if (existingData.identification) {
             form.reset({
               ...defaultFormValues,
@@ -140,6 +152,11 @@ export const usePersonaQuestionnaire = () => {
           participantId: participantIdentifier || data.identification.participantId,
         }
       };
+      
+      // Replace "Do no harm, take no shit" with "Respect others, stand your ground" if present
+      if (dataWithId.values?.worldview === "Do no harm, take no shit") {
+        dataWithId.values.worldview = "Respect others, stand your ground";
+      }
 
       // Save questionnaire data to Supabase using participant ID
       const updated = await updateParticipantQuestionnaireById(participantId, dataWithId);

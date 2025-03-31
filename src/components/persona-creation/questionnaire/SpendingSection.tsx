@@ -175,10 +175,45 @@ const SpendingSection = ({ form, open, onOpenChange }: SpendingSectionProps) => 
         control={form.control}
         name="spending.noRegretPurchase"
         render={({ field }) => (
-          <FormItem className="mt-6">
-            <FormLabel>What's one recent purchase you don't regret at all? Why?</FormLabel>
+          <FormItem className="space-y-3 mt-6">
+            <FormLabel>How do you usually feel after making a big purchase?</FormLabel>
             <FormControl>
-              <Input placeholder="Your answer" {...field} />
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex flex-col space-y-1"
+              >
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="confident" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Confident – I know what I want</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="relieved" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Relieved – I stress until it's done</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="anxious" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Anxious – I worry I chose wrong</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="excited" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Excited – I love the feeling</FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <RadioGroupItem value="indifferent" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Indifferent – I don't think much about it</FormLabel>
+                </FormItem>
+              </RadioGroup>
             </FormControl>
             <FormMessage />
           </FormItem>
