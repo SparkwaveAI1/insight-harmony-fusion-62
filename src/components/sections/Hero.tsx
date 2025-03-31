@@ -8,7 +8,7 @@ const Hero = () => {
   return (
     <section
       id="home"
-      className="relative min-h-screen pt-24 pb-16 flex items-center"
+      className="relative min-h-screen pt-24 pb-16 flex items-center justify-center"
     >
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-background -z-10">
@@ -20,7 +20,7 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="container px-4 mx-auto w-full">
+      <div className="container mx-auto px-4 flex flex-col items-center">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md">
@@ -35,10 +35,10 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex justify-center w-full">
+            <div className="flex justify-center">
               <Button 
                 size="lg" 
-                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
+                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 sm:w-auto"
                 as={Link}
                 to="/interviewer"
                 variant="primary"
@@ -49,21 +49,21 @@ const Hero = () => {
             </div>
           </Reveal>
         </div>
-      </div>
-      
-      {/* Hero Image */}
-      <Reveal delay={400} className="mt-16 max-w-5xl mx-auto px-6 w-full">
-        <div className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-2xl border border-white/10">
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent product-image-mask pointer-events-none z-10" />
-          <div className="bg-gradient-to-tr from-primary/30 to-accent/40 absolute inset-0" />
-          <div className="absolute inset-0 bg-grid-white/[0.03] bg-[length:20px_20px]" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-300">Product visualization will appear here</p>
+        
+        {/* Hero Image */}
+        <Reveal delay={400} className="mt-16 max-w-5xl w-full px-6">
+          <div className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-2xl border border-white/10">
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent product-image-mask pointer-events-none z-10" />
+            <div className="bg-gradient-to-tr from-primary/30 to-accent/40 absolute inset-0" />
+            <div className="absolute inset-0 bg-grid-white/[0.03] bg-[length:20px_20px]" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-sm font-medium text-gray-300">Product visualization will appear here</p>
+              </div>
             </div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
     </section>
   );
 };
