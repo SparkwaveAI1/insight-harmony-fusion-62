@@ -17,6 +17,8 @@ const ConsentForm = () => {
   useEffect(() => {
     // Get participant ID from session storage
     const id = sessionStorage.getItem("participant_id");
+    console.log("ConsentForm - Participant ID from session:", id);
+    
     if (!id) {
       toast({
         title: "Session Error",
@@ -31,6 +33,8 @@ const ConsentForm = () => {
   }, [navigate, toast]);
 
   const handleConsent = async () => {
+    console.log("handleConsent called - Consent checked:", consentChecked);
+    
     if (!consentChecked) {
       toast({
         title: "Consent Required",
@@ -41,6 +45,7 @@ const ConsentForm = () => {
     }
 
     if (!participantId) {
+      console.error("No participant ID found when trying to submit consent");
       toast({
         title: "Session Error",
         description: "Your session information is missing. Please start from the screener.",
@@ -51,10 +56,12 @@ const ConsentForm = () => {
     }
 
     setIsSubmitting(true);
+    console.log("Saving consent for participant ID:", participantId);
 
     try {
       // Save consent status to Supabase using participant ID
       const updated = await updateParticipantConsentById(participantId, true);
+      console.log("Consent update result:", updated);
       
       if (updated) {
         toast({
@@ -63,10 +70,9 @@ const ConsentForm = () => {
           duration: 5000,
         });
         
-        // Ensure navigation happens after state updates
-        setTimeout(() => {
-          navigate("/persona-creation/questionnaire");
-        }, 100);
+        console.log("Navigation to questionnaire initiated");
+        // Force a clean navigation with replace to avoid history issues
+        navigate("/persona-creation/questionnaire", { replace: true });
       } else {
         throw new Error("Failed to save consent information");
       }
