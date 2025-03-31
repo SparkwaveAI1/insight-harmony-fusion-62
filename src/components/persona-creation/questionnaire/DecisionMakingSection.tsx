@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
@@ -7,17 +6,11 @@ import FormSectionWrapper from "@/components/ui-custom/FormSectionWrapper";
 
 interface DecisionMakingSectionProps {
   form: UseFormReturn<any>;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
-const DecisionMakingSection = ({ form, open, onOpenChange }: DecisionMakingSectionProps) => {
+const DecisionMakingSection = ({ form }: DecisionMakingSectionProps) => {
   return (
-    <FormSectionWrapper 
-      title="🔹 Section 2: Decision-Making & Risk Style" 
-      open={open} 
-      onOpenChange={onOpenChange}
-    >
+    <FormSectionWrapper title="🔹 Section 2: Decision-Making & Risk Style">
       <FormField
         control={form.control}
         name="decisionMaking.financialRisk"
@@ -120,7 +113,6 @@ const DecisionMakingSection = ({ form, open, onOpenChange }: DecisionMakingSecti
         )}
       />
 
-      {/* Add remaining questions for this section */}
       <FormField
         control={form.control}
         name="decisionMaking.newProducts"
@@ -263,8 +255,6 @@ const DecisionMakingSection = ({ form, open, onOpenChange }: DecisionMakingSecti
           </FormItem>
         )}
       />
-
-      {/* Removed the trustFactor field */}
     </FormSectionWrapper>
   );
 };

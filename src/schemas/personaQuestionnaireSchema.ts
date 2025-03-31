@@ -1,4 +1,3 @@
-
 import * as z from "zod";
 
 export const formSchema = z.object({
@@ -13,7 +12,7 @@ export const formSchema = z.object({
     location: z.string().optional(),
     workHours: z.string().optional(),
     caregiving: z.string().optional(),
-    livingArrangement: z.record(z.boolean().optional()),
+    livingArrangement: z.record(z.boolean().optional()).optional(),
   }),
   decisionMaking: z.object({
     financialRisk: z.string().optional(),
@@ -117,4 +116,3 @@ export const defaultFormValues = {
   worldview: { politicalExpression: {} },
   final: {},
 };
-

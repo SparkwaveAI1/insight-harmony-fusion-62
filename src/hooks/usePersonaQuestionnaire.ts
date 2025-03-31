@@ -12,7 +12,7 @@ export const usePersonaQuestionnaire = () => {
   const { participantId, participantEmail, participantIdentifier } = useQuestionnaireSession();
   const { loadExistingData, saveProgress } = useQuestionnaireDataManagement(form, participantId, participantIdentifier);
   const { activeSection, setActiveSection, isFirstSection, isLastSection, handleNext, handlePrevious } = 
-    useQuestionnaireNavigation(saveProgress);
+    useQuestionnaireNavigation(saveProgress, form);
   const { isSubmitting, onSubmit } = useQuestionnaireSubmission(form, participantId, participantIdentifier);
 
   // Set participant ID in form if available
@@ -27,7 +27,7 @@ export const usePersonaQuestionnaire = () => {
     if (participantId) {
       loadExistingData();
     }
-  }, [participantId]);
+  }, [participantId, loadExistingData]);
 
   return {
     form,

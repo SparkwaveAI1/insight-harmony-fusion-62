@@ -9,17 +9,11 @@ import FormSectionWrapper from "@/components/ui-custom/FormSectionWrapper";
 
 interface FinalSectionProps {
   form: UseFormReturn<any>;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
-const FinalSection = ({ form, open, onOpenChange }: FinalSectionProps) => {
+const FinalSection = ({ form }: FinalSectionProps) => {
   return (
-    <FormSectionWrapper 
-      title="🔹 Final: Optional" 
-      open={open} 
-      onOpenChange={onOpenChange}
-    >
+    <FormSectionWrapper title="🔹 Final: Optional">
       <FormField
         control={form.control}
         name="final.additionalInfo"
