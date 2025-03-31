@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PersonaCreationScreener from './pages/persona-creation/PersonaCreationScreener';
@@ -6,7 +7,8 @@ import PersonaCreationQuestionnaire from './pages/persona-creation/PersonaCreati
 import InterviewPage from './pages/interview/InterviewPage';
 import ThankYouPage from './pages/ThankYouPage';
 import UnlockInterview from './pages/interview/UnlockInterview';
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
+import PersonaCreationLanding from './pages/persona-creation/PersonaCreationLanding';
 
 function App() {
   return (
