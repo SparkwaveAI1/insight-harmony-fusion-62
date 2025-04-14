@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Card from "@/components/ui-custom/Card";
+import Button from "@/components/ui-custom/Button";
 import ContactDialog from "@/components/contact/ContactDialog";
 
 const ResearchOption = () => {
