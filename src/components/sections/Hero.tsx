@@ -43,7 +43,7 @@ const Hero = () => {
                 to="/interviewer"
                 variant="primary"
               >
-                Contribute Interview
+                Begin Your Persona Interview
                 <Users className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
             </div>
