@@ -30,14 +30,13 @@ const Interviewer = () => {
               
               <Reveal delay={100} animation="blur-in">
                 <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
-                  AI-Powered Interviews for Deep Consumer Understanding
+                  Structured Interviews for Persona Creation & Research
                 </h1>
               </Reveal>
               
               <Reveal delay={200}>
                 <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
-                  Use AI-driven interviews to create accurate Personas or conduct research studies at scale—then leverage those 
-                  Personas for ongoing insights, content creation, and decision validation.
+                  Create rich, human-derived AI Personas or run research studies with real participants—using our automated interviewer designed for realism, depth, and scale.
                 </p>
               </Reveal>
             </div>
@@ -53,30 +52,29 @@ const Interviewer = () => {
                 <Card className="p-8 h-full flex flex-col">
                   <div className="mb-6 pb-6 border-b">
                     <h2 className="text-2xl font-bold mb-4 font-plasmik">1️⃣ Build a Persona</h2>
-                    <p className="text-muted-foreground text-sm">For: Businesses, marketers, researchers</p>
+                    <p className="text-muted-foreground text-sm">For: Individuals, businesses, researchers</p>
                   </div>
                   
                   <div className="mb-8 flex-grow">
                     <ul className="space-y-4">
                       <li className="flex items-start gap-3">
-                        <span className="text-primary text-lg">•</span>
-                        <p>AI-powered persona creation based on structured interviews.</p>
+                        <span className="text-primary">🔹</span>
+                        <p>Create a human-derived AI Persona through a structured interview.</p>
                       </li>
                       <li className="flex items-start gap-3">
-                        <span className="text-primary text-lg">•</span>
-                        <p>Modeled from real human data to mirror actual decision-making patterns.</p>
+                        <span className="text-primary">🔹</span>
+                        <p>Based on real decisions, not assumptions—your responses shape how the AI thinks.</p>
                       </li>
                       <li className="flex items-start gap-3">
-                        <span className="text-primary text-lg">•</span>
-                        <p>Reusable for future research—train your AI Persona once and use it repeatedly.</p>
+                        <span className="text-primary">🔹</span>
+                        <p>Use your Persona privately, in your business, or license it for future research and earn $PRSNA.</p>
                       </li>
                     </ul>
                     
                     <div className="mt-6 p-4 bg-muted/40 rounded-lg">
-                      <h3 className="font-medium mb-2">Example Use Case:</h3>
+                      <h3 className="font-medium mb-2">Use Case:</h3>
                       <p className="text-sm text-muted-foreground">
-                        Want to understand Gen Z investors? Our AI interviews real investors, builds an accurate digital Persona, 
-                        and allows you to test messaging, products, and strategies instantly.
+                        Want to create a thinking replica of yourself for strategy, automation, or AI-based interaction? The Interviewer captures your values, thought patterns, and decision logic—then builds a persona you can use or monetize.
                       </p>
                     </div>
                   </div>
@@ -95,30 +93,33 @@ const Interviewer = () => {
                 <Card className="p-8 h-full flex flex-col">
                   <div className="mb-6 pb-6 border-b">
                     <h2 className="text-2xl font-bold mb-4 font-plasmik">2️⃣ Conduct Custom Research</h2>
-                    <p className="text-muted-foreground text-sm">For: Businesses, researchers, brands</p>
+                    <p className="text-muted-foreground text-sm">For: Researchers, brands, protocols</p>
                   </div>
                   
                   <div className="mb-8 flex-grow">
                     <ul className="space-y-4">
                       <li className="flex items-start gap-3">
-                        <span className="text-primary text-lg">•</span>
-                        <p>AI-powered interviewer conducts qualitative research at scale.</p>
+                        <span className="text-primary">🔹</span>
+                        <p>Use the Interviewer to run qualitative research with real people.</p>
                       </li>
                       <li className="flex items-start gap-3">
-                        <span className="text-primary text-lg">•</span>
-                        <p>Extracts customer opinions, motivations, and emotions in real-time.</p>
+                        <span className="text-primary">🔹</span>
+                        <p>Consistent, scalable moderation—no human interviewer required.</p>
                       </li>
                       <li className="flex items-start gap-3">
-                        <span className="text-primary text-lg">•</span>
-                        <p>Instant analysis—dashboard insights faster than any traditional research method.</p>
+                        <span className="text-primary">🔹</span>
+                        <p>Extract beliefs, motivations, and emotional responses in real time.</p>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="text-primary">🔹</span>
+                        <p>Analyze results through the PersonaAI dashboard for immediate strategic insight.</p>
                       </li>
                     </ul>
                     
                     <div className="mt-6 p-4 bg-muted/40 rounded-lg">
-                      <h3 className="font-medium mb-2">Example Use Case:</h3>
+                      <h3 className="font-medium mb-2">Use Case:</h3>
                       <p className="text-sm text-muted-foreground">
-                        Want to know why customers abandon sign-ups? Our AI interviews real users, analyzes sentiment, and gives 
-                        you actionable insights instantly.
+                        Want to understand what's driving community churn or resistance to staking? The Interviewer collects and analyzes human responses, giving you narrative insight with the speed of automation.
                       </p>
                     </div>
                   </div>
