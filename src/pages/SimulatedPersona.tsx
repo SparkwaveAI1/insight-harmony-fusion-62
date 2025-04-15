@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { ArrowRight, Brain, Users, MessagesSquare, Test, Vote, Copy, UserPlus, Save, FileJson, Shuffle } from "lucide-react";
+import { ArrowRight, Brain, Users, MessagesSquare, Microscope, Vote, Copy, UserPlus, Save, FileJson, Shuffle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Reveal from "@/components/ui-custom/Reveal";
@@ -123,7 +122,7 @@ const SimulatedPersonaPage = () => {
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {[
                 {
-                  icon: <Test className="h-6 w-6 text-primary" />,
+                  icon: <Microscope className="h-6 w-6 text-primary" />,
                   title: "Run Behavioral Interviews",
                   description: "Explore how they think, decide, and rationalize."
                 },
