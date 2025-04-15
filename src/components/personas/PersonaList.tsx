@@ -6,7 +6,11 @@ import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import PersonaCard from "./PersonaCard";
 
-export default function PersonaList() {
+interface PersonaListProps {
+  onPersonasLoad?: (personas: any[]) => void;
+}
+
+export default function PersonaList({ onPersonasLoad }: PersonaListProps) {
   const [personas, setPersonas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,6 +36,7 @@ export default function PersonaList() {
       });
 
       setPersonas(data);
+      onPersonasLoad?.(data);
     } catch (error) {
       console.error("Error loading personas:", error);
       toast.error("Failed to load personas");
