@@ -18,6 +18,19 @@ export default function PersonaList() {
     setIsLoading(true);
     try {
       const data = await getAllPersonas();
+      console.log("Fetched personas:", data);
+      console.log("Number of personas:", data.length);
+      
+      // Log details of each persona for debugging
+      data.forEach((persona, index) => {
+        console.log(`Persona ${index + 1}:`, {
+          id: persona.persona_id,
+          name: persona.name,
+          creationDate: persona.creation_date,
+          prompt: persona.prompt
+        });
+      });
+
       setPersonas(data);
     } catch (error) {
       console.error("Error loading personas:", error);
