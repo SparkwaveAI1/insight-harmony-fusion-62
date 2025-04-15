@@ -8,6 +8,7 @@ import SimulatedPersonaPage from "@/pages/SimulatedPersona";
 import PersonaViewer from "@/pages/PersonaViewer";
 import PersonaDetail from "@/pages/PersonaDetail";
 import PersonaChat from "@/pages/PersonaChat";
+import InsightConductor from "@/pages/InsightConductor";
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
@@ -261,6 +262,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <PersonaChat />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/insight-conductor",
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <InsightConductor />
       </Suspense>
     ),
   },
