@@ -1,5 +1,5 @@
 
-import { Users } from "lucide-react";
+import { Users, Flask, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -36,16 +36,38 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 
                 size="lg" 
-                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 sm:w-auto"
+                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
                 as={Link}
                 to="/interviewer"
                 variant="primary"
               >
                 Begin Your Persona Interview
                 <Users className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
+              </Button>
+
+              <Button 
+                size="lg" 
+                className="group py-6 px-8 text-lg transition-all shadow-lg w-full sm:w-auto"
+                as={Link}
+                to="/simulated-persona"
+                variant="secondary"
+              >
+                Create a Simulated Persona
+                <Flask className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
+              </Button>
+
+              <Button 
+                size="lg" 
+                className="group py-6 px-8 text-lg transition-all shadow-lg w-full sm:w-auto"
+                as={Link}
+                to="/research"
+                variant="secondary"
+              >
+                Run Research Simulations
+                <Search className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
           </Reveal>
