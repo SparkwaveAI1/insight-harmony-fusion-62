@@ -17,6 +17,7 @@ const InterviewProcess = lazy(() => import("./pages/InterviewProcess"));
 const ParticipateResearch = lazy(() => import("./pages/ParticipateResearch"));
 const Team = lazy(() => import("./pages/Team"));
 const CustomResearch = lazy(() => import("./pages/CustomResearch"));
+const SimulatedPersona = lazy(() => import("./pages/SimulatedPersona"));
 const PersonaCreationLanding = lazy(() => import("./pages/persona-creation/PersonaCreationLanding"));
 const PersonaCreationScreener = lazy(() => import("./pages/persona-creation/PersonaCreationScreener"));
 const PersonaCreationQuestionnaire = lazy(() => import("./pages/persona-creation/PersonaCreationQuestionnaire"));
@@ -128,6 +129,14 @@ const router = createBrowserRouter([
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <AIFocusGroups />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/simulated-persona",
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <SimulatedPersona />
       </Suspense>
     ),
   },
