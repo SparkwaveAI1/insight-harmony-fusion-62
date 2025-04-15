@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,10 +77,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   };
 
   return (
-    <Section 
-      className="pt-24" 
-      pattern="dots"
-    >
+    <Section className="bg-gradient-to-b from-accent/50 via-background to-background pt-24">
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto">
           <Reveal>
