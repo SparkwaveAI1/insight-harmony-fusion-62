@@ -57,6 +57,54 @@ export type Database = {
         }
         Relationships: []
       }
+      personas: {
+        Row: {
+          behavioral_modulation: Json
+          created_at: string | null
+          creation_date: string
+          id: string
+          interview_sections: Json
+          linguistic_profile: Json
+          metadata: Json
+          name: string
+          persona_id: string
+          preinterview_tags: Json
+          prompt: string | null
+          simulation_directives: Json
+          trait_profile: Json
+        }
+        Insert: {
+          behavioral_modulation: Json
+          created_at?: string | null
+          creation_date: string
+          id?: string
+          interview_sections: Json
+          linguistic_profile: Json
+          metadata: Json
+          name: string
+          persona_id: string
+          preinterview_tags: Json
+          prompt?: string | null
+          simulation_directives: Json
+          trait_profile: Json
+        }
+        Update: {
+          behavioral_modulation?: Json
+          created_at?: string | null
+          creation_date?: string
+          id?: string
+          interview_sections?: Json
+          linguistic_profile?: Json
+          metadata?: Json
+          name?: string
+          persona_id?: string
+          preinterview_tags?: Json
+          prompt?: string | null
+          simulation_directives?: Json
+          trait_profile?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

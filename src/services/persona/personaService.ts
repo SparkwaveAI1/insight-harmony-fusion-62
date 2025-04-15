@@ -25,6 +25,7 @@ export interface Persona {
   persona_id: string;
   name: string;
   creation_date: string;
+  prompt?: string;
   metadata: PersonaMetadata;
   trait_profile: Record<string, any>;
   behavioral_modulation: Record<string, any>;
@@ -38,7 +39,6 @@ export interface Persona {
     responses?: string[];
   }>;
   created_at?: string;
-  prompt?: string;
 }
 
 /**
@@ -67,19 +67,13 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
 /**
  * Save a persona to Supabase
  */
-export async function savePersona(persona: Persona, prompt: string): Promise<Persona | null> {
+export async function savePersona(persona: Persona): Promise<Persona | null> {
   try {
     console.log("Saving persona to Supabase:", persona.persona_id);
     
-    // Add the original prompt to the persona
-    const personaWithPrompt = {
-      ...persona,
-      prompt: prompt
-    };
-    
     const { data, error } = await supabase
       .from('personas')
-      .insert(personaWithPrompt)
+      .insert(persona)
       .select()
       .single();
 
