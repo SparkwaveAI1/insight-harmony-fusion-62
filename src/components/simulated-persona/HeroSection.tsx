@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import Card from "@/components/ui-custom/Card";
+import Section from "@/components/ui-custom/Section";  // Add this import
 
 interface HeroSectionProps {
   onGenerate: () => void;
