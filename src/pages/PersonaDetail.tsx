@@ -1,44 +1,24 @@
+
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { useParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { getPersonaByPersonaId } from "@/services/persona/personaService";
-import { Persona, InterviewSection, InterviewQuestion } from "@/services/persona/types";
-
-// Define interfaces for the interview section structures
-interface InterviewQuestion {
-  question: string;
-  response?: string;
-}
-
-interface InterviewSection {
-  section: string;
-  notes: string;
-  questions: Array<string | InterviewQuestion>;
-  responses?: string[];
-}
-
-// Interface for nested interview sections object structure
-interface InterviewSectionsWrapper {
-  interview_sections: InterviewSection[];
-}
-
-// Helper types for interview_sections property which could be either structure
-type InterviewSections = InterviewSection[] | InterviewSectionsWrapper;
+import { Persona } from "@/services/persona/types";
+import PersonaHeader from "@/components/persona-details/PersonaHeader";
+import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
+import PersonaDemographics from "@/components/persona-details/PersonaDemographics";
+import PersonaTraits from "@/components/persona-details/PersonaTraits";
+import InterviewResponses from "@/components/persona-details/InterviewResponses";
 
 const PersonaDetail = () => {
   const { personaId } = useParams<{ personaId: string }>();
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (personaId) {
@@ -52,31 +32,7 @@ const PersonaDetail = () => {
       const data = await getPersonaByPersonaId(id);
       if (data) {
         console.log("Persona data loaded:", data);
-        console.log("Interview sections structure:", data.interview_sections);
-        
-        // Log each question and response for debugging
-        const sections = getInterviewSectionsArray(data.interview_sections);
-        sections.forEach((section, i) => {
-          console.log(`Section ${i+1}: ${section.section}`);
-          if (Array.isArray(section.questions)) {
-            section.questions.forEach((q, j) => {
-              if (typeof q === 'object') {
-                console.log(`  Question ${j+1}: ${q.question}`);
-                console.log(`  Response: ${q.response || 'No response'}`);
-              } else {
-                console.log(`  Question ${j+1}: ${q}`);
-                const resp = section.responses?.[j];
-                console.log(`  Response: ${resp || 'No response'}`);
-              }
-            });
-          }
-        });
-        
         setPersona(data);
-        // Set the first section to be expanded by default
-        if (sections.length > 0) {
-          setExpandedSections({ [sections[0].section]: true });
-        }
       } else {
         toast.error("Persona not found");
       }
@@ -88,61 +44,18 @@ const PersonaDetail = () => {
     }
   };
 
-  const toggleSection = (section: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
-
-  // Helper function to determine if the interview_sections is a wrapped object
-  const isInterviewSectionsWrapper = (
-    sections: InterviewSections | undefined
-  ): sections is InterviewSectionsWrapper => {
-    return (
-      sections !== undefined &&
-      !Array.isArray(sections) &&
-      typeof sections === "object" &&
-      "interview_sections" in sections
-    );
-  };
-  
-  // Helper function to get the interview sections as an array regardless of structure
-  const getInterviewSectionsArray = (sections: InterviewSections | undefined): InterviewSection[] => {
-    if (!sections) return [];
+  const getInterviewSections = () => {
+    if (!persona?.interview_sections) return [];
     
-    if (Array.isArray(sections)) {
-      return sections;
+    if (Array.isArray(persona.interview_sections)) {
+      return persona.interview_sections;
     }
     
-    if (isInterviewSectionsWrapper(sections)) {
-      return sections.interview_sections || [];
+    if ('interview_sections' in persona.interview_sections) {
+      return persona.interview_sections.interview_sections || [];
     }
     
     return [];
-  };
-
-  // Helper function for component to use
-  const getInterviewSections = (): InterviewSection[] => {
-    if (!persona || !persona.interview_sections) return [];
-    return getInterviewSectionsArray(persona.interview_sections as unknown as InterviewSections);
-  };
-
-  // Helper function to get response for a question
-  const getResponseForQuestion = (section: InterviewSection, questionIndex: number): string => {
-    const questionItem = section.questions[questionIndex];
-    
-    // If question is an object with a response property
-    if (typeof questionItem === 'object' && 'response' in questionItem) {
-      return questionItem.response || 'No response recorded';
-    }
-    
-    // If section has separate responses array
-    if (section.responses && section.responses[questionIndex]) {
-      return section.responses[questionIndex];
-    }
-    
-    return 'No response recorded';
   };
 
   return (
@@ -151,29 +64,17 @@ const PersonaDetail = () => {
       <main className="flex-grow">
         <Section className="bg-gradient-to-b from-accent/30 via-background to-background pt-24">
           <div className="container px-4 mx-auto">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/persona-viewer')}
-              className="gap-2 mb-6"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to All Personas
-            </Button>
+            <PersonaHeader />
             
             {isLoading ? (
-              <div className="text-center py-12">
-                <Progress value={75} className="w-64 mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading persona details...</p>
-              </div>
+              <PersonaLoadingState />
             ) : !persona ? (
               <Card className="p-8 text-center">
                 <h3 className="text-lg font-bold mb-3">Persona Not Found</h3>
                 <p className="text-muted-foreground mb-6">
                   The persona you're looking for doesn't exist or couldn't be loaded.
                 </p>
-                <Button onClick={() => navigate('/persona-viewer')}>
-                  View All Personas
-                </Button>
+                <Button as={Link} to="/persona-viewer">View All Personas</Button>
               </Card>
             ) : (
               <div className="space-y-8 max-w-4xl mx-auto">
@@ -191,135 +92,11 @@ const PersonaDetail = () => {
                     )}
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <h2 className="text-xl font-bold mb-3">Demographics</h2>
-                      <ul className="space-y-2">
-                        <li className="flex">
-                          <span className="font-medium w-32">Age:</span>
-                          <span>{persona.metadata.age}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Gender:</span>
-                          <span>{persona.metadata.gender}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Location:</span>
-                          <span>{persona.metadata.region}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Grew up in:</span>
-                          <span>{persona.metadata.location_history?.grew_up_in}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Current home:</span>
-                          <span>{persona.metadata.location_history?.current_residence}</span>
-                        </li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-xl font-bold mb-3">Background</h2>
-                      <ul className="space-y-2">
-                        <li className="flex">
-                          <span className="font-medium w-32">Occupation:</span>
-                          <span>{persona.metadata.occupation}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Education:</span>
-                          <span>{persona.metadata.education_level}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Income:</span>
-                          <span>{persona.metadata.income_level}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Relationship:</span>
-                          <span>{persona.metadata.relationship_status}</span>
-                        </li>
-                        <li className="flex">
-                          <span className="font-medium w-32">Culture:</span>
-                          <span>{persona.metadata.cultural_background}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h2 className="text-xl font-bold mb-3">Traits Profile</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {Object.entries(persona.trait_profile).map(([category, traits]) => (
-                        <div key={category} className="bg-muted/30 p-4 rounded-md">
-                          <h3 className="font-medium mb-2 capitalize">{category.replace(/_/g, ' ')}</h3>
-                          {Object.entries(traits as Record<string, any>).length > 0 ? (
-                            <ul className="space-y-1 text-sm">
-                              {Object.entries(traits as Record<string, any>).map(([trait, value]) => (
-                                <li key={trait} className="flex justify-between">
-                                  <span className="capitalize">{trait.replace(/_/g, ' ')}:</span>
-                                  <span className="font-medium">{value}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-sm text-muted-foreground italic">No details available</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <PersonaDemographics metadata={persona.metadata} />
+                  <PersonaTraits traitProfile={persona.trait_profile} />
                 </Card>
                 
-                <div>
-                  <h2 className="text-2xl font-bold mb-4 font-plasmik">Interview Responses</h2>
-                  
-                  {getInterviewSections().map((section, index) => (
-                    <Card key={index} className="mb-4 overflow-hidden">
-                      <button
-                        className="w-full p-4 flex justify-between items-center hover:bg-muted/30 transition-colors"
-                        onClick={() => toggleSection(section.section)}
-                      >
-                        <h3 className="text-lg font-bold">{section.section}</h3>
-                        {expandedSections[section.section] ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
-                        )}
-                      </button>
-                      
-                      {expandedSections[section.section] && (
-                        <div className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground italic mb-4">{section.notes}</p>
-                          <div className="space-y-6">
-                            {section.questions.map((item, qIndex) => {
-                              // Get the question text
-                              const questionText = typeof item === 'object' ? item.question : item;
-                              
-                              // Get the response
-                              const response = typeof item === 'object' && item.response 
-                                ? item.response 
-                                : section.responses && section.responses[qIndex];
-                              
-                              return (
-                                <div key={qIndex}>
-                                  <p className="font-medium mb-2">Q: {questionText}</p>
-                                  {response ? (
-                                    <p className="pl-4 border-l-2 border-primary/30 py-1">
-                                      {response}
-                                    </p>
-                                  ) : (
-                                    <p className="text-muted-foreground pl-4 border-l-2 border-muted py-1 italic">
-                                      No response recorded
-                                    </p>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </Card>
-                  ))}
-                </div>
+                <InterviewResponses sections={getInterviewSections()} />
               </div>
             )}
           </div>
