@@ -1,3 +1,4 @@
+
 import { Users, Beaker, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
@@ -49,10 +50,10 @@ const Hero = () => {
 
               <Button 
                 size="lg" 
-                className="group py-6 px-8 text-lg transition-all shadow-lg w-full sm:w-auto"
+                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg w-full sm:w-auto"
                 as={Link}
                 to="/simulated-persona"
-                variant="secondary"
+                variant="primary"
               >
                 Create a Simulated Persona
                 <Beaker className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
@@ -60,10 +61,10 @@ const Hero = () => {
 
               <Button 
                 size="lg" 
-                className="group py-6 px-8 text-lg transition-all shadow-lg w-full sm:w-auto"
+                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg w-full sm:w-auto"
                 as={Link}
                 to="/research"
-                variant="secondary"
+                variant="primary"
               >
                 Run Research Simulations
                 <Search className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
