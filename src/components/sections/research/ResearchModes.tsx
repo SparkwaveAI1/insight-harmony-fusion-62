@@ -2,6 +2,7 @@
 import { Brain, UserRound, MessageSquare, Globe2 } from "lucide-react";
 import Reveal from "@/components/ui-custom/Reveal";
 import Card from "@/components/ui-custom/Card";
+import Section from "@/components/ui-custom/Section";
 
 const researchModes = [
   {

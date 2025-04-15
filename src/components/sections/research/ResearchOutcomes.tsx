@@ -2,6 +2,7 @@
 import { Check, ArrowRight, Zap, MessageSquare } from "lucide-react";
 import Reveal from "@/components/ui-custom/Reveal";
 import Button from "@/components/ui-custom/Button";
+import Section from "@/components/ui-custom/Section";
 
 const researchOutcomes = [
   "Identify consumer motivations",
