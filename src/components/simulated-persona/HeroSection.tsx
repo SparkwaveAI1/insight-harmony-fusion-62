@@ -4,7 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import Card from "@/components/ui-custom/Card";
-import Section from "@/components/ui-custom/Section";  // Add this import
+import Section from "@/components/ui-custom/Section";
+import { toast } from "sonner";
+import { generatePersona, savePersona } from "@/services/persona/personaService";
 
 interface HeroSectionProps {
   onGenerate: () => void;
@@ -13,6 +15,40 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   const [prompt, setPrompt] = useState("");
+  
+  const handleGenerateClick = async () => {
+    if (!prompt.trim()) {
+      toast.error("Please enter a description for your persona");
+      return;
+    }
+    
+    try {
+      onGenerate(); // Start loading state
+      
+      // Generate the persona using the OpenAI API
+      const persona = await generatePersona(prompt);
+      
+      if (!persona) {
+        throw new Error("Failed to generate persona");
+      }
+      
+      // Save the persona to Supabase
+      await savePersona(persona, prompt);
+      
+      toast.success("Persona generated successfully");
+      
+      // Reset form after successful generation
+      setPrompt("");
+    } catch (error) {
+      console.error("Error generating persona:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to generate persona");
+    } finally {
+      // End loading state in parent component
+      setTimeout(() => {
+        onGenerate();
+      }, 500);
+    }
+  };
 
   return (
     <Section className="bg-gradient-to-b from-accent/50 via-background to-background pt-24">
@@ -36,9 +72,10 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                 className="mb-4 min-h-[100px]"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+                disabled={isGenerating}
               />
               <Button 
-                onClick={onGenerate}
+                onClick={handleGenerateClick}
                 className="w-full" 
                 disabled={!prompt.trim() || isGenerating}
               >
@@ -48,6 +85,9 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                   <>Generate Persona</>
                 )}
               </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                This will create a complete persona with demographic traits, psychological profile, and interview responses.
+              </p>
             </Card>
           </Reveal>
         </div>

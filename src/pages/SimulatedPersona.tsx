@@ -6,17 +6,14 @@ import HeroSection from "@/components/simulated-persona/HeroSection";
 import HowItWorksSection from "@/components/simulated-persona/HowItWorksSection";
 import UseCasesSection from "@/components/simulated-persona/UseCasesSection";
 import WhyDifferentSection from "@/components/simulated-persona/WhyDifferentSection";
-// Removed SaveAccessSection import
+import { toast } from "sonner";
 
 const SimulatedPersonaPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   
   const handleGeneratePersona = () => {
-    setIsGenerating(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsGenerating(false);
-    }, 2000);
+    // Toggle the generating state
+    setIsGenerating(prevState => !prevState);
   };
 
   return (
@@ -27,7 +24,6 @@ const SimulatedPersonaPage = () => {
         <HowItWorksSection />
         <UseCasesSection />
         <WhyDifferentSection />
-        {/* Removed SaveAccessSection */}
       </main>
       <Footer />
     </div>
@@ -35,4 +31,3 @@ const SimulatedPersonaPage = () => {
 };
 
 export default SimulatedPersonaPage;
-
