@@ -1,13 +1,13 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, Info, Clock, Check, UserPlus } from "lucide-react";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/sections/Footer";
-import Section from "@/components/ui-custom/Section";
-import Button from "@/components/ui-custom/Button";
-import Card from "@/components/ui-custom/Card";
-import Reveal from "@/components/ui-custom/Reveal";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, Info, Clock, Check, UserPlus } from 'lucide-react';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/sections/Footer';
+import Section from '@/components/ui-custom/Section';
+import Button from '@/components/ui-custom/Button';
+import Card from '@/components/ui-custom/Card';
+import Reveal from '@/components/ui-custom/Reveal';
 
 const PersonaCreationLanding = () => {
   const navigate = useNavigate();
@@ -35,13 +35,14 @@ const PersonaCreationLanding = () => {
               
               <Reveal delay={100} animation="blur-in">
                 <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
-                  Build Your AI Persona for Research Insights
+                  Simulate Yourself. Use It or Share It.
                 </h1>
               </Reveal>
               
               <Reveal delay={200}>
                 <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
-                  Create a research-grade AI persona through our structured process. Train an AI that mirrors your target audience's behaviors, preferences, and decision-making patterns.
+                  Create a lifelike AI version of you—complete with personality traits, decision style, stress behavior, and voice.
+                  Keep it for personal use, or contribute it to research and earn rewards. Every persona starts with who you really are.
                 </p>
               </Reveal>
               
