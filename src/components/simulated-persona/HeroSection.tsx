@@ -33,7 +33,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       }
       
       // Save the persona to Supabase
-      await savePersona(persona, prompt);
+      await savePersona(persona);
       
       toast.success("Persona generated successfully");
       

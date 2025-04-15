@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface PersonaMetadata {
   age: string | null;
@@ -20,6 +21,24 @@ export interface PersonaMetadata {
   family_medical_history: string | null;
 }
 
+// Database Persona type that matches the Supabase table structure
+export interface DbPersona {
+  id?: string;
+  persona_id: string;
+  name: string;
+  creation_date: string;
+  prompt?: string | null;
+  metadata: Json;
+  trait_profile: Json;
+  behavioral_modulation: Json;
+  linguistic_profile: Json;
+  preinterview_tags: Json;
+  simulation_directives: Json;
+  interview_sections: Json;
+  created_at?: string | null;
+}
+
+// Application Persona type with strongly typed properties
 export interface Persona {
   id?: string;
   persona_id: string;
@@ -42,6 +61,43 @@ export interface Persona {
 }
 
 /**
+ * Convert a Persona to a DbPersona for database storage
+ */
+function personaToDbPersona(persona: Persona): DbPersona {
+  return {
+    ...persona,
+    metadata: persona.metadata as unknown as Json,
+    trait_profile: persona.trait_profile as unknown as Json,
+    behavioral_modulation: persona.behavioral_modulation as unknown as Json,
+    linguistic_profile: persona.linguistic_profile as unknown as Json,
+    preinterview_tags: persona.preinterview_tags as unknown as Json,
+    simulation_directives: persona.simulation_directives as unknown as Json,
+    interview_sections: persona.interview_sections as unknown as Json,
+  };
+}
+
+/**
+ * Convert a DbPersona to a Persona for application use
+ */
+function dbPersonaToPersona(dbPersona: DbPersona): Persona {
+  return {
+    ...dbPersona,
+    metadata: dbPersona.metadata as unknown as PersonaMetadata,
+    trait_profile: dbPersona.trait_profile as unknown as Record<string, any>,
+    behavioral_modulation: dbPersona.behavioral_modulation as unknown as Record<string, any>,
+    linguistic_profile: dbPersona.linguistic_profile as unknown as Record<string, any>,
+    preinterview_tags: dbPersona.preinterview_tags as unknown as string[],
+    simulation_directives: dbPersona.simulation_directives as unknown as Record<string, any>,
+    interview_sections: dbPersona.interview_sections as unknown as Array<{
+      section: string;
+      notes: string;
+      questions: string[];
+      responses?: string[];
+    }>,
+  };
+}
+
+/**
  * Generate a persona from a user prompt
  */
 export async function generatePersona(prompt: string): Promise<Persona | null> {
@@ -57,7 +113,11 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       throw new Error(response.error?.message || (response.data && response.data.error) || "Failed to generate persona");
     }
 
-    return response.data.persona;
+    // Add the prompt to the persona
+    const persona = response.data.persona;
+    persona.prompt = prompt;
+    
+    return persona;
   } catch (error) {
     console.error("Error in generatePersona:", error);
     throw error;
@@ -71,9 +131,12 @@ export async function savePersona(persona: Persona): Promise<Persona | null> {
   try {
     console.log("Saving persona to Supabase:", persona.persona_id);
     
+    // Convert Persona to DbPersona for saving to the database
+    const dbPersona = personaToDbPersona(persona);
+    
     const { data, error } = await supabase
       .from('personas')
-      .insert(persona)
+      .insert(dbPersona)
       .select()
       .single();
 
@@ -82,7 +145,8 @@ export async function savePersona(persona: Persona): Promise<Persona | null> {
       throw error;
     }
     
-    return data;
+    // Convert DbPersona back to Persona for application use
+    return dbPersonaToPersona(data);
   } catch (error) {
     console.error("Error in savePersona:", error);
     throw error;
@@ -101,7 +165,7 @@ export async function getPersonaById(id: string): Promise<Persona | null> {
       .single();
 
     if (error) throw error;
-    return data;
+    return data ? dbPersonaToPersona(data) : null;
   } catch (error) {
     console.error("Error getting persona by ID:", error);
     return null;
@@ -120,7 +184,7 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
       .single();
 
     if (error) throw error;
-    return data;
+    return data ? dbPersonaToPersona(data) : null;
   } catch (error) {
     console.error("Error getting persona by persona_id:", error);
     return null;
@@ -138,7 +202,7 @@ export async function getAllPersonas(): Promise<Persona[]> {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return data ? data.map(dbPersonaToPersona) : [];
   } catch (error) {
     console.error("Error getting all personas:", error);
     return [];
