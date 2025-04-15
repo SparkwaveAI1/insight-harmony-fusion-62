@@ -1,3 +1,4 @@
+
 import { User, Brain, Bot } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -11,7 +12,7 @@ const pathsData = [
     subtitle: "Human-Derived Personas",
     description: "Build a high-fidelity AI persona through a structured interview process. Ideal for personal reflection, business tools, or future licensed use in research.",
     note: "May be eligible for royalties in upcoming releases.",
-    buttonText: "Contribute a Persona",
+    buttonText: "Start Persona Interview",
     buttonHref: "/persona-creation"
   },
   {
