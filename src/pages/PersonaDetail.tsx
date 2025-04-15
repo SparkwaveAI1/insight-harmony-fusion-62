@@ -84,6 +84,16 @@ const PersonaDetail = () => {
                       <h1 className="text-3xl font-bold mb-2 font-plasmik">{persona.name}</h1>
                       <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
                     </div>
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        as={Link} 
+                        to={`/persona/${persona.persona_id}/chat`}
+                        className="flex items-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Chat with Persona
+                      </Button>
+                    </div>
                     {persona.prompt && (
                       <div className="bg-muted/50 p-3 rounded-md max-w-md">
                         <p className="text-sm font-medium mb-1">Original Prompt</p>

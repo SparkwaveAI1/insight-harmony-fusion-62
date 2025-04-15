@@ -255,6 +255,14 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: "/persona/:personaId/chat",
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PersonaChat />
+      </Suspense>
+    ),
+  },
 ]);
 
 function useSupabaseStatus() {
