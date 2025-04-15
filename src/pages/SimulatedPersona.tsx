@@ -6,7 +6,7 @@ import HeroSection from "@/components/simulated-persona/HeroSection";
 import HowItWorksSection from "@/components/simulated-persona/HowItWorksSection";
 import UseCasesSection from "@/components/simulated-persona/UseCasesSection";
 import WhyDifferentSection from "@/components/simulated-persona/WhyDifferentSection";
-import SaveAccessSection from "@/components/simulated-persona/SaveAccessSection";
+// Removed SaveAccessSection import
 
 const SimulatedPersonaPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -27,7 +27,7 @@ const SimulatedPersonaPage = () => {
         <HowItWorksSection />
         <UseCasesSection />
         <WhyDifferentSection />
-        <SaveAccessSection />
+        {/* Removed SaveAccessSection */}
       </main>
       <Footer />
     </div>
@@ -35,3 +35,4 @@ const SimulatedPersonaPage = () => {
 };
 
 export default SimulatedPersonaPage;
+
