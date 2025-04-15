@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,7 +21,8 @@ import {
   BrainCircuit,
   ThumbsUp,
   CircleEqual,
-  ThumbsDown
+  ThumbsDown,
+  TrendingUp
 } from "lucide-react";
 import { ResearchQuery, AnalysisResults, TimelineEvent, TimeFrame, SentimentFilter, TopicRippleData } from "@/services/types/qualitativeAnalysisTypes";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from "recharts";
@@ -433,9 +435,10 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
                       </Card>
                     ))}
                   </div>
-                )}
-              </div>
-            </TabsContent>
+                </div>
+              )}
+            </div>
+          </TabsContent>
           
           {/* Trends Tab */}
           <TabsContent value="trends" className="space-y-6">
