@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { getPersonaByPersonaId, Persona } from '@/services/persona/personaService';
+import { getPersonaByPersonaId } from '@/services/persona/personaService';
+import { Persona } from '@/services/persona/types';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 

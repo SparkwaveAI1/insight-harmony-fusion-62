@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
@@ -10,7 +9,8 @@ import Button from "@/components/ui-custom/Button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, Persona } from "@/services/persona/personaService";
+import { getPersonaByPersonaId } from "@/services/persona/personaService";
+import { Persona, InterviewSection, InterviewQuestion } from "@/services/persona/types";
 
 // Define interfaces for the interview section structures
 interface InterviewQuestion {

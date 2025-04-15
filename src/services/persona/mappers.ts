@@ -1,5 +1,5 @@
 
-import { DbPersona, Persona, PersonaMetadata } from "./types";
+import { DbPersona, Persona, PersonaMetadata, InterviewSection } from "./types";
 import { Json } from "@/integrations/supabase/types";
 
 export function personaToDbPersona(persona: Persona): DbPersona {

@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
-import { Persona } from "@/services/persona/personaService";
+import { Persona } from "@/services/persona/types";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 

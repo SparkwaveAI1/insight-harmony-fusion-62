@@ -90,3 +90,4 @@ export async function getAllPersonas(): Promise<Persona[]> {
 }
 
 export { generatePersona } from './personaGenerator';
+export type { Persona, InterviewSection, InterviewQuestion } from './types';
