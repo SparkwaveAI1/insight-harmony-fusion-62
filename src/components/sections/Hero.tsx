@@ -1,5 +1,4 @@
-
-import { Users, Flask, Search } from "lucide-react";
+import { Users, Beaker, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -56,7 +55,7 @@ const Hero = () => {
                 variant="secondary"
               >
                 Create a Simulated Persona
-                <Flask className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
+                <Beaker className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
 
               <Button 
