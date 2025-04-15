@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
@@ -183,7 +182,14 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
       .eq('persona_id', personaId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error(`Error fetching persona with ID ${personaId}:`, error);
+      return null;
+    }
+
+    // Log the entire persona data for debugging
+    console.log('Persona found:', data);
+
     return data ? dbPersonaToPersona(data) : null;
   } catch (error) {
     console.error("Error getting persona by persona_id:", error);
