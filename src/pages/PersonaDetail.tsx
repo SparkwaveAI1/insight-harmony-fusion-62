@@ -30,10 +30,19 @@ const PersonaDetail = () => {
     try {
       const data = await getPersonaByPersonaId(id);
       if (data) {
+        console.log("Persona data loaded:", data);
+        console.log("Interview sections structure:", data.interview_sections);
         setPersona(data);
         // Set the first section to be expanded by default
-        if (data.interview_sections && data.interview_sections.length > 0) {
-          setExpandedSections({ [data.interview_sections[0].section]: true });
+        if (data.interview_sections && typeof data.interview_sections === 'object') {
+          // Handle case where interview_sections might be an object with an 'interview_sections' property
+          const sectionsArray = Array.isArray(data.interview_sections) 
+            ? data.interview_sections 
+            : (data.interview_sections.interview_sections || []);
+          
+          if (sectionsArray.length > 0) {
+            setExpandedSections({ [sectionsArray[0].section]: true });
+          }
         }
       } else {
         toast.error("Persona not found");
@@ -51,6 +60,23 @@ const PersonaDetail = () => {
       ...prev,
       [section]: !prev[section],
     }));
+  };
+
+  // Helper function to get the correct interview sections array
+  const getInterviewSections = () => {
+    if (!persona || !persona.interview_sections) return [];
+    
+    // Handle the case where interview_sections could be an object with an 'interview_sections' property
+    if (Array.isArray(persona.interview_sections)) {
+      return persona.interview_sections;
+    }
+    
+    // Check if it's an object with interview_sections property
+    if (typeof persona.interview_sections === 'object' && 'interview_sections' in persona.interview_sections) {
+      return persona.interview_sections.interview_sections || [];
+    }
+    
+    return [];
   };
 
   return (
@@ -157,7 +183,7 @@ const PersonaDetail = () => {
                 <div>
                   <h2 className="text-2xl font-bold mb-4 font-plasmik">Interview Responses</h2>
                   
-                  {persona.interview_sections?.map((section, index) => (
+                  {getInterviewSections().map((section, index) => (
                     <Card key={index} className="mb-4 overflow-hidden">
                       <button
                         className="w-full p-4 flex justify-between items-center hover:bg-muted/30 transition-colors"
@@ -175,20 +201,27 @@ const PersonaDetail = () => {
                         <div className="p-4 pt-0">
                           <p className="text-sm text-muted-foreground italic mb-4">{section.notes}</p>
                           <div className="space-y-6">
-                            {section.questions.map((question, qIndex) => (
-                              <div key={qIndex}>
-                                <p className="font-medium mb-2">Q: {question}</p>
-                                {section.responses && section.responses[qIndex] ? (
-                                  <p className="pl-4 border-l-2 border-primary/30 py-1">
-                                    {section.responses[qIndex]}
-                                  </p>
-                                ) : (
-                                  <p className="text-muted-foreground pl-4 border-l-2 border-muted py-1 italic">
-                                    No response recorded
-                                  </p>
-                                )}
-                              </div>
-                            ))}
+                            {section.questions.map((item: any, qIndex: number) => {
+                              // Handle both formats: object with question/response or just string questions
+                              const question = typeof item === 'object' ? item.question : item;
+                              const response = typeof item === 'object' ? item.response : 
+                                (section.responses && section.responses[qIndex]);
+                              
+                              return (
+                                <div key={qIndex}>
+                                  <p className="font-medium mb-2">Q: {question}</p>
+                                  {response ? (
+                                    <p className="pl-4 border-l-2 border-primary/30 py-1">
+                                      {response}
+                                    </p>
+                                  ) : (
+                                    <p className="text-muted-foreground pl-4 border-l-2 border-muted py-1 italic">
+                                      No response recorded
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
