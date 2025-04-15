@@ -30,7 +30,8 @@ const Hero = () => {
           
           <Reveal delay={200}>
             <p className="mb-10 text-lg md:text-xl text-gray-300 text-pretty max-w-2xl mx-auto">
-              Digital personas built from real human interviews. Help create them by contributing your insights. Interviews and surveys are live now.
+              Behaviorally rich AI personas for research, testing, and decision forecasting. 
+              From real interviews to strategic simulations, PersonaAI lets you model human thinking for research and insight.
             </p>
           </Reveal>
           
