@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { MessageCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
