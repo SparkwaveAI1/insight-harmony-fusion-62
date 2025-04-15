@@ -4,6 +4,9 @@ import { Toaster } from "sonner";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import { ensureTablesExist, getSetupSQLScripts } from "./services/supabase/databaseSetup";
+import SimulatedPersonaPage from "@/pages/SimulatedPersona";
+import PersonaViewer from "@/pages/PersonaViewer";
+import PersonaDetail from "@/pages/PersonaDetail";
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
@@ -134,11 +137,15 @@ const router = createBrowserRouter([
   },
   {
     path: "/simulated-persona",
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <SimulatedPersona />
-      </Suspense>
-    ),
+    element: <SimulatedPersonaPage />,
+  },
+  {
+    path: "/persona-viewer",
+    element: <PersonaViewer />,
+  },
+  {
+    path: "/persona/:personaId",
+    element: <PersonaDetail />,
   },
   {
     path: "/custom-research",

@@ -1,54 +1,87 @@
+import {
+  LayoutDashboard,
+  Calendar,
+  HelpCircle,
+  Settings,
+  Compass,
+} from "lucide-react";
 
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-
-interface NavItem {
-  label: string;
+export interface NavigationItem {
+  title: string;
   href: string;
+  icon?: any;
+  description?: string;
+  disabled?: boolean;
+  external?: boolean;
+  submenu?: NavigationItem[];
 }
 
-interface NavigationItemsProps {
-  navItems: NavItem[];
-  isScrolled: boolean;
-  isEarnPage: boolean;
-  onNavClick?: (href: string) => void;
-  className?: string;
-}
-
-const NavigationItems: React.FC<NavigationItemsProps> = ({ 
-  navItems, 
-  isScrolled, 
-  isEarnPage, 
-  onNavClick,
-  className
-}) => {
-  const location = useLocation();
-
-  return (
-    <nav className={cn("flex items-center gap-6", className)}>
-      {navItems.map((item) => (
-        <Link
-          key={item.label}
-          to={item.href}
-          className={cn(
-            "text-sm font-medium transition-colors",
-            (item.href === '/earn-prsna' && isEarnPage) || 
-            (item.href === '/research' && location.pathname === '/research') ||
-            (item.href === '/interviewer' && location.pathname === '/interviewer') ||
-            (item.href === '/' && location.pathname === '/')
-              ? "text-primary font-bold" 
-              : isScrolled 
-                ? "text-foreground/80 hover:text-foreground" 
-                : "text-white/90 hover:text-white"
-          )}
-          onClick={() => onNavClick && onNavClick(item.href)}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </nav>
-  );
-};
-
-export default NavigationItems;
+export const navigationItems: NavigationItem[] = [
+  {
+    title: "Getting Started",
+    href: "/docs",
+    icon: LayoutDashboard,
+    description: "Explore the documentation",
+  },
+  {
+    title: "Roadmap",
+    href: "/roadmap",
+    icon: Compass,
+    description: "See what's coming up next",
+  },
+  {
+    title: "Calendar",
+    href: "/calendar",
+    icon: Calendar,
+    disabled: true,
+    description: "Check out upcoming events",
+  },
+  {
+    title: "Support",
+    href: "/support",
+    icon: HelpCircle,
+    description: "Get help with PersonaAI",
+    submenu: [
+      {
+        title: "Documentation",
+        href: "/docs",
+        description: "Explore the documentation",
+      },
+      {
+        title: "Roadmap",
+        href: "/roadmap",
+        description: "See what's coming up next",
+      },
+      {
+        title: "Support",
+        href: "/support",
+        description: "Get help with PersonaAI",
+      },
+    ],
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
+    description: "Manage your account settings",
+  },
+  
+  // Add these items after the existing ones
+  {
+    title: "Build Personas",
+    href: "/simulated-persona",
+    submenu: [
+      {
+        title: "Generate AI Persona",
+        href: "/simulated-persona",
+        description: "Create behaviorally accurate AI personas"
+      },
+      {
+        title: "View Personas",
+        href: "/persona-viewer",
+        description: "Browse and view your generated personas"
+      }
+    ]
+  },
+  
+];

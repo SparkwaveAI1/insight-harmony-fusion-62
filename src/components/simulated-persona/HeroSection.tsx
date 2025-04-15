@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
@@ -15,6 +16,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   const [prompt, setPrompt] = useState("");
+  const navigate = useNavigate();
   
   const handleGenerateClick = async () => {
     if (!prompt.trim()) {
@@ -24,6 +26,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
     
     try {
       onGenerate(); // Start loading state
+      toast.info("Generating persona... This may take a minute.");
       
       // Generate the persona using the OpenAI API
       const persona = await generatePersona(prompt);
@@ -33,9 +36,18 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       }
       
       // Save the persona to Supabase
-      await savePersona(persona);
+      const savedPersona = await savePersona(persona);
       
-      toast.success("Persona generated successfully");
+      if (savedPersona) {
+        toast.success("Persona generated successfully");
+        
+        // Navigate to the persona viewer page
+        setTimeout(() => {
+          navigate("/persona-viewer");
+        }, 1000);
+      } else {
+        toast.error("Persona was generated but could not be saved");
+      }
       
       // Reset form after successful generation
       setPrompt("");
@@ -88,6 +100,17 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
               <p className="text-xs text-muted-foreground mt-2">
                 This will create a complete persona with demographic traits, psychological profile, and interview responses.
               </p>
+              
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/persona-viewer")}
+                  className="text-sm"
+                >
+                  View Previously Generated Personas
+                </Button>
+              </div>
             </Card>
           </Reveal>
         </div>
