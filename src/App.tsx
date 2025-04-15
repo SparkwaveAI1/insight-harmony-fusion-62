@@ -7,6 +7,7 @@ import { ensureTablesExist, getSetupSQLScripts } from "./services/supabase/datab
 import SimulatedPersonaPage from "@/pages/SimulatedPersona";
 import PersonaViewer from "@/pages/PersonaViewer";
 import PersonaDetail from "@/pages/PersonaDetail";
+import PersonaChat from "@/pages/PersonaChat";
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
