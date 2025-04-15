@@ -28,6 +28,8 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       onGenerate(); // Start loading state
       toast.info("Generating persona... This may take a minute.");
       
+      console.log("Starting persona generation with prompt:", prompt);
+      
       // Generate the persona using the OpenAI API
       const persona = await generatePersona(prompt);
       
@@ -35,17 +37,22 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
         throw new Error("Failed to generate persona");
       }
       
+      console.log("Persona generated successfully:", persona);
+      console.log("Now saving persona to Supabase...");
+      
       // Save the persona to Supabase
       const savedPersona = await savePersona(persona);
       
       if (savedPersona) {
+        console.log("Persona saved successfully with ID:", savedPersona.persona_id);
         toast.success("Persona generated successfully");
         
         // Navigate to the persona viewer page
         setTimeout(() => {
-          navigate("/persona-viewer");
+          navigate(`/persona-viewer/${savedPersona.persona_id}`);
         }, 1000);
       } else {
+        console.error("Persona was generated but could not be saved");
         toast.error("Persona was generated but could not be saved");
       }
       

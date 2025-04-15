@@ -107,6 +107,8 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       body: { prompt }
     });
 
+    console.log("Response from generate-persona function:", response);
+
     if (!response.data || !response.data.success) {
       console.error("Error generating persona:", response.error || (response.data && response.data.error));
       throw new Error(response.error?.message || (response.data && response.data.error) || "Failed to generate persona");
@@ -116,6 +118,8 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     const persona = response.data.persona;
     persona.prompt = prompt;
     
+    console.log("Generated persona:", persona);
+    console.log("Persona ID:", persona.persona_id);
     return persona;
   } catch (error) {
     console.error("Error in generatePersona:", error);
@@ -129,6 +133,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
 export async function savePersona(persona: Persona): Promise<Persona | null> {
   try {
     console.log("Saving persona to Supabase:", persona.persona_id);
+    console.log("Full persona data being saved:", JSON.stringify(persona, null, 2));
     
     // Convert Persona to DbPersona for saving to the database
     const dbPersona = personaToDbPersona(persona);
@@ -143,6 +148,8 @@ export async function savePersona(persona: Persona): Promise<Persona | null> {
       console.error("Error saving persona to Supabase:", error);
       throw error;
     }
+    
+    console.log("Persona successfully saved:", data);
     
     // Convert DbPersona back to Persona for application use
     return dbPersonaToPersona(data);
@@ -176,6 +183,8 @@ export async function getPersonaById(id: string): Promise<Persona | null> {
  */
 export async function getPersonaByPersonaId(personaId: string): Promise<Persona | null> {
   try {
+    console.log(`Fetching persona with ID ${personaId} from Supabase`);
+    
     const { data, error } = await supabase
       .from('personas')
       .select('*')

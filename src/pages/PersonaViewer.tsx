@@ -12,6 +12,8 @@ const PersonaViewer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { personaId } = useParams<{ personaId?: string }>();
 
+  console.log("PersonaViewer - Current personaId from URL:", personaId);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
