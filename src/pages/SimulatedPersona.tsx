@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowRight, Brain, Users, MessagesSquare, Microscope, Vote, Copy, UserPlus, Save, FileJson, Shuffle } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -42,7 +43,7 @@ const SimulatedPersonaPage = () => {
                 <div className="bg-card rounded-xl shadow-sm p-6 mb-8">
                   <label className="text-sm font-medium mb-2 block">Describe your persona:</label>
                   <Textarea 
-                    placeholder="Example: 23-year-old Latina marketing associate from Arizona, distrusts politics, loves gaming and DAOs"
+                    placeholder="Example: 23-year-old Latina marketing associate from Arizona, distrusts politics, loves gaming"
                     className="mb-4 min-h-[100px]"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
