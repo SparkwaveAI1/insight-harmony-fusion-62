@@ -8,27 +8,29 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
     const { message, persona, previousMessages } = await req.json();
+    console.log("Received request to generate persona response:", { message, persona: persona.name, messagesCount: previousMessages.length });
 
     // Create a system message that describes the persona
     const systemMessage = `You are ${persona.name}. Here are your characteristics:
     
 Demographics:
-${Object.entries(persona.metadata).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(persona.metadata || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 Personality Traits:
-${Object.entries(persona.trait_profile).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(persona.trait_profile || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 Behavioral Patterns:
-${Object.entries(persona.behavioral_modulation).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(persona.behavioral_modulation || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 Language Style:
-${Object.entries(persona.linguistic_profile).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
+${Object.entries(persona.linguistic_profile || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
 Respond naturally as this persona, incorporating these characteristics into your responses.`;
 
@@ -42,6 +44,8 @@ Respond naturally as this persona, incorporating these characteristics into your
       { role: "user", content: message },
     ];
 
+    console.log("Sending request to OpenAI API with conversation history");
+    
     // Call OpenAI API
     const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -57,11 +61,15 @@ Respond naturally as this persona, incorporating these characteristics into your
     });
 
     if (!openAIResponse.ok) {
-      throw new Error(`OpenAI API error: ${await openAIResponse.text()}`);
+      const errorText = await openAIResponse.text();
+      console.error(`OpenAI API error (${openAIResponse.status}):`, errorText);
+      throw new Error(`OpenAI API error: ${openAIResponse.status} - ${errorText}`);
     }
 
     const data = await openAIResponse.json();
     const response = data.choices[0].message.content;
+
+    console.log("Generated response:", response.substring(0, 50) + "...");
 
     return new Response(
       JSON.stringify({ response }),
@@ -69,7 +77,7 @@ Respond naturally as this persona, incorporating these characteristics into your
     );
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in generate-persona-response function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
