@@ -55,7 +55,8 @@ export const useQuestionnaireSubmission = (
         
         sessionStorage.removeItem("participant_email");
         
-        navigate("/persona-creation/complete");
+        // Use navigate with replace option to prevent back navigation
+        navigate("/persona-creation/complete", { replace: true });
       } else {
         throw new Error("Failed to save questionnaire data");
       }
