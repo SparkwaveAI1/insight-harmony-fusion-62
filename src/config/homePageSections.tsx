@@ -4,7 +4,6 @@ import CustomAIPersonas from "@/components/sections/CustomAIPersonas";
 import HowItWorks from "@/components/sections/HowItWorks";
 import InsightPaths from "@/components/sections/InsightPaths";
 import PersonaBehavior from "@/components/sections/PersonaBehavior";
-import SimulatedPersona from "@/components/sections/SimulatedPersona";
 import TokenEcosystem from "@/components/sections/TokenEcosystem";
 
 export interface HomepageSection {
@@ -18,7 +17,5 @@ export const homepageSections: HomepageSection[] = [
   { id: 'howItWorks', Component: HowItWorks },
   { id: 'customAIPersonas', Component: CustomAIPersonas },
   { id: 'personaBehavior', Component: PersonaBehavior },
-  { id: 'simulatedPersona', Component: SimulatedPersona },
   { id: 'tokenEcosystem', Component: TokenEcosystem },
 ];
-
