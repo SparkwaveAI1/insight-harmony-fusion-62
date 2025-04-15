@@ -53,7 +53,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
         setGenerationStep("Success! Redirecting to persona details...");
         toast.success("Persona generated successfully");
         
-        // Navigate to the persona viewer page
+        // Navigate to the persona viewer page with the specific persona ID
         setTimeout(() => {
           navigate(`/persona-viewer/${savedPersona.persona_id}`);
         }, 1000);
