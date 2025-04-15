@@ -53,9 +53,27 @@ const PersonaDetail = () => {
       if (data) {
         console.log("Persona data loaded:", data);
         console.log("Interview sections structure:", data.interview_sections);
+        
+        // Log each question and response for debugging
+        const sections = getInterviewSectionsArray(data.interview_sections);
+        sections.forEach((section, i) => {
+          console.log(`Section ${i+1}: ${section.section}`);
+          if (Array.isArray(section.questions)) {
+            section.questions.forEach((q, j) => {
+              if (typeof q === 'object') {
+                console.log(`  Question ${j+1}: ${q.question}`);
+                console.log(`  Response: ${q.response || 'No response'}`);
+              } else {
+                console.log(`  Question ${j+1}: ${q}`);
+                const resp = section.responses?.[j];
+                console.log(`  Response: ${resp || 'No response'}`);
+              }
+            });
+          }
+        });
+        
         setPersona(data);
         // Set the first section to be expanded by default
-        const sections = getInterviewSectionsArray(data.interview_sections);
         if (sections.length > 0) {
           setExpandedSections({ [sections[0].section]: true });
         }
@@ -108,6 +126,23 @@ const PersonaDetail = () => {
   const getInterviewSections = (): InterviewSection[] => {
     if (!persona || !persona.interview_sections) return [];
     return getInterviewSectionsArray(persona.interview_sections as unknown as InterviewSections);
+  };
+
+  // Helper function to get response for a question
+  const getResponseForQuestion = (section: InterviewSection, questionIndex: number): string => {
+    const questionItem = section.questions[questionIndex];
+    
+    // If question is an object with a response property
+    if (typeof questionItem === 'object' && 'response' in questionItem) {
+      return questionItem.response || 'No response recorded';
+    }
+    
+    // If section has separate responses array
+    if (section.responses && section.responses[questionIndex]) {
+      return section.responses[questionIndex];
+    }
+    
+    return 'No response recorded';
   };
 
   return (
@@ -209,6 +244,29 @@ const PersonaDetail = () => {
                       </ul>
                     </div>
                   </div>
+                  
+                  <div className="mt-6">
+                    <h2 className="text-xl font-bold mb-3">Traits Profile</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {Object.entries(persona.trait_profile).map(([category, traits]) => (
+                        <div key={category} className="bg-muted/30 p-4 rounded-md">
+                          <h3 className="font-medium mb-2 capitalize">{category.replace(/_/g, ' ')}</h3>
+                          {Object.entries(traits as Record<string, any>).length > 0 ? (
+                            <ul className="space-y-1 text-sm">
+                              {Object.entries(traits as Record<string, any>).map(([trait, value]) => (
+                                <li key={trait} className="flex justify-between">
+                                  <span className="capitalize">{trait.replace(/_/g, ' ')}:</span>
+                                  <span className="font-medium">{value}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">No details available</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </Card>
                 
                 <div>
@@ -232,15 +290,18 @@ const PersonaDetail = () => {
                         <div className="p-4 pt-0">
                           <p className="text-sm text-muted-foreground italic mb-4">{section.notes}</p>
                           <div className="space-y-6">
-                            {section.questions.map((item: any, qIndex: number) => {
-                              // Handle both formats: object with question/response or just string questions
-                              const question = typeof item === 'object' ? item.question : item;
-                              const response = typeof item === 'object' ? item.response : 
-                                (section.responses && section.responses[qIndex]);
+                            {section.questions.map((item, qIndex) => {
+                              // Get the question text
+                              const questionText = typeof item === 'object' ? item.question : item;
+                              
+                              // Get the response
+                              const response = typeof item === 'object' && item.response 
+                                ? item.response 
+                                : section.responses && section.responses[qIndex];
                               
                               return (
                                 <div key={qIndex}>
-                                  <p className="font-medium mb-2">Q: {question}</p>
+                                  <p className="font-medium mb-2">Q: {questionText}</p>
                                   {response ? (
                                     <p className="pl-4 border-l-2 border-primary/30 py-1">
                                       {response}

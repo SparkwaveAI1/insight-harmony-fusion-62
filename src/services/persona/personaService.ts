@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
@@ -18,6 +19,18 @@ export interface PersonaMetadata {
   cultural_background: string | null;
   disabilities_or_conditions: string | null;
   family_medical_history: string | null;
+}
+
+export interface InterviewQuestion {
+  question: string;
+  response?: string;
+}
+
+export interface InterviewSection {
+  section: string;
+  notes: string;
+  questions: Array<string | InterviewQuestion>;
+  responses?: string[];
 }
 
 // Database Persona type that matches the Supabase table structure
@@ -50,12 +63,9 @@ export interface Persona {
   linguistic_profile: Record<string, any>;
   preinterview_tags: string[];
   simulation_directives: Record<string, any>;
-  interview_sections: Array<{
-    section: string;
-    notes: string;
-    questions: string[];
-    responses?: string[];
-  }>;
+  interview_sections: InterviewSection[] | {
+    interview_sections: InterviewSection[];
+  };
   created_at?: string;
 }
 
@@ -87,12 +97,9 @@ function dbPersonaToPersona(dbPersona: DbPersona): Persona {
     linguistic_profile: dbPersona.linguistic_profile as unknown as Record<string, any>,
     preinterview_tags: dbPersona.preinterview_tags as unknown as string[],
     simulation_directives: dbPersona.simulation_directives as unknown as Record<string, any>,
-    interview_sections: dbPersona.interview_sections as unknown as Array<{
-      section: string;
-      notes: string;
-      questions: string[];
-      responses?: string[];
-    }>,
+    interview_sections: dbPersona.interview_sections as unknown as InterviewSection[] | {
+      interview_sections: InterviewSection[];
+    },
   };
 }
 
@@ -119,6 +126,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     persona.prompt = prompt;
     
     console.log("Generated persona:", persona);
+    console.log("Interview sections generated:", JSON.stringify(persona.interview_sections, null, 2));
     console.log("Persona ID:", persona.persona_id);
     return persona;
   } catch (error) {
@@ -198,8 +206,16 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
 
     // Log the entire persona data for debugging
     console.log('Persona found:', data);
-
-    return data ? dbPersonaToPersona(data) : null;
+    
+    if (data) {
+      // Check interview_sections structure 
+      console.log('Interview sections structure:', JSON.stringify(data.interview_sections, null, 2));
+      
+      const persona = dbPersonaToPersona(data);
+      return persona;
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error getting persona by persona_id:", error);
     return null;

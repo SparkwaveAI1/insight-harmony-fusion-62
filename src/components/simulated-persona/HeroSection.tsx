@@ -16,6 +16,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   const [prompt, setPrompt] = useState("");
+  const [generationStep, setGenerationStep] = useState("");
   const navigate = useNavigate();
   
   const handleGenerateClick = async () => {
@@ -26,7 +27,8 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
     
     try {
       onGenerate(); // Start loading state
-      toast.info("Generating persona... This may take a minute.");
+      setGenerationStep("Generating persona traits and psychological profile...");
+      toast.info("Generating persona... This may take up to a minute.");
       
       console.log("Starting persona generation with prompt:", prompt);
       
@@ -38,6 +40,9 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       }
       
       console.log("Persona generated successfully:", persona);
+      setGenerationStep("Persona generated. Saving to database...");
+      
+      console.log("Interview sections:", JSON.stringify(persona.interview_sections, null, 2));
       console.log("Now saving persona to Supabase...");
       
       // Save the persona to Supabase
@@ -45,6 +50,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       
       if (savedPersona) {
         console.log("Persona saved successfully with ID:", savedPersona.persona_id);
+        setGenerationStep("Success! Redirecting to persona details...");
         toast.success("Persona generated successfully");
         
         // Navigate to the persona viewer page
@@ -63,6 +69,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       toast.error(error instanceof Error ? error.message : "Failed to generate persona");
     } finally {
       // End loading state in parent component
+      setGenerationStep("");
       setTimeout(() => {
         onGenerate();
       }, 500);
@@ -99,7 +106,10 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                 disabled={!prompt.trim() || isGenerating}
               >
                 {isGenerating ? (
-                  <>Generating Persona <span className="ml-2 animate-pulse">...</span></>
+                  <>
+                    {generationStep || "Generating Persona"} 
+                    <span className="ml-2 animate-pulse">...</span>
+                  </>
                 ) : (
                   <>Generate Persona</>
                 )}

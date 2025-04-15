@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -288,8 +289,16 @@ serve(async (req) => {
     personaTraits.creation_date = new Date().toISOString().split('T')[0];
     personaTraits.persona_id = crypto.randomUUID().substring(0, 8);
     
-    // Add interview sections
-    personaTraits.interview_sections = interviewSections;
+    // Add interview sections with placeholder for responses
+    const interviewSectionsWithEmptyResponses = interviewSections.map(section => ({
+      ...section,
+      questions: section.questions.map(question => ({
+        question,
+        response: "" // Empty response placeholder
+      }))
+    }));
+    
+    personaTraits.interview_sections = interviewSectionsWithEmptyResponses;
 
     // Step 2: Generate interview responses based on the persona
     const interviewResponse = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -308,7 +317,7 @@ serve(async (req) => {
             that match the persona's characteristics, traits, and speaking style.
             Ensure responses reflect the persona's demographic information and psychological traits.
             Include behavioral inconsistencies where appropriate.
-            Return the output as valid JSON with a "responses" array added to each interview section.` 
+            For each question in each section, provide a response in the "response" field of each question object.` 
           },
           { 
             role: "user", 
@@ -330,7 +339,6 @@ serve(async (req) => {
     }
 
     const interviewData = await interviewResponse.json();
-    let interviewResponses = [];
     
     try {
       const content = interviewData.choices[0].message.content;
@@ -338,11 +346,21 @@ serve(async (req) => {
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       const jsonContent = jsonMatch ? jsonMatch[1] : content;
       
-      interviewResponses = JSON.parse(jsonContent);
+      const parsedResponse = JSON.parse(jsonContent);
       console.log("Successfully parsed interview responses");
       
       // Update the persona with the interview responses
-      personaTraits.interview_sections = interviewResponses;
+      if (Array.isArray(parsedResponse)) {
+        // Response is directly the interview_sections array
+        personaTraits.interview_sections = parsedResponse;
+      } else if (parsedResponse.interview_sections && Array.isArray(parsedResponse.interview_sections)) {
+        // Response has the interview_sections property
+        personaTraits.interview_sections = parsedResponse.interview_sections;
+      } else {
+        console.error("Unexpected format for interview responses:", parsedResponse);
+      }
+      
+      console.log("Updated persona with interview responses");
     } catch (e) {
       console.error("Error parsing interview responses:", e);
       console.error("Raw content:", interviewData.choices[0].message.content);
