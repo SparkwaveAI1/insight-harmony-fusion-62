@@ -212,12 +212,15 @@ serve(async (req) => {
 
   try {
     if (!openAIApiKey) {
+      console.error("OPENAI_API_KEY is not configured in environment variables");
       throw new Error("OPENAI_API_KEY is not configured in environment variables");
     }
 
-    const { prompt } = await req.json();
+    const requestData = await req.json().catch(() => ({}));
+    const { prompt } = requestData;
     
     if (!prompt || typeof prompt !== "string" || prompt.trim() === "") {
+      console.error("Valid prompt is required");
       throw new Error("Valid prompt is required");
     }
 
@@ -240,12 +243,12 @@ serve(async (req) => {
             You should fill in all the demographic fields in the metadata section, and the psychological traits.
             Use realistic values based on demographic probability distributions.
             Maintain internal consistency while allowing for realistic contradictions.
-            Format the output as valid JSON matching the provided template exactly.` 
+            Return the output as valid JSON matching the provided template exactly.` 
           },
           { 
             role: "user", 
             content: `Create a realistic persona based on this description: "${prompt}".
-            Use the following template structure and fill in all the values:
+            Fill in all the values according to the template structure below. Return ONLY the JSON data, no markdown formatting.
             ${JSON.stringify(personaTemplate, null, 2)}` 
           }
         ],
@@ -260,7 +263,26 @@ serve(async (req) => {
     }
 
     const traitsData = await traitsResponse.json();
-    const personaTraits = JSON.parse(traitsData.choices[0].message.content);
+    
+    if (!traitsData.choices || !traitsData.choices[0] || !traitsData.choices[0].message) {
+      console.error("Invalid response from OpenAI:", traitsData);
+      throw new Error("Invalid response from OpenAI");
+    }
+    
+    let personaTraits;
+    try {
+      const content = traitsData.choices[0].message.content;
+      // Try to extract JSON if wrapped in markdown code blocks
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      const jsonContent = jsonMatch ? jsonMatch[1] : content;
+      
+      personaTraits = JSON.parse(jsonContent);
+      console.log("Successfully parsed persona traits");
+    } catch (error) {
+      console.error("Error parsing OpenAI response:", error);
+      console.error("Raw content:", traitsData.choices[0].message.content);
+      throw new Error("Failed to parse persona data from OpenAI response");
+    }
     
     // Add creation date and unique ID
     personaTraits.creation_date = new Date().toISOString().split('T')[0];
@@ -286,7 +308,7 @@ serve(async (req) => {
             that match the persona's characteristics, traits, and speaking style.
             Ensure responses reflect the persona's demographic information and psychological traits.
             Include behavioral inconsistencies where appropriate.
-            Format the output as valid JSON, adding a "responses" array to each interview section.` 
+            Return the output as valid JSON with a "responses" array added to each interview section.` 
           },
           { 
             role: "user", 
@@ -294,7 +316,7 @@ serve(async (req) => {
             ${JSON.stringify(personaTraits, null, 2)}
             
             For each question in each interview section, add a realistic response that this persona would give.
-            Return the complete interview_sections array with the responses added.` 
+            Return the complete interview_sections array with the responses added as JSON, no markdown formatting.` 
           }
         ],
         temperature: 0.8,
@@ -308,17 +330,26 @@ serve(async (req) => {
     }
 
     const interviewData = await interviewResponse.json();
-    let interviewResponses;
+    let interviewResponses = [];
     
     try {
-      interviewResponses = JSON.parse(interviewData.choices[0].message.content);
+      const content = interviewData.choices[0].message.content;
+      // Try to extract JSON if wrapped in markdown code blocks
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      const jsonContent = jsonMatch ? jsonMatch[1] : content;
+      
+      interviewResponses = JSON.parse(jsonContent);
+      console.log("Successfully parsed interview responses");
+      
       // Update the persona with the interview responses
       personaTraits.interview_sections = interviewResponses;
     } catch (e) {
       console.error("Error parsing interview responses:", e);
+      console.error("Raw content:", interviewData.choices[0].message.content);
       // If parsing fails, keep the original interview sections without responses
     }
 
+    console.log("Returning generated persona");
     return new Response(
       JSON.stringify({
         success: true,
