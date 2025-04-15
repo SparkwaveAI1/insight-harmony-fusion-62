@@ -12,6 +12,27 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { getPersonaByPersonaId, Persona } from "@/services/persona/personaService";
 
+// Define interfaces for the interview section structures
+interface InterviewQuestion {
+  question: string;
+  response?: string;
+}
+
+interface InterviewSection {
+  section: string;
+  notes: string;
+  questions: Array<string | InterviewQuestion>;
+  responses?: string[];
+}
+
+// Interface for nested interview sections object structure
+interface InterviewSectionsWrapper {
+  interview_sections: InterviewSection[];
+}
+
+// Helper types for interview_sections property which could be either structure
+type InterviewSections = InterviewSection[] | InterviewSectionsWrapper;
+
 const PersonaDetail = () => {
   const { personaId } = useParams<{ personaId: string }>();
   const [persona, setPersona] = useState<Persona | null>(null);
@@ -34,15 +55,9 @@ const PersonaDetail = () => {
         console.log("Interview sections structure:", data.interview_sections);
         setPersona(data);
         // Set the first section to be expanded by default
-        if (data.interview_sections && typeof data.interview_sections === 'object') {
-          // Handle case where interview_sections might be an object with an 'interview_sections' property
-          const sectionsArray = Array.isArray(data.interview_sections) 
-            ? data.interview_sections 
-            : (data.interview_sections.interview_sections || []);
-          
-          if (sectionsArray.length > 0) {
-            setExpandedSections({ [sectionsArray[0].section]: true });
-          }
+        const sections = getInterviewSectionsArray(data.interview_sections);
+        if (sections.length > 0) {
+          setExpandedSections({ [sections[0].section]: true });
         }
       } else {
         toast.error("Persona not found");
@@ -62,21 +77,37 @@ const PersonaDetail = () => {
     }));
   };
 
-  // Helper function to get the correct interview sections array
-  const getInterviewSections = () => {
-    if (!persona || !persona.interview_sections) return [];
+  // Helper function to determine if the interview_sections is a wrapped object
+  const isInterviewSectionsWrapper = (
+    sections: InterviewSections | undefined
+  ): sections is InterviewSectionsWrapper => {
+    return (
+      sections !== undefined &&
+      !Array.isArray(sections) &&
+      typeof sections === "object" &&
+      "interview_sections" in sections
+    );
+  };
+  
+  // Helper function to get the interview sections as an array regardless of structure
+  const getInterviewSectionsArray = (sections: InterviewSections | undefined): InterviewSection[] => {
+    if (!sections) return [];
     
-    // Handle the case where interview_sections could be an object with an 'interview_sections' property
-    if (Array.isArray(persona.interview_sections)) {
-      return persona.interview_sections;
+    if (Array.isArray(sections)) {
+      return sections;
     }
     
-    // Check if it's an object with interview_sections property
-    if (typeof persona.interview_sections === 'object' && 'interview_sections' in persona.interview_sections) {
-      return persona.interview_sections.interview_sections || [];
+    if (isInterviewSectionsWrapper(sections)) {
+      return sections.interview_sections || [];
     }
     
     return [];
+  };
+
+  // Helper function for component to use
+  const getInterviewSections = (): InterviewSection[] => {
+    if (!persona || !persona.interview_sections) return [];
+    return getInterviewSectionsArray(persona.interview_sections as unknown as InterviewSections);
   };
 
   return (
