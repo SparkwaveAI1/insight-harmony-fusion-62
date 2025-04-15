@@ -1,4 +1,3 @@
-
 import { User, Brain, Bot } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Card from "../ui-custom/Card";
@@ -10,18 +9,10 @@ const pathsData = [
     icon: <User className="h-12 w-12 text-primary" />,
     title: "Interview Module",
     subtitle: "Human-Derived Personas",
-    description: "Build high-fidelity AI personas through structured interviews with real participants. Ideal for personal reflection, business tools, or future licensed use in research.",
+    description: "Build a high-fidelity AI persona through a structured interview process. Ideal for personal reflection, business tools, or future licensed use in research.",
     note: "May be eligible for royalties in upcoming releases.",
     buttonText: "Contribute a Persona",
     buttonHref: "/persona-creation"
-  },
-  {
-    icon: <Brain className="h-12 w-12 text-primary" />,
-    title: "Research Module",
-    subtitle: "PersonaAI Researcher",
-    description: "Use personas—human or simulated—to explore decisions, test messaging, or simulate group behavior. Run interviews, focus groups, or scenario tests and extract qualitative insight at scale.",
-    buttonText: "Run Research Simulations",
-    buttonHref: "/research"
   },
   {
     icon: <Bot className="h-12 w-12 text-primary" />,
@@ -30,6 +21,14 @@ const pathsData = [
     description: "Create behaviorally realistic personas using natural language prompts or system-generated profiles. All personas are grounded in psychological modeling and simulate authentic, testable behavior.",
     buttonText: "Create a Simulated Persona",
     buttonHref: "/interviewer"
+  },
+  {
+    icon: <Brain className="h-12 w-12 text-primary" />,
+    title: "Research Module",
+    subtitle: "PersonaAI Researcher",
+    description: "Use personas—human or simulated—to explore decisions, test messaging, or simulate group behavior. Run interviews, focus groups, or scenario tests and extract qualitative insight at scale.",
+    buttonText: "Run Research Simulations",
+    buttonHref: "/research"
   }
 ];
 
