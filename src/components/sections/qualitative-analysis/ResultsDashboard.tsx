@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -126,7 +126,7 @@ const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, query, onN
               Export PDF
             </Button>
             <Button 
-              variant="primary" 
+              variant="default" 
               onClick={onNewSearch}
               className="flex items-center gap-2"
             >
@@ -470,7 +470,7 @@ const NoResults: React.FC<{ query: string; onNewSearch: () => void }> = ({ query
         <h3 className="text-xl font-semibold text-[#221F26]">Results for: "{query}"</h3>
       </div>
       <Button 
-        variant="primary" 
+        variant="default" 
         onClick={onNewSearch}
         className="flex items-center gap-2"
       >

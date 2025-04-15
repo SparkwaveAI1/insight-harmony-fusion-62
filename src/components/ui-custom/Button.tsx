@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 // Define props for different component types
 interface BaseButtonProps {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "link";
+  variant?: "default" | "primary" | "secondary" | "outline" | "ghost" | "link";
   size?: "sm" | "default" | "lg" | "icon";
   className?: string;
 }
@@ -40,10 +40,11 @@ type ButtonProps = ButtonAsButtonProps & React.ButtonHTMLAttributes<HTMLButtonEl
                   ButtonAsAnchorProps & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'href'>;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "default", children, as, to, href, ...props }, ref) => {
+  ({ className, variant = "default", size = "default", children, as, to, href, ...props }, ref) => {
     const styles = cn(
       "relative inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
       // Variants
+      variant === "default" && "bg-primary text-white shadow hover:bg-primary/90 active:bg-primary/80",
       variant === "primary" && "bg-primary text-white shadow hover:bg-primary/90 active:bg-primary/80",
       variant === "secondary" && "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 active:bg-secondary/90",
       variant === "outline" && "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
@@ -66,7 +67,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {...props as Omit<LinkProps, 'className' | 'to'>}
         >
           {children}
-          {variant === "primary" && (
+          {(variant === "primary" || variant === "default") && (
             <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
           )}
         </Link>
@@ -82,7 +83,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>}
         >
           {children}
-          {variant === "primary" && (
+          {(variant === "primary" || variant === "default") && (
             <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
           )}
         </a>
@@ -97,7 +98,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props as React.ButtonHTMLAttributes<HTMLButtonElement>}
       >
         {children}
-        {variant === "primary" && (
+        {(variant === "primary" || variant === "default") && (
           <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
         )}
       </button>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Section from "../ui-custom/Section";
 import Logo from "../ui-custom/Logo";
@@ -9,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import QueryForm from "./qualitative-analysis/QueryForm";
 import ResultsDashboard from "./qualitative-analysis/ResultsDashboard";
 import Reveal from "../ui-custom/Reveal";
+import { Card } from "@/components/ui/card";
 
 const QualitativeAnalysis: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
