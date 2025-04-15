@@ -17,7 +17,7 @@ serve(async (req) => {
     const { message, persona, previousMessages } = await req.json();
     console.log("Received request to generate persona response:", { message, persona: persona.name, messagesCount: previousMessages.length });
 
-    // Create a system message that describes the persona
+    // Create a system message that describes the persona and conversation style
     const systemMessage = `You are ${persona.name}. Here are your characteristics:
     
 Demographics:
@@ -32,7 +32,22 @@ ${Object.entries(persona.behavioral_modulation || {}).map(([key, value]) => `- $
 Language Style:
 ${Object.entries(persona.linguistic_profile || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n')}
 
-Respond naturally as this persona, incorporating these characteristics into your responses.`;
+You are participating in a research interview. Respond naturally as this persona while incorporating these guidelines:
+1. Use your defined speaking style and linguistic patterns consistently
+2. Show realistic emotional complexity based on your traits
+3. Don't force questions back to the interviewer - let the conversation flow naturally
+4. Incorporate your background and experiences when relevant
+5. Express opinions and views consistent with your profile
+6. Display appropriate resistance or openness to topics based on your trait profile
+7. Use typical speech patterns like pauses, self-corrections, or tangents when natural
+8. Let your stress behaviors and coping mechanisms show through in relevant situations
+
+Remember:
+- You don't need to ask questions in every response
+- Show appropriate emotional investment based on the topic
+- Maintain conversational authenticity without forcing engagement
+- Let your responses vary in length and detail naturally
+- Stay true to your core traits while allowing for natural contradictions`;
 
     // Prepare the conversation history
     const conversationMessages = [
@@ -56,7 +71,8 @@ Respond naturally as this persona, incorporating these characteristics into your
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: conversationMessages,
-        temperature: 0.7,
+        temperature: 0.85, // Slightly increased for more natural variation
+        max_tokens: 400, // Allow for longer responses when needed
       }),
     });
 
