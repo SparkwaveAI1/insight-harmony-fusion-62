@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -9,6 +10,16 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ApiKeyManagerProps {
   onApiKeyUpdate: (apiKey: string | null) => void;
+}
+
+// Define a type for the user_api_keys data
+interface UserApiKey {
+  id: string;
+  user_id: string;
+  service: string;
+  key_present: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
@@ -33,11 +44,15 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       
       if (data.session) {
         // Check if the user has a stored API key
+        // Use a type assertion to handle the TypeScript error
         const { data: apiKeyData, error: apiKeyError } = await supabase
           .from('user_api_keys')
           .select('key_present')
           .eq('service', 'openai')
-          .single();
+          .single() as unknown as { 
+            data: Pick<UserApiKey, 'key_present'> | null; 
+            error: any 
+          };
           
         if (apiKeyError && apiKeyError.code !== 'PGRST116') {
           console.error("Error fetching API key status:", apiKeyError);

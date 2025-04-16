@@ -1,6 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Define a type for the user_api_keys data (matches our database schema)
+interface UserApiKey {
+  id: string;
+  user_id: string;
+  service: string;
+  key_present: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
   const { data } = await supabase.auth.getSession();
@@ -30,6 +40,9 @@ export const setApiKey = async (service: string, key: string): Promise<boolean> 
       return false;
     }
     
+    // Also store a marker in localStorage to indicate we're using a stored key
+    localStorage.setItem(`${service}_key_stored`, 'true');
+    
     return true;
   } catch (error) {
     console.error('Error in setApiKey:', error);
@@ -52,7 +65,7 @@ export const getApiKey = (service: string): string | null => {
   // First check if we're using a stored key in the database
   if (service === 'openai') {
     // Check if we have a marker for a stored key
-    const storedKeyMarker = localStorage.getItem('openai_key_stored');
+    const storedKeyMarker = localStorage.getItem(`${service}_key_stored`);
     if (storedKeyMarker === 'true') {
       return 'stored-key';
     }
@@ -92,9 +105,7 @@ export const removeApiKey = async (service: string): Promise<boolean> => {
     localStorage.setItem('apiKeys', JSON.stringify(keys));
     
     // Remove the stored key marker
-    if (service === 'openai') {
-      localStorage.removeItem('openai_key_stored');
-    }
+    localStorage.removeItem(`${service}_key_stored`);
     
     return true;
   } catch (error) {
@@ -110,7 +121,14 @@ export const removeApiKey = async (service: string): Promise<boolean> => {
 // Clear all API keys
 export const clearApiKeys = async (): Promise<void> => {
   localStorage.removeItem('apiKeys');
-  localStorage.removeItem('openai_key_stored');
+  
+  // Remove all stored key markers
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.endsWith('_key_stored')) {
+      localStorage.removeItem(key);
+    }
+  }
   
   // Try to clear keys in the database if authenticated
   try {
