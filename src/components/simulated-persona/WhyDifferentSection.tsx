@@ -1,4 +1,3 @@
-
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Reveal from "@/components/ui-custom/Reveal";
@@ -11,9 +10,7 @@ const WhyDifferentSection = () => {
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-3xl font-bold text-center mb-8 font-plasmik text-white 
-              bg-gradient-to-r from-white/10 via-white/20 to-white/10 
-              py-3 rounded-lg shadow-sm">
+            <h2 className="text-3xl font-bold text-center mb-8 font-plasmik text-white">
               Realistic Personas. No Stereotypes.
             </h2>
           </Reveal>
