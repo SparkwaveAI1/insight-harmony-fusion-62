@@ -4,6 +4,7 @@ import { getPersonaByPersonaId } from '@/services/persona/personaService';
 import { Persona } from '@/services/persona/types';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
+import { formatName } from '@/lib/utils';
 
 interface PersonaFetcherProps {
   personaId: string;
@@ -58,7 +59,7 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
 
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">{persona.name}</h2>
+      <h2 className="text-xl font-bold mb-4">{formatName(persona.name)}</h2>
       <div className="mb-4">
         <strong>Persona ID:</strong> {persona.persona_id}
         <br />

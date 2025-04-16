@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { Persona } from "@/services/persona/types";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
+import { formatName } from "@/lib/utils";
 
 interface PersonaCardProps {
   persona: Persona;
@@ -16,7 +17,7 @@ const PersonaCard = ({ persona }: PersonaCardProps) => {
     <Card key={persona.persona_id} className="p-6 flex flex-col h-full">
       <div className="mb-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-xl font-bold">{persona.name}</h3>
+          <h3 className="text-xl font-bold">{formatName(persona.name)}</h3>
           <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
             ID: {persona.persona_id}
           </span>
