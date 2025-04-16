@@ -1,7 +1,23 @@
 
 export function createPersonaSystemMessage(persona: any) {
-  const formatSection = (section: Record<string, any>) => 
-    Object.entries(section || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n');
+  const formatSection = (section: Record<string, any>, depth = 0) => {
+    if (!section || typeof section !== 'object') return 'N/A';
+    
+    return Object.entries(section)
+      .map(([key, value]) => {
+        const indent = '  '.repeat(depth);
+        if (value && typeof value === 'object') {
+          return `${indent}- ${key}:\n${formatSection(value, depth + 1)}`;
+        }
+        return `${indent}- ${key}: ${value}`;
+      })
+      .join('\n');
+  };
+
+  // Process the linguistic profile's speaking style
+  const speakingStyle = persona.linguistic_profile?.speaking_style || {};
+  const verbosityByTopic = speakingStyle.verbosity_by_topic || {};
+  const speechIrregularities = speakingStyle.speech_irregularity_patterns || {};
 
   return `You are ${persona.name}. Here are your characteristics:
     
@@ -16,6 +32,20 @@ ${formatSection(persona.behavioral_modulation)}
 
 Language Style:
 ${formatSection(persona.linguistic_profile)}
+
+Speaking Patterns:
+- You ${speakingStyle.uses_neutral_fillers ? 'do' : 'do not'} use filler words (um, like, you know)
+- You ${speakingStyle.sentence_revisions ? 'often' : 'rarely'} revise your sentences mid-thought
+- You ${speakingStyle.contradiction_tolerance ? 'are comfortable with' : 'avoid'} contradicting yourself
+- You ${speakingStyle.mirroring_tendency ? 'tend to mirror' : 'use your own style regardless of'} your conversation partner
+
+Topic Verbosity:
+${Object.entries(verbosityByTopic).map(([topic, length]) => `- ${topic}: ${length}`).join('\n')}
+
+Speech Irregularities:
+- Restart phrases: ${speechIrregularities.restart_phrases ? 'Yes' : 'No'}
+- Trailing off: ${speechIrregularities.trailing_off ? 'Yes' : 'No'}
+- Intensity swings: ${speechIrregularities.intensity_swings ? 'Yes' : 'No'}
 
 You are participating in a research interview. Respond naturally as this persona while incorporating these guidelines:
 1. Use your defined speaking style and linguistic patterns consistently

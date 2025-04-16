@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -35,14 +36,14 @@ const personaTemplate = {
     extended_traits: {},
   },
   behavioral_modulation: {
-    cognitive_load_pattern: null,
-    attention_regulation: null,
-    emotional_reactivity: null,
-    stress_behavior: null,
-    fatigue_pattern: null,
-    physical_health_consideration: null,
-    trust_behavior_under_strain: null,
-    coping_mechanisms: null,
+    cognitive_load_pattern: "mid_to_high_variability",
+    attention_regulation: "context_sensitive",
+    emotional_reactivity: "medium_high",
+    stress_behavior: "defensive_creativity",
+    fatigue_pattern: "cyclical",
+    physical_health_consideration: "mild_hormonal_sensitivity",
+    trust_behavior_under_strain: "selective_mirroring",
+    coping_mechanisms: "info_loops_and_isolation",
   },
   linguistic_profile: {
     default_output_length: "moderate",
@@ -58,6 +59,17 @@ const personaTemplate = {
       contradiction_tolerance: true,
       trust_modulated_tone: true,
       mirroring_tendency: true,
+      verbosity_by_topic: {
+        work: "long",
+        politics: "moderate",
+        relationships: "short",
+        health: "fluctuates",
+      },
+      speech_irregularity_patterns: {
+        restart_phrases: true,
+        trailing_off: true,
+        intensity_swings: true,
+      },
     },
     sample_phrasing: [],
   },
