@@ -7,29 +7,24 @@ import { generatePersonaTraits, generateInterviewResponses } from "../_shared/ge
 
 const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 
-// Helper function to sanitize and validate the persona object
-function sanitizePersona(personaTraits: any, template: any): any {
-  // Create a new object based on the template structure
-  const sanitized: any = {};
-  
-  // Copy only the properties that exist in the template
-  for (const key of Object.keys(template)) {
-    if (key in personaTraits) {
-      if (typeof template[key] === 'object' && template[key] !== null && typeof personaTraits[key] === 'object' && personaTraits[key] !== null) {
-        sanitized[key] = sanitizePersona(personaTraits[key], template[key]);
-      } else {
-        sanitized[key] = personaTraits[key];
-      }
-    } else {
-      sanitized[key] = template[key];
-    }
-  }
-  
-  return sanitized;
+// Helper function to validate and sanitize the persona object
+function validatePersonaStructure(persona: any): boolean {
+  const requiredFields = [
+    'persona_id',
+    'name',
+    'creation_date',
+    'metadata',
+    'trait_profile',
+    'behavioral_modulation',
+    'linguistic_profile',
+    'preinterview_tags',
+    'simulation_directives'
+  ];
+
+  return requiredFields.every(field => field in persona);
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -67,8 +62,10 @@ serve(async (req) => {
       personaTraits = JSON.parse(jsonContent);
       console.log("Successfully parsed persona traits");
       
-      // Sanitize the persona to ensure it matches the template structure
-      personaTraits = sanitizePersona(personaTraits, personaTemplate);
+      if (!validatePersonaStructure(personaTraits)) {
+        console.error("Invalid persona structure received from OpenAI");
+        throw new Error("Generated persona does not match required structure");
+      }
     } catch (error) {
       console.error("Error parsing OpenAI response:", error);
       throw new Error("Failed to parse persona data from OpenAI response");

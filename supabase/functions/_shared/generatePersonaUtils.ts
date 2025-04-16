@@ -17,8 +17,10 @@ export async function generatePersonaTraits(prompt: string, openAIApiKey: string
           Use realistic values based on demographic probability distributions.
           Maintain internal consistency while allowing for realistic contradictions.
           IMPORTANT: For the name field, ONLY use a first name followed by last initial (e.g., "Maria J.", "James T.") - never use full last names.
-          CRITICAL: Do not add any fields or properties that are not in the template.
-          Return the output as valid JSON matching the provided template exactly.` 
+          CRITICAL: You must EXACTLY match the template structure. Do not add or remove any fields.
+          Do not include any fields that are not in the template.
+          Each section (metadata, trait_profile, etc.) must contain exactly the same structure as the template.
+          Return valid JSON matching the template structure precisely.` 
         },
         { 
           role: "user", 
