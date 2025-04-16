@@ -56,11 +56,21 @@ serve(async (req) => {
     let personaTraits;
     try {
       const content = traitsResponse.choices[0].message.content;
+      // Try to extract JSON from the content (in case it's wrapped in markdown)
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       const jsonContent = jsonMatch ? jsonMatch[1] : content;
       
-      personaTraits = JSON.parse(jsonContent);
-      console.log("Successfully parsed persona traits");
+      try {
+        personaTraits = JSON.parse(jsonContent);
+        console.log("Successfully parsed persona traits");
+      } catch (parseError) {
+        // If initial parsing fails, try to clean the content
+        const cleanedContent = content.replace(/^```json\s*|\s*```$/g, '')
+                                     .replace(/^\s*\{\s*|\s*\}\s*$/g, '{}\n')
+                                     .trim();
+        personaTraits = JSON.parse(cleanedContent);
+        console.log("Successfully parsed persona traits after cleaning");
+      }
       
       if (!validatePersonaStructure(personaTraits)) {
         console.error("Invalid persona structure received from OpenAI");
@@ -94,7 +104,17 @@ serve(async (req) => {
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       const jsonContent = jsonMatch ? jsonMatch[1] : content;
       
-      const parsedResponse = JSON.parse(jsonContent);
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(jsonContent);
+      } catch (parseError) {
+        // If initial parsing fails, try to clean the content
+        const cleanedContent = content.replace(/^```json\s*|\s*```$/g, '')
+                                    .replace(/^\s*\{\s*|\s*\}\s*$/g, '{}\n')
+                                    .trim();
+        parsedResponse = JSON.parse(cleanedContent);
+      }
+      
       console.log("Successfully parsed interview responses");
       
       if (Array.isArray(parsedResponse)) {
