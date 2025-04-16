@@ -273,6 +273,10 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  {
+    path: "/persona-viewer/:personaId",
+    element: <Navigate to="/persona/:personaId" replace />,
+  },
 ]);
 
 function useSupabaseStatus() {
