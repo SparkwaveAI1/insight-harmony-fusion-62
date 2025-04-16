@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -244,12 +243,14 @@ serve(async (req) => {
             You should fill in all the demographic fields in the metadata section, and the psychological traits.
             Use realistic values based on demographic probability distributions.
             Maintain internal consistency while allowing for realistic contradictions.
+            IMPORTANT: For the name field, ONLY use a first name followed by last initial (e.g., "Maria J.", "James T.", "Sonia M.") - never use full last names.
             Return the output as valid JSON matching the provided template exactly.` 
           },
           { 
             role: "user", 
             content: `Create a realistic persona based on this description: "${prompt}".
             Fill in all the values according to the template structure below. Return ONLY the JSON data, no markdown formatting.
+            REMEMBER: For the name field, ONLY use a first name followed by last initial (e.g., "Maria J.", "James T.").
             ${JSON.stringify(personaTemplate, null, 2)}` 
           }
         ],
@@ -365,6 +366,13 @@ serve(async (req) => {
       console.error("Error parsing interview responses:", e);
       console.error("Raw content:", interviewData.choices[0].message.content);
       // If parsing fails, keep the original interview sections without responses
+    }
+
+    // Before returning the persona, ensure the name format is correct
+    if (personaTraits.name && personaTraits.name.split(' ').length > 2) {
+      // If name has more than first name and last initial, fix it
+      const nameParts = personaTraits.name.split(' ');
+      personaTraits.name = `${nameParts[0]} ${nameParts[nameParts.length - 1].charAt(0)}.`;
     }
 
     console.log("Returning generated persona");
