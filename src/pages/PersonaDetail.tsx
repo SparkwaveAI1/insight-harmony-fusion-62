@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -15,6 +15,7 @@ import PersonaLoadingState from "@/components/persona-details/PersonaLoadingStat
 import PersonaDemographics from "@/components/persona-details/PersonaDemographics";
 import PersonaTraits from "@/components/persona-details/PersonaTraits";
 import InterviewResponses from "@/components/persona-details/InterviewResponses";
+import { formatName } from "@/lib/utils";
 
 const PersonaDetail = () => {
   const { personaId } = useParams<{ personaId: string }>();
@@ -82,7 +83,7 @@ const PersonaDetail = () => {
                 <Card className="p-6">
                   <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
                     <div>
-                      <h1 className="text-3xl font-bold mb-2 font-plasmik">{persona.name}</h1>
+                      <h1 className="text-3xl font-bold mb-2 font-plasmik">{formatName(persona.name)}</h1>
                       <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
                     </div>
                     <div className="flex items-center gap-4">
