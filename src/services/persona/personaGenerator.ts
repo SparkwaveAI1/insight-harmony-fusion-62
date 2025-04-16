@@ -6,6 +6,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
   try {
     console.log("Generating persona with prompt:", prompt);
     
+    // Use the existing Edge Function which already has rate limiting and centralized API key handling
     const response = await supabase.functions.invoke('generate-persona', {
       body: { prompt }
     });

@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { getApiKey, saveApiKey, clearApiKeys } from "@/services/utils/apiKeyUtils";
 import { Input } from "./ui/input";
 import { toast } from "sonner";
 import { validateApiKey } from "@/services/ai/textToSpeechService";
-import { AlertCircle, CheckCircle2, Info, Loader2, X, AlertTriangle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, Loader2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "./ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ApiKeyManagerProps {
   onApiKeyUpdate: (apiKey: string | null) => void;
@@ -20,45 +20,54 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
   const [validationAttempts, setValidationAttempts] = useState<number>(0);
   const [validationDetails, setValidationDetails] = useState<string>("");
   const [showDetails, setShowDetails] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Check if API key exists on mount
+  // Check user authentication and API key on mount
   useEffect(() => {
-    const checkApiKey = async () => {
-      const storedApiKey = getApiKey("openai");
-      if (storedApiKey) {
-        setApiKey(storedApiKey);
+    const checkAuthentication = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error checking authentication:", error);
+        return;
+      }
+      
+      setIsAuthenticated(!!data.session);
+      
+      if (data.session) {
+        // Check if the user has a stored API key
+        const { data: apiKeyData, error: apiKeyError } = await supabase
+          .from('user_api_keys')
+          .select('key_present')
+          .single();
+          
+        if (apiKeyError && apiKeyError.code !== 'PGRST116') {
+          console.error("Error fetching API key status:", apiKeyError);
+          return;
+        }
         
-        // Validate the stored API key
-        setIsValidating(true);
-        setValidationMessage("Validating stored API key...");
-        try {
-          console.log("API KEY MANAGER: Validating stored OpenAI API key");
-          const isValid = await validateApiKey(storedApiKey);
-          setIsApiKeyValid(isValid);
-          if (isValid) {
-            setValidationMessage("API Key is valid");
-            onApiKeyUpdate(storedApiKey);
-            toast.success("API Key validated successfully");
-            console.log("API KEY MANAGER: API key validation successful");
-          } else {
-            setValidationMessage("Stored API Key is invalid. Please enter a new one.");
-            setValidationDetails("Your stored API key failed validation. This might be because the key is invalid, expired, or doesn't have access to the required models (whisper-1, tts-1, gpt-4o-mini).");
-            toast.error("Stored API Key is invalid. Please enter a new one.");
-            console.error("API KEY MANAGER: Stored API key validation failed");
-          }
-        } catch (error) {
-          console.error("API KEY MANAGER: API key validation error:", error);
-          setValidationMessage("Failed to validate API Key. Network error.");
-          setValidationDetails("A network error occurred during API key validation. Please check your internet connection and try again.");
-          toast.error("Failed to validate API Key");
-        } finally {
-          setIsValidating(false);
+        if (apiKeyData?.key_present) {
+          setApiKey("••••••••••••••••••••••••••••");
+          setIsApiKeyValid(true);
+          setValidationMessage("API Key is valid and securely stored");
+          onApiKeyUpdate("stored-key");
+          toast.success("Using your stored API key");
         }
       }
     };
     
-    checkApiKey();
-  }, [onApiKeyUpdate, validationAttempts]);
+    checkAuthentication();
+  }, [onApiKeyUpdate]);
+  
+  // Watch for auth state changes
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   const handleSaveApiKey = async () => {
     if (!apiKey) {
@@ -73,6 +82,13 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       return;
     }
     
+    if (!isAuthenticated) {
+      toast.error("You must be logged in to save an API key");
+      setValidationMessage("Authentication required to save API keys");
+      setValidationDetails("For security, we require you to be logged in before saving API keys. This allows us to store your key securely.");
+      return;
+    }
+    
     setIsValidating(true);
     setValidationMessage("Validating API key...");
     try {
@@ -81,11 +97,25 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       const isValid = await validateApiKey(apiKey);
       
       if (isValid) {
-        saveApiKey("openai", apiKey);
+        // Store the API key in Supabase
+        const { error: storeError } = await supabase.functions.invoke('store-api-key', {
+          body: { apiKey, service: 'openai' }
+        });
+        
+        if (storeError) {
+          console.error("Error storing API key:", storeError);
+          toast.error("Failed to securely store API key");
+          return;
+        }
+        
         setIsApiKeyValid(true);
-        setValidationMessage("API Key is valid");
-        setValidationDetails("Your API key has been validated and saved. It has access to the required models.");
-        onApiKeyUpdate(apiKey);
+        setValidationMessage("API Key is valid and securely stored");
+        setValidationDetails("Your API key has been validated and securely stored in our database. It is encrypted and only accessible when you are authenticated.");
+        onApiKeyUpdate("stored-key");
+        
+        // Mask the key for display
+        setApiKey("••••••••••••••••••••••••••••");
+        
         toast.success("API Key saved and validated successfully!");
         console.log("API KEY MANAGER: API key saved and validated successfully");
       } else {
@@ -104,14 +134,33 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
     }
   };
 
-  const handleClearApiKey = () => {
-    clearApiKeys();
-    setApiKey("");
-    setIsApiKeyValid(false);
-    setValidationMessage("");
-    setValidationDetails("");
-    onApiKeyUpdate(null);
-    toast.success("API Key cleared successfully!");
+  const handleClearApiKey = async () => {
+    if (!isAuthenticated) {
+      toast.error("You must be logged in to remove an API key");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.functions.invoke('remove-api-key', {
+        body: { service: 'openai' }
+      });
+      
+      if (error) {
+        console.error("Error removing API key:", error);
+        toast.error("Failed to remove API key");
+        return;
+      }
+      
+      setApiKey("");
+      setIsApiKeyValid(false);
+      setValidationMessage("");
+      setValidationDetails("");
+      onApiKeyUpdate(null);
+      toast.success("API Key removed successfully!");
+    } catch (error) {
+      console.error("Error removing API key:", error);
+      toast.error("Failed to remove API key");
+    }
   };
 
   const retryValidation = () => {
@@ -124,19 +173,40 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
 
   const isStructurallyValidKey = apiKey.startsWith('sk-') && apiKey.length > 10;
 
+  // If not authenticated, show a login prompt
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-4">
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertDescription>
+            You need to be logged in to securely store API keys. This ensures your keys are encrypted and only accessible to you.
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => { /* Handle login - redirect to login page or open auth dialog */ }}
+          className="w-full"
+        >
+          Log in to manage API keys
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Alert className="bg-muted">
         <Info className="h-4 w-4" />
         <AlertDescription>
           You need an OpenAI API key with access to speech models (tts-1 and whisper-1) and GPT-4o Mini.
+          Your key will be securely encrypted and stored.
         </AlertDescription>
       </Alert>
       
       <div className="flex items-center space-x-2">
         <Input
           type="password"
-          placeholder="Enter your OpenAI API Key"
+          placeholder={isApiKeyValid ? "API Key securely stored" : "Enter your OpenAI API Key"}
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           disabled={isApiKeyValid || isValidating}
@@ -144,7 +214,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
         />
         <Button 
           onClick={handleSaveApiKey} 
-          disabled={isApiKeyValid || isValidating || !apiKey}
+          disabled={isApiKeyValid || isValidating || !apiKey || (apiKey === "••••••••••••••••••••••••••••")}
         >
           {isValidating ? (
             <>
@@ -206,12 +276,12 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
       )}
       
       <div className="text-sm text-gray-400 mt-1">
-        Your API key should start with "sk-" and must have access to OpenAI's audio models (whisper-1, tts-1) and chat models (gpt-4o-mini).
+        Your API key is stored securely with encryption and is only accessible when you're logged in.
       </div>
       
       {isApiKeyValid && (
         <Button variant="destructive" onClick={handleClearApiKey}>
-          Clear API Key
+          Remove API Key
         </Button>
       )}
     </div>

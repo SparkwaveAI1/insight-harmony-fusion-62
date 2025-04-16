@@ -1,14 +1,12 @@
 
-import { getApiKey } from '../utils/apiKeyUtils';
 import { toast } from 'sonner';
-
-const OPENAI_TTS_ENDPOINT = 'https://api.openai.com/v1/audio/speech';
+import { supabase } from '@/integrations/supabase/client';
 
 let activeAudioElement: HTMLAudioElement | null = null;
 
 export const validateApiKey = async (apiKey: string): Promise<boolean> => {
   try {
-    // Use OpenAI's models endpoint to validate the API key
+    // Use the models endpoint to validate the API key
     const response = await fetch('https://api.openai.com/v1/models', {
       method: 'GET',
       headers: {
@@ -31,46 +29,48 @@ export const validateApiKey = async (apiKey: string): Promise<boolean> => {
 };
 
 export const generateSpeech = async (text: string): Promise<ArrayBuffer | null> => {
-  const apiKey = getApiKey('openai');
-
-  if (!apiKey) {
-    console.error('OpenAI API key is missing');
-    toast.error('OpenAI API key is required for AI responses');
-    return null;
-  }
-
   try {
-    console.log('Generating speech using OpenAI TTS:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+    console.log('Generating speech using secured OpenAI TTS proxy:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     
-    const response = await fetch(OPENAI_TTS_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'tts-1',
-        voice: 'alloy',
-        input: text
-      })
+    const payload = {
+      model: 'tts-1',
+      voice: 'alloy',
+      input: text
+    };
+    
+    const { data, error } = await supabase.functions.invoke('openai-proxy', {
+      body: { endpoint: 'audio/speech', payload }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Speech generation failed', response.status, response.statusText, errorData);
-      
-      if (response.status === 401) {
-        toast.error('Invalid API key. Please check your OpenAI API key.');
-      } else if (response.status === 429) {
-        toast.error('Rate limit exceeded. Please try again in a moment.');
-      } else {
-        toast.error('Failed to generate speech. Please check your API key and settings.');
-      }
+    if (error) {
+      console.error('Error invoking OpenAI proxy for speech:', error);
+      toast.error('Failed to generate speech. Please try again.');
       return null;
     }
-
-    const audioArrayBuffer = await response.arrayBuffer();
-    return audioArrayBuffer;
+    
+    if (data.error) {
+      console.error('Speech generation failed:', data.error);
+      
+      if (data.status === 401) {
+        toast.error('Authorization error. Please check your account settings.');
+      } else if (data.status === 429) {
+        toast.error('Rate limit exceeded. Please try again in a moment.');
+      } else {
+        toast.error('Failed to generate speech. Please try again.');
+      }
+      
+      return null;
+    }
+    
+    // Convert the base64 data to ArrayBuffer
+    const binaryString = atob(data.audio);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    return bytes.buffer;
   } catch (error) {
     console.error('Error generating speech:', error);
     toast.error('Failed to generate speech. Please try again.');
