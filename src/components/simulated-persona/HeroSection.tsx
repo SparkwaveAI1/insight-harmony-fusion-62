@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,14 +117,14 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                 This will create a complete persona with demographic traits, psychological profile, and interview responses.
               </p>
               
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-4 space-x-4">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate("/persona-viewer")}
                   className="text-sm"
                 >
-                  View Previously Generated Personas
+                  Personas List
                 </Button>
               </div>
             </Card>
