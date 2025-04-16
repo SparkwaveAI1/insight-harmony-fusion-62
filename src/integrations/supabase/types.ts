@@ -105,6 +105,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_api_keys: {
+        Row: {
+          created_at: string | null
+          encrypted_key: string | null
+          encryption_iv: string | null
+          encryption_key: string | null
+          id: string
+          key_present: boolean | null
+          service: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          encrypted_key?: string | null
+          encryption_iv?: string | null
+          encryption_key?: string | null
+          id?: string
+          key_present?: boolean | null
+          service: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          encrypted_key?: string | null
+          encryption_iv?: string | null
+          encryption_key?: string | null
+          id?: string
+          key_present?: boolean | null
+          service?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

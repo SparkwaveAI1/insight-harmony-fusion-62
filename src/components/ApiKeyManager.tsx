@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -22,7 +21,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Check user authentication and API key on mount
   useEffect(() => {
     const checkAuthentication = async () => {
       const { data, error } = await supabase.auth.getSession();
@@ -38,6 +36,7 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
         const { data: apiKeyData, error: apiKeyError } = await supabase
           .from('user_api_keys')
           .select('key_present')
+          .eq('service', 'openai')
           .single();
           
         if (apiKeyError && apiKeyError.code !== 'PGRST116') {
@@ -58,7 +57,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
     checkAuthentication();
   }, [onApiKeyUpdate]);
   
-  // Watch for auth state changes
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
@@ -93,7 +91,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
     setValidationMessage("Validating API key...");
     try {
       console.log("API KEY MANAGER: Attempting to validate new API key...");
-      // Validate the API key
       const isValid = await validateApiKey(apiKey);
       
       if (isValid) {
@@ -173,7 +170,6 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onApiKeyUpdate }) => {
 
   const isStructurallyValidKey = apiKey.startsWith('sk-') && apiKey.length > 10;
 
-  // If not authenticated, show a login prompt
   if (!isAuthenticated) {
     return (
       <div className="space-y-4">
