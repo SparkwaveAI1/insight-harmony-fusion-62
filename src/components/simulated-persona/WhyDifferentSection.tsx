@@ -6,12 +6,14 @@ import Reveal from "@/components/ui-custom/Reveal";
 const WhyDifferentSection = () => {
   return (
     <Section 
-      className="bg-gradient-to-br from-[#1A1F2C] via-[#222222] to-[#0A0A0A] text-gray-100"
+      className="bg-gradient-to-br from-[#1A1F2C] via-[#0A0A0A] to-[#000000] text-gray-100"
     >
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-3xl font-bold text-center mb-8 font-plasmik text-white">
+            <h2 className="text-3xl font-bold text-center mb-8 font-plasmik text-white 
+              bg-gradient-to-r from-white/10 via-white/20 to-white/10 
+              py-3 rounded-lg shadow-sm">
               Realistic Personas. No Stereotypes.
             </h2>
           </Reveal>
@@ -54,4 +56,3 @@ const WhyDifferentSection = () => {
 };
 
 export default WhyDifferentSection;
-
