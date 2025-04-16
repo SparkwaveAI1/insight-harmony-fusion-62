@@ -2,7 +2,6 @@
 import { FileJson } from "lucide-react";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
-import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 
 const WhyDifferentSection = () => {
@@ -36,15 +35,6 @@ const WhyDifferentSection = () => {
                 ))}
               </ul>
             </Card>
-          </Reveal>
-
-          <Reveal delay={200}>
-            <div className="text-center">
-              <Button variant="outline">
-                See a Sample Persona
-                <FileJson className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
           </Reveal>
         </div>
       </div>
