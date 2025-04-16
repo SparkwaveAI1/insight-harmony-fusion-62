@@ -74,4 +74,3 @@ export const personaTemplate = {
     response_length_variability: true,
   },
 };
-

@@ -17,6 +17,7 @@ export async function generatePersonaTraits(prompt: string, openAIApiKey: string
           Use realistic values based on demographic probability distributions.
           Maintain internal consistency while allowing for realistic contradictions.
           IMPORTANT: For the name field, ONLY use a first name followed by last initial (e.g., "Maria J.", "James T.") - never use full last names.
+          CRITICAL: Do not add any fields or properties that are not in the template.
           Return the output as valid JSON matching the provided template exactly.` 
         },
         { 
@@ -52,7 +53,8 @@ export async function generateInterviewResponses(persona: any, openAIApiKey: str
           that match the persona's characteristics, traits, and speaking style.
           Ensure responses reflect the persona's demographic information and psychological traits.
           Include behavioral inconsistencies where appropriate.
-          For each question in each section, provide a response in the "response" field of each question object.` 
+          For each question in each section, provide a response in the "response" field of each question object.
+          Do not add any fields or properties that were not in the input template.` 
         },
         { 
           role: "user", 
@@ -73,4 +75,3 @@ export async function generateInterviewResponses(persona: any, openAIApiKey: str
 
   return response.json();
 }
-
