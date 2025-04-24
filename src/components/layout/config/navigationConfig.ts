@@ -1,5 +1,4 @@
-
-import { User, Library, Folder } from "lucide-react";
+import { User, Library, Folder, HandCoins } from "lucide-react";
 
 export const navigationMenuItems = [
   {
@@ -10,11 +9,16 @@ export const navigationMenuItems = [
   {
     title: "Persona Library",
     icon: Library,
-    url: "/persona-viewer",  // Updated to point to persona-viewer
+    url: "/persona-viewer",
   },
   {
     title: "Collections",
     icon: Folder,
     url: "/collections",
+  },
+  {
+    title: "Earn $PRSNA",
+    icon: HandCoins,
+    url: "/prsna",
   },
 ];

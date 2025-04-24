@@ -162,12 +162,16 @@ const router = createBrowserRouter([
     element: <Navigate to="/earn-prsna" replace />,
   },
   {
-    path: "/earn-prsna",
+    path: "/prsna",
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <EarnPRSNA />
       </Suspense>
     ),
+  },
+  {
+    path: "/earn-prsna",
+    element: <Navigate to="/prsna" replace />,
   },
   {
     path: "/contact",
