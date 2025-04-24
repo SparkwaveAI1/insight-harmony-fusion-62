@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, BrainCircuit, Users, GraduationCap, HandCoins, Wallet } from "lucide-react";
+import { Book, UserPlus, Users, GraduationCap, HandCoins } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
@@ -11,7 +11,7 @@ import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import AvatarFeatureDark from "@/components/ecosystem/AvatarFeatureDark";
 
 const EarnPRSNA = () => {
-  const { isWalletConnected, connectWallet } = useWeb3Wallet();
+  const { isWalletConnected } = useWeb3Wallet();
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
@@ -27,51 +27,46 @@ const EarnPRSNA = () => {
                 <Reveal>
                   <div className="inline-flex items-center justify-center bg-secondary/20 px-4 py-2 rounded-full mb-6">
                     <HandCoins className="h-5 w-5 text-secondary mr-2" />
-                    <span className="text-sm font-medium text-secondary">Earn Rewards</span>
+                    <span className="text-sm font-medium text-secondary">Web3 Intelligence</span>
                   </div>
                 </Reveal>
 
                 <Reveal delay={100}>
                   <h1 className="text-4xl md:text-5xl font-bold mb-6 font-plasmik">
-                    Earn $PRSNA by Contributing to AI Research
+                    🚧 Building the Future of On-Chain Behavioral Intelligence
                   </h1>
                 </Reveal>
                 
                 <Reveal delay={200}>
                   <p className="text-gray-300 text-pretty mb-10">
-                    Help shape the future of AI-powered research and earn $PRSNA tokens as rewards. 
-                    Create unique AI personas or participate in focus groups to earn while 
-                    contributing to next-generation market insights.
+                    PersonaAI is launching ERC-6551 personas—dynamic, evolving behavioral assets anchored onchain. 
+                    $PRSNA will power simulations, licensing, and the cognitive layer of Web3.
                   </p>
                 </Reveal>
                 
                 <Reveal delay={300}>
-                  {!isWalletConnected ? (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="group bg-gradient-to-r from-primary to-primary/80 border-none"
-                      onClick={connectWallet}
-                    >
-                      <Wallet className="w-4 h-4 mr-2" />
-                      Connect Wallet
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                    </Button>
-                  ) : (
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <Link to="/prsna-ecosystem">
-                        <Button
-                          variant="primary"
-                          size="lg"
-                          className="group bg-gradient-to-r from-primary to-primary/80 border-none"
-                        >
-                          <Wallet className="w-4 h-4 mr-2" />
-                          Stake $PRSNA
-                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Link to="#token-utility">
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="group bg-gradient-to-r from-primary to-primary/80 border-none"
+                      >
+                        <Book className="w-4 h-4 mr-2" />
+                        Learn About $PRSNA Utility
+                      </Button>
+                    </Link>
+                    <Link to="/persona-creation/landing">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        className="group"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Contribute a Persona
+                      </Button>
+                    </Link>
+                  </div>
                 </Reveal>
               </div>
               
