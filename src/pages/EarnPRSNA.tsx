@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Book, UserPlus, Users, GraduationCap, HandCoins } from "lucide-react";
+import { Book, UserPlus, Users, GraduationCap, HandCoins, BrainCircuit, ArrowRight, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
