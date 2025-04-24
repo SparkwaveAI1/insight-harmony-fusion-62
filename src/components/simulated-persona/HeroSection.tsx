@@ -95,7 +95,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
             <Card className="p-6 mb-8 shadow-md border-t-2 border-t-accent">
               <label className="text-sm font-medium mb-2 block">Describe your persona:</label>
               <Textarea 
-                placeholder="Example: 23-year-old Latina marketing associate from Arizona, distrusts politics, loves gaming"
+                placeholder="Example: 23-year-old female marketing associate from Arizona, distrusts politics, loves gaming"
                 className="mb-4 min-h-[100px]"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -121,10 +121,10 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
               
               <div className="flex justify-center mt-4 space-x-4">
                 <Button
-                  variant="ghost"
+                  variant="primary"
                   size="sm"
                   onClick={() => navigate("/persona-viewer")}
-                  className="text-sm"
+                  className="text-sm bg-blue-500 text-white hover:bg-blue-600"
                 >
                   Personas List
                 </Button>
