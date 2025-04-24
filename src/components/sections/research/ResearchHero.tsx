@@ -3,16 +3,14 @@ import Reveal from "@/components/ui-custom/Reveal";
 
 const ResearchHero = () => {
   return (
-    <section className="relative min-h-[70vh] pt-24 pb-16 flex items-center">
-      {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-accent/50 via-background to-background -z-10" />
-      
+    <section className="relative min-h-[70vh] pt-24 pb-16 flex items-center bg-white">
       <div className="container px-4 mx-auto">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
-            <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik">
+            <h1 className="mb-3 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik">
               Run Advanced Behavioral Research with AI or Human-Based Personas
             </h1>
+            <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
           </Reveal>
           
           <Reveal delay={100}>

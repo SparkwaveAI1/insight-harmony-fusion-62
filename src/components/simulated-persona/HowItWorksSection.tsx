@@ -29,19 +29,22 @@ const features = [
 
 const HowItWorksSection = () => {
   return (
-    <Section>
+    <Section className="bg-muted/30 py-16">
       <div className="container px-4 mx-auto">
         <Reveal>
-          <h2 className="text-3xl font-bold text-center mb-12 font-plasmik">
-            Not Just a Prompt. A Simulated Mind.
-          </h2>
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-2 font-plasmik">
+              Not Just a Prompt. A Simulated Mind.
+            </h2>
+            <div className="w-24 h-1 bg-accent mx-auto mb-12"></div>
+          </div>
         </Reveal>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((item, index) => (
             <Reveal key={index} delay={index * 100}>
-              <Card className="p-6 h-full flex flex-col items-center text-center">
-                <div className="p-3 bg-primary/10 rounded-full mb-4">
+              <Card className="p-6 h-full flex flex-col items-center text-center border-t-2 border-t-accent shadow-sm">
+                <div className="p-3 bg-muted rounded-full mb-4">
                   {item.icon}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{item.title}</h3>

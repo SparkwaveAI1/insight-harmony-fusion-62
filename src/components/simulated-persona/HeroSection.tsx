@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,13 +77,14 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   };
 
   return (
-    <Section className="bg-gradient-to-b from-accent/50 via-background to-background pt-24">
+    <Section className="bg-white pt-24 pb-16">
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center font-plasmik">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-center font-plasmik">
               Build a Behaviorally Accurate AI Persona
             </h1>
+            <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
             <p className="text-lg text-muted-foreground text-center mb-12">
               Describe who you need. Our system will generate a simulated persona based on probabilistic 
               psychological modeling—ready for interviews, testing, or focus groups.
@@ -90,7 +92,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
           </Reveal>
 
           <Reveal delay={100}>
-            <Card className="p-6 mb-8">
+            <Card className="p-6 mb-8 shadow-md border-t-2 border-t-accent">
               <label className="text-sm font-medium mb-2 block">Describe your persona:</label>
               <Textarea 
                 placeholder="Example: 23-year-old Latina marketing associate from Arizona, distrusts politics, loves gaming"
@@ -101,7 +103,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
               />
               <Button 
                 onClick={handleGenerateClick}
-                className="w-full" 
+                className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
                 disabled={!prompt.trim() || isGenerating}
               >
                 {isGenerating ? (

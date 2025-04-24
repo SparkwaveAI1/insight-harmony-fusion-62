@@ -1,3 +1,4 @@
+
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Reveal from "@/components/ui-custom/Reveal";
@@ -5,18 +6,19 @@ import Reveal from "@/components/ui-custom/Reveal";
 const WhyDifferentSection = () => {
   return (
     <Section 
-      className="bg-gradient-to-br from-[#1A1F2C] via-[#0A0A0A] to-[#000000] text-gray-100"
+      className="bg-white py-16"
     >
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto">
           <Reveal>
-            <h2 className="text-3xl font-bold text-center mb-8 font-plasmik text-white">
+            <h2 className="text-3xl font-bold text-center mb-2 font-plasmik">
               Realistic Personas. No Stereotypes.
             </h2>
+            <div className="w-24 h-1 bg-accent mx-auto mb-8"></div>
           </Reveal>
 
           <Reveal delay={100}>
-            <Card className="p-6 mb-8 bg-black/30 backdrop-blur-lg border-white/10 border">
+            <Card className="p-6 mb-8 border-l-4 border-l-accent shadow-sm">
               <ul className="space-y-4">
                 {[
                   "Demographic distributions sourced from Pew, WVS, Gallup",
@@ -24,10 +26,10 @@ const WhyDifferentSection = () => {
                   "Nonlinear interactions between traits = emergent behavior",
                   "Stored as structured .json files for advanced use"
                 ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-3 text-gray-300">
-                    <div className="rounded-full bg-white/20 p-1 mt-0.5">
+                  <li key={index} className="flex items-start gap-3 text-foreground">
+                    <div className="rounded-full bg-accent p-1 mt-0.5">
                       <svg 
-                        className="h-4 w-4 text-white" 
+                        className="h-4 w-4 text-accent-foreground" 
                         fill="none" 
                         viewBox="0 0 24 24" 
                         stroke="currentColor"

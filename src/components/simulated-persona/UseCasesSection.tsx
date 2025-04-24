@@ -6,22 +6,22 @@ import Reveal from "@/components/ui-custom/Reveal";
 
 const useCases = [
   {
-    icon: <Microscope className="h-6 w-6 text-primary" />,
+    icon: <Microscope className="h-6 w-6 text-accent-foreground" />,
     title: "Run Behavioral Interviews",
     description: "Explore how they think, decide, and rationalize."
   },
   {
-    icon: <Vote className="h-6 w-6 text-primary" />,
+    icon: <Vote className="h-6 w-6 text-accent-foreground" />,
     title: "Test Reactions",
     description: "Simulate how your persona responds to a new app, a political message, or an economic scenario."
   },
   {
-    icon: <Copy className="h-6 w-6 text-primary" />,
+    icon: <Copy className="h-6 w-6 text-accent-foreground" />,
     title: "Clone & Compare",
     description: "Modify income, age, or stress level to compare behavior."
   },
   {
-    icon: <UserPlus className="h-6 w-6 text-primary" />,
+    icon: <UserPlus className="h-6 w-6 text-accent-foreground" />,
     title: "Join Group Sessions",
     description: "Add them to a focus group with other personas or humans."
   }
@@ -29,20 +29,23 @@ const useCases = [
 
 const UseCasesSection = () => {
   return (
-    <Section className="bg-muted/30">
+    <Section className="bg-white py-16">
       <div className="container px-4 mx-auto">
         <Reveal>
-          <h2 className="text-3xl font-bold text-center mb-12 font-plasmik">
-            Use Your Persona for Research, Strategy, or Simulation
-          </h2>
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-2 font-plasmik">
+              Use Your Persona for Research, Strategy, or Simulation
+            </h2>
+            <div className="w-32 h-1 bg-accent mx-auto mb-12"></div>
+          </div>
         </Reveal>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {useCases.map((useCase, index) => (
             <Reveal key={index} delay={index * 100}>
-              <Card className="p-6 h-full">
+              <Card className="p-6 h-full border-l-4 border-l-accent shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                  <div className="p-2 bg-accent/20 rounded-lg shrink-0">
                     {useCase.icon}
                   </div>
                   <div>

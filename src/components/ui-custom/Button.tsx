@@ -47,8 +47,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant === "default" && "bg-primary text-white shadow hover:bg-primary/90 active:bg-primary/80",
       variant === "primary" && "bg-primary text-white shadow hover:bg-primary/90 active:bg-primary/80",
       variant === "secondary" && "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 active:bg-secondary/90",
-      variant === "outline" && "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
-      variant === "ghost" && "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+      variant === "outline" && "border border-input bg-transparent shadow-sm hover:bg-accent/10 hover:text-accent-foreground active:bg-accent/20",
+      variant === "ghost" && "hover:bg-muted hover:text-muted-foreground active:bg-muted/80",
       variant === "link" && "text-primary underline-offset-4 hover:underline",
       // Sizes
       size === "default" && "h-9 px-5 py-2 text-sm",
@@ -67,9 +67,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {...props as Omit<LinkProps, 'className' | 'to'>}
         >
           {children}
-          {(variant === "primary" || variant === "default") && (
-            <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
-          )}
         </Link>
       );
     }
@@ -83,9 +80,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>}
         >
           {children}
-          {(variant === "primary" || variant === "default") && (
-            <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
-          )}
         </a>
       );
     }
@@ -98,9 +92,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props as React.ButtonHTMLAttributes<HTMLButtonElement>}
       >
         {children}
-        {(variant === "primary" || variant === "default") && (
-          <span className="absolute inset-0 rounded-md bg-white/10 opacity-0 transition-opacity hover:opacity-100"></span>
-        )}
       </button>
     );
   }

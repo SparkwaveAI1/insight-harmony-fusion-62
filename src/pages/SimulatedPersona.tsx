@@ -6,7 +6,6 @@ import HeroSection from "@/components/simulated-persona/HeroSection";
 import HowItWorksSection from "@/components/simulated-persona/HowItWorksSection";
 import UseCasesSection from "@/components/simulated-persona/UseCasesSection";
 import WhyDifferentSection from "@/components/simulated-persona/WhyDifferentSection";
-import { toast } from "sonner";
 
 const SimulatedPersonaPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -17,7 +16,7 @@ const SimulatedPersonaPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-grow">
         <HeroSection onGenerate={handleGeneratePersona} isGenerating={isGenerating} />

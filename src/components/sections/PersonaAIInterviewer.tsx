@@ -7,13 +7,14 @@ import Reveal from "../ui-custom/Reveal";
 
 const PersonaAIInterviewerSection = () => {
   return (
-    <Section className="py-20 md:py-28 overflow-hidden">
+    <Section className="py-20 md:py-28 bg-white overflow-hidden">
       <div className="container px-4 mx-auto relative">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
+            <h2 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
               Deep Interview AI—Uncover Authentic Human Insights
             </h2>
+            <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
           </Reveal>
           
           <Reveal delay={100}>
@@ -25,9 +26,8 @@ const PersonaAIInterviewerSection = () => {
           <Reveal delay={200}>
             <Link to="/persona-ai-interviewer">
               <Button 
-                variant="primary" 
+                className="group bg-accent text-accent-foreground hover:bg-accent/90"
                 size="lg" 
-                className="group"
               >
                 Try the PersonaAI Interviewer
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
