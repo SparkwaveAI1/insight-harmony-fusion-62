@@ -10,7 +10,7 @@ export const navigationMenuItems = [
   {
     title: "Persona Library",
     icon: Library,
-    url: "/library",
+    url: "/persona-viewer",  // Updated to point to persona-viewer
   },
   {
     title: "Collections",
