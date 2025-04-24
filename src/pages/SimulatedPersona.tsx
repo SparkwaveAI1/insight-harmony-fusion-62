@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import Header from "@/components/layout/Header";
@@ -9,6 +10,12 @@ import UseCasesSection from "@/components/simulated-persona/UseCasesSection";
 import WhyDifferentSection from "@/components/simulated-persona/WhyDifferentSection";
 
 export default function SimulatedPersona() {
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const handleGenerate = () => {
+    setIsGenerating(prev => !prev);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -16,7 +23,10 @@ export default function SimulatedPersona() {
         <div className="flex-1">
           <Header />
           <main className="flex-grow">
-            <HeroSection />
+            <HeroSection 
+              onGenerate={handleGenerate} 
+              isGenerating={isGenerating} 
+            />
             <HowItWorksSection />
             <UseCasesSection />
             <WhyDifferentSection />
