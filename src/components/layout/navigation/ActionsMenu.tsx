@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { actionMenuItems } from "../config/navigationConfig";
+import { Plus, Settings } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,16 +16,22 @@ export function ActionsMenu() {
       <SidebarGroupLabel>Actions</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {actionMenuItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <Link to={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Create New">
+              <Link to="/persona-creation/landing">
+                <Plus />
+                <span>Create New</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Settings">
+              <Link to="/settings">
+                <Settings />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

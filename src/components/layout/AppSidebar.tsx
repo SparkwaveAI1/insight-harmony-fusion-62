@@ -4,7 +4,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { NavigationMenu } from "./navigation/NavigationMenu";
@@ -14,12 +13,9 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="font-semibold">PersonaAI</span>
-          </Link>
-          <SidebarTrigger />
-        </div>
+        <Link to="/" className="flex items-center space-x-2">
+          <span className="font-semibold">PersonaAI</span>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <NavigationMenu />
