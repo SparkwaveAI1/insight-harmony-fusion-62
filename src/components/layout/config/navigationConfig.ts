@@ -1,5 +1,5 @@
 
-import { Home, User, Library, Folder } from "lucide-react";
+import { Home, User, Search, Folder, Mic } from "lucide-react";
 
 export const navigationMenuItems = [
   {
@@ -13,13 +13,26 @@ export const navigationMenuItems = [
     url: "/persona-viewer",
   },
   {
-    title: "Library",
-    icon: Library,
+    title: "Persona Library",
+    icon: Folder,
     url: "/library",
   },
+];
+
+export const actionMenuItems = [
   {
-    title: "Collections",
-    icon: Folder,
-    url: "/collections",
+    title: "Persona Builder",
+    icon: User,
+    url: "/simulated-persona",
+  },
+  {
+    title: "Interviewer",
+    icon: Mic,
+    url: "/interviewer",
+  },
+  {
+    title: "Researcher",
+    icon: Search,
+    url: "/research",
   },
 ];
