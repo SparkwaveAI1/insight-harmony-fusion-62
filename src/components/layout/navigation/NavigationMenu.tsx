@@ -14,7 +14,7 @@ export function NavigationMenu() {
   const location = useLocation();
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="pt-4">
       <SidebarGroupLabel>Navigation</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
