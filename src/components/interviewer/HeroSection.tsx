@@ -17,15 +17,9 @@ const HeroSection = () => {
           
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-2 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
-              Structured Interviews for Persona Creation & Research
+              AI-Powered Interviewing
             </h1>
             <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
-          </Reveal>
-          
-          <Reveal delay={200}>
-            <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
-              Create rich, human-derived AI Personas or run research studies with real participants—using our automated interviewer designed for realism, depth, and scale.
-            </p>
           </Reveal>
         </div>
       </div>
@@ -34,3 +28,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
