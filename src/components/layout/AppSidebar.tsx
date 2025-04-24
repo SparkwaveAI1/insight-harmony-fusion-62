@@ -4,7 +4,7 @@ import {
   Settings,
   User,
   Library,
-  Collection,
+  Folder,  // Replaced Collection with Folder
   Plus,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -39,7 +39,7 @@ const menuItems = [
   },
   {
     title: "Collections",
-    icon: Collection,
+    icon: Folder,  // Updated to use Folder
     url: "/collections",
   },
 ];
