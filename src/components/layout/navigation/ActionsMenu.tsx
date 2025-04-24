@@ -18,7 +18,7 @@ export function ActionsMenu() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Create Simulated Persona">
-              <Link to="/persona-creation/landing">
+              <Link to="/simulated-persona">
                 <Plus />
                 <span>Create Simulated Persona</span>
               </Link>
