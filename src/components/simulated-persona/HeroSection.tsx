@@ -1,139 +1,43 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Textarea } from "@/components/ui/textarea";
-import Button from "@/components/ui-custom/Button";
-import Reveal from "@/components/ui-custom/Reveal";
-import Card from "@/components/ui-custom/Card";
-import Section from "@/components/ui-custom/Section";
-import { toast } from "sonner";
-import { generatePersona, savePersona } from "@/services/persona/personaService";
-
-interface HeroSectionProps {
-  onGenerate: () => void;
-  isGenerating: boolean;
-}
-
-const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
-  const [prompt, setPrompt] = useState("");
-  const [generationStep, setGenerationStep] = useState("");
-  const navigate = useNavigate();
-  
-  const handleGenerateClick = async () => {
-    if (!prompt.trim()) {
-      toast.error("Please enter a description for your persona");
-      return;
-    }
-    
-    try {
-      onGenerate(); // Start loading state
-      setGenerationStep("Generating persona traits and psychological profile...");
-      toast.info("Generating persona... This may take up to a minute.");
-      
-      console.log("Starting persona generation with prompt:", prompt);
-      
-      // Generate the persona using the OpenAI API
-      const persona = await generatePersona(prompt);
-      
-      if (!persona) {
-        throw new Error("Failed to generate persona");
-      }
-      
-      console.log("Persona generated successfully:", persona);
-      setGenerationStep("Persona generated. Saving to database...");
-      
-      console.log("Interview sections:", JSON.stringify(persona.interview_sections, null, 2));
-      console.log("Now saving persona to Supabase...");
-      
-      // Save the persona to Supabase
-      const savedPersona = await savePersona(persona);
-      
-      if (savedPersona) {
-        console.log("Persona saved successfully with ID:", savedPersona.persona_id);
-        setGenerationStep("Success! Redirecting to persona details...");
-        toast.success("Persona generated successfully");
-        
-        // Navigate to the correct route path using the persona ID
-        setTimeout(() => {
-          navigate(`/persona/${savedPersona.persona_id}`);
-        }, 1000);
-      } else {
-        console.error("Persona was generated but could not be saved");
-        toast.error("Persona was generated but could not be saved");
-      }
-      
-      // Reset form after successful generation
-      setPrompt("");
-    } catch (error) {
-      console.error("Error generating persona:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate persona");
-    } finally {
-      // End loading state in parent component
-      setGenerationStep("");
-      setTimeout(() => {
-        onGenerate();
-      }, 500);
-    }
-  };
-
+const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isGenerating: boolean }) => {
   return (
-    <Section className="bg-white pt-24 pb-16">
-      <div className="container px-4 mx-auto">
-        <div className="max-w-3xl mx-auto">
-          <Reveal>
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-center font-plasmik">
-              Build a Behaviorally Accurate AI Persona
-            </h1>
-            <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
-            <p className="text-lg text-muted-foreground text-center mb-12">
-              Describe who you need. Our system will generate a simulated persona based on probabilistic 
-              psychological modeling—ready for interviews, testing, or focus groups.
-            </p>
-          </Reveal>
-
-          <Reveal delay={100}>
-            <Card className="p-6 mb-8 shadow-md border-t-2 border-t-accent">
-              <label className="text-sm font-medium mb-2 block">Describe your persona:</label>
-              <Textarea 
-                placeholder="Example: 23-year-old female marketing associate from Arizona, distrusts politics, loves gaming"
-                className="mb-4 min-h-[100px]"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                disabled={isGenerating}
-              />
-              <Button 
-                onClick={handleGenerateClick}
-                className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
-                disabled={!prompt.trim() || isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    {generationStep || "Generating Persona"} 
-                    <span className="ml-2 animate-pulse">...</span>
-                  </>
-                ) : (
-                  <>Generate Persona</>
-                )}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2">
-                This will create a complete persona with demographic traits, psychological profile, and interview responses.
-              </p>
-              
-              <div className="flex justify-center mt-4 space-x-4">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => navigate("/persona-viewer")}
-                  className="text-sm bg-blue-500 text-white hover:bg-blue-600"
-                >
-                  Personas List
-                </Button>
-              </div>
-            </Card>
-          </Reveal>
+    <div className="container px-4 mx-auto py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-semibold mb-4">
+          Build a Simulated Persona
+        </h1>
+        <p className="text-lg text-muted-foreground mb-8">
+          Use natural language to generate a realistic AI persona. Our system parses your input, rolls traits, and returns a fully interactive research subject—ready for interviews, group tests, or scenario simulations.
+        </p>
+        <div className="bg-muted p-6 rounded-lg mb-8">
+          <div className="mb-4">
+            <label htmlFor="persona-prompt" className="block text-sm font-medium mb-2">
+              Describe your persona
+            </label>
+            <textarea
+              id="persona-prompt"
+              className="w-full p-3 border rounded-md h-32 bg-background"
+              placeholder="Example: Crypto-savvy Gen Z woman, skeptical of authority, loves sustainability"
+            ></textarea>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={onGenerate}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2"
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <span className="animate-spin">⟳</span>
+                  Generating...
+                </>
+              ) : (
+                <>Generate Persona</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </Section>
+    </div>
   );
 };
 
