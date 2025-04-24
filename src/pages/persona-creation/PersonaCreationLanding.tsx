@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Info, Clock, Check, UserPlus } from 'lucide-react';
@@ -21,8 +22,8 @@ const PersonaCreationLanding = () => {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="relative pt-24 pb-16">
-          {/* Background Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-background -z-10" />
+          {/* Background - Changed to white/light gray gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-background -z-10" />
           
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center">
@@ -36,6 +37,8 @@ const PersonaCreationLanding = () => {
                 <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
                   Simulate Yourself. Use It or Share It.
                 </h1>
+                {/* Yellow accent underline */}
+                <div className="w-32 h-1 bg-[#FFD600] mx-auto mb-6"></div>
               </Reveal>
               
               <Reveal delay={200}>
@@ -49,7 +52,7 @@ const PersonaCreationLanding = () => {
                 <Button 
                   variant="primary" 
                   size="lg" 
-                  className="group"
+                  className="group bg-[#FFD600] text-[#212121] hover:bg-[#FFD600]/90"
                   onClick={handleStartProcess}
                 >
                   Begin Persona Creation
@@ -60,71 +63,65 @@ const PersonaCreationLanding = () => {
           </div>
         </section>
 
-        {/* Process Overview Section */}
-        <Section>
+        {/* Process Overview Section - Updated with new styling */}
+        <Section className="bg-[#F9F9F9]">
           <div className="container px-4 mx-auto">
             <Reveal>
-              <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center font-plasmik">
-                The Persona Creation Process
-              </h2>
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-3 font-plasmik inline-block">
+                  The Persona Creation Process
+                </h2>
+                {/* Yellow accent underline */}
+                <div className="w-32 h-1 bg-[#FFD600] mx-auto"></div>
+              </div>
             </Reveal>
             
             <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              <Reveal delay={100}>
-                <Card className="p-6 border-l-4 border-l-primary">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <UserPlus className="w-5 h-5 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold">1. Eligibility</h3>
-                  </div>
-                  <p className="text-muted-foreground">
-                    A brief screener to confirm you're eligible based on your location and other factors.
-                  </p>
-                </Card>
-              </Reveal>
-              
-              <Reveal delay={200}>
-                <Card className="p-6 border-l-4 border-l-primary">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Info className="w-5 h-5 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold">2. Questionnaire</h3>
-                  </div>
-                  <p className="text-muted-foreground">
-                    Answer a set of questions about your background, mindset, and decision habits.
-                  </p>
-                </Card>
-              </Reveal>
-              
-              <Reveal delay={300}>
-                <Card className="p-6 border-l-4 border-l-primary flex flex-col justify-between h-full">
-                  <div>
+              {[
+                {
+                  icon: UserPlus,
+                  title: "1. Eligibility",
+                  description: "A brief screener to confirm you're eligible based on your location and other factors."
+                },
+                {
+                  icon: Info,
+                  title: "2. Questionnaire",
+                  description: "Answer a set of questions about your background, mindset, and decision habits."
+                },
+                {
+                  icon: Clock,
+                  title: "3. Interview",
+                  description: "Our AI will conduct an in-depth voice interview to gather essential data for building your persona."
+                }
+              ].map((step, index) => (
+                <Reveal key={index} delay={index * 100}>
+                  <Card className="p-6 bg-white border-l-4 border-l-[#FFD600] h-full">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-primary" />
+                      <div className="w-10 h-10 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                        <step.icon className="w-5 h-5 text-[#FFD600]" />
                       </div>
-                      <h3 className="text-xl font-bold">3. Interview</h3>
+                      <h3 className="text-xl font-bold">{step.title}</h3>
                     </div>
                     <p className="text-muted-foreground">
-                      Our AI will conduct an in-depth voice interview to gather essential data for building your persona.
+                      {step.description}
                     </p>
-                  </div>
-                </Card>
-              </Reveal>
+                  </Card>
+                </Reveal>
+              ))}
             </div>
           </div>
         </Section>
 
-        {/* Benefits Section */}
-        <Section className="bg-muted/30">
+        {/* Benefits Section - Updated with new styling */}
+        <Section>
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center mb-12">
               <Reveal>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
+                <h2 className="text-3xl md:text-4xl font-bold mb-3 font-plasmik inline-block">
                   Benefits of AI Personas
                 </h2>
+                {/* Yellow accent underline */}
+                <div className="w-32 h-1 bg-[#FFD600] mx-auto"></div>
               </Reveal>
             </div>
 
@@ -148,9 +145,9 @@ const PersonaCreationLanding = () => {
                 }
               ].map((benefit, index) => (
                 <Reveal key={index} delay={index * 100}>
-                  <Card className="p-5 h-full">
-                    <div className="mb-4 p-2 bg-primary/10 w-10 h-10 flex items-center justify-center rounded-full">
-                      <Check className="h-5 w-5 text-primary" />
+                  <Card className="p-5 h-full bg-white">
+                    <div className="mb-4 p-2 bg-[#F9F9F9] w-10 h-10 flex items-center justify-center rounded-full">
+                      <Check className="h-5 w-5 text-[#FFD600]" />
                     </div>
                     <h3 className="text-lg font-bold mb-2">{benefit.title}</h3>
                     <p className="text-muted-foreground text-sm">
@@ -166,7 +163,7 @@ const PersonaCreationLanding = () => {
                 <Button 
                   variant="primary" 
                   size="lg" 
-                  className="group"
+                  className="group bg-[#FFD600] text-[#212121] hover:bg-[#FFD600]/90"
                   onClick={handleStartProcess}
                 >
                   Start Creating Your Persona
