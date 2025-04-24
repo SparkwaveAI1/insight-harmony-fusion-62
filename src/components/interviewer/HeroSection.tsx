@@ -1,5 +1,7 @@
 
 import Reveal from "@/components/ui-custom/Reveal";
+import PersonaOption from "./PersonaOption";
+import ResearchOption from "./ResearchOption";
 
 const HeroSection = () => {
   return (
@@ -8,18 +10,20 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-background -z-10" />
       
       <div className="container px-4 mx-auto">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center mb-12">
           <Reveal>
             <p className="inline-block mb-4 px-3 py-1 text-xs font-medium tracking-wider text-primary uppercase bg-primary/10 rounded-full">
               PersonaAI Interviewer
             </p>
           </Reveal>
-          
-          <Reveal delay={100} animation="blur-in">
-            <h1 className="mb-2 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
-              AI-Powered Interviewing
-            </h1>
-            <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <Reveal>
+            <PersonaOption />
+          </Reveal>
+          <Reveal delay={200}>
+            <ResearchOption />
           </Reveal>
         </div>
       </div>
@@ -28,4 +32,3 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
-
