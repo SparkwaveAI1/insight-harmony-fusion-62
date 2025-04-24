@@ -3,6 +3,7 @@ import { Book, UserPlus, HandCoins } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
+import RewardsIllustration from "./RewardsIllustration";
 
 const HeroSection = () => {
   return (

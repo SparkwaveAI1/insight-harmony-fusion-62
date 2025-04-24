@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
+import EarningOptionCard from "./EarningOptionCard";
 
 const EarningOptionsSection = () => {
   return (
