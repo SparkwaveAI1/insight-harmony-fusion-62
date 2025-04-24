@@ -5,7 +5,7 @@ const HeroSection = () => {
   return (
     <section className="relative pt-24 pb-16">
       {/* Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-background -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-background -z-10" />
       
       <div className="container px-4 mx-auto">
         <div className="max-w-4xl mx-auto text-center">
@@ -16,9 +16,10 @@ const HeroSection = () => {
           </Reveal>
           
           <Reveal delay={100} animation="blur-in">
-            <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
+            <h1 className="mb-2 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
               Structured Interviews for Persona Creation & Research
             </h1>
+            <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
           </Reveal>
           
           <Reveal delay={200}>

@@ -1,4 +1,3 @@
-
 import { ArrowRight, MessageSquare, TrendingUp, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -34,7 +33,7 @@ const AIFocusGroups = () => {
         {/* Hero Section */}
         <section className="relative min-h-[70vh] pt-24 pb-16 flex items-center">
           {/* Background Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-accent/50 via-background to-background -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-background -z-10" />
           
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center">
@@ -71,12 +70,13 @@ const AIFocusGroups = () => {
         </section>
 
         {/* How It Works */}
-        <Section id="how-it-works" highlight>
+        <Section className="bg-white">
           <div className="container px-4 mx-auto">
             <Reveal>
-              <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center font-plasmik">
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-center font-plasmik">
                 How It Works
               </h2>
+              <div className="w-32 h-1 bg-accent mx-auto mb-12"></div>
             </Reveal>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -99,7 +99,7 @@ const AIFocusGroups = () => {
         </Section>
 
         {/* CTA Section */}
-        <Section id="start-focus-group" className="bg-primary/5">
+        <Section className="bg-gray-50">
           <div className="container px-4 mx-auto">
             <div className="max-w-3xl mx-auto text-center">
               <Reveal>

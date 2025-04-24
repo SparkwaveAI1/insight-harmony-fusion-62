@@ -91,7 +91,7 @@ const YourPersona = () => {
         {/* Hero Section */}
         <section className="relative pt-24 pb-16">
           {/* Background Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-accent/30 via-background to-background -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-background -z-10" />
           
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center">

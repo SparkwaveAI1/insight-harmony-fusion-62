@@ -14,24 +14,28 @@ const PersonaViewer = () => {
   const { personaId } = useParams<{ personaId?: string }>();
   const [personas, setPersonas] = useState<any[]>([]);
 
-  console.log("PersonaViewer - Current personaId from URL:", personaId);
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-grow">
-        <Section className="bg-gradient-to-b from-accent/30 via-background to-background pt-24">
+        <Section className="bg-gradient-to-b from-white via-gray-50 to-background pt-24">
           <div className="container px-4 mx-auto">
             <ViewerHeader isLoading={isLoading} />
             
             {personaId ? (
               <>
-                <h1 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">Persona Details</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
+                  Persona Details
+                </h1>
+                <div className="w-32 h-1 bg-accent mb-6"></div>
                 <PersonaFetcher personaId={personaId} />
               </>
             ) : (
               <>
-                <h1 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">Your Generated Personas</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
+                  Your Generated Personas
+                </h1>
+                <div className="w-32 h-1 bg-accent mb-6"></div>
                 <PersonaList onPersonasLoad={setPersonas} />
                 {personas.length > 0 && <PersonaSummary personas={personas} />}
               </>
