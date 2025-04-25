@@ -96,8 +96,8 @@ const TokenEcosystem = () => {
           <Reveal delay={400}>
             <div className="mt-16 max-w-4xl mx-auto">
               <div className="bg-gray-800/80 border border-gray-700 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold mb-6">🎯 What's Live Now</h3>
-                <ul className="space-y-4 mb-8">
+                <h3 className="text-2xl font-bold mb-6 text-left">🎯 What's Live Now</h3>
+                <ul className="space-y-4 mb-8 text-left">
                   <li className="flex items-start">
                     <span className="text-green-400 text-xl font-bold mr-2">✅</span>
                     <div>
@@ -114,8 +114,8 @@ const TokenEcosystem = () => {
                   </li>
                 </ul>
                 
-                <h3 className="text-2xl font-bold mb-6">🔐 Coming Soon</h3>
-                <ul className="space-y-4">
+                <h3 className="text-2xl font-bold mb-6 text-left">🔐 Coming Soon</h3>
+                <ul className="space-y-4 text-left">
                   <li className="flex items-start">
                     <span className="text-blue-400 text-xl font-bold mr-2">🔄</span>
                     <div>
