@@ -7,7 +7,7 @@ export function ModeratorMenuItem() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild tooltip="Moderator">
-        <Link to="/moderator">
+        <Link to="/custom-research">
           <Users2 />
           <span>Moderator</span>
         </Link>
