@@ -5,7 +5,7 @@ import Footer from "@/components/sections/Footer";
 import AvatarFeatureDark from "@/components/ecosystem/AvatarFeatureDark";
 import HeroSection from "@/components/prsna/HeroSection";
 import EarningOptionsSection from "@/components/prsna/EarningOptionsSection";
-import StakingBenefitsSection from "@/components/prsna/StakingBenefitsSection";
+import RoadmapSection from "@/components/prsna/RoadmapSection";
 
 const EarnPRSNA = () => {
   return (
@@ -28,9 +28,9 @@ const EarnPRSNA = () => {
           <EarningOptionsSection />
         </Section>
 
-        {/* Staking Benefits Section */}
+        {/* Roadmap Section */}
         <Section className="bg-gray-800">
-          <StakingBenefitsSection />
+          <RoadmapSection />
         </Section>
       </main>
 
