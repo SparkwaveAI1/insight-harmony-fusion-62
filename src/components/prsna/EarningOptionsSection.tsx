@@ -1,8 +1,5 @@
 
-import { BrainCircuit, Users, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import Card from "@/components/ui-custom/Card";
-import Button from "@/components/ui-custom/Button";
+import { BrainCircuit, Coins } from "lucide-react";
 import Reveal from "@/components/ui-custom/Reveal";
 import EarningOptionCard from "./EarningOptionCard";
 
@@ -11,41 +8,40 @@ const EarningOptionsSection = () => {
     <div className="container px-4 mx-auto">
       <div className="max-w-4xl mx-auto">
         <Reveal>
-          <h2 className="text-3xl font-bold mb-2 text-center">How to Earn $PRSNA</h2>
-          <p className="text-gray-400 text-center mb-10">
-            Multiple ways to earn rewards while contributing to AI research
-          </p>
+          <h2 className="text-3xl font-bold mb-2 text-center">💡 How $PRSNA Will Work</h2>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Create AI Personas Card */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Create AI Personas Today */}
           <EarningOptionCard
             icon={BrainCircuit}
-            title="Create AI Personas"
-            description="Build and train unique AI personas with specific demographics, behaviors, and preferences. Your personas will be used in qualitative research studies to generate insights."
+            title="Create AI Personas Today"
+            description="Contribute to PersonaAI's growing network of behavioral models."
             benefits={[
-              "Earn 50-200 $PRSNA per approved persona",
-              "Earn royalties when your personas are used in research",
-              "Persona creators get priority for focus groups"
+              "Personas created now will transition into ERC-6551 on-chain assets",
+              "Early contributors will benefit from future $PRSNA-powered simulations",
+              "Be part of the future of behavioral intelligence"
             ]}
-            buttonText="Coming Soon"
-            disabled
           />
           
-          {/* Join AI Focus Groups Card */}
+          {/* The $PRSNA Value Loop */}
           <EarningOptionCard
-            icon={Users}
-            title="Join AI Focus Groups"
-            description="Participate in moderated AI focus groups to provide insights on products, services, and market trends. Your contributions help shape the future of AI-powered research."
+            icon={Coins}
+            title="The $PRSNA Value Loop"
+            description="Join the ecosystem of behavioral intelligence and value creation."
             benefits={[
-              "Earn 10-50 $PRSNA per focus group session",
-              "Bonus rewards for high-quality contributions",
-              "$PRSNA stakers get access to premium sessions"
+              "Power behavioral simulations across Web3",
+              "License and sponsor high-demand personas",
+              "Earn when your personas drive real insight (launching soon)"
             ]}
-            buttonText="Explore Focus Groups"
-            link="/ai-focus-groups"
           />
         </div>
+
+        <Reveal>
+          <p className="text-center text-gray-400 text-sm italic">
+            Token utility and rewards are in development. No active staking or earning programs live yet.
+          </p>
+        </Reveal>
       </div>
     </div>
   );
