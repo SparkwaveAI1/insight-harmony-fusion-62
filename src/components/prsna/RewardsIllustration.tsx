@@ -32,10 +32,6 @@ const RewardsIllustration = () => {
               <span className="text-sm font-medium">Join Focus Groups</span>
             </div>
           </div>
-          
-          <div className="text-center text-gray-400 text-sm">
-            Stakers get priority access to earning opportunities
-          </div>
         </div>
       </Reveal>
     </div>
