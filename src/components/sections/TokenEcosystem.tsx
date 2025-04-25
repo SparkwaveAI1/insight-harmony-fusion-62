@@ -81,7 +81,7 @@ const TokenEcosystem = () => {
 
           <Reveal delay={300}>
             <div className="flex justify-center mb-8">
-              <Link to="/research">
+              <Link to="/prsna">
                 <Button 
                   variant="primary" 
                   className="bg-[#9b87f5] hover:bg-[#8a76e3] text-white px-6 py-3 rounded-lg transition-colors"
