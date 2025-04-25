@@ -1,3 +1,4 @@
+
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "sonner";
@@ -9,6 +10,7 @@ import PersonaViewer from "@/pages/PersonaViewer";
 import PersonaDetail from "@/pages/PersonaDetail";
 import PersonaChat from "@/pages/PersonaChat";
 import InsightConductor from "@/pages/InsightConductor";
+import Collections from "@/pages/Collections";
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
@@ -156,6 +158,10 @@ const router = createBrowserRouter([
         <CustomResearch />
       </Suspense>
     ),
+  },
+  {
+    path: "/collections",
+    element: <Collections />,
   },
   {
     path: "/prsna-ecosystem",

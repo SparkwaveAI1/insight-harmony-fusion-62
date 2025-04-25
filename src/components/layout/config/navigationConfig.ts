@@ -1,3 +1,4 @@
+
 import { User, Library, Folder, HandCoins } from "lucide-react";
 
 export const navigationMenuItems = [
