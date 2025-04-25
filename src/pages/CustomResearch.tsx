@@ -1,3 +1,4 @@
+
 import { ArrowRight, Check, MessageSquare, ShieldCheck, Users } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
@@ -48,8 +49,44 @@ const CustomResearch = () => {
           </div>
         </section>
 
-        {/* What You Get Section */}
+        {/* Get Started Section - Moved up */}
         <Section className="bg-white">
+          <div className="container px-4 mx-auto">
+            <div className="max-w-4xl mx-auto text-center">
+              <Reveal>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
+                  Get Started
+                </h2>
+              </Reveal>
+              
+              <Reveal delay={100}>
+                <p className="mb-10 text-muted-foreground text-pretty max-w-2xl mx-auto">
+                  Contact us to set up a research project or request access to the interview feature.
+                </p>
+              </Reveal>
+              
+              <Reveal delay={200}>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link to="/contact">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                      Contract Research Project
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/interview-process">
+                    <Button variant="primary" size="lg" className="w-full sm:w-auto group">
+                      Go to Interview Platform
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </Section>
+
+        {/* What You Get Section */}
+        <Section className="bg-gray-50">
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center mb-12">
               <Reveal>
@@ -112,7 +149,7 @@ const CustomResearch = () => {
         </Section>
         
         {/* Use Cases Section */}
-        <Section className="bg-gray-50">
+        <Section className="bg-white">
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center mb-12">
               <Reveal>
@@ -142,42 +179,6 @@ const CustomResearch = () => {
                     <p>Community input for Web3 and crypto initiatives</p>
                   </li>
                 </ul>
-              </Reveal>
-            </div>
-          </div>
-        </Section>
-        
-        {/* Get Started Section */}
-        <Section className="bg-white">
-          <div className="container px-4 mx-auto">
-            <div className="max-w-4xl mx-auto text-center">
-              <Reveal>
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">
-                  Get Started
-                </h2>
-              </Reveal>
-              
-              <Reveal delay={100}>
-                <p className="mb-10 text-muted-foreground text-pretty max-w-2xl mx-auto">
-                  Contact us to set up a research project or request access to the interview feature.
-                </p>
-              </Reveal>
-              
-              <Reveal delay={200}>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/contact">
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                      Contract Research Project
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/interview-process">
-                    <Button variant="primary" size="lg" className="w-full sm:w-auto group">
-                      Go to Interview Platform
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    </Button>
-                  </Link>
-                </div>
               </Reveal>
             </div>
           </div>
