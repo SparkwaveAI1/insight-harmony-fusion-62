@@ -24,7 +24,7 @@ const SimulatedPersonaPage = () => {
         <SidebarInset>
           <div className="relative flex min-h-svh flex-col">
             <Header />
-            <main className="flex-1">
+            <main className="flex-1 pt-24">  {/* Added pt-24 to create padding from header */}
               <div className="container py-6">
                 <div className="flex items-center justify-between">
                   <SidebarTrigger className="hidden md:flex" />
