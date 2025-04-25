@@ -8,7 +8,7 @@ const EarningOptionsSection = () => {
     <div className="container px-4 mx-auto">
       <div className="max-w-4xl mx-auto">
         <Reveal>
-          <h2 className="text-3xl font-bold mb-2 text-center">💡 How $PRSNA Will Work</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">💡 How $PRSNA Will Work</h2>
         </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -48,3 +48,4 @@ const EarningOptionsSection = () => {
 };
 
 export default EarningOptionsSection;
+
