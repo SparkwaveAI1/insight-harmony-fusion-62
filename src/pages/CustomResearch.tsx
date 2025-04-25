@@ -1,5 +1,5 @@
 
-import { ArrowRight, Check, MessageSquare, ShieldCheck, Users } from "lucide-react";
+import { Check, MessageSquare, ShieldCheck, Users } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
@@ -66,17 +66,14 @@ const CustomResearch = () => {
               </Reveal>
               
               <Reveal delay={200}>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex justify-center">
                   <Link to="/contact">
-                    <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                    <Button 
+                      variant="primary" 
+                      size="lg" 
+                      className="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700"
+                    >
                       Contract Research Project
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/interview-process">
-                    <Button variant="primary" size="lg" className="w-full sm:w-auto group">
-                      Go to Interview Platform
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
                 </div>
