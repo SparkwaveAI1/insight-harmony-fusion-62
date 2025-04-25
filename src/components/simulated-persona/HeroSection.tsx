@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { generatePersona } from "@/services/persona/personaService";
 import { savePersona } from "@/services/persona/personaService";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isGenerating: boolean }) => {
   const [prompt, setPrompt] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +38,9 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
         
         console.log("Persona created and saved:", savedPersona);
         onGenerate(); // Toggle loading state back
+        
+        // Navigate to the persona viewer page
+        navigate(`/persona/${persona.persona_id}`);
       } else {
         throw new Error("Failed to generate persona");
       }
