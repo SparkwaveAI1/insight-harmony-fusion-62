@@ -11,6 +11,7 @@ import PersonaChat from "@/pages/PersonaChat";
 import InsightConductor from "@/pages/InsightConductor";
 import Collections from "@/pages/Collections";
 import Auth from "@/pages/Auth";
+import AuthCallback from "@/pages/AuthCallback";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
@@ -103,6 +104,10 @@ const router = createBrowserRouter([
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/auth/callback",
+    element: <AuthCallback />,
   },
   {
     path: "/research",

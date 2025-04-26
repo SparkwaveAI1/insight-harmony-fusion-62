@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Session, User, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -12,6 +12,8 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithDiscord: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,6 +119,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithOAuth = async (provider: Provider) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+      
+      // Success toast will be shown after redirect
+    } catch (error) {
+      console.error(`Sign in with ${provider} error:`, error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithGoogle = () => signInWithOAuth('google');
+  const signInWithDiscord = () => signInWithOAuth('discord');
+
   return (
     <AuthContext.Provider
       value={{
@@ -127,6 +156,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signOut,
         resetPassword,
+        signInWithGoogle,
+        signInWithDiscord,
       }}
     >
       {children}
