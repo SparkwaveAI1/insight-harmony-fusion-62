@@ -9,7 +9,6 @@ import { CreatePersonaMenuItem } from "./action-items/CreatePersonaMenuItem";
 import { InterviewerMenuItem } from "./action-items/InterviewerMenuItem";
 import { ResearcherMenuItem } from "./action-items/ResearcherMenuItem";
 import { ModeratorMenuItem } from "./action-items/ModeratorMenuItem";
-import { PersonasMenuItem } from "./action-items/PersonasMenuItem";
 
 export function ActionsMenu() {
   return (
@@ -18,7 +17,6 @@ export function ActionsMenu() {
       <SidebarGroupContent>
         <SidebarMenu>
           <CreatePersonaMenuItem />
-          <PersonasMenuItem />
           <InterviewerMenuItem />
           <ResearcherMenuItem />
           <ModeratorMenuItem />
