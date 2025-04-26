@@ -73,15 +73,16 @@ export const useDualChat = () => {
   const generatePersonaResponse = async (
     personaId: string, 
     personaRole: 'personaA' | 'personaB',
-    previousMessages: any[]
+    previousMessages: Message[]
   ) => {
     try {
       setIsResponding(true);
       
-      // Format previous messages for the API
+      // Format previous messages for the API to maintain conversation context
       const formattedMessages = previousMessages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
+        name: msg.role === 'personaA' ? getPersonaA()?.name : msg.role === 'personaB' ? getPersonaB()?.name : undefined
       }));
       
       const persona = personaRole === 'personaA' ? getPersonaA() : getPersonaB();
@@ -188,7 +189,7 @@ export const useDualChat = () => {
       const respondingPersona = lastMessage.role === 'personaA' || (lastMessage.role === 'user' && lastMessage.target === 'personaA') 
         ? 'personaB' : 'personaA';
       
-      // Generate response
+      // Generate response with full conversation context
       const response = await generatePersonaResponse(
         respondingPersona === 'personaA' ? personaAId : personaBId,
         respondingPersona,
@@ -234,7 +235,7 @@ export const useDualChat = () => {
         const response = await generatePersonaResponse(
           targetPersona === 'personaA' ? personaAId : personaBId,
           targetPersona,
-          [...messages, { role: 'user', content: userInput }] 
+          [...messages, { role: 'user', content: userInput, timestamp: new Date(), target: targetPersona }]
         );
         
         addMessage(targetPersona, response);

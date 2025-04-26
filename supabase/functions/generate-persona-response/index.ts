@@ -18,18 +18,20 @@ serve(async (req) => {
     const { message, persona, previousMessages } = await req.json();
     console.log("Received request to generate persona response:", { message, persona: persona.name, messagesCount: previousMessages.length });
 
+    // Create system message with enhanced context awareness
     const systemMessage = createPersonaSystemMessage(persona);
 
+    // Prepare conversation history, ensuring proper context
     const conversationMessages = [
       { role: "system", content: systemMessage },
       ...previousMessages.map((msg: any) => ({
         role: msg.role,
         content: msg.content,
+        name: msg.name // Include names to help distinguish between personas
       })),
-      { role: "user", content: message },
     ];
 
-    console.log("Sending request to OpenAI API with conversation history");
+    console.log("Sending request to OpenAI API with conversation history of", conversationMessages.length, "messages");
     
     const data = await generateChatResponse(conversationMessages, Deno.env.get('OPENAI_API_KEY') || '');
     const response = data.choices[0].message.content;
