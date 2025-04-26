@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
@@ -165,10 +166,25 @@ export const useDualChat = () => {
       }
       return;
     }
-    
+
     try {
-      // Determine which persona should respond next
+      // Check if messages array is empty
+      if (messages.length === 0) {
+        console.error("No messages to continue conversation");
+        return;
+      }
+      
+      // Determine which persona should respond next based on the last message
       const lastMessage = messages[messages.length - 1];
+      
+      // Ensure lastMessage exists and has a role before continuing
+      if (!lastMessage || !lastMessage.role) {
+        console.error("Invalid last message:", lastMessage);
+        toast.error("Error in conversation flow: invalid message");
+        setAutoChatActive(false);
+        return;
+      }
+      
       const respondingPersona = lastMessage.role === 'personaA' || (lastMessage.role === 'user' && lastMessage.target === 'personaA') 
         ? 'personaB' : 'personaA';
       
