@@ -1,49 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
-import { getPersonaByPersonaId } from '@/services/persona/personaService';
-import { Persona } from '@/services/persona/types';
+import React, { useEffect } from 'react';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 import { formatName } from '@/lib/utils';
+import { usePersona } from '@/hooks/usePersona';
 
 interface PersonaFetcherProps {
   personaId: string;
 }
 
 const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
-  const [persona, setPersona] = useState<Persona | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { loadPersona, activePersona, isLoading, error } = usePersona();
 
   useEffect(() => {
     const fetchPersona = async () => {
-      setIsLoading(true);
       try {
         console.log(`PersonaFetcher - Fetching persona with ID: ${personaId}`);
-        const fetchedPersona = await getPersonaByPersonaId(personaId);
-        
-        if (fetchedPersona) {
-          console.log(`PersonaFetcher - Successfully fetched persona:`, fetchedPersona);
-          setPersona(fetchedPersona);
-        } else {
-          console.error(`PersonaFetcher - No persona found with ID: ${personaId}`);
-          toast.error(`No persona found with ID: ${personaId}`);
-        }
+        await loadPersona(personaId);
       } catch (error) {
         console.error('PersonaFetcher - Error fetching persona:', error);
         toast.error('Failed to fetch persona');
-      } finally {
-        setIsLoading(false);
       }
     };
 
     fetchPersona();
-  }, [personaId]);
+  }, [personaId, loadPersona]);
 
   if (isLoading) {
     return <div className="p-6 bg-muted/20 rounded-lg animate-pulse">Loading persona...</div>;
   }
 
-  if (!persona) {
+  if (error || !activePersona) {
     return (
       <Card className="p-6">
         <div className="text-center">
@@ -59,35 +46,35 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
 
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">{formatName(persona.name)}</h2>
+      <h2 className="text-xl font-bold mb-4">{formatName(activePersona.name)}</h2>
       <div className="mb-4">
-        <strong>Persona ID:</strong> {persona.persona_id}
+        <strong>Persona ID:</strong> {activePersona.persona_id}
         <br />
-        <strong>Created:</strong> {persona.creation_date}
+        <strong>Created:</strong> {activePersona.creation_date}
         <br />
-        <strong>Prompt:</strong> {persona.prompt || 'No prompt available'}
+        <strong>Prompt:</strong> {activePersona.prompt || 'No prompt available'}
       </div>
       
       <div className="mt-6">
         <h3 className="text-lg font-semibold mb-3">Demographics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <strong>Age:</strong> {persona.metadata.age || 'Not specified'}
+            <strong>Age:</strong> {activePersona.metadata.age || 'Not specified'}
             <br />
-            <strong>Gender:</strong> {persona.metadata.gender || 'Not specified'}
+            <strong>Gender:</strong> {activePersona.metadata.gender || 'Not specified'}
             <br />
-            <strong>Ethnicity:</strong> {persona.metadata.race_ethnicity || 'Not specified'}
+            <strong>Ethnicity:</strong> {activePersona.metadata.race_ethnicity || 'Not specified'}
             <br />
-            <strong>Region:</strong> {persona.metadata.region || 'Not specified'}
+            <strong>Region:</strong> {activePersona.metadata.region || 'Not specified'}
           </div>
           <div>
-            <strong>Education:</strong> {persona.metadata.education_level || 'Not specified'}
+            <strong>Education:</strong> {activePersona.metadata.education_level || 'Not specified'}
             <br />
-            <strong>Occupation:</strong> {persona.metadata.occupation || 'Not specified'}
+            <strong>Occupation:</strong> {activePersona.metadata.occupation || 'Not specified'}
             <br />
-            <strong>Income Level:</strong> {persona.metadata.income_level || 'Not specified'}
+            <strong>Income Level:</strong> {activePersona.metadata.income_level || 'Not specified'}
             <br />
-            <strong>Relationship:</strong> {persona.metadata.relationship_status || 'Not specified'}
+            <strong>Relationship:</strong> {activePersona.metadata.relationship_status || 'Not specified'}
           </div>
         </div>
       </div>

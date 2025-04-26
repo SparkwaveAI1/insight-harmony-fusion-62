@@ -2,11 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
-import { getPersonaByPersonaId } from '@/services/persona/personaService';
 import { Persona } from '@/services/persona/types';
 import Card from '@/components/ui-custom/Card';
 import Button from '@/components/ui-custom/Button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { usePersona } from '@/hooks/usePersona';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,40 +21,37 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [persona, setPersona] = useState<Persona | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Use our new persona hook
+  const { loadPersona, activePersona, isLoading, error } = usePersona();
 
   useEffect(() => {
-    const loadPersona = async () => {
+    const initChat = async () => {
       try {
-        const personaData = await getPersonaByPersonaId(personaId);
-        if (personaData) {
-          console.log("Loaded persona:", personaData.name);
-          setPersona(personaData);
-          // Add initial greeting
-          setMessages([
-            {
-              role: 'assistant',
-              content: `Hello! I'm ${personaData.name}. How can I help you today?`,
-              timestamp: new Date(),
-            },
-          ]);
-        } else {
-          toast.error('Could not load persona data');
-        }
+        await loadPersona(personaId);
       } catch (error) {
-        console.error('Error loading persona:', error);
-        toast.error('Failed to load persona data');
-      } finally {
-        setIsLoading(false);
+        console.error('Error initializing chat:', error);
       }
     };
 
-    loadPersona();
-  }, [personaId]);
+    initChat();
+  }, [personaId, loadPersona]);
+
+  useEffect(() => {
+    if (activePersona && messages.length === 0) {
+      // Add initial greeting once persona is loaded
+      setMessages([
+        {
+          role: 'assistant',
+          content: `Hello! I'm ${activePersona.name}. How can I help you today?`,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [activePersona, messages.length]);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -73,7 +70,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !persona || isResponding) return;
+    if (!inputMessage.trim() || !activePersona || isResponding) return;
 
     const userMessage: Message = {
       role: 'user',
@@ -93,7 +90,6 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
       console.log("Sending message to persona:", inputMessage);
       
-      // Fix the JWT token - Change iaT to iat
       const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
         method: 'POST',
         headers: {
@@ -102,7 +98,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         },
         body: JSON.stringify({
           message: inputMessage,
-          persona: persona,
+          persona: activePersona,
           previousMessages: previousMessages,
         }),
       });
@@ -136,6 +132,20 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
+    );
+  }
+
+  if (error || !activePersona) {
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <h3 className="text-xl font-semibold mb-2 text-red-500">Failed to load persona</h3>
+          <p className="mb-4">Could not load persona with ID: {personaId}</p>
+          <p className="text-sm text-muted-foreground">
+            Check the console logs for more details.
+          </p>
+        </div>
+      </Card>
     );
   }
 

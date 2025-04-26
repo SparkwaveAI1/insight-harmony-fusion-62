@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "sonner";
@@ -11,6 +10,8 @@ import PersonaDetail from "@/pages/PersonaDetail";
 import PersonaChat from "@/pages/PersonaChat";
 import InsightConductor from "@/pages/InsightConductor";
 import Collections from "@/pages/Collections";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PersonaProvider } from './context/PersonaProvider';
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
@@ -334,6 +335,8 @@ function useSupabaseStatus() {
 }
 
 function App() {
+  const queryClient = new QueryClient();
+  
   const { isDbReady, isLoading } = useSupabaseStatus();
 
   if (isLoading) {
@@ -345,10 +348,12 @@ function App() {
   }
 
   return (
-    <>
-      <RouterProvider router={router} />
-      <Toaster position="top-center" richColors />
-    </>
+    <QueryClientProvider client={queryClient}>
+      <PersonaProvider>
+        <RouterProvider router={router} />
+        <Toaster position="top-center" richColors />
+      </PersonaProvider>
+    </QueryClientProvider>
   );
 }
 

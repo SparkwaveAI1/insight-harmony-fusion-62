@@ -20,8 +20,8 @@ export async function createProfilesTable(): Promise<boolean> {
     }
     
     console.log('Creating profiles table...');
-    // Execute the SQL query to create the profiles table
-    const { error: createError } = await supabase.sql(getProfilesTableSQL());
+    // Execute the SQL query to create the profiles table using rpc instead of direct sql
+    const { error: createError } = await supabase.rpc('create_profiles_table', { sql_content: getProfilesTableSQL() });
     
     if (createError) {
       console.error('Error creating profiles table:', createError);
