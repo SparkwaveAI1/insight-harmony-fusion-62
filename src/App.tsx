@@ -1,4 +1,3 @@
-
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy, useState, useEffect } from "react";
 import { Toaster } from "sonner";
@@ -11,6 +10,8 @@ import PersonaDetail from "@/pages/PersonaDetail";
 import PersonaChat from "@/pages/PersonaChat";
 import InsightConductor from "@/pages/InsightConductor";
 import Collections from "@/pages/Collections";
+import Auth from "@/pages/Auth";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const PersonaAIInterviewer = lazy(() => import("./pages/PersonaAIInterviewer"));
 const AIFocusGroups = lazy(() => import("./pages/AIFocusGroups"));
@@ -98,6 +99,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <Index />,
     errorElement: <NotFound />,
+  },
+  {
+    path: "/auth",
+    element: <Auth />,
   },
   {
     path: "/research",
@@ -345,10 +350,10 @@ function App() {
   }
 
   return (
-    <>
+    <AuthProvider>
       <RouterProvider router={router} />
       <Toaster position="top-center" richColors />
-    </>
+    </AuthProvider>
   );
 }
 
