@@ -1,5 +1,5 @@
 
-import { SidebarHeading, SidebarMenu } from "@/components/ui/sidebar";
+import { SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import { CreatePersonaMenuItem } from "./action-items/CreatePersonaMenuItem";
 import { InterviewerMenuItem } from "./action-items/InterviewerMenuItem";
 import { ResearcherMenuItem } from "./action-items/ResearcherMenuItem";
@@ -9,7 +9,7 @@ import { AuthMenuItem } from "./action-items/AuthMenuItem";
 export function ActionsMenu() {
   return (
     <>
-      <SidebarHeading>Actions</SidebarHeading>
+      <SidebarGroupLabel>Actions</SidebarGroupLabel>
       <SidebarMenu>
         <CreatePersonaMenuItem />
         <InterviewerMenuItem />
