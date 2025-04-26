@@ -1,131 +1,28 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send } from 'lucide-react';
-import { toast } from 'sonner';
-import { Persona } from '@/services/persona/types';
+import React, { useRef } from 'react';
+import { MessageCircle } from 'lucide-react';
 import Card from '@/components/ui-custom/Card';
-import Button from '@/components/ui-custom/Button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { usePersona } from '@/hooks/usePersona';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import MessageList from '@/components/persona-chat/MessageList';
+import MessageInput from '@/components/persona-chat/MessageInput';
+import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
+import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
 
 interface PersonaChatInterfaceProps {
   personaId: string;
 }
 
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isResponding, setIsResponding] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const {
+    messages,
+    isResponding,
+    isLoading,
+    error,
+    activePersona,
+    handleSendMessage
+  } = usePersonaChat(personaId);
   
-  // Use our new persona hook
-  const { loadPersona, activePersona, isLoading, error } = usePersona();
-
-  useEffect(() => {
-    const initChat = async () => {
-      try {
-        await loadPersona(personaId);
-      } catch (error) {
-        console.error('Error initializing chat:', error);
-      }
-    };
-
-    initChat();
-  }, [personaId, loadPersona]);
-
-  useEffect(() => {
-    if (activePersona && messages.length === 0) {
-      // Add initial greeting once persona is loaded
-      setMessages([
-        {
-          role: 'assistant',
-          content: `Hello! I'm ${activePersona.name}. How can I help you today?`,
-          timestamp: new Date(),
-        },
-      ]);
-    }
-  }, [activePersona, messages.length]);
-
-  const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        // Use a slight delay to ensure the new messages are rendered
-        setTimeout(() => {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }, 100);
-      }
-    }
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !activePersona || isResponding) return;
-
-    const userMessage: Message = {
-      role: 'user',
-      content: inputMessage,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsResponding(true);
-
-    try {
-      const previousMessages = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.content,
-      }));
-
-      console.log("Sending message to persona:", inputMessage);
-      
-      const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
-        },
-        body: JSON.stringify({
-          message: inputMessage,
-          persona: activePersona,
-          previousMessages: previousMessages,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Edge function error (${response.status}):`, errorText);
-        throw new Error(`Failed to get response: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("Received response from persona");
-      
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error getting response:', error);
-      toast.error('Failed to get response from persona');
-    } finally {
-      setIsResponding(false);
-    }
-  };
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   if (isLoading) {
     return (
@@ -136,79 +33,22 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   }
 
   if (error || !activePersona) {
-    return (
-      <Card className="p-6">
-        <div className="text-center">
-          <h3 className="text-xl font-semibold mb-2 text-red-500">Failed to load persona</h3>
-          <p className="mb-4">Could not load persona with ID: {personaId}</p>
-          <p className="text-sm text-muted-foreground">
-            Check the console logs for more details.
-          </p>
-        </div>
-      </Card>
-    );
+    return <ErrorDisplay personaId={personaId} />;
   }
 
   return (
     <Card className="h-[600px] flex flex-col">
       <ScrollArea ref={scrollAreaRef} className="flex-1 h-[520px]">
-        <div className="p-4 space-y-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
-              <div
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground ml-4'
-                    : 'bg-muted mr-4'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                <span className="text-xs opacity-70 mt-1 block">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-          ))}
-          {isResponding && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] p-3 rounded-lg bg-muted mr-4">
-                <div className="flex space-x-1">
-                  <div className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
-                  <div className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+        <MessageList 
+          messages={messages} 
+          isResponding={isResponding} 
+        />
       </ScrollArea>
       
-      <div className="border-t p-4">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your message..."
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            disabled={isResponding}
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isResponding}
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <MessageInput
+        onSendMessage={handleSendMessage}
+        isResponding={isResponding}
+      />
     </Card>
   );
 };
