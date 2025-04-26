@@ -2,7 +2,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const createProfilesTable = async () => {
-  const { error } = await supabase.rpc('create_profiles_table_if_not_exists');
+  // The issue is that the rpc function needs the correct type signature
+  // We're passing 'create_profiles_table_if_not_exists' as a string to a function expecting a never type
+  // Let's fix this by using the correct type signature for the rpc function
+  const { error } = await supabase.rpc('create_profiles_table_if_not_exists', {});
   
   if (error) {
     console.error('Error creating profiles table:', error);
