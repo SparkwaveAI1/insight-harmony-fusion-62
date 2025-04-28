@@ -60,12 +60,14 @@ const Auth = () => {
     try {
       const { error } = await signIn(data.email, data.password);
       if (error) {
-        toast.error(error.message);
+        console.error("Login error:", error.message);
+        toast.error(error.message || 'Failed to sign in');
       } else {
         toast.success('Welcome back!');
         navigate('/');
       }
     } catch (err: any) {
+      console.error("Unexpected login error:", err);
       toast.error(err.message || 'Failed to sign in');
     } finally {
       setIsLoading(false);
@@ -77,12 +79,15 @@ const Auth = () => {
     try {
       const { error } = await signUp(data.email, data.password);
       if (error) {
-        toast.error(error.message);
+        console.error("Signup error:", error.message);
+        toast.error(error.message || 'Failed to create account');
       } else {
         toast.success('Account created! Please check your email to confirm your registration.');
         setActiveTab('login');
+        signupForm.reset();
       }
     } catch (err: any) {
+      console.error("Unexpected signup error:", err);
       toast.error(err.message || 'Failed to create account');
     } finally {
       setIsLoading(false);
@@ -100,7 +105,7 @@ const Auth = () => {
         
         <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-lg">
           <CardHeader>
-            <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'signup')} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -116,11 +121,11 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-white">Email</FormLabel>
                         <FormControl>
                           <Input placeholder="you@example.com" {...field} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -130,11 +135,11 @@ const Auth = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-white">Password</FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -152,11 +157,11 @@ const Auth = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel className="text-white">Email</FormLabel>
                         <FormControl>
                           <Input placeholder="you@example.com" {...field} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -166,11 +171,11 @@ const Auth = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel className="text-white">Password</FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -180,11 +185,11 @@ const Auth = () => {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel className="text-white">Confirm Password</FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-red-400" />
                       </FormItem>
                     )}
                   />

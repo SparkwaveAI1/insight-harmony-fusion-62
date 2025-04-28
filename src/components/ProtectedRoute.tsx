@@ -11,17 +11,19 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // If still loading, show nothing (or a spinner)
+  // If still loading, show spinner
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+        <p className="text-slate-300">Loading your profile...</p>
       </div>
     );
   }
 
   // If user is not authenticated, redirect to auth page
   if (!user) {
+    console.log('User not authenticated, redirecting to /auth');
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

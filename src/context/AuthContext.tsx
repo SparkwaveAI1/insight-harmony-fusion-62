@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 type AuthContextType = {
   session: Session | null;
@@ -34,11 +35,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Use setTimeout to prevent potential auth deadlocks
           setTimeout(() => {
             console.log('User signed in:', currentSession?.user?.email);
+            toast.success(`Signed in as ${currentSession?.user?.email}`);
           }, 0);
         }
         
         if (event === 'SIGNED_OUT') {
           navigate('/auth');
+          toast.info('Signed out successfully');
         }
       }
     );
@@ -48,6 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
+      
+      if (currentSession?.user) {
+        console.log('User already signed in:', currentSession.user.email);
+      }
     });
 
     return () => {
@@ -56,13 +63,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      return { error };
+    }
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      return { error };
+    } catch (error) {
+      console.error('Sign up error:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {
