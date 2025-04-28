@@ -4,6 +4,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
+// Auth Provider
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Auth from './pages/Auth';
+
 // Pages
 import Index from './pages/Index';
 import CustomResearch from './pages/CustomResearch';
@@ -52,45 +57,111 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <PersonaProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/custom-research" element={<CustomResearch />} />
-            <Route path="/earn" element={<EarnPRSNA />} />
-            <Route path="/ecosystem" element={<PRSNAEcosystem />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/research" element={<Research />} />
-            <Route path="/interviewer" element={<Interviewer />} />
-            <Route path="/simulated-persona" element={<SimulatedPersona />} />
-            <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
-            <Route path="/collections" element={<Collections />} />
-            <Route path="/participate" element={<ParticipateResearch />} />
-            <Route path="/interview-process" element={<InterviewProcess />} />
-            <Route path="/persona-viewer" element={<PersonaViewer />} />
-            <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
-            <Route path="/persona-chat/:personaId" element={<PersonaChat />} />
-            <Route path="/dual-chat" element={<DualChat />} />
+      <Router>
+        <AuthProvider>
+          <PersonaProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/custom-research" element={<CustomResearch />} />
+              <Route path="/earn" element={<EarnPRSNA />} />
+              <Route path="/ecosystem" element={<PRSNAEcosystem />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/research" element={<Research />} />
+              <Route path="/interviewer" element={<Interviewer />} />
+              <Route path="/simulated-persona" element={<SimulatedPersona />} />
+              <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
+              
+              {/* Protected routes */}
+              <Route path="/collections" element={
+                <ProtectedRoute>
+                  <Collections />
+                </ProtectedRoute>
+              } />
+              <Route path="/participate" element={
+                <ProtectedRoute>
+                  <ParticipateResearch />
+                </ProtectedRoute>
+              } />
+              <Route path="/interview-process" element={
+                <ProtectedRoute>
+                  <InterviewProcess />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-viewer" element={
+                <ProtectedRoute>
+                  <PersonaViewer />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-detail/:personaId" element={
+                <ProtectedRoute>
+                  <PersonaDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-chat/:personaId" element={
+                <ProtectedRoute>
+                  <PersonaChat />
+                </ProtectedRoute>
+              } />
+              <Route path="/dual-chat" element={
+                <ProtectedRoute>
+                  <DualChat />
+                </ProtectedRoute>
+              } />
+              
+              {/* Persona Creation Routes */}
+              <Route path="/persona-creation" element={
+                <ProtectedRoute>
+                  <PersonaCreationLanding />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-creation/screener" element={
+                <ProtectedRoute>
+                  <PersonaCreationScreener />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-creation/consent" element={
+                <ProtectedRoute>
+                  <ConsentForm />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-creation/questionnaire" element={
+                <ProtectedRoute>
+                  <PersonaCreationQuestionnaire />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-creation/complete" element={
+                <ProtectedRoute>
+                  <PersonaCreationComplete />
+                </ProtectedRoute>
+              } />
+              <Route path="/your-persona/:id" element={
+                <ProtectedRoute>
+                  <YourPersona />
+                </ProtectedRoute>
+              } />
+              <Route path="/interviewer-ai" element={
+                <ProtectedRoute>
+                  <PersonaAIInterviewer />
+                </ProtectedRoute>
+              } />
+              <Route path="/insights" element={
+                <ProtectedRoute>
+                  <InsightConductor />
+                </ProtectedRoute>
+              } />
+              
+              {/* Catch any unknown routes */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
             
-            {/* Persona Creation Routes */}
-            <Route path="/persona-creation" element={<PersonaCreationLanding />} />
-            <Route path="/persona-creation/screener" element={<PersonaCreationScreener />} />
-            <Route path="/persona-creation/consent" element={<ConsentForm />} />
-            <Route path="/persona-creation/questionnaire" element={<PersonaCreationQuestionnaire />} />
-            <Route path="/persona-creation/complete" element={<PersonaCreationComplete />} />
-            <Route path="/your-persona/:id" element={<YourPersona />} />
-            <Route path="/interviewer-ai" element={<PersonaAIInterviewer />} />
-            <Route path="/insights" element={<InsightConductor />} />
-            
-            {/* Catch any unknown routes */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          
-          <Toaster position="top-center" />
-        </Router>
-      </PersonaProvider>
+            <Toaster position="top-center" />
+          </PersonaProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
