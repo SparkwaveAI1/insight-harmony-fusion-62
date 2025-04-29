@@ -8,6 +8,7 @@ interface BaseButtonProps {
   variant?: "default" | "primary" | "secondary" | "outline" | "ghost" | "link";
   size?: "sm" | "default" | "lg" | "icon";
   className?: string;
+  isLoading?: boolean;
 }
 
 // For normal button
@@ -40,7 +41,7 @@ type ButtonProps = ButtonAsButtonProps & React.ButtonHTMLAttributes<HTMLButtonEl
                   ButtonAsAnchorProps & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'href'>;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", children, as, to, href, ...props }, ref) => {
+  ({ className, variant = "default", size = "default", children, as, to, href, isLoading, ...props }, ref) => {
     const styles = cn(
       "relative inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
       // Variants
@@ -58,6 +59,30 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className
     );
     
+    // Loading spinner component
+    const LoadingSpinner = () => (
+      <svg
+        className="animate-spin h-4 w-4 mr-2"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    );
+    
     // Render as Link component
     if (as === Link && to) {
       return (
@@ -66,6 +91,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className={styles}
           {...props as Omit<LinkProps, 'className' | 'to'>}
         >
+          {isLoading && <LoadingSpinner />}
           {children}
         </Link>
       );
@@ -79,6 +105,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className={styles}
           {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>}
         >
+          {isLoading && <LoadingSpinner />}
           {children}
         </a>
       );
@@ -89,8 +116,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={styles}
         ref={ref}
+        disabled={isLoading || (props as React.ButtonHTMLAttributes<HTMLButtonElement>).disabled}
         {...props as React.ButtonHTMLAttributes<HTMLButtonElement>}
       >
+        {isLoading && <LoadingSpinner />}
         {children}
       </button>
     );
