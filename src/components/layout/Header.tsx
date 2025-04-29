@@ -1,20 +1,15 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, User } from "lucide-react";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
-  const { user, signOut } = useAuth();
   const isEarnPage = location.pathname === "/earn-prsna" || location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
@@ -29,15 +24,6 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  const handleLogin = () => {
-    navigate('/auth');
-  };
 
   return (
     <header
@@ -59,31 +45,7 @@ const Header = () => {
         </div>
 
         {/* Action Buttons (right side) */}
-        <div className="flex items-center gap-4">
-          {user ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-gray-300 hover:bg-gray-800" 
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          ) : (
-            location.pathname !== '/auth' && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-gray-300 hover:bg-gray-800" 
-                onClick={handleLogin}
-              >
-                <LogIn className="h-4 w-4 mr-2" />
-                Login
-              </Button>
-            )
-          )}
-
+        <div className="flex items-center">
           <ActionButtons 
             isEarnPage={isEarnPage}
             isWalletConnected={isWalletConnected}
