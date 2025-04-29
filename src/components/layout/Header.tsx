@@ -5,11 +5,15 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
+import { useAuth } from "@/context/AuthContext";
+import Button from "../ui-custom/Button";
+import { User } from "lucide-react";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
+  const { user, signOut } = useAuth();
   const isEarnPage = location.pathname === "/earn-prsna" || location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
@@ -45,13 +49,33 @@ const Header = () => {
         </div>
 
         {/* Action Buttons (right side) */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <ActionButtons 
             isEarnPage={isEarnPage}
             isWalletConnected={isWalletConnected}
             connectWallet={connectWallet}
             disconnectWallet={disconnectWallet}
           />
+          
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Link to="/persona-viewer">
+                <Button size="sm" variant="outline" className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800">
+                  <User className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Button size="sm" variant="outline" className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800" onClick={() => signOut()}>
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <Link to="/auth">
+              <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80 border-none">
+                Sign In
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>
