@@ -31,3 +31,19 @@ export function formatName(fullName: string): string {
   // Return formatted name
   return `${firstName} ${lastNameInitial}.`;
 }
+
+/**
+ * Formats a date string into a localized date string
+ * @param dateString The date string to format
+ * @returns Formatted date string
+ */
+export function formatDateString(dateString: string): string {
+  if (!dateString) return "Unknown";
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  } catch (error) {
+    return dateString;
+  }
+}

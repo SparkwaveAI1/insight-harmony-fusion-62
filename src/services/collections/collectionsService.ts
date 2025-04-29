@@ -48,7 +48,14 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform the data to match the CollectionWithPersonaCount interface
+    const transformedData = data?.map(collection => ({
+      ...collection,
+      persona_count: collection.persona_count?.[0]?.count || 0
+    })) as CollectionWithPersonaCount[];
+    
+    return transformedData || [];
   } catch (error) {
     console.error("Error fetching collections with count:", error);
     toast.error("Failed to fetch collections");
@@ -61,9 +68,18 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
  */
 export const createCollection = async (name: string, description: string | null = null): Promise<Collection | null> => {
   try {
+    // Get the user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast.error("You must be logged in to create a collection");
+      return null;
+    }
+    
+    // Insert with the user_id
     const { data, error } = await supabase
       .from("collections")
-      .insert({ name, description })
+      .insert({ name, description, user_id: user.id })
       .select()
       .single();
 

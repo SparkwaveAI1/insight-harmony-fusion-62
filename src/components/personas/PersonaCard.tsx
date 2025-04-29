@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { formatDateString, formatName } from "@/lib/utils";
+import { formatName } from "@/lib/utils";
 import Card from "@/components/ui-custom/Card";
 import { Bookmark, MessageCircle } from "lucide-react";
 import AddToCollectionDialog from "./AddToCollectionDialog";
@@ -26,6 +26,18 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
     }
     
     setIsCollectionDialogOpen(true);
+  };
+
+  // Helper function to format date strings
+  const formatDateString = (dateString: string) => {
+    if (!dateString) return "Unknown";
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (error) {
+      return dateString;
+    }
   };
 
   return (
@@ -80,16 +92,4 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
       />
     </Card>
   );
-}
-
-// Helper function to format date strings
-function formatDateString(dateString: string) {
-  if (!dateString) return "Unknown";
-  
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  } catch (error) {
-    return dateString;
-  }
 }
