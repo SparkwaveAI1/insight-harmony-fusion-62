@@ -22,6 +22,7 @@ import Interviewer from './pages/Interviewer';
 import SimulatedPersona from './pages/SimulatedPersona';
 import AIFocusGroups from './pages/AIFocusGroups';
 import Collections from './pages/Collections';
+import CollectionDetail from './pages/CollectionDetail';
 import ParticipateResearch from './pages/ParticipateResearch';
 import InterviewProcess from './pages/InterviewProcess';
 import PersonaViewer from './pages/PersonaViewer';
@@ -78,6 +79,7 @@ function App() {
               <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
               <Route path="/ai-focus-groups" element={<ProtectedRoute><AIFocusGroups /></ProtectedRoute>} />
               <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+              <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
               <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
               <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
               <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
