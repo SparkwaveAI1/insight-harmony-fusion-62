@@ -2,8 +2,7 @@
 // This file re-exports everything from the other files for backward compatibility
 // It can be deprecated once all imports are updated to use the new structure
 
-import { Collection, CollectionWithPersonaCount } from './types';
-import {
+import { 
   getCollectionById,
   getUserCollections,
   getUserCollectionsWithCount,
@@ -18,11 +17,13 @@ import {
   isPersonaInCollection,
   getPersonasNotInCollection
 } from './personaCollectionOperations';
+import type { Collection, CollectionWithPersonaCount } from './types';
 
-// Re-export everything
+// Re-export types with 'export type'
+export type { Collection, CollectionWithPersonaCount };
+
+// Re-export functions
 export {
-  Collection,
-  CollectionWithPersonaCount,
   getCollectionById,
   getUserCollections,
   getUserCollectionsWithCount,
