@@ -77,7 +77,7 @@ const Header = () => {
                     <NavigationMenuLink className={cn(
                       navigationMenuTriggerStyle(),
                       "text-sm",
-                      isScrolled ? "text-foreground" : "text-white"
+                      "text-white hover:text-white/80"
                     )}>
                       {link.icon && <link.icon className="w-4 h-4 mr-2" />}
                       {link.title}
