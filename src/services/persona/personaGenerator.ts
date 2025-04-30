@@ -22,6 +22,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     
     console.log("Sending request to generate persona with prompt:", prompt);
     
+    // Call the Supabase Edge Function to generate the persona
     const response = await fetch(`https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/generate-persona`, {
       method: 'POST',
       headers: {
@@ -31,15 +32,18 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       body: JSON.stringify({ prompt }),
     });
 
+    // Check for HTTP errors
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Error response from API:", response.status, errorText);
       throw new Error(`Error generating persona: ${response.statusText} (${response.status})`);
     }
 
+    // Parse the response
     const personaData = await response.json();
     console.log("Generated persona data received:", personaData);
     
+    // Validate the response
     if (!personaData || !personaData.success) {
       console.error("Invalid response from API:", personaData);
       throw new Error(personaData?.error || 'Invalid response from persona generation API');
@@ -58,7 +62,6 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     };
     
     console.log("Final persona object to be saved:", persona);
-    console.log("With created_by user ID:", persona.created_by);
     
     // Save the persona to the database
     const savedPersona = await savePersona(persona);

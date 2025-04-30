@@ -1,8 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { generatePersona } from "@/services/persona/personaService";
-import { savePersona } from "@/services/persona/personaService";
+import { generatePersona } from "@/services/persona/personaGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,41 +25,40 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
     onGenerate(); // Toggle loading state
     
     try {
+      console.log("Starting persona generation with prompt:", prompt);
       // Generate the persona
       const persona = await generatePersona(prompt);
       
-      if (persona) {
-        // Save the persona to the database
-        const savedPersona = await savePersona(persona);
-        
+      if (persona && persona.persona_id) {
         toast({
           title: "Persona Created",
           description: `Successfully created persona: ${persona.name}`,
         });
         
-        console.log("Persona created and saved:", savedPersona);
+        console.log("Persona created successfully:", persona.persona_id);
         onGenerate(); // Toggle loading state back
         
         // Navigate to the success page with personaId
         navigate('/persona-creation/complete', { 
           state: { 
-            personaId: persona.persona_id 
+            personaId: persona.persona_id,
+            personaName: persona.name
           }
         });
       } else {
-        throw new Error("Failed to generate persona");
+        throw new Error("Failed to generate persona - no persona ID returned");
       }
     } catch (error) {
       console.error("Error creating persona:", error);
       toast({
         title: "Error",
-        description: "Failed to create persona. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create persona. Please try again.",
         variant: "destructive"
       });
       onGenerate(); // Toggle loading state back
       
       // Navigate to the completion page with error state
-      navigate('/persona-creation/complete', { state: { error: true } });
+      navigate('/persona-creation/complete', { state: { error: true, errorMessage: error instanceof Error ? error.message : "Unknown error" } });
     }
   };
   
