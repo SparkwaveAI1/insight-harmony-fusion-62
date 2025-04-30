@@ -28,11 +28,6 @@ export const navigationMenuItems = [
     icon: FlaskConical,
   },
   {
-    title: "Insights",
-    url: "/insights",
-    icon: BarChart3,
-  },
-  {
     title: "Create Simulated Persona",
     url: "/simulated-persona",
     icon: User,
