@@ -22,12 +22,16 @@ interface PersonaListProps {
   onPersonasLoad?: (personas: any[]) => void;
   collectionId?: string;
   onDeleteCollection?: () => void;
+  filterByCurrentUser?: boolean; // Added missing prop
+  publicOnly?: boolean; // Added missing prop
 }
 
 const PersonaList: React.FC<PersonaListProps> = ({
   onPersonasLoad,
   collectionId,
   onDeleteCollection,
+  filterByCurrentUser = false, // Default value
+  publicOnly = false, // Default value
 }) => {
   const [personas, setPersonas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +59,7 @@ const PersonaList: React.FC<PersonaListProps> = ({
 
   useEffect(() => {
     fetchPersonas();
-  }, [collectionId]);
+  }, [collectionId, filterByCurrentUser, publicOnly]);
 
   const handleRemoveFromCollection = () => {
     fetchPersonas();

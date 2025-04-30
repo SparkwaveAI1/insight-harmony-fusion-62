@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   AlertDialog,
@@ -19,12 +18,14 @@ interface DeletePersonaDialogProps {
   personaId: string;
   personaName: string;
   onDelete: () => void;
+  onDeleteComplete?: () => void; // Added this optional prop
 }
 
 export default function DeletePersonaDialog({
   personaId,
   personaName,
   onDelete,
+  onDeleteComplete, // Added to the destructuring
 }: DeletePersonaDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -34,6 +35,10 @@ export default function DeletePersonaDialog({
       await deletePersona(personaId);
       toast.success(`Persona "${personaName}" has been deleted`);
       onDelete();
+      // Call the additional callback if provided
+      if (onDeleteComplete) {
+        onDeleteComplete();
+      }
     } catch (error) {
       console.error("Error deleting persona:", error);
       toast.error("Failed to delete persona");

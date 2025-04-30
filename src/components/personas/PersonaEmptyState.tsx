@@ -1,21 +1,26 @@
 
-import { useNavigate } from "react-router-dom";
-import Button from "@/components/ui-custom/Button";
-import Card from "@/components/ui-custom/Card";
+import React from "react";
+import { FolderOpen } from "lucide-react";
 
-const PersonaEmptyState = () => {
-  const navigate = useNavigate();
-  
+interface PersonaEmptyStateProps {
+  title?: string;
+  description?: string;
+}
+
+const PersonaEmptyState: React.FC<PersonaEmptyStateProps> = ({
+  title = "No personas found",
+  description = "There are no personas to display at this time."
+}) => {
   return (
-    <Card className="p-8 text-center">
-      <h3 className="text-lg font-bold mb-3">No Personas Found</h3>
-      <p className="text-muted-foreground mb-6">
-        You haven't generated any personas yet. Create your first persona to see it here.
+    <div className="flex flex-col items-center justify-center py-20 bg-muted/10 rounded-lg">
+      <div className="rounded-full bg-muted/20 p-6">
+        <FolderOpen className="h-12 w-12 text-muted-foreground" />
+      </div>
+      <h3 className="font-medium text-lg mt-6">{title}</h3>
+      <p className="text-muted-foreground mt-2 text-center max-w-md">
+        {description}
       </p>
-      <Button onClick={() => navigate('/simulated-persona')}>
-        Create a Persona
-      </Button>
-    </Card>
+    </div>
   );
 };
 

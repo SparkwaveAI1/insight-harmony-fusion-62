@@ -73,7 +73,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           <DeletePersonaDialog
             personaId={persona.persona_id}
             personaName={persona.name}
-            onDeleteComplete={onDelete}
+            onDelete={onDelete}
           />
         )}
       </div>
