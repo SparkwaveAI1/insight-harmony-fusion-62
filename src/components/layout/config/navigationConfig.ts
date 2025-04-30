@@ -19,7 +19,7 @@ export const navigationMenuItems = [
   },
   {
     title: "Persona Library",
-    url: "/persona-library",
+    url: "/persona-viewer",
     icon: Library,
   },
   {
