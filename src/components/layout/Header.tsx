@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, LayoutDashboard } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -38,6 +38,7 @@ const Header = () => {
   }, []);
 
   const navigationLinks = [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Research", href: "/research" },
     { title: "Interviewer", href: "/interviewer" },
     { title: "Personas", href: "/persona-viewer" },
@@ -78,6 +79,7 @@ const Header = () => {
                       "text-sm",
                       isScrolled ? "text-foreground" : "text-white"
                     )}>
+                      {link.icon && <link.icon className="w-4 h-4 mr-2" />}
                       {link.title}
                     </NavigationMenuLink>
                   </Link>
@@ -116,9 +118,10 @@ const Header = () => {
                 <Link 
                   key={link.title} 
                   to={link.href} 
-                  className="text-white hover:text-primary px-2 py-1"
+                  className="text-white hover:text-primary px-2 py-1 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
+                  {link.icon && <link.icon className="w-4 h-4 mr-2" />}
                   {link.title}
                 </Link>
               ))}
