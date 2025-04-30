@@ -10,7 +10,7 @@ import PersonaDisplay from '@/components/dual-chat/PersonaDisplay';
 import ChatMessages from '@/components/dual-chat/ChatMessages';
 import ChatInput from '@/components/dual-chat/ChatInput';
 import ChatControls from '@/components/dual-chat/ChatControls';
-import useDualChat from '@/components/dual-chat/useDualChat';
+import useDualChat from '@/components/dual-chat/hooks/useDualChat';
 import { Toaster } from "@/components/ui/toaster";
 
 const DualChat: React.FC = () => {
