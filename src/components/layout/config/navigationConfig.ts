@@ -32,16 +32,6 @@ export const navigationMenuItems = [
     url: "/insights",
     icon: BarChart3,
   },
-  {
-    title: "Interview",
-    url: "/interviewer",
-    icon: BookText,
-  },
-  {
-    title: "Chat",
-    url: "/dual-chat",
-    icon: MessageCircle,
-  },
 ];
 
 export const actionMenuItems = [
@@ -51,13 +41,13 @@ export const actionMenuItems = [
     icon: User,
   },
   {
-    title: "New Interview",
+    title: "Interview",
     url: "/interviewer",
     icon: BookText,
   },
   {
-    title: "AI Moderator",
-    url: "/ai-focus-groups",
+    title: "Chat",
+    url: "/dual-chat",
     icon: MessageCircle,
   },
 ];
