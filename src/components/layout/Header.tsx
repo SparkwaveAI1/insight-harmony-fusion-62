@@ -69,7 +69,7 @@ const Header = () => {
           
         {/* Centered Navigation Links - Desktop */}
         <NavigationMenu className="hidden md:flex mx-auto">
-          <NavigationMenuList>
+          <NavigationMenuList className="space-x-4">
             {navigationLinks.map((link) => (
               <NavigationMenuItem key={link.title}>
                 <Link to={link.href}>
