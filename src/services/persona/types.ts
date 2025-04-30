@@ -1,4 +1,3 @@
-
 export interface PersonaMetadata {
   // Core Demographics
   age?: string;
@@ -90,7 +89,7 @@ export interface DbPersona {
   simulation_directives: any;
   trait_profile: any;
   prompt?: string;
-  created_by?: string;
+  user_id?: string;
   is_public?: boolean;
 }
 
@@ -173,7 +172,7 @@ export interface Persona {
   preinterview_tags?: string[];
   simulation_directives?: SimulationDirectives;
   prompt?: string;
-  created_by?: string;
+  user_id?: string;
   is_public?: boolean;
   [key: string]: any;
 }

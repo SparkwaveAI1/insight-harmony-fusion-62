@@ -40,6 +40,8 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
     
     try {
       console.log("Starting persona generation with prompt:", prompt);
+      console.log("User ID:", session.user.id);
+      
       // Generate the persona
       const persona = await generatePersona(prompt);
       

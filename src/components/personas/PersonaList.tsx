@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { getAllPersonas } from "@/services/persona/personaService";
 import { useAuth } from "@/context/AuthContext";
@@ -34,12 +33,11 @@ export default function PersonaList({
     try {
       let data = await getAllPersonas();
       
-      // Improved debugging for persona filtering
       console.log("Total personas loaded:", data.length);
       
-      // Log all personas with their created_by values to debug
+      // Log all personas with their user_id values for debugging
       data.forEach((persona, index) => {
-        console.log(`Persona ${index}: id=${persona.persona_id}, name=${persona.name}, created_by=${persona.created_by}`);
+        console.log(`Persona ${index}: id=${persona.persona_id}, name=${persona.name}, user_id=${persona.user_id}`);
       });
       
       // Apply filters based on the props
@@ -47,10 +45,10 @@ export default function PersonaList({
         console.log("Filtering by current user:", user.id);
         console.log("Before filter:", data.length, "personas");
         
-        // Enhanced filtering with better logging
+        // Filter personas by user_id
         data = data.filter(persona => {
-          const isMatch = persona.created_by === user.id;
-          console.log(`Checking persona ${persona.persona_id}: created_by=${persona.created_by}, user.id=${user.id}, match=${isMatch}`);
+          const isMatch = persona.user_id === user.id;
+          console.log(`Checking persona ${persona.persona_id}: user_id=${persona.user_id}, user.id=${user.id}, match=${isMatch}`);
           return isMatch;
         });
         

@@ -129,6 +129,7 @@ export type Database = {
           prompt: string | null
           simulation_directives: Json
           trait_profile: Json
+          user_id: string | null
         }
         Insert: {
           behavioral_modulation: Json
@@ -145,6 +146,7 @@ export type Database = {
           prompt?: string | null
           simulation_directives: Json
           trait_profile: Json
+          user_id?: string | null
         }
         Update: {
           behavioral_modulation?: Json
@@ -161,6 +163,7 @@ export type Database = {
           prompt?: string | null
           simulation_directives?: Json
           trait_profile?: Json
+          user_id?: string | null
         }
         Relationships: []
       }

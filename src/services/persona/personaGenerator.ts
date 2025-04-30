@@ -61,8 +61,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       created_at: new Date().toISOString(),
       prompt,
       is_public: false,
-      // Not adding 'created_by' as it's not in the database schema
-      // User association will be handled by RLS policies
+      user_id: userId, // Set the user_id from the authenticated user
     };
     
     console.log("Final persona object to be saved:", persona);
