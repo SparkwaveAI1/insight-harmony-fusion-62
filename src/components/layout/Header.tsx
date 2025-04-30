@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, User, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -39,10 +39,7 @@ const Header = () => {
 
   const navigationLinks = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "Research", href: "/research" },
-    { title: "Interviewer", href: "/interviewer" },
-    { title: "Personas", href: "/persona-viewer" },
-    { title: "Pricing", href: "/pricing" },
+    { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
     { title: "Contact", href: "/contact" },
   ];
   
