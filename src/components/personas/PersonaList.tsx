@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { getAllPersonas } from "@/services/persona/personaService";
 import { useAuth } from "@/context/AuthContext";
@@ -36,7 +35,11 @@ export default function PersonaList({
       
       // Apply filters based on the props
       if (filterByCurrentUser && user) {
+        console.log("Filtering by current user:", user.id);
+        console.log("Before filter:", data.length, "personas");
         data = data.filter(persona => persona.created_by === user.id);
+        console.log("After filter:", data.length, "personas");
+        console.log("Sample persona created_by:", data.length > 0 ? data[0].created_by : "None");
       }
       
       if (publicOnly) {
@@ -49,7 +52,7 @@ export default function PersonaList({
         data = collectionPersonas;
       }
       
-      console.log(`Loaded ${data.length} personas with filters: `, 
+      console.log(`Loaded ${data.length} personas with filters:`, 
         { filterByCurrentUser, publicOnly, collectionId });
       
       setPersonas(data);

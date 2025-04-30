@@ -8,10 +8,11 @@ import { useAuth } from "@/context/AuthContext";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
 import { useState } from "react";
+import { Persona } from "@/services/persona/types";
 
 const MyPersonas = () => {
   const { user } = useAuth();
-  const [personas, setPersonas] = useState<any[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
 
   return (
     <SidebarProvider defaultOpen={true}>

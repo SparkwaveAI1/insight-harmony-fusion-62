@@ -7,9 +7,10 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
 import { useState } from "react";
+import { Persona } from "@/services/persona/types";
 
 const PersonaLibrary = () => {
-  const [personas, setPersonas] = useState<any[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -25,7 +26,7 @@ const PersonaLibrary = () => {
                     Persona Library
                   </h1>
                   <p className="text-muted-foreground">
-                    Browse all publicly available personas
+                    Browse publicly shared personas from our community
                   </p>
                   <div className="w-32 h-1 bg-accent mt-2"></div>
                 </div>
