@@ -6,7 +6,7 @@ import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
 import { useAuth } from "@/context/AuthContext";
-import Button from "../ui-custom/Button";
+import { Button } from "../ui/button";
 import { User } from "lucide-react";
 
 const Header = () => {

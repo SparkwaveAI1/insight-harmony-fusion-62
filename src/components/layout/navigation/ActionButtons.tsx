@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Wallet } from "lucide-react";
-import Button from "@/components/ui-custom/Button";
+import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
   isEarnPage: boolean;
