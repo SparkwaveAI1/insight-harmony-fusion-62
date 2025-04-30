@@ -33,8 +33,8 @@ export const navigationMenuItems = [
     icon: BarChart3,
   },
   {
-    title: "Create Persona",
-    url: "/persona-creation",
+    title: "Create Simulated Persona",
+    url: "/simulated-persona",
     icon: User,
   },
   {
