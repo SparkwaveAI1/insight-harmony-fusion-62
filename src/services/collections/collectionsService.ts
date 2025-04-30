@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -14,6 +13,26 @@ export interface Collection {
 export interface CollectionWithPersonaCount extends Collection {
   persona_count: number;
 }
+
+/**
+ * Fetches a specific collection by ID
+ */
+export const getCollectionById = async (id: string): Promise<Collection | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching collection:", error);
+    toast.error("Failed to fetch collection");
+    return null;
+  }
+};
 
 /**
  * Fetches all collections for the current user
