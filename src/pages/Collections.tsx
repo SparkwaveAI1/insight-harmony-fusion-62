@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -159,6 +158,7 @@ const Collections = () => {
                   <div 
                     key={collection.id}
                     className="relative border rounded-lg p-6 hover:shadow-md transition-shadow group"
+                    onClick={() => viewCollection(collection.id)}
                   >
                     <div className="mb-4">
                       <h2 className="text-xl font-semibold">{collection.name}</h2>
@@ -187,10 +187,6 @@ const Collections = () => {
                         </Button>
                       </div>
                     </div>
-                    <div 
-                      className="absolute inset-0 cursor-pointer" 
-                      onClick={() => viewCollection(collection.id)}
-                    />
                   </div>
                 ))}
               </div>
