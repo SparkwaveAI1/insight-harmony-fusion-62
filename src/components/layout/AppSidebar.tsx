@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { NavigationMenu } from "./navigation/NavigationMenu";
-import { ActionsMenu } from "./navigation/ActionsMenu";
 
 export function AppSidebar() {
   return (
@@ -21,7 +20,6 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <NavigationMenu />
-        <ActionsMenu />
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
         <div className="flex items-center space-x-2">

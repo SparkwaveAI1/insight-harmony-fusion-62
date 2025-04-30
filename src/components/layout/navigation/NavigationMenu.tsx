@@ -4,7 +4,6 @@ import { navigationMenuItems } from "../config/navigationConfig";
 import {
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -15,7 +14,6 @@ export function NavigationMenu() {
 
   return (
     <SidebarGroup className="pt-4">
-      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {navigationMenuItems.map((item) => (

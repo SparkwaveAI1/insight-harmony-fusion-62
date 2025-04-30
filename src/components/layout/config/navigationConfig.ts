@@ -32,9 +32,6 @@ export const navigationMenuItems = [
     url: "/insights",
     icon: BarChart3,
   },
-];
-
-export const actionMenuItems = [
   {
     title: "Create Persona",
     url: "/persona-creation",
