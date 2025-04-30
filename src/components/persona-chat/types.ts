@@ -4,3 +4,8 @@ export interface Message {
   content: string;
   timestamp: Date;
 }
+
+export interface PersonaOption {
+  id: string;
+  name: string;
+}
