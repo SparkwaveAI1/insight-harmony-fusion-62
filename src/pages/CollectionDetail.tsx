@@ -7,13 +7,14 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { getCollectionById, deleteCollection } from "@/services/collections/collectionsService";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
+import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
@@ -22,6 +23,7 @@ const CollectionDetail = () => {
   const [collection, setCollection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [personas, setPersonas] = useState<any[]>([]);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   useEffect(() => {
     if (collectionId) {
@@ -56,6 +58,14 @@ const CollectionDetail = () => {
     }
   };
 
+  const refreshPersonas = () => {
+    if (collectionId) {
+      // Force PersonaList to refetch by triggering a state change
+      const personaListKey = Date.now();
+      setPersonas([]); // Clear current personas
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
@@ -84,12 +94,18 @@ const CollectionDetail = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="mb-8">
-                      <h1 className="text-3xl font-bold">{collection?.name}</h1>
-                      {collection?.description && (
-                        <p className="text-muted-foreground mt-2">{collection.description}</p>
-                      )}
-                      <div className="w-32 h-1 bg-accent mt-2"></div>
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h1 className="text-3xl font-bold">{collection?.name}</h1>
+                        {collection?.description && (
+                          <p className="text-muted-foreground mt-2">{collection.description}</p>
+                        )}
+                        <div className="w-32 h-1 bg-accent mt-2"></div>
+                      </div>
+                      <Button onClick={() => setAddDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Personas
+                      </Button>
                     </div>
                     
                     <PersonaList 
@@ -108,6 +124,15 @@ const CollectionDetail = () => {
           </div>
         </SidebarInset>
       </div>
+      
+      {collectionId && (
+        <AddPersonasToCollectionDialog
+          open={addDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          collectionId={collectionId}
+          onAddComplete={refreshPersonas}
+        />
+      )}
     </SidebarProvider>
   );
 };

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -239,5 +240,24 @@ export const isPersonaInCollection = async (
   } catch (error) {
     console.error("Error checking if persona is in collection:", error);
     return false;
+  }
+};
+
+/**
+ * Gets all personas that are not in a collection
+ */
+export const getPersonasNotInCollection = async (collectionId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("collection_personas")
+      .select("persona_id")
+      .eq("collection_id", collectionId);
+
+    if (error) throw error;
+    return data.map(item => item.persona_id) || [];
+  } catch (error) {
+    console.error("Error fetching personas in collection:", error);
+    toast.error("Failed to fetch personas in collection");
+    return [];
   }
 };
