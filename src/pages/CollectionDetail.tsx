@@ -8,15 +8,17 @@ import {
   Collection,
   getPersonasInCollection,
   deleteCollection,
+  removePersonaFromCollection,
 } from "@/services/collections/collectionsService";
 import { supabase } from "@/integrations/supabase/client";
 import Button from "@/components/ui-custom/Button";
-import { ChevronLeft, Trash2, Edit, FolderOpen } from "lucide-react";
+import { ChevronLeft, Trash2, Edit, FolderOpen, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import PersonaCard from "@/components/personas/PersonaCard";
 import { Persona } from "@/services/persona/types";
 import { dbPersonaToPersona } from "@/services/persona/mappers";
+import AddToCollectionButton from "@/components/personas/AddToCollectionButton";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams();
@@ -27,6 +29,8 @@ const CollectionDetail = () => {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [removePersonaDialogOpen, setRemovePersonaDialogOpen] = useState(false);
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && collectionId) {
@@ -91,6 +95,25 @@ const CollectionDetail = () => {
     }
   };
 
+  const handleRemovePersona = async () => {
+    if (!collectionId || !selectedPersonaId) return;
+    
+    const result = await removePersonaFromCollection(collectionId, selectedPersonaId);
+    if (result) {
+      // Refresh the persona list
+      fetchPersonasInCollection();
+      setRemovePersonaDialogOpen(false);
+      setSelectedPersonaId(null);
+    }
+  };
+
+  const openRemoveDialog = (personaId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedPersonaId(personaId);
+    setRemovePersonaDialogOpen(true);
+  };
+
   const handleEditCollection = () => {
     navigate(`/collection/${collectionId}/edit`);
   };
@@ -134,8 +157,16 @@ const CollectionDetail = () => {
               )}
             </div>
 
-            <div className="mb-4">
+            <div className="mb-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold">Personas in this collection</h2>
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/persona-viewer")}
+                className="flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Browse for Personas
+              </Button>
             </div>
 
             {loading ? (
@@ -163,7 +194,16 @@ const CollectionDetail = () => {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {personas.map((persona) => (
-                  <PersonaCard key={persona.persona_id} persona={persona} />
+                  <div key={persona.persona_id} className="relative">
+                    <PersonaCard persona={persona} />
+                    <button
+                      onClick={(e) => openRemoveDialog(persona.persona_id, e)}
+                      className="absolute top-2 right-2 p-2 rounded-full bg-background/90 hover:bg-accent text-foreground"
+                      title="Remove from collection"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -186,6 +226,29 @@ const CollectionDetail = () => {
                   </Button>
                   <Button variant="primary" onClick={handleDeleteCollection}>
                     Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Remove Persona Confirmation */}
+            <Dialog open={removePersonaDialogOpen} onOpenChange={setRemovePersonaDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Remove Persona</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <p>
+                    Are you sure you want to remove this persona from the collection?
+                    This will only remove the reference, not delete the persona itself.
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setRemovePersonaDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary" onClick={handleRemovePersona}>
+                    Remove
                   </Button>
                 </DialogFooter>
               </DialogContent>

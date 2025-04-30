@@ -1,12 +1,12 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { formatName } from "@/lib/utils";
 import Card from "@/components/ui-custom/Card";
-import { Bookmark, MessageCircle } from "lucide-react";
-import AddToCollectionDialog from "./AddToCollectionDialog";
+import { MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import AddToCollectionButton from "./AddToCollectionButton";
 
 interface PersonaCardProps {
   persona: any;
@@ -14,19 +14,6 @@ interface PersonaCardProps {
 
 export default function PersonaCard({ persona }: PersonaCardProps) {
   const { user } = useAuth();
-  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
-
-  const handleAddToCollection = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      toast.error("Please sign in to add personas to collections");
-      return;
-    }
-    
-    setIsCollectionDialogOpen(true);
-  };
 
   // Helper function to format date strings
   const formatDateString = (dateString: string) => {
@@ -69,13 +56,7 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
 
       {/* Action buttons */}
       <div className="absolute top-4 right-4 flex gap-2">
-        <button
-          onClick={handleAddToCollection}
-          className="p-2 bg-background/90 rounded-full hover:bg-muted/90 transition-colors"
-          title="Add to collection"
-        >
-          <Bookmark className="h-4 w-4" />
-        </button>
+        <AddToCollectionButton personaId={persona.persona_id} />
         <Link
           to={`/persona-chat/${persona.persona_id}`}
           className="p-2 bg-background/90 rounded-full hover:bg-muted/90 transition-colors"
@@ -84,12 +65,6 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
           <MessageCircle className="h-4 w-4" />
         </Link>
       </div>
-      
-      <AddToCollectionDialog
-        open={isCollectionDialogOpen}
-        onOpenChange={setIsCollectionDialogOpen}
-        personaId={persona.persona_id}
-      />
     </Card>
   );
 }
