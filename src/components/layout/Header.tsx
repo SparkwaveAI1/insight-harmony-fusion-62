@@ -5,9 +5,8 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { useAuth } from "@/context/AuthContext";
+import { Menu, X, User } from "lucide-react";
 import { Button } from "../ui/button";
-import { User, Menu, X } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -23,7 +22,6 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
-  const { user, signOut } = useAuth();
   const isEarnPage = location.pathname === "/earn-prsna" || location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
@@ -106,26 +104,6 @@ const Header = () => {
             connectWallet={connectWallet}
             disconnectWallet={disconnectWallet}
           />
-          
-          {user ? (
-            <div className="flex items-center gap-2">
-              <Link to="/dashboard">
-                <Button size="sm" variant="outline" className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800">
-                  <User className="h-4 w-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Button size="sm" variant="outline" className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800" onClick={() => signOut()}>
-                Logout
-              </Button>
-            </div>
-          ) : (
-            <Link to="/auth">
-              <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80 border-none">
-                Sign In
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
       
@@ -154,34 +132,6 @@ const Header = () => {
                   disconnectWallet={disconnectWallet}
                   className="w-full"
                 />
-                
-                {user ? (
-                  <>
-                    <Link to="/dashboard" className="w-full">
-                      <Button size="sm" variant="outline" className="w-full border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800">
-                        <User className="h-4 w-4 mr-2" />
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="w-full border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800" 
-                      onClick={() => {
-                        signOut();
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <Link to="/auth" className="w-full" onClick={() => setMobileMenuOpen(false)}>
-                    <Button size="sm" className="w-full bg-gradient-to-r from-primary to-primary/80 border-none">
-                      Sign In
-                    </Button>
-                  </Link>
-                )}
               </div>
             </nav>
           </div>

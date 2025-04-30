@@ -1,14 +1,16 @@
 
 import React from "react";
-import { Wallet } from "lucide-react";
+import { Wallet, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface ActionButtonsProps {
-  isWalletConnected: boolean;
-  connectWallet: () => void;
-  disconnectWallet: () => void;
+  isWalletConnected?: boolean;
+  connectWallet?: () => void;
+  disconnectWallet?: () => void;
   className?: string;
-  showWalletOptions?: boolean; // New prop to control wallet button visibility
+  showWalletOptions?: boolean;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -16,10 +18,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   connectWallet,
   disconnectWallet,
   className,
-  showWalletOptions = false // Default to not showing wallet options
+  showWalletOptions = false
 }) => {
+  const { user, signOut } = useAuth();
+
   return (
-    <div className={className}>
+    <div className={`flex items-center gap-2 ${className}`}>
       {showWalletOptions && (
         <>
           {isWalletConnected ? (
@@ -43,6 +47,25 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             </Button>
           )}
         </>
+      )}
+
+      {/* Auth buttons - always show these */}
+      {user ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800"
+          onClick={() => signOut()}
+        >
+          Logout
+        </Button>
+      ) : (
+        <Link to="/auth">
+          <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80 border-none">
+            <LogIn className="h-4 w-4 mr-2" />
+            Sign In
+          </Button>
+        </Link>
       )}
     </div>
   );
