@@ -1,121 +1,46 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { useAuth } from "@/context/AuthContext";
-import {
-  Collection,
-  getPersonasInCollection,
-  deleteCollection,
-  removePersonaFromCollection,
-} from "@/services/collections/collectionsService";
-import { supabase } from "@/integrations/supabase/client";
-import Button from "@/components/ui-custom/Button";
-import { ChevronLeft, Trash2, Edit, FolderOpen, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useParams, useNavigate } from "react-router-dom";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/sections/Footer";
+import { Toaster } from "@/components/ui/toaster";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import PersonaCard from "@/components/personas/PersonaCard";
-import { Persona } from "@/services/persona/types";
-import { dbPersonaToPersona } from "@/services/persona/mappers";
-import AddToCollectionButton from "@/components/personas/AddToCollectionButton";
+import { useAuth } from "@/context/AuthContext";
+import { getCollectionById } from "@/services/collections/collectionsService";
+import PersonaList from "@/components/personas/PersonaList";
+import PersonaSummary from "@/components/personas/PersonaSummary";
 
 const CollectionDetail = () => {
-  const { collectionId } = useParams();
-  const { user } = useAuth();
+  const { collectionId } = useParams<{ collectionId: string }>();
   const navigate = useNavigate();
-
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [personas, setPersonas] = useState<Persona[]>([]);
+  const { user } = useAuth();
+  const [collection, setCollection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [removePersonaDialogOpen, setRemovePersonaDialogOpen] = useState(false);
-  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
+  const [personas, setPersonas] = useState<any[]>([]);
 
   useEffect(() => {
-    if (user && collectionId) {
-      fetchCollection();
-      fetchPersonasInCollection();
+    if (collectionId) {
+      fetchCollection(collectionId);
     }
-  }, [user, collectionId]);
+  }, [collectionId]);
 
-  const fetchCollection = async () => {
+  const fetchCollection = async (id: string) => {
     try {
-      const { data, error } = await supabase
-        .from("collections")
-        .select("*")
-        .eq("id", collectionId)
-        .single();
-
-      if (error) throw error;
-      setCollection(data);
+      setLoading(true);
+      const collectionData = await getCollectionById(id);
+      setCollection(collectionData);
     } catch (error) {
       console.error("Error fetching collection:", error);
-      toast.error("Failed to load collection details");
+      toast.error("Failed to load collection");
       navigate("/collections");
-    }
-  };
-
-  const fetchPersonasInCollection = async () => {
-    setLoading(true);
-    try {
-      const personaIds = await getPersonasInCollection(collectionId as string);
-      
-      if (personaIds.length === 0) {
-        setPersonas([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch all personas that are in this collection
-      const { data, error } = await supabase
-        .from("personas")
-        .select("*")
-        .in("persona_id", personaIds);
-
-      if (error) throw error;
-      
-      // Convert DB personas to the Persona type with required fields
-      const convertedPersonas = data?.map(dbPersonaToPersona) || [];
-      setPersonas(convertedPersonas);
-    } catch (error) {
-      console.error("Error fetching personas:", error);
-      toast.error("Failed to load personas");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDeleteCollection = async () => {
-    if (!collection) return;
-
-    const result = await deleteCollection(collection.id);
-    if (result) {
-      navigate("/collections");
-    }
-  };
-
-  const handleRemovePersona = async () => {
-    if (!collectionId || !selectedPersonaId) return;
-    
-    const result = await removePersonaFromCollection(collectionId, selectedPersonaId);
-    if (result) {
-      // Refresh the persona list
-      fetchPersonasInCollection();
-      setRemovePersonaDialogOpen(false);
-      setSelectedPersonaId(null);
-    }
-  };
-
-  const openRemoveDialog = (personaId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedPersonaId(personaId);
-    setRemovePersonaDialogOpen(true);
-  };
-
-  const handleEditCollection = () => {
-    navigate(`/collection/${collectionId}/edit`);
   };
 
   return (
@@ -123,137 +48,50 @@ const CollectionDetail = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <SidebarInset>
-          <main className="flex-1 p-6 flex flex-col">
-            <div className="mb-8">
-              <button 
-                onClick={() => navigate("/collections")}
-                className="flex items-center text-muted-foreground hover:text-foreground mb-4"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Back to Collections
-              </button>
-
-              {collection ? (
-                <div className="flex flex-col md:flex-row md:items-center justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold">{collection.name}</h1>
-                    {collection.description && (
-                      <p className="text-muted-foreground mt-2">{collection.description}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-4 md:mt-0">
-                    <Button variant="outline" onClick={handleEditCollection}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button variant="primary" onClick={() => setDeleteDialogOpen(true)}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-14 bg-muted/20 animate-pulse rounded-lg w-1/3"></div>
-              )}
-            </div>
-
-            <div className="mb-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Personas in this collection</h2>
-              <Button 
-                variant="outline"
-                onClick={() => navigate("/persona-viewer")}
-                className="flex items-center"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Browse for Personas
-              </Button>
-            </div>
-
-            {loading ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-48 rounded-lg bg-muted/30 animate-pulse"></div>
-                ))}
-              </div>
-            ) : personas.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-muted/10 rounded-lg">
-                <div className="rounded-full bg-muted/20 p-6">
-                  <FolderOpen className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <h3 className="font-medium text-lg mt-6">No personas in this collection</h3>
-                <p className="text-muted-foreground mt-2">
-                  Add personas to this collection from the persona viewer
-                </p>
+          <div className="relative flex min-h-svh flex-col">
+            <Header />
+            <main className="flex-1 pt-24">
+              <div className="container py-6">
                 <Button 
-                  className="mt-6"
-                  onClick={() => navigate("/persona-viewer")}
+                  variant="ghost" 
+                  onClick={() => navigate("/collections")} 
+                  className="mb-4"
                 >
-                  Browse Personas
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Collections
                 </Button>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {personas.map((persona) => (
-                  <div key={persona.persona_id} className="relative">
-                    <PersonaCard persona={persona} />
-                    <button
-                      onClick={(e) => openRemoveDialog(persona.persona_id, e)}
-                      className="absolute top-2 right-2 p-2 rounded-full bg-background/90 hover:bg-accent text-foreground"
-                      title="Remove from collection"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                
+                {loading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-10 w-1/3" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <div className="mt-8">
+                      <Skeleton className="h-[300px] w-full" />
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <>
+                    <div className="mb-8">
+                      <h1 className="text-3xl font-bold">{collection?.name}</h1>
+                      {collection?.description && (
+                        <p className="text-muted-foreground mt-2">{collection.description}</p>
+                      )}
+                      <div className="w-32 h-1 bg-accent mt-2"></div>
+                    </div>
+                    
+                    <PersonaList 
+                      onPersonasLoad={setPersonas}
+                      collectionId={collectionId}
+                    />
+                    
+                    {personas.length > 0 && <PersonaSummary personas={personas} />}
+                  </>
+                )}
               </div>
-            )}
-
-            {/* Delete Collection Confirmation */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Delete Collection</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <p>
-                    Are you sure you want to delete "{collection?.name}"? This action cannot
-                    be undone and all persona references will be removed.
-                  </p>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" onClick={handleDeleteCollection}>
-                    Delete
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Remove Persona Confirmation */}
-            <Dialog open={removePersonaDialogOpen} onOpenChange={setRemovePersonaDialogOpen}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Remove Persona</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <p>
-                    Are you sure you want to remove this persona from the collection?
-                    This will only remove the reference, not delete the persona itself.
-                  </p>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setRemovePersonaDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button variant="primary" onClick={handleRemovePersona}>
-                    Remove
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </main>
+            </main>
+            <Footer />
+            <Toaster />
+          </div>
         </SidebarInset>
       </div>
     </SidebarProvider>

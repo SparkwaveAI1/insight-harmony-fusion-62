@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "./types";
 import { personaToDbPersona, dbPersonaToPersona } from "./mappers";
@@ -84,6 +85,39 @@ export async function getAllPersonas(): Promise<Persona[]> {
     return data ? data.map(dbPersonaToPersona) : [];
   } catch (error) {
     console.error("Error getting all personas:", error);
+    return [];
+  }
+}
+
+export async function getPersonasByCollection(collectionId: string): Promise<Persona[]> {
+  try {
+    // First get the persona_ids from the collection_personas table
+    const { data: collectionPersonas, error: collectionError } = await supabase
+      .from('collection_personas')
+      .select('persona_id')
+      .eq('collection_id', collectionId);
+
+    if (collectionError) throw collectionError;
+    
+    if (!collectionPersonas || collectionPersonas.length === 0) {
+      return [];
+    }
+    
+    // Extract the persona_ids
+    const personaIds = collectionPersonas.map(cp => cp.persona_id);
+    
+    // Then fetch the actual personas
+    const { data: personas, error: personasError } = await supabase
+      .from('personas')
+      .select('*')
+      .in('persona_id', personaIds)
+      .order('created_at', { ascending: false });
+    
+    if (personasError) throw personasError;
+    
+    return personas ? personas.map(dbPersonaToPersona) : [];
+  } catch (error) {
+    console.error("Error getting personas by collection:", error);
     return [];
   }
 }

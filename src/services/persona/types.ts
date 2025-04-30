@@ -33,6 +33,8 @@ export interface DbPersona {
   simulation_directives: any;
   trait_profile: any;
   prompt?: string;
+  created_by?: string;
+  is_public?: boolean;
 }
 
 export interface Persona {
@@ -51,5 +53,7 @@ export interface Persona {
   preinterview_tags?: string[];
   simulation_directives?: any;
   prompt?: string;
+  created_by?: string;
+  is_public?: boolean;
   [key: string]: any;
 }
