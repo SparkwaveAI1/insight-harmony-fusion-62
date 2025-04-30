@@ -1,8 +1,19 @@
 
-import { BarChart3, Users, Folder, Activity } from "lucide-react";
+import { BarChart3, Users, Folder, Activity, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRecentActivity } from "@/hooks/useRecentActivity";
+import { formatDistanceToNow } from "date-fns";
 
 export function DashboardContent() {
+  const { activities, isLoading } = useRecentActivity();
+
+  // Mapping of activity types to their respective icons
+  const activityIcons = {
+    Users: Users,
+    Folder: Folder,
+    BarChart3: BarChart3
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -66,38 +77,34 @@ export function DashboardContent() {
             <CardDescription>Your latest persona interactions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4 border-b pb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-primary" />
+            {isLoading ? (
+              <div className="flex justify-center items-center py-6">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                <span className="ml-2">Loading activities...</span>
               </div>
-              <div>
-                <p className="font-medium">Persona interview completed</p>
-                <p className="text-sm text-muted-foreground">You interviewed "Jamie, 34, Marketing Manager"</p>
+            ) : activities.length > 0 ? (
+              activities.map((activity) => {
+                const IconComponent = activityIcons[activity.iconName];
+                return (
+                  <div key={activity.id} className="flex items-center gap-4 border-b last:border-0 pb-4 last:pb-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <IconComponent className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                    </div>
+                    <div className="ml-auto text-sm text-muted-foreground">
+                      {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                No recent activities found
               </div>
-              <div className="ml-auto text-sm text-muted-foreground">2h ago</div>
-            </div>
-
-            <div className="flex items-center gap-4 border-b pb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Folder className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">New collection created</p>
-                <p className="text-sm text-muted-foreground">You created "Product Feedback - Q2"</p>
-              </div>
-              <div className="ml-auto text-sm text-muted-foreground">Yesterday</div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Insight generated</p>
-                <p className="text-sm text-muted-foreground">New insights for "Millennial Shopping Habits"</p>
-              </div>
-              <div className="ml-auto text-sm text-muted-foreground">3 days ago</div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
