@@ -13,7 +13,7 @@ export function NavigationMenu() {
   const location = useLocation();
 
   return (
-    <SidebarGroup className="pt-4">
+    <SidebarGroup className="pt-6">
       <SidebarGroupContent>
         <SidebarMenu>
           {navigationMenuItems.map((item) => (
