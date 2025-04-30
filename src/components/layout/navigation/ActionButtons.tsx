@@ -4,23 +4,23 @@ import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ActionButtonsProps {
-  isEarnPage: boolean;
   isWalletConnected: boolean;
   connectWallet: () => void;
   disconnectWallet: () => void;
   className?: string;
+  showWalletOptions?: boolean; // New prop to control wallet button visibility
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
-  isEarnPage,
   isWalletConnected,
   connectWallet,
   disconnectWallet,
-  className
+  className,
+  showWalletOptions = false // Default to not showing wallet options
 }) => {
   return (
     <div className={className}>
-      {isEarnPage && (
+      {showWalletOptions && (
         <>
           {isWalletConnected ? (
             <Button 

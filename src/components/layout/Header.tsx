@@ -101,7 +101,7 @@ const Header = () => {
         {/* Action Buttons (right side) - Desktop */}
         <div className="hidden md:flex items-center gap-4">
           <ActionButtons 
-            isEarnPage={isEarnPage}
+            showWalletOptions={isEarnPage}
             isWalletConnected={isWalletConnected}
             connectWallet={connectWallet}
             disconnectWallet={disconnectWallet}
@@ -148,7 +148,7 @@ const Header = () => {
               {/* Mobile Auth Buttons */}
               <div className="mt-4 flex flex-col gap-2">
                 <ActionButtons 
-                  isEarnPage={isEarnPage}
+                  showWalletOptions={isEarnPage}
                   isWalletConnected={isWalletConnected}
                   connectWallet={connectWallet}
                   disconnectWallet={disconnectWallet}
