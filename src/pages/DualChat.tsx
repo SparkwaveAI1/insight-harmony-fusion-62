@@ -104,11 +104,13 @@ const DualChat: React.FC = () => {
                       targetPersona={targetPersona}
                       setTargetPersona={setTargetPersona}
                       handleUserSendMessage={handleUserSendMessage}
+                      handleStartConversation={handleStartConversation}
                       isResponding={isResponding}
                       getPersonaName={getPersonaName}
                       activePersonasLoaded={activePersonasLoaded}
                       exchangeCount={exchangeCount}
                       maxExchanges={maxExchanges}
+                      autoChatActive={autoChatActive}
                     />
                   </Card>
                 </div>

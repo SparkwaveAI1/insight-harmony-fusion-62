@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import Button from '@/components/ui-custom/Button';
-import { Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Send, MessageSquare, ArrowRightLeft } from 'lucide-react';
 
 interface ChatInputProps {
   userInput: string;
@@ -10,11 +10,13 @@ interface ChatInputProps {
   targetPersona: 'personaA' | 'personaB';
   setTargetPersona: (persona: 'personaA' | 'personaB') => void;
   handleUserSendMessage: () => void;
+  handleStartConversation: () => void;
   isResponding: boolean;
   getPersonaName: (type: 'personaA' | 'personaB') => string;
   activePersonasLoaded: boolean;
   exchangeCount: number;
   maxExchanges: number;
+  autoChatActive: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -23,42 +25,72 @@ const ChatInput: React.FC<ChatInputProps> = ({
   targetPersona,
   setTargetPersona,
   handleUserSendMessage,
+  handleStartConversation,
   isResponding,
   getPersonaName,
   activePersonasLoaded,
   exchangeCount,
-  maxExchanges
+  maxExchanges,
+  autoChatActive
 }) => {
+  
+  const sendToPersonaA = () => {
+    setTargetPersona('personaA');
+    handleUserSendMessage();
+  };
+
+  const sendToPersonaB = () => {
+    setTargetPersona('personaB');
+    handleUserSendMessage();
+  };
+
   return (
     <div className="border-t p-4">
       <div className="flex flex-col md:flex-row gap-2">
-        <div className="flex-1 flex gap-2">
-          <select 
-            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            value={targetPersona}
-            onChange={(e) => setTargetPersona(e.target.value as 'personaA' | 'personaB')}
-            disabled={isResponding || !activePersonasLoaded}
+        <Input
+          type="text"
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && userInput.trim() && handleUserSendMessage()}
+          placeholder="Type your message..."
+          disabled={isResponding || !activePersonasLoaded || autoChatActive}
+          className="flex-1"
+        />
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={sendToPersonaA}
+            disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
+            className="whitespace-nowrap"
+            title={`Send to ${getPersonaName('personaA')}`}
           >
-            <option value="personaA">Send to {getPersonaName('personaA')}</option>
-            <option value="personaB">Send to {getPersonaName('personaB')}</option>
-          </select>
-          <Input
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleUserSendMessage()}
-            placeholder="Type your message..."
-            disabled={isResponding || !activePersonasLoaded}
-            className="flex-1"
-          />
+            <Send className="h-4 w-4 mr-2" />
+            To {getPersonaName('personaA')}
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={sendToPersonaB}
+            disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
+            className="whitespace-nowrap"
+            title={`Send to ${getPersonaName('personaB')}`}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            To {getPersonaName('personaB')}
+          </Button>
+          
+          <Button
+            variant="default"
+            onClick={handleStartConversation}
+            disabled={isResponding || !activePersonasLoaded || autoChatActive}
+            className="whitespace-nowrap"
+            title="Continue conversation between personas"
+          >
+            <ArrowRightLeft className="h-4 w-4 mr-2" />
+            Continue Chat
+          </Button>
         </div>
-        <Button
-          onClick={handleUserSendMessage}
-          disabled={!userInput.trim() || isResponding || !activePersonasLoaded}
-        >
-          <Send className="h-4 w-4 mr-2" />
-          Send
-        </Button>
       </div>
       
       <div className="mt-3 text-xs text-muted-foreground text-center">
