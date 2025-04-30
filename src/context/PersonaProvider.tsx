@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { getPersonaByPersonaId } from '@/services/persona/personaService';
 import { Persona } from '@/services/persona/types';
 import { PersonaContextType } from './PersonaContext.types';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create context with undefined default value
 export const PersonaContext = createContext<PersonaContextType | undefined>(undefined);
@@ -65,6 +66,11 @@ export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) =>
         queryKey: ['persona', personaId],
         queryFn: () => getPersonaByPersonaId(personaId),
       });
+      
+      if (!persona) {
+        toast.error("Persona not found");
+        return null;
+      }
       
       return persona;
     } catch (error) {

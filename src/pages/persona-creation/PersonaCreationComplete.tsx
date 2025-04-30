@@ -1,38 +1,42 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Check } from "lucide-react";
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Toaster } from "sonner";
 
 const PersonaCreationComplete = () => {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Short delay before redirecting to My Personas page
+    const timer = setTimeout(() => {
+      navigate('/my-personas');
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
   return (
-    <div className="container max-w-3xl mx-auto py-12 px-4">
-      <Card className="p-8">
-        <div className="flex flex-col items-center text-center space-y-6">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
-          
-          <h1 className="text-3xl font-bold">Questionnaire Completed</h1>
-          
-          <p className="text-lg text-gray-600 max-w-md">
-            Thank you for completing the questionnaire! We will be in touch within 24 hours with information 
-            about your Conversational Interview, the final step in creating your persona.
-          </p>
-          
-          <div className="border-t border-gray-200 w-full pt-6 mt-6">
-            <Button 
-              onClick={() => navigate("/")}
-              className="px-6"
-            >
-              Return to Home
-            </Button>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center p-8 max-w-md">
+        <div className="mb-6">
+          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
         </div>
-      </Card>
+        <h1 className="text-3xl font-bold mb-4">Persona Created Successfully!</h1>
+        <p className="text-muted-foreground mb-8">
+          Your persona has been saved to your account. You'll be redirected to your personas in a moment...
+        </p>
+        <button 
+          onClick={() => navigate('/my-personas')}
+          className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
+        >
+          View My Personas
+        </button>
+      </div>
+      <Toaster />
     </div>
   );
 };

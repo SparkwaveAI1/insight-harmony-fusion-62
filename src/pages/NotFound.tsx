@@ -1,6 +1,7 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const NotFound = () => {
   const location = useLocation();
@@ -11,7 +12,15 @@ const NotFound = () => {
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+    
+    // Check if the user was trying to access a persona detail page
+    if (location.pathname.includes('/persona-detail/') || 
+        location.pathname.includes('/your-persona/')) {
+      toast.error("The persona could not be found. Redirecting you to your personas.");
+      setTimeout(() => navigate("/my-personas"), 2000);
+      return;
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

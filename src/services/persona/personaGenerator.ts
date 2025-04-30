@@ -1,31 +1,54 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Persona } from "./types";
+import { v4 as uuidv4 } from 'uuid';
+import { Persona } from './types';
+import { savePersona } from './personaService';
+import { supabase } from '@/integrations/supabase/client';
 
 export async function generatePersona(prompt: string): Promise<Persona | null> {
   try {
-    console.log("Generating persona with prompt:", prompt);
+    // Fetch the current user's ID to associate with the persona
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
     
-    // Use the existing Edge Function which already has rate limiting and centralized API key handling
-    const response = await supabase.functions.invoke('generate-persona', {
-      body: { prompt }
+    // Create a unique ID for the persona
+    const personaId = Math.random().toString(36).substring(2, 10);
+    
+    const response = await fetch(`https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/generate-persona`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+      },
+      body: JSON.stringify({ prompt }),
     });
 
-    console.log("Response from generate-persona function:", response);
-
-    if (!response.data || !response.data.success) {
-      console.error("Error generating persona:", response.error || (response.data && response.data.error));
-      throw new Error(response.error?.message || (response.data && response.data.error) || "Failed to generate persona");
+    if (!response.ok) {
+      throw new Error(`Error generating persona: ${response.statusText}`);
     }
 
-    // Add the prompt to the persona
-    const persona = response.data.persona;
-    persona.prompt = prompt;
+    const personaData = await response.json();
+    console.log("Generated persona data:", personaData);
     
-    console.log("Generated persona:", persona);
-    console.log("Interview sections generated:", JSON.stringify(persona.interview_sections, null, 2));
-    console.log("Persona ID:", persona.persona_id);
-    return persona;
+    if (!personaData) {
+      throw new Error('No persona data returned from API');
+    }
+    
+    // Add additional fields to the persona
+    const persona: Persona = {
+      ...personaData,
+      id: uuidv4(),
+      persona_id: personaId,
+      creation_date: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString(),
+      prompt,
+      created_by: userId || undefined,
+      is_public: false,
+    };
+    
+    // Save the persona to the database
+    const savedPersona = await savePersona(persona);
+    return savedPersona;
+    
   } catch (error) {
     console.error("Error in generatePersona:", error);
     throw error;

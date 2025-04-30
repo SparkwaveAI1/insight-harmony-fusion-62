@@ -45,12 +45,12 @@ export default function PersonaList({
       
       if (collectionId) {
         // This would require an API call to get personas in a specific collection
-        // For now, we'll leave this as a placeholder
-        console.log(`Should filter by collection ID: ${collectionId}`);
+        const collectionPersonas = await getPersonasByCollection(collectionId);
+        data = collectionPersonas;
       }
       
-      console.log("Fetched personas:", data);
-      console.log("Number of personas:", data.length);
+      console.log(`Loaded ${data.length} personas with filters: `, 
+        { filterByCurrentUser, publicOnly, collectionId });
       
       setPersonas(data);
       onPersonasLoad?.(data);
@@ -100,3 +100,6 @@ export default function PersonaList({
     </div>
   );
 }
+
+// Import the getPersonasByCollection function at the top of the file
+import { getPersonasByCollection } from "@/services/persona/personaService";
