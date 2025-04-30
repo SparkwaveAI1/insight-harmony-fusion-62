@@ -41,11 +41,44 @@ export function useRecentActivity() {
         // Fetch recent collection-persona associations
         const { data: collectionPersonas, error: collectionPersonasError } = await supabase
           .from('collection_personas')
-          .select('id, persona_id, collection_id, added_at, collections(name), personas(name)')
+          .select('id, persona_id, collection_id, added_at')
           .order('added_at', { ascending: false })
           .limit(2);
 
         if (collectionPersonasError) throw collectionPersonasError;
+
+        // Now fetch the related persona and collection names separately
+        const personaCollectionActivities: Activity[] = [];
+        
+        if (collectionPersonas && collectionPersonas.length > 0) {
+          for (const cp of collectionPersonas) {
+            // Get persona name
+            const { data: personaData } = await supabase
+              .from('personas')
+              .select('name')
+              .eq('persona_id', cp.persona_id)
+              .single();
+            
+            // Get collection name
+            const { data: collectionData } = await supabase
+              .from('collections')
+              .select('name')
+              .eq('id', cp.collection_id)
+              .single();
+            
+            const personaName = personaData?.name || 'Unknown Persona';
+            const collectionName = collectionData?.name || 'Unknown Collection';
+            
+            personaCollectionActivities.push({
+              id: cp.id,
+              type: 'insight',
+              title: 'Persona added to collection',
+              description: `Added "${personaName}" to "${collectionName}"`,
+              iconName: 'BarChart3',
+              timestamp: new Date(cp.added_at)
+            });
+          }
+        }
 
         // Transform the data into activity items
         const personaActivities: Activity[] = (personas || []).map(persona => ({
@@ -64,17 +97,6 @@ export function useRecentActivity() {
           description: `You updated "${collection.name}"`,
           iconName: 'Folder',
           timestamp: new Date(collection.updated_at)
-        }));
-
-        const personaCollectionActivities: Activity[] = (collectionPersonas || []).map(cp => ({
-          id: cp.id,
-          type: 'insight',
-          title: 'Persona added to collection',
-          description: cp.personas?.name && cp.collections?.name 
-            ? `Added "${cp.personas.name}" to "${cp.collections.name}"`
-            : 'Persona added to collection',
-          iconName: 'BarChart3',
-          timestamp: new Date(cp.added_at)
         }));
 
         // Combine all activities and sort by timestamp
