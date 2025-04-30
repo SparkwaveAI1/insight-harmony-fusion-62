@@ -65,26 +65,26 @@ const Header = () => {
               className={isScrolled ? "text-foreground" : "text-white"}
             />
           </Link>
-          
-          {/* Navigation Links - Desktop */}
-          <NavigationMenu className="hidden md:flex ml-6">
-            <NavigationMenuList>
-              {navigationLinks.map((link) => (
-                <NavigationMenuItem key={link.title}>
-                  <Link to={link.href}>
-                    <NavigationMenuLink className={cn(
-                      navigationMenuTriggerStyle(),
-                      "text-sm font-medium text-foreground hover:text-foreground/80"
-                    )}>
-                      {link.icon && <link.icon className="w-4 h-4 mr-2" />}
-                      {link.title}
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              ))}
-            </NavigationMenuList>
-          </NavigationMenu>
         </div>
+          
+        {/* Centered Navigation Links - Desktop */}
+        <NavigationMenu className="hidden md:flex mx-auto">
+          <NavigationMenuList>
+            {navigationLinks.map((link) => (
+              <NavigationMenuItem key={link.title}>
+                <Link to={link.href}>
+                  <NavigationMenuLink className={cn(
+                    navigationMenuTriggerStyle(),
+                    "text-sm font-medium text-foreground hover:text-foreground/80"
+                  )}>
+                    {link.icon && <link.icon className="w-4 h-4 mr-2" />}
+                    {link.title}
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            ))}
+          </NavigationMenuList>
+        </NavigationMenu>
 
         {/* Mobile Menu Button */}
         <button 
