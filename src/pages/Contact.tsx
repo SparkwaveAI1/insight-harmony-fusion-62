@@ -15,15 +15,15 @@ const Contact = () => {
             <div className="max-w-3xl mx-auto">
               <div className="text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 font-plasmik">
-                  Commission Custom Personas
+                  Get in Touch with PersonaAI
                 </h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Get AI personas tailored precisely to your audience. Fill out the form below, and our team will contact you to discuss your custom persona needs.
+                  Have questions about our AI research platform? Looking to partner with us or learn more about investment opportunities? We're here to help. Fill out the form below and our team will get back to you shortly.
                 </p>
               </div>
 
               <div className="bg-white/50 shadow-sm border border-border rounded-xl p-8">
-                <ContactForm formType="custom-persona" />
+                <ContactForm formType="contact" />
               </div>
             </div>
           </div>
