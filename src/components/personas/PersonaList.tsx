@@ -12,13 +12,15 @@ interface PersonaListProps {
   filterByCurrentUser?: boolean;
   publicOnly?: boolean;
   collectionId?: string;
+  onDeleteCollection?: () => void;
 }
 
 export default function PersonaList({ 
   onPersonasLoad, 
   filterByCurrentUser = false, 
   publicOnly = false,
-  collectionId
+  collectionId,
+  onDeleteCollection
 }: PersonaListProps) {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -8,7 +9,8 @@ import {
   createCollection,
   deleteCollection,
   Collection,
-  CollectionWithPersonaCount
+  CollectionWithPersonaCount,
+  updateCollection
 } from "@/services/collections/collectionsService";
 import Button from "@/components/ui-custom/Button";
 import { Plus, Trash2, Edit, FolderOpen } from "lucide-react";
@@ -16,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const Collections = () => {
   const { user } = useAuth();
@@ -77,21 +80,29 @@ const Collections = () => {
   const handleDeleteCollection = async () => {
     if (!selectedCollection) return;
 
-    const result = await deleteCollection(selectedCollection.id);
-    if (result) {
-      setDeleteDialogOpen(false);
-      fetchCollections();
+    try {
+      const result = await deleteCollection(selectedCollection.id);
+      if (result) {
+        toast.success(`Collection "${selectedCollection.name}" deleted`);
+        setDeleteDialogOpen(false);
+        fetchCollections();
+      }
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      toast.error("Failed to delete collection");
     }
   };
 
-  const openEditDialog = (collection: Collection) => {
+  const openEditDialog = (collection: Collection, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation to collection detail
     setSelectedCollection(collection);
     setName(collection.name);
     setDescription(collection.description || "");
     setEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (collection: Collection) => {
+  const openDeleteDialog = (collection: Collection, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation to collection detail
     setSelectedCollection(collection);
     setDeleteDialogOpen(true);
   };
@@ -163,14 +174,14 @@ const Collections = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => openEditDialog(collection)}
+                          onClick={(e) => openEditDialog(collection, e)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => openDeleteDialog(collection)}
+                          onClick={(e) => openDeleteDialog(collection, e)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -262,27 +273,25 @@ const Collections = () => {
             </Dialog>
 
             {/* Delete Collection Confirmation */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Delete Collection</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <p>
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+                  <AlertDialogDescription>
                     Are you sure you want to delete "{selectedCollection?.name}"? This action cannot
                     be undone and all persona references will be removed.
-                  </p>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
                     Cancel
-                  </Button>
-                  <Button variant="primary" onClick={handleDeleteCollection}>
+                  </AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteCollection}>
                     Delete
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </main>
         </SidebarInset>
       </div>
@@ -291,5 +300,3 @@ const Collections = () => {
 };
 
 export default Collections;
-
-import { updateCollection } from "@/services/collections/collectionsService"; // Add the missing import
