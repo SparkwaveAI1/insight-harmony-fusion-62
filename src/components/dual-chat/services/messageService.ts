@@ -41,6 +41,7 @@ export const createMessageService = ({
       setIsResponding(false);
       return response;
     } catch (error) {
+      console.error("Error in generateResponseFor:", error);
       setIsResponding(false);
       throw error;
     }
