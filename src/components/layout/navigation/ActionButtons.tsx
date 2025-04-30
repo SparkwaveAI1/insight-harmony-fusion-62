@@ -39,7 +39,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           ) : (
             <Button 
               size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 border-none text-white"
+              className="bg-gradient-to-r from-primary to-primary/80 border-none text-white hover:opacity-90"
               onClick={connectWallet}
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -62,7 +62,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         </Button>
       ) : (
         <Link to="/auth">
-          <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80 border-none text-white">
+          <Button 
+            size="sm" 
+            className="bg-gradient-to-r from-primary to-primary/80 border-none text-white hover:opacity-90"
+          >
             <LogIn className="h-4 w-4 mr-2" />
             Sign In
           </Button>
