@@ -24,6 +24,7 @@ const CollectionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [personas, setPersonas] = useState<any[]>([]);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);  // Add this line to force refresh
 
   useEffect(() => {
     if (collectionId) {
@@ -61,7 +62,7 @@ const CollectionDetail = () => {
   const refreshPersonas = () => {
     if (collectionId) {
       // Force PersonaList to refetch by triggering a state change
-      const personaListKey = Date.now();
+      setRefreshKey(prev => prev + 1);
       setPersonas([]); // Clear current personas
     }
   };
@@ -109,6 +110,7 @@ const CollectionDetail = () => {
                     </div>
                     
                     <PersonaList 
+                      key={refreshKey}  // Add this line to force refresh when refreshKey changes
                       onPersonasLoad={setPersonas}
                       collectionId={collectionId}
                       onDeleteCollection={handleDeleteCollection}

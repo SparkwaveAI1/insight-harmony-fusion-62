@@ -1,137 +1,151 @@
 
-import { useState, useEffect } from "react";
-import { getAllPersonas } from "@/services/persona/personaService";
-import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
-import PersonaLoadingState from "./PersonaLoadingState";
-import PersonaEmptyState from "./PersonaEmptyState";
+import React, { useState, useEffect } from "react";
+import { getPersonasByCollection } from "@/services/persona/personaService";
 import PersonaCard from "./PersonaCard";
-import { Persona } from "@/services/persona/types";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import PersonaEmptyState from "./PersonaEmptyState";
+import PersonaLoadingState from "./PersonaLoadingState";
 
 interface PersonaListProps {
-  onPersonasLoad?: (personas: Persona[]) => void;
-  filterByCurrentUser?: boolean;
-  publicOnly?: boolean;
+  onPersonasLoad?: (personas: any[]) => void;
   collectionId?: string;
   onDeleteCollection?: () => void;
 }
 
-export default function PersonaList({ 
-  onPersonasLoad, 
-  filterByCurrentUser = false, 
-  publicOnly = false,
+const PersonaList: React.FC<PersonaListProps> = ({
+  onPersonasLoad,
   collectionId,
-  onDeleteCollection
-}: PersonaListProps) {
-  const [personas, setPersonas] = useState<Persona[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  onDeleteCollection,
+}) => {
+  const [personas, setPersonas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPersonas = async () => {
+    setLoading(true);
+    try {
+      let data;
+      if (collectionId) {
+        data = await getPersonasByCollection(collectionId);
+      } else {
+        // You might want to implement a different fetch here for non-collection scenarios
+        data = [];
+      }
+      setPersonas(data);
+      if (onPersonasLoad) {
+        onPersonasLoad(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch personas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    loadPersonas();
-  }, [filterByCurrentUser, publicOnly, collectionId, user]);
+    fetchPersonas();
+  }, [collectionId]);
 
-  const loadPersonas = async () => {
-    setIsLoading(true);
-    try {
-      let data = await getAllPersonas();
-      
-      console.log("Total personas loaded:", data.length);
-      
-      // Log all personas with their user_id values for debugging
-      data.forEach((persona, index) => {
-        console.log(`Persona ${index}: id=${persona.persona_id}, name=${persona.name}, user_id=${persona.user_id}`);
-      });
-      
-      // Apply filters based on the props
-      if (filterByCurrentUser && user) {
-        console.log("Filtering by current user:", user.id);
-        console.log("Before filter:", data.length, "personas");
-        
-        // Filter personas by user_id
-        data = data.filter(persona => {
-          const isMatch = persona.user_id === user.id;
-          console.log(`Checking persona ${persona.persona_id}: user_id=${persona.user_id}, user.id=${user.id}, match=${isMatch}`);
-          return isMatch;
-        });
-        
-        console.log("After filter:", data.length, "personas");
-      }
-      
-      if (publicOnly) {
-        data = data.filter(persona => persona.is_public);
-      }
-      
-      if (collectionId) {
-        // This would require an API call to get personas in a specific collection
-        const collectionPersonas = await getPersonasByCollection(collectionId);
-        data = collectionPersonas;
-      }
-      
-      console.log(`Loaded ${data.length} personas with filters:`, 
-        { filterByCurrentUser, publicOnly, collectionId });
-      
-      setPersonas(data);
-      onPersonasLoad?.(data);
-    } catch (error) {
-      console.error("Error loading personas:", error);
-      toast.error("Failed to load personas");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRemoveFromCollection = () => {
+    fetchPersonas();
   };
 
-  const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
-    // Update local state when visibility changes
-    setPersonas(prevPersonas => 
-      prevPersonas.map(persona => 
-        persona.persona_id === personaId 
-          ? { ...persona, is_public: isPublic } 
-          : persona
-      )
-    );
-    
-    // If we're filtering by public only and a persona was made private, remove it from the list
-    if (publicOnly && !isPublic) {
-      setPersonas(prevPersonas => 
-        prevPersonas.filter(persona => persona.persona_id !== personaId)
-      );
-    }
-  };
-
-  const handleDelete = (personaId: string) => {
-    // Remove the deleted persona from the list
-    setPersonas(prevPersonas => 
-      prevPersonas.filter(persona => persona.persona_id !== personaId)
-    );
-    
-    // If we're in a collection and it's the last persona, trigger collection delete
-    if (collectionId && personas.length <= 1 && onDeleteCollection) {
-      onDeleteCollection();
-    }
-  };
-
-  if (isLoading) {
+  if (loading) {
     return <PersonaLoadingState />;
   }
 
   if (personas.length === 0) {
-    return <PersonaEmptyState />;
+    return (
+      <div>
+        <PersonaEmptyState 
+          title="No personas in this collection" 
+          description="This collection doesn't have any personas yet. Add personas to this collection to see them here."
+        />
+        {collectionId && onDeleteCollection && (
+          <div className="mt-6 flex justify-center">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="mt-4">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Collection
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this collection? This action cannot be undone.
+                    The personas in this collection will not be deleted, just the collection itself.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDeleteCollection} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete Collection
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {personas.map((persona) => (
-        <PersonaCard 
-          key={persona.persona_id} 
-          persona={persona}
-          onVisibilityChange={handleVisibilityChange}
-          onDelete={handleDelete} 
-        />
-      ))}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {personas.map((persona) => (
+          <PersonaCard 
+            key={persona.persona_id} 
+            persona={persona} 
+            inCollection={!!collectionId}
+            collectionId={collectionId}
+            onRemoveFromCollection={handleRemoveFromCollection}
+          />
+        ))}
+      </div>
+      
+      {collectionId && onDeleteCollection && (
+        <div className="mt-6 flex justify-end">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Collection
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Collection</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this collection? This action cannot be undone.
+                  The personas in this collection will not be deleted, just the collection itself.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDeleteCollection} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete Collection
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </div>
   );
-}
+};
 
-// Import the getPersonasByCollection function at the top of the file
-import { getPersonasByCollection } from "@/services/persona/personaService";
+export default PersonaList;
