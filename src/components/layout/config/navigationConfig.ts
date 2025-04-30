@@ -23,11 +23,6 @@ export const navigationMenuItems = [
     icon: Library,
   },
   {
-    title: "Research",
-    url: "/research",
-    icon: FlaskConical,
-  },
-  {
     title: "Create Simulated Persona",
     url: "/simulated-persona",
     icon: User,
@@ -38,8 +33,13 @@ export const navigationMenuItems = [
     icon: BookText,
   },
   {
-    title: "Chat",
+    title: "Chat with Personas",
     url: "/dual-chat",
     icon: MessageCircle,
+  },
+  {
+    title: "Research",
+    url: "/research",
+    icon: FlaskConical,
   },
 ];
