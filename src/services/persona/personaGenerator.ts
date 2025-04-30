@@ -10,6 +10,12 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
     
+    if (!userId) {
+      console.error("No authenticated user found when generating persona");
+    } else {
+      console.log("Creating persona for user:", userId);
+    }
+    
     // Create a unique ID for the persona
     const personaId = uuidv4().substring(0, 8);
     
@@ -33,7 +39,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       throw new Error('No persona data returned from API');
     }
     
-    // Add additional fields to the persona
+    // Add additional fields to the persona - explicitly set created_by to userId
     const persona: Persona = {
       ...personaData,
       id: uuidv4(),
@@ -41,9 +47,11 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       creation_date: new Date().toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       prompt,
-      created_by: userId || undefined,
+      created_by: userId,
       is_public: false,
     };
+    
+    console.log("Saving persona with created_by:", persona.created_by);
     
     // Save the persona to the database
     const savedPersona = await savePersona(persona);

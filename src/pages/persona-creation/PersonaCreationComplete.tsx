@@ -10,8 +10,9 @@ const PersonaCreationComplete = () => {
     // Show success toast
     toast.success("Persona created successfully!");
     
-    // Short delay before redirecting to My Personas page
+    // Add a slight delay to ensure the persona is saved
     const timer = setTimeout(() => {
+      console.log("Redirecting to My Personas page...");
       navigate('/my-personas');
     }, 3000);
 
