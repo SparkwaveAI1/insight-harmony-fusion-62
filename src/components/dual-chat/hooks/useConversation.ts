@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Message } from '../types';
@@ -55,7 +56,6 @@ export const useConversation = ({
     }
     
     setAutoChatActive(true);
-    setExchangeCount(0);
     
     // Start with persona A if there are no messages yet
     if (messages.length === 0) {
@@ -100,8 +100,8 @@ export const useConversation = ({
         return;
       }
       
-      const respondingPersona = lastMessage.role === 'personaA' || (lastMessage.role === 'user' && lastMessage.target === 'personaA') 
-        ? 'personaB' : 'personaA';
+      // The next responder should always be the persona who didn't speak last
+      const respondingPersona = lastMessage.role === 'personaA' ? 'personaB' : 'personaA';
       
       // Generate response with full conversation context
       const response = await generateResponseFor(

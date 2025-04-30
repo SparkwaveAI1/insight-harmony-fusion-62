@@ -34,14 +34,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   autoChatActive
 }) => {
   
-  const sendToPersonaA = () => {
-    setTargetPersona('personaA');
-    handleUserSendMessage();
-  };
-
-  const sendToPersonaB = () => {
-    setTargetPersona('personaB');
-    handleUserSendMessage();
+  const handleSendToPersona = (persona: 'personaA' | 'personaB') => {
+    setTargetPersona(persona);
+    setTimeout(() => handleUserSendMessage(), 0);
   };
 
   return (
@@ -51,7 +46,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="text"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && userInput.trim() && handleUserSendMessage()}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && userInput.trim()) {
+              handleUserSendMessage();
+            }
+          }}
           placeholder="Type your message..."
           disabled={isResponding || !activePersonasLoaded || autoChatActive}
           className="flex-1"
@@ -60,7 +59,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={sendToPersonaA}
+            onClick={() => handleSendToPersona('personaA')}
             disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
             className="whitespace-nowrap"
             title={`Send to ${getPersonaName('personaA')}`}
@@ -71,7 +70,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           
           <Button
             variant="outline"
-            onClick={sendToPersonaB}
+            onClick={() => handleSendToPersona('personaB')}
             disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
             className="whitespace-nowrap"
             title={`Send to ${getPersonaName('personaB')}`}
