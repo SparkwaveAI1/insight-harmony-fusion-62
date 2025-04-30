@@ -1,12 +1,15 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 
 const PersonaCreationComplete = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Show success toast
+    toast.success("Persona created successfully!");
+    
     // Short delay before redirecting to My Personas page
     const timer = setTimeout(() => {
       navigate('/my-personas');

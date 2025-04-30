@@ -20,6 +20,13 @@ const NotFound = () => {
       setTimeout(() => navigate("/my-personas"), 2000);
       return;
     }
+    
+    // Check if the user was coming from persona creation
+    if (location.pathname.includes('/persona-creation')) {
+      toast.info("Redirecting to your personas...");
+      setTimeout(() => navigate("/my-personas"), 1000);
+      return;
+    }
   }, [location.pathname, navigate]);
 
   return (
