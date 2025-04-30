@@ -18,7 +18,7 @@ interface PersonaCardProps {
 
 export default function PersonaCard({ persona, onVisibilityChange }: PersonaCardProps) {
   const { user } = useAuth();
-  const isOwner = user && persona.created_by === user.id;
+  const isOwner = user && persona.user_id === user.id;
 
   // Helper function to format date strings
   const formatDateString = (dateString: string) => {
