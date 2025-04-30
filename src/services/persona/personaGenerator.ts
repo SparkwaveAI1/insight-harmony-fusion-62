@@ -49,7 +49,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       throw new Error(personaData?.error || 'Invalid response from persona generation API');
     }
     
-    // Add additional fields to the persona - adjust field name based on existing schema
+    // Add additional fields to the persona according to the database schema
     const persona: Persona = {
       ...personaData.persona,
       id: uuidv4(),
@@ -57,7 +57,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       creation_date: new Date().toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       prompt,
-      // Don't include user_id or created_by since they don't exist in the schema
+      created_by: userId, // Store the user ID in the created_by field
       is_public: false,
     };
     

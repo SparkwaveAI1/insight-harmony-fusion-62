@@ -63,6 +63,26 @@ const PersonaCreationComplete = () => {
     }
   };
 
+  // Display detailed error information to help with debugging
+  const getDetailedErrorInfo = () => {
+    if (!errorMessage) return null;
+    
+    // If it contains specific keywords, provide more targeted help
+    if (errorMessage.includes("column") || errorMessage.includes("schema")) {
+      return (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTitle>Database Schema Issue</AlertTitle>
+          <AlertDescription className="text-sm font-mono">
+            {errorMessage}
+            <p className="mt-2">This appears to be a database schema mismatch. The application is trying to save fields that don't exist in the database.</p>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    return null;
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center p-8 max-w-md">
@@ -82,6 +102,8 @@ const PersonaCreationComplete = () => {
                 {errorMessage}
               </AlertDescription>
             </Alert>
+            
+            {getDetailedErrorInfo()}
             
             <p className="text-muted-foreground mb-8">
               There was an error creating your persona. You can try again or view your existing personas.
