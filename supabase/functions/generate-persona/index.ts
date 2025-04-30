@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -10,22 +9,60 @@ const personaTemplate = {
   name: '',
   creation_date: '',
   metadata: {
+    // Core Demographics
     age: null,
     gender: null,
     race_ethnicity: null,
+    sexual_orientation: null,
+    education_level: null,
+    occupation: null,
+    employment_type: null,
+    income_level: null,
+    social_class_identity: null,
+    marital_status: null,
+    parenting_role: null,
+    relationship_history: null,
+    military_service: null,
+    
+    // Location, Environment & Migration
     region: null,
+    urban_rural_context: null,
     location_history: {
       grew_up_in: null,
       current_residence: null,
+      places_lived: [],
     },
-    income_level: null,
-    education_level: null,
-    occupation: null,
-    relationship_status: null,
-    children_or_caregiver: null,
+    migration_history: null,
+    climate_risk_zone: null,
+    
+    // Cognitive, Psychological, and Cultural
+    language_proficiency: [],
+    religious_affiliation: null,
+    religious_practice_level: null,
     cultural_background: null,
-    disabilities_or_conditions: null,
-    family_medical_history: null,
+    cultural_affiliation: [],
+    political_affiliation: null,
+    political_sophistication: null,
+    tech_familiarity: null,
+    learning_modality: null,
+    trust_in_institutions: null,
+    trauma_exposure: null,
+    
+    // Financial and Time Resource Profile
+    financial_pressure: null,
+    credit_access: null,
+    debt_load: null,
+    time_abundance: null,
+    
+    // Digital Ecosystem & Signaling Behavior
+    media_ecosystem: [],
+    aesthetic_subculture: null,
+    
+    // Health-Related Attributes
+    physical_health_status: null,
+    mental_health_status: null,
+    health_prioritization: null,
+    healthcare_access: null,
   },
   trait_profile: {
     big_five: {},
@@ -240,8 +277,8 @@ serve(async (req) => {
           { 
             role: "system", 
             content: `You are an AI specialized in creating realistic personas for research. 
-            Given a brief description, generate a detailed psychological profile following the template exactly.
-            You should fill in all the demographic fields in the metadata section, and the psychological traits.
+            Given a brief description, generate a detailed psychological and demographic profile following the template exactly.
+            You should fill in all the demographic fields in the metadata section, creating a rich and nuanced profile.
             Use realistic values based on demographic probability distributions.
             Maintain internal consistency while allowing for realistic contradictions.
             Return the output as valid JSON matching the provided template exactly.` 
