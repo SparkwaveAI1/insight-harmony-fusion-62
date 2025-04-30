@@ -7,7 +7,7 @@ import AddToCollectionDialog from "./AddToCollectionDialog";
 interface AddToCollectionButtonProps {
   personaId: string;
   size?: "default" | "sm" | "lg" | "icon";
-  variant?: "default" | "primary" | "secondary" | "outline" | "ghost" | "link";
+  variant?: "default" | "secondary" | "outline" | "ghost" | "link" | "destructive";
 }
 
 const AddToCollectionButton: React.FC<AddToCollectionButtonProps> = ({
