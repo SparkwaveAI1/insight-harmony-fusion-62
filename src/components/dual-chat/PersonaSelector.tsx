@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Card from '@/components/ui-custom/Card';
 import Button from '@/components/ui-custom/Button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { PersonaOption } from '@/components/persona-chat/types';
 import { useQuery } from '@tanstack/react-query';
 import { getAllPersonas } from '@/services/persona/personaService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -37,8 +36,6 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
   autoChatActive,
   isLoading
 }) => {
-  const [searchTermA, setSearchTermA] = useState('');
-  const [searchTermB, setSearchTermB] = useState('');
   const [browseDialogOpen, setBrowseDialogOpen] = useState(false);
   const [currentSelectionTarget, setCurrentSelectionTarget] = useState<'A' | 'B' | null>(null);
   
@@ -52,14 +49,11 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  // Filter personas based on search term
-  const filteredPersonasA = allPersonas.filter(persona => 
-    persona.name.toLowerCase().includes(searchTermA.toLowerCase())
-  );
-  
-  const filteredPersonasB = allPersonas.filter(persona => 
-    persona.name.toLowerCase().includes(searchTermB.toLowerCase())
-  );
+  // Get persona name by ID
+  const getPersonaNameById = (id: string): string => {
+    const persona = allPersonas.find(p => p.id === id);
+    return persona ? persona.name : id;
+  };
   
   // Filter personas for the browse dialog
   const [browseSearchTerm, setBrowseSearchTerm] = useState('');
@@ -67,12 +61,6 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
     persona.name.toLowerCase().includes(browseSearchTerm.toLowerCase()) ||
     (persona.metadata?.occupation || "").toLowerCase().includes(browseSearchTerm.toLowerCase())
   );
-  
-  // Get persona name by ID
-  const getPersonaNameById = (id: string): string => {
-    const persona = allPersonas.find(p => p.id === id);
-    return persona ? persona.name : id;
-  };
   
   const handleOpenBrowseDialog = (target: 'A' | 'B') => {
     setCurrentSelectionTarget(target);
@@ -99,20 +87,15 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
             <label className="block text-sm font-medium mb-1">Persona A</label>
             <div className="flex flex-col space-y-2">
               <div className="flex gap-2">
-                <Input 
-                  placeholder="Search personas..."
-                  value={searchTermA}
-                  onChange={(e) => setSearchTermA(e.target.value)}
-                  disabled={autoChatActive || isLoading}
-                  className="flex-1"
-                />
                 <Button 
                   variant="outline" 
                   onClick={() => handleOpenBrowseDialog('A')}
                   disabled={autoChatActive || isLoading}
                   title="Browse Persona Library"
+                  className="w-full"
                 >
-                  <LibraryIcon className="h-4 w-4" />
+                  <LibraryIcon className="h-4 w-4 mr-2" />
+                  Browse Persona Library
                 </Button>
               </div>
               
@@ -128,12 +111,12 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
                   <SelectGroup>
-                    {filteredPersonasA.map((persona) => (
+                    {allPersonas.map((persona) => (
                       <SelectItem key={persona.id} value={persona.id}>
                         {persona.name}
                       </SelectItem>
                     ))}
-                    {filteredPersonasA.length === 0 && (
+                    {allPersonas.length === 0 && (
                       <div className="py-2 px-2 text-sm text-muted-foreground">
                         {isLoadingPersonas ? "Loading..." : "No personas found"}
                       </div>
@@ -156,20 +139,15 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
             <label className="block text-sm font-medium mb-1">Persona B</label>
             <div className="flex flex-col space-y-2">
               <div className="flex gap-2">
-                <Input 
-                  placeholder="Search personas..."
-                  value={searchTermB}
-                  onChange={(e) => setSearchTermB(e.target.value)}
-                  disabled={autoChatActive || isLoading}
-                  className="flex-1"
-                />
                 <Button 
                   variant="outline" 
                   onClick={() => handleOpenBrowseDialog('B')}
                   disabled={autoChatActive || isLoading}
                   title="Browse Persona Library"
+                  className="w-full"
                 >
-                  <LibraryIcon className="h-4 w-4" />
+                  <LibraryIcon className="h-4 w-4 mr-2" />
+                  Browse Persona Library
                 </Button>
               </div>
               
@@ -185,12 +163,12 @@ const PersonaSelector: React.FC<PersonaSelectorProps> = ({
                 </SelectTrigger>
                 <SelectContent className="max-h-80">
                   <SelectGroup>
-                    {filteredPersonasB.map((persona) => (
+                    {allPersonas.map((persona) => (
                       <SelectItem key={persona.id} value={persona.id}>
                         {persona.name}
                       </SelectItem>
                     ))}
-                    {filteredPersonasB.length === 0 && (
+                    {allPersonas.length === 0 && (
                       <div className="py-2 px-2 text-sm text-muted-foreground">
                         {isLoadingPersonas ? "Loading..." : "No personas found"}
                       </div>
