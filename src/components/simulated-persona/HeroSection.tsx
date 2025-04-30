@@ -50,11 +50,20 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
       }
     } catch (error) {
       console.error("Error creating persona:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      // Get the detailed error message
+      let errorMessage = "Failed to create persona. Please try again.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Check for specific database errors
+        if (error.message.includes("column")) {
+          errorMessage = "Database schema issue. Please contact support.";
+        }
+      }
       
       toast({
         title: "Error",
-        description: errorMessage || "Failed to create persona. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
       onGenerate(); // Toggle loading state back
