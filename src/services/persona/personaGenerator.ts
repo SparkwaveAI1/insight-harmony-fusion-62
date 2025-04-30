@@ -11,7 +11,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     const userId = user?.id;
     
     // Create a unique ID for the persona
-    const personaId = Math.random().toString(36).substring(2, 10);
+    const personaId = uuidv4().substring(0, 8);
     
     const response = await fetch(`https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/generate-persona`, {
       method: 'POST',
