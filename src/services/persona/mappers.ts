@@ -27,5 +27,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
     interview_sections: dbPersona.interview_sections as unknown as InterviewSection[] | {
       interview_sections: InterviewSection[];
     },
+    persona_context: {}, // Add missing required property
+    persona_type: "generated", // Add default value for missing required property
   };
 }

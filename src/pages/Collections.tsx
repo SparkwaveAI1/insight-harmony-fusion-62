@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -278,7 +277,7 @@ const Collections = () => {
                   <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button variant="destructive" onClick={handleDeleteCollection}>
+                  <Button variant="primary" onClick={handleDeleteCollection}>
                     Delete
                   </Button>
                 </DialogFooter>

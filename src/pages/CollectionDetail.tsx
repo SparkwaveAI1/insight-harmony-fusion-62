@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -16,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import PersonaCard from "@/components/personas/PersonaCard";
 import { Persona } from "@/services/persona/types";
+import { dbPersonaToPersona } from "@/services/persona/mappers";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams();
@@ -70,7 +70,9 @@ const CollectionDetail = () => {
 
       if (error) throw error;
       
-      setPersonas(data || []);
+      // Convert DB personas to the Persona type with required fields
+      const convertedPersonas = data?.map(dbPersonaToPersona) || [];
+      setPersonas(convertedPersonas);
     } catch (error) {
       console.error("Error fetching personas:", error);
       toast.error("Failed to load personas");
@@ -181,7 +183,7 @@ const CollectionDetail = () => {
                   <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button variant="destructive" onClick={handleDeleteCollection}>
+                  <Button variant="primary" onClick={handleDeleteCollection}>
                     Delete
                   </Button>
                 </DialogFooter>
