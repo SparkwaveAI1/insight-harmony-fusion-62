@@ -12,6 +12,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     
     if (!userId) {
       console.error("No authenticated user found when generating persona");
+      throw new Error("You must be logged in to create personas");
     } else {
       console.log("Creating persona for user:", userId);
     }
@@ -35,13 +36,13 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     const personaData = await response.json();
     console.log("Generated persona data:", personaData);
     
-    if (!personaData) {
-      throw new Error('No persona data returned from API');
+    if (!personaData || !personaData.success) {
+      throw new Error(personaData?.error || 'No persona data returned from API');
     }
     
     // Add additional fields to the persona - explicitly set created_by to userId
     const persona: Persona = {
-      ...personaData,
+      ...personaData.persona,
       id: uuidv4(),
       persona_id: personaId,
       creation_date: new Date().toISOString().split('T')[0],

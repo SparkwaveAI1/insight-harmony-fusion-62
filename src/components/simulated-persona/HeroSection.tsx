@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { generatePersona } from "@/services/persona/personaService";
 import { savePersona } from "@/services/persona/personaService";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isGenerating: boolean }) => {
   const [prompt, setPrompt] = useState("");
@@ -39,8 +41,8 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
         console.log("Persona created and saved:", savedPersona);
         onGenerate(); // Toggle loading state back
         
-        // Navigate to the persona viewer page
-        navigate(`/persona/${persona.persona_id}`);
+        // Navigate to the success page
+        navigate('/persona-creation/complete');
       } else {
         throw new Error("Failed to generate persona");
       }
@@ -52,6 +54,9 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
         variant: "destructive"
       });
       onGenerate(); // Toggle loading state back
+      
+      // Navigate to the completion page with error state
+      navigate('/persona-creation/complete', { state: { error: true } });
     }
   };
   
@@ -78,20 +83,20 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
             ></textarea>
           </div>
           <div className="flex justify-end">
-            <button
+            <Button
               type="submit"
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2"
               disabled={isGenerating}
             >
               {isGenerating ? (
                 <>
-                  <span className="animate-spin">⟳</span>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>Generate Persona</>
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
