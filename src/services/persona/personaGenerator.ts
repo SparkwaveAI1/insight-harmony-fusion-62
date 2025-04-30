@@ -20,6 +20,8 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     // Create a unique ID for the persona
     const personaId = uuidv4().substring(0, 8);
     
+    console.log("Sending request to generate persona with prompt:", prompt);
+    
     const response = await fetch(`https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/generate-persona`, {
       method: 'POST',
       headers: {
@@ -30,14 +32,17 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     });
 
     if (!response.ok) {
-      throw new Error(`Error generating persona: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("Error response from API:", response.status, errorText);
+      throw new Error(`Error generating persona: ${response.statusText} (${response.status})`);
     }
 
     const personaData = await response.json();
-    console.log("Generated persona data:", personaData);
+    console.log("Generated persona data received:", personaData);
     
     if (!personaData || !personaData.success) {
-      throw new Error(personaData?.error || 'No persona data returned from API');
+      console.error("Invalid response from API:", personaData);
+      throw new Error(personaData?.error || 'Invalid response from persona generation API');
     }
     
     // Add additional fields to the persona - explicitly set created_by to userId
@@ -52,11 +57,19 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       is_public: false,
     };
     
-    console.log("Saving persona with created_by:", persona.created_by);
+    console.log("Final persona object to be saved:", persona);
+    console.log("With created_by user ID:", persona.created_by);
     
     // Save the persona to the database
     const savedPersona = await savePersona(persona);
-    return savedPersona;
+    
+    if (!savedPersona) {
+      console.error("Failed to save persona to database");
+      throw new Error("Failed to save persona to database");
+    }
+    
+    console.log("Successfully saved persona:", savedPersona);
+    return persona;
     
   } catch (error) {
     console.error("Error in generatePersona:", error);

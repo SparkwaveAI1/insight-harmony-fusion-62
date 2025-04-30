@@ -10,7 +10,8 @@ const PersonaCreationComplete = () => {
   const location = useLocation();
   const [isRedirecting, setIsRedirecting] = useState(true);
   const hasError = location.state?.error;
-
+  const personaId = location.state?.personaId;
+  
   useEffect(() => {
     if (hasError) {
       toast.error("Failed to create persona. Please try again.");
@@ -23,19 +24,31 @@ const PersonaCreationComplete = () => {
     
     // Add a slight delay to ensure the persona is saved
     const timer = setTimeout(() => {
-      console.log("Redirecting to My Personas page...");
-      navigate('/my-personas');
-    }, 3000);
+      console.log("Redirecting to created persona...", personaId);
+      
+      if (personaId) {
+        // Navigate directly to the created persona detail page
+        navigate(`/persona-detail/${personaId}`);
+      } else {
+        // Fallback to My Personas page if no personaId is available
+        console.log("No personaId available, redirecting to My Personas");
+        navigate('/my-personas');
+      }
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate, hasError]);
+  }, [navigate, hasError, personaId]);
 
   const handleRetry = () => {
     navigate('/simulated-persona');
   };
 
   const handleViewPersonas = () => {
-    navigate('/my-personas');
+    if (personaId) {
+      navigate(`/persona-detail/${personaId}`);
+    } else {
+      navigate('/my-personas');
+    }
   };
 
   return (
@@ -83,13 +96,13 @@ const PersonaCreationComplete = () => {
           <>
             <h1 className="text-3xl font-bold mb-4">Persona Created Successfully!</h1>
             <p className="text-muted-foreground mb-8">
-              Your persona has been saved to your account. You'll be redirected to your personas in a moment...
+              Your persona has been saved. You'll be redirected to view it in a moment...
             </p>
             <Button 
               onClick={handleViewPersonas}
               className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
             >
-              View My Personas
+              {personaId ? "View My Persona" : "View My Personas"}
             </Button>
           </>
         )}

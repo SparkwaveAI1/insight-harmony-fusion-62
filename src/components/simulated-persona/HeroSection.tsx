@@ -41,8 +41,12 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
         console.log("Persona created and saved:", savedPersona);
         onGenerate(); // Toggle loading state back
         
-        // Navigate to the success page
-        navigate('/persona-creation/complete');
+        // Navigate to the success page with personaId
+        navigate('/persona-creation/complete', { 
+          state: { 
+            personaId: persona.persona_id 
+          }
+        });
       } else {
         throw new Error("Failed to generate persona");
       }
