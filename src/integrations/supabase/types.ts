@@ -120,6 +120,7 @@ export type Database = {
           creation_date: string
           id: string
           interview_sections: Json
+          is_public: boolean | null
           linguistic_profile: Json
           metadata: Json
           name: string
@@ -135,6 +136,7 @@ export type Database = {
           creation_date: string
           id?: string
           interview_sections: Json
+          is_public?: boolean | null
           linguistic_profile: Json
           metadata: Json
           name: string
@@ -150,6 +152,7 @@ export type Database = {
           creation_date?: string
           id?: string
           interview_sections?: Json
+          is_public?: boolean | null
           linguistic_profile?: Json
           metadata?: Json
           name?: string
