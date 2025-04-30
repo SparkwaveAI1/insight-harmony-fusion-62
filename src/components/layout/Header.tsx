@@ -8,6 +8,15 @@ import ActionButtons from "./navigation/ActionButtons";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "../ui/button";
 import { User } from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,6 +38,14 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const navigationLinks = [
+    { title: "Research", href: "/research" },
+    { title: "Interviewer", href: "/interviewer" },
+    { title: "Personas", href: "/persona-viewer" },
+    { title: "Pricing", href: "/pricing" },
+    { title: "Contact", href: "/contact" },
+  ];
+
   return (
     <header
       className={cn(
@@ -46,6 +63,25 @@ const Header = () => {
               className={isScrolled ? "text-foreground" : "text-white"}
             />
           </Link>
+          
+          {/* Navigation Links */}
+          <NavigationMenu className="hidden md:flex ml-6">
+            <NavigationMenuList>
+              {navigationLinks.map((link) => (
+                <NavigationMenuItem key={link.title}>
+                  <Link to={link.href}>
+                    <NavigationMenuLink className={cn(
+                      navigationMenuTriggerStyle(),
+                      "text-sm",
+                      isScrolled ? "text-foreground" : "text-white"
+                    )}>
+                      {link.title}
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
         {/* Action Buttons (right side) */}
