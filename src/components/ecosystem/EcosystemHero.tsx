@@ -105,7 +105,7 @@ const EcosystemHero = ({
                 </p>
                 
                 <div className="flex flex-wrap gap-4">
-                  <Link to="/earn-prsna">
+                  <Link to="/prsna">
                     <Button 
                       variant="secondary" 
                       className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
@@ -115,7 +115,7 @@ const EcosystemHero = ({
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
                     </Button>
                   </Link>
-                  <Link to="/earn-prsna">
+                  <Link to="/prsna">
                     <Button 
                       variant="outline" 
                       className="group border-gray-700 text-gray-300 hover:bg-gray-800"

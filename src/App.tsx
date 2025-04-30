@@ -67,7 +67,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/custom-research" element={<CustomResearch />} />
-              <Route path="/earn-prsna" element={<EarnPRSNA />} />
+              <Route path="/prsna" element={<EarnPRSNA />} />
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/contact" element={<Contact />} />

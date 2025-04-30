@@ -1,3 +1,4 @@
+
 import { ArrowRight, HandCoins, Bot, Lightbulb } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "@/components/ui-custom/Section";

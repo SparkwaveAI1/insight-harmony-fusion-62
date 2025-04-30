@@ -22,7 +22,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
-  const isEarnPage = location.pathname === "/earn-prsna" || location.pathname === "/prsna-ecosystem";
+  const isEarnPage = location.pathname === "/prsna" || location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
     const handleScroll = () => {
