@@ -1,8 +1,9 @@
 
-import { BarChart3, Users, Folder, Activity, Loader2 } from "lucide-react";
+import { BarChart3, Users, Folder, Activity, Loader2, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRecentActivity } from "@/hooks/useRecentActivity";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
 
 export function DashboardContent() {
   const { activities, isLoading } = useRecentActivity();
@@ -115,7 +116,7 @@ export function DashboardContent() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4">
-              <div className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
+              <Link to="/simulated-persona" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <Users className="h-5 w-5 text-primary" />
                 </div>
@@ -123,9 +124,9 @@ export function DashboardContent() {
                   <p className="font-medium">Create a New Persona</p>
                   <p className="text-sm text-muted-foreground">Generate a simulated persona for research</p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
+              <Link to="/collections" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <Folder className="h-5 w-5 text-primary" />
                 </div>
@@ -133,17 +134,17 @@ export function DashboardContent() {
                   <p className="font-medium">Manage Collections</p>
                   <p className="text-sm text-muted-foreground">Organize and review your persona collections</p>
                 </div>
-              </div>
+              </Link>
 
-              <div className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
+              <Link to="/dual-chat" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Activity className="h-5 w-5 text-primary" />
+                  <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">Start a Research Project</p>
-                  <p className="text-sm text-muted-foreground">Begin a new research interview or focus group</p>
+                  <p className="font-medium">Chat with a Persona</p>
+                  <p className="text-sm text-muted-foreground">Interact with your simulated personas</p>
                 </div>
-              </div>
+              </Link>
             </div>
           </CardContent>
         </Card>
