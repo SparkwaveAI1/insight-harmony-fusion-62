@@ -1,32 +1,92 @@
 
+import { TraitProfile } from "@/services/persona/types";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 interface PersonaTraitsProps {
-  traitProfile: Record<string, any>;
+  traitProfile: TraitProfile;
 }
 
 const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
   return (
-    <div className="mt-6">
-      <h2 className="text-xl font-bold mb-3">Traits Profile</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(traitProfile).map(([category, traits]) => (
-          <div key={category} className="bg-muted/30 p-4 rounded-md">
-            <h3 className="font-medium mb-2 capitalize">{category.replace(/_/g, ' ')}</h3>
-            {Object.entries(traits as Record<string, any>).length > 0 ? (
-              <ul className="space-y-1 text-sm">
-                {Object.entries(traits as Record<string, any>).map(([trait, value]) => (
-                  <li key={trait} className="flex justify-between">
-                    <span className="capitalize">{trait.replace(/_/g, ' ')}:</span>
-                    <span className="font-medium">{value}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">No details available</p>
-            )}
-          </div>
-        ))}
-      </div>
+    <div className="space-y-6 mt-6">
+      <h2 className="text-xl font-bold">Traits Profile</h2>
+      
+      <Accordion type="multiple" defaultValue={["big-five"]}>
+        {/* Big Five */}
+        <TraitCategory 
+          value="big-five"
+          title="Big Five Personality Traits"
+          traits={traitProfile.big_five}
+        />
+        
+        {/* Moral Foundations */}
+        <TraitCategory 
+          value="moral-foundations"
+          title="Moral Foundations"
+          traits={traitProfile.moral_foundations}
+        />
+        
+        {/* World Values */}
+        <TraitCategory 
+          value="world-values"
+          title="World Values"
+          traits={traitProfile.world_values}
+        />
+        
+        {/* Political Compass */}
+        <TraitCategory 
+          value="political-compass"
+          title="Political Compass"
+          traits={traitProfile.political_compass}
+        />
+        
+        {/* Behavioral Economics */}
+        <TraitCategory 
+          value="behavioral-economics"
+          title="Behavioral Economics"
+          traits={traitProfile.behavioral_economics}
+        />
+        
+        {/* Extended Traits */}
+        <TraitCategory 
+          value="extended-traits"
+          title="Extended Traits"
+          traits={traitProfile.extended_traits}
+        />
+      </Accordion>
     </div>
+  );
+};
+
+interface TraitCategoryProps {
+  value: string;
+  title: string;
+  traits?: Record<string, any>;
+}
+
+const TraitCategory = ({ value, title, traits }: TraitCategoryProps) => {
+  if (!traits) return null;
+  
+  return (
+    <AccordionItem value={value}>
+      <AccordionTrigger className="text-lg font-semibold">{title}</AccordionTrigger>
+      <AccordionContent>
+        <div className="grid gap-2">
+          {Object.entries(traits).length > 0 ? (
+            Object.entries(traits).map(([trait, value]) => (
+              value && (
+                <div key={trait} className="flex justify-between items-center py-1 border-b border-muted last:border-0">
+                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
+                  <span className="font-medium">{value}</span>
+                </div>
+              )
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No traits available</p>
+          )}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 };
 

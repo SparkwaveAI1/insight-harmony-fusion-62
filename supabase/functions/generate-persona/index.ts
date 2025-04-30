@@ -65,12 +65,47 @@ const personaTemplate = {
     healthcare_access: null,
   },
   trait_profile: {
-    big_five: {},
-    moral_foundations: {},
-    world_values: {},
-    political_compass: {},
-    behavioral_economics: {},
-    extended_traits: {},
+    big_five: {
+      openness: null,
+      conscientiousness: null,
+      extraversion: null,
+      agreeableness: null,
+      neuroticism: null,
+    },
+    moral_foundations: {
+      care: null,
+      fairness: null,
+      loyalty: null,
+      authority: null,
+      sanctity: null,
+      liberty: null,
+    },
+    world_values: {
+      traditional_vs_secular: null,
+      survival_vs_self_expression: null,
+    },
+    political_compass: {
+      economic: null,
+      authoritarian_libertarian: null,
+    },
+    behavioral_economics: {
+      present_bias: null,
+      loss_aversion: null,
+      overconfidence: null,
+      risk_sensitivity: null,
+    },
+    extended_traits: {
+      truth_orientation: null,
+      moral_consistency: null,
+      self_awareness: null,
+      empathy: null,
+      self_efficacy: null,
+      manipulativeness: null,
+      impulse_control: null,
+      shadow_trait_activation: null,
+      attention_pattern: null,
+      cognitive_load_resilience: null,
+    },
   },
   behavioral_modulation: {
     cognitive_load_pattern: null,
@@ -279,6 +314,7 @@ serve(async (req) => {
             content: `You are an AI specialized in creating realistic personas for research. 
             Given a brief description, generate a detailed psychological and demographic profile following the template exactly.
             You should fill in all the demographic fields in the metadata section, creating a rich and nuanced profile.
+            Fill in the trait_profile completely with accurate, realistic trait assessments.
             Use realistic values based on demographic probability distributions.
             Maintain internal consistency while allowing for realistic contradictions.
             Return the output as valid JSON matching the provided template exactly.` 

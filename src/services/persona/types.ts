@@ -94,6 +94,69 @@ export interface DbPersona {
   is_public?: boolean;
 }
 
+export interface TraitProfile {
+  big_five?: {
+    openness?: string | null;
+    conscientiousness?: string | null;
+    extraversion?: string | null;
+    agreeableness?: string | null;
+    neuroticism?: string | null;
+  };
+  moral_foundations?: {
+    care?: string | null;
+    fairness?: string | null;
+    loyalty?: string | null;
+    authority?: string | null;
+    sanctity?: string | null;
+    liberty?: string | null;
+  };
+  world_values?: {
+    traditional_vs_secular?: string | null;
+    survival_vs_self_expression?: string | null;
+  };
+  political_compass?: {
+    economic?: string | null;
+    authoritarian_libertarian?: string | null;
+  };
+  behavioral_economics?: {
+    present_bias?: string | null;
+    loss_aversion?: string | null;
+    overconfidence?: string | null;
+    risk_sensitivity?: string | null;
+  };
+  extended_traits?: {
+    truth_orientation?: string | null;
+    moral_consistency?: string | null;
+    self_awareness?: string | null;
+    empathy?: string | null;
+    self_efficacy?: string | null;
+    manipulativeness?: string | null;
+    impulse_control?: string | null;
+    shadow_trait_activation?: string | null;
+    attention_pattern?: string | null;
+    cognitive_load_resilience?: string | null;
+  };
+}
+
+export interface LinguisticProfile {
+  default_output_length?: string;
+  speech_register?: string;
+  regional_influence?: string | null;
+  professional_or_educational_influence?: string | null;
+  cultural_speech_patterns?: string | null;
+  generational_or_peer_influence?: string | null;
+  speaking_style?: Record<string, boolean>;
+  sample_phrasing?: string[];
+}
+
+export interface SimulationDirectives {
+  encourage_contradiction?: boolean;
+  emotional_asymmetry?: boolean;
+  stress_behavior_expected?: boolean;
+  inconsistency_is_valid?: boolean;
+  response_length_variability?: boolean;
+}
+
 export interface Persona {
   persona_id: string;
   id: string;
@@ -103,12 +166,12 @@ export interface Persona {
   metadata: PersonaMetadata;
   behavioral_modulation: any;
   interview_sections: InterviewSection[] | { interview_sections: InterviewSection[] };
-  linguistic_profile: any;
+  linguistic_profile: LinguisticProfile;
   persona_context: any;
   persona_type: string;
-  trait_profile: any;
+  trait_profile: TraitProfile;
   preinterview_tags?: string[];
-  simulation_directives?: any;
+  simulation_directives?: SimulationDirectives;
   prompt?: string;
   created_by?: string;
   is_public?: boolean;
