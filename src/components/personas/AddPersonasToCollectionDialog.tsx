@@ -18,6 +18,7 @@ import {
 } from "@/services/collections/personaCollectionOperations";
 import { getAllPersonas } from "@/services/persona/personaService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AddPersonasToCollectionDialogProps {
   open: boolean;
@@ -38,28 +39,33 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPersonas, setSelectedPersonas] = useState<Set<string>>(new Set());
   const [addingPersonas, setAddingPersonas] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("available");
 
-  // Fetch personas not in the collection when the dialog opens
+  // Fetch personas when the dialog opens
   useEffect(() => {
     if (open) {
-      fetchAvailablePersonas();
+      fetchPersonas();
     }
   }, [open, collectionId]);
 
-  const fetchAvailablePersonas = async () => {
+  const fetchPersonas = async () => {
     setLoading(true);
     try {
-      // Get all user personas that are not already in this collection
+      // Get all user personas
       const allPersonas = await getAllPersonas();
+      
+      // Get personas not in this collection
       const personasInCollection = await getPersonasNotInCollection(collectionId);
+      
+      // Split personas into those in the collection and those not in the collection
       const availablePersonas = allPersonas.filter(
-        persona => !personasInCollection.includes(persona.persona_id)
+        persona => personasInCollection.includes(persona.persona_id)
       );
       
       setPersonas(availablePersonas);
       setFilteredPersonas(availablePersonas);
     } catch (error) {
-      console.error("Error fetching available personas:", error);
+      console.error("Error fetching personas:", error);
       toast.error("Failed to load personas");
     } finally {
       setLoading(false);
