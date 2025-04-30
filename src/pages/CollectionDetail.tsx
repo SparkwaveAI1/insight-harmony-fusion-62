@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -122,7 +123,7 @@ const CollectionDetail = () => {
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
-                    <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                    <Button variant="primary" onClick={() => setDeleteDialogOpen(true)}>
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete
                     </Button>
