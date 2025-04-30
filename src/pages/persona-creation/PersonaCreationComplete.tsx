@@ -18,15 +18,23 @@ const PersonaCreationComplete = () => {
   const personaName = location.state?.personaName || "your persona";
   
   useEffect(() => {
+    // If we have no state at all, it likely means the user navigated directly to this page
+    if (!location.state) {
+      toast.error("No persona creation data found");
+      console.error("No state found when accessing PersonaCreationComplete");
+      setIsRedirecting(false);
+      return;
+    }
+
     if (hasError) {
-      toast.error("Failed to create persona.");
+      toast.error("Failed to create persona");
       console.error("Persona creation failed:", errorMessage);
       setIsRedirecting(false);
       return;
     }
 
     if (!personaId) {
-      toast.error("No persona ID received.");
+      toast.error("No persona ID received");
       setIsRedirecting(false);
       return;
     }
@@ -41,7 +49,7 @@ const PersonaCreationComplete = () => {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate, hasError, personaId, personaName, errorMessage]);
+  }, [navigate, hasError, personaId, personaName, errorMessage, location.state]);
 
   const handleRetry = () => {
     navigate('/simulated-persona');

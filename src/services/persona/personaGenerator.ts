@@ -49,7 +49,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       throw new Error(personaData?.error || 'Invalid response from persona generation API');
     }
     
-    // Add additional fields to the persona - explicitly set created_by to userId
+    // Add additional fields to the persona - use user_id instead of created_by
     const persona: Persona = {
       ...personaData.persona,
       id: uuidv4(),
@@ -57,7 +57,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       creation_date: new Date().toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       prompt,
-      created_by: userId,
+      user_id: userId, // Use user_id instead of created_by
       is_public: false,
     };
     

@@ -32,7 +32,7 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
       if (persona && persona.persona_id) {
         toast({
           title: "Persona Created",
-          description: `Successfully created persona: ${persona.name}`,
+          description: `Successfully created persona: ${persona.name || 'New Persona'}`,
         });
         
         console.log("Persona created successfully:", persona.persona_id);
@@ -42,7 +42,7 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
         navigate('/persona-creation/complete', { 
           state: { 
             personaId: persona.persona_id,
-            personaName: persona.name
+            personaName: persona.name || 'New Persona'
           }
         });
       } else {
@@ -50,15 +50,22 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
       }
     } catch (error) {
       console.error("Error creating persona:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create persona. Please try again.",
+        description: errorMessage || "Failed to create persona. Please try again.",
         variant: "destructive"
       });
       onGenerate(); // Toggle loading state back
       
       // Navigate to the completion page with error state
-      navigate('/persona-creation/complete', { state: { error: true, errorMessage: error instanceof Error ? error.message : "Unknown error" } });
+      navigate('/persona-creation/complete', { 
+        state: { 
+          error: true, 
+          errorMessage: errorMessage 
+        } 
+      });
     }
   };
   
