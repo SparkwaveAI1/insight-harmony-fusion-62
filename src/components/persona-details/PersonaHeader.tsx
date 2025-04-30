@@ -1,7 +1,7 @@
 
 import { ArrowLeft } from "lucide-react";
-import Button from "@/components/ui-custom/Button";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const PersonaHeader = () => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const PersonaHeader = () => {
     <Button 
       variant="ghost" 
       onClick={() => navigate('/persona-viewer')}
-      className="gap-2 mb-6"
+      className="gap-2 mb-6 flex items-center"
     >
       <ArrowLeft className="h-4 w-4" />
       Back to All Personas

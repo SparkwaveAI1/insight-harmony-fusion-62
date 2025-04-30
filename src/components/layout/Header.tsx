@@ -7,7 +7,7 @@ import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "../ui/button";
-import { User } from "lucide-react";
+import { User, Menu, X } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -20,6 +20,7 @@ import {
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
   const { user, signOut } = useAuth();
@@ -45,6 +46,10 @@ const Header = () => {
     { title: "Pricing", href: "/pricing" },
     { title: "Contact", href: "/contact" },
   ];
+  
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   return (
     <header
@@ -64,7 +69,7 @@ const Header = () => {
             />
           </Link>
           
-          {/* Navigation Links */}
+          {/* Navigation Links - Desktop */}
           <NavigationMenu className="hidden md:flex ml-6">
             <NavigationMenuList>
               {navigationLinks.map((link) => (
@@ -84,8 +89,17 @@ const Header = () => {
           </NavigationMenu>
         </div>
 
-        {/* Action Buttons (right side) */}
-        <div className="flex items-center gap-4">
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden text-white p-2" 
+          onClick={toggleMobileMenu}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Action Buttons (right side) - Desktop */}
+        <div className="hidden md:flex items-center gap-4">
           <ActionButtons 
             isEarnPage={isEarnPage}
             isWalletConnected={isWalletConnected}
@@ -114,6 +128,65 @@ const Header = () => {
           )}
         </div>
       </div>
+      
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-slate-800 py-4">
+          <div className="container">
+            <nav className="flex flex-col gap-3">
+              {navigationLinks.map((link) => (
+                <Link 
+                  key={link.title} 
+                  to={link.href} 
+                  className="text-white hover:text-primary px-2 py-1"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.title}
+                </Link>
+              ))}
+              
+              {/* Mobile Auth Buttons */}
+              <div className="mt-4 flex flex-col gap-2">
+                <ActionButtons 
+                  isEarnPage={isEarnPage}
+                  isWalletConnected={isWalletConnected}
+                  connectWallet={connectWallet}
+                  disconnectWallet={disconnectWallet}
+                  className="w-full"
+                />
+                
+                {user ? (
+                  <>
+                    <Link to="/dashboard" className="w-full">
+                      <Button size="sm" variant="outline" className="w-full border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800">
+                        <User className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800" 
+                      onClick={() => {
+                        signOut();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Link to="/auth" className="w-full" onClick={() => setMobileMenuOpen(false)}>
+                    <Button size="sm" className="w-full bg-gradient-to-r from-primary to-primary/80 border-none">
+                      Sign In
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

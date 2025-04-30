@@ -34,4 +34,3 @@ const ViewerHeader = ({ isLoading }: ViewerHeaderProps) => {
 };
 
 export default ViewerHeader;
-
