@@ -1,84 +1,122 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import DeletePersonaDialog from "./DeletePersonaDialog";
+import { formatName } from "@/lib/utils";
+import Card from "@/components/ui-custom/Card";
+import { MessageCircle } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 import AddToCollectionButton from "./AddToCollectionButton";
-import RemoveFromCollectionButton from "./RemoveFromCollectionButton";
+import { Switch } from "@/components/ui/switch";
+import { Persona } from "@/services/persona/types";
+import { updatePersonaVisibility } from "@/services/persona/personaService";
+import DeletePersonaDialog from "./DeletePersonaDialog";
 
 interface PersonaCardProps {
-  persona: any;
-  onDelete?: () => void;
-  inCollection?: boolean;
-  collectionId?: string;
-  onRemoveFromCollection?: () => void;
+  persona: Persona;
+  onVisibilityChange?: (personaId: string, isPublic: boolean) => void;
+  onDelete?: (personaId: string) => void;
 }
 
-const PersonaCard: React.FC<PersonaCardProps> = ({
-  persona,
-  onDelete,
-  inCollection = false,
-  collectionId,
-  onRemoveFromCollection,
-}) => {
-  const initials = persona.name
-    ? persona.name
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .toUpperCase()
-    : "??";
+export default function PersonaCard({ 
+  persona, 
+  onVisibilityChange,
+  onDelete 
+}: PersonaCardProps) {
+  const { user } = useAuth();
+  const isOwner = user && persona.user_id === user.id;
+
+  // Helper function to format date strings
+  const formatDateString = (dateString: string) => {
+    if (!dateString) return "Unknown";
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const handleVisibilityToggle = async (checked: boolean) => {
+    try {
+      await updatePersonaVisibility(persona.persona_id, checked);
+      toast.success(`Persona is now ${checked ? 'public' : 'private'}`);
+      if (onVisibilityChange) {
+        onVisibilityChange(persona.persona_id, checked);
+      }
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      toast.error("Failed to update persona visibility");
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(persona.persona_id);
+    }
+  };
 
   return (
-    <Card className="relative h-full flex flex-col transition-shadow hover:shadow-md">
-      {inCollection && collectionId && (
-        <RemoveFromCollectionButton
-          personaId={persona.persona_id}
-          collectionId={collectionId}
-          onRemoveComplete={onRemoveFromCollection}
-        />
-      )}
-      
-      <Link
-        to={`/persona/${persona.persona_id}`}
-        className="flex-1 flex flex-col"
-      >
-        <CardHeader className="flex flex-row items-center gap-4 pb-2">
-          <Avatar>
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+    <Card className="relative group overflow-hidden">
+      <Link to={`/persona-detail/${persona.persona_id}`} className="block p-6">
+        <h3 className="text-xl font-semibold mb-1">{formatName(persona.name)}</h3>
+        <p className="text-muted-foreground text-sm mb-3">
+          ID: {persona.persona_id} • Created: {formatDateString(persona.creation_date)}
+        </p>
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <h3 className="font-semibold text-lg">{persona.name}</h3>
-            {persona.metadata?.age && persona.metadata?.occupation && (
-              <p className="text-sm text-muted-foreground">
-                {persona.metadata.age} • {persona.metadata.occupation}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">Age</p>
+            <p className="text-sm">{persona.metadata?.age || "N/A"}</p>
           </div>
-        </CardHeader>
-        <CardContent className="flex-1">
-          <div className="line-clamp-3 text-sm text-muted-foreground">
-            {persona.metadata?.background || "No background available"}
+          <div>
+            <p className="text-xs text-muted-foreground">Gender</p>
+            <p className="text-sm">{persona.metadata?.gender || "N/A"}</p>
           </div>
-        </CardContent>
+          <div>
+            <p className="text-xs text-muted-foreground">Occupation</p>
+            <p className="text-sm">{persona.metadata?.occupation || "N/A"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Location</p>
+            <p className="text-sm">{persona.metadata?.region || "N/A"}</p>
+          </div>
+        </div>
       </Link>
 
-      <div className="p-4 pt-0 flex justify-between items-center mt-auto">
-        {!inCollection && <AddToCollectionButton personaId={persona.persona_id} />}
-        
-        {onDelete && (
-          <DeletePersonaDialog
+      {/* Action buttons */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        {isOwner && (
+          <DeletePersonaDialog 
             personaId={persona.persona_id}
             personaName={persona.name}
-            onDelete={onDelete}
+            onDelete={handleDelete}
           />
         )}
+        <AddToCollectionButton personaId={persona.persona_id} />
+        <Link
+          to={`/persona-chat/${persona.persona_id}`}
+          className="p-2 bg-background/90 rounded-full hover:bg-muted/90 transition-colors"
+          title="Chat with persona"
+          onClick={(e) => e.stopPropagation()} // Prevent event bubbling to parent
+        >
+          <MessageCircle className="h-4 w-4" />
+        </Link>
       </div>
+      
+      {/* Visibility toggle (only for the owner) */}
+      {isOwner && (
+        <div className="absolute bottom-4 right-4 flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {persona.is_public ? "Public" : "Private"}
+          </span>
+          <Switch 
+            checked={!!persona.is_public}
+            onCheckedChange={handleVisibilityToggle}
+            aria-label="Toggle persona visibility"
+          />
+        </div>
+      )}
     </Card>
   );
-};
-
-export default PersonaCard;
+}
