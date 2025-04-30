@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import PersonaCard from "./PersonaCard";
+import { Persona } from "@/services/persona/types";
 
 interface PersonaListProps {
-  onPersonasLoad?: (personas: any[]) => void;
+  onPersonasLoad?: (personas: Persona[]) => void;
   filterByCurrentUser?: boolean;
   publicOnly?: boolean;
   collectionId?: string;
@@ -20,7 +21,7 @@ export default function PersonaList({
   publicOnly = false,
   collectionId
 }: PersonaListProps) {
-  const [personas, setPersonas] = useState([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
@@ -61,6 +62,24 @@ export default function PersonaList({
     }
   };
 
+  const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
+    // Update local state when visibility changes
+    setPersonas(prevPersonas => 
+      prevPersonas.map(persona => 
+        persona.persona_id === personaId 
+          ? { ...persona, is_public: isPublic } 
+          : persona
+      )
+    );
+    
+    // If we're filtering by public only and a persona was made private, remove it from the list
+    if (publicOnly && !isPublic) {
+      setPersonas(prevPersonas => 
+        prevPersonas.filter(persona => persona.persona_id !== personaId)
+      );
+    }
+  };
+
   if (isLoading) {
     return <PersonaLoadingState />;
   }
@@ -72,7 +91,11 @@ export default function PersonaList({
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {personas.map((persona) => (
-        <PersonaCard key={persona.persona_id} persona={persona} />
+        <PersonaCard 
+          key={persona.persona_id} 
+          persona={persona}
+          onVisibilityChange={handleVisibilityChange} 
+        />
       ))}
     </div>
   );

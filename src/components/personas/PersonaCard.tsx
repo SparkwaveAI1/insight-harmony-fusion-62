@@ -7,13 +7,18 @@ import { MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import AddToCollectionButton from "./AddToCollectionButton";
+import { Switch } from "@/components/ui/switch";
+import { Persona } from "@/services/persona/types";
+import { updatePersonaVisibility } from "@/services/persona/personaService";
 
 interface PersonaCardProps {
-  persona: any;
+  persona: Persona;
+  onVisibilityChange?: (personaId: string, isPublic: boolean) => void;
 }
 
-export default function PersonaCard({ persona }: PersonaCardProps) {
+export default function PersonaCard({ persona, onVisibilityChange }: PersonaCardProps) {
   const { user } = useAuth();
+  const isOwner = user && persona.created_by === user.id;
 
   // Helper function to format date strings
   const formatDateString = (dateString: string) => {
@@ -24,6 +29,19 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
       return date.toLocaleDateString();
     } catch (error) {
       return dateString;
+    }
+  };
+
+  const handleVisibilityToggle = async (checked: boolean) => {
+    try {
+      await updatePersonaVisibility(persona.persona_id, checked);
+      toast.success(`Persona is now ${checked ? 'public' : 'private'}`);
+      if (onVisibilityChange) {
+        onVisibilityChange(persona.persona_id, checked);
+      }
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      toast.error("Failed to update persona visibility");
     }
   };
 
@@ -65,6 +83,20 @@ export default function PersonaCard({ persona }: PersonaCardProps) {
           <MessageCircle className="h-4 w-4" />
         </Link>
       </div>
+      
+      {/* Visibility toggle (only for the owner) */}
+      {isOwner && (
+        <div className="absolute bottom-4 right-4 flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {persona.is_public ? "Public" : "Private"}
+          </span>
+          <Switch 
+            checked={!!persona.is_public}
+            onCheckedChange={handleVisibilityToggle}
+            aria-label="Toggle persona visibility"
+          />
+        </div>
+      )}
     </Card>
   );
 }
