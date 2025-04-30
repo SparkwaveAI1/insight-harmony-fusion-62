@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom";
 import Reveal from "@/components/ui-custom/Reveal";
 import RewardsIllustration from "./RewardsIllustration";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -22,10 +24,23 @@ const HeroSection = () => {
           </Reveal>
           
           <Reveal delay={200}>
-            <p className="text-gray-300 text-pretty mb-10">
+            <p className="text-gray-300 text-pretty mb-6">
               PersonaAI is launching ERC-6551 personas—dynamic, evolving behavioral assets anchored onchain. 
               $PRSNA will power simulations, licensing, and the cognitive layer of Web3.
             </p>
+          </Reveal>
+
+          <Reveal delay={250}>
+            <Link to="/dashboard">
+              <Button 
+                variant="default" 
+                size="lg" 
+                className="group bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-blue-700 text-white font-medium"
+              >
+                Go To App
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
           </Reveal>
         </div>
         
