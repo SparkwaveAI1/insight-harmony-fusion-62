@@ -50,6 +50,7 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     }
     
     // Add additional fields to the persona according to the database schema
+    // Note: Removing created_by field as it doesn't exist in the database schema
     const persona: Persona = {
       ...personaData.persona,
       id: uuidv4(),
@@ -57,7 +58,6 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       creation_date: new Date().toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       prompt,
-      created_by: userId, // Store the user ID in the created_by field
       is_public: false,
     };
     
