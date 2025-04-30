@@ -22,7 +22,8 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
-  const isEarnPage = location.pathname === "/prsna" || location.pathname === "/prsna-ecosystem";
+  // We'll only show the wallet options on the ecosystem page, not the prsna page
+  const isEarnPage = location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
     const handleScroll = () => {
