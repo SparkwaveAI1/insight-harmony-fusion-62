@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "./types";
 import { personaToDbPersona, dbPersonaToPersona } from "./mappers";
@@ -166,8 +167,12 @@ export async function deletePersona(personaId: string): Promise<boolean> {
       .delete()
       .eq('persona_id', personaId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error in final persona deletion:", error);
+      throw error;
+    }
     
+    console.log("Persona successfully deleted");
     return true;
   } catch (error) {
     console.error("Error deleting persona:", error);

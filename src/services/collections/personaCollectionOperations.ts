@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -95,16 +94,38 @@ export const isPersonaInCollection = async (
  */
 export const getPersonasNotInCollection = async (collectionId: string): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
+    // First, get all personas that are in the collection
+    const { data: collectionPersonas, error: collectionError } = await supabase
       .from("collection_personas")
       .select("persona_id")
       .eq("collection_id", collectionId);
 
-    if (error) throw error;
-    return data.map(item => item.persona_id) || [];
+    if (collectionError) throw collectionError;
+    
+    // Extract persona IDs that are already in the collection
+    const personaIdsInCollection = collectionPersonas.map(item => item.persona_id) || [];
+    
+    if (personaIdsInCollection.length === 0) {
+      // If no personas in collection, get all personas
+      const { data: allPersonas, error: personaError } = await supabase
+        .from("personas")
+        .select("persona_id");
+      
+      if (personaError) throw personaError;
+      return allPersonas.map(persona => persona.persona_id);
+    } else {
+      // Otherwise, get personas not in the collection
+      const { data: personasNotInCollection, error: personaError } = await supabase
+        .from("personas")
+        .select("persona_id")
+        .not('persona_id', 'in', `(${personaIdsInCollection.map(id => `'${id}'`).join(',')})`);
+      
+      if (personaError) throw personaError;
+      return personasNotInCollection.map(persona => persona.persona_id);
+    }
   } catch (error) {
-    console.error("Error fetching personas in collection:", error);
-    toast.error("Failed to fetch personas in collection");
+    console.error("Error fetching personas not in collection:", error);
+    toast.error("Failed to fetch personas not in collection");
     return [];
   }
 };
