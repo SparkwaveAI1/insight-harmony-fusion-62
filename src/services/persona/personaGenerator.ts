@@ -29,7 +29,10 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ 
+        prompt,
+        userId // Send the userId to the Edge Function
+      }),
     });
 
     // Check for HTTP errors
@@ -50,7 +53,6 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
     }
     
     // Add additional fields to the persona according to the database schema
-    // Note: Removing created_by field as it doesn't exist in the database schema
     const persona: Persona = {
       ...personaData.persona,
       id: uuidv4(),
@@ -59,6 +61,8 @@ export async function generatePersona(prompt: string): Promise<Persona | null> {
       created_at: new Date().toISOString(),
       prompt,
       is_public: false,
+      // Not adding 'created_by' as it's not in the database schema
+      // User association will be handled by RLS policies
     };
     
     console.log("Final persona object to be saved:", persona);

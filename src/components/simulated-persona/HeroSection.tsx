@@ -5,6 +5,7 @@ import { generatePersona } from "@/services/persona/personaGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isGenerating: boolean }) => {
   const [prompt, setPrompt] = useState("");
@@ -19,6 +20,19 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
         description: "Please enter a description for your persona.",
         variant: "destructive"
       });
+      return;
+    }
+    
+    // Check authentication before proceeding
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to create a persona.",
+        variant: "destructive"
+      });
+      // Navigate to auth page - uncomment when auth page is implemented
+      // navigate('/auth', { state: { returnTo: '/simulated-persona' } });
       return;
     }
     
@@ -55,9 +69,14 @@ const HeroSection = ({ onGenerate, isGenerating }: { onGenerate: () => void; isG
       
       if (error instanceof Error) {
         errorMessage = error.message;
+        
         // Check for specific database errors
-        if (error.message.includes("column")) {
-          errorMessage = "Database schema issue. Please contact support.";
+        if (
+          error.message.includes("column") ||
+          error.message.includes("does not exist") ||
+          error.message.includes("invalid input syntax")
+        ) {
+          errorMessage = `Database schema issue: ${error.message}`;
         }
       }
       

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { toast } from "sonner";
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Database } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -68,13 +68,24 @@ const PersonaCreationComplete = () => {
     if (!errorMessage) return null;
     
     // If it contains specific keywords, provide more targeted help
-    if (errorMessage.includes("column") || errorMessage.includes("schema")) {
+    if (errorMessage.includes("column") || errorMessage.includes("schema") || errorMessage.includes("does not exist")) {
       return (
         <Alert variant="destructive" className="mt-4">
-          <AlertTitle>Database Schema Issue</AlertTitle>
-          <AlertDescription className="text-sm font-mono">
+          <AlertTitle className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            Database Schema Mismatch
+          </AlertTitle>
+          <AlertDescription className="text-sm">
             {errorMessage}
-            <p className="mt-2">This appears to be a database schema mismatch. The application is trying to save fields that don't exist in the database.</p>
+            <div className="mt-4 p-3 bg-background rounded text-xs font-mono">
+              <p>This appears to be a database schema mismatch. The application is trying to save fields that don't exist in the database.</p>
+              <p className="mt-2">Common issues:</p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>Field names in the code don't match database column names</li>
+                <li>TypeScript interfaces include fields not present in the database</li>
+                <li>Missing RLS policies for user association</li>
+              </ul>
+            </div>
           </AlertDescription>
         </Alert>
       );

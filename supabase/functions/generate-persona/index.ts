@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -290,7 +291,7 @@ serve(async (req) => {
     }
 
     const requestData = await req.json().catch(() => ({}));
-    const { prompt } = requestData;
+    const { prompt, userId } = requestData; // Extract userId if available
     
     if (!prompt || typeof prompt !== "string" || prompt.trim() === "") {
       console.error("Valid prompt is required");
@@ -298,6 +299,9 @@ serve(async (req) => {
     }
 
     console.log("Generating persona from prompt:", prompt);
+    if (userId) {
+      console.log("Creating for user:", userId);
+    }
 
     // Step 1: Generate basic persona traits
     const traitsResponse = await fetch("https://api.openai.com/v1/chat/completions", {
