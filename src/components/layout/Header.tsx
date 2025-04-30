@@ -76,8 +76,7 @@ const Header = () => {
                   <Link to={link.href}>
                     <NavigationMenuLink className={cn(
                       navigationMenuTriggerStyle(),
-                      "text-sm font-medium",
-                      isScrolled ? "text-foreground hover:text-foreground/80" : "text-white hover:text-white/80"
+                      "text-sm font-medium text-foreground hover:text-foreground/80"
                     )}>
                       {link.icon && <link.icon className="w-4 h-4 mr-2" />}
                       {link.title}
@@ -118,7 +117,7 @@ const Header = () => {
                 <Link 
                   key={link.title} 
                   to={link.href} 
-                  className="text-white hover:text-primary px-2 py-1 flex items-center"
+                  className="text-foreground hover:text-primary px-2 py-1 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.icon && <link.icon className="w-4 h-4 mr-2" />}

@@ -30,7 +30,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             <Button 
               variant="outline" 
               size="sm"
-              className="border-gray-300 text-white bg-transparent hover:bg-gray-800"
+              className="border-gray-300 text-foreground bg-white/80 hover:bg-gray-100"
               onClick={disconnectWallet}
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -39,7 +39,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           ) : (
             <Button 
               size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 border-none text-white hover:opacity-90"
+              className="bg-gradient-to-r from-primary to-primary/80 border-none text-foreground hover:opacity-90"
               onClick={connectWallet}
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -54,7 +54,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="border-gray-300 text-white bg-transparent hover:bg-gray-800"
+          className="border-gray-300 text-foreground bg-white/80 hover:bg-gray-100"
           onClick={() => signOut()}
         >
           <LogIn className="h-4 w-4 mr-2 rotate-180" />
@@ -64,7 +64,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Link to="/auth">
           <Button 
             size="sm" 
-            className="bg-gradient-to-r from-primary to-primary/80 border-none text-white hover:opacity-90"
+            className="bg-gradient-to-r from-primary to-primary/80 border-none text-foreground hover:opacity-90"
           >
             <LogIn className="h-4 w-4 mr-2" />
             Sign In
