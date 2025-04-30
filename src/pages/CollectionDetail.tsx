@@ -11,7 +11,7 @@ import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { getCollectionById, deleteCollection } from "@/services/collections/collectionsService";
+import { getCollectionById, deleteCollection } from "@/services/collections/collectionOperations";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";

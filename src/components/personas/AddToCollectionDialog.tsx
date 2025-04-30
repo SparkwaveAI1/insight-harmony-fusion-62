@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -17,7 +16,7 @@ import {
   removePersonaFromCollection,
   isPersonaInCollection,
   createCollection,
-} from "@/services/collections/collectionsService";
+} from "@/services/collections";
 
 interface AddToCollectionDialogProps {
   open: boolean;

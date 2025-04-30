@@ -12,7 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Check, Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Persona } from "@/services/persona/types";
-import { getPersonasNotInCollection, addPersonaToCollection } from "@/services/collections/collectionsService";
+import { 
+  getPersonasNotInCollection, 
+  addPersonaToCollection 
+} from "@/services/collections/personaCollectionOperations";
 import { getAllPersonas } from "@/services/persona/personaService";
 import { Skeleton } from "@/components/ui/skeleton";
 
