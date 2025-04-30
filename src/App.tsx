@@ -30,6 +30,7 @@ import PersonaDetail from './pages/PersonaDetail';
 import PersonaChat from './pages/PersonaChat';
 import DualChat from './pages/DualChat';
 import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
 
 // Persona Creation Pages
 import PersonaCreationLanding from './pages/persona-creation/PersonaCreationLanding';
@@ -74,6 +75,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
 
               {/* Protected Routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
               <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
               <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />

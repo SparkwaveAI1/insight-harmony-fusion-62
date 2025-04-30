@@ -59,7 +59,7 @@ const Header = () => {
           
           {user ? (
             <div className="flex items-center gap-2">
-              <Link to="/persona-viewer">
+              <Link to="/dashboard">
                 <Button size="sm" variant="outline" className="border-gray-700 bg-transparent text-gray-300 hover:bg-gray-800">
                   <User className="h-4 w-4 mr-2" />
                   Dashboard
