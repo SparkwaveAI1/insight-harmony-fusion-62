@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "./types";
 import { personaToDbPersona, dbPersonaToPersona } from "./mappers";
@@ -139,6 +138,39 @@ export async function updatePersonaVisibility(personaId: string, isPublic: boole
     return true;
   } catch (error) {
     console.error("Error updating persona visibility:", error);
+    return false;
+  }
+}
+
+/**
+ * Deletes a persona permanently
+ */
+export async function deletePersona(personaId: string): Promise<boolean> {
+  try {
+    console.log(`Deleting persona with ID ${personaId}`);
+    
+    // First, remove all collection references
+    const { error: collectionError } = await supabase
+      .from('collection_personas')
+      .delete()
+      .eq('persona_id', personaId);
+    
+    if (collectionError) {
+      console.error("Error removing persona from collections:", collectionError);
+      // Continue with deletion anyway
+    }
+    
+    // Delete the persona
+    const { error } = await supabase
+      .from('personas')
+      .delete()
+      .eq('persona_id', personaId);
+
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting persona:", error);
     return false;
   }
 }

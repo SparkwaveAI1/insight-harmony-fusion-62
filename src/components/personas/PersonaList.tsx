@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { getAllPersonas } from "@/services/persona/personaService";
 import { useAuth } from "@/context/AuthContext";
@@ -98,6 +99,18 @@ export default function PersonaList({
     }
   };
 
+  const handleDelete = (personaId: string) => {
+    // Remove the deleted persona from the list
+    setPersonas(prevPersonas => 
+      prevPersonas.filter(persona => persona.persona_id !== personaId)
+    );
+    
+    // If we're in a collection and it's the last persona, trigger collection delete
+    if (collectionId && personas.length <= 1 && onDeleteCollection) {
+      onDeleteCollection();
+    }
+  };
+
   if (isLoading) {
     return <PersonaLoadingState />;
   }
@@ -112,7 +125,8 @@ export default function PersonaList({
         <PersonaCard 
           key={persona.persona_id} 
           persona={persona}
-          onVisibilityChange={handleVisibilityChange} 
+          onVisibilityChange={handleVisibilityChange}
+          onDelete={handleDelete} 
         />
       ))}
     </div>

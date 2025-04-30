@@ -10,13 +10,19 @@ import AddToCollectionButton from "./AddToCollectionButton";
 import { Switch } from "@/components/ui/switch";
 import { Persona } from "@/services/persona/types";
 import { updatePersonaVisibility } from "@/services/persona/personaService";
+import DeletePersonaDialog from "./DeletePersonaDialog";
 
 interface PersonaCardProps {
   persona: Persona;
   onVisibilityChange?: (personaId: string, isPublic: boolean) => void;
+  onDelete?: (personaId: string) => void;
 }
 
-export default function PersonaCard({ persona, onVisibilityChange }: PersonaCardProps) {
+export default function PersonaCard({ 
+  persona, 
+  onVisibilityChange,
+  onDelete 
+}: PersonaCardProps) {
   const { user } = useAuth();
   const isOwner = user && persona.user_id === user.id;
 
@@ -42,6 +48,12 @@ export default function PersonaCard({ persona, onVisibilityChange }: PersonaCard
     } catch (error) {
       console.error("Error updating visibility:", error);
       toast.error("Failed to update persona visibility");
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(persona.persona_id);
     }
   };
 
@@ -74,11 +86,19 @@ export default function PersonaCard({ persona, onVisibilityChange }: PersonaCard
 
       {/* Action buttons */}
       <div className="absolute top-4 right-4 flex gap-2">
+        {isOwner && (
+          <DeletePersonaDialog 
+            personaId={persona.persona_id}
+            personaName={persona.name}
+            onDelete={handleDelete}
+          />
+        )}
         <AddToCollectionButton personaId={persona.persona_id} />
         <Link
           to={`/persona-chat/${persona.persona_id}`}
           className="p-2 bg-background/90 rounded-full hover:bg-muted/90 transition-colors"
           title="Chat with persona"
+          onClick={(e) => e.stopPropagation()} // Prevent event bubbling to parent
         >
           <MessageCircle className="h-4 w-4" />
         </Link>

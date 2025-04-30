@@ -11,7 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { getCollectionById } from "@/services/collections/collectionsService";
+import { getCollectionById, deleteCollection } from "@/services/collections/collectionsService";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
 
@@ -40,6 +40,19 @@ const CollectionDetail = () => {
       navigate("/collections");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!collectionId) return;
+    
+    try {
+      await deleteCollection(collectionId);
+      toast.success("Collection deleted successfully");
+      navigate("/collections");
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      toast.error("Failed to delete collection");
     }
   };
 
@@ -82,6 +95,7 @@ const CollectionDetail = () => {
                     <PersonaList 
                       onPersonasLoad={setPersonas}
                       collectionId={collectionId}
+                      onDeleteCollection={handleDeleteCollection}
                     />
                     
                     {personas.length > 0 && <PersonaSummary personas={personas} />}
