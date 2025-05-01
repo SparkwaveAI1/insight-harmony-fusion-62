@@ -39,9 +39,34 @@ export const useDualChat = () => {
     getPersonaName
   });
   
-  // Wrapper functions that provide the necessary dependencies
+  // Updated handler to determine which persona should respond next
   const handleStartConversation = () => {
-    return startConversation(getPersonaA, getPersonaB);
+    // If there are no messages, start with a default conversation
+    if (messages.length === 0) {
+      return startConversation(getPersonaA, getPersonaB);
+    }
+    
+    // Find the last persona message to determine who should speak next
+    const lastMessage = [...messages].reverse().find(
+      msg => msg.role === 'personaA' || msg.role === 'personaB'
+    );
+    
+    // If no persona has spoken yet or there's an issue, start with default conversation
+    if (!lastMessage) {
+      return startConversation(getPersonaA, getPersonaB);
+    }
+    
+    // Determine which persona should respond next
+    const nextSpeaker = lastMessage.role === 'personaA' ? 'personaB' : 'personaA';
+    
+    // Create prompt for the other persona to continue the conversation
+    const prompt = `Please continue the conversation.`;
+    return userSendMessageToTarget(
+      prompt,
+      nextSpeaker,
+      getPersonaA,
+      getPersonaB
+    );
   };
   
   // Regular message send function
