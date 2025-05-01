@@ -93,10 +93,14 @@ export default function PersonaList({
     
     // If we're filtering by public only and a persona was made private, remove it from the list
     // But only if it's not owned by the current user
-    if (publicOnly && !isPublic && user && persona?.user_id !== user.id) {
-      setPersonas(prevPersonas => 
-        prevPersonas.filter(persona => persona.persona_id !== personaId)
-      );
+    if (publicOnly && !isPublic && user) {
+      // Find the persona to check if it's owned by current user
+      const personaToCheck = personas.find(p => p.persona_id === personaId);
+      if (personaToCheck && personaToCheck.user_id !== user.id) {
+        setPersonas(prevPersonas => 
+          prevPersonas.filter(persona => persona.persona_id !== personaId)
+        );
+      }
     }
   };
 
@@ -136,4 +140,3 @@ export default function PersonaList({
 
 // Import the getPersonasByCollection function at the top of the file
 import { getPersonasByCollection } from "@/services/persona/personaService";
-
