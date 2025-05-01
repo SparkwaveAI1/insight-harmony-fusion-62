@@ -1,7 +1,9 @@
 
-import { BrainCircuit, Coins } from "lucide-react";
+import { BrainCircuit, Coins, FileText, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import Reveal from "@/components/ui-custom/Reveal";
 import EarningOptionCard from "./EarningOptionCard";
+import { Button } from "@/components/ui/button";
 
 const EarningOptionsSection = () => {
   return (
@@ -38,9 +40,34 @@ const EarningOptionsSection = () => {
         </div>
 
         <Reveal>
-          <p className="text-center text-gray-400 text-sm italic">
+          <p className="text-center text-gray-400 text-sm italic mb-8">
             Token utility and rewards are in development. No active staking or earning programs live yet.
           </p>
+        </Reveal>
+        
+        {/* New buttons */}
+        <Reveal delay={200}>
+          <div className="flex flex-wrap justify-center gap-6 mt-8">
+            <Link to="/prsna/whitepaper">
+              <Button 
+                variant="outline" 
+                className="text-white border-white/30 hover:bg-white/10 min-w-32"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                White Paper
+              </Button>
+            </Link>
+            
+            <Link to="/prsna/roadmap">
+              <Button 
+                variant="outline" 
+                className="text-white border-white/30 hover:bg-white/10 min-w-32"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Road Map
+              </Button>
+            </Link>
+          </div>
         </Reveal>
       </div>
     </div>
@@ -48,4 +75,3 @@ const EarningOptionsSection = () => {
 };
 
 export default EarningOptionsSection;
-

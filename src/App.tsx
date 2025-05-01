@@ -14,6 +14,8 @@ import Index from './pages/Index';
 import CustomResearch from './pages/CustomResearch';
 import EarnPRSNA from './pages/EarnPRSNA';
 import PRSNAEcosystem from './pages/PRSNAEcosystem';
+import WhitePaper from './pages/WhitePaper';
+import Roadmap from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
 import Team from './pages/Team';
@@ -69,6 +71,8 @@ function App() {
               <Route path="/custom-research" element={<CustomResearch />} />
               <Route path="/prsna" element={<EarnPRSNA />} />
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
+              <Route path="/prsna/whitepaper" element={<WhitePaper />} />
+              <Route path="/prsna/roadmap" element={<Roadmap />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/team" element={<Team />} />
