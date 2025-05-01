@@ -9,11 +9,9 @@ import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { navigationItems } from "./navigation/NavigationItems";
@@ -85,39 +83,6 @@ const Header = () => {
                 </Link>
               </NavigationMenuItem>
             ))}
-            
-            {/* Products Dropdown */}
-            <NavigationMenuItem>
-              <NavigationMenuTrigger className="text-sm font-medium">Products</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <div className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-2">
-                  <Link to="/simulated-persona" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                    <div className="text-sm font-medium leading-none">Generate AI Personas</div>
-                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                      Create behaviorally accurate AI personas
-                    </p>
-                  </Link>
-                  <Link to="/persona-viewer" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                    <div className="text-sm font-medium leading-none">Persona Library</div>
-                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                      Browse and view generated personas
-                    </p>
-                  </Link>
-                  <Link to="/dual-chat" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                    <div className="text-sm font-medium leading-none">Chat with Personas</div>
-                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                      Interact with AI personas in conversation
-                    </p>
-                  </Link>
-                  <Link to="/interviewer" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                    <div className="text-sm font-medium leading-none">Interview System</div>
-                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                      Conduct automated interview sessions
-                    </p>
-                  </Link>
-                </div>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
 
@@ -157,41 +122,6 @@ const Header = () => {
                   {link.title}
                 </Link>
               ))}
-              
-              {/* Mobile Products Links */}
-              <div className="px-2 py-2">
-                <div className="font-medium text-foreground mb-1">Products</div>
-                <div className="pl-2 flex flex-col gap-2">
-                  <Link 
-                    to="/simulated-persona" 
-                    className="text-sm text-foreground/90 py-1"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Generate AI Personas
-                  </Link>
-                  <Link 
-                    to="/persona-viewer" 
-                    className="text-sm text-foreground/90 py-1"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Persona Library
-                  </Link>
-                  <Link 
-                    to="/dual-chat" 
-                    className="text-sm text-foreground/90 py-1"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Chat with Personas
-                  </Link>
-                  <Link 
-                    to="/interviewer" 
-                    className="text-sm text-foreground/90 py-1"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Interview System
-                  </Link>
-                </div>
-              </div>
               
               {/* Mobile Auth Buttons */}
               <div className="mt-4 flex flex-col gap-2">

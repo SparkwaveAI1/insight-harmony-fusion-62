@@ -1,5 +1,5 @@
 
-import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText, MessageCircle } from "lucide-react";
+import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText } from "lucide-react";
 
 export const navigationMenuItems = [
   {
@@ -31,11 +31,6 @@ export const navigationMenuItems = [
     title: "Interview",
     url: "/interviewer",
     icon: BookText,
-  },
-  {
-    title: "Chat with Personas",
-    url: "/dual-chat",
-    icon: MessageCircle,
   },
   {
     title: "Research",
