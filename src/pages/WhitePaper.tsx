@@ -299,7 +299,7 @@ const WhitePaper = () => {
               </pre>
               
               <div className="flex justify-center mt-8 mb-10">
-                <Link to="/roadmap">
+                <Link to="/prsna/roadmap">
                   <Button size="lg" className="flex items-center gap-2">
                     <Route className="h-5 w-5" />
                     View Our Road Map
