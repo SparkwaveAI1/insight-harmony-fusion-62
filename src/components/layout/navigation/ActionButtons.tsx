@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Wallet, LogIn } from "lucide-react";
+import { Wallet, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -57,7 +57,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           className="border-gray-300 text-foreground bg-white/80 hover:bg-gray-100"
           onClick={() => signOut()}
         >
-          <LogIn className="h-4 w-4 mr-2 rotate-180" />
+          <LogOut className="h-4 w-4 mr-2" />
           Logout
         </Button>
       ) : (
