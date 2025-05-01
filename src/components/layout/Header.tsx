@@ -63,13 +63,14 @@ const Header = () => {
           
         {/* Centered Navigation Links - Desktop */}
         <NavigationMenu className="hidden md:flex mx-auto">
-          <NavigationMenuList className="space-x-4">
+          <NavigationMenuList className="flex space-x-4">
             {navigationMenuItems.map((link) => (
               <NavigationMenuItem key={link.title}>
                 <Link to={link.url}>
                   <NavigationMenuLink className={cn(
                     navigationMenuTriggerStyle(),
-                    "text-sm font-medium text-foreground hover:text-foreground/80",
+                    "text-sm font-medium",
+                    isScrolled ? "text-foreground hover:text-foreground/80" : "text-white hover:text-white/80",
                     location.pathname === link.url ? "bg-accent" : ""
                   )}>
                     {link.icon && <link.icon className="w-4 h-4 mr-2" />}
@@ -110,7 +111,10 @@ const Header = () => {
                 <Link 
                   key={link.title} 
                   to={link.url} 
-                  className="text-foreground hover:text-primary px-2 py-1 flex items-center"
+                  className={cn(
+                    "px-2 py-1 flex items-center",
+                    isScrolled ? "text-foreground hover:text-primary" : "text-white hover:text-primary"
+                  )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.icon && <link.icon className="w-4 h-4 mr-2" />}
