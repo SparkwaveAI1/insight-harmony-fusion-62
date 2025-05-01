@@ -45,13 +45,14 @@ const EarningOptionsSection = () => {
           </p>
         </Reveal>
         
-        {/* New buttons */}
+        {/* Buttons with improved visibility */}
         <Reveal delay={200}>
-          <div className="flex flex-wrap justify-center gap-6 mt-8">
+          <div className="flex flex-wrap justify-center gap-6 mt-8 mb-12">
             <Link to="/prsna/whitepaper">
               <Button 
                 variant="outline" 
-                className="text-white border-white/30 hover:bg-white/10 min-w-32"
+                className="text-white border-white hover:bg-white/10 min-w-32 font-medium"
+                size="lg"
               >
                 <FileText className="mr-2 h-4 w-4" />
                 White Paper
@@ -61,7 +62,8 @@ const EarningOptionsSection = () => {
             <Link to="/prsna/roadmap">
               <Button 
                 variant="outline" 
-                className="text-white border-white/30 hover:bg-white/10 min-w-32"
+                className="text-white border-white hover:bg-white/10 min-w-32 font-medium"
+                size="lg"
               >
                 <MapPin className="mr-2 h-4 w-4" />
                 Road Map
