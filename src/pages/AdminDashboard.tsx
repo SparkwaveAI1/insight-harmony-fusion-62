@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -33,8 +34,8 @@ const AdminDashboard = () => {
         setLoading(true);
         
         // Get all users from the auth.users view via a stored function
-        // Fix TypeScript error by removing the empty object parameter since the function doesn't expect any parameters
-        const { data, error } = await supabase.rpc('get_all_users');
+        // Fix TypeScript error by explicitly typing the RPC call
+        const { data, error } = await supabase.rpc<UserProfile[]>('get_all_users');
         
         if (error) throw error;
         
