@@ -34,8 +34,8 @@ const AdminDashboard = () => {
         setLoading(true);
         
         // Get all users from the auth.users view via a stored function
-        // Fix TypeScript error by explicitly typing the RPC call
-        const { data, error } = await supabase.rpc<UserProfile[]>('get_all_users');
+        // Fix TypeScript error by providing both required type arguments: return type and params type
+        const { data, error } = await supabase.rpc<UserProfile[], null>('get_all_users');
         
         if (error) throw error;
         
