@@ -62,9 +62,11 @@ export const usePersonaChat = (personaId: string) => {
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
         },
         body: JSON.stringify({
-          message: inputMessage,
-          persona: activePersona,
-          previousMessages: previousMessages,
+          persona_id: personaId,
+          previous_messages: [
+            ...previousMessages,
+            { role: 'user', content: inputMessage }
+          ],
         }),
       });
 
@@ -75,7 +77,7 @@ export const usePersonaChat = (personaId: string) => {
       }
 
       const data = await response.json();
-      console.log("Received response from persona");
+      console.log("Received response from persona:", data.response);
       
       const assistantMessage: Message = {
         role: 'assistant',

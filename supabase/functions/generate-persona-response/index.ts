@@ -18,10 +18,10 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { persona_id, persona_role, previous_messages } = await req.json()
+    const { persona_id, previous_messages } = await req.json()
     
     // Log request info
-    console.log(`Request to generate response for persona ${persona_id} (${persona_role})`)
+    console.log(`Request to generate response for persona ${persona_id}`)
     
     if (!persona_id) {
       return new Response(
@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
         Authorization: `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
