@@ -21,10 +21,10 @@ interface MobileDrawerMenuProps {
 const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader className="border-b">
-          <DrawerTitle className="text-center">PersonaAI Navigation</DrawerTitle>
-          <DrawerClose className="absolute right-4 top-4">
+      <DrawerContent className="max-h-[85vh] bg-slate-800">
+        <DrawerHeader className="border-b border-slate-700">
+          <DrawerTitle className="text-center text-white">PersonaAI Navigation</DrawerTitle>
+          <DrawerClose className="absolute right-4 top-4 text-white">
             <X size={20} />
           </DrawerClose>
         </DrawerHeader>
@@ -37,7 +37,7 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
             >
               <Button 
                 variant="ghost" 
-                className="w-full justify-start gap-2 px-3"
+                className="w-full justify-start gap-2 px-3 text-white hover:bg-slate-700"
               >
                 <item.icon className="h-5 w-5" />
                 <span>{item.title}</span>
@@ -45,7 +45,7 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
             </Link>
           ))}
         </div>
-        <DrawerFooter className="border-t">
+        <DrawerFooter className="border-t border-slate-700">
           <Link to="/dashboard" onClick={() => onOpenChange(false)} className="w-full">
             <Button variant="default" className="w-full">
               Back to Dashboard
