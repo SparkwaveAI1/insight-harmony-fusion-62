@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Send, ArrowRightLeft } from 'lucide-react';
 
@@ -49,43 +49,48 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="border-t p-4">
-      <div className="flex flex-col md:flex-row gap-2">
-        <Input
-          type="text"
+      <div className="flex flex-col gap-4">
+        {/* Larger textarea with 3 lines */}
+        <Textarea
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           onKeyPress={(e) => {
-            if (e.key === 'Enter' && userInput.trim()) {
+            if (e.key === 'Enter' && e.shiftKey === false && userInput.trim()) {
+              e.preventDefault();
               handleUserSendMessage();
             }
           }}
           placeholder="Type your message..."
           disabled={isResponding || !activePersonasLoaded || autoChatActive}
-          className="flex-1"
+          className="min-h-[120px] resize-none"
+          rows={3}
         />
         
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => handleSendToPersona('personaA')}
-            disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
-            className="whitespace-nowrap"
-            title={`Send to ${getPersonaName('personaA')}`}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            To {getPersonaName('personaA')}
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => handleSendToPersona('personaB')}
-            disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
-            className="whitespace-nowrap"
-            title={`Send to ${getPersonaName('personaB')}`}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            To {getPersonaName('personaB')}
-          </Button>
+        {/* Buttons moved below the text area */}
+        <div className="flex flex-wrap gap-2 justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleSendToPersona('personaA')}
+              disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
+              className="whitespace-nowrap"
+              title={`Send to ${getPersonaName('personaA')}`}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              To {getPersonaName('personaA')}
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => handleSendToPersona('personaB')}
+              disabled={!userInput.trim() || isResponding || !activePersonasLoaded || autoChatActive}
+              className="whitespace-nowrap"
+              title={`Send to ${getPersonaName('personaB')}`}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              To {getPersonaName('personaB')}
+            </Button>
+          </div>
           
           <Button
             variant="default"
