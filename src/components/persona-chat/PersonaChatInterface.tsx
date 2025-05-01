@@ -1,13 +1,16 @@
 
-import React, { useRef } from 'react';
-import { MessageCircle, Volume } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
+import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 
 interface PersonaChatInterfaceProps {
   personaId: string;
@@ -24,6 +27,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   } = usePersonaChat(personaId);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -39,6 +43,30 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
   return (
     <div className="space-y-4">
+      {/* Mobile Navigation Bar */}
+      <div className="flex items-center justify-between md:hidden mb-2">
+        <Button 
+          variant="outline" 
+          size="icon"
+          onClick={() => setMobileMenuOpen(true)}
+          className="h-10 w-10"
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+        
+        <h3 className="font-medium">
+          {activePersona?.name || 'Chat'}
+        </h3>
+        
+        <Link to="/dashboard">
+          <Button variant="outline" size="icon" className="h-10 w-10">
+            <LayoutDashboard className="h-5 w-5" />
+            <span className="sr-only">Dashboard</span>
+          </Button>
+        </Link>
+      </div>
+      
       <Card className="h-[600px] flex flex-col">
         <ScrollArea 
           ref={scrollAreaRef} 
@@ -59,11 +87,17 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       </Card>
       
       <Alert className="bg-amber-50 border-amber-200">
-        <Volume className="h-4 w-4 text-amber-500" />
+        <MessageCircle className="h-4 w-4 text-amber-500" />
         <AlertDescription className="text-amber-800 font-medium">
           Voice conversation feature is currently in development. Stay tuned for updates!
         </AlertDescription>
       </Alert>
+      
+      {/* Mobile Navigation Drawer */}
+      <MobileDrawerMenu 
+        open={mobileMenuOpen}
+        onOpenChange={setMobileMenuOpen}
+      />
     </div>
   );
 };

@@ -57,12 +57,24 @@ const Header = () => {
       )}
     >
       <div className="container flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center">
             <Logo 
               size="md" 
               className={isScrolled ? "text-foreground" : "text-white"}
             />
+          </Link>
+          
+          {/* Dashboard quick access button on mobile */}
+          <Link to="/dashboard" className="md:hidden ml-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={isScrolled ? "text-foreground hover:bg-background/80" : "text-white hover:bg-white/20"}
+            >
+              <LayoutDashboard className="h-4 w-4 mr-1" />
+              <span className="text-xs">Dashboard</span>
+            </Button>
           </Link>
         </div>
           

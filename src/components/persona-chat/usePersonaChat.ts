@@ -48,13 +48,16 @@ export const usePersonaChat = (personaId: string) => {
     setIsResponding(true);
 
     try {
+      console.log("Sending message to persona:", inputMessage);
+      console.log("Persona ID:", personaId);
+      
       const previousMessages = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       }));
-
-      console.log("Sending message to persona:", inputMessage);
       
+      console.log("Previous messages:", previousMessages);
+
       const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
         method: 'POST',
         headers: {
@@ -88,7 +91,7 @@ export const usePersonaChat = (personaId: string) => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error getting response:', error);
-      toast.error('Failed to get response from persona');
+      toast.error(`Failed to get response from persona: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsResponding(false);
     }
