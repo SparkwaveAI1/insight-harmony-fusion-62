@@ -47,11 +47,11 @@ const EarningOptionsSection = () => {
         
         {/* Buttons with improved visibility */}
         <Reveal delay={200}>
-          <div className="flex flex-wrap justify-center gap-6 mt-8 mb-12">
+          <div className="flex flex-wrap justify-center gap-6 mt-8">
             <Link to="/prsna/whitepaper">
               <Button 
                 variant="outline" 
-                className="text-white border-white hover:bg-white/10 min-w-32 font-medium"
+                className="text-gray-900 bg-white border-white hover:bg-white hover:bg-opacity-80 min-w-32 font-medium"
                 size="lg"
               >
                 <FileText className="mr-2 h-4 w-4" />
@@ -62,7 +62,7 @@ const EarningOptionsSection = () => {
             <Link to="/prsna/roadmap">
               <Button 
                 variant="outline" 
-                className="text-white border-white hover:bg-white/10 min-w-32 font-medium"
+                className="text-gray-900 bg-white border-white hover:bg-white hover:bg-opacity-80 min-w-32 font-medium"
                 size="lg"
               >
                 <MapPin className="mr-2 h-4 w-4" />
