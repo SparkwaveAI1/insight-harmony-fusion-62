@@ -34,8 +34,10 @@ const AdminDashboard = () => {
         setLoading(true);
         
         // Get all users from the auth.users view via a stored function
-        // This requires appropriate permissions to be set up
-        const { data, error } = await supabase.rpc('get_all_users');
+        // Using the correct type annotation for the RPC call
+        const { data, error } = await supabase.rpc('get_all_users', {}, {
+          count: 'exact'
+        });
         
         if (error) throw error;
         
