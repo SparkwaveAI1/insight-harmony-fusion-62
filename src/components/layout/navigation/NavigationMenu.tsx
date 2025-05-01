@@ -28,8 +28,8 @@ export function NavigationMenu() {
                   tooltip={item.title}
                 >
                   <Link to={item.url}>
-                    <item.icon />
-                    <span>{item.title}</span>
+                    <item.icon className="h-5 w-5" />
+                    <span className="ml-2">{item.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

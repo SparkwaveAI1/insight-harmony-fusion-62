@@ -31,22 +31,27 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
           </DrawerClose>
         </DrawerHeader>
         <div className="flex flex-col gap-3 p-6">
-          {navigationMenuItems.map((item) => (
-            <Link 
-              key={item.title} 
-              to={item.url} 
-              onClick={() => onOpenChange(false)}
-              className="block w-full"
-            >
-              <Button 
-                variant={location.pathname === item.url ? "default" : "ghost"}
-                className="w-full justify-start gap-3 px-4 py-4 text-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors"
+          {navigationMenuItems.map((item) => {
+            const isActive = location.pathname === item.url || 
+                            (item.url !== "/" && location.pathname.startsWith(item.url));
+            
+            return (
+              <Link 
+                key={item.title} 
+                to={item.url} 
+                onClick={() => onOpenChange(false)}
+                className="block w-full"
               >
-                <item.icon className="h-6 w-6" />
-                <span>{item.title}</span>
-              </Button>
-            </Link>
-          ))}
+                <Button 
+                  variant={isActive ? "default" : "ghost"}
+                  className="w-full justify-start gap-3 px-4 py-4 text-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                >
+                  <item.icon className="h-6 w-6" />
+                  <span>{item.title}</span>
+                </Button>
+              </Link>
+            );
+          })}
         </div>
         <DrawerFooter className="border-t border-gray-200 bg-gray-100 pt-4">
           <Link to="/dashboard" onClick={() => onOpenChange(false)} className="w-full">
