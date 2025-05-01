@@ -26,43 +26,7 @@ export function DashboardContent() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest persona interactions</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-6">
-                <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                <span className="ml-2">Loading activities...</span>
-              </div>
-            ) : activities.length > 0 ? (
-              activities.map((activity) => {
-                const IconComponent = activityIcons[activity.iconName];
-                return (
-                  <div key={activity.id} className="flex items-center gap-4 border-b last:border-0 pb-4 last:pb-0">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <IconComponent className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
-                    </div>
-                    <div className="ml-auto text-sm text-muted-foreground">
-                      {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-6 text-muted-foreground">
-                No recent activities found
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
+        {/* Quick Actions Card - Moved to the top */}
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
@@ -100,6 +64,44 @@ export function DashboardContent() {
                 </div>
               </Link>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity Card - Now below Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Your latest persona interactions</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-6">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                <span className="ml-2">Loading activities...</span>
+              </div>
+            ) : activities.length > 0 ? (
+              activities.map((activity) => {
+                const IconComponent = activityIcons[activity.iconName];
+                return (
+                  <div key={activity.id} className="flex items-center gap-4 border-b last:border-0 pb-4 last:pb-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <IconComponent className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                    </div>
+                    <div className="ml-auto text-sm text-muted-foreground">
+                      {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                No recent activities found
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
