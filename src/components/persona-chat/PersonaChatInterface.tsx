@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -67,11 +66,11 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </Link>
       </div>
       
+      {/* Card with scroll area and message input */}
       <Card className="h-[600px] flex flex-col">
         <ScrollArea 
           ref={scrollAreaRef} 
           className="flex-1 h-[520px]"
-          // Remove automatic scrolling behavior
         >
           <MessageList 
             messages={messages} 
@@ -93,7 +92,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </AlertDescription>
       </Alert>
       
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Navigation Drawer - Explicitly set z-index high to ensure visibility */}
       <MobileDrawerMenu 
         open={mobileMenuOpen}
         onOpenChange={setMobileMenuOpen}
