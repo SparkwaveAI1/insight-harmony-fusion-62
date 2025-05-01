@@ -23,7 +23,7 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="border-b">
-          <DrawerTitle className="text-center">App Navigation</DrawerTitle>
+          <DrawerTitle className="text-center">PersonaAI Navigation</DrawerTitle>
           <DrawerClose className="absolute right-4 top-4">
             <X size={20} />
           </DrawerClose>
