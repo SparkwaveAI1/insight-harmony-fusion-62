@@ -30,12 +30,9 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Auto scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isResponding]);
+  // Remove automatic scrolling behavior
+  // The scrolling will now be controlled by the MessageList component
+  // which has auto-scroll disabled by default
 
   if (isLoading) {
     return (
@@ -104,7 +101,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           <MessageList 
             messages={messages} 
             isResponding={isResponding} 
-            messagesEndRef={messagesEndRef}  
+            messagesEndRef={messagesEndRef}
+            disableAutoScroll={true}  
           />
         </ScrollArea>
         

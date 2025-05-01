@@ -12,7 +12,7 @@ interface MessageListProps {
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
   isResponding, 
-  disableAutoScroll,
+  disableAutoScroll = true, // Changed the default to true to prevent auto scrolling
   messagesEndRef 
 }) => {
   const defaultMessagesEndRef = useRef<HTMLDivElement>(null);

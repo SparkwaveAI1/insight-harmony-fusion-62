@@ -9,13 +9,15 @@ interface ChatMessagesProps {
   isResponding: boolean;
   getPersonaName: (type: 'personaA' | 'personaB') => string;
   messagesEndRef: React.RefObject<HTMLDivElement>;
+  disableAutoScroll?: boolean;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
   isResponding,
   getPersonaName,
-  messagesEndRef
+  messagesEndRef,
+  disableAutoScroll = true // Add this prop with default value true
 }) => {
   return (
     <ScrollArea className="flex-1 p-4">
