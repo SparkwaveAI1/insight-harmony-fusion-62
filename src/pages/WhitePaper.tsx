@@ -14,8 +14,8 @@ const WhitePaper = () => {
       
       <main className="flex-grow pt-16">
         <Section className="bg-gradient-to-br from-gray-900 to-gray-800">
-          <div className="container px-4 mx-auto py-8">
-            <div className="mb-8">
+          <div className="container px-4 mx-auto py-12">
+            <div className="mb-10">
               <Link to="/prsna">
                 <Button variant="ghost" className="text-white hover:bg-white/10">
                   <ArrowLeft className="mr-2 h-4 w-4" /> Back to $PRSNA
@@ -23,30 +23,30 @@ const WhitePaper = () => {
               </Link>
             </div>
             
-            <div className="flex items-center mb-12">
-              <div className="bg-primary/20 p-3 rounded-full mr-4">
-                <FileText className="h-6 w-6 text-primary" />
+            <div className="flex items-center mb-16">
+              <div className="bg-primary/20 p-4 rounded-full mr-5">
+                <FileText className="h-8 w-8 text-primary" />
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold">White Paper</h1>
+              <h1 className="text-4xl md:text-5xl font-bold">White Paper</h1>
             </div>
             
-            <div className="max-w-4xl mx-auto prose prose-invert prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-h2:border-b prose-h2:pb-2 prose-h2:border-gray-700 prose-p:text-gray-300 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-800 prose-code:text-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-              <h1>PersonaAI Documentation</h1>
+            <div className="max-w-4xl mx-auto prose prose-lg prose-invert prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h2:border-b prose-h2:pb-3 prose-h2:border-gray-700 prose-h2:mt-16 prose-p:text-gray-300 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-800 prose-code:text-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
+              <h1 className="text-5xl mb-8">PersonaAI Documentation</h1>
               
-              <p>
+              <p className="text-xl leading-relaxed">
                 Welcome to the official documentation for <strong>PersonaAI</strong> — the first AI-native qualitative research platform. 
                 Our mission is to redefine how businesses, researchers, and projects model human behavior using synthetic personas 
                 grounded in social science and behavioral realism.
               </p>
               
-              <p>
+              <p className="text-xl leading-relaxed mb-10">
                 PersonaAI combines large language models, probabilistic trait modeling, and structured interviews to simulate 
                 real-world users across a wide range of domains — including Web3, consumer insights, governance design, and incentive testing.
               </p>
               
-              <h2>🔍 What You'll Find Here</h2>
+              <h2 className="text-3xl mb-8">🔍 What You'll Find Here</h2>
               
-              <ul>
+              <ul className="space-y-2 text-lg">
                 <li>System architecture: how our platform is structured</li>
                 <li>Token utility: what $PRSNA does and how value flows</li>
                 <li>Product modules: from persona creation to research tools</li>
@@ -54,246 +54,246 @@ const WhitePaper = () => {
                 <li>Roadmap: what we're building and when</li>
               </ul>
               
-              <hr className="border-gray-700 my-12" />
+              <hr className="border-gray-700 my-16" />
               
-              <h2>What Is a Persona?</h2>
+              <h2 className="text-3xl mb-8">What Is a Persona?</h2>
               
-              <p>
+              <p className="text-lg leading-relaxed">
                 In PersonaAI, a "persona" is a structured behavioral model—built either from a real interview or 
                 generated using our trait engine.
               </p>
               
-              <p>Each persona includes:</p>
-              <ul>
+              <p className="text-lg mb-6">Each persona includes:</p>
+              <ul className="space-y-2 mb-8 text-lg">
                 <li>A demographic and psychological profile</li>
                 <li>Contradictions and emergent behavior</li>
                 <li>Decision-making tendencies based on validated models</li>
               </ul>
               
-              <p>Types of personas:</p>
-              <ul>
+              <p className="text-lg mb-4">Types of personas:</p>
+              <ul className="space-y-2 mb-8 text-lg">
                 <li><strong>Human-Derived</strong>: Created via real interviews</li>
                 <li><strong>Simulated</strong>: Generated by our internal modeling engine</li>
                 <li><strong>Prompted</strong>: Created from text input, with internal trait inference</li>
               </ul>
               
-              <p>
+              <p className="text-lg italic mb-10">
                 These personas are not avatars—they are testable, probabilistic systems designed for research use.
               </p>
               
-              <hr className="border-gray-700 my-12" />
+              <hr className="border-gray-700 my-16" />
               
-              <h2>System Architecture</h2>
+              <h2 className="text-3xl mb-8">System Architecture</h2>
               
-              <p>PersonaAI has two core subsystems:</p>
+              <p className="text-lg mb-6">PersonaAI has two core subsystems:</p>
               
-              <h3>1. Interview System (Human-Based)</h3>
-              <ul>
+              <h3 className="text-2xl mt-10 mb-4">1. Interview System (Human-Based)</h3>
+              <ul className="space-y-2 mb-8 text-lg">
                 <li>Structured interviews with real people</li>
                 <li>Outputs royalty-eligible personas</li>
                 <li>Contradiction logging, trait validation</li>
               </ul>
               
-              <h3>2. Simulation Engine (Persona-Based)</h3>
-              <ul>
+              <h3 className="text-2xl mt-10 mb-4">2. Simulation Engine (Persona-Based)</h3>
+              <ul className="space-y-2 mb-8 text-lg">
                 <li>Uses synthetic or user-prompted personas</li>
                 <li>Supports 1-on-1 or multi-agent interactions</li>
                 <li>Powers simulations, A/B testing, and modeling</li>
               </ul>
               
-              <p>
+              <p className="text-lg italic mb-10">
                 All personas—real or simulated—are structured using the same trait architecture and realism checks.
               </p>
               
-              <hr className="border-gray-700 my-12" />
+              <hr className="border-gray-700 my-16" />
               
-              <h2>Platform Modules</h2>
+              <h2 className="text-3xl mb-8">Platform Modules</h2>
               
-              <p>PersonaAI is composed of four primary modules:</p>
+              <p className="text-lg mb-6">PersonaAI is composed of four primary modules:</p>
               
-              <h3>🧬 Persona Builder</h3>
-              <ul>
+              <h3 className="text-2xl mt-10 mb-4">🧬 Persona Builder</h3>
+              <ul className="space-y-2 mb-10 text-lg">
                 <li>Generate personas from prompts</li>
                 <li>Internal engine assigns traits using demographic models</li>
                 <li>Designed for contradiction and realism, not cohesion</li>
               </ul>
               
-              <h3>🗣️ AI Interviewer (Human-Based)</h3>
-              <ul>
+              <h3 className="text-2xl mt-10 mb-4">🗣️ AI Interviewer (Human-Based)</h3>
+              <ul className="space-y-2 mb-10 text-lg">
                 <li>Real human interviews</li>
                 <li>Dynamic branching + trait contradiction logging</li>
                 <li>Output: Human-Derived Persona (ERC-6551 capable)</li>
               </ul>
               
-              <h3>🧪 Research Simulation Suite</h3>
-              <ul>
+              <h3 className="text-2xl mt-10 mb-4">🧪 Research Simulation Suite</h3>
+              <ul className="space-y-2 mb-10 text-lg">
                 <li>1-on-1 Interviews</li>
                 <li>Group discussions (3–6)</li>
                 <li>Town Halls (up to 50 agents)</li>
                 <li>Text or voice</li>
               </ul>
               
-              <h3>📊 Analytics & Dashboard</h3>
-              <ul>
+              <h3 className="text-2xl mt-10 mb-4">📊 Analytics & Dashboard</h3>
+              <ul className="space-y-2 mb-10 text-lg">
                 <li>Trait maps, contradiction highlights</li>
                 <li>Scenario testing tools</li>
                 <li>Persona cloning and variation tracking</li>
               </ul>
               
-              <h3>🔐 Persona Wallets (ERC-6551)</h3>
+              <h3 className="text-2xl mt-10 mb-4">🔐 Persona Wallets (ERC-6551)</h3>
               
-              <p>Each persona can be optionally deployed to an ERC-6551 smart wallet:</p>
-              <ul>
+              <p className="text-lg mb-4">Each persona can be optionally deployed to an ERC-6551 smart wallet:</p>
+              <ul className="space-y-2 mb-6 text-lg">
                 <li>Holds $PRSNA or other tokens</li>
                 <li>Tracks behavior, licensing, usage</li>
                 <li>Powers autonomous transactions or staking</li>
               </ul>
               
-              <p>
+              <p className="text-lg font-medium mb-10">
                 This creates <strong>real digital agents</strong>—onchain behavioral entities with financial identity.
               </p>
               
-              <hr className="border-gray-700 my-12" />
+              <hr className="border-gray-700 my-16" />
               
-              <h2>$PRSNA Token Utility</h2>
+              <h2 className="text-3xl mb-8">$PRSNA Token Utility</h2>
               
-              <p>$PRSNA is the fuel for the PersonaAI research economy.</p>
+              <p className="text-xl font-medium mb-6">$PRSNA is the fuel for the PersonaAI research economy.</p>
               
-              <h3>🔧 Core Functions</h3>
+              <h3 className="text-2xl mt-10 mb-6">🔧 Core Functions</h3>
               
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-gray-800 rounded-lg border border-gray-700">
+              <div className="overflow-x-auto mb-12">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700">
                   <thead>
                     <tr>
-                      <th className="px-4 py-2 border-b border-gray-700 text-left">Capability</th>
-                      <th className="px-4 py-2 border-b border-gray-700 text-left">Role of $PRSNA</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Capability</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Role of $PRSNA</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Run simulations</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Pay to access personas in interviews/groups</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Run simulations</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Pay to access personas in interviews/groups</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Stake persona access</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Lock tokens to prioritize key simulations</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Stake persona access</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Lock tokens to prioritize key simulations</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Access trait data</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Use tokens to view aggregated analytics</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Access trait data</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Use tokens to view aggregated analytics</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">License human personas</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Route value to creators via ERC-6551 wallets</td>
+                      <td className="px-6 py-4 border-b border-gray-700">License human personas</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Route value to creators via ERC-6551 wallets</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">ACP participation</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Transact inside the Virtuals agent protocol</td>
+                      <td className="px-6 py-4 border-b border-gray-700">ACP participation</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Transact inside the Virtuals agent protocol</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               
-              <h3>🔄 Value Loop</h3>
+              <h3 className="text-2xl mt-10 mb-6">🔄 Value Loop</h3>
               
-              <ol>
+              <ol className="list-decimal list-inside space-y-2 mb-10 text-lg">
                 <li>Researchers simulate behavior</li>
                 <li>$PRSNA is used or staked</li>
                 <li>Human contributors earn royalties (if applicable)</li>
                 <li>Persona agents can autonomously act inside Virtuals ecosystem</li>
               </ol>
               
-              <blockquote>
-                <p>$PRSNA is <strong>not</strong> a governance token. It exists for coordination and access—not speculation.</p>
+              <blockquote className="bg-gray-800/30 border-l-4 border-primary p-6 rounded-lg my-12">
+                <p className="text-lg italic">$PRSNA is <strong>not</strong> a governance token. It exists for coordination and access—not speculation.</p>
               </blockquote>
               
-              <hr className="border-gray-700 my-12" />
+              <hr className="border-gray-700 my-16" />
               
-              <h2>PersonaAI Agent Integration (Virtuals ACP)</h2>
+              <h2 className="text-3xl mb-8">PersonaAI Agent Integration (Virtuals ACP)</h2>
               
-              <p>
+              <p className="text-lg mb-8">
                 At the center of PersonaAI is our <strong>autonomous Agent</strong>, responsible for orchestrating interviews, 
                 learning from data, and transacting in onchain simulations.
               </p>
               
-              <h3>🔧 What the Agent Does</h3>
+              <h3 className="text-2xl mt-10 mb-4">🔧 What the Agent Does</h3>
               
-              <ul>
+              <ul className="space-y-2 mb-10 text-lg">
                 <li>Coordinates group conversations</li>
                 <li>Learns and adapts across simulations</li>
                 <li>Makes decisions using our trait architecture</li>
                 <li>Transacts onchain via ERC-6551 wallet</li>
               </ul>
               
-              <h3>🌐 ERC-6551 Identity</h3>
+              <h3 className="text-2xl mt-10 mb-4">🌐 ERC-6551 Identity</h3>
               
-              <ul>
+              <ul className="space-y-2 mb-10 text-lg">
                 <li>Every deployed agent/persona has a smart wallet</li>
                 <li>Can hold $PRSNA or be paid for licensed activity</li>
                 <li>Enables autonomous value exchange inside Virtuals</li>
               </ul>
               
-              <h3>🔁 ACP Integration</h3>
+              <h3 className="text-2xl mt-10 mb-4">🔁 ACP Integration</h3>
               
-              <p>Using the <strong>Agent Commerce Protocol (ACP)</strong>:</p>
-              <ul>
+              <p className="text-lg mb-4">Using the <strong>Agent Commerce Protocol (ACP)</strong>:</p>
+              <ul className="space-y-2 mb-8 text-lg">
                 <li>Agents negotiate, evaluate, and execute jobs</li>
                 <li>Smart contracts ensure outcomes and reputation tracking</li>
                 <li>Enables true economic autonomy for research agents</li>
               </ul>
               
-              <p>
+              <p className="text-lg font-medium mb-10">
                 The PersonaAI Agent is not just a model—it is a composable, onchain identity with both behavioral nuance and financial capability.
               </p>
               
-              <hr className="border-gray-700 my-12" />
+              <hr className="border-gray-700 my-16" />
               
-              <h2>Trait Modeling: How PersonaAI Simulates Human Behavior</h2>
+              <h2 className="text-3xl mb-8">Trait Modeling: How PersonaAI Simulates Human Behavior</h2>
               
-              <p>
+              <p className="text-lg mb-8">
                 Our personas are grounded in empirical psychology, behavioral economics, and structured contradiction. 
                 Each is shaped by multiple overlapping models—not archetypes.
               </p>
               
-              <h3>🧠 Base Trait Stack</h3>
+              <h3 className="text-2xl mt-10 mb-6">🧠 Base Trait Stack</h3>
               
-              <p>Every persona includes probabilistically rolled traits from:</p>
+              <p className="text-lg mb-6">Every persona includes probabilistically rolled traits from:</p>
               
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-gray-800 rounded-lg border border-gray-700">
+              <div className="overflow-x-auto mb-12">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700">
                   <thead>
                     <tr>
-                      <th className="px-4 py-2 border-b border-gray-700 text-left">Model</th>
-                      <th className="px-4 py-2 border-b border-gray-700 text-left">Contribution</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Model</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Contribution</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Big Five (OCEAN)</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Emotional and social behavior</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Big Five (OCEAN)</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Emotional and social behavior</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Moral Foundations</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Ethical alignment and social triggers</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Moral Foundations</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Ethical alignment and social triggers</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">World Values Survey (WVS)</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Cultural worldview orientation</td>
+                      <td className="px-6 py-4 border-b border-gray-700">World Values Survey (WVS)</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Cultural worldview orientation</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Political Compass</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Ideology, trust in institutions</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Political Compass</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Ideology, trust in institutions</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-2 border-b border-gray-700">Behavioral Economics</td>
-                      <td className="px-4 py-2 border-b border-gray-700">Reward sensitivity, loss aversion, risk bias</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Behavioral Economics</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Reward sensitivity, loss aversion, risk bias</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               
-              <p>Example:</p>
-              <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto">
+              <p className="text-lg mb-4">Example:</p>
+              <pre className="bg-gray-800/80 p-6 rounded-lg overflow-x-auto mb-16">
                 {`{
   "OCEAN": { "O": 71, "C": 56, "E": 42, "A": 65, "N": 48 },
   "Moral Foundations": { "Care": 82, "Fairness": 68, "Authority": 35 },
