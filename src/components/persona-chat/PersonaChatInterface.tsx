@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -39,6 +40,11 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   if (error || !activePersona) {
     return <ErrorDisplay personaId={personaId} />;
   }
+  
+  const toggleMobileMenu = () => {
+    console.log("Opening mobile menu, current state:", mobileMenuOpen);
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   return (
     <div className="space-y-4">
@@ -47,7 +53,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         <Button 
           variant="outline" 
           size="icon"
-          onClick={() => setMobileMenuOpen(true)}
+          onClick={toggleMobileMenu}
           className="h-10 w-10"
         >
           <Menu className="h-5 w-5" />
@@ -92,7 +98,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </AlertDescription>
       </Alert>
       
-      {/* Mobile Navigation Drawer - Explicitly set z-index high to ensure visibility */}
+      {/* Mobile Navigation Drawer */}
       <MobileDrawerMenu 
         open={mobileMenuOpen}
         onOpenChange={setMobileMenuOpen}

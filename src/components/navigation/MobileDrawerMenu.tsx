@@ -21,11 +21,11 @@ interface MobileDrawerMenuProps {
 const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh] bg-black border border-gray-800">
+      <DrawerContent className="max-h-[85vh] bg-black border border-gray-800 pb-safe">
         <DrawerHeader className="border-b border-gray-800">
-          <DrawerTitle className="text-center text-white font-bold text-lg">PersonaAI Navigation</DrawerTitle>
+          <DrawerTitle className="text-center text-white font-bold text-xl">Navigation Menu</DrawerTitle>
           <DrawerClose className="absolute right-4 top-4 text-white">
-            <X size={20} />
+            <X size={24} />
           </DrawerClose>
         </DrawerHeader>
         <div className="flex flex-col gap-3 p-6">
@@ -34,20 +34,21 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
               key={item.title} 
               to={item.url} 
               onClick={() => onOpenChange(false)}
+              className="block w-full"
             >
               <Button 
                 variant="ghost" 
-                className="w-full justify-start gap-3 px-4 py-3 text-white font-semibold hover:bg-white/10 active:bg-white/20 transition-colors"
+                className="w-full justify-start gap-3 px-4 py-4 text-white text-lg font-bold hover:bg-white/20 active:bg-white/30 transition-colors"
               >
-                <item.icon className="h-5 w-5 text-white" />
+                <item.icon className="h-6 w-6 text-white" />
                 <span>{item.title}</span>
               </Button>
             </Link>
           ))}
         </div>
-        <DrawerFooter className="border-t border-gray-800 bg-black">
+        <DrawerFooter className="border-t border-gray-800 bg-black pt-4">
           <Link to="/dashboard" onClick={() => onOpenChange(false)} className="w-full">
-            <Button variant="default" className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-base font-semibold">
+            <Button variant="default" className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-lg font-bold">
               Back to Dashboard
             </Button>
           </Link>
