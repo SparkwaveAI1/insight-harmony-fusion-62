@@ -35,7 +35,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
               size="sm"
               className={cn(
                 "border-gray-300 text-foreground hover:bg-gray-100",
-                isDarkRoute ? "bg-white text-primary border-transparent" : "bg-white/80"
+                isDarkRoute ? "bg-primary text-white border-transparent" : "bg-white/80"
               )}
               onClick={disconnectWallet}
             >
@@ -47,7 +47,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
               size="sm"
               className={cn(
                 "border-none hover:opacity-90",
-                isDarkRoute ? "bg-white text-primary" : "bg-gradient-to-r from-primary to-primary/80 text-foreground"
+                isDarkRoute ? "bg-primary text-white" : "bg-gradient-to-r from-primary to-primary/80 text-foreground"
               )}
               onClick={connectWallet}
             >
@@ -65,7 +65,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           size="sm" 
           className={cn(
             "border-gray-300 text-foreground hover:bg-gray-100",
-            isDarkRoute ? "bg-white text-primary border-transparent" : "bg-white/80"
+            isDarkRoute ? "bg-primary text-white border-transparent" : "bg-white/80"
           )}
           onClick={() => signOut()}
         >
@@ -78,7 +78,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             size="sm" 
             className={cn(
               "border-none hover:opacity-90",
-              isDarkRoute ? "bg-white text-primary" : "bg-gradient-to-r from-primary to-primary/80 text-foreground"
+              isDarkRoute ? "bg-primary text-white" : "bg-gradient-to-r from-primary to-primary/80 text-foreground"
             )}
           >
             <LogIn className="h-4 w-4 mr-2" />
