@@ -10,7 +10,7 @@ const PersonaHeader = () => {
     <Button 
       variant="ghost" 
       onClick={() => navigate('/persona-viewer')}
-      className="gap-2 mb-6 flex items-center hover:bg-accent/50"
+      className="gap-2 mb-6 flex items-center"
     >
       <ArrowLeft className="h-4 w-4" />
       Back to All Personas

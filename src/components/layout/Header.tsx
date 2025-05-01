@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X } from "lucide-react";
-import { navigationItems } from "./navigation/NavigationItems";
+import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
+import { Button } from "../ui/button";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -37,13 +37,16 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const navigationLinks = [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
+    { title: "Contact", href: "/contact" },
+  ];
   
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
-
-  // Filter navigation items, only show main items (not submenu items)
-  const mainNavItems = navigationItems.filter(item => !item.disabled);
 
   return (
     <header
@@ -66,52 +69,18 @@ const Header = () => {
           
         {/* Centered Navigation Links - Desktop */}
         <NavigationMenu className="hidden md:flex mx-auto">
-          <NavigationMenuList className="flex space-x-4">
-            {mainNavItems.map((link) => (
+          <NavigationMenuList className="space-x-4">
+            {navigationLinks.map((link) => (
               <NavigationMenuItem key={link.title}>
-                {link.submenu ? (
-                  <>
-                    <NavigationMenuTrigger className={cn(
-                      "text-sm font-medium",
-                      isScrolled ? "text-foreground hover:text-foreground/80" : "text-white hover:text-white/80"
-                    )}>
-                      {link.icon && <link.icon className="w-4 h-4 mr-2" />}
-                      {link.title}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid gap-3 p-4 w-[400px] md:w-[500px] grid-cols-2">
-                        {link.submenu.map((subItem) => (
-                          <li key={subItem.title} className="row-span-1">
-                            <NavigationMenuLink asChild>
-                              <Link to={subItem.href}
-                                className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                              >
-                                <div className="text-sm font-medium leading-none">{subItem.title}</div>
-                                {subItem.description && (
-                                  <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                    {subItem.description}
-                                  </p>
-                                )}
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </NavigationMenuContent>
-                  </>
-                ) : (
-                  <Link to={link.href}>
-                    <NavigationMenuLink className={cn(
-                      navigationMenuTriggerStyle(),
-                      "text-sm font-medium",
-                      isScrolled ? "text-foreground hover:text-foreground/80" : "text-white hover:text-white/80",
-                      location.pathname === link.href ? "bg-accent" : ""
-                    )}>
-                      {link.icon && <link.icon className="w-4 h-4 mr-2" />}
-                      {link.title}
-                    </NavigationMenuLink>
-                  </Link>
-                )}
+                <Link to={link.href}>
+                  <NavigationMenuLink className={cn(
+                    navigationMenuTriggerStyle(),
+                    "text-sm font-medium text-foreground hover:text-foreground/80"
+                  )}>
+                    {link.icon && <link.icon className="w-4 h-4 mr-2" />}
+                    {link.title}
+                  </NavigationMenuLink>
+                </Link>
               </NavigationMenuItem>
             ))}
           </NavigationMenuList>
@@ -142,14 +111,11 @@ const Header = () => {
         <div className="md:hidden bg-slate-800 py-4">
           <div className="container">
             <nav className="flex flex-col gap-3">
-              {mainNavItems.map((link) => (
+              {navigationLinks.map((link) => (
                 <Link 
                   key={link.title} 
-                  to={link.href || "#"} 
-                  className={cn(
-                    "px-2 py-1 flex items-center",
-                    isScrolled ? "text-foreground hover:text-primary" : "text-white hover:text-primary"
-                  )}
+                  to={link.href} 
+                  className="text-foreground hover:text-primary px-2 py-1 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.icon && <link.icon className="w-4 h-4 mr-2" />}
