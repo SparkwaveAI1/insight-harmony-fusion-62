@@ -24,6 +24,10 @@ const Header = () => {
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
   // We'll only show the wallet options on the ecosystem page, not the prsna page
   const isEarnPage = location.pathname === "/prsna-ecosystem";
+  
+  // Check if we're on a route that needs dark styling
+  const isDarkRoute = location.pathname === "/" || 
+                     location.pathname === "/prsna-ecosystem";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,7 +53,7 @@ const Header = () => {
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4",
-        isScrolled || location.pathname.includes("/collections") || location.pathname.includes("/dashboard")
+        isScrolled || !isDarkRoute
           ? "bg-background/95 backdrop-blur-md shadow-md" 
           : "bg-slate-900/90 backdrop-blur-md"
       )}
@@ -59,7 +63,7 @@ const Header = () => {
           <Link to="/" className="flex items-center">
             <Logo 
               size="md" 
-              className={isScrolled || location.pathname.includes("/collections") || location.pathname.includes("/dashboard") ? "text-foreground" : "text-white"}
+              className={isScrolled || !isDarkRoute ? "text-foreground" : "text-white"}
             />
           </Link>
         </div>
@@ -79,7 +83,7 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        isScrolled || location.pathname.includes("/collections") || location.pathname.includes("/dashboard") ? "text-foreground" : "text-white",
+                        isScrolled || !isDarkRoute ? "text-foreground" : "text-white",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
@@ -108,7 +112,7 @@ const Header = () => {
           <Button 
             className={cn(
               "md:hidden",
-              isScrolled || location.pathname.includes("/collections") || location.pathname.includes("/dashboard") ? "text-foreground" : "text-white",
+              isScrolled || !isDarkRoute ? "text-foreground" : "text-white",
               "p-2"
             )} 
             variant="ghost"
