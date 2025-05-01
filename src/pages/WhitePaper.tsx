@@ -142,7 +142,7 @@ const WhitePaper = () => {
               
               <h3 className="text-2xl mt-10 mb-4">🔐 Persona Wallets (ERC-6551)</h3>
               
-              <p className="text-lg mb-4">Each persona can be optionally deployed to an ERC-6551 smart wallet:</p>
+              <p className="text-lg mb-4">Each persona will be optionally deployable to an ERC-6551 smart wallet:</p>
               <ul className="space-y-2 mb-6 text-lg">
                 <li>Holds $PRSNA or other tokens</li>
                 <li>Tracks behavior, licensing, usage</li>
@@ -157,7 +157,7 @@ const WhitePaper = () => {
               
               <h2 className="text-3xl mb-8">$PRSNA Token Utility</h2>
               
-              <p className="text-xl font-medium mb-6">$PRSNA is the fuel for the PersonaAI research economy.</p>
+              <p className="text-xl font-medium mb-6">$PRSNA is the fuel for the PersonaAI research economy. Future plans include:</p>
               
               <h3 className="text-2xl mt-10 mb-6">🔧 Core Functions</h3>
               
@@ -203,20 +203,16 @@ const WhitePaper = () => {
                 <li>Persona agents can autonomously act inside Virtuals ecosystem</li>
               </ol>
               
-              <blockquote className="bg-gray-800/30 border-l-4 border-primary p-6 rounded-lg my-12">
-                <p className="text-lg italic">$PRSNA is <strong>not</strong> a governance token. It exists for coordination and access—not speculation.</p>
-              </blockquote>
-              
               <hr className="border-gray-700 my-16" />
               
               <h2 className="text-3xl mb-8">PersonaAI Agent Integration (Virtuals ACP)</h2>
               
               <p className="text-lg mb-8">
-                At the center of PersonaAI is our <strong>autonomous Agent</strong>, responsible for orchestrating interviews, 
-                learning from data, and transacting in onchain simulations.
+                At the center of PersonaAI is our autonomous Agent (under development), responsible for orchestrating interviews, 
+                learning from data, and transacting in onchain simulations. The Agent will be central to integration with Virtuals Agent Commerce Protocol (ACP).
               </p>
               
-              <h3 className="text-2xl mt-10 mb-4">🔧 What the Agent Does</h3>
+              <h3 className="text-2xl mt-10 mb-4">🔧 Agent Functions</h3>
               
               <ul className="space-y-2 mb-10 text-lg">
                 <li>Coordinates group conversations</li>
@@ -228,7 +224,7 @@ const WhitePaper = () => {
               <h3 className="text-2xl mt-10 mb-4">🌐 ERC-6551 Identity</h3>
               
               <ul className="space-y-2 mb-10 text-lg">
-                <li>Every deployed agent/persona has a smart wallet</li>
+                <li>Every ERC-6551 deployed agent/persona will have a smart wallet</li>
                 <li>Can hold $PRSNA or be paid for licensed activity</li>
                 <li>Enables autonomous value exchange inside Virtuals</li>
               </ul>
@@ -312,3 +308,4 @@ const WhitePaper = () => {
 };
 
 export default WhitePaper;
+
