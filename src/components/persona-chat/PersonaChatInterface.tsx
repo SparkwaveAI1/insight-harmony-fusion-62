@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
@@ -27,7 +27,15 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   } = usePersonaChat(personaId);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Auto scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isResponding]);
 
   if (isLoading) {
     return (
@@ -72,6 +80,21 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </Link>
       </div>
       
+      {/* Persona badge */}
+      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-muted">
+        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
+          {activePersona.name.charAt(0)}
+        </div>
+        <div>
+          <p className="font-medium">{activePersona.name}</p>
+          <p className="text-xs text-muted-foreground">
+            {activePersona.metadata?.occupation || ''} 
+            {activePersona.metadata?.age && `, ${activePersona.metadata.age}`}
+            {activePersona.metadata?.region && ` • ${activePersona.metadata.region}`}
+          </p>
+        </div>
+      </div>
+      
       {/* Card with scroll area and message input */}
       <Card className="h-[600px] flex flex-col">
         <ScrollArea 
@@ -81,7 +104,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           <MessageList 
             messages={messages} 
             isResponding={isResponding} 
-            disableAutoScroll={true}  
+            messagesEndRef={messagesEndRef}  
           />
         </ScrollArea>
         

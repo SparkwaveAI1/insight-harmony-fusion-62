@@ -6,17 +6,38 @@ interface MessageListProps {
   messages: Message[];
   isResponding: boolean;
   disableAutoScroll?: boolean;
+  messagesEndRef?: React.RefObject<HTMLDivElement>;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, isResponding, disableAutoScroll }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+const MessageList: React.FC<MessageListProps> = ({ 
+  messages, 
+  isResponding, 
+  disableAutoScroll,
+  messagesEndRef 
+}) => {
+  const defaultMessagesEndRef = useRef<HTMLDivElement>(null);
+  const actualEndRef = messagesEndRef || defaultMessagesEndRef;
 
   useEffect(() => {
     // Only auto scroll if disableAutoScroll is not true
-    if (!disableAutoScroll && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!disableAutoScroll && actualEndRef.current) {
+      actualEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, disableAutoScroll]);
+  }, [messages, disableAutoScroll, actualEndRef]);
+
+  // Function to add style variations based on message position
+  const getMessageStyle = (index: number, isUser: boolean) => {
+    if (isUser) return "bg-primary text-primary-foreground ml-4";
+    
+    // Add slight variations in styling for personality
+    const variations = [
+      "bg-muted mr-4",
+      "bg-muted/90 mr-4",
+      "bg-muted/95 mr-4",
+    ];
+    
+    return variations[index % variations.length];
+  };
 
   return (
     <div className="p-4 space-y-4">
@@ -29,9 +50,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isResponding, disab
         >
           <div
             className={`max-w-[80%] p-3 rounded-lg ${
-              message.role === 'user'
-                ? 'bg-primary text-primary-foreground ml-4'
-                : 'bg-muted mr-4'
+              getMessageStyle(index, message.role === 'user')
             }`}
           >
             <p className="text-sm">{message.content}</p>
@@ -52,7 +71,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isResponding, disab
           </div>
         </div>
       )}
-      <div ref={messagesEndRef} />
+      <div ref={actualEndRef} />
     </div>
   );
 };
