@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -35,7 +36,6 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import MyPersonas from './pages/MyPersonas';
 import PersonaLibrary from './pages/PersonaLibrary';
-import AdminDashboard from './pages/AdminDashboard'; // Import the new AdminDashboard page
 
 // Persona Creation Pages
 import PersonaCreationLanding from './pages/persona-creation/PersonaCreationLanding';
@@ -99,9 +99,6 @@ function App() {
               <Route path="/dual-chat" element={<ProtectedRoute><DualChat /></ProtectedRoute>} />
               <Route path="/my-personas" element={<ProtectedRoute><MyPersonas /></ProtectedRoute>} />
               <Route path="/persona-library" element={<ProtectedRoute><PersonaLibrary /></ProtectedRoute>} />
-              
-              {/* Admin Dashboard - Not in navigation menu */}
-              <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               
               {/* Persona Creation Routes */}
               <Route path="/persona-creation" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />
