@@ -95,7 +95,7 @@ export default function PersonaCard({
         )}
         <AddToCollectionButton personaId={persona.persona_id} />
         <Link
-          to={`/persona-chat/${persona.persona_id}`}
+          to={`/persona/${persona.persona_id}/chat`}
           className="p-2 bg-background/90 rounded-full hover:bg-muted/90 transition-colors"
           title="Chat with persona"
           onClick={(e) => e.stopPropagation()} // Prevent event bubbling to parent

@@ -88,6 +88,10 @@ function App() {
               <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
               <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
               <Route path="/persona-chat/:personaId" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+              
+              {/* Add the route that matches the URL format in PersonaCard */}
+              <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+              
               <Route path="/dual-chat" element={<ProtectedRoute><DualChat /></ProtectedRoute>} />
               <Route path="/my-personas" element={<ProtectedRoute><MyPersonas /></ProtectedRoute>} />
               <Route path="/persona-library" element={<ProtectedRoute><PersonaLibrary /></ProtectedRoute>} />
