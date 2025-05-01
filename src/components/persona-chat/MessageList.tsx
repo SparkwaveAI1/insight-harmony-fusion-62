@@ -25,18 +25,37 @@ const MessageList: React.FC<MessageListProps> = ({
     }
   }, [messages, disableAutoScroll, actualEndRef]);
 
-  // Function to add style variations based on message position
-  const getMessageStyle = (index: number, isUser: boolean) => {
+  // Function to add style variations based on message position and content
+  const getMessageStyle = (message: Message, index: number) => {
+    const isUser = message.role === 'user';
+    
     if (isUser) return "bg-primary text-primary-foreground ml-4";
     
-    // Add slight variations in styling for personality
+    // Check if message contains emotion indicators
+    const hasEmphasis = /!/.test(message.content);
+    const hasQuestion = /\?/.test(message.content);
+    const isShort = message.content.length < 30;
+    const hasQuote = /"([^"]*)"/.test(message.content);
+    
+    // Create variations based on content and position
     const variations = [
-      "bg-muted mr-4",
-      "bg-muted/90 mr-4",
-      "bg-muted/95 mr-4",
+      "bg-muted mr-4", // Default
+      "bg-muted/90 mr-4", // Subtle variation
+      "bg-muted/95 mr-4", // Another subtle variation
+      hasEmphasis ? "bg-muted/80 mr-4 border-l-2 border-primary/30" : "bg-muted/90 mr-4", // Emphasis
+      hasQuestion ? "bg-muted/90 mr-4 border-b border-muted-foreground/20" : "bg-muted mr-4", // Question
+      isShort ? "bg-muted/80 mr-4 rounded-xl" : "bg-muted mr-4", // Short response
+      hasQuote ? "bg-muted/95 mr-4 border-l-2 border-muted-foreground/30" : "bg-muted mr-4" // Contains quote
     ];
     
-    return variations[index % variations.length];
+    // Choose variation based on message content and position
+    const variationIndex = hasEmphasis ? 3 : 
+                         hasQuestion ? 4 : 
+                         isShort ? 5 : 
+                         hasQuote ? 6 : 
+                         index % 3; // Default rotation of subtle variations
+                         
+    return variations[variationIndex];
   };
 
   return (
@@ -50,12 +69,12 @@ const MessageList: React.FC<MessageListProps> = ({
         >
           <div
             className={`max-w-[80%] p-3 rounded-lg ${
-              getMessageStyle(index, message.role === 'user')
+              getMessageStyle(message, index)
             }`}
           >
             <p className="text-sm">{message.content}</p>
             <span className="text-xs opacity-70 mt-1 block">
-              {new Date(message.timestamp).toLocaleTimeString()}
+              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         </div>
