@@ -83,7 +83,8 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        isScrolled || !isDarkRoute ? "text-foreground" : "text-white",
+                        // Always use dark text on homepage for consistency
+                        isDarkRoute ? "text-foreground" : "text-foreground",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
@@ -113,7 +114,8 @@ const Header = () => {
           <Button 
             className={cn(
               "md:hidden",
-              isScrolled || !isDarkRoute ? "text-foreground" : "text-white",
+              // Always use dark text on homepage for mobile menu button
+              isDarkRoute ? "text-foreground" : "text-foreground",
               "p-2"
             )} 
             variant="ghost"
