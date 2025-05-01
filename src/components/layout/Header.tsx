@@ -14,7 +14,8 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { navigationItems } from "./navigation/NavigationItems";
+import { navigationMenuItems } from "./config/navigationConfig";
+import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,16 +38,13 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navigationLinks = [
+  // Use shortened navigationMenuItems for the header
+  const headerNavItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
-    { title: "Contact", href: "/contact" },
+    { title: "Persona Library", href: "/persona-viewer", icon: User },
   ];
   
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
   return (
     <header
       className={cn(
@@ -64,91 +62,69 @@ const Header = () => {
               className={isScrolled ? "text-foreground" : "text-white"}
             />
           </Link>
-          
-          {/* Dashboard quick access button on mobile */}
-          <Link to="/dashboard" className="md:hidden ml-2">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className={isScrolled ? "text-foreground hover:bg-background/80" : "text-white hover:bg-white/20"}
-            >
-              <LayoutDashboard className="h-4 w-4 mr-1" />
-              <span className="text-xs">Dashboard</span>
-            </Button>
-          </Link>
         </div>
           
         {/* Centered Navigation Links - Desktop */}
         <NavigationMenu className="hidden md:flex mx-auto">
-          <NavigationMenuList className="space-x-4">
+          <NavigationMenuList className="space-x-2">
             {/* Primary Navigation Links */}
-            {navigationLinks.map((link) => (
-              <NavigationMenuItem key={link.title}>
-                <Link to={link.href}>
-                  <NavigationMenuLink className={cn(
-                    navigationMenuTriggerStyle(),
-                    "text-sm font-medium text-foreground hover:text-foreground/80"
-                  )}>
-                    {link.icon && <link.icon className="w-4 h-4 mr-2" />}
-                    {link.title}
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            ))}
+            {headerNavItems.map((link) => {
+              const isActive = location.pathname === link.href || 
+                             (link.href !== "/" && location.pathname.startsWith(link.href));
+              
+              return (
+                <NavigationMenuItem key={link.title}>
+                  <Link to={link.href}>
+                    <NavigationMenuLink 
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "flex items-center gap-2 px-4 font-medium",
+                        isScrolled ? "text-foreground" : "text-white",
+                        isActive && "bg-accent text-accent-foreground"
+                      )}
+                    >
+                      {link.icon && <link.icon className="w-4 h-4" />}
+                      {link.title}
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              );
+            })}
           </NavigationMenuList>
         </NavigationMenu>
 
         {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden text-white p-2" 
-          onClick={toggleMobileMenu}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Action Buttons (right side) - Desktop */}
-        <div className="hidden md:flex items-center gap-4">
-          <ActionButtons 
-            showWalletOptions={isEarnPage}
-            isWalletConnected={isWalletConnected}
-            connectWallet={connectWallet}
-            disconnectWallet={disconnectWallet}
-          />
+        <div className="flex items-center gap-2">
+          {/* Action Buttons (right side) - Desktop */}
+          <div className="hidden md:flex items-center gap-4">
+            <ActionButtons 
+              showWalletOptions={isEarnPage}
+              isWalletConnected={isWalletConnected}
+              connectWallet={connectWallet}
+              disconnectWallet={disconnectWallet}
+            />
+          </div>
+          
+          <Button 
+            className={cn(
+              "md:hidden",
+              isScrolled ? "text-foreground" : "text-white",
+              "p-2"
+            )} 
+            variant="ghost"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Toggle menu"
+          >
+            <Menu size={24} />
+          </Button>
         </div>
       </div>
       
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-slate-800 py-4">
-          <div className="container">
-            <nav className="flex flex-col gap-3">
-              {navigationLinks.map((link) => (
-                <Link 
-                  key={link.title} 
-                  to={link.href} 
-                  className="text-foreground hover:text-primary px-2 py-1 flex items-center"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.icon && <link.icon className="w-4 h-4 mr-2" />}
-                  {link.title}
-                </Link>
-              ))}
-              
-              {/* Mobile Auth Buttons */}
-              <div className="mt-4 flex flex-col gap-2">
-                <ActionButtons 
-                  showWalletOptions={isEarnPage}
-                  isWalletConnected={isWalletConnected}
-                  connectWallet={connectWallet}
-                  disconnectWallet={disconnectWallet}
-                  className="w-full"
-                />
-              </div>
-            </nav>
-          </div>
-        </div>
-      )}
+      {/* Mobile Drawer Menu */}
+      <MobileDrawerMenu 
+        open={mobileMenuOpen} 
+        onOpenChange={setMobileMenuOpen} 
+      />
     </header>
   );
 };
