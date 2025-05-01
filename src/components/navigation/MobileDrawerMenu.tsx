@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Drawer,
   DrawerClose,
@@ -19,6 +19,8 @@ interface MobileDrawerMenuProps {
 }
 
 const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
+  const location = useLocation();
+  
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh] bg-gray-100 border border-gray-200 pb-safe">
@@ -37,10 +39,10 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
               className="block w-full"
             >
               <Button 
-                variant="ghost" 
-                className="w-full justify-start gap-3 px-4 py-4 text-gray-800 text-lg font-bold hover:bg-gray-200 active:bg-gray-300 transition-colors"
+                variant={location.pathname === item.url ? "default" : "ghost"}
+                className="w-full justify-start gap-3 px-4 py-4 text-lg font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors"
               >
-                <item.icon className="h-6 w-6 text-gray-800" />
+                <item.icon className="h-6 w-6" />
                 <span>{item.title}</span>
               </Button>
             </Link>

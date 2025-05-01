@@ -1,5 +1,5 @@
 
-import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText } from "lucide-react";
+import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText, Coins } from "lucide-react";
 
 export const navigationMenuItems = [
   {
@@ -36,5 +36,10 @@ export const navigationMenuItems = [
     title: "Research",
     url: "/research",
     icon: FlaskConical,
+  },
+  {
+    title: "PRSNA Ecosystem",
+    url: "/prsna",
+    icon: Coins,
   },
 ];

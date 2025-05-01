@@ -16,20 +16,25 @@ export function NavigationMenu() {
     <SidebarGroup className="pt-6 pb-6">
       <SidebarGroupContent>
         <SidebarMenu>
-          {navigationMenuItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={location.pathname === item.url}
-                tooltip={item.title}
-              >
-                <Link to={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navigationMenuItems.map((item) => {
+            const isActive = location.pathname === item.url || 
+                            (item.url !== "/" && location.pathname.startsWith(item.url));
+            
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  tooltip={item.title}
+                >
+                  <Link to={item.url}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
