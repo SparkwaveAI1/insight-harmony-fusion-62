@@ -1,10 +1,9 @@
-
 import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
 import Section from '@/components/ui-custom/Section';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, FileText, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const WhitePaper = () => {
@@ -302,10 +301,18 @@ const WhitePaper = () => {
         </Section>
       </main>
 
+      <div className="flex justify-center mt-20">
+        <Link to="/roadmap">
+          <Button size="lg" className="flex items-center gap-2">
+            <Route className="h-5 w-5" />
+            View Our Road Map
+          </Button>
+        </Link>
+      </div>
+
       <Footer />
     </div>
   );
 };
 
 export default WhitePaper;
-
