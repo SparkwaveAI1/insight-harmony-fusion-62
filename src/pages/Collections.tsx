@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import Header from "@/components/layout/Header";
 import {
   getUserCollectionsWithCount,
   createCollection,
@@ -113,9 +115,10 @@ const Collections = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
+        <Header />
         <AppSidebar />
         <SidebarInset>
-          <main className="flex-1 p-6 flex flex-col">
+          <main className="flex-1 p-6 flex flex-col mt-16">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-bold">Your Collections</h1>
