@@ -54,6 +54,8 @@ export const usePersonaChat = (personaId: string) => {
       }));
 
       console.log("Sending message to persona:", inputMessage);
+      console.log("Persona ID being used:", personaId);
+      console.log("Previous messages:", JSON.stringify(previousMessages));
       
       const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
         method: 'POST',

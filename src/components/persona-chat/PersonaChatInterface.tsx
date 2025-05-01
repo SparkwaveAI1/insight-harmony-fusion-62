@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { MessageCircle, Volume } from 'lucide-react';
 import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,6 +25,18 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom when messages change or when responding
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        setTimeout(() => {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+        }, 100); // Small timeout to ensure content is rendered
+      }
+    }
+  }, [messages, isResponding]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -43,12 +55,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         <ScrollArea 
           ref={scrollAreaRef} 
           className="flex-1 h-[520px]"
-          // Remove automatic scrolling behavior
         >
           <MessageList 
             messages={messages} 
             isResponding={isResponding} 
-            disableAutoScroll={true}  
           />
         </ScrollArea>
         

@@ -34,12 +34,15 @@ const AdminDashboard = () => {
         setLoading(true);
         
         // Get all users from the auth.users view via a stored function
-        // Fix TypeScript error by providing both required type arguments: return type and params type
-        const { data, error } = await supabase.rpc<UserProfile[], null>('get_all_users');
+        const { data, error } = await supabase.rpc('get_all_users');
         
         if (error) throw error;
         
-        setUsers(data || []);
+        if (data) {
+          setUsers(data as UserProfile[]);
+        } else {
+          setUsers([]);
+        }
       } catch (err: any) {
         console.error('Error fetching users:', err);
         setError(err.message || 'Failed to fetch users');
