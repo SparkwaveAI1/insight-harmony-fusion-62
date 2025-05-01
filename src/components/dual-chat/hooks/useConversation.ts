@@ -49,6 +49,7 @@ export const useConversation = ({
   
   const { addMessage, generateResponseFor } = messageService;
   
+  // This function handles starting the conversation between personas
   const handleStartConversation = async (getPersonaA: () => any, getPersonaB: () => any) => {
     if (isResponding || !getPersonaA() || !getPersonaB()) {
       toast.error('Please load both personas first');
@@ -135,6 +136,7 @@ export const useConversation = ({
     toast.info('Conversation stopped');
   };
   
+  // This function handles sending a user message to the currently set target persona
   const handleUserSendMessage = async (
     userInput: string,
     targetPersona: 'personaA' | 'personaB', 
@@ -165,6 +167,35 @@ export const useConversation = ({
       }
     }
   };
+  
+  // NEW FUNCTION: Direct message sending to a specific persona
+  const handleUserSendMessageToTarget = async (
+    messageText: string,
+    targetPersona: 'personaA' | 'personaB',
+    getPersonaA: () => any,
+    getPersonaB: () => any
+  ) => {
+    if (!messageText.trim() || isResponding || !getPersonaA() || !getPersonaB()) return;
+    
+    // Add user message to chat with explicit target
+    addMessage('user', messageText, targetPersona);
+    
+    // Generate a response from the targeted persona
+    if (!autoChatActive) {
+      try {
+        const response = await generateResponseFor(
+          targetPersona === 'personaA' ? personaAId : personaBId,
+          targetPersona,
+          [...messages, { role: 'user', content: messageText, timestamp: new Date(), target: targetPersona }]
+        );
+        
+        addMessage(targetPersona, response);
+      } catch (error) {
+        console.error('Error generating response to direct message:', error);
+        toast.error('Failed to get response');
+      }
+    }
+  };
 
   return {
     messages,
@@ -175,6 +206,7 @@ export const useConversation = ({
     handleStartConversation,
     handleStopConversation,
     handleUserSendMessage,
+    handleUserSendMessageToTarget, // Export the new function
     setMessages,
   };
 };

@@ -10,6 +10,7 @@ interface ChatInputProps {
   targetPersona: 'personaA' | 'personaB';
   setTargetPersona: (persona: 'personaA' | 'personaB') => void;
   handleUserSendMessage: () => void;
+  handleUserSendMessageToTarget?: (message: string, target: 'personaA' | 'personaB') => void;
   handleStartConversation: () => void;
   isResponding: boolean;
   getPersonaName: (type: 'personaA' | 'personaB') => string;
@@ -25,6 +26,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   targetPersona,
   setTargetPersona,
   handleUserSendMessage,
+  handleUserSendMessageToTarget,
   handleStartConversation,
   isResponding,
   getPersonaName,
@@ -34,9 +36,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
   autoChatActive
 }) => {
   
+  // Updated to handle direct sending to a specific persona
   const handleSendToPersona = (persona: 'personaA' | 'personaB') => {
-    setTargetPersona(persona);
-    setTimeout(() => handleUserSendMessage(), 0);
+    const message = userInput.trim();
+    if (message) {
+      if (handleUserSendMessageToTarget) {
+        handleUserSendMessageToTarget(message, persona);
+        setUserInput(''); // Clear the input field after sending
+      }
+    }
   };
 
   return (

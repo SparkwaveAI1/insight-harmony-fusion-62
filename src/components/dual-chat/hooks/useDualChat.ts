@@ -30,6 +30,7 @@ export const useDualChat = () => {
     handleStartConversation: startConversation,
     handleStopConversation,
     handleUserSendMessage: userSendMessage,
+    handleUserSendMessageToTarget: userSendMessageToTarget,
     setMessages
   } = useConversation({
     personaAId,
@@ -43,6 +44,7 @@ export const useDualChat = () => {
     return startConversation(getPersonaA, getPersonaB);
   };
   
+  // Regular message send function
   const handleUserSendMessage = () => {
     return userSendMessage(
       userInput,
@@ -50,6 +52,16 @@ export const useDualChat = () => {
       getPersonaA,
       getPersonaB,
       setUserInput
+    );
+  };
+  
+  // New function to handle direct messaging to a specific target
+  const handleUserSendMessageToTarget = (message: string, target: 'personaA' | 'personaB') => {
+    return userSendMessageToTarget(
+      message,
+      target,
+      getPersonaA,
+      getPersonaB
     );
   };
 
@@ -82,6 +94,7 @@ export const useDualChat = () => {
     handleStartConversation,
     handleStopConversation,
     handleUserSendMessage,
+    handleUserSendMessageToTarget,
   };
 };
 

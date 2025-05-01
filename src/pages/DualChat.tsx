@@ -35,6 +35,7 @@ const DualChat: React.FC = () => {
     handleStartConversation,
     handleStopConversation,
     handleUserSendMessage,
+    handleUserSendMessageToTarget,
     getPersonaA,
     getPersonaB,
     getPersonaName,
@@ -104,6 +105,7 @@ const DualChat: React.FC = () => {
                       targetPersona={targetPersona}
                       setTargetPersona={setTargetPersona}
                       handleUserSendMessage={handleUserSendMessage}
+                      handleUserSendMessageToTarget={handleUserSendMessageToTarget} // Add the new prop
                       handleStartConversation={handleStartConversation}
                       isResponding={isResponding}
                       getPersonaName={getPersonaName}
