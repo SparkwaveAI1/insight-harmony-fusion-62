@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
@@ -296,19 +297,19 @@ const WhitePaper = () => {
   "Risk Bias": "present_bias_high"
 }`}
               </pre>
+              
+              <div className="flex justify-center mt-8 mb-10">
+                <Link to="/roadmap">
+                  <Button size="lg" className="flex items-center gap-2">
+                    <Route className="h-5 w-5" />
+                    View Our Road Map
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </Section>
       </main>
-
-      <div className="flex justify-center mt-20">
-        <Link to="/roadmap">
-          <Button size="lg" className="flex items-center gap-2">
-            <Route className="h-5 w-5" />
-            View Our Road Map
-          </Button>
-        </Link>
-      </div>
 
       <Footer />
     </div>
