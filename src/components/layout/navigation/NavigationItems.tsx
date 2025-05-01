@@ -4,6 +4,7 @@ import {
   HelpCircle,
   Settings,
   Compass,
+  Route,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -25,9 +26,9 @@ export const navigationItems: NavigationItem[] = [
   },
   {
     title: "Roadmap",
-    href: "/roadmap",
-    icon: Compass,
-    description: "See what's coming up next",
+    href: "/prsna/roadmap",
+    icon: Route,
+    description: "See our development plan and milestones",
   },
   {
     title: "Calendar",
