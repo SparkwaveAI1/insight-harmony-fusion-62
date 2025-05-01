@@ -5,14 +5,18 @@ import { Message } from '@/components/persona-chat/types';
 interface MessageListProps {
   messages: Message[];
   isResponding: boolean;
+  disableAutoScroll?: boolean;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, isResponding }) => {
+const MessageList: React.FC<MessageListProps> = ({ messages, isResponding, disableAutoScroll }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Only auto scroll if disableAutoScroll is not true
+    if (!disableAutoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, disableAutoScroll]);
 
   return (
     <div className="p-4 space-y-4">

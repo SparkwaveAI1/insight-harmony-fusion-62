@@ -40,10 +40,15 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   return (
     <div className="space-y-4">
       <Card className="h-[600px] flex flex-col">
-        <ScrollArea ref={scrollAreaRef} className="flex-1 h-[520px]">
+        <ScrollArea 
+          ref={scrollAreaRef} 
+          className="flex-1 h-[520px]"
+          // Remove automatic scrolling behavior
+        >
           <MessageList 
             messages={messages} 
             isResponding={isResponding} 
+            disableAutoScroll={true}  
           />
         </ScrollArea>
         
