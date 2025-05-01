@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Message } from '../../types';
-import { createMessageService } from '../../services/messageService';
+import { Message } from '../types';
+import { createMessageService } from '../services/messageService';
 
 interface UseMessageOperationsProps {
   personaAId: string;
