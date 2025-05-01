@@ -15,19 +15,20 @@ serve(async (req) => {
   }
 
   try {
-    const { message, persona, previousMessages } = await req.json();
+    const { message, persona, previousMessages, sanitizedName } = await req.json();
     console.log("Received request to generate persona response:", { message, persona: persona.name, messagesCount: previousMessages.length });
 
     // Create system message with enhanced context awareness
     const systemMessage = createPersonaSystemMessage(persona);
 
     // Prepare conversation history, ensuring proper context
+    // We use the sanitized name for the API call to avoid special characters
     const conversationMessages = [
       { role: "system", content: systemMessage },
       ...previousMessages.map((msg: any) => ({
         role: msg.role,
         content: msg.content,
-        name: msg.name // Include names to help distinguish between personas
+        name: msg.name // This should be sanitized from the client
       })),
     ];
 

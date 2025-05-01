@@ -7,6 +7,13 @@ import { handleApiError } from '@/services/utils/apiUtils';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
+// Helper function to sanitize name for OpenAI API compatibility
+const sanitizeName = (name: string): string => {
+  if (!name) return 'unknown';
+  // Replace spaces and special characters with underscores
+  return name.replace(/[^\w]/g, '_');
+};
+
 export const generatePersonaResponse = async (
   personaId: string, 
   personaRole: 'personaA' | 'personaB',
@@ -19,11 +26,23 @@ export const generatePersonaResponse = async (
   while (retries <= MAX_RETRIES) {
     try {
       // Format previous messages for the API to maintain conversation context
-      const formattedMessages = previousMessages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.content,
-        name: msg.role === 'personaA' ? getPersonaName('personaA') : msg.role === 'personaB' ? getPersonaName('personaB') : undefined
-      }));
+      const formattedMessages = previousMessages.map(msg => {
+        // Determine the name to use based on role
+        let name;
+        if (msg.role === 'personaA') {
+          name = sanitizeName(getPersonaName('personaA'));
+        } else if (msg.role === 'personaB') {
+          name = sanitizeName(getPersonaName('personaB'));
+        } else {
+          name = 'user';
+        }
+        
+        return {
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+          name: name
+        };
+      });
       
       const personaName = getPersonaName(personaRole);
       
@@ -40,6 +59,7 @@ export const generatePersonaResponse = async (
           message: previousMessages.length > 0 ? previousMessages[previousMessages.length - 1].content : "Hello",
           persona: { name: personaName },
           previousMessages: formattedMessages,
+          sanitizedName: sanitizeName(personaName), // Pass sanitized name for system prompt
         }),
       });
 
