@@ -62,7 +62,7 @@ const Roadmap = () => {
                     <li>Multi-persona chat interface (1-on-1 and small group)</li>
                     <li>Researcher tools and scenario builder (beta)</li>
                     <li>Public dashboard for trait visualizations</li>
-                    <li>Begin $PRSNA staking integration</li>
+                    <li>Persona cloning and A/B variation toolkit</li>
                     <li>Interview-to-persona pipeline completed</li>
                   </ul>
                 </div>
@@ -74,9 +74,9 @@ const Roadmap = () => {
                     Q3 2025 – Licensing & Economic Engine
                   </h2>
                   <ul className="mt-4 text-gray-400">
-                    <li>ERC-6551 deployment for human-derived personas</li>
+                    <li>ERC-6551 deployment for personas</li>
+                    <li>Begin $PRSNA staking integration</li>
                     <li>Royalties and licensing terms for paid simulations</li>
-                    <li>Persona cloning and A/B variation toolkit</li>
                     <li>Trait export API + CSV access for researchers</li>
                     <li>PersonaAI Agent launches in Virtuals ACP</li>
                   </ul>
