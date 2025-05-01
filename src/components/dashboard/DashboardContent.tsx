@@ -90,7 +90,7 @@ export function DashboardContent() {
                 </div>
               </Link>
 
-              <Link to="/dual-chat" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
+              <Link to="/my-personas" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <MessageSquare className="h-5 w-5 text-primary" />
                 </div>
