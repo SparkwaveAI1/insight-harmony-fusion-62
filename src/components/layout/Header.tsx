@@ -106,6 +106,7 @@ const Header = () => {
               isWalletConnected={isWalletConnected}
               connectWallet={connectWallet}
               disconnectWallet={disconnectWallet}
+              isDarkRoute={isDarkRoute && !isScrolled}
             />
           </div>
           

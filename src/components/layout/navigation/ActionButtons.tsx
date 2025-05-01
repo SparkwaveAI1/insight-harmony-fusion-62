@@ -4,6 +4,7 @@ import { Wallet, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface ActionButtonsProps {
   isWalletConnected?: boolean;
@@ -11,6 +12,7 @@ interface ActionButtonsProps {
   disconnectWallet?: () => void;
   className?: string;
   showWalletOptions?: boolean;
+  isDarkRoute?: boolean;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -18,7 +20,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   connectWallet,
   disconnectWallet,
   className,
-  showWalletOptions = false
+  showWalletOptions = false,
+  isDarkRoute = false
 }) => {
   const { user, signOut } = useAuth();
 
@@ -30,7 +33,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             <Button 
               variant="outline" 
               size="sm"
-              className="border-gray-300 text-foreground bg-white/80 hover:bg-gray-100"
+              className={cn(
+                "border-gray-300 text-foreground hover:bg-gray-100",
+                isDarkRoute ? "bg-primary text-white border-transparent" : "bg-white/80"
+              )}
               onClick={disconnectWallet}
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -39,7 +45,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           ) : (
             <Button 
               size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 border-none text-foreground hover:opacity-90"
+              className={cn(
+                "border-none hover:opacity-90",
+                isDarkRoute ? "bg-primary text-white" : "bg-gradient-to-r from-primary to-primary/80 text-foreground"
+              )}
               onClick={connectWallet}
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -54,7 +63,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className="border-gray-300 text-foreground bg-white/80 hover:bg-gray-100"
+          className={cn(
+            "border-gray-300 text-foreground hover:bg-gray-100",
+            isDarkRoute ? "bg-primary text-white border-transparent" : "bg-white/80"
+          )}
           onClick={() => signOut()}
         >
           <LogOut className="h-4 w-4 mr-2" />
@@ -64,7 +76,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Link to="/auth">
           <Button 
             size="sm" 
-            className="bg-gradient-to-r from-primary to-primary/80 border-none text-foreground hover:opacity-90"
+            className={cn(
+              "border-none hover:opacity-90",
+              isDarkRoute ? "bg-primary text-white" : "bg-gradient-to-r from-primary to-primary/80 text-foreground"
+            )}
           >
             <LogIn className="h-4 w-4 mr-2" />
             Sign In
