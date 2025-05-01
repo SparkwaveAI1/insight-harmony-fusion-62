@@ -1,57 +1,112 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { createPersonaSystemMessage } from "../_shared/personaSystemMessage.ts";
-import { generateChatResponse } from "../_shared/openai.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
+import { corsHeaders } from '../_shared/cors.ts'
+import { createPersonaSystemMessage } from '../_shared/personaSystemMessage.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || ''
 
-serve(async (req) => {
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  name?: string
+}
+
+Deno.serve(async (req: Request) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { message, persona, previousMessages, sanitizedName } = await req.json();
-    console.log("Received request to generate persona response:", { message, persona: persona.name, messagesCount: previousMessages.length });
-
-    // Create system message with enhanced context awareness
-    const systemMessage = createPersonaSystemMessage(persona);
-
-    // Prepare conversation history, ensuring proper context
-    // We use the sanitized name for the API call to avoid special characters
-    const conversationMessages = [
-      { role: "system", content: systemMessage },
-      ...previousMessages.map((msg: any) => ({
-        role: msg.role,
-        content: msg.content,
-        name: msg.name // This should be sanitized from the client
-      })),
-    ];
-
-    console.log("Sending request to OpenAI API with conversation history of", conversationMessages.length, "messages");
+    const { persona_id, persona_role, previous_messages } = await req.json()
     
-    const data = await generateChatResponse(conversationMessages, Deno.env.get('OPENAI_API_KEY') || '');
-    const response = data.choices[0].message.content;
+    // Log request info
+    console.log(`Request to generate response for persona ${persona_id} (${persona_role})`)
+    
+    if (!persona_id) {
+      return new Response(
+        JSON.stringify({ error: 'Missing persona_id parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    console.log("Generated response:", response.substring(0, 50) + "...");
+    // Create a Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    
+    // Fetch the persona from the database
+    console.log(`Fetching persona with ID: ${persona_id}`)
+    const { data: persona, error: personaError } = await supabase
+      .from('personas')
+      .select('*')
+      .eq('persona_id', persona_id)
+      .single()
 
+    if (personaError || !persona) {
+      console.error('Error fetching persona:', personaError)
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch persona: ${personaError?.message || 'Not found'}` }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    console.log(`Successfully fetched persona: ${persona.name}`)
+    
+    // Format previous messages for the OpenAI API
+    const messages = []
+    
+    // Add the system message
+    const systemMessage = createPersonaSystemMessage(persona)
+    messages.push({ role: "system", content: systemMessage })
+    
+    // Add the previous messages
+    if (previous_messages && previous_messages.length > 0) {
+      // Only add the most recent 10 messages to avoid hitting token limits
+      const recentMessages = previous_messages.slice(-10)
+      messages.push(...recentMessages)
+    }
+    
+    console.log("Generating response with OpenAI API...")
+    
+    // Call the OpenAI API to generate a response
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 500,
+      }),
+    })
+
+    if (!openaiResponse.ok) {
+      const errorData = await openaiResponse.json()
+      console.error('OpenAI API error:', errorData)
+      return new Response(
+        JSON.stringify({ error: `OpenAI API error: ${errorData.error?.message || 'Unknown error'}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const openaiData = await openaiResponse.json()
+    const response = openaiData.choices[0].message.content
+    
+    console.log(`Generated response for ${persona.name}: ${response.substring(0, 20)}...`)
+    
     return new Response(
-      JSON.stringify({ response }),
+      JSON.stringify({ response: response }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    )
   } catch (error) {
-    console.error('Error in generate-persona-response function:', error);
+    console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+      JSON.stringify({ error: `Unexpected error: ${error.message}` }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
-});
+})

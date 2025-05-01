@@ -20,6 +20,7 @@ export const usePersona = (): PersonaContextType => {
   const context = useContext(PersonaContext);
   
   if (context === undefined) {
+    console.error('usePersona must be used within a PersonaProvider');
     throw new Error('usePersona must be used within a PersonaProvider');
   }
   
