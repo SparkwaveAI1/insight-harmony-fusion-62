@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
-import { Button } from "../ui/button";
+import { Menu, X } from "lucide-react";
+import { navigationMenuItems } from "./config/navigationConfig";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -37,12 +37,6 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const navigationLinks = [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
-    { title: "Contact", href: "/contact" },
-  ];
   
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -70,12 +64,13 @@ const Header = () => {
         {/* Centered Navigation Links - Desktop */}
         <NavigationMenu className="hidden md:flex mx-auto">
           <NavigationMenuList className="space-x-4">
-            {navigationLinks.map((link) => (
+            {navigationMenuItems.map((link) => (
               <NavigationMenuItem key={link.title}>
-                <Link to={link.href}>
+                <Link to={link.url}>
                   <NavigationMenuLink className={cn(
                     navigationMenuTriggerStyle(),
-                    "text-sm font-medium text-foreground hover:text-foreground/80"
+                    "text-sm font-medium text-foreground hover:text-foreground/80",
+                    location.pathname === link.url ? "bg-accent" : ""
                   )}>
                     {link.icon && <link.icon className="w-4 h-4 mr-2" />}
                     {link.title}
@@ -111,10 +106,10 @@ const Header = () => {
         <div className="md:hidden bg-slate-800 py-4">
           <div className="container">
             <nav className="flex flex-col gap-3">
-              {navigationLinks.map((link) => (
+              {navigationMenuItems.map((link) => (
                 <Link 
                   key={link.title} 
-                  to={link.href} 
+                  to={link.url} 
                   className="text-foreground hover:text-primary px-2 py-1 flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
