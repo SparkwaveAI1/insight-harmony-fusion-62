@@ -19,7 +19,7 @@ const PersonaViewer = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-grow">
-        <Section className="bg-gradient-to-b from-white via-gray-50 to-background pt-24">
+        <Section className="bg-gradient-to-b from-[#F8F9FA] via-gray-50 to-background pt-24">
           <div className="container px-4 mx-auto">
             <ViewerHeader isLoading={isLoading} />
             
@@ -28,7 +28,7 @@ const PersonaViewer = () => {
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
                   Persona Details
                 </h1>
-                <div className="w-32 h-1 bg-accent mb-6"></div>
+                <div className="w-32 h-1 bg-primary mb-6"></div>
                 <PersonaFetcher personaId={personaId} />
               </>
             ) : (
@@ -36,7 +36,7 @@ const PersonaViewer = () => {
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
                   Persona Library
                 </h1>
-                <div className="w-32 h-1 bg-accent mb-6"></div>
+                <div className="w-32 h-1 bg-primary mb-6"></div>
                 <PersonaList onPersonasLoad={setPersonas} />
                 {personas.length > 0 && <PersonaSummary personas={personas} />}
               </>

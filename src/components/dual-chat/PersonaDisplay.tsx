@@ -21,7 +21,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
     return (
       <Card className="mb-6 p-4">
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="border rounded-md p-4 bg-muted/20">
+          <div className="border rounded-md p-4 bg-[#F5F5F7]">
             <p className="font-semibold">Persona A {personaA ? '(Loaded)' : '(Not Loaded)'}</p>
             <p className="text-sm text-muted-foreground">ID: {personaAId}</p>
             {!personaA && (
@@ -30,7 +30,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
               </div>
             )}
           </div>
-          <div className="border rounded-md p-4 bg-muted/20">
+          <div className="border rounded-md p-4 bg-[#F5F5F7]">
             <p className="font-semibold">Persona B {personaB ? '(Loaded)' : '(Not Loaded)'}</p>
             <p className="text-sm text-muted-foreground">ID: {personaBId}</p>
             {!personaB && (
@@ -73,7 +73,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
         </div>
       </div>
       
-      {/* Decisions section - NEW */}
+      {/* Decisions section */}
       <div className="mt-3">
         <div className="flex items-center gap-1 mb-1">
           <Brain className="h-3 w-3 text-primary" />
@@ -87,7 +87,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
         </p>
       </div>
       
-      {/* Drivers section - NEW */}
+      {/* Drivers section */}
       <div className="mt-3">
         <div className="flex items-center gap-1 mb-1">
           <Target className="h-3 w-3 text-primary" />
@@ -101,7 +101,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
         </p>
       </div>
       
-      {/* Persuasion section - NEW */}
+      {/* Persuasion section */}
       <div className="mt-3">
         <div className="flex items-center gap-1 mb-1">
           <Users className="h-3 w-3 text-primary" />
@@ -120,11 +120,11 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
   return (
     <Card className="mb-6 p-4">
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="border rounded-md p-4">
+        <div className="border rounded-md p-4 bg-[#F8F9FA]">
           {renderPersonaDetails(personaA)}
         </div>
         
-        <div className="border rounded-md p-4">
+        <div className="border rounded-md p-4 bg-[#F8F9FA]">
           {renderPersonaDetails(personaB)}
         </div>
       </div>

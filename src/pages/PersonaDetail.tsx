@@ -64,7 +64,7 @@ const PersonaDetail = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow">
-        <Section className="bg-gradient-to-b from-accent/30 via-background to-background pt-24">
+        <Section className="bg-gradient-to-b from-[#F5F5F7] via-background to-background pt-24">
           <div className="container px-4 mx-auto">
             <PersonaHeader />
             
