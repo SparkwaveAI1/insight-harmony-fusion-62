@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
+import { Persona } from '@/services/persona/types';
 
 export const usePersonaChat = (personaId: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -91,6 +93,42 @@ export const usePersonaChat = (personaId: string) => {
     return messages;
   };
 
+  // Create knowledge boundary instructions based on persona metadata
+  const createKnowledgeBoundaries = (persona: Persona): string => {
+    const currentYear = new Date().getFullYear();
+    const personaAge = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+    const birthYear = currentYear - personaAge;
+    
+    // Parse self_awareness as a number (default to 0.5 if parsing fails)
+    const selfAwareness = persona.trait_profile?.extended_traits?.self_awareness 
+      ? parseFloat(persona.trait_profile.extended_traits.self_awareness as string) 
+      : 0.5;
+      
+    // Parse overconfidence as a number (default to 0.5 if parsing fails)
+    const overconfidence = persona.trait_profile?.behavioral_economics?.overconfidence
+      ? parseFloat(persona.trait_profile.behavioral_economics.overconfidence as string)
+      : 0.5;
+    
+    const expertise = persona.metadata?.occupation || "your stated field";
+    const education = persona.metadata?.education_level || persona.metadata?.education || "average education";
+    
+    return `
+    CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE THESE:
+    
+    1. TIME LIMITATION: You were born in ${birthYear} and have NO KNOWLEDGE of events after ${currentYear - 5}. If asked about more recent events, you MUST express ignorance.
+    
+    2. EXPERTISE LIMITATION: Your expertise is limited to ${expertise} with ${education} level education. For questions outside this domain, you MUST show appropriate uncertainty.
+    
+    3. When faced with questions outside your knowledge boundaries:
+       - NEVER make up facts or pretend to know
+       - Respond with "I don't know" or "That was after my time" for post-${currentYear - 5} events
+       - Show appropriate ${selfAwareness < 0.4 ? "reluctance to admit ignorance" : "willingness to acknowledge knowledge limits"}
+       - ${overconfidence > 0.7 ? "You may sometimes guess despite uncertainty" : "Express appropriate uncertainty when unsure"}
+    
+    YOU ARE A SPECIFIC INDIVIDUAL with limited knowledge, NOT an AI with broad capabilities.
+    `;
+  };
+
   const handleSendMessage = async (inputMessage: string) => {
     if (!inputMessage.trim() || !activePersona || isResponding) return;
 
@@ -113,6 +151,9 @@ export const usePersonaChat = (personaId: string) => {
       }));
       
       console.log("Previous messages:", previousMessages);
+      
+      // Create knowledge boundaries based on the persona's traits and metadata
+      const knowledgeBoundaries = activePersona ? createKnowledgeBoundaries(activePersona) : "";
 
       const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
         method: 'POST',
@@ -126,6 +167,7 @@ export const usePersonaChat = (personaId: string) => {
             ...previousMessages,
             { role: 'user', content: inputMessage }
           ],
+          knowledge_boundaries: knowledgeBoundaries,
         }),
       });
 

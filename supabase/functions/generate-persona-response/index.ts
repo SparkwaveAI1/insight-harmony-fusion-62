@@ -62,7 +62,8 @@ Deno.serve(async (req: Request) => {
     
     // Forcefully add knowledge boundary instructions 
     if (knowledge_boundaries) {
-      systemMessage += `\n\n${knowledge_boundaries}\n\nIMPORTANT: You MUST adhere to these knowledge boundaries in ALL your responses.`
+      // Add a separator to make knowledge boundaries more visually distinct
+      systemMessage += `\n\n${'='.repeat(40)}\nKNOWLEDGE BOUNDARIES - ABSOLUTELY CRITICAL\n${'='.repeat(40)}\n\n${knowledge_boundaries}\n\n${'='.repeat(40)}\n\nYOU ARE STRICTLY REQUIRED TO ADHERE TO THESE KNOWLEDGE BOUNDARIES IN ALL RESPONSES. THIS IS THE MOST IMPORTANT PART OF YOUR INSTRUCTIONS.`;
     }
     
     messages.push({ role: "system", content: systemMessage })
@@ -87,8 +88,10 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: messages,
-        temperature: 0.7,
+        temperature: 0.8,  // Slightly increased to allow more personality variation
         max_tokens: 500,
+        presence_penalty: 0.6,  // Encourages the model to be more varied in responses
+        frequency_penalty: 0.2,  // Discourages repetition of the same phrases
       }),
     })
 
