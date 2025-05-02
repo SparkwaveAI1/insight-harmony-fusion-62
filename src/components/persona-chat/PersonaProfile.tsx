@@ -1,6 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Card from "@/components/ui-custom/Card";
+import { Badge } from "@/components/ui/badge";
 
 const PersonaProfile = () => {
   return (
@@ -16,6 +17,7 @@ const PersonaProfile = () => {
         </div>
         
         <div className="space-y-6">
+          {/* Persona Traits section */}
           <div>
             <h3 className="text-base font-semibold mb-3">Persona Traits</h3>
             <div className="grid grid-cols-2 gap-2">
@@ -31,6 +33,40 @@ const PersonaProfile = () => {
               <div className="bg-muted/30 rounded p-2 text-center">
                 <span className="text-xs font-medium">Mobile-First</span>
               </div>
+            </div>
+          </div>
+          
+          {/* Key Information section */}
+          <div>
+            <h3 className="text-base font-semibold mb-3">Key Information</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="flex justify-between">
+                <span className="text-muted-foreground">Age:</span>
+                <span className="font-medium">25</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-muted-foreground">Occupation:</span>
+                <span className="font-medium">Software Engineer</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-muted-foreground">Region:</span>
+                <span className="font-medium">San Francisco</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-muted-foreground">Education:</span>
+                <span className="font-medium">Bachelor's Degree</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* Interest Areas */}
+          <div>
+            <h3 className="text-base font-semibold mb-3">Interest Areas</h3>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="bg-primary/10">Crypto</Badge>
+              <Badge variant="outline" className="bg-primary/10">Sustainable Investing</Badge>
+              <Badge variant="outline" className="bg-primary/10">Tech Startups</Badge>
+              <Badge variant="outline" className="bg-primary/10">NFTs</Badge>
             </div>
           </div>
         </div>
