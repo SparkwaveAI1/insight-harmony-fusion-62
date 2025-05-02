@@ -77,6 +77,7 @@ Deno.serve(async (req: Request) => {
     console.log("Generating response with OpenAI API...")
     
     // Call the OpenAI API with more restrictive parameters to enforce knowledge gating
+    // Removed the system_fingerprint parameter which is causing the error
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -88,7 +89,6 @@ Deno.serve(async (req: Request) => {
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
-        system_fingerprint: "persona-response-with-knowledge-boundaries", // Help OpenAI track system message consistency
       }),
     })
 
