@@ -59,9 +59,9 @@ export default function PersonaCard({
 
   // Helper function to determine decision-making style
   const getDecisionStyle = () => {
-    const riskAversion = persona.trait_profile?.behavioral_economics?.risk_aversion;
-    if (riskAversion !== undefined) {
-      return parseFloat(riskAversion as string) > 0.5 
+    const riskSensitivity = persona.trait_profile?.behavioral_economics?.risk_sensitivity;
+    if (riskSensitivity !== undefined) {
+      return parseFloat(riskSensitivity as string) > 0.5 
         ? "Prefers thorough evaluation before committing" 
         : "Makes quick decisions based on intuition";
     }

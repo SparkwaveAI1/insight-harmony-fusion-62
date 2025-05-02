@@ -80,7 +80,8 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
           <h4 className="text-sm font-medium">Decisions</h4>
         </div>
         <p className="text-xs">
-          {persona.trait_profile?.behavioral_economics?.risk_aversion > 0.6 ? 
+          {persona.trait_profile?.behavioral_economics?.risk_sensitivity && 
+           parseFloat(persona.trait_profile.behavioral_economics.risk_sensitivity) > 0.6 ? 
             "Cautious decision-maker, avoids risks" : 
             "Embraces new opportunities, comfortable with risk"}
         </p>
@@ -93,7 +94,8 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
           <h4 className="text-sm font-medium">Drivers</h4>
         </div>
         <p className="text-xs">
-          {persona.trait_profile?.big_five?.openness > 0.6 ? 
+          {persona.trait_profile?.big_five?.openness && 
+           parseFloat(persona.trait_profile.big_five.openness) > 0.6 ? 
             "Motivated by novelty and exploration" : 
             "Values stability and traditional approaches"}
         </p>
@@ -106,7 +108,8 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
           <h4 className="text-sm font-medium">Discussion & Persuasion</h4>
         </div>
         <p className="text-xs">
-          {persona.trait_profile?.big_five?.agreeableness > 0.6 ? 
+          {persona.trait_profile?.big_five?.agreeableness && 
+           parseFloat(persona.trait_profile.big_five.agreeableness) > 0.6 ? 
             "Receptive to collaboration, values harmony in discussions" : 
             "Prefers direct communication, focuses on facts over feelings"}
         </p>
