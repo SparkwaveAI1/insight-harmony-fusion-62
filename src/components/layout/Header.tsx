@@ -83,8 +83,8 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        // Use appropriate text color based on the route/scroll state
-                        isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
+                        // Always use black text color
+                        "text-black",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
