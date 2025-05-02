@@ -1,30 +1,30 @@
 
 import React, { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 import { formatName } from '@/lib/utils';
-import { usePersona } from '@/hooks/usePersona';
+import { getPersonaByPersonaId } from '@/services/persona/personaService';
 
 interface PersonaFetcherProps {
   personaId: string;
 }
 
 const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
-  const { loadPersona, activePersona, isLoading, error } = usePersona();
+  // Use React Query to fetch the persona
+  const { data: activePersona, isLoading, error } = useQuery({
+    queryKey: ['persona', personaId],
+    queryFn: () => getPersonaByPersonaId(personaId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
 
   useEffect(() => {
-    const fetchPersona = async () => {
-      try {
-        console.log(`PersonaFetcher - Fetching persona with ID: ${personaId}`);
-        await loadPersona(personaId);
-      } catch (error) {
-        console.error('PersonaFetcher - Error fetching persona:', error);
-        toast.error('Failed to fetch persona');
-      }
-    };
-
-    fetchPersona();
-  }, [personaId, loadPersona]);
+    if (error) {
+      console.error('PersonaFetcher - Error fetching persona:', error);
+      toast.error('Failed to fetch persona');
+    }
+  }, [error]);
 
   if (isLoading) {
     return <div className="p-6 bg-muted/20 rounded-lg animate-pulse">Loading persona...</div>;
@@ -59,22 +59,22 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
         <h3 className="text-lg font-semibold mb-3">Demographics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <strong>Age:</strong> {activePersona.metadata.age || 'Not specified'}
+            <strong>Age:</strong> {activePersona.metadata?.age || 'Not specified'}
             <br />
-            <strong>Gender:</strong> {activePersona.metadata.gender || 'Not specified'}
+            <strong>Gender:</strong> {activePersona.metadata?.gender || 'Not specified'}
             <br />
-            <strong>Ethnicity:</strong> {activePersona.metadata.race_ethnicity || 'Not specified'}
+            <strong>Ethnicity:</strong> {activePersona.metadata?.race_ethnicity || 'Not specified'}
             <br />
-            <strong>Region:</strong> {activePersona.metadata.region || 'Not specified'}
+            <strong>Region:</strong> {activePersona.metadata?.region || 'Not specified'}
           </div>
           <div>
-            <strong>Education:</strong> {activePersona.metadata.education_level || 'Not specified'}
+            <strong>Education:</strong> {activePersona.metadata?.education_level || 'Not specified'}
             <br />
-            <strong>Occupation:</strong> {activePersona.metadata.occupation || 'Not specified'}
+            <strong>Occupation:</strong> {activePersona.metadata?.occupation || 'Not specified'}
             <br />
-            <strong>Income Level:</strong> {activePersona.metadata.income_level || 'Not specified'}
+            <strong>Income Level:</strong> {activePersona.metadata?.income_level || 'Not specified'}
             <br />
-            <strong>Relationship:</strong> {activePersona.metadata.relationship_status || 'Not specified'}
+            <strong>Relationship:</strong> {activePersona.metadata?.relationship_status || 'Not specified'}
           </div>
         </div>
       </div>

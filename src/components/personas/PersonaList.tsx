@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getAllPersonas } from "@/services/persona/personaService";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -23,63 +24,75 @@ export default function PersonaList({
   collectionId,
   onDeleteCollection
 }: PersonaListProps) {
-  const [personas, setPersonas] = useState<Persona[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-
-  useEffect(() => {
-    loadPersonas();
-  }, [filterByCurrentUser, publicOnly, collectionId, user]);
-
-  const loadPersonas = async () => {
-    setIsLoading(true);
-    try {
-      let data = await getAllPersonas();
-      
-      console.log("Total personas loaded:", data.length);
-      
-      // Log all personas with their user_id values for debugging
-      data.forEach((persona, index) => {
-        console.log(`Persona ${index}: id=${persona.persona_id}, name=${persona.name}, user_id=${persona.user_id}`);
-      });
-      
-      // Apply filters based on the props
-      if (filterByCurrentUser && user) {
-        console.log("Filtering by current user:", user.id);
-        console.log("Before filter:", data.length, "personas");
+  
+  // Use React Query to fetch personas
+  const { data: allPersonas = [], isLoading, error } = useQuery({
+    queryKey: ['personas', { filterByCurrentUser, publicOnly, collectionId, userId: user?.id }],
+    queryFn: async () => {
+      try {
+        let data = await getAllPersonas();
         
-        // Filter personas by user_id
-        data = data.filter(persona => {
-          const isMatch = persona.user_id === user.id;
-          console.log(`Checking persona ${persona.persona_id}: user_id=${persona.user_id}, user.id=${user.id}, match=${isMatch}`);
-          return isMatch;
+        console.log("Total personas loaded:", data.length);
+        
+        // Log all personas with their user_id values for debugging
+        data.forEach((persona, index) => {
+          console.log(`Persona ${index}: id=${persona.persona_id}, name=${persona.name}, user_id=${persona.user_id}`);
         });
         
-        console.log("After filter:", data.length, "personas");
+        // Apply filters based on the props
+        if (filterByCurrentUser && user) {
+          console.log("Filtering by current user:", user.id);
+          console.log("Before filter:", data.length, "personas");
+          
+          // Filter personas by user_id
+          data = data.filter(persona => {
+            const isMatch = persona.user_id === user.id;
+            console.log(`Checking persona ${persona.persona_id}: user_id=${persona.user_id}, user.id=${user.id}, match=${isMatch}`);
+            return isMatch;
+          });
+          
+          console.log("After filter:", data.length, "personas");
+        }
+        
+        if (publicOnly) {
+          data = data.filter(persona => persona.is_public);
+        }
+        
+        if (collectionId) {
+          // This would require an API call to get personas in a specific collection
+          const collectionPersonas = await getPersonasByCollection(collectionId);
+          data = collectionPersonas;
+        }
+        
+        console.log(`Loaded ${data.length} personas with filters:`, 
+          { filterByCurrentUser, publicOnly, collectionId });
+        
+        return data;
+      } catch (err) {
+        console.error("Error loading personas:", err);
+        toast.error("Failed to load personas");
+        throw err;
       }
-      
-      if (publicOnly) {
-        data = data.filter(persona => persona.is_public);
-      }
-      
-      if (collectionId) {
-        // This would require an API call to get personas in a specific collection
-        const collectionPersonas = await getPersonasByCollection(collectionId);
-        data = collectionPersonas;
-      }
-      
-      console.log(`Loaded ${data.length} personas with filters:`, 
-        { filterByCurrentUser, publicOnly, collectionId });
-      
-      setPersonas(data);
-      onPersonasLoad?.(data);
-    } catch (error) {
-      console.error("Error loading personas:", error);
-      toast.error("Failed to load personas");
-    } finally {
-      setIsLoading(false);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  // Update the parent component with loaded personas
+  useEffect(() => {
+    if (allPersonas && onPersonasLoad) {
+      onPersonasLoad(allPersonas);
     }
-  };
+  }, [allPersonas, onPersonasLoad]);
+
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  
+  // Update local state when personas are loaded from React Query
+  useEffect(() => {
+    if (allPersonas) {
+      setPersonas(allPersonas);
+    }
+  }, [allPersonas]);
 
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
     // Update local state when visibility changes
@@ -113,6 +126,10 @@ export default function PersonaList({
 
   if (isLoading) {
     return <PersonaLoadingState />;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">Error loading personas: {String(error)}</div>;
   }
 
   if (personas.length === 0) {
