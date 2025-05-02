@@ -1,245 +1,337 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/sections/Footer";
-import Section from "@/components/ui-custom/Section";
-import Card from "@/components/ui-custom/Card";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle,
+  CardFooter 
+} from "@/components/ui/card";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { getProjectById, getProjectConversations, updateProject, deleteConversation } from "@/services/collections";
-import { ArrowLeft, Edit, Trash2, MessageSquare, Calendar } from "lucide-react";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/sections/Footer";
+import { ArrowLeft, Calendar, Edit2, FileText, MessageSquare, MoreHorizontal, Plus, Trash, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { getProjectById, getProjectConversations, updateProject } from "@/services/collections";
+import { toast } from "sonner";
+import { Conversation } from "@/services/collections/types";
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<any>(null);
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [projectName, setProjectName] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
   const navigate = useNavigate();
+  const [project, setProject] = useState<any>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState<string | null>("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    if (projectId) {
-      loadProjectData(projectId);
-    }
-  }, [projectId]);
-
-  const loadProjectData = async (id: string) => {
-    setIsLoading(true);
-    const projectData = await getProjectById(id);
-    if (projectData) {
-      setProject(projectData);
-      setProjectName(projectData.name);
-      setProjectDescription(projectData.description || '');
-      
-      // Load conversations for this project
-      const conversationsData = await getProjectConversations(id);
-      setConversations(conversationsData);
-    }
-    setIsLoading(false);
-  };
+    const loadProject = async () => {
+      setIsLoading(true);
+      try {
+        if (projectId) {
+          const projectData = await getProjectById(projectId);
+          const conversationsData = await getProjectConversations(projectId);
+          
+          if (projectData) {
+            setProject(projectData);
+            setProjectName(projectData.name);
+            setProjectDescription(projectData.description || "");
+            setConversations(conversationsData);
+          } else {
+            toast.error("Project not found");
+            navigate("/projects");
+          }
+        }
+      } catch (error) {
+        console.error("Error loading project:", error);
+        toast.error("Failed to load project");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadProject();
+  }, [projectId, navigate]);
 
   const handleUpdateProject = async () => {
-    if (!projectId || !projectName.trim()) return;
-
-    const updated = await updateProject(projectId, {
-      name: projectName,
-      description: projectDescription || null
-    });
-
-    if (updated) {
-      setProject(updated);
-      setEditDialogOpen(false);
-    }
-  };
-
-  const handleDeleteConversation = async (id: string) => {
-    if (confirm("Are you sure you want to delete this conversation?")) {
-      const deleted = await deleteConversation(id);
-      if (deleted && projectId) {
-        // Reload conversations
-        const conversationsData = await getProjectConversations(projectId);
-        setConversations(conversationsData);
-      }
-    }
-  };
-
-  const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'MMM d, yyyy');
+      setIsEditing(true);
+      
+      if (!projectId || !projectName.trim()) {
+        toast.error("Project name is required");
+        return;
+      }
+      
+      const updatedProject = await updateProject(projectId, {
+        name: projectName,
+        description: projectDescription || null,
+      });
+      
+      if (updatedProject) {
+        setProject(updatedProject);
+        setEditDialogOpen(false);
+        toast.success("Project updated successfully");
+      }
     } catch (error) {
-      return dateString;
+      console.error("Error updating project:", error);
+      toast.error("Failed to update project");
+    } finally {
+      setIsEditing(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <SidebarInset>
+            <div className="relative flex min-h-svh flex-col">
+              <Header />
+              <main className="flex-1 pt-24">
+                <div className="container py-6 flex items-center justify-center h-[60vh]">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              </main>
+              <Footer />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  if (!project) return null;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow">
-        <Section className="pt-24">
-          <div className="container mx-auto px-4">
-            {isLoading ? (
-              <div className="flex justify-center my-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
-            ) : !project ? (
-              <Card className="p-12 text-center">
-                <h3 className="text-xl font-semibold mb-4">Project Not Found</h3>
-                <p className="text-muted-foreground mb-6">
-                  The project you're looking for doesn't exist or couldn't be loaded.
-                </p>
-                <Button as={Link} to="/projects">View All Projects</Button>
-              </Card>
-            ) : (
-              <>
-                {/* Header with back button */}
-                <div className="mb-6">
-                  <Button variant="ghost" className="pl-0" as={Link} to="/projects">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Projects
-                  </Button>
-                </div>
-
-                {/* Project header */}
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h1 className="text-3xl font-bold mb-2 font-plasmik">{project.name}</h1>
-                    {project.description && (
-                      <p className="text-muted-foreground max-w-2xl">{project.description}</p>
-                    )}
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Created {formatDate(project.created_at)}
-                    </p>
-                  </div>
-                  <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Project
-                  </Button>
-                </div>
-
-                <Separator className="my-6" />
-
-                {/* Conversations listing */}
-                <h2 className="text-xl font-semibold mb-6">Conversations</h2>
-                
-                {conversations.length === 0 ? (
-                  <Card className="p-8 text-center">
-                    <div className="flex justify-center">
-                      <div className="bg-muted/50 h-12 w-12 rounded-full flex items-center justify-center mb-4">
-                        <MessageSquare className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">No Conversations Yet</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Save conversations from chats to store them in this project.
-                    </p>
-                    <Button as={Link} to="/persona-viewer">
-                      Chat with a Persona
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <SidebarInset>
+          <div className="relative flex min-h-svh flex-col">
+            <Header />
+            <main className="flex-1 pt-24">
+              <div className="container py-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+                      <ArrowLeft className="h-4 w-4" />
                     </Button>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {conversations.map((conversation) => (
-                      <Card key={conversation.id} className="p-4 hover:bg-accent/5 transition-colors group">
-                        <div className="flex items-start justify-between">
-                          <Link to={`/conversations/${conversation.id}`} className="flex-1">
-                            <div className="flex items-center mb-1">
-                              <MessageSquare className="h-4 w-4 text-primary mr-2" />
-                              <h3 className="font-medium">{conversation.title}</h3>
-                            </div>
-                            
-                            {conversation.tags && conversation.tags.length > 0 && (
-                              <div className="flex gap-2 my-2 flex-wrap">
-                                {conversation.tags.map((tag: string, index: number) => (
-                                  <span 
-                                    key={index} 
-                                    className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            
-                            <p className="text-xs text-muted-foreground mt-1 flex items-center">
-                              <Calendar className="h-3 w-3 inline mr-1" />
-                              {formatDate(conversation.created_at)}
-                            </p>
-                          </Link>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                            onClick={() => handleDeleteConversation(conversation.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
+                    <h1 className="text-2xl md:text-3xl font-bold font-plasmik">
+                      {project.name}
+                    </h1>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        </Section>
-      </main>
-
-      {/* Edit Project Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-            <DialogDescription>
-              Update your project details.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-project-name">Project Name</Label>
-              <Input
-                id="edit-project-name"
-                placeholder="Enter project name"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-              />
-            </div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setEditDialogOpen(true)}>
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit Project
+                    </Button>
+                    <Button asChild>
+                      <Link to="/projects">Back to Projects</Link>
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                          <CardTitle>Conversations</CardTitle>
+                          <CardDescription>
+                            Chat conversations saved in this project
+                          </CardDescription>
+                        </div>
+                        
+                        <Button asChild>
+                          <Link to="/dual-chat">
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Conversation
+                          </Link>
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        {conversations.length > 0 ? (
+                          <div className="space-y-3">
+                            {conversations.map((conversation) => (
+                              <Card key={conversation.id} className="bg-muted/30">
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                      <h3 className="font-medium">{conversation.title}</h3>
+                                      <p className="text-sm text-muted-foreground">
+                                        <Calendar className="h-3 w-3 inline-block mr-1" />
+                                        {format(new Date(conversation.created_at), "MMM d, yyyy")}
+                                      </p>
+                                    </div>
+                                    
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      asChild
+                                      className="text-primary"
+                                    >
+                                      <Link to={`/conversations/${conversation.id}`}>
+                                        <MessageSquare className="h-4 w-4 mr-1" />
+                                        View
+                                      </Link>
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-8 flex flex-col items-center justify-center text-center">
+                            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                              <FileText className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="font-medium mb-1">No conversations yet</h3>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Start a new conversation with personas and save it to this project
+                            </p>
+                            <Button asChild>
+                              <Link to="/dual-chat">Start New Conversation</Link>
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Project Details</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                            Description
+                          </h3>
+                          {project.description ? (
+                            <p>{project.description}</p>
+                          ) : (
+                            <p className="italic text-muted-foreground">No description provided</p>
+                          )}
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                            Created
+                          </h3>
+                          <p>
+                            {format(new Date(project.created_at), "MMMM d, yyyy")}
+                          </p>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                            Last Updated
+                          </h3>
+                          <p>
+                            {format(new Date(project.updated_at), "MMMM d, yyyy")}
+                          </p>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                            Conversations
+                          </h3>
+                          <p>
+                            {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <Footer />
             
-            <div className="space-y-2">
-              <Label htmlFor="edit-project-description">Description (Optional)</Label>
-              <Textarea
-                id="edit-project-description"
-                placeholder="Enter project description"
-                value={projectDescription}
-                onChange={(e) => setProjectDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
+            {/* Edit Project Dialog */}
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Edit Project</DialogTitle>
+                  <DialogDescription>
+                    Update the details of your project.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Project Name</Label>
+                    <Input
+                      id="name"
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                      placeholder="Enter project name"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">
+                      Description <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Textarea
+                      id="description"
+                      value={projectDescription || ""}
+                      onChange={(e) => setProjectDescription(e.target.value)}
+                      placeholder="Enter project description"
+                      rows={4}
+                    />
+                  </div>
+                </div>
+                
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setEditDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleUpdateProject}
+                    disabled={isEditing || !projectName.trim()}
+                  >
+                    {isEditing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Save Changes
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={handleUpdateProject}
-              disabled={!projectName.trim()}
-            >
-              Update Project
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Footer />
-    </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 
