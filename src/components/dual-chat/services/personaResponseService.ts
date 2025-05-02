@@ -41,12 +41,22 @@ export const generatePersonaResponse = async (
       const personaAge = typedPersona.metadata?.age ? parseInt(typedPersona.metadata.age) : 30;
       const birthYear = currentYear - personaAge;
       
+      // Parse self_awareness as a number (default to 0.5 if parsing fails)
+      const selfAwareness = typedPersona.trait_profile?.extended_traits?.self_awareness 
+        ? parseFloat(typedPersona.trait_profile.extended_traits.self_awareness as string) 
+        : 0.5;
+        
+      // Parse overconfidence as a number (default to 0.5 if parsing fails)
+      const overconfidence = typedPersona.trait_profile?.behavioral_economics?.overconfidence
+        ? parseFloat(typedPersona.trait_profile.behavioral_economics.overconfidence as string)
+        : 0.5;
+      
       knowledgeBoundaryInstructions = `
       IMPORTANT - KNOWLEDGE BOUNDARIES:
       1. You were born in approximately ${birthYear} and your knowledge has natural human limitations.
       2. You should NOT have detailed knowledge about events after your creation date.
       3. You have expertise primarily in: ${typedPersona.metadata?.occupation || "your stated field"}${
-        typedPersona.trait_profile?.extended_traits?.self_awareness < 0.5 
+        selfAwareness < 0.5 
           ? " but you sometimes overestimate your expertise" 
           : ""
       }.
@@ -56,7 +66,7 @@ export const generatePersonaResponse = async (
          - Base answers on your personal perspective rather than omniscient knowledge
          - Occasionally provide slightly outdated or incomplete information
          - ${
-            typedPersona.trait_profile?.behavioral_economics?.overconfidence > 0.7 
+            overconfidence > 0.7 
               ? "You tend to answer confidently even when uncertain" 
               : "You're comfortable saying you don't know"
           }
