@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
@@ -89,57 +90,6 @@ const PersonaDetail = () => {
     });
   };
 
-  // Helper function to generate a personality snapshot
-  const getPersonalitySnapshot = (persona: Persona) => {
-    if (!persona?.trait_profile) return "";
-    
-    const traits = persona.trait_profile;
-    const bigFive = traits.big_five;
-    const economics = traits.behavioral_economics;
-    
-    if (!bigFive && !economics) return "";
-    
-    // Build a descriptive snapshot based on dominant traits
-    let descriptors = [];
-    
-    if (bigFive?.openness && parseFloat(bigFive.openness) > 0.7) {
-      descriptors.push("innovative");
-    } else if (bigFive?.openness && parseFloat(bigFive.openness) < 0.3) {
-      descriptors.push("traditional");
-    }
-    
-    if (bigFive?.conscientiousness && parseFloat(bigFive.conscientiousness) > 0.7) {
-      descriptors.push("methodical");
-    } 
-    
-    if (bigFive?.extraversion && parseFloat(bigFive.extraversion) > 0.7) {
-      descriptors.push("outgoing");
-    } else if (bigFive?.extraversion && parseFloat(bigFive.extraversion) < 0.3) {
-      descriptors.push("reserved");
-    }
-    
-    if (economics?.risk_sensitivity && parseFloat(economics.risk_sensitivity) > 0.6) {
-      descriptors.push("cautious decision-maker");
-    } else if (economics?.risk_sensitivity && parseFloat(economics.risk_sensitivity) < 0.4) {
-      descriptors.push("opportunity-seeking");
-    }
-    
-    if (bigFive?.agreeableness && parseFloat(bigFive.agreeableness) > 0.7) {
-      descriptors.push("collaborative");
-    } else if (bigFive?.agreeableness && parseFloat(bigFive.agreeableness) < 0.3) {
-      descriptors.push("direct");
-    }
-    
-    // Default snapshot if we couldn't extract meaningful traits
-    if (descriptors.length < 2) {
-      return "Complex individual with nuanced decision-making patterns and specific motivational drivers";
-    }
-    
-    // Format the descriptors into a sentence
-    const formattedDescriptors = descriptors.slice(0, 3).join(", ");
-    return `${formattedDescriptors.charAt(0).toUpperCase() + formattedDescriptors.slice(1)} individual focused on security and practical outcomes.`;
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -165,9 +115,6 @@ const PersonaDetail = () => {
                     <div className="space-y-2">
                       <h1 className="text-3xl font-bold font-plasmik">{formatName(persona.name)}</h1>
                       <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
-                      <p className="text-lg text-gray-700 font-medium border-l-4 pl-3 border-primary/30">
-                        {getPersonalitySnapshot(persona)}
-                      </p>
                     </div>
                     <div className="flex items-center gap-4">
                       <Button 
