@@ -1,72 +1,58 @@
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import React from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Card from "@/components/ui-custom/Card";
-import { InterviewSection } from "@/services/persona/types";
+
+interface InterviewResponse {
+  question: string;
+  answer: string;
+}
+
+interface InterviewSection {
+  section_title: string;
+  responses: InterviewResponse[];
+}
 
 interface InterviewResponsesProps {
   sections: InterviewSection[];
 }
 
-const InterviewResponses = ({ sections }: InterviewResponsesProps) => {
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-
-  const toggleSection = (section: string) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  };
+const InterviewResponses: React.FC<InterviewResponsesProps> = ({ sections }) => {
+  if (!sections || sections.length === 0) {
+    return null;
+  }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4 font-plasmik">Interview Responses</h2>
-      
-      {sections.map((section, index) => (
-        <Card key={index} className="mb-4 overflow-hidden">
-          <button
-            className="w-full p-4 flex justify-between items-center hover:bg-muted/30 transition-colors"
-            onClick={() => toggleSection(section.section)}
+    <Card className="p-6 shadow-md bg-white border-gray-100">
+      <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
+        <span className="inline-block w-3 h-3 rounded-full bg-indigo-500 mr-2"></span>
+        Interview Responses
+      </h2>
+
+      <Accordion type="multiple" defaultValue={[`section-0`]}>
+        {sections.map((section, sectionIndex) => (
+          <AccordionItem 
+            key={`section-${sectionIndex}`} 
+            value={`section-${sectionIndex}`}
+            className="border-0 mb-2"
           >
-            <h3 className="text-lg font-bold">{section.section}</h3>
-            {expandedSections[section.section] ? (
-              <ChevronUp className="h-5 w-5" />
-            ) : (
-              <ChevronDown className="h-5 w-5" />
-            )}
-          </button>
-          
-          {expandedSections[section.section] && (
-            <div className="p-4 pt-0">
-              <p className="text-sm text-muted-foreground italic mb-4">{section.notes}</p>
-              <div className="space-y-6">
-                {section.questions.map((item, qIndex) => {
-                  const questionText = typeof item === 'object' ? item.question : item;
-                  const response = typeof item === 'object' && item.response 
-                    ? item.response 
-                    : section.responses && section.responses[qIndex];
-                  
-                  return (
-                    <div key={qIndex}>
-                      <p className="font-medium mb-2">Q: {questionText}</p>
-                      {response ? (
-                        <p className="pl-4 border-l-2 border-primary/30 py-1">
-                          {response}
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground pl-4 border-l-2 border-muted py-1 italic">
-                          No response recorded
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </Card>
-      ))}
-    </div>
+            <AccordionTrigger 
+              className={`text-lg font-semibold py-2 px-3 bg-indigo-50/40 rounded-md hover:bg-indigo-50 transition-colors`}
+            >
+              {section.section_title || `Interview Section ${sectionIndex + 1}`}
+            </AccordionTrigger>
+            <AccordionContent className="pt-4 space-y-4">
+              {section.responses.map((response, responseIndex) => (
+                <div key={`response-${sectionIndex}-${responseIndex}`} className="bg-gray-50 rounded-lg p-4">
+                  <p className="font-medium text-gray-800 mb-2">{response.question}</p>
+                  <p className="text-gray-600 whitespace-pre-wrap">{response.answer}</p>
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </Card>
   );
 };
 

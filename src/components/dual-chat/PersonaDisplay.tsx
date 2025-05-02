@@ -19,7 +19,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
 }) => {
   if (!personaA || !personaB) {
     return (
-      <Card className="mb-6 p-4">
+      <Card className="mb-6 p-4 shadow-sm">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="border rounded-md p-4 bg-[#F5F5F7]">
             <p className="font-semibold">Persona A {personaA ? '(Loaded)' : '(Not Loaded)'}</p>
@@ -74,7 +74,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
       </div>
       
       {/* Decisions section */}
-      <div className="mt-3">
+      <div className="mt-3 bg-blue-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <Brain className="h-3 w-3 text-primary" />
           <h4 className="text-sm font-medium">Decisions</h4>
@@ -88,7 +88,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
       </div>
       
       {/* Drivers section */}
-      <div className="mt-3">
+      <div className="mt-3 bg-green-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <Target className="h-3 w-3 text-primary" />
           <h4 className="text-sm font-medium">Drivers</h4>
@@ -102,7 +102,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
       </div>
       
       {/* Persuasion section */}
-      <div className="mt-3">
+      <div className="mt-3 bg-purple-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <Users className="h-3 w-3 text-primary" />
           <h4 className="text-sm font-medium">Discussion & Persuasion</h4>
@@ -118,7 +118,7 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
   );
 
   return (
-    <Card className="mb-6 p-4">
+    <Card className="mb-6 p-4 shadow-md">
       <div className="grid md:grid-cols-2 gap-4">
         <div className="border rounded-md p-4 bg-[#F8F9FA]">
           {renderPersonaDetails(personaA)}

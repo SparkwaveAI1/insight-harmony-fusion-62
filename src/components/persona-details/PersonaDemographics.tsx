@@ -9,13 +9,18 @@ interface PersonaDemographicsProps {
 const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold">Demographics Profile</h2>
+      <h2 className="text-xl font-bold text-gray-800 flex items-center">
+        <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+        Demographics Profile
+      </h2>
       
       <Accordion type="multiple" defaultValue={["core-demographics"]}>
         {/* Core Demographics */}
-        <AccordionItem value="core-demographics">
-          <AccordionTrigger className="text-lg font-semibold">Core Demographics</AccordionTrigger>
-          <AccordionContent>
+        <AccordionItem value="core-demographics" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-blue-50/50 rounded-md hover:bg-blue-50 transition-colors">
+            Core Demographics
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <InfoItem label="Age" value={metadata.age} />
@@ -39,9 +44,11 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         </AccordionItem>
 
         {/* Location & Environment */}
-        <AccordionItem value="location-environment">
-          <AccordionTrigger className="text-lg font-semibold">Location, Environment & Migration</AccordionTrigger>
-          <AccordionContent>
+        <AccordionItem value="location-environment" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-blue-50/30 rounded-md hover:bg-blue-50 transition-colors">
+            Location, Environment & Migration
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <InfoItem label="Region" value={metadata.region} />
@@ -67,9 +74,11 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         </AccordionItem>
 
         {/* Cognitive & Cultural */}
-        <AccordionItem value="cognitive-cultural">
-          <AccordionTrigger className="text-lg font-semibold">Cognitive, Psychological, and Cultural</AccordionTrigger>
-          <AccordionContent>
+        <AccordionItem value="cognitive-cultural" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-green-50/40 rounded-md hover:bg-green-50 transition-colors">
+            Cognitive, Psychological, and Cultural
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <InfoItem label="Languages" value={formatArrayOrString(metadata.language_proficiency)} />
@@ -91,9 +100,11 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         </AccordionItem>
 
         {/* Financial & Resource */}
-        <AccordionItem value="financial-resource">
-          <AccordionTrigger className="text-lg font-semibold">Financial and Time Resource Profile</AccordionTrigger>
-          <AccordionContent>
+        <AccordionItem value="financial-resource" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-amber-50/30 rounded-md hover:bg-amber-50 transition-colors">
+            Financial and Time Resource Profile
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <InfoItem label="Financial Pressure" value={metadata.financial_pressure} />
@@ -108,9 +119,11 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         </AccordionItem>
 
         {/* Digital & Signaling */}
-        <AccordionItem value="digital-signaling">
-          <AccordionTrigger className="text-lg font-semibold">Digital Ecosystem & Signaling Behavior</AccordionTrigger>
-          <AccordionContent>
+        <AccordionItem value="digital-signaling" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-purple-50/30 rounded-md hover:bg-purple-50 transition-colors">
+            Digital Ecosystem & Signaling Behavior
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
             <div className="space-y-2">
               <InfoItem label="Media Ecosystem" value={formatArrayOrString(metadata.media_ecosystem)} />
               <InfoItem label="Aesthetic Subculture" value={metadata.aesthetic_subculture} />
@@ -119,9 +132,11 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         </AccordionItem>
 
         {/* Health */}
-        <AccordionItem value="health">
-          <AccordionTrigger className="text-lg font-semibold">Health-Related Attributes</AccordionTrigger>
-          <AccordionContent>
+        <AccordionItem value="health" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-red-50/20 rounded-md hover:bg-red-50 transition-colors">
+            Health-Related Attributes
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <InfoItem label="Physical Health" value={metadata.physical_health_status} />
