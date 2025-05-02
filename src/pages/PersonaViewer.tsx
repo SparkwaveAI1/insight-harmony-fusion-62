@@ -8,11 +8,12 @@ import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import PersonaSummary from "@/components/personas/PersonaSummary";
 import { useParams } from "react-router-dom";
+import { Persona } from "@/services/persona/types";
 
 const PersonaViewer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { personaId } = useParams<{ personaId?: string }>();
-  const [personas, setPersonas] = useState<any[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

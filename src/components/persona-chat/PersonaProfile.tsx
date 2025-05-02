@@ -2,6 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Card from "@/components/ui-custom/Card";
 import { Badge } from "@/components/ui/badge";
+import { Brain, Target, Users } from "lucide-react";
 
 const PersonaProfile = () => {
   return (
@@ -56,6 +57,42 @@ const PersonaProfile = () => {
                 <span className="text-muted-foreground">Education:</span>
                 <span className="font-medium">Bachelor's Degree</span>
               </li>
+            </ul>
+          </div>
+          
+          {/* Decisions section - NEW */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Brain className="h-4 w-4 text-primary" />
+              <h3 className="text-base font-semibold">Decisions</h3>
+            </div>
+            <ul className="space-y-2 text-sm pl-1">
+              <li>Evaluates options through data-driven analysis</li>
+              <li>Takes calculated risks after thorough research</li>
+            </ul>
+          </div>
+          
+          {/* Drivers section - NEW */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="h-4 w-4 text-primary" />
+              <h3 className="text-base font-semibold">Drivers</h3>
+            </div>
+            <ul className="space-y-2 text-sm pl-1">
+              <li>Motivated by long-term financial independence</li>
+              <li>Values innovation and sustainable business practices</li>
+            </ul>
+          </div>
+          
+          {/* Persuasion section - NEW */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-primary" />
+              <h3 className="text-base font-semibold">Discussion & Persuasion</h3>
+            </div>
+            <ul className="space-y-2 text-sm pl-1">
+              <li>Receptive to peer recommendations and trends</li>
+              <li>Persuaded by evidence and social proof</li>
             </ul>
           </div>
           
