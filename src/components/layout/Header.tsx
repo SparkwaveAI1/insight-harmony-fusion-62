@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, LayoutDashboard, BadgeDollarSign, Library } from "lucide-react";
+import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -14,8 +14,8 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 import { navigationMenuItems } from "./config/navigationConfig";
+import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -41,6 +41,13 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Use shortened navigationMenuItems for the header
+  const headerNavItems = [
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
+    { title: "Persona Library", href: "/persona-viewer", icon: User },
+  ];
   
   return (
     <header
@@ -65,19 +72,19 @@ const Header = () => {
         <NavigationMenu className="hidden md:flex mx-auto">
           <NavigationMenuList className="space-x-2">
             {/* Primary Navigation Links */}
-            {navigationMenuItems.map((link) => {
-              const isActive = location.pathname === link.url || 
-                             (link.url !== "/" && location.pathname.startsWith(link.url));
+            {headerNavItems.map((link) => {
+              const isActive = location.pathname === link.href || 
+                             (link.href !== "/" && location.pathname.startsWith(link.href));
               
               return (
                 <NavigationMenuItem key={link.title}>
-                  <Link to={link.url}>
+                  <Link to={link.href}>
                     <NavigationMenuLink 
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        // Make sure text is visible regardless of background
-                        isDarkRoute && !isScrolled ? "text-white" : "text-gray-800",
+                        // Always use black text color
+                        "text-black",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
@@ -108,7 +115,7 @@ const Header = () => {
             className={cn(
               "md:hidden",
               // Use appropriate text color based on the route/scroll state
-              isDarkRoute && !isScrolled ? "text-white" : "text-gray-800",
+              isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
               "p-2"
             )} 
             variant="ghost"

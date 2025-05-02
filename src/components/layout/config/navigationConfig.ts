@@ -1,11 +1,21 @@
 
-import { LayoutDashboard, BadgeDollarSign, Library } from "lucide-react";
+import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText, Coins } from "lucide-react";
 
 export const navigationMenuItems = [
   {
     title: "Dashboard",
     url: "/dashboard",
-    icon: LayoutDashboard,
+    icon: PieChart,
+  },
+  {
+    title: "My Personas",
+    url: "/my-personas",
+    icon: User,
+  },
+  {
+    title: "Collections",
+    url: "/collections",
+    icon: Users,
   },
   {
     title: "Persona Library",
@@ -13,8 +23,23 @@ export const navigationMenuItems = [
     icon: Library,
   },
   {
-    title: "$PRSNA",
-    url: "/prsna-ecosystem",
-    icon: BadgeDollarSign,
+    title: "Create Simulated Persona",
+    url: "/simulated-persona",
+    icon: User,
+  },
+  {
+    title: "Interview",
+    url: "/interviewer",
+    icon: BookText,
+  },
+  {
+    title: "Research",
+    url: "/research",
+    icon: FlaskConical,
+  },
+  {
+    title: "PRSNA Ecosystem",
+    url: "/prsna",
+    icon: Coins,
   },
 ];
