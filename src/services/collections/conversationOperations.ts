@@ -8,9 +8,6 @@ import { Conversation, ConversationMessage } from "./types";
  */
 export const getConversationById = async (id: string): Promise<Conversation | null> => {
   try {
-    // For now, we're mocking this since the conversations table doesn't exist yet in Supabase
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     const { data, error } = await supabase
       .from("conversations")
       .select("*")
@@ -18,20 +15,7 @@ export const getConversationById = async (id: string): Promise<Conversation | nu
       .single();
 
     if (error) throw error;
-    return data;
-    */
-    
-    // Temporary mock while tables are being set up
-    return {
-      id: id,
-      title: "Mock Conversation",
-      project_id: "mock-project-id",
-      user_id: "mock-user-id",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      persona_ids: [],
-      tags: []
-    };
+    return data as Conversation;
   } catch (error) {
     console.error("Error fetching conversation:", error);
     toast.error("Failed to fetch conversation");
@@ -44,9 +28,6 @@ export const getConversationById = async (id: string): Promise<Conversation | nu
  */
 export const getConversationMessages = async (conversationId: string): Promise<ConversationMessage[]> => {
   try {
-    // For now, we're mocking this since the conversation_messages table doesn't exist yet
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     const { data, error } = await supabase
       .from("conversation_messages")
       .select("*")
@@ -54,28 +35,7 @@ export const getConversationMessages = async (conversationId: string): Promise<C
       .order("created_at", { ascending: true });
 
     if (error) throw error;
-    return data || [];
-    */
-    
-    // Temporary mock data
-    return [
-      {
-        id: "mock-msg-1",
-        conversation_id: conversationId,
-        role: "user",
-        content: "This is a mock user message",
-        created_at: new Date().toISOString(),
-        persona_id: null
-      },
-      {
-        id: "mock-msg-2",
-        conversation_id: conversationId,
-        role: "assistant",
-        content: "This is a mock assistant response",
-        created_at: new Date().toISOString(),
-        persona_id: "mock-persona-id"
-      }
-    ];
+    return data as ConversationMessage[] || [];
   } catch (error) {
     console.error("Error fetching conversation messages:", error);
     toast.error("Failed to fetch conversation messages");
@@ -88,9 +48,6 @@ export const getConversationMessages = async (conversationId: string): Promise<C
  */
 export const getProjectConversations = async (projectId: string): Promise<Conversation[]> => {
   try {
-    // For now, we're mocking this since the conversations table doesn't exist yet
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     const { data, error } = await supabase
       .from("conversations")
       .select("*")
@@ -98,32 +55,7 @@ export const getProjectConversations = async (projectId: string): Promise<Conver
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
-    */
-    
-    // Temporary mock data
-    return [
-      {
-        id: "mock-conv-1",
-        title: "First Mock Conversation",
-        project_id: projectId,
-        user_id: "mock-user-id",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        persona_ids: ["mock-persona-1"],
-        tags: ["tag1", "tag2"]
-      },
-      {
-        id: "mock-conv-2",
-        title: "Second Mock Conversation",
-        project_id: projectId,
-        user_id: "mock-user-id",
-        created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        updated_at: new Date(Date.now() - 86400000).toISOString(),
-        persona_ids: ["mock-persona-2"],
-        tags: ["tag3"]
-      }
-    ];
+    return data as Conversation[] || [];
   } catch (error) {
     console.error("Error fetching project conversations:", error);
     toast.error("Failed to fetch conversations");
@@ -149,9 +81,6 @@ export const createConversation = async (
       return null;
     }
     
-    // For now, we're mocking this since the conversations table doesn't exist yet
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     // Insert the conversation
     const { data, error } = await supabase
       .from("conversations")
@@ -166,22 +95,7 @@ export const createConversation = async (
       .single();
 
     if (error) throw error;
-    return data;
-    */
-    
-    // Return mock data
-    const mockConversation: Conversation = {
-      id: `mock-${Date.now()}`,
-      title,
-      project_id: projectId,
-      user_id: user.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      persona_ids: personaIds,
-      tags
-    };
-    
-    return mockConversation;
+    return data as Conversation;
   } catch (error) {
     console.error("Error creating conversation:", error);
     toast.error("Failed to save conversation");
@@ -197,9 +111,6 @@ export const saveConversationMessages = async (
   messages: { role: "user" | "assistant"; content: string; persona_id?: string }[]
 ): Promise<boolean> => {
   try {
-    // For now, we're mocking this since the conversation_messages table doesn't exist yet
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     // Format messages for insertion
     const formattedMessages = messages.map(message => ({
       conversation_id: conversationId,
@@ -214,9 +125,7 @@ export const saveConversationMessages = async (
       .insert(formattedMessages);
 
     if (error) throw error;
-    */
     
-    // Return success for mock
     return true;
   } catch (error) {
     console.error("Error saving conversation messages:", error);
@@ -237,9 +146,6 @@ export const updateConversation = async (
   }
 ): Promise<Conversation | null> => {
   try {
-    // For now, we're mocking this since the conversations table doesn't exist yet
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     const { data, error } = await supabase
       .from("conversations")
       .update(updates)
@@ -248,20 +154,7 @@ export const updateConversation = async (
       .single();
 
     if (error) throw error;
-    return data;
-    */
-    
-    // Return mock data
-    return {
-      id,
-      title: updates.title || "Updated Mock Conversation",
-      project_id: updates.project_id || "mock-project-id",
-      user_id: "mock-user-id",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      persona_ids: [],
-      tags: updates.tags || []
-    };
+    return data as Conversation;
   } catch (error) {
     console.error("Error updating conversation:", error);
     toast.error("Failed to update conversation");
@@ -274,9 +167,6 @@ export const updateConversation = async (
  */
 export const deleteConversation = async (id: string): Promise<boolean> => {
   try {
-    // For now, we're mocking this since the conversations table doesn't exist yet
-    // Once the SQL is run to create the table, uncomment this code:
-    /*
     // Delete conversation messages first
     const { error: messagesError } = await supabase
       .from("conversation_messages")
@@ -292,7 +182,6 @@ export const deleteConversation = async (id: string): Promise<boolean> => {
       .eq("id", id);
 
     if (error) throw error;
-    */
     
     toast.success("Conversation deleted");
     return true;

@@ -15,7 +15,7 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Project;
   } catch (error) {
     console.error("Error fetching project:", error);
     toast.error("Failed to fetch project");
@@ -34,7 +34,7 @@ export const getUserProjects = async (): Promise<Project[]> => {
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return data as Project[] || [];
   } catch (error) {
     console.error("Error fetching projects:", error);
     toast.error("Failed to fetch projects");
@@ -51,7 +51,7 @@ export const getUserProjectsWithCount = async (): Promise<ProjectWithConversatio
       .from("projects")
       .select(`
         *,
-        conversation_count: project_conversations(count)
+        project_conversations!inner (count)
       `)
       .order("updated_at", { ascending: false });
 
@@ -60,7 +60,7 @@ export const getUserProjectsWithCount = async (): Promise<ProjectWithConversatio
     // Transform the data to match the ProjectWithConversationCount interface
     const transformedData = data?.map(project => ({
       ...project,
-      conversation_count: project.conversation_count?.[0]?.count || 0
+      conversation_count: project.project_conversations?.[0]?.count || 0
     })) as ProjectWithConversationCount[];
     
     return transformedData || [];
@@ -93,7 +93,7 @@ export const createProject = async (name: string, description: string | null = n
 
     if (error) throw error;
     toast.success("Project created");
-    return data;
+    return data as Project;
   } catch (error) {
     console.error("Error creating project:", error);
     toast.error("Failed to create project");
@@ -118,7 +118,7 @@ export const updateProject = async (
 
     if (error) throw error;
     toast.success("Project updated");
-    return data;
+    return data as Project;
   } catch (error) {
     console.error("Error updating project:", error);
     toast.error("Failed to update project");
