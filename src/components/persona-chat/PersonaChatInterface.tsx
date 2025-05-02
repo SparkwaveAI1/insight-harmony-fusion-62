@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
+import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 
@@ -17,6 +18,7 @@ interface PersonaChatInterfaceProps {
 }
 
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
+  const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const {
     messages,
     isResponding,
@@ -24,15 +26,11 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     error,
     activePersona,
     handleSendMessage
-  } = usePersonaChat(personaId);
+  } = usePersonaChat(personaId, chatMode);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // Remove automatic scrolling behavior
-  // The scrolling will now be controlled by the MessageList component
-  // which has auto-scroll disabled by default
 
   if (isLoading) {
     return (
@@ -91,6 +89,9 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           </p>
         </div>
       </div>
+
+      {/* Chat Mode Selector */}
+      <ChatModeSelector selectedMode={chatMode} onChange={setChatMode} />
       
       {/* Card with scroll area and message input */}
       <Card className="h-[600px] flex flex-col">

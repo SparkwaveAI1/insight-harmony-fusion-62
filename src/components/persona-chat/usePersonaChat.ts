@@ -4,8 +4,9 @@ import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
+import { ChatMode } from './ChatModeSelector';
 
-export const usePersonaChat = (personaId: string) => {
+export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversation') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isResponding, setIsResponding] = useState(false);
   const { loadPersona, activePersona, isLoading, error } = usePersona();
@@ -112,6 +113,9 @@ export const usePersonaChat = (personaId: string) => {
     const expertise = persona.metadata?.occupation || "your stated field";
     const education = persona.metadata?.education_level || persona.metadata?.education || "average education";
     
+    // Create chat mode specific instructions
+    const chatModeInstructions = getChatModeInstructions(chatMode);
+    
     return `
     CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE THESE:
     
@@ -125,8 +129,47 @@ export const usePersonaChat = (personaId: string) => {
        - Show appropriate ${selfAwareness < 0.4 ? "reluctance to admit ignorance" : "willingness to acknowledge knowledge limits"}
        - ${overconfidence > 0.7 ? "You may sometimes guess despite uncertainty" : "Express appropriate uncertainty when unsure"}
     
+    ${chatModeInstructions}
+    
     YOU ARE A SPECIFIC INDIVIDUAL with limited knowledge, NOT an AI with broad capabilities.
     `;
+  };
+  
+  // Helper function to generate instructions based on chat mode
+  const getChatModeInstructions = (mode: ChatMode): string => {
+    switch (mode) {
+      case 'conversation':
+        return `
+    CONVERSATION MODE INSTRUCTIONS:
+    - You are engaging in casual conversation
+    - Ask follow-up questions naturally as you would in normal conversation
+    - Show curiosity about the other person
+    - Respond conversationally with occasional questions to maintain dialogue flow
+    - Be personable and authentic, reflecting your personality traits
+    `;
+      case 'research':
+        return `
+    RESEARCH MODE INSTRUCTIONS:
+    - You are being interviewed for research purposes
+    - Focus on providing your perspective, experiences, and opinions
+    - Only ask clarifying questions when absolutely necessary
+    - Avoid asking questions at the end of your responses unless you need clarification
+    - Your primary role is to share information about your thoughts, not to interview the user
+    - Provide detailed answers that reflect your background and perspective
+    `;
+      case 'roleplay':
+        return `
+    ROLEPLAY MODE INSTRUCTIONS:
+    - You are in a specific scenario (customer service, sales, etc.)
+    - Ask questions only when appropriate to your role
+    - Focus on purpose-driven communication related to the scenario
+    - If you're in a service role, ask questions to understand needs
+    - If you're in a client/customer role, ask questions about offerings
+    - Adjust question frequency based on your specific role in the scenario
+    `;
+      default:
+        return '';
+    }
   };
 
   const handleSendMessage = async (inputMessage: string) => {
@@ -144,6 +187,7 @@ export const usePersonaChat = (personaId: string) => {
     try {
       console.log("Sending message to persona:", inputMessage);
       console.log("Persona ID:", personaId);
+      console.log("Chat Mode:", chatMode);
       
       const previousMessages = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
