@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -10,8 +10,10 @@ import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
+import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
 import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
+import { toast } from 'sonner';
 
 interface PersonaChatInterfaceProps {
   personaId: string;
@@ -31,6 +33,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -47,6 +51,30 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const toggleMobileMenu = () => {
     console.log("Opening mobile menu, current state:", mobileMenuOpen);
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleConversationSaved = (conversationId: string, projectId: string) => {
+    toast.success("Conversation saved successfully", {
+      description: "Your conversation has been saved to your project.",
+      action: {
+        label: "Go to Project",
+        onClick: () => navigate(`/projects/${projectId}`),
+      },
+    });
+  };
+
+  // Generate a default title from the conversation content
+  const generateDefaultTitle = () => {
+    // Get the first user message, or use a default
+    const firstUserMessage = messages.find(m => m.role === 'user');
+    if (firstUserMessage && firstUserMessage.content.length > 0) {
+      // Use first few words of first message
+      const titlePreview = firstUserMessage.content.slice(0, 30);
+      return `${titlePreview}${firstUserMessage.content.length > 30 ? '...' : ''}`;
+    }
+    
+    // Default title with persona name and date
+    return `Chat with ${activePersona.name} - ${new Date().toLocaleDateString()}`;
   };
 
   return (
@@ -88,6 +116,19 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
             {activePersona.metadata?.region && ` • ${activePersona.metadata.region}`}
           </p>
         </div>
+        
+        {/* Save Conversation Button */}
+        {messages.length > 0 && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-auto"
+            onClick={() => setSaveModalOpen(true)}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+        )}
       </div>
 
       {/* Chat Mode Selector */}
@@ -124,6 +165,20 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       <MobileDrawerMenu 
         open={mobileMenuOpen}
         onOpenChange={setMobileMenuOpen}
+      />
+      
+      {/* Save Conversation Modal */}
+      <SaveConversationModal
+        open={saveModalOpen}
+        onOpenChange={setSaveModalOpen}
+        messages={messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          persona_id: personaId
+        }))}
+        personaIds={[personaId]}
+        defaultTitle={generateDefaultTitle()}
+        onSaved={handleConversationSaved}
       />
     </div>
   );
