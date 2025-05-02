@@ -25,8 +25,8 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
   const expertise = persona.metadata?.occupation || "your stated field";
   const education = persona.metadata?.education_level || persona.metadata?.education || "average education";
   
-  // Create chat mode specific instructions
-  const chatModeInstructions = getChatModeInstructions(ChatMode.Conversation);
+  // Create chat mode specific instructions - fixed the error by using 'conversation' string instead of ChatMode enum value
+  const chatModeInstructions = getChatModeInstructions('conversation');
   
   return `
   CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE THESE:
@@ -76,8 +76,8 @@ export const getChatModeInstructions = (mode: ChatMode): string => {
     case 'roleplay':
       return `
   ROLEPLAY MODE INSTRUCTIONS:
-  - You are in a specific scenario (customer service, sales, etc.)
-  - Ask questions only when appropriate to your role
+  - You are in a specific scenario that the user will describe with "Scenario: ..." 
+  - Ask questions only when appropriate to your role in the described scenario
   - Focus on purpose-driven communication related to the scenario
   - If you're in a service role, ask questions to understand needs
   - If you're in a client/customer role, ask questions about offerings

@@ -34,7 +34,7 @@ const ChatModeSelector: React.FC<ChatModeSelectorProps> = ({ selectedMode, onCha
               <span className="font-medium">Casual Conversation</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Natural back-and-forth dialogue with questions
+              Natural back-and-forth dialogue
             </p>
           </div>
         </div>
@@ -58,7 +58,7 @@ const ChatModeSelector: React.FC<ChatModeSelectorProps> = ({ selectedMode, onCha
               <span className="font-medium">Research Mode</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Interview style with minimal questions
+              Interview style conversation
             </p>
           </div>
         </div>
@@ -82,7 +82,7 @@ const ChatModeSelector: React.FC<ChatModeSelectorProps> = ({ selectedMode, onCha
               <span className="font-medium">Role-Play</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Scenario-based with purpose-driven questions
+              Scenario-based conversation. Describe in chat: "Scenario: ..."
             </p>
           </div>
         </div>
