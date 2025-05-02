@@ -1,5 +1,5 @@
 
-import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText, Coins } from "lucide-react";
+import { User, Users, Library, FlaskConical, PieChart, BarChart3, BookText, Coins, Folder } from "lucide-react";
 
 export const navigationMenuItems = [
   {
@@ -11,6 +11,11 @@ export const navigationMenuItems = [
     title: "My Personas",
     url: "/my-personas",
     icon: User,
+  },
+  {
+    title: "Projects",
+    url: "/projects",
+    icon: Folder,
   },
   {
     title: "Collections",

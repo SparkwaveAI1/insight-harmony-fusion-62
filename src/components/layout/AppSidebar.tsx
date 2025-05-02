@@ -57,6 +57,16 @@ export function AppSidebar() {
               <span>Projects</span>
             </Link>
             <Link
+              to="/collections"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "justify-start text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Users className="mr-2 h-5 w-5" />
+              <span>Collections</span>
+            </Link>
+            <Link
               to="/persona-viewer"
               className={cn(
                 buttonVariants({ variant: "ghost", size: "lg" }),
@@ -75,16 +85,6 @@ export function AppSidebar() {
             >
               <MessageSquare className="mr-2 h-5 w-5" />
               <span>Multi-Persona Chat</span>
-            </Link>
-            <Link
-              to="/collections"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "lg" }),
-                "justify-start text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Users className="mr-2 h-5 w-5" />
-              <span>Collections</span>
             </Link>
 
             <div className="border-t border-border my-4"></div>
