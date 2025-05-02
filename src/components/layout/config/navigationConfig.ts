@@ -44,7 +44,7 @@ export const navigationMenuItems = [
   },
   {
     title: "PRSNA Ecosystem",
-    url: "/prsna",
+    url: "/prsna-ecosystem",
     icon: Coins,
   },
 ];

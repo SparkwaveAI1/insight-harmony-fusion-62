@@ -42,7 +42,7 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Use shortened navigationMenuItems for the header
+  // Use navigation items for the header - correctly ordered
   const headerNavItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "My Personas", href: "/my-personas", icon: User },
@@ -86,8 +86,8 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        // Always use black text color
-                        "text-foreground",
+                        // Use appropriate text color
+                        isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
