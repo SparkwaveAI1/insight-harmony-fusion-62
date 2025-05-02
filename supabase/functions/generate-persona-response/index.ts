@@ -60,9 +60,9 @@ Deno.serve(async (req: Request) => {
     // Add the system message
     let systemMessage = createPersonaSystemMessage(persona)
     
-    // Add knowledge boundary instructions if provided
+    // Forcefully add knowledge boundary instructions 
     if (knowledge_boundaries) {
-      systemMessage += `\n\n${knowledge_boundaries}`
+      systemMessage += `\n\n${knowledge_boundaries}\n\nIMPORTANT: You MUST adhere to these knowledge boundaries in ALL your responses.`
     }
     
     messages.push({ role: "system", content: systemMessage })
@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
     
     console.log("Generating response with OpenAI API...")
     
-    // Call the OpenAI API to generate a response
+    // Call the OpenAI API with more restrictive parameters to enforce knowledge gating
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -88,6 +88,7 @@ Deno.serve(async (req: Request) => {
         messages: messages,
         temperature: 0.7,
         max_tokens: 500,
+        system_fingerprint: "persona-response-with-knowledge-boundaries", // Help OpenAI track system message consistency
       }),
     })
 

@@ -51,27 +51,44 @@ export const generatePersonaResponse = async (
         ? parseFloat(typedPersona.trait_profile.behavioral_economics.overconfidence as string)
         : 0.5;
       
+      // Define areas of expertise and non-expertise based on persona data
+      const expertise = typedPersona.metadata?.occupation || "your stated field";
+      const educationLevel = typedPersona.metadata?.education || "average";
+      
+      // Define knowledge boundaries more explicitly with stronger directives
       knowledgeBoundaryInstructions = `
-      IMPORTANT - KNOWLEDGE BOUNDARIES:
-      1. You were born in approximately ${birthYear} and your knowledge has natural human limitations.
-      2. You should NOT have detailed knowledge about events after your creation date.
-      3. You have expertise primarily in: ${typedPersona.metadata?.occupation || "your stated field"}${
-        selfAwareness < 0.5 
-          ? " but you sometimes overestimate your expertise" 
-          : ""
-      }.
-      4. For questions outside your expertise or life experience:
-         - Express uncertainty ("I think...", "If I recall correctly...")
-         - Admit when you don't know something ("I'm not really familiar with that")
-         - Base answers on your personal perspective rather than omniscient knowledge
-         - Occasionally provide slightly outdated or incomplete information
-         - ${
-            overconfidence > 0.7 
-              ? "You tend to answer confidently even when uncertain" 
-              : "You're comfortable saying you don't know"
-          }
-      5. Your response should reflect YOUR perspective based on YOUR background, not perfect factual information.`;
+      CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE THESE:
+      1. You were born in ${birthYear} and have NO KNOWLEDGE of events after ${currentYear - 5}. If asked about more recent events or technologies, you MUST express ignorance.
+      
+      2. Your expertise is limited to: ${expertise}. For questions outside this domain, you MUST show appropriate uncertainty.
+      
+      3. Your education level is: ${educationLevel}, which affects what academic/technical knowledge you would reasonably possess.
+      
+      4. Time-bounded knowledge:
+         - You cannot know about technologies, cultural events, or world affairs that occurred after ${currentYear - 5}
+         - Your knowledge of recent events (past 5-10 years) should be general and sometimes incomplete
+         - You should be most knowledgeable about events from your formative years (${birthYear + 15} - ${birthYear + 30})
+      
+      5. Your responses should reflect:
+         ${selfAwareness < 0.4 ? "- LOW SELF-AWARENESS: You overestimate your knowledge and rarely admit ignorance" : 
+           selfAwareness > 0.7 ? "- HIGH SELF-AWARENESS: You're very aware of your knowledge limitations and openly acknowledge them" :
+           "- MODERATE SELF-AWARENESS: You have a reasonable understanding of what you know and don't know"}
+         
+         ${overconfidence > 0.7 ? "- HIGH OVERCONFIDENCE: Even when uncertain, you tend to speak with unearned confidence" :
+           overconfidence < 0.3 ? "- LOW OVERCONFIDENCE: You're hesitant to make definitive statements without certainty" :
+           "- MODERATE OVERCONFIDENCE: You show appropriate levels of certainty based on your knowledge"}
+      
+      6. When you encounter questions outside your knowledge boundaries:
+         - NEVER make up facts to appear knowledgeable
+         - ${selfAwareness < 0.5 ? "Sometimes give vague or deflecting answers rather than admitting ignorance" : "Honestly acknowledge gaps in your knowledge"}
+         - Use phrases like "I'm not familiar with that," "That was after my time," or "I don't have much expertise in that area"
+         - ${overconfidence > 0.6 ? "Occasionally offer your best guess while subtly indicating uncertainty" : "Avoid speculating on topics you wouldn't realistically know about"}
+         
+      7. KEY DIRECTIVE: You are a SPECIFIC INDIVIDUAL with limited knowledge, NOT an AI with broad capabilities. Your responses must reflect the knowledge limitations of a real person born in ${birthYear} with your specific background.
+      `;
     }
+    
+    console.log("Applied knowledge boundaries:", knowledgeBoundaryInstructions);
     
     // Call the Supabase Edge Function for persona response
     const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
