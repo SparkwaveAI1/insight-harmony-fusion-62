@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 export interface Activity {
   id: string;
@@ -14,34 +15,46 @@ export interface Activity {
 export function useRecentActivity() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { user } = useAuth(); // Get the current logged-in user
 
   useEffect(() => {
     const fetchRecentActivity = async () => {
+      if (!user) {
+        // If no user is logged in, return empty activities
+        setActivities([]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       
       try {
-        // Fetch recent personas (created or updated)
+        // Fetch recent personas (created or updated) for the current user
         const { data: personas, error: personasError } = await supabase
           .from('personas')
           .select('id, persona_id, name, created_at')
+          .eq('user_id', user.id) // Filter by user ID
           .order('created_at', { ascending: false })
           .limit(3);
 
         if (personasError) throw personasError;
 
-        // Fetch recent collections (created or updated)
+        // Fetch recent collections (created or updated) for the current user
         const { data: collections, error: collectionsError } = await supabase
           .from('collections')
           .select('id, name, updated_at')
+          .eq('user_id', user.id) // Filter by user ID
           .order('updated_at', { ascending: false })
           .limit(3);
 
         if (collectionsError) throw collectionsError;
 
-        // Fetch recent collection-persona associations
+        // Fetch recent collection-persona associations for the current user
+        // We need to join with collections to filter by user_id
         const { data: collectionPersonas, error: collectionPersonasError } = await supabase
           .from('collection_personas')
-          .select('id, persona_id, collection_id, added_at')
+          .select('id, persona_id, collection_id, added_at, collections!inner(user_id)')
+          .eq('collections.user_id', user.id) // Filter by user ID via join
           .order('added_at', { ascending: false })
           .limit(2);
 
@@ -110,7 +123,7 @@ export function useRecentActivity() {
         setActivities(combinedActivities);
       } catch (error) {
         console.error('Error fetching activities:', error);
-        // Fallback to mock data if there's an error or no data
+        // Fallback to mock data if there's an error or no data, but still filter by user
         const mockActivities: Activity[] = [
           {
             id: '1',
@@ -145,7 +158,7 @@ export function useRecentActivity() {
     };
 
     fetchRecentActivity();
-  }, []);
+  }, [user]); // Re-run when user changes
 
   return { activities, isLoading };
 }
