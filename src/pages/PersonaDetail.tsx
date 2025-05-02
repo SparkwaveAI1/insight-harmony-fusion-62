@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
@@ -48,15 +49,43 @@ const PersonaDetail = () => {
   const getInterviewSections = () => {
     if (!persona?.interview_sections) return [];
     
+    // Get the raw sections data
+    let rawSections = [];
+    
     if (Array.isArray(persona.interview_sections)) {
-      return persona.interview_sections;
+      rawSections = persona.interview_sections;
+    } else if ('interview_sections' in persona.interview_sections) {
+      rawSections = persona.interview_sections.interview_sections || [];
     }
     
-    if ('interview_sections' in persona.interview_sections) {
-      return persona.interview_sections.interview_sections || [];
-    }
-    
-    return [];
+    // Map the raw sections to the format expected by the InterviewResponses component
+    return rawSections.map(section => {
+      // Create a responses array from questions and responses
+      const responses = [];
+      
+      // Try to extract responses from the section
+      if (section.questions && Array.isArray(section.questions)) {
+        section.questions.forEach((q, idx) => {
+          // Handle different question formats
+          if (typeof q === 'string' && section.responses && section.responses[idx]) {
+            responses.push({
+              question: q,
+              answer: section.responses[idx]
+            });
+          } else if (typeof q === 'object' && q.question) {
+            responses.push({
+              question: q.question,
+              answer: q.response || 'No response recorded'
+            });
+          }
+        });
+      }
+      
+      return {
+        section_title: section.section || 'Interview Section',
+        responses: responses
+      };
+    });
   };
 
   // Helper function to generate a personality snapshot

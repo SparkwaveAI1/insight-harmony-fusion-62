@@ -42,7 +42,7 @@ const InterviewResponses: React.FC<InterviewResponsesProps> = ({ sections }) => 
               {section.section_title || `Interview Section ${sectionIndex + 1}`}
             </AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              {section.responses.map((response, responseIndex) => (
+              {section.responses && section.responses.map((response, responseIndex) => (
                 <div key={`response-${sectionIndex}-${responseIndex}`} className="bg-gray-50 rounded-lg p-4">
                   <p className="font-medium text-gray-800 mb-2">{response.question}</p>
                   <p className="text-gray-600 whitespace-pre-wrap">{response.answer}</p>
