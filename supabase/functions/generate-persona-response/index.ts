@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 import { createPersonaSystemMessage } from '../_shared/personaSystemMessage.ts'
+import { generateChatResponse } from '../_shared/openai.ts'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || ''
 
@@ -18,7 +19,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { persona_id, previous_messages } = await req.json()
+    const { persona_id, persona_role, previous_messages, knowledge_boundaries } = await req.json()
     
     // Log request info
     console.log(`Request to generate response for persona ${persona_id}`)
@@ -57,7 +58,13 @@ Deno.serve(async (req: Request) => {
     const messages = []
     
     // Add the system message
-    const systemMessage = createPersonaSystemMessage(persona)
+    let systemMessage = createPersonaSystemMessage(persona)
+    
+    // Add knowledge boundary instructions if provided
+    if (knowledge_boundaries) {
+      systemMessage += `\n\n${knowledge_boundaries}`
+    }
+    
     messages.push({ role: "system", content: systemMessage })
     
     // Add the previous messages

@@ -1,6 +1,7 @@
 
 import { Message } from '../types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const generatePersonaResponse = async (
   personaId: string,
@@ -20,6 +21,38 @@ export const generatePersonaResponse = async (
     
     console.log("Formatted messages for persona API:", JSON.stringify(formattedMessages));
     
+    // Fetch the persona's data to check knowledge domains and expertise
+    const { data: persona, error: personaError } = await supabase
+      .from('personas')
+      .select('*')
+      .eq('persona_id', personaId)
+      .single();
+      
+    if (personaError) {
+      console.error("Error fetching persona data:", personaError);
+    }
+    
+    // Create knowledge boundary instructions based on persona metadata
+    let knowledgeBoundaryInstructions = "";
+    if (persona) {
+      const currentYear = new Date().getFullYear();
+      const personaAge = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+      const birthYear = currentYear - personaAge;
+      
+      knowledgeBoundaryInstructions = `
+      IMPORTANT - KNOWLEDGE BOUNDARIES:
+      1. You were born in approximately ${birthYear} and your knowledge has natural human limitations.
+      2. You should NOT have detailed knowledge about events after your creation date.
+      3. You have expertise primarily in: ${persona.metadata?.occupation || "your stated field"}${persona.trait_profile?.extended_traits?.self_awareness < 0.5 ? " but you sometimes overestimate your expertise" : ""}.
+      4. For questions outside your expertise or life experience:
+         - Express uncertainty ("I think...", "If I recall correctly...")
+         - Admit when you don't know something ("I'm not really familiar with that")
+         - Base answers on your personal perspective rather than omniscient knowledge
+         - Occasionally provide slightly outdated or incomplete information
+         - ${persona.trait_profile?.behavioral_economics?.overconfidence > 0.7 ? "You tend to answer confidently even when uncertain" : "You're comfortable saying you don't know"}
+      5. Your response should reflect YOUR perspective based on YOUR background, not perfect factual information.`;
+    }
+    
     // Call the Supabase Edge Function for persona response
     const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
       method: 'POST',
@@ -31,6 +64,7 @@ export const generatePersonaResponse = async (
         persona_id: personaId,
         persona_role: personaRole,
         previous_messages: formattedMessages,
+        knowledge_boundaries: knowledgeBoundaryInstructions
       }),
     });
 
