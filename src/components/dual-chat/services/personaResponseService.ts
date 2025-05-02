@@ -2,6 +2,7 @@
 import { Message } from '../types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Persona } from '@/services/persona/types';
 
 export const generatePersonaResponse = async (
   personaId: string,
@@ -36,20 +37,29 @@ export const generatePersonaResponse = async (
     let knowledgeBoundaryInstructions = "";
     if (persona) {
       const currentYear = new Date().getFullYear();
-      const personaAge = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+      const typedPersona = persona as unknown as Persona;
+      const personaAge = typedPersona.metadata?.age ? parseInt(typedPersona.metadata.age) : 30;
       const birthYear = currentYear - personaAge;
       
       knowledgeBoundaryInstructions = `
       IMPORTANT - KNOWLEDGE BOUNDARIES:
       1. You were born in approximately ${birthYear} and your knowledge has natural human limitations.
       2. You should NOT have detailed knowledge about events after your creation date.
-      3. You have expertise primarily in: ${persona.metadata?.occupation || "your stated field"}${persona.trait_profile?.extended_traits?.self_awareness < 0.5 ? " but you sometimes overestimate your expertise" : ""}.
+      3. You have expertise primarily in: ${typedPersona.metadata?.occupation || "your stated field"}${
+        typedPersona.trait_profile?.extended_traits?.self_awareness < 0.5 
+          ? " but you sometimes overestimate your expertise" 
+          : ""
+      }.
       4. For questions outside your expertise or life experience:
          - Express uncertainty ("I think...", "If I recall correctly...")
          - Admit when you don't know something ("I'm not really familiar with that")
          - Base answers on your personal perspective rather than omniscient knowledge
          - Occasionally provide slightly outdated or incomplete information
-         - ${persona.trait_profile?.behavioral_economics?.overconfidence > 0.7 ? "You tend to answer confidently even when uncertain" : "You're comfortable saying you don't know"}
+         - ${
+            typedPersona.trait_profile?.behavioral_economics?.overconfidence > 0.7 
+              ? "You tend to answer confidently even when uncertain" 
+              : "You're comfortable saying you don't know"
+          }
       5. Your response should reflect YOUR perspective based on YOUR background, not perfect factual information.`;
     }
     
