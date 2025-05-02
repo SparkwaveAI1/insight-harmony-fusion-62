@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
+import { Menu, X, User, LayoutDashboard, BadgeDollarSign, Library } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -14,7 +14,6 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { navigationMenuItems } from "./config/navigationConfig";
 import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 
 const Header = () => {
@@ -42,13 +41,10 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Use navigation items for the header - correctly ordered
+  // Use simplified header navigation items as requested
   const headerNavItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "My Personas", href: "/my-personas", icon: User },
-    { title: "Projects", href: "/projects", icon: LayoutDashboard },
-    { title: "Collections", href: "/collections", icon: User },
-    { title: "Persona Library", href: "/persona-viewer", icon: User },
+    { title: "Persona Library", href: "/persona-viewer", icon: Library },
     { title: "$PRSNA", href: "/prsna-ecosystem", icon: BadgeDollarSign },
   ];
   
@@ -86,8 +82,8 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        // Use appropriate text color
-                        isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
+                        // Make sure text is visible regardless of background
+                        isDarkRoute && !isScrolled ? "text-white" : "text-gray-800",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
@@ -118,7 +114,7 @@ const Header = () => {
             className={cn(
               "md:hidden",
               // Use appropriate text color based on the route/scroll state
-              isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
+              isDarkRoute && !isScrolled ? "text-white" : "text-gray-800",
               "p-2"
             )} 
             variant="ghost"

@@ -32,7 +32,7 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-h-[85vh] bg-gray-100 border border-gray-200 pb-safe">
         <DrawerHeader className="border-b border-gray-200">
-          <DrawerTitle className="text-center text-gray-800 font-bold text-xl">Navigation Menu</DrawerTitle>
+          <DrawerTitle className="text-center text-gray-800 font-bold text-xl">Menu</DrawerTitle>
           <DrawerClose className="absolute right-4 top-4 text-gray-800">
             <X size={24} />
           </DrawerClose>
