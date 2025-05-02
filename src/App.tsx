@@ -1,5 +1,5 @@
 
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
 import { Toaster } from "sonner";
@@ -56,49 +56,51 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PersonaProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/persona-viewer" element={<PersonaViewer />} />
-            <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
-            <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
-            <Route path="/dual-chat" element={<DualChat />} />
-            <Route path="/your-persona" element={<YourPersona />} />
-            <Route path="/my-personas" element={<MyPersonas />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:projectId" element={<ProjectDetail />} />
-            <Route path="/conversations/:conversationId" element={<ConversationDetail />} />
-            <Route path="/collections" element={<Collections />} />
-            <Route path="/collections/:collectionId" element={<CollectionDetail />} />
-            <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
-            <Route path="/prsna" element={<EarnPRSNA />} />
-            <Route path="/interviewer" element={<Interviewer />} />
-            <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
-            <Route path="/sign-in" element={<Auth />} />
-            <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
-            <Route path="/simulated-persona" element={<SimulatedPersona />} />
-            <Route path="/custom-research" element={<CustomResearch />} />
-            <Route path="/insight-conductor" element={<InsightConductor />} />
-            <Route path="/research" element={<Research />} />
-            <Route path="/participate" element={<ParticipateResearch />} />
-            <Route path="/interview-process" element={<InterviewProcess />} />
-            <Route path="/whitepaper" element={<WhitePaper />} />
-            
-            {/* Persona Creation Flow */}
-            <Route path="/create" element={<PersonaCreationLanding />} />
-            <Route path="/consent" element={<ConsentForm />} />
-            <Route path="/screener" element={<PersonaCreationScreener />} />
-            <Route path="/questionnaire" element={<PersonaCreationQuestionnaire />} />
-            <Route path="/complete" element={<PersonaCreationComplete />} />
-            
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster position="top-right" />
-        </PersonaProvider>
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <PersonaProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/persona-viewer" element={<PersonaViewer />} />
+              <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
+              <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
+              <Route path="/dual-chat" element={<DualChat />} />
+              <Route path="/your-persona" element={<YourPersona />} />
+              <Route path="/my-personas" element={<MyPersonas />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:projectId" element={<ProjectDetail />} />
+              <Route path="/conversations/:conversationId" element={<ConversationDetail />} />
+              <Route path="/collections" element={<Collections />} />
+              <Route path="/collections/:collectionId" element={<CollectionDetail />} />
+              <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
+              <Route path="/prsna" element={<EarnPRSNA />} />
+              <Route path="/interviewer" element={<Interviewer />} />
+              <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
+              <Route path="/sign-in" element={<Auth />} />
+              <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
+              <Route path="/simulated-persona" element={<SimulatedPersona />} />
+              <Route path="/custom-research" element={<CustomResearch />} />
+              <Route path="/insight-conductor" element={<InsightConductor />} />
+              <Route path="/research" element={<Research />} />
+              <Route path="/participate" element={<ParticipateResearch />} />
+              <Route path="/interview-process" element={<InterviewProcess />} />
+              <Route path="/whitepaper" element={<WhitePaper />} />
+              
+              {/* Persona Creation Flow */}
+              <Route path="/create" element={<PersonaCreationLanding />} />
+              <Route path="/consent" element={<ConsentForm />} />
+              <Route path="/screener" element={<PersonaCreationScreener />} />
+              <Route path="/questionnaire" element={<PersonaCreationQuestionnaire />} />
+              <Route path="/complete" element={<PersonaCreationComplete />} />
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster position="top-right" />
+          </PersonaProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
