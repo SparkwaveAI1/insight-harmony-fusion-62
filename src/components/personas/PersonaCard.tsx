@@ -59,7 +59,7 @@ export default function PersonaCard({
 
   return (
     <Card className="relative group overflow-hidden">
-      <Link to={`/persona-detail/${persona.persona_id}`} className="block p-6">
+      <div className="p-6">
         <h3 className="text-xl font-semibold mb-1">{formatName(persona.name)}</h3>
         <p className="text-muted-foreground text-sm mb-3">
           ID: {persona.persona_id} • Created: {formatDateString(persona.creation_date)}
@@ -84,7 +84,50 @@ export default function PersonaCard({
             <p className="text-sm">{persona.metadata?.region || "N/A"}</p>
           </div>
         </div>
-      </Link>
+        
+        {/* Additional info: psychographic traits - restored from previous version */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="flex items-center gap-1">
+            <Brain className="h-3 w-3 text-primary" />
+            <p className="text-xs">
+              {persona.trait_profile?.behavioral_economics?.risk_sensitivity 
+                ? (parseFloat(persona.trait_profile.behavioral_economics.risk_sensitivity) > 0.5 
+                  ? "Risk-averse" 
+                  : "Risk-taker")
+                : "Unknown risk profile"}
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Target className="h-3 w-3 text-primary" />
+            <p className="text-xs">
+              {persona.trait_profile?.big_five?.openness 
+                ? (parseFloat(persona.trait_profile.big_five.openness) > 0.5 
+                  ? "Open-minded" 
+                  : "Traditional")
+                : "Unknown openness"}
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Users className="h-3 w-3 text-primary" />
+            <p className="text-xs">
+              {persona.trait_profile?.big_five?.extraversion 
+                ? (parseFloat(persona.trait_profile.big_five.extraversion) > 0.5 
+                  ? "Extroverted" 
+                  : "Introverted")
+                : "Unknown socialness"}
+            </p>
+          </div>
+        </div>
+        
+        {/* Chat now button */}
+        <Link 
+          to={`/persona/${persona.persona_id}/chat`}
+          className="w-full mt-2 bg-primary/10 hover:bg-primary/20 text-primary text-sm py-1 px-3 rounded flex items-center justify-center gap-1"
+        >
+          <MessageCircle className="h-3 w-3" />
+          <span>Chat with persona</span>
+        </Link>
+      </div>
 
       {/* Action buttons */}
       <div className="absolute top-4 right-4 flex gap-2">
@@ -96,14 +139,6 @@ export default function PersonaCard({
           />
         )}
         <AddToCollectionButton personaId={persona.persona_id} />
-        <Link
-          to={`/persona/${persona.persona_id}/chat`}
-          className="p-2 bg-background/90 rounded-full hover:bg-muted/90 transition-colors"
-          title="Chat with persona"
-          onClick={(e) => e.stopPropagation()} // Prevent event bubbling to parent
-        >
-          <MessageCircle className="h-4 w-4" />
-        </Link>
       </div>
       
       {/* Visibility toggle (only for the owner) */}

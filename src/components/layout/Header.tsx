@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, User, LayoutDashboard, BadgeDollarSign, Library } from "lucide-react";
+import { Menu, X, LayoutDashboard, BadgeDollarSign, Library } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -15,6 +15,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
+import { navigationMenuItems } from "./config/navigationConfig";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,13 +41,6 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // Use simplified header navigation items as requested
-  const headerNavItems = [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "Persona Library", href: "/persona-viewer", icon: Library },
-    { title: "$PRSNA", href: "/prsna-ecosystem", icon: BadgeDollarSign },
-  ];
   
   return (
     <header
@@ -71,13 +65,13 @@ const Header = () => {
         <NavigationMenu className="hidden md:flex mx-auto">
           <NavigationMenuList className="space-x-2">
             {/* Primary Navigation Links */}
-            {headerNavItems.map((link) => {
-              const isActive = location.pathname === link.href || 
-                             (link.href !== "/" && location.pathname.startsWith(link.href));
+            {navigationMenuItems.map((link) => {
+              const isActive = location.pathname === link.url || 
+                             (link.url !== "/" && location.pathname.startsWith(link.url));
               
               return (
                 <NavigationMenuItem key={link.title}>
-                  <Link to={link.href}>
+                  <Link to={link.url}>
                     <NavigationMenuLink 
                       className={cn(
                         navigationMenuTriggerStyle(),
