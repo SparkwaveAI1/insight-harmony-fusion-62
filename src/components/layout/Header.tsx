@@ -45,8 +45,11 @@ const Header = () => {
   // Use shortened navigationMenuItems for the header
   const headerNavItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
+    { title: "My Personas", href: "/my-personas", icon: User },
+    { title: "Projects", href: "/projects", icon: LayoutDashboard },
+    { title: "Collections", href: "/collections", icon: User },
     { title: "Persona Library", href: "/persona-viewer", icon: User },
+    { title: "$PRSNA", href: "/prsna-ecosystem", icon: BadgeDollarSign },
   ];
   
   return (
@@ -84,7 +87,7 @@ const Header = () => {
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
                         // Always use black text color
-                        "text-black",
+                        "text-foreground",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
