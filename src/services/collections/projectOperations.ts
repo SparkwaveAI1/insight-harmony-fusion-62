@@ -47,23 +47,45 @@ export const getUserProjects = async (): Promise<Project[]> => {
  */
 export const getUserProjectsWithCount = async (): Promise<ProjectWithConversationCount[]> => {
   try {
-    const { data, error } = await supabase
+    // First fetch the projects
+    const { data: projects, error: projectsError } = await supabase
       .from("projects")
-      .select(`
-        *,
-        project_conversations!inner (count)
-      `)
+      .select("*")
       .order("updated_at", { ascending: false });
 
-    if (error) throw error;
+    if (projectsError) throw projectsError;
     
-    // Transform the data to match the ProjectWithConversationCount interface
-    const transformedData = data?.map(project => ({
+    if (!projects || projects.length === 0) {
+      return [];
+    }
+    
+    // Now get the counts from the project_conversations view
+    const { data: counts, error: countsError } = await supabase
+      .from("project_conversations")
+      .select("project_id, count");
+    
+    if (countsError) {
+      console.error("Error fetching conversation counts:", countsError);
+      // Continue with projects but without counts
+      return projects.map(project => ({
+        ...project,
+        conversation_count: 0
+      }));
+    }
+    
+    // Create a map of project_id to count
+    const countMap = new Map();
+    counts?.forEach(item => {
+      countMap.set(item.project_id, parseInt(item.count));
+    });
+    
+    // Merge projects with counts
+    const projectsWithCount = projects.map(project => ({
       ...project,
-      conversation_count: project.project_conversations?.[0]?.count || 0
-    })) as ProjectWithConversationCount[];
+      conversation_count: countMap.get(project.id) || 0
+    }));
     
-    return transformedData || [];
+    return projectsWithCount;
   } catch (error) {
     console.error("Error fetching projects with count:", error);
     toast.error("Failed to fetch projects");

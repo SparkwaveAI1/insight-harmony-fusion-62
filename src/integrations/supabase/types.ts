@@ -315,6 +315,21 @@ export type Database = {
       }
     }
     Views: {
+      collection_personas_count: {
+        Row: {
+          collection_id: string | null
+          count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_personas_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_conversations: {
         Row: {
           count: number | null
