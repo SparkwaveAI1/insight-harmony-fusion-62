@@ -33,6 +33,13 @@ export type Database = {
             foreignKeyName: "collection_personas_collection_id_fkey"
             columns: ["collection_id"]
             isOneToOne: false
+            referencedRelation: "collection_personas_count"
+            referencedColumns: ["collection_id"]
+          },
+          {
+            foreignKeyName: "collection_personas_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
             referencedRelation: "collections"
             referencedColumns: ["id"]
           },
@@ -320,15 +327,7 @@ export type Database = {
           collection_id: string | null
           count: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "collection_personas_collection_id_fkey"
-            columns: ["collection_id"]
-            isOneToOne: false
-            referencedRelation: "collections"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_conversations: {
         Row: {
