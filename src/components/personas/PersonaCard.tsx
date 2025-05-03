@@ -84,6 +84,48 @@ export default function PersonaCard({
             <p className="text-sm">{persona.metadata?.region || "N/A"}</p>
           </div>
         </div>
+        
+        {/* Decisions section */}
+        <div className="mt-3 bg-blue-50/30 p-2 rounded">
+          <div className="flex items-center gap-1 mb-1">
+            <Brain className="h-3 w-3 text-primary" />
+            <h4 className="text-sm font-medium">Decisions</h4>
+          </div>
+          <p className="text-xs">
+            {persona.trait_profile?.behavioral_economics?.risk_sensitivity && 
+             parseFloat(persona.trait_profile.behavioral_economics.risk_sensitivity) > 0.6 ? 
+              "Prefers proven, tangible solutions over speculative ideas. Skeptical toward trends without track record." : 
+              "Embraces new opportunities, comfortable with risk-taking and innovation."}
+          </p>
+        </div>
+        
+        {/* Drivers section */}
+        <div className="mt-3 bg-green-50/30 p-2 rounded">
+          <div className="flex items-center gap-1 mb-1">
+            <Target className="h-3 w-3 text-primary" />
+            <h4 className="text-sm font-medium">Drivers</h4>
+          </div>
+          <p className="text-xs">
+            {persona.trait_profile?.big_five?.openness && 
+             parseFloat(persona.trait_profile.big_five.openness) > 0.6 ? 
+              "Motivated by novelty, exploration and intellectual curiosity." : 
+              "Seeks personal security and social loyalty. Respects those who \"earn their place\" through action."}
+          </p>
+        </div>
+        
+        {/* Persuasion section */}
+        <div className="mt-3 bg-purple-50/30 p-2 rounded">
+          <div className="flex items-center gap-1 mb-1">
+            <Users className="h-3 w-3 text-primary" />
+            <h4 className="text-sm font-medium">Discussion / Persuasion</h4>
+          </div>
+          <p className="text-xs">
+            {persona.trait_profile?.big_five?.agreeableness && 
+             parseFloat(persona.trait_profile.big_five.agreeableness) > 0.6 ? 
+              "Receptive to collaboration, values harmony in discussions." : 
+              "Resists persuasion framed as emotional appeals. Responds better to strategic argumentation and earned trust."}
+          </p>
+        </div>
       </Link>
 
       {/* Action buttons */}
