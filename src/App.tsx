@@ -22,7 +22,6 @@ import Collections from "./pages/Collections";
 import CollectionDetail from "./pages/CollectionDetail";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
 import DualChat from "./pages/DualChat";
-import EarnPRSNA from "./pages/EarnPRSNA";
 import AIFocusGroups from "./pages/AIFocusGroups";
 import SimulatedPersona from "./pages/SimulatedPersona";
 import CustomResearch from "./pages/CustomResearch";
@@ -73,8 +72,9 @@ function App() {
               <Route path="/conversations/:conversationId" element={<ConversationDetail />} />
               <Route path="/collections" element={<Collections />} />
               <Route path="/collections/:collectionId" element={<CollectionDetail />} />
+              {/* Consolidate PRSNA ecosystem routes */}
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
-              <Route path="/prsna" element={<EarnPRSNA />} />
+              {/* Remove redundant /prsna route since we're using /prsna-ecosystem */}
               <Route path="/interviewer" element={<Interviewer />} />
               <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
               <Route path="/sign-in" element={<Auth />} />

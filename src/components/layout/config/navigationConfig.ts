@@ -38,8 +38,8 @@ export const navigationMenuItems = [
     icon: FlaskConical,
   },
   {
-    title: "PRSNA Ecosystem",
-    url: "/prsna",
+    title: "$PRSNA Ecosystem",
+    url: "/prsna-ecosystem",
     icon: Coins,
   },
 ];

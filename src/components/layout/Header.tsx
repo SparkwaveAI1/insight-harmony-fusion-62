@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -14,7 +13,6 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { navigationMenuItems } from "./config/navigationConfig";
 import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 
 const Header = () => {
@@ -42,10 +40,10 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Use shortened navigationMenuItems for the header
+  // Use shortened navigationMenuItems for the header - UPDATED to ensure no duplicates
   const headerNavItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "$PRSNA", href: "/prsna", icon: BadgeDollarSign },
+    { title: "$PRSNA", href: "/prsna-ecosystem", icon: BadgeDollarSign },
     { title: "Persona Library", href: "/persona-viewer", icon: User },
   ];
   

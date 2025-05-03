@@ -19,6 +19,7 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
     retry: 1,
   });
 
+  // Handle errors with useEffect
   useEffect(() => {
     if (error) {
       console.error('PersonaFetcher - Error fetching persona:', error);
