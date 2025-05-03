@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -17,9 +16,6 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
     queryFn: () => getPersonaByPersonaId(personaId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
-    onError: (error) => {
-      console.error('Error fetching persona:', error);
-    }
   });
 
   useEffect(() => {
