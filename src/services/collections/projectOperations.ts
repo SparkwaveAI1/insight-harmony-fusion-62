@@ -76,7 +76,8 @@ export const getUserProjectsWithCount = async (): Promise<ProjectWithConversatio
     // Create a map of project_id to count
     const countMap = new Map();
     counts?.forEach(item => {
-      countMap.set(item.project_id, parseInt(item.count));
+      // Convert count to number before storing in the map
+      countMap.set(item.project_id, typeof item.count === 'string' ? parseInt(item.count) : item.count || 0);
     });
     
     // Merge projects with counts
