@@ -11,12 +11,15 @@ interface PersonaFetcherProps {
 }
 
 const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
-  // Use React Query to fetch the persona
+  // Use React Query to fetch the persona with better error handling
   const { data: activePersona, isLoading, error } = useQuery({
     queryKey: ['persona', personaId],
     queryFn: () => getPersonaByPersonaId(personaId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
+    onError: (error) => {
+      console.error('Error fetching persona:', error);
+    }
   });
 
   useEffect(() => {

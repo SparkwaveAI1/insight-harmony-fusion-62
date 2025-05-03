@@ -49,25 +49,37 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
   try {
     console.log(`Fetching persona with ID ${personaId} from Supabase`);
     
+    if (!personaId) {
+      console.error('Invalid persona ID: empty string');
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('personas')
       .select('*')
       .eq('persona_id', personaId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no rows are returned
 
     if (error) {
       console.error(`Error fetching persona with ID ${personaId}:`, error);
       return null;
     }
 
-    console.log('Persona found:', data);
-    
-    if (data) {
-      console.log('Interview sections structure:', JSON.stringify(data.interview_sections, null, 2));
-      return dbPersonaToPersona(data);
+    if (!data) {
+      console.log(`No persona found with ID ${personaId}`);
+      return null;
     }
     
-    return null;
+    console.log('Persona found:', data);
+    
+    try {
+      // Handle potential JSON parsing issues with interview_sections
+      console.log('Interview sections structure:', JSON.stringify(data.interview_sections, null, 2));
+      return dbPersonaToPersona(data);
+    } catch (parseError) {
+      console.error('Error parsing persona data:', parseError);
+      return null;
+    }
   } catch (error) {
     console.error("Error getting persona by persona_id:", error);
     return null;
