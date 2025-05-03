@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, User, LayoutDashboard, BadgeDollarSign } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -14,6 +15,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
+import { headerNavItems } from "./config/navigationConfig";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -39,13 +41,6 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // Use shortened navigationMenuItems for the header - UPDATED to ensure no duplicates
-  const headerNavItems = [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { title: "$PRSNA", href: "/prsna-ecosystem", icon: BadgeDollarSign },
-    { title: "Persona Library", href: "/persona-viewer", icon: User },
-  ];
   
   return (
     <header
