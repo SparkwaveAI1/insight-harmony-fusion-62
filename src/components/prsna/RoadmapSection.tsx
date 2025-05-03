@@ -64,21 +64,17 @@ const RoadmapSection = () => {
         
         <Reveal delay={200}>
           <div className="text-center">
-            <a 
-              href="https://x.com/PersonaAI_agent" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
+            <Link to="/prsna/roadmap">
               <Button 
                 variant="primary" 
                 size="lg"
                 className="group bg-gradient-to-r from-primary to-primary/80 border-none"
               >
                 <Rocket className="w-4 h-4 mr-2" />
-                Follow Our Progress
+                View Full Roadmap
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
               </Button>
-            </a>
+            </Link>
           </div>
         </Reveal>
       </div>

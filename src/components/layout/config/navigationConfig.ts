@@ -15,7 +15,9 @@ import {
   FileQuestion,
   BookOpen,
   LightbulbIcon,
-  Sparkles
+  Sparkles,
+  Route as RouteIcon,
+  FileSparkles
 } from "lucide-react";
 
 // Main consolidated navigation - this will be used for the sidebar
@@ -114,10 +116,22 @@ export const additionalRoutes = [
     url: "/interview-process",
     icon: BarChart3,
   },
+  
+  // PRSNA Ecosystem routes
+  {
+    title: "$PRSNA",
+    url: "/prsna",
+    icon: Coins,
+  },
+  {
+    title: "Roadmap",
+    url: "/prsna/roadmap",
+    icon: RouteIcon,
+  },
   {
     title: "White Paper",
-    url: "/whitepaper",
-    icon: FileText,
+    url: "/prsna/whitepaper",
+    icon: FileSparkles,
   },
   
   // Persona creation flow
@@ -184,7 +198,7 @@ export const headerNavItems = [
   },
   {
     title: "$PRSNA",
-    href: "/prsna-ecosystem",
+    href: "/prsna",
     icon: Coins,
   },
 ];

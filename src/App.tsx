@@ -32,6 +32,8 @@ import NotFound from "./pages/NotFound";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import InterviewProcess from "./pages/InterviewProcess";
 import WhitePaper from "./pages/WhitePaper";
+import Roadmap from "./pages/Roadmap";
+import EarnPRSNA from "./pages/EarnPRSNA";
 
 // Pages - Persona Creation
 import ConsentForm from "./pages/persona-creation/ConsentForm";
@@ -72,9 +74,11 @@ function App() {
               <Route path="/conversations/:conversationId" element={<ConversationDetail />} />
               <Route path="/collections" element={<Collections />} />
               <Route path="/collections/:collectionId" element={<CollectionDetail />} />
-              {/* Consolidate PRSNA ecosystem routes */}
+              {/* PRSNA ecosystem routes */}
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
-              {/* Remove redundant /prsna route since we're using /prsna-ecosystem */}
+              <Route path="/prsna" element={<EarnPRSNA />} />
+              <Route path="/prsna/roadmap" element={<Roadmap />} />
+              <Route path="/prsna/whitepaper" element={<WhitePaper />} />
               <Route path="/interviewer" element={<Interviewer />} />
               <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
               <Route path="/sign-in" element={<Auth />} />
