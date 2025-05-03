@@ -73,7 +73,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           Logout
         </Button>
       ) : (
-        <Link to="/auth">
+        <Link to="/sign-in">
           <Button 
             size="sm" 
             className={cn(
