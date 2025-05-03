@@ -1,4 +1,3 @@
-
 import { 
   User, 
   Users, 
@@ -17,7 +16,7 @@ import {
   LightbulbIcon,
   Sparkles,
   Route as RouteIcon,
-  FileSparkles
+  ScrollText
 } from "lucide-react";
 
 // Main consolidated navigation - this will be used for the sidebar
@@ -131,7 +130,7 @@ export const additionalRoutes = [
   {
     title: "White Paper",
     url: "/prsna/whitepaper",
-    icon: FileSparkles,
+    icon: ScrollText,
   },
   
   // Persona creation flow
