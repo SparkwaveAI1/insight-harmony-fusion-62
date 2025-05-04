@@ -5,13 +5,20 @@ import { toast } from 'sonner';
 export async function createProfilesTable(): Promise<boolean> {
   try {
     console.log('Checking if profiles table exists...');
+    console.log('Supabase client type:', typeof supabase);
+    console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Use a type assertion to bypass the TypeScript error with RPC
-    // This tells TypeScript that we expect a specific return type from our table_exists function
-    const { data, error } = await supabase
-      .rpc('table_exists', { table_name: 'profiles' } as any)
+    // Try a different approach with explicit casting for TypeScript
+    const rpcCall = supabase.rpc('table_exists', { table_name: 'profiles' } as any);
+    console.log('RPC call object type:', typeof rpcCall);
+    console.log('RPC call methods:', Object.keys(rpcCall));
+    
+    const { data, error } = await rpcCall
       .returns<{ exists: boolean }>()
       .single();
+    
+    console.log('RPC response data:', data);
+    console.log('RPC response error:', error);
     
     if (error) {
       // If the RPC fails, we'll try a fallback approach - try to execute a count query
@@ -20,6 +27,9 @@ export async function createProfilesTable(): Promise<boolean> {
       const { count, error: countError } = await supabase
         .from('participants') // Use a table we know exists
         .select('*', { count: 'exact', head: true }); // Just to check connection
+      
+      console.log('Fallback check count:', count);
+      console.log('Fallback check error:', countError);
       
       if (countError) {
         // There's a connection issue
@@ -36,12 +46,21 @@ export async function createProfilesTable(): Promise<boolean> {
     }
     
     // If the RPC succeeds, check the result
-    // Use a type assertion to safely access the 'exists' property
-    if (data && data.exists) {
-      console.log('Profiles table already exists');
-      return true;
+    console.log('RPC data structure:', JSON.stringify(data));
+    // Try explicit type checking before accessing property
+    if (data && typeof data === 'object' && 'exists' in data) {
+      const exists = data.exists;
+      console.log('Table exists check result:', exists);
+      if (exists) {
+        console.log('Profiles table already exists');
+        return true;
+      } else {
+        console.log('Profiles table does not exist, showing instructions...');
+        displayProfileCreationInstructions();
+        return false;
+      }
     } else {
-      console.log('Profiles table does not exist, showing instructions...');
+      console.log('Unexpected data structure from RPC:', data);
       displayProfileCreationInstructions();
       return false;
     }
@@ -128,3 +147,4 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 `;
 }
+
