@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -6,25 +5,30 @@ export async function createProfilesTable(): Promise<boolean> {
   try {
     console.log('Checking if profiles table exists...');
     
-    // Instead of trying to query the profiles table directly (which causes errors),
-    // we'll try to use a different approach that works with the Supabase types
-    
-    // We're going to try a simple approach - if we get an error requesting a profile
-    // with a random ID, we'll determine if the table needs to be created
-    const testUuid = '00000000-0000-0000-0000-000000000000';
+    // Check if the profiles table exists by attempting to query it
     try {
-      const { error } = await supabase.rpc('get_profile_by_id', { profile_id: testUuid });
+      // Use a more compatible approach - try to query a count from profiles
+      const { error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
       
-      // If no error or error isn't about missing table/relation, table likely exists
-      if (!error || (error.code !== '42P01' && !error.message.includes('relation "profiles" does not exist'))) {
-        console.log('Profiles table already exists or custom RPC function exists');
+      // If no error, table likely exists
+      if (!error) {
+        console.log('Profiles table already exists');
         return true;
+      }
+      
+      // Check if the error indicates table doesn't exist
+      if (error.code === '42P01' || error.message.includes('relation "profiles" does not exist')) {
+        console.log('Profiles table needs to be created...');
+      } else {
+        // Other error
+        console.error('Error checking profiles table:', error);
+        throw error;
       }
     } catch (err) {
       console.log('Error checking profiles table:', err);
     }
-    
-    console.log('Profiles table needs to be created...');
     
     // Display instructions for creating the profiles table
     toast.info('Profiles table needs to be created. Please run the SQL script in Supabase SQL Editor.', {
@@ -108,4 +112,3 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 `;
-}
