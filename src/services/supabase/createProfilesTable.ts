@@ -6,10 +6,11 @@ export async function createProfilesTable(): Promise<boolean> {
   try {
     console.log('Checking if profiles table exists...');
     
-    // Check if the profiles table exists by using a raw query approach
-    // that doesn't rely on typed table definitions
+    // Use a type assertion to bypass the TypeScript error with RPC
+    // This tells TypeScript that we expect a specific return type from our table_exists function
     const { data, error } = await supabase
-      .rpc('table_exists', { table_name: 'profiles' })
+      .rpc('table_exists', { table_name: 'profiles' } as any)
+      .returns<{ exists: boolean }>()
       .single();
     
     if (error) {
@@ -35,6 +36,7 @@ export async function createProfilesTable(): Promise<boolean> {
     }
     
     // If the RPC succeeds, check the result
+    // Use a type assertion to safely access the 'exists' property
     if (data && data.exists) {
       console.log('Profiles table already exists');
       return true;
