@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -254,3 +255,4 @@ ON participants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update for existing participants" 
 ON participants FOR UPDATE USING (true);
 `;
+}

@@ -3,6 +3,7 @@ import { FormSchema } from "@/schemas/personaQuestionnaireSchema";
 import { useToast } from "@/hooks/use-toast";
 import { getParticipantById, updateParticipantQuestionnaireById } from "@/services/supabase/supabaseService";
 import { UseFormReturn } from "react-hook-form";
+import { Json } from "@/integrations/supabase/types";
 
 export const useQuestionnaireDataManagement = (
   form: UseFormReturn<FormSchema>,
@@ -57,7 +58,8 @@ export const useQuestionnaireDataManagement = (
         valuesObj.worldview = "Respect others, stand your ground";
       }
       
-      await updateParticipantQuestionnaireById(participantId, currentValues);
+      // Convert to Json type when saving to database
+      await updateParticipantQuestionnaireById(participantId, currentValues as unknown as Record<string, any>);
       console.log("Progress auto-saved");
     } catch (error) {
       console.error("Error auto-saving progress:", error);
