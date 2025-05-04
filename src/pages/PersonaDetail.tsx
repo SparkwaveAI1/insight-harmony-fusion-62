@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
@@ -12,6 +13,7 @@ import { Persona } from "@/services/persona/types";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
 import PersonaDemographics from "@/components/persona-details/PersonaDemographics";
+import PersonaKeyInsights from "@/components/persona-details/PersonaKeyInsights";
 import InterviewResponses from "@/components/persona-details/InterviewResponses";
 import { formatName } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -124,6 +126,11 @@ const PersonaDetail = () => {
                         Chat with Persona
                       </Button>
                     </div>
+                  </div>
+                  
+                  {/* New Key Insights section above Demographics */}
+                  <div className="bg-[#F8F9FA] p-6 rounded-lg mb-6">
+                    <PersonaKeyInsights metadata={persona.metadata} />
                   </div>
                   
                   <div className="bg-[#F5F5F7] p-6 rounded-lg mb-6">

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,8 +7,7 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // The correct approach is to use the rpc method without generic type parameters
-    // and then type the result separately
+    // Fix: Remove the generic type parameters from rpc call and use type assertion
     const { data, error } = await supabase.rpc(
       'table_exists', 
       { table_name: 'profiles' }
