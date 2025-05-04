@@ -36,5 +36,11 @@ export {
   saveAudio
 } from './storage/uploadService';
 
+// Export profiles table creation function
+export { 
+  createProfilesTable, 
+  getProfilesTableSQL 
+} from './createProfilesTable';
+
 // Re-export the Supabase client
 export { supabase };

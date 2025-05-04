@@ -144,3 +144,35 @@ export function displayParticipantsTableInfo() {
     duration: 5000,
   });
 }
+
+/**
+ * Checks if a table exists in the database
+ * @param tableName The name of the table to check
+ */
+export async function checkTableExists(tableName: string): Promise<boolean> {
+  try {
+    // Perform a simple count query - if it succeeds, the table exists
+    const { error } = await supabase
+      .from(tableName as any)
+      .select('count')
+      .limit(1)
+      .single();
+    
+    // If no error, table exists
+    if (!error) {
+      return true;
+    }
+    
+    // Check if error indicates table doesn't exist
+    if (error.code === '42P01' || error.message.includes('relation') && error.message.includes('does not exist')) {
+      return false;
+    }
+    
+    // For other errors, log and assume table might not exist
+    console.error(`Error checking if table ${tableName} exists:`, error);
+    return false;
+  } catch (error) {
+    console.error(`Exception checking if table ${tableName} exists:`, error);
+    return false;
+  }
+}
