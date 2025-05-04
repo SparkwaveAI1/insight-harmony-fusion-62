@@ -7,9 +7,6 @@ interface PersonaKeyInsightsProps {
 }
 
 const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
-  // Create tailored insights for Alina R (ID: 9f8540fa) based on her full profile
-  // These will replace the generic placeholder content
-  
   // Determine if this is Alina R's persona by checking ID or unique characteristics
   const isAlinaR = metadata?.persona_id === '9f8540fa' || 
                   (metadata?.name?.includes('Alina') && metadata?.occupation === 'Financial Analyst');
@@ -31,7 +28,6 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
   ];
   
   // Extract the appropriate insights based on the persona
-  // If it's Alina R, use the custom insights; otherwise use the metadata values or defaults
   const decisions = isAlinaR ? 
     alinaDecisions : 
     metadata?.decision_making_style || [
