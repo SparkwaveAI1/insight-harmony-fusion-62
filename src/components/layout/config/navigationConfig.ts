@@ -54,7 +54,7 @@ export const navigationMenuItems = [
   },
   {
     title: "$PRSNA Ecosystem",
-    url: "/prsna-ecosystem",
+    url: "/prsna", // Updated from "/prsna-ecosystem" to "/prsna"
     icon: Coins,
   },
 ];
@@ -203,7 +203,7 @@ export const headerNavItems = [
   },
   {
     title: "$PRSNA",
-    href: "/prsna-ecosystem",
+    href: "/prsna", // Updated from "/prsna-ecosystem" to "/prsna"
     icon: Coins,
   },
 ];

@@ -11,7 +11,8 @@ export async function createProfilesTable(): Promise<boolean> {
     // Fix: Use explicit any typing to bypass the TypeScript error
     const { data, error } = await supabase.rpc(
       'table_exists', 
-      { table_name: 'profiles' } as any
+      { table_name: 'profiles' } as any,
+      { count: null } as any
     );
     
     console.log('RPC response data:', data);
