@@ -7,7 +7,7 @@ interface PersonaKeyInsightsProps {
 }
 
 const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
-  // Default values in case metadata doesn't have these fields
+  // Extract the correct fields from metadata
   const decisions = metadata?.decision_making_style || [
     "Evaluates options through data-driven analysis",
     "Takes calculated risks after thorough research"
