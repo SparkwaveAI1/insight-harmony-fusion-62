@@ -1,10 +1,12 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 export interface Participant {
   id?: string;
   email: string;
   screener_passed: boolean;
-  questionnaire_data: Record<string, any>;
+  questionnaire_data: Json;  // Changed from Record<string, any> to Json
   interview_unlocked: boolean;
   unlock_code?: string;
   interview_completed: boolean;
@@ -15,6 +17,9 @@ export interface Participant {
   unique_identifier?: string;
   created_at?: string;
 }
+
+// Export the Supabase client so other files can import it
+export { supabase };
 
 // Create a new participant
 export async function createParticipant(participant: Omit<Participant, 'id' | 'created_at'>): Promise<Participant | null> {

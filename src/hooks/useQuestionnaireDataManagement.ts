@@ -17,7 +17,8 @@ export const useQuestionnaireDataManagement = (
     try {
       const participant = await getParticipantById(participantId);
       if (participant && participant.questionnaire_data) {
-        const existingData = participant.questionnaire_data;
+        // Convert the Json type to the FormSchema type as needed
+        const existingData = participant.questionnaire_data as unknown as FormSchema;
         
         // Check if values exists and handle the worldview text replacement
         const valuesObj = existingData.values as FormSchema['values'] | undefined;
