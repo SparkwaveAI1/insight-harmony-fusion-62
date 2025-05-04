@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { z } from "zod";
@@ -11,6 +11,8 @@ import Button from "@/components/ui-custom/Button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const authFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -28,6 +30,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { signIn, signUp, user, forgotPassword } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -48,40 +51,59 @@ const Auth = () => {
     },
   });
 
-  // Redirect if already logged in
-  if (user) {
-    navigate("/");
-    return null;
-  }
+  // Add debug logging for user state
+  useEffect(() => {
+    console.log("Auth page - Current user state:", user);
+    
+    // Redirect if already logged in
+    if (user) {
+      console.log("User is already authenticated, redirecting to home page");
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const onSubmit = async (values: AuthFormValues) => {
+    setAuthError(null);
     setIsLoading(true);
     try {
+      console.log(`Attempting to ${activeTab === "login" ? "sign in" : "sign up"} with email:`, values.email);
+      
       if (activeTab === "login") {
         await signIn(values.email, values.password);
+        console.log("Sign in successful, navigating to home page");
         navigate("/");
       } else {
         await signUp(values.email, values.password);
+        console.log("Sign up successful");
         // Stay on page after signup since user needs to verify email
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error);
+      setAuthError(error.message || "Authentication failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const onForgotPassword = async (values: ForgotPasswordValues) => {
+    setAuthError(null);
     setIsLoading(true);
     try {
+      console.log("Requesting password reset for:", values.email);
       await forgotPassword(values.email);
       setShowForgotPassword(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Password reset error:", error);
+      setAuthError(error.message || "Password reset failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // If user is already authenticated, don't render the page
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -89,6 +111,13 @@ const Auth = () => {
       <main className="flex-grow flex items-center justify-center py-16 px-4">
         <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
           <h1 className="text-2xl font-bold text-center mb-6">Welcome to PersonaAI</h1>
+          
+          {authError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
           
           {showForgotPassword ? (
             <div className="space-y-4">

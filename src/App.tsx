@@ -81,6 +81,7 @@ function App() {
               <Route path="/prsna/whitepaper" element={<WhitePaper />} />
               <Route path="/interviewer" element={<Interviewer />} />
               <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/sign-in" element={<Auth />} />
               <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
               <Route path="/simulated-persona" element={<SimulatedPersona />} />

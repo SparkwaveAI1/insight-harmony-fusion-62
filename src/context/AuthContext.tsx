@@ -23,23 +23,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
+    console.log("Setting up auth state...");
+    
+    // First set up the auth state listener before checking existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
+      (event, currentSession) => {
+        console.log("Auth state changed:", event);
+        
+        // Handle auth state changes synchronously
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
         setIsLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
-      setIsLoading(false);
-    });
+    // Then check for existing session
+    const initializeAuth = async () => {
+      try {
+        console.log("Checking for existing session...");
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        
+        // Don't set state if listener already updated it
+        if (isLoading) {
+          console.log("Setting initial session state:", !!existingSession);
+          setSession(existingSession);
+          setUser(existingSession?.user || null);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error("Error checking auth session:", error);
+        setIsLoading(false);
+      }
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      console.log("Cleaning up auth listener...");
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {
@@ -55,10 +77,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      console.log("Attempting to sign in with email:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        console.error("Sign in error:", error);
+        throw error;
+      }
+      
+      console.log("Sign in successful:", !!data.session);
       toast.success("Successfully signed in");
     } catch (error: any) {
+      console.error("Sign in exception:", error);
       toast.error(error.message || "Error signing in");
       throw error;
     }
@@ -66,6 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      console.log("Signing out...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success("Successfully signed out");
@@ -86,11 +117,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   
-  // Adding a new method for forgot password that calls resetPassword
   const forgotPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/auth?reset=true',
+        redirectTo: window.location.origin + '/sign-in?reset=true',
       });
       if (error) throw error;
       toast.success("Password reset email sent to your inbox");
