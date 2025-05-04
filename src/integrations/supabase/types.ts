@@ -136,6 +136,13 @@ export type Database = {
             foreignKeyName: "conversations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "project_conversations"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "conversations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -328,15 +335,7 @@ export type Database = {
           count: number | null
           project_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "conversations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
