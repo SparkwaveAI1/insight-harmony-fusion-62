@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,10 +7,11 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Using a more explicit approach that should work with TypeScript
-    const rpcResult = await supabase.rpc<{ exists: boolean }>(
+    // Fixed: Adding the proper generic type parameters to the rpc call
+    // The first type parameter is for the input params, the second is for the result
+    const rpcResult = await supabase.rpc<{ table_name: string }, { exists: boolean }>(
       'table_exists', 
-      { table_name: 'profiles' as string }
+      { table_name: 'profiles' }
     );
     
     const { data, error } = rpcResult;
@@ -148,4 +148,3 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 `;
 }
-
