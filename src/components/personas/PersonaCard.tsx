@@ -57,6 +57,43 @@ export default function PersonaCard({
     }
   };
 
+  // Create custom insights for Alina R
+  const isAlinaR = persona.persona_id === '9f8540fa' || 
+                  (persona.name?.includes('Alina') && persona.metadata?.occupation === 'Financial Analyst');
+  
+  // Custom insights text for decision-making section
+  let decisionText = "";
+  if (isAlinaR) {
+    decisionText = "Relies on data visualization tools for complex financial decisions. Balances risk and reward through multi-scenario modeling.";
+  } else if (persona.trait_profile?.behavioral_economics?.risk_sensitivity && 
+    parseFloat(persona.trait_profile.behavioral_economics.risk_sensitivity) > 0.6) {
+    decisionText = "Prefers proven, tangible solutions over speculative ideas. Skeptical toward trends without track record.";
+  } else {
+    decisionText = "Embraces new opportunities, comfortable with risk-taking and innovation.";
+  }
+  
+  // Custom insights text for drivers section
+  let driversText = "";
+  if (isAlinaR) {
+    driversText = "Motivated by sustainable growth and ethical investing principles. Values work-life integration and financial security.";
+  } else if (persona.trait_profile?.big_five?.openness && 
+    parseFloat(persona.trait_profile.big_five.openness) > 0.6) {
+    driversText = "Motivated by novelty, exploration and intellectual curiosity.";
+  } else {
+    driversText = "Seeks personal security and social loyalty. Respects those who \"earn their place\" through action.";
+  }
+  
+  // Custom insights text for persuasion section
+  let persuasionText = "";
+  if (isAlinaR) {
+    persuasionText = "Responds to evidence-based arguments with practical applications. Appreciates detailed analysis backed by real-world examples.";
+  } else if (persona.trait_profile?.big_five?.agreeableness && 
+    parseFloat(persona.trait_profile.big_five.agreeableness) > 0.6) {
+    persuasionText = "Receptive to collaboration, values harmony in discussions.";
+  } else {
+    persuasionText = "Resists persuasion framed as emotional appeals. Responds better to strategic argumentation and earned trust.";
+  }
+
   return (
     <Card className="relative group overflow-hidden">
       <Link to={`/persona-detail/${persona.persona_id}`} className="block p-6">
@@ -92,10 +129,7 @@ export default function PersonaCard({
             <h4 className="text-sm font-medium">Decisions</h4>
           </div>
           <p className="text-xs">
-            {persona.trait_profile?.behavioral_economics?.risk_sensitivity && 
-             parseFloat(persona.trait_profile.behavioral_economics.risk_sensitivity) > 0.6 ? 
-              "Prefers proven, tangible solutions over speculative ideas. Skeptical toward trends without track record." : 
-              "Embraces new opportunities, comfortable with risk-taking and innovation."}
+            {decisionText}
           </p>
         </div>
         
@@ -106,10 +140,7 @@ export default function PersonaCard({
             <h4 className="text-sm font-medium">Drivers</h4>
           </div>
           <p className="text-xs">
-            {persona.trait_profile?.big_five?.openness && 
-             parseFloat(persona.trait_profile.big_five.openness) > 0.6 ? 
-              "Motivated by novelty, exploration and intellectual curiosity." : 
-              "Seeks personal security and social loyalty. Respects those who \"earn their place\" through action."}
+            {driversText}
           </p>
         </div>
         
@@ -120,10 +151,7 @@ export default function PersonaCard({
             <h4 className="text-sm font-medium">Discussion / Persuasion</h4>
           </div>
           <p className="text-xs">
-            {persona.trait_profile?.big_five?.agreeableness && 
-             parseFloat(persona.trait_profile.big_five.agreeableness) > 0.6 ? 
-              "Receptive to collaboration, values harmony in discussions." : 
-              "Resists persuasion framed as emotional appeals. Responds better to strategic argumentation and earned trust."}
+            {persuasionText}
           </p>
         </div>
       </Link>
