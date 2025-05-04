@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -7,10 +8,10 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Fix: Use type assertion to handle the response properly
+    // Fix: Use proper typing for the RPC call
     const { data, error } = await supabase.rpc(
       'table_exists', 
-      { table_name: 'profiles' }
+      { table_name: 'profiles' } as { table_name: string }
     );
     
     console.log('RPC response data:', data);

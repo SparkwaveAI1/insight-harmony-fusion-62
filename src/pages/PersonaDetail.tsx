@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
@@ -90,6 +89,16 @@ const PersonaDetail = () => {
     });
   };
 
+  // Enhanced metadata to include persona_id for proper identification in the PersonaKeyInsights component
+  const getEnhancedMetadata = () => {
+    if (!persona) return {};
+    return {
+      ...persona.metadata,
+      persona_id: persona.persona_id,
+      name: persona.name
+    };
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -128,9 +137,9 @@ const PersonaDetail = () => {
                     </div>
                   </div>
                   
-                  {/* New Key Insights section above Demographics */}
+                  {/* Pass the enhanced metadata with persona_id to PersonaKeyInsights */}
                   <div className="bg-[#F8F9FA] p-6 rounded-lg mb-6">
-                    <PersonaKeyInsights metadata={persona.metadata} />
+                    <PersonaKeyInsights metadata={getEnhancedMetadata()} />
                   </div>
                   
                   <div className="bg-[#F5F5F7] p-6 rounded-lg mb-6">
