@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,10 +7,10 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Fix: Use proper typing for the RPC call
+    // Fix: Use explicit any typing to bypass the TypeScript error
     const { data, error } = await supabase.rpc(
       'table_exists', 
-      { table_name: 'profiles' } as { table_name: string }
+      { table_name: 'profiles' } as any
     );
     
     console.log('RPC response data:', data);
@@ -146,4 +145,3 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 `;
-}

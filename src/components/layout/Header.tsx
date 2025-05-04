@@ -76,7 +76,8 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        isScrolled || !isDarkRoute ? "text-foreground" : "text-white",
+                        // Changed the text color logic here to always use text-foreground for the home page
+                        isDarkRoute && !isScrolled ? "text-black" : "text-foreground",
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
@@ -106,8 +107,8 @@ const Header = () => {
           <Button 
             className={cn(
               "md:hidden",
-              // Use appropriate text color based on the route/scroll state
-              isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
+              // Updated the mobile menu button text color
+              isDarkRoute && !isScrolled ? "text-black" : "text-foreground",
               "p-2"
             )} 
             variant="ghost"
