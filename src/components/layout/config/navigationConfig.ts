@@ -1,3 +1,4 @@
+
 import { 
   User, 
   Users, 
@@ -186,6 +187,11 @@ export const additionalRoutes = [
 // Header navigation - simplified subset for the header menu
 export const headerNavItems = [
   {
+    title: "Home",
+    href: "/",
+    icon: PieChart,
+  },
+  {
     title: "Dashboard",
     href: "/dashboard",
     icon: PieChart,
@@ -197,7 +203,7 @@ export const headerNavItems = [
   },
   {
     title: "$PRSNA",
-    href: "/prsna",
+    href: "/prsna-ecosystem",
     icon: Coins,
   },
 ];

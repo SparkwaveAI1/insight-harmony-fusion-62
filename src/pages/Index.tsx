@@ -9,9 +9,11 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow">
-        {homepageSections.map(({ id, Component }) => (
-          <Component key={id} />
-        ))}
+        <div className="pt-24">
+          {homepageSections.map(({ id, Component }) => (
+            <Component key={id} />
+          ))}
+        </div>
       </main>
       <Footer />
       <Toaster />

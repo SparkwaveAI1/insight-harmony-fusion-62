@@ -61,7 +61,10 @@ function App() {
         <AuthProvider>
           <PersonaProvider>
             <Routes>
+              {/* Main marketing/landing page */}
               <Route path="/" element={<Index />} />
+              
+              {/* App routes */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/persona-viewer" element={<PersonaViewer />} />
               <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
@@ -74,11 +77,14 @@ function App() {
               <Route path="/conversations/:conversationId" element={<ConversationDetail />} />
               <Route path="/collections" element={<Collections />} />
               <Route path="/collections/:collectionId" element={<CollectionDetail />} />
-              {/* PRSNA ecosystem routes */}
+              
+              {/* PRSNA token routes - consolidated section */}
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
               <Route path="/prsna" element={<EarnPRSNA />} />
               <Route path="/prsna/roadmap" element={<Roadmap />} />
               <Route path="/prsna/whitepaper" element={<WhitePaper />} />
+              
+              {/* Research section */}
               <Route path="/interviewer" element={<Interviewer />} />
               <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
               <Route path="/auth" element={<Auth />} />

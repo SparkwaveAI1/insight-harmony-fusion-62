@@ -8,15 +8,13 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Try a different approach with explicit casting for TypeScript
-    const rpcCall = supabase.rpc('table_exists', { table_name: 'profiles' } as any);
-    console.log('RPC call object type:', typeof rpcCall);
-    console.log('RPC call methods:', Object.keys(rpcCall));
+    // Using a more explicit approach that should work with TypeScript
+    const rpcResult = await supabase.rpc<{ exists: boolean }>(
+      'table_exists', 
+      { table_name: 'profiles' as string }
+    );
     
-    const { data, error } = await rpcCall
-      .returns<{ exists: boolean }>()
-      .single();
-    
+    const { data, error } = rpcResult;
     console.log('RPC response data:', data);
     console.log('RPC response error:', error);
     
@@ -47,9 +45,12 @@ export async function createProfilesTable(): Promise<boolean> {
     
     // If the RPC succeeds, check the result
     console.log('RPC data structure:', JSON.stringify(data));
-    // Try explicit type checking before accessing property
-    if (data && typeof data === 'object' && 'exists' in data) {
-      const exists = data.exists;
+    
+    if (data && typeof data === 'object') {
+      // Cast the data to the expected type
+      const result = data as { exists: boolean };
+      const exists = result.exists;
+      
       console.log('Table exists check result:', exists);
       if (exists) {
         console.log('Profiles table already exists');
