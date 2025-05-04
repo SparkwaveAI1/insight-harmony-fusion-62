@@ -93,12 +93,15 @@ export async function updateParticipantQuestionnaire(email: string, questionnair
       throw new Error(`Participant with email ${email} not found`);
     }
 
+    // Safely handle the existing data - convert from Json to object if needed
+    const existingData = participant.questionnaire_data as Record<string, any> || {};
+    
     // Update the questionnaire data
     const { error } = await supabase
       .from('participants')
       .update({
         questionnaire_data: {
-          ...participant.questionnaire_data,
+          ...existingData,
           ...questionnaireData
         }
       })
@@ -121,12 +124,15 @@ export async function updateParticipantQuestionnaireById(id: string, questionnai
       throw new Error(`Participant with ID ${id} not found`);
     }
 
+    // Safely handle the existing data - convert from Json to object if needed
+    const existingData = participant.questionnaire_data as Record<string, any> || {};
+    
     // Update the questionnaire data
     const { error } = await supabase
       .from('participants')
       .update({
         questionnaire_data: {
-          ...participant.questionnaire_data,
+          ...existingData,
           ...questionnaireData
         }
       })

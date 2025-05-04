@@ -14,7 +14,11 @@ export async function ensureTablesExist(): Promise<boolean> {
     try {
       // Instead of directly accessing the supabaseUrl property, we'll use the URL from the service file
       console.log('Checking Supabase connection...');
-      const { data: healthCheck, error: healthError } = await supabase.rpc('healthcheck', {});
+      // Replace the RPC call with a simpler query to test connection
+      const { error: healthError } = await supabase
+        .from('participants')
+        .select('count(*)')
+        .limit(1);
       
       if (healthError) {
         console.error('Supabase connection error:', healthError);
@@ -25,7 +29,7 @@ export async function ensureTablesExist(): Promise<boolean> {
         console.log('Supabase connection is healthy');
       }
     } catch (healthErr) {
-      // RPC might not exist, which is fine, we'll try direct API calls
+      // API might not exist, which is fine, we'll try direct API calls
       console.log('Health check not available, continuing with direct checks');
     }
     
@@ -74,12 +78,19 @@ export async function ensureTablesExist(): Promise<boolean> {
       
       // As a fallback, try to query another way
       try {
-        const { data: tablesData, error: tablesError } = await supabase
-          .rpc('get_tables', {});
+        // Use a direct query to check table existence instead of RPC
+        const { data, error: tablesError } = await supabase
+          .from('information_schema.tables')
+          .select('table_name')
+          .eq('table_schema', 'public')
+          .eq('table_type', 'BASE TABLE');
         
-        if (!tablesError && tablesData && tablesData.includes('participants')) {
-          console.log('Participants table exists (alternate check) ✅');
-          return true;
+        if (!tablesError && data) {
+          const tableNames = data.map(t => t.table_name);
+          if (tableNames.includes('participants')) {
+            console.log('Participants table exists (alternate check) ✅');
+            return true;
+          }
         }
       } catch (fallbackErr) {
         // Fallback didn't work either

@@ -5,31 +5,50 @@ import { toast } from 'sonner';
 export async function createProfilesTable(): Promise<boolean> {
   try {
     console.log('Checking if profiles table exists...');
-    // When calling rpc with no parameters, we must provide an empty object as the second argument
-    const { data, error } = await supabase.rpc('get_tables', {});
+    // We need to properly type the RPC call or use a more direct approach
+    const { data, error } = await supabase
+      .from('tables')
+      .select('*')
+      .eq('table_type', 'BASE TABLE')
+      .eq('table_schema', 'public');
     
     if (error) {
       console.error('Error getting tables:', error);
       return false;
     }
     
-    // Check if profiles table already exists
-    if (data && Array.isArray(data) && data.includes('profiles')) {
+    // Check if profiles table already exists in the returned table list
+    const tableNames = data?.map(table => table.table_name) || [];
+    if (tableNames.includes('profiles')) {
       console.log('Profiles table already exists');
       return true;
     }
     
     console.log('Creating profiles table...');
-    // Execute the SQL query to create the profiles table using rpc instead of direct sql
-    const { error: createError } = await supabase.rpc('create_profiles_table', { sql_content: getProfilesTableSQL() });
-    
-    if (createError) {
-      console.error('Error creating profiles table:', createError);
-      toast.error('Failed to create profiles table. Please check your Supabase configuration.');
+    // Use a direct SQL query instead of RPC
+    const { error: createError } = await supabase
+      .from('profiles')
+      .select('*')
+      .limit(0);
+      
+    if (createError && createError.code === '42P01') {
+      // Table doesn't exist, create it
+      const { error: sqlError } = await supabase.sql(getProfilesTableSQL());
+      
+      if (sqlError) {
+        console.error('Error creating profiles table:', sqlError);
+        toast.error('Failed to create profiles table. Please check your Supabase configuration.');
+        return false;
+      }
+      
+      console.log('Profiles table created successfully');
+      return true;
+    } else if (createError) {
+      console.error('Unexpected error checking profiles table:', createError);
       return false;
     }
     
-    console.log('Profiles table created successfully');
+    console.log('Profiles table exists');
     return true;
   } catch (error) {
     console.error('Error creating profiles table:', error);
