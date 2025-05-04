@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
@@ -13,7 +12,6 @@ import { Persona } from "@/services/persona/types";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
 import PersonaDemographics from "@/components/persona-details/PersonaDemographics";
-import PersonaTraits from "@/components/persona-details/PersonaTraits";
 import InterviewResponses from "@/components/persona-details/InterviewResponses";
 import { formatName } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -131,42 +129,38 @@ const PersonaDetail = () => {
                   <div className="bg-[#F5F5F7] p-6 rounded-lg mb-6">
                     <PersonaDemographics metadata={persona.metadata} />
                   </div>
-                  
-                  <div className="bg-[#F8F9FA] p-6 rounded-lg">
-                    <PersonaTraits traitProfile={persona.trait_profile} />
-                  </div>
-                  
-                  {persona.prompt && (
-                    <Card className="p-6 shadow-md bg-white border-gray-100 max-w-none">
-                      <Collapsible
-                        open={promptOpen}
-                        onOpenChange={setPromptOpen}
-                        className="w-full"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                            <span className="inline-block w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
-                            Original Prompt
-                          </h2>
-                          <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="w-9 p-0 hover:bg-slate-100">
-                              <ChevronDown className={`h-4 w-4 transition-transform ${promptOpen ? "transform rotate-180" : ""}`} />
-                              <span className="sr-only">Toggle</span>
-                            </Button>
-                          </CollapsibleTrigger>
-                        </div>
-                        
-                        <CollapsibleContent className="mt-2">
-                          <div className="bg-muted/50 p-4 rounded-md">
-                            <p className="text-sm italic">"{persona.prompt}"</p>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </Card>
-                  )}
                 </Card>
                 
                 <InterviewResponses sections={getInterviewSections()} />
+                
+                {persona.prompt && (
+                  <Card className="p-6 shadow-md bg-white border-gray-100 max-w-none">
+                    <Collapsible
+                      open={promptOpen}
+                      onOpenChange={setPromptOpen}
+                      className="w-full"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                          <span className="inline-block w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
+                          Original Prompt
+                        </h2>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm" className="w-9 p-0 hover:bg-slate-100">
+                            <ChevronDown className={`h-4 w-4 transition-transform ${promptOpen ? "transform rotate-180" : ""}`} />
+                            <span className="sr-only">Toggle</span>
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                      
+                      <CollapsibleContent className="mt-2">
+                        <div className="bg-muted/50 p-4 rounded-md">
+                          <p className="text-sm italic">"{persona.prompt}"</p>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </Card>
+                )}
               </div>
             )}
           </div>
