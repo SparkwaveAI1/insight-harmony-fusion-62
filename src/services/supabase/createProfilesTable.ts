@@ -5,51 +5,49 @@ import { toast } from 'sonner';
 export async function createProfilesTable(): Promise<boolean> {
   try {
     console.log('Checking if profiles table exists...');
-    // We need to properly type the RPC call or use a more direct approach
-    const { data, error } = await supabase
-      .from('tables')
-      .select('*')
-      .eq('table_type', 'BASE TABLE')
-      .eq('table_schema', 'public');
     
-    if (error) {
-      console.error('Error getting tables:', error);
-      return false;
-    }
-    
-    // Check if profiles table already exists in the returned table list
-    const tableNames = data?.map(table => table.table_name) || [];
-    if (tableNames.includes('profiles')) {
-      console.log('Profiles table already exists');
-      return true;
+    // Direct approach to check if the profiles table exists - we try to query it
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+      
+      if (!error) {
+        console.log('Profiles table already exists');
+        return true;
+      }
+      
+      // If the error isn't about the table not existing, something else is wrong
+      if (error.code !== '42P01' && !error.message.includes('relation "profiles" does not exist')) {
+        console.error('Unexpected error checking profiles table:', error);
+        return false;
+      }
+    } catch (err) {
+      console.error('Error checking profiles table:', err);
     }
     
     console.log('Creating profiles table...');
-    // Use a direct SQL query instead of RPC
-    const { error: createError } = await supabase
-      .from('profiles')
-      .select('*')
-      .limit(0);
+    
+    // Execute the SQL script to create the profiles table
+    try {
+      // We can't directly execute SQL from the client, so we display instructions
+      toast.info('Profiles table needs to be created. Please run the SQL script in Supabase SQL Editor.', {
+        duration: 8000,
+      });
       
-    if (createError && createError.code === '42P01') {
-      // Table doesn't exist, create it
-      const { error: sqlError } = await supabase.sql(getProfilesTableSQL());
+      console.info(getProfilesTableSQL());
       
-      if (sqlError) {
-        console.error('Error creating profiles table:', sqlError);
-        toast.error('Failed to create profiles table. Please check your Supabase configuration.');
-        return false;
-      }
+      toast.info('After running the SQL, reload this page to continue setup.', {
+        duration: 5000,
+      });
       
-      console.log('Profiles table created successfully');
-      return true;
-    } else if (createError) {
-      console.error('Unexpected error checking profiles table:', createError);
+      return false;
+    } catch (error) {
+      console.error('Error creating profiles table:', error);
+      toast.error('An unexpected error occurred while setting up profiles table.');
       return false;
     }
-    
-    console.log('Profiles table exists');
-    return true;
   } catch (error) {
     console.error('Error creating profiles table:', error);
     toast.error('An unexpected error occurred while setting up profiles table.');
