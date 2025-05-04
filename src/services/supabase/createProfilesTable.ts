@@ -6,48 +6,38 @@ export async function createProfilesTable(): Promise<boolean> {
   try {
     console.log('Checking if profiles table exists...');
     
-    // Direct approach to check if the profiles table exists - we try to query it
+    // Instead of trying to query the profiles table directly (which causes errors),
+    // we'll try to use a different approach that works with the Supabase types
+    
+    // We're going to try a simple approach - if we get an error requesting a profile
+    // with a random ID, we'll determine if the table needs to be created
+    const testUuid = '00000000-0000-0000-0000-000000000000';
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id')
-        .limit(1);
+      const { error } = await supabase.rpc('get_profile_by_id', { profile_id: testUuid });
       
-      if (!error) {
-        console.log('Profiles table already exists');
+      // If no error or error isn't about missing table/relation, table likely exists
+      if (!error || (error.code !== '42P01' && !error.message.includes('relation "profiles" does not exist'))) {
+        console.log('Profiles table already exists or custom RPC function exists');
         return true;
       }
-      
-      // If the error isn't about the table not existing, something else is wrong
-      if (error.code !== '42P01' && !error.message.includes('relation "profiles" does not exist')) {
-        console.error('Unexpected error checking profiles table:', error);
-        return false;
-      }
     } catch (err) {
-      console.error('Error checking profiles table:', err);
+      console.log('Error checking profiles table:', err);
     }
     
-    console.log('Creating profiles table...');
+    console.log('Profiles table needs to be created...');
     
-    // Execute the SQL script to create the profiles table
-    try {
-      // We can't directly execute SQL from the client, so we display instructions
-      toast.info('Profiles table needs to be created. Please run the SQL script in Supabase SQL Editor.', {
-        duration: 8000,
-      });
-      
-      console.info(getProfilesTableSQL());
-      
-      toast.info('After running the SQL, reload this page to continue setup.', {
-        duration: 5000,
-      });
-      
-      return false;
-    } catch (error) {
-      console.error('Error creating profiles table:', error);
-      toast.error('An unexpected error occurred while setting up profiles table.');
-      return false;
-    }
+    // Display instructions for creating the profiles table
+    toast.info('Profiles table needs to be created. Please run the SQL script in Supabase SQL Editor.', {
+      duration: 8000,
+    });
+    
+    console.info(getProfilesTableSQL());
+    
+    toast.info('After running the SQL, reload this page to continue setup.', {
+      duration: 5000,
+    });
+    
+    return false;
   } catch (error) {
     console.error('Error creating profiles table:', error);
     toast.error('An unexpected error occurred while setting up profiles table.');

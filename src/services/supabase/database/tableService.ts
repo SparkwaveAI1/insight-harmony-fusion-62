@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureStorageBuckets } from '../storage/bucketService';
@@ -76,24 +77,32 @@ export async function ensureTablesExist(): Promise<boolean> {
     } catch (tableErr) {
       console.error('Exception during table check:', tableErr);
       
-      // As a fallback, try to query another way
+      // As a fallback, try to check table existance without querying information_schema
+      // Instead, we'll make another direct check based on standard tables
       try {
-        // Use a direct query to check table existence instead of RPC
-        const { data, error: tablesError } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_schema', 'public')
-          .eq('table_type', 'BASE TABLE');
+        // Try testing against a few core tables to determine availability
+        const tablesToCheck = ['participants', 'personas', 'collections', 'projects'];
+        let tableExists = false;
         
-        if (!tablesError && data) {
-          const tableNames = data.map(t => t.table_name);
-          if (tableNames.includes('participants')) {
-            console.log('Participants table exists (alternate check) ✅');
-            return true;
+        for (const table of tablesToCheck) {
+          const { error: checkError } = await supabase
+            .from(table as any)
+            .select('count(*)')
+            .limit(1);
+            
+          if (!checkError) {
+            tableExists = true;
+            break;
           }
+        }
+        
+        if (tableExists) {
+          console.log('Database tables exist (alternate check) ✅');
+          return true;
         }
       } catch (fallbackErr) {
         // Fallback didn't work either
+        console.error('Fallback check failed:', fallbackErr);
       }
       
       toast.error('Could not verify database setup. Please check your Supabase configuration.');

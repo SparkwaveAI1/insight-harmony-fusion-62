@@ -3,8 +3,11 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Export participant types and functions
+export type { 
+  Participant 
+} from './participants/participantService';
+
 export { 
-  Participant,
   createParticipant,
   getParticipantByEmail,
   getParticipantById, 
