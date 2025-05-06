@@ -76,7 +76,7 @@ const Header = () => {
                       className={cn(
                         navigationMenuTriggerStyle(),
                         "flex items-center gap-2 px-4 font-medium",
-                        isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
+                        "text-foreground", // Always use text-foreground (black in light mode)
                         isActive && "bg-accent text-accent-foreground"
                       )}
                     >
@@ -106,7 +106,7 @@ const Header = () => {
           <Button 
             className={cn(
               "md:hidden",
-              isDarkRoute && !isScrolled ? "text-white" : "text-foreground",
+              "text-foreground", // Always use text-foreground (black in light mode) for mobile menu button
               "p-2"
             )} 
             variant="ghost"
@@ -128,3 +128,4 @@ const Header = () => {
 };
 
 export default Header;
+
