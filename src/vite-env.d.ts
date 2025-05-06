@@ -25,4 +25,13 @@ declare module '@/integrations/supabase/types' {
       }
     }
   }
+  
+  // Export Json type that was missing
+  export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[]
 }
