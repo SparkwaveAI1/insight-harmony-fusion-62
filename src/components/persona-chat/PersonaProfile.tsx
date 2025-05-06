@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Brain, Target, Users } from "lucide-react";
 
 const PersonaProfile = () => {
-  // Since this is a hard-coded component for demonstration purposes,
-  // we'll update it to use Alina R's insights for consistency
-
+  // Using Alina R's persona ID for this component
+  const personaId = "9f8540fa";
+  
   return (
     <Card className="p-6 sticky top-24">
       <div className="flex flex-col">
@@ -63,7 +63,7 @@ const PersonaProfile = () => {
             </ul>
           </div>
           
-          {/* Decisions section - Updated for Alina R */}
+          {/* Decisions section - Using Alina R's insights */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Brain className="h-4 w-4 text-primary" />
@@ -75,7 +75,7 @@ const PersonaProfile = () => {
             </ul>
           </div>
           
-          {/* Drivers section - Updated for Alina R */}
+          {/* Drivers section - Using Alina R's insights */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Target className="h-4 w-4 text-primary" />
@@ -87,7 +87,7 @@ const PersonaProfile = () => {
             </ul>
           </div>
           
-          {/* Persuasion section - Updated for Alina R */}
+          {/* Persuasion section - Using Alina R's insights */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Users className="h-4 w-4 text-primary" />
