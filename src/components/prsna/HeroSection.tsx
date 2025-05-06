@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Reveal from "@/components/ui-custom/Reveal";
 import RewardsIllustration from "./RewardsIllustration";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Coins } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -43,16 +43,7 @@ const HeroSection = () => {
                 </Button>
               </Link>
               
-              <Link to="/prsna-ecosystem">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="group border-blue-500 text-blue-500 hover:bg-blue-50 font-medium"
-                >
-                  <Coins className="mr-2 h-5 w-5" />
-                  Learn About $PRSNA
-                </Button>
-              </Link>
+              {/* Removed the "Learn About $PRSNA" button */}
             </div>
           </Reveal>
         </div>
