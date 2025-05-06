@@ -6,7 +6,7 @@ import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import Reveal from "@/components/ui-custom/Reveal";
 import Footer from "@/components/sections/Footer";
-import { Link } from "react-router-dom";
+import ContactDialog from "@/components/contact/ContactDialog";
 
 const CustomResearch = () => {
   return (
@@ -35,7 +35,7 @@ const CustomResearch = () => {
               <Reveal delay={200}>
                 <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
                   PersonaAI's Interview System lets you conduct real-time interviews with human subjects, using an AI moderator. 
-                  You define the objective—we handle the logistics, consistency, and data collection.
+                  You define the objective—we handle the logistics, recruiting, moderation, and data collection.
                 </p>
               </Reveal>
               
@@ -67,15 +67,19 @@ const CustomResearch = () => {
               
               <Reveal delay={200}>
                 <div className="flex justify-center">
-                  <Link to="/contact">
-                    <Button 
-                      variant="primary" 
-                      size="lg" 
-                      className="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700"
-                    >
-                      Contract Research Project
-                    </Button>
-                  </Link>
+                  <ContactDialog 
+                    triggerButton={
+                      <Button 
+                        variant="primary" 
+                        size="lg" 
+                        className="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700"
+                      >
+                        Custom Research Request
+                      </Button>
+                    }
+                    title="Custom Research Request"
+                    formType="custom-persona"
+                  />
                 </div>
               </Reveal>
             </div>

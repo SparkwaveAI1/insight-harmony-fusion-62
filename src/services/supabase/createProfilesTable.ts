@@ -8,11 +8,11 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Fix: Use explicit any typing to bypass the TypeScript error
+    // Fix: Cast the parameters to unknown first to avoid TypeScript errors
     const { data, error } = await supabase.rpc(
       'table_exists', 
-      { table_name: 'profiles' } as any,
-      { count: null } as any
+      { table_name: 'profiles' } as unknown as Record<string, unknown>,
+      { count: null } as unknown as Record<string, unknown>
     );
     
     console.log('RPC response data:', data);
