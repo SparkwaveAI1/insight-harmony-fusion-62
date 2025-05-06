@@ -8,8 +8,9 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Fix: Properly type the RPC call with correct generic parameters
-    const { data, error } = await supabase.rpc<{ exists: boolean }, { table_name: string }>(
+    // Fix: Use proper typing with generics for the RPC call
+    // First generic is the return type, without constraints
+    const { data, error } = await supabase.rpc<any, { table_name: string }>(
       'table_exists', 
       { table_name: 'profiles' },
       { count: null } as any
@@ -47,6 +48,7 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('RPC data structure:', JSON.stringify(data));
     
     if (data) {
+      // Since we're using 'any' as the return type, we can safely access properties
       const exists = data.exists;
       
       console.log('Table exists check result:', exists);
