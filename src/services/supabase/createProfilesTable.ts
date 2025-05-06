@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,12 +7,9 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('Supabase client type:', typeof supabase);
     console.log('Supabase rpc method type:', typeof supabase.rpc);
     
-    // Fix: Use an explicit return type interface for the RPC call
-    interface TableExistsResult {
-      exists: boolean;
-    }
-    
-    const { data, error } = await supabase.rpc<TableExistsResult, { table_name: string }>(
+    // Call the RPC function without manual type parameters
+    // Letting TypeScript infer the types from the Database interface
+    const { data, error } = await supabase.rpc(
       'table_exists', 
       { table_name: 'profiles' },
       { count: null } as any
@@ -51,7 +47,7 @@ export async function createProfilesTable(): Promise<boolean> {
     console.log('RPC data structure:', JSON.stringify(data));
     
     if (data) {
-      // Now TypeScript knows data has an exists property
+      // We know the structure based on the Database types
       const exists = data.exists;
       
       console.log('Table exists check result:', exists);
