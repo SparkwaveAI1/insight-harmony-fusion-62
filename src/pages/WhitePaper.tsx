@@ -31,274 +31,316 @@ const WhitePaper = () => {
             </div>
             
             <div className="max-w-4xl mx-auto prose prose-lg prose-invert prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h2:border-b prose-h2:pb-3 prose-h2:border-gray-700 prose-h2:mt-16 prose-p:text-gray-300 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-800 prose-code:text-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-              <h1 className="text-5xl mb-8">PersonaAI Documentation</h1>
+              <h1 className="text-5xl mb-8">PersonaAI Unified Whitepaper v1.4</h1>
               
-              <p className="text-xl leading-relaxed">
-                Welcome to the official documentation for <strong>PersonaAI</strong> — the first AI-native qualitative research platform. 
-                Our mission is to redefine how businesses, researchers, and projects model human behavior using synthetic personas 
-                grounded in social science and behavioral realism.
+              <h2 className="text-3xl mb-8">Abstract</h2>
+              <p>
+                PersonaAI is the first AI-driven qualitative research platform designed to simulate and study real human decision-making through dynamic digital personas.
+              </p>
+              <p>
+                The $PRSNA token powers the minting, ownership, trading, leasing, and incentivization of ERC-6551 Persona assets in an integrated Web2/Web3 research and commerce ecosystem.
+              </p>
+              <p>
+                PersonaAI enables a sustainable, scalable agent economy where users create, own, and monetize behavioral assets — aligning incentives across creators, researchers, and platform participants.
+              </p>
+              <p>
+                Website: <a href="https://personaresearch.ai" target="_blank" rel="noopener noreferrer">PersonaResearch.ai</a>
               </p>
               
-              <p className="text-xl leading-relaxed mb-10">
-                PersonaAI combines large language models, probabilistic trait modeling, and structured interviews to simulate 
-                real-world users across a wide range of domains — including Web3, consumer insights, governance design, and incentive testing.
+              <h2 className="text-3xl mb-8">Introduction</h2>
+              <p>
+                Traditional market research is costly, slow, and limited by small, biased samples. PersonaAI introduces behaviorally realistic AI personas to dramatically expand research capabilities while lowering costs and timelines.
               </p>
-              
-              <h2 className="text-3xl mb-8">🔍 What You'll Find Here</h2>
-              
-              <ul className="space-y-2 text-lg">
-                <li>System architecture: how our platform is structured</li>
-                <li>Token utility: what $PRSNA does and how value flows</li>
-                <li>Product modules: from persona creation to research tools</li>
-                <li>Trait engine: our methodology for behavioral realism</li>
-                <li>Roadmap: what we're building and when</li>
+              <p>
+                PersonaAI is built for Web2 accessibility and Web3 optional ownership:
+              </p>
+              <ul>
+                <li>Web2 users can frictionlessly create and use personas.</li>
+                <li>Web3 users can mint, own, and commercialize personas using $PRSNA.</li>
               </ul>
-              
-              <hr className="border-gray-700 my-16" />
-              
-              <h2 className="text-3xl mb-8">What Is a Persona?</h2>
-              
-              <p className="text-lg leading-relaxed">
-                In PersonaAI, a "persona" is a structured behavioral model—built either from a real interview or 
-                generated using our trait engine.
+              <p>
+                PersonaAI is not a closed platform; it is a research economy.
               </p>
               
-              <p className="text-lg mb-6">Each persona includes:</p>
-              <ul className="space-y-2 mb-8 text-lg">
+              <h2 className="text-3xl mb-8">Platform Structure</h2>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Layer</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Persona Engine</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Creates personas through structured human interviews or behavioral simulation.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">ERC-6551 Integration</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Enables personas to become on-chain ownable, tradable, rentable digital assets.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Marketplace</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Facilitates the buying, selling, renting, and licensing of ERC-6551 personas.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Research Pool</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Enables general access to personas while rewarding creators through royalties.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Treasury</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Accumulates revenue to fund platform growth and economic sustainability.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Staking Module</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Rewards $PRSNA holders with fixed yield and dynamic revenue share.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <h2 className="text-3xl mb-8 mt-12">What Is a Persona?</h2>
+              <p>
+                In PersonaAI, a "persona" is a structured behavioral model—built either from a real interview or generated using our trait engine.
+              </p>
+              <p>Each persona includes:</p>
+              <ul>
                 <li>A demographic and psychological profile</li>
                 <li>Contradictions and emergent behavior</li>
                 <li>Decision-making tendencies based on validated models</li>
               </ul>
               
-              <p className="text-lg mb-4">Types of personas:</p>
-              <ul className="space-y-2 mb-8 text-lg">
+              <p>Types of personas:</p>
+              <ul>
                 <li><strong>Human-Derived</strong>: Created via real interviews</li>
                 <li><strong>Simulated</strong>: Generated by our internal modeling engine</li>
-                <li><strong>Prompted</strong>: Created from text input, with internal trait inference</li>
+                <li><strong>Prompted</strong>: Created from user text input, with internal trait inference</li>
               </ul>
               
-              <p className="text-lg italic mb-10">
-                These personas are not avatars—they are testable, probabilistic systems designed for research use.
+              <p className="italic">
+                These personas are not avatars—they are testable, probabilistic systems designed for research and agent deployment.
               </p>
               
-              <hr className="border-gray-700 my-16" />
-              
-              <h2 className="text-3xl mb-8">System Architecture</h2>
-              
-              <p className="text-lg mb-6">PersonaAI has two core subsystems:</p>
-              
-              <h3 className="text-2xl mt-10 mb-4">1. Interview System (Human-Based)</h3>
-              <ul className="space-y-2 mb-8 text-lg">
-                <li>Structured interviews with real people</li>
-                <li>Outputs royalty-eligible personas</li>
-                <li>Contradiction logging, trait validation</li>
-              </ul>
-              
-              <h3 className="text-2xl mt-10 mb-4">2. Simulation Engine (Persona-Based)</h3>
-              <ul className="space-y-2 mb-8 text-lg">
-                <li>Uses synthetic or user-prompted personas</li>
-                <li>Supports 1-on-1 or multi-agent interactions</li>
-                <li>Powers simulations, A/B testing, and modeling</li>
-              </ul>
-              
-              <p className="text-lg italic mb-10">
-                All personas—real or simulated—are structured using the same trait architecture and realism checks.
+              <h2 className="text-3xl mb-8">Persona Realism Methodology</h2>
+              <p>
+                Every PersonaAI model is grounded in empirical psychological frameworks, including Big Five Personality Theory, Moral Foundations Theory, and Behavioral Economics models. Our personas are structured to demonstrate contradiction, incentive sensitivity, and emergent behavior — ensuring authentic decision modeling at scale.
               </p>
               
-              <hr className="border-gray-700 my-16" />
-              
-              <h2 className="text-3xl mb-8">Platform Modules</h2>
-              
-              <p className="text-lg mb-6">PersonaAI is composed of four primary modules:</p>
-              
-              <h3 className="text-2xl mt-10 mb-4">🧬 Persona Builder</h3>
-              <ul className="space-y-2 mb-10 text-lg">
-                <li>Generate personas from prompts</li>
-                <li>Internal engine assigns traits using demographic models</li>
-                <li>Designed for contradiction and realism, not cohesion</li>
+              <h2 className="text-3xl mb-8">ERC-6551 Persona Ownership</h2>
+              <p>
+                PersonaAI implements ERC-6551 — the Token-Bound Account (TBA) standard — to transform personas into fully ownable, tradable, and programmable digital assets.
+              </p>
+              <p>
+                Each ERC-6551 persona acts as a smart wallet tied directly to its NFT identity, enabling:
+              </p>
+              <ul>
+                <li><strong>Ownership</strong>: Personas can be bought, sold, leased, and licensed like any digital asset.</li>
+                <li><strong>Composability</strong>: Personas can hold data, interact with protocols, and participate in research deployments.</li>
+                <li><strong>Provable Provenance</strong>: Every persona's creation, evolution, and history can be tracked on-chain.</li>
+                <li><strong>Agent Economy Integration</strong>: ERC-6551 personas can function independently within the broader Virtuals Protocol agent commerce ecosystem.</li>
               </ul>
-              
-              <h3 className="text-2xl mt-10 mb-4">🗣️ AI Interviewer (Human-Based)</h3>
-              <ul className="space-y-2 mb-10 text-lg">
-                <li>Real human interviews</li>
-                <li>Dynamic branching + trait contradiction logging</li>
-                <li>Output: Human-Derived Persona (ERC-6551 capable)</li>
-              </ul>
-              
-              <h3 className="text-2xl mt-10 mb-4">🧪 Research Simulation Suite</h3>
-              <ul className="space-y-2 mb-10 text-lg">
-                <li>1-on-1 Interviews</li>
-                <li>Group discussions (3–6)</li>
-                <li>Town Halls (up to 50 agents)</li>
-                <li>Text or voice</li>
-              </ul>
-              
-              <h3 className="text-2xl mt-10 mb-4">📊 Analytics & Dashboard</h3>
-              <ul className="space-y-2 mb-10 text-lg">
-                <li>Trait maps, contradiction highlights</li>
-                <li>Scenario testing tools</li>
-                <li>Persona cloning and variation tracking</li>
-              </ul>
-              
-              <h3 className="text-2xl mt-10 mb-4">🔐 Persona Wallets (ERC-6551)</h3>
-              
-              <p className="text-lg mb-4">Each persona will be optionally deployable to an ERC-6551 smart wallet:</p>
-              <ul className="space-y-2 mb-6 text-lg">
-                <li>Holds $PRSNA or other tokens</li>
-                <li>Tracks behavior, licensing, usage</li>
-                <li>Powers autonomous transactions or staking</li>
-              </ul>
-              
-              <p className="text-lg font-medium mb-10">
-                This creates <strong>real digital agents</strong>—onchain behavioral entities with financial identity.
+              <p>
+                PersonaAI ensures every minted persona is an active, evolving economic participant.
               </p>
               
-              <hr className="border-gray-700 my-16" />
+              <h2 className="text-3xl mb-8">Virtuals Protocol Integration</h2>
+              <p>
+                ERC-6551 personas created within PersonaAI will be fully interoperable with the Agent Commerce Protocol (ACP) inside Virtuals, enabling agent deployment, negotiation, and autonomous action across broader Web3 ecosystems.
+              </p>
               
-              <h2 className="text-3xl mb-8">$PRSNA Token Utility</h2>
+              <h2 className="text-3xl mb-8">$PRSNA Tokenomics</h2>
               
-              <p className="text-xl font-medium mb-6">$PRSNA is the fuel for the PersonaAI research economy. Future plans include:</p>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700 mb-12">
+                  <tbody>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700 font-semibold">Token Symbol</td>
+                      <td className="px-6 py-4 border-b border-gray-700">$PRSNA</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700 font-semibold">Primary Utility</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Minting ERC-6551 personas, marketplace transactions, research pool access, staking, platform discounts.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700 font-semibold">Mint Fee</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Small fee paid in $PRSNA to mint a persona to the blockchain.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700 font-semibold">Revenue Streams</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Minting fees, marketplace fees, leasing commissions, research pool usage fees.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               
-              <h3 className="text-2xl mt-10 mb-6">🔧 Core Functions</h3>
+              <h2 className="text-3xl mb-8">Staking Model</h2>
               
-              <div className="overflow-x-auto mb-12">
-                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700">
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700 mb-12">
                   <thead>
                     <tr>
-                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Capability</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Feature</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Base Rewards</td>
+                      <td className="px-6 py-4 border-b border-gray-700">7% APR, paid in $PRSNA.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Revenue Sharing</td>
+                      <td className="px-6 py-4 border-b border-gray-700">20% of platform-wide on-chain revenue distributed to stakers.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Cooldown Period</td>
+                      <td className="px-6 py-4 border-b border-gray-700">7-day unstake cooldown; no forced long-term lockups.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Benefits</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Platform discounts, early access opportunities, future partner project eligibility.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <p className="mb-2">
+                Staking $PRSNA supports the platform while earning meaningful participation rewards.
+              </p>
+              <p className="mb-8">
+                <strong>Timing</strong>: Implementation of staking during Q2 2025.
+              </p>
+              
+              <h2 className="text-3xl mb-8">How $PRSNA Holders Earn</h2>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700 mb-12">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Method</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Staking Rewards</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Earn 7% APR + 20% of on-chain platform revenue.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Platform Discounts</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Reduced fees when using $PRSNA for transactions.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Early Access</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Eligibility for early participation in partner projects, agent collectives, and research opportunities.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-6 py-4 border-b border-gray-700">Token Growth Exposure</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Benefit from ecosystem expansion, Treasury growth, and token scarcity mechanisms over time.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              <p className="mb-8">
+                PersonaAI aligns platform success with tokenholder participation incentives.
+              </p>
+              
+              <h2 className="text-3xl mb-8">Marketplace Mechanics</h2>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700 mb-12">
+                  <thead>
+                    <tr>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Activity</th>
                       <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Role of $PRSNA</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Run simulations</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Pay to access personas in interviews/groups</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Buy/Sell Personas</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Marketplace transactions use $PRSNA (with discounts) or USDC/ETH (with standard fees).</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Stake persona access</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Lock tokens to prioritize key simulations</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Rent Personas</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Leasing personas or fleets requires $PRSNA.</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Access trait data</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Use tokens to view aggregated analytics</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">License human personas</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Route value to creators via ERC-6551 wallets</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">ACP participation</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Transact inside the Virtuals agent protocol</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Fee Collection</td>
+                      <td className="px-6 py-4 border-b border-gray-700">20% of platform revenue flows to stakers; 80% grows the Treasury.</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               
-              <h3 className="text-2xl mt-10 mb-6">🔄 Value Loop</h3>
-              
-              <ol className="list-decimal list-inside space-y-2 mb-10 text-lg">
-                <li>Researchers simulate behavior</li>
-                <li>$PRSNA is used or staked</li>
-                <li>Human contributors earn royalties (if applicable)</li>
-                <li>Persona agents can autonomously act inside Virtuals ecosystem</li>
-              </ol>
-              
-              <hr className="border-gray-700 my-16" />
-              
-              <h2 className="text-3xl mb-8">PersonaAI Agent Integration (Virtuals ACP)</h2>
-              
-              <p className="text-lg mb-8">
-                At the center of PersonaAI is our autonomous Agent (under development), responsible for orchestrating interviews, 
-                learning from data, and transacting in onchain simulations. The Agent will be central to integration with Virtuals Agent Commerce Protocol (ACP).
+              <p className="mb-8">
+                PersonaAI positions personas as productive, value-generating research and commerce assets.
               </p>
               
-              <h3 className="text-2xl mt-10 mb-4">🔧 Agent Functions</h3>
-              
-              <ul className="space-y-2 mb-10 text-lg">
-                <li>Coordinates group conversations</li>
-                <li>Learns and adapts across simulations</li>
-                <li>Makes decisions using our trait architecture</li>
-                <li>Transacts onchain via ERC-6551 wallet</li>
+              <h2 className="text-3xl mb-8">Research Pool</h2>
+              <p>
+                The Research Pool allows both human-derived and synthetic personas to be available for general research access:
+              </p>
+              <ul>
+                <li>Researchers pay a usage fee (in $PRSNA).</li>
+                <li>Persona creators receive royalty rewards based on usage.</li>
+                <li>Treasury and stakers continue to receive their revenue share allocation.</li>
               </ul>
               
-              <h3 className="text-2xl mt-10 mb-4">🌐 ERC-6551 Identity</h3>
-              
-              <ul className="space-y-2 mb-10 text-lg">
-                <li>Every ERC-6551 deployed agent/persona will have a smart wallet</li>
-                <li>Can hold $PRSNA or be paid for licensed activity</li>
-                <li>Enables autonomous value exchange inside Virtuals</li>
-              </ul>
-              
-              <h3 className="text-2xl mt-10 mb-4">🔁 ACP Integration</h3>
-              
-              <p className="text-lg mb-4">Using the <strong>Agent Commerce Protocol (ACP)</strong>:</p>
-              <ul className="space-y-2 mb-8 text-lg">
-                <li>Agents negotiate, evaluate, and execute jobs</li>
-                <li>Smart contracts ensure outcomes and reputation tracking</li>
-                <li>Enables true economic autonomy for research agents</li>
-              </ul>
-              
-              <p className="text-lg font-medium mb-10">
-                The PersonaAI Agent is not just a model—it is a composable, onchain identity with both behavioral nuance and financial capability.
+              <p className="font-medium mt-4">
+                Royalty Mechanism Statement:
+              </p>
+              <blockquote className="border-l-4 border-primary pl-4 italic my-4">
+                "Research Pool royalty systems will be designed to prioritize sustainable ecosystem growth, platform health, and tokenholder value appreciation."
+              </blockquote>
+              <p>
+                Final royalty payment mechanisms (split percentages, currencies, and schedules) will be finalized and optimized over time to ensure alignment with these principles.
               </p>
               
-              <hr className="border-gray-700 my-16" />
+              <h2 className="text-3xl mb-8">Treasury Strategy</h2>
+              <ul>
+                <li>Treasury receives 80% of on-chain platform revenue after royalty and token management actions.</li>
+                <li>Supports platform sustainability, liquidity provision, growth initiatives, and strategic buybacks if needed.</li>
+                <li>Ensures PersonaAI remains independent and scalable without reliance on external capital.</li>
+              </ul>
               
-              <h2 className="text-3xl mb-8">Trait Modeling: How PersonaAI Simulates Human Behavior</h2>
+              <h2 className="text-3xl mb-8">Future Roadmap</h2>
               
-              <p className="text-lg mb-8">
-                Our personas are grounded in empirical psychology, behavioral economics, and structured contradiction. 
-                Each is shaped by multiple overlapping models—not archetypes.
-              </p>
-              
-              <h3 className="text-2xl mt-10 mb-6">🧠 Base Trait Stack</h3>
-              
-              <p className="text-lg mb-6">Every persona includes probabilistically rolled traits from:</p>
-              
-              <div className="overflow-x-auto mb-12">
+              <div className="overflow-x-auto">
                 <table className="min-w-full bg-gray-800/50 rounded-xl border border-gray-700">
                   <thead>
                     <tr>
-                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Model</th>
-                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Contribution</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Phase</th>
+                      <th className="px-6 py-4 border-b border-gray-700 text-left font-semibold">Initiative</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Big Five (OCEAN)</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Emotional and social behavior</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Phase 1</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Launch marketplace, staking, and ERC-6551 minting. (Q2 2025)</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Moral Foundations</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Ethical alignment and social triggers</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Phase 2</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Expand persona fleet leasing, dynamic research pooling, and partner project integrations. Begin agent development for full Agent Commerce Protocol (ACP) integration. (Q3 2025)</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">World Values Survey (WVS)</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Cultural worldview orientation</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Political Compass</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Ideology, trust in institutions</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 border-b border-gray-700">Behavioral Economics</td>
-                      <td className="px-6 py-4 border-b border-gray-700">Reward sensitivity, loss aversion, risk bias</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Phase 3</td>
+                      <td className="px-6 py-4 border-b border-gray-700">Expand marketplace and research network globally. Focus on revenue growth. (Q4 2025)</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               
-              <p className="text-lg mb-4">Example:</p>
-              <pre className="bg-gray-800/80 p-6 rounded-lg overflow-x-auto mb-16">
-                {`{
-  "OCEAN": { "O": 71, "C": 56, "E": 42, "A": 65, "N": 48 },
-  "Moral Foundations": { "Care": 82, "Fairness": 68, "Authority": 35 },
-  "WVS": { "Traditional": 22, "Self-Expression": 79 },
-  "Risk Bias": "present_bias_high"
-}`}
-              </pre>
+              <h2 className="text-3xl mb-8 mt-12">Conclusion</h2>
+              <ul>
+                <li>PersonaAI is building the foundation for a real research economy powered by intelligent, behaviorally rich agents.</li>
+                <li>$PRSNA is the fuel for an evolving system of ownership, insight, and opportunity.</li>
+                <li>With careful economic design prioritizing sustainability, participation, and tokenholder alignment, PersonaAI positions itself at the forefront of the agent commerce revolution.</li>
+              </ul>
               
-              <div className="flex justify-center mt-8 mb-10">
+              <div className="flex justify-center mt-16 mb-10">
                 <Link to="/prsna/roadmap">
                   <Button size="lg" className="flex items-center gap-2">
                     <Route className="h-5 w-5" />
