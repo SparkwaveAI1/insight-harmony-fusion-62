@@ -137,55 +137,55 @@ const WhitePaper = () => {
 
               {/* Main Content */}
               <div className="lg:col-span-3 prose prose-lg prose-invert prose-headings:font-bold prose-h2:text-2xl lg:prose-h2:text-3xl prose-h2:flex prose-h2:items-center prose-h2:gap-3 prose-h3:text-xl prose-h2:pb-3 prose-h2:border-b prose-h2:border-gray-700/70 prose-h2:mt-16 prose-p:text-gray-300 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-800 prose-code:text-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-                <div id="section-abstract" ref={sectionRefs.abstract} className="mb-12 p-6 rounded-xl bg-gradient-to-br from-gray-800 to-gray-800/70 border border-gray-700/50">
+                <div id="section-abstract" ref={sectionRefs.abstract} className="mb-16 p-6 rounded-xl bg-gradient-to-br from-gray-800 to-gray-800/70 border border-gray-700/50">
                   <h1 className="text-4xl lg:text-5xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">PersonaAI Unified Whitepaper v1.4</h1>
                   
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <BookOpen className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="text-2xl lg:text-3xl m-0 p-0 border-0">Abstract</h2>
                   </div>
                   
-                  <p>
+                  <p className="mb-6">
                     PersonaAI is the first AI-driven qualitative research platform designed to simulate and study real human decision-making through dynamic digital personas.
                   </p>
-                  <p>
+                  <p className="mb-6">
                     The $PRSNA token powers the minting, ownership, trading, leasing, and incentivization of ERC-6551 Persona assets in an integrated Web2/Web3 research and commerce ecosystem.
                   </p>
-                  <p>
+                  <p className="mb-6">
                     PersonaAI enables a sustainable, scalable agent economy where users create, own, and monetize behavioral assets — aligning incentives across creators, researchers, and platform participants.
                   </p>
-                  <p>
+                  <p className="mb-6">
                     Website: <a href="https://personaresearch.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PersonaResearch.ai</a>
                   </p>
                 </div>
                 
-                <div id="section-introduction" ref={sectionRefs.introduction} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-introduction" ref={sectionRefs.introduction} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Book className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">Introduction</h2>
                   </div>
                   
-                  <p>
+                  <p className="mb-6">
                     Traditional market research is costly, slow, and limited by small, biased samples. PersonaAI introduces behaviorally realistic AI personas to dramatically expand research capabilities while lowering costs and timelines.
                   </p>
-                  <p>
+                  <p className="mb-6">
                     PersonaAI is built for Web2 accessibility and Web3 optional ownership:
                   </p>
-                  <ul>
+                  <ul className="mb-6">
                     <li>Web2 users can frictionlessly create and use personas.</li>
                     <li>Web3 users can mint, own, and commercialize personas using $PRSNA.</li>
                   </ul>
-                  <p>
+                  <p className="mb-6">
                     PersonaAI is not a closed platform; it is a research economy.
                   </p>
                 </div>
                 
-                <div id="section-platform" ref={sectionRefs.platform} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-platform" ref={sectionRefs.platform} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Layers className="h-5 w-5 text-primary" />
                     </div>
@@ -230,73 +230,73 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
-                <div id="section-persona" ref={sectionRefs.persona} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-persona" ref={sectionRefs.persona} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <User className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">What Is a Persona?</h2>
                   </div>
                   
-                  <p>
+                  <p className="mb-6">
                     In PersonaAI, a "persona" is a structured behavioral model—built either from a real interview or generated using our trait engine.
                   </p>
-                  <p>Each persona includes:</p>
-                  <ul>
+                  <p className="mb-6">Each persona includes:</p>
+                  <ul className="mb-6">
                     <li>A demographic and psychological profile</li>
                     <li>Contradictions and emergent behavior</li>
                     <li>Decision-making tendencies based on validated models</li>
                   </ul>
                   
-                  <p>Types of personas:</p>
-                  <ul>
+                  <p className="mb-6">Types of personas:</p>
+                  <ul className="mb-6">
                     <li><strong>Human-Derived</strong>: Created via real interviews</li>
                     <li><strong>Simulated</strong>: Generated by our internal modeling engine</li>
                     <li><strong>Prompted</strong>: Created from user text input, with internal trait inference</li>
                   </ul>
                   
-                  <p className="italic">
+                  <p className="italic mb-6">
                     These personas are not avatars—they are testable, probabilistic systems designed for research and agent deployment.
                   </p>
                   
-                  <h3 className="text-xl font-bold mt-8 mb-4">Persona Realism Methodology</h3>
-                  <p>
+                  <h3 className="text-xl font-bold mt-12 mb-6">Persona Realism Methodology</h3>
+                  <p className="mb-6">
                     Every PersonaAI model is grounded in empirical psychological frameworks, including Big Five Personality Theory, Moral Foundations Theory, and Behavioral Economics models. Our personas are structured to demonstrate contradiction, incentive sensitivity, and emergent behavior — ensuring authentic decision modeling at scale.
                   </p>
                 </div>
                 
-                <div id="section-ownership" ref={sectionRefs.ownership} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-ownership" ref={sectionRefs.ownership} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Coins className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">ERC-6551 Persona Ownership</h2>
                   </div>
                   
-                  <p>
+                  <p className="mb-6">
                     PersonaAI implements ERC-6551 — the Token-Bound Account (TBA) standard — to transform personas into fully ownable, tradable, and programmable digital assets.
                   </p>
-                  <p>
+                  <p className="mb-6">
                     Each ERC-6551 persona acts as a smart wallet tied directly to its NFT identity, enabling:
                   </p>
-                  <ul>
+                  <ul className="mb-6">
                     <li><strong>Ownership</strong>: Personas can be bought, sold, leased, and licensed like any digital asset.</li>
                     <li><strong>Composability</strong>: Personas can hold data, interact with protocols, and participate in research deployments.</li>
                     <li><strong>Provable Provenance</strong>: Every persona's creation, evolution, and history can be tracked on-chain.</li>
                     <li><strong>Agent Economy Integration</strong>: ERC-6551 personas can function independently within the broader Virtuals Protocol agent commerce ecosystem.</li>
                   </ul>
-                  <p>
+                  <p className="mb-6">
                     PersonaAI ensures every minted persona is an active, evolving economic participant.
                   </p>
                   
-                  <h3 className="text-xl font-bold mt-8 mb-4">Virtuals Protocol Integration</h3>
-                  <p>
+                  <h3 className="text-xl font-bold mt-12 mb-6">Virtuals Protocol Integration</h3>
+                  <p className="mb-6">
                     ERC-6551 personas created within PersonaAI will be fully interoperable with the Agent Commerce Protocol (ACP) inside Virtuals, enabling agent deployment, negotiation, and autonomous action across broader Web3 ecosystems.
                   </p>
                 </div>
                 
-                <div id="section-tokenomics" ref={sectionRefs.tokenomics} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-tokenomics" ref={sectionRefs.tokenomics} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Coins className="h-5 w-5 text-primary" />
                     </div>
@@ -327,8 +327,8 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
-                <div id="section-staking" ref={sectionRefs.staking} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-staking" ref={sectionRefs.staking} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <BarChart className="h-5 w-5 text-primary" />
                     </div>
@@ -364,7 +364,7 @@ const WhitePaper = () => {
                     </Table>
                   </Card>
                   
-                  <p className="mb-2">
+                  <p className="mb-6">
                     Staking $PRSNA supports the platform while earning meaningful participation rewards.
                   </p>
                   <p className="mb-8">
@@ -372,8 +372,8 @@ const WhitePaper = () => {
                   </p>
                 </div>
                 
-                <div id="section-earning" ref={sectionRefs.earning} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-earning" ref={sectionRefs.earning} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Coins className="h-5 w-5 text-primary" />
                     </div>
@@ -414,8 +414,8 @@ const WhitePaper = () => {
                   </p>
                 </div>
                 
-                <div id="section-marketplace" ref={sectionRefs.marketplace} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-marketplace" ref={sectionRefs.marketplace} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <ShoppingCart className="h-5 w-5 text-primary" />
                     </div>
@@ -452,24 +452,24 @@ const WhitePaper = () => {
                   </p>
                 </div>
                 
-                <div id="section-research" ref={sectionRefs.research} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-research" ref={sectionRefs.research} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Search className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">Research Pool</h2>
                   </div>
                   
-                  <p>
+                  <p className="mb-6">
                     The Research Pool allows both human-derived and synthetic personas to be available for general research access:
                   </p>
-                  <ul>
+                  <ul className="mb-6">
                     <li>Researchers pay a usage fee (in $PRSNA).</li>
                     <li>Persona creators receive royalty rewards based on usage.</li>
                     <li>Treasury and stakers continue to receive their revenue share allocation.</li>
                   </ul>
                   
-                  <div className="my-6 p-4 border-l-4 border-primary bg-primary/5 rounded-r-lg">
+                  <div className="my-8 p-4 border-l-4 border-primary bg-primary/5 rounded-r-lg">
                     <p className="font-medium mt-0">
                       Royalty Mechanism Statement:
                     </p>
@@ -478,28 +478,28 @@ const WhitePaper = () => {
                     </blockquote>
                   </div>
                   
-                  <p>
+                  <p className="mb-6">
                     Final royalty payment mechanisms (split percentages, currencies, and schedules) will be finalized and optimized over time to ensure alignment with these principles.
                   </p>
                 </div>
                 
-                <div id="section-treasury" ref={sectionRefs.treasury} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-treasury" ref={sectionRefs.treasury} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Wallet className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">Treasury Strategy</h2>
                   </div>
                   
-                  <ul>
+                  <ul className="mb-6">
                     <li>Treasury receives 80% of on-chain platform revenue after royalty and token management actions.</li>
                     <li>Supports platform sustainability, liquidity provision, growth initiatives, and strategic buybacks if needed.</li>
                     <li>Ensures PersonaAI remains independent and scalable without reliance on external capital.</li>
                   </ul>
                 </div>
                 
-                <div id="section-roadmap" ref={sectionRefs.roadmap} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-roadmap" ref={sectionRefs.roadmap} className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Calendar className="h-5 w-5 text-primary" />
                     </div>
@@ -532,18 +532,18 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
-                <div id="section-conclusion" ref={sectionRefs.conclusion} className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-4">
+                <div id="section-conclusion" ref={sectionRefs.conclusion} className="scroll-mt-24 mb-20">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Rocket className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">Conclusion</h2>
                   </div>
                   
-                  <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                    <ul>
-                      <li>PersonaAI is building the foundation for a real research economy powered by intelligent, behaviorally rich agents.</li>
-                      <li>$PRSNA is the fuel for an evolving system of ownership, insight, and opportunity.</li>
+                  <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 mb-8">
+                    <ul className="mb-0">
+                      <li className="mb-2">PersonaAI is building the foundation for a real research economy powered by intelligent, behaviorally rich agents.</li>
+                      <li className="mb-2">$PRSNA is the fuel for an evolving system of ownership, insight, and opportunity.</li>
                       <li>With careful economic design prioritizing sustainability, participation, and tokenholder alignment, PersonaAI positions itself at the forefront of the agent commerce revolution.</li>
                     </ul>
                   </div>
