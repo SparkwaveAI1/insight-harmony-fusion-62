@@ -12,7 +12,7 @@ import {
   Book, 
   Layers, 
   User, 
-  Token, 
+  Coins, 
   BarChart, 
   ShoppingCart, 
   Search, 
@@ -20,7 +20,7 @@ import {
   Calendar,
   Rocket,
   ChevronRight,
-  Abstract
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -142,7 +142,7 @@ const WhitePaper = () => {
                   
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-primary/20 rounded-lg">
-                      <Abstract className="h-5 w-5 text-primary" />
+                      <BookOpen className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="text-2xl lg:text-3xl m-0 p-0 border-0">Abstract</h2>
                   </div>
@@ -268,7 +268,7 @@ const WhitePaper = () => {
                 <div id="section-ownership" ref={sectionRefs.ownership} className="scroll-mt-24">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-primary/20 rounded-lg">
-                      <Token className="h-5 w-5 text-primary" />
+                      <Coins className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">ERC-6551 Persona Ownership</h2>
                   </div>
@@ -298,7 +298,7 @@ const WhitePaper = () => {
                 <div id="section-tokenomics" ref={sectionRefs.tokenomics} className="scroll-mt-24">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-primary/20 rounded-lg">
-                      <Token className="h-5 w-5 text-primary" />
+                      <Coins className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">$PRSNA Tokenomics</h2>
                   </div>
@@ -375,7 +375,7 @@ const WhitePaper = () => {
                 <div id="section-earning" ref={sectionRefs.earning} className="scroll-mt-24">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-primary/20 rounded-lg">
-                      <Token className="h-5 w-5 text-primary" />
+                      <Coins className="h-5 w-5 text-primary" />
                     </div>
                     <h2 className="m-0 p-0 border-0">How $PRSNA Holders Earn</h2>
                   </div>
