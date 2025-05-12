@@ -1,5 +1,4 @@
 
-import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
@@ -36,12 +35,18 @@ const PersonaOption = () => {
         </div>
       </div>
       
-      <Link to="/persona-creation/landing">
-        <Button className="w-full justify-center group mt-auto">
+      <div className="mt-auto space-y-3">
+        <Button 
+          className="w-full justify-center group" 
+          disabled={true}
+        >
           Create a Persona
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Button>
-      </Link>
+        <p className="text-sm text-center text-amber-600 font-medium">
+          Interviewer scheduled to go live mid-May 2025
+        </p>
+      </div>
     </Card>
   );
 };
