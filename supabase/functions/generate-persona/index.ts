@@ -94,6 +94,7 @@ const personaTemplate = {
     },
   },
   trait_profile: {
+    // A. Big Five Personality Traits (OCEAN)
     big_five: {
       openness: null,
       conscientiousness: null,
@@ -101,6 +102,8 @@ const personaTemplate = {
       agreeableness: null,
       neuroticism: null,
     },
+    
+    // B. Moral Foundations Theory
     moral_foundations: {
       care: null,
       fairness: null,
@@ -109,20 +112,29 @@ const personaTemplate = {
       sanctity: null,
       liberty: null,
     },
+    
+    // C. World Values Survey Axes
     world_values: {
       traditional_vs_secular: null,
       survival_vs_self_expression: null,
     },
+    
+    // D. Political Compass Dimensions
     political_compass: {
       economic: null,
       authoritarian_libertarian: null,
     },
+    
+    // E. Behavioral Economics Traits
     behavioral_economics: {
       present_bias: null,
       loss_aversion: null,
       overconfidence: null,
       risk_sensitivity: null,
+      scarcity_sensitivity: null,
     },
+    
+    // Extended Traits
     extended_traits: {
       truth_orientation: null,
       moral_consistency: null,
@@ -134,6 +146,19 @@ const personaTemplate = {
       shadow_trait_activation: null,
       attention_pattern: null,
       cognitive_load_resilience: null,
+      institutional_trust: null,
+      conformity_tendency: null,
+      conflict_avoidance: null,
+      cognitive_flexibility: null,
+      need_for_cognitive_closure: null,
+    },
+    
+    // Dynamic State Modifiers
+    dynamic_state: {
+      current_stress_level: null,
+      emotional_stability_context: null,
+      motivation_orientation: null,
+      trust_volatility: null,
     },
   },
   behavioral_modulation: {
@@ -331,7 +356,7 @@ serve(async (req) => {
       console.log("Creating for user:", userId);
     }
 
-    // Step 1: Generate basic persona traits
+    // Step 1: Generate basic persona traits with enhanced trait architecture
     const traitsResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -345,9 +370,18 @@ serve(async (req) => {
             role: "system", 
             content: `You are an AI specialized in creating realistic personas for research. 
             Given a brief description, generate a detailed psychological and demographic profile following the template exactly.
-            You should fill in all the demographic fields in the metadata section, creating a rich and nuanced profile.
-            Fill in the trait_profile completely with accurate, realistic trait assessments.
-            Use realistic values based on demographic probability distributions.
+            
+            Pay special attention to the comprehensive trait architecture:
+            1. Base Traits (OCEAN, Moral Foundations, World Values, Political Compass, Behavioral Economics)
+            2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
+            3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+            
+            Fill in all demographic fields and knowledge domains in the metadata section.
+            For each knowledge domain, assign a value from 1 (minimal) to 5 (expert).
+            
+            For trait values, use decimal values between 0 and 1 (like 0.7) or descriptive labels 
+            that make psychological sense based on the persona.
+            
             Maintain internal consistency while allowing for realistic contradictions.
             Return the output as valid JSON matching the provided template exactly.` 
           },
@@ -418,10 +452,15 @@ serve(async (req) => {
           { 
             role: "system", 
             content: `You are an AI that simulates interviews for realistic personas. 
-            Given a persona definition, generate plausible responses to the preset interview questions 
+            Given a persona definition with a comprehensive trait architecture including:
+            1. Base Traits (OCEAN, Moral Foundations, World Values, Political Compass, Behavioral Economics)
+            2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
+            3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+            
+            Generate plausible responses to the preset interview questions 
             that match the persona's characteristics, traits, and speaking style.
-            Ensure responses reflect the persona's demographic information and psychological traits.
-            Include behavioral inconsistencies where appropriate.
+            Ensure responses reflect the persona's demographic information, psychological traits, and knowledge domains.
+            Include behavioral inconsistencies where appropriate based on their trait profile.
             For each question in each section, provide a response in the "response" field of each question object.` 
           },
           { 

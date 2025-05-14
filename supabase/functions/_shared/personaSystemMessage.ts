@@ -2,14 +2,117 @@
 export function createPersonaSystemMessage(persona: any) {
   const formatSection = (section: Record<string, any>) => 
     Object.entries(section || {}).map(([key, value]) => `- ${key}: ${value}`).join('\n');
+  
+  // Format trait profile with comprehensive trait architecture
+  const formatTraitProfile = (traitProfile: any) => {
+    let output = "";
+    
+    // Format Big Five
+    if (traitProfile?.big_five) {
+      output += "Big Five Personality:\n";
+      output += Object.entries(traitProfile.big_five)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    // Format Moral Foundations
+    if (traitProfile?.moral_foundations) {
+      output += "Moral Foundations:\n";
+      output += Object.entries(traitProfile.moral_foundations)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    // Format World Values
+    if (traitProfile?.world_values) {
+      output += "World Values:\n";
+      output += Object.entries(traitProfile.world_values)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    // Format Political Compass
+    if (traitProfile?.political_compass) {
+      output += "Political Orientation:\n";
+      output += Object.entries(traitProfile.political_compass)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    // Format Behavioral Economics
+    if (traitProfile?.behavioral_economics) {
+      output += "Decision Making & Risk:\n";
+      output += Object.entries(traitProfile.behavioral_economics)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    // Format Extended Traits
+    if (traitProfile?.extended_traits) {
+      output += "Extended Traits:\n";
+      output += Object.entries(traitProfile.extended_traits)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    // Format Dynamic State
+    if (traitProfile?.dynamic_state) {
+      output += "Current Mental/Emotional State:\n";
+      output += Object.entries(traitProfile.dynamic_state)
+        .filter(([_, value]) => value !== null)
+        .map(([key, value]) => `- ${key}: ${value}`)
+        .join('\n');
+      output += "\n\n";
+    }
+    
+    return output;
+  };
+  
+  // Format knowledge domains if present
+  const formatKnowledgeDomains = (metadata: any) => {
+    if (!metadata?.knowledge_domains) return "";
+    
+    let output = "Knowledge Domains (expertise level 1-5):\n";
+    
+    const domains = Object.entries(metadata.knowledge_domains)
+      .filter(([_, value]) => value !== null)
+      .sort((a, b) => (b[1] as number) - (a[1] as number));
+      
+    if (domains.length === 0) return "";
+    
+    for (const [domain, level] of domains) {
+      const formattedDomain = domain
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+        
+      output += `- ${formattedDomain}: ${level}/5\n`;
+    }
+    
+    return output + "\n";
+  };
 
   return `You are ${persona.name}. Here are your characteristics:
     
 Demographics:
 ${formatSection(persona.metadata)}
 
-Personality Traits:
-${formatSection(persona.trait_profile)}
+${formatKnowledgeDomains(persona.metadata)}
+
+Personality Profile:
+${formatTraitProfile(persona.trait_profile)}
 
 Behavioral Patterns:
 ${formatSection(persona.behavioral_modulation)}

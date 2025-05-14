@@ -41,14 +41,25 @@ export const generatePersonaResponse = async (
       const personaAge = typedPersona.metadata?.age ? parseInt(typedPersona.metadata.age) : 30;
       const birthYear = currentYear - personaAge;
       
-      // Parse self_awareness as a number (default to 0.5 if parsing fails)
+      // Extract personality traits with fallbacks
       const selfAwareness = typedPersona.trait_profile?.extended_traits?.self_awareness 
         ? parseFloat(typedPersona.trait_profile.extended_traits.self_awareness as string) 
         : 0.5;
         
-      // Parse overconfidence as a number (default to 0.5 if parsing fails)
       const overconfidence = typedPersona.trait_profile?.behavioral_economics?.overconfidence
         ? parseFloat(typedPersona.trait_profile.behavioral_economics.overconfidence as string)
+        : 0.5;
+      
+      const truthOrientation = typedPersona.trait_profile?.extended_traits?.truth_orientation
+        ? parseFloat(typedPersona.trait_profile.extended_traits.truth_orientation as string)
+        : 0.5;
+        
+      const needForCognitiveClosure = typedPersona.trait_profile?.extended_traits?.need_for_cognitive_closure
+        ? parseFloat(typedPersona.trait_profile.extended_traits?.need_for_cognitive_closure as string)
+        : 0.5;
+        
+      const cognitiveFlexibility = typedPersona.trait_profile?.extended_traits?.cognitive_flexibility
+        ? parseFloat(typedPersona.trait_profile.extended_traits?.cognitive_flexibility as string)
         : 0.5;
       
       // Define areas of expertise and non-expertise based on persona data
@@ -105,6 +116,15 @@ export const generatePersonaResponse = async (
         }
       }
       
+      // Extract dynamic state modifiers if available
+      const currentStressLevel = typedPersona.trait_profile?.dynamic_state?.current_stress_level
+        ? parseFloat(typedPersona.trait_profile.dynamic_state.current_stress_level as string)
+        : 0.5;
+        
+      const trustVolatility = typedPersona.trait_profile?.dynamic_state?.trust_volatility
+        ? parseFloat(typedPersona.trait_profile.dynamic_state.trust_volatility as string)
+        : 0.5;
+      
       // Define knowledge boundaries more explicitly with stronger directives
       knowledgeBoundaryInstructions = `
       ABSOLUTELY CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE:
@@ -141,6 +161,36 @@ export const generatePersonaResponse = async (
            overconfidence < 0.3 ? 
            "- LOW OVERCONFIDENCE: You're hesitant to make definitive statements without certainty and readily admit knowledge gaps" :
            "- MODERATE OVERCONFIDENCE: You show appropriate levels of certainty based on your knowledge"}
+         
+         ${truthOrientation < 0.4 ?
+           "- LOW TRUTH ORIENTATION: You prioritize social harmony or your own interests over absolute factual accuracy" :
+           truthOrientation > 0.7 ?
+           "- HIGH TRUTH ORIENTATION: You strongly value factual accuracy and precision in your statements" :
+           "- MODERATE TRUTH ORIENTATION: You generally try to be accurate but might occasionally bend the truth"}
+           
+         ${needForCognitiveClosure > 0.7 ?
+           "- HIGH NEED FOR CLOSURE: You prefer clear, decisive answers and feel uncomfortable with ambiguity" :
+           needForCognitiveClosure < 0.3 ?
+           "- LOW NEED FOR CLOSURE: You're comfortable with ambiguity and nuanced, open-ended responses" :
+           "- MODERATE NEED FOR CLOSURE: You can handle some ambiguity but prefer resolution when possible"}
+           
+         ${cognitiveFlexibility < 0.4 ?
+           "- LOW COGNITIVE FLEXIBILITY: You tend to stick to your established views and may resist changing your mind" :
+           cognitiveFlexibility > 0.7 ?
+           "- HIGH COGNITIVE FLEXIBILITY: You easily adapt to new information and readily update your views" :
+           "- MODERATE COGNITIVE FLEXIBILITY: You can change your mind given sufficient evidence but maintain some consistency"}
+           
+         ${currentStressLevel > 0.7 ?
+           "- HIGH CURRENT STRESS: Your responses may show some signs of stress, irritability, or defensiveness" :
+           currentStressLevel < 0.3 ?
+           "- LOW CURRENT STRESS: You're in a calm, measured state of mind in your responses" :
+           "- MODERATE CURRENT STRESS: You're managing daily pressures reasonably well"}
+           
+         ${trustVolatility > 0.7 ?
+           "- HIGH TRUST VOLATILITY: Your trust in others shifts rapidly based on recent interactions" :
+           trustVolatility < 0.3 ?
+           "- LOW TRUST VOLATILITY: Your trust in others is stable and changes slowly over time" :
+           "- MODERATE TRUST VOLATILITY: Your trust adapts to circumstances but doesn't swing wildly"}
       
       5. SPECIFIC KNOWLEDGE LIMITATIONS (MUST FOLLOW):
          - NO information about events after ${currentYear - 5}
