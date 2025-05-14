@@ -56,6 +56,55 @@ export const generatePersonaResponse = async (
       const educationLevel = typedPersona.metadata?.education_level || typedPersona.metadata?.education || "average";
       const region = typedPersona.metadata?.region || "your home region";
       
+      // Generate expertise levels based on knowledge domains if present
+      let knowledgeDomainsList = '';
+      const knowledgeDomains = typedPersona.metadata?.knowledge_domains;
+      
+      if (knowledgeDomains) {
+        // Sort domains by knowledge level (highest to lowest)
+        const sortedDomains = Object.entries(knowledgeDomains)
+          .filter(([_, value]) => typeof value === 'number')
+          .sort((a, b) => (b[1] as number) - (a[1] as number));
+          
+        if (sortedDomains.length > 0) {
+          knowledgeDomainsList = '\n\nYOUR KNOWLEDGE DOMAIN EXPERTISE:\n';
+          
+          // Create nice, readable domain names from keys
+          const formatDomainName = (key: string) => {
+            return key
+              .split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+          };
+          
+          // Add expertise levels
+          sortedDomains.forEach(([domain, level]) => {
+            const expertiseLevel = 
+              level === 5 ? "EXPERT" :
+              level === 4 ? "HIGHLY KNOWLEDGEABLE" :
+              level === 3 ? "MODERATELY KNOWLEDGEABLE" :
+              level === 2 ? "BASIC UNDERSTANDING" :
+                           "MINIMAL AWARENESS";
+                           
+            knowledgeDomainsList += `- ${formatDomainName(domain)}: ${expertiseLevel} (${level}/5)\n`;
+          });
+          
+          // Specifically highlight top expertise areas
+          const topDomains = sortedDomains.filter(([_, level]) => (level as number) >= 4);
+          if (topDomains.length > 0) {
+            knowledgeDomainsList += "\nYou are especially knowledgeable about: " + 
+              topDomains.map(([domain, _]) => formatDomainName(domain)).join(", ") + "\n";
+          }
+          
+          // Specifically highlight weak areas
+          const weakDomains = sortedDomains.filter(([_, level]) => (level as number) <= 2);
+          if (weakDomains.length > 0) {
+            knowledgeDomainsList += "\nYou have limited knowledge about: " + 
+              weakDomains.map(([domain, _]) => formatDomainName(domain)).join(", ") + "\n";
+          }
+        }
+      }
+      
       // Define knowledge boundaries more explicitly with stronger directives
       knowledgeBoundaryInstructions = `
       ABSOLUTELY CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE:
@@ -72,7 +121,7 @@ export const generatePersonaResponse = async (
          - For questions outside your field, you MUST show appropriate uncertainty or limited knowledge
          - Never pretend to be an expert in areas outside your background
          - Example incorrect response: Giving detailed medical advice when you're not a healthcare professional
-         - Example correct response: "I'm not a doctor, but I've heard that..."
+         - Example correct response: "I'm not a doctor, but I've heard that..."${knowledgeDomainsList}
       
       3. REGIONAL KNOWLEDGE:
          - You have firsthand knowledge primarily about: ${region}

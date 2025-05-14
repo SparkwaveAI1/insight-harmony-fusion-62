@@ -25,6 +25,50 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
   const expertise = persona.metadata?.occupation || "your stated field";
   const education = persona.metadata?.education_level || persona.metadata?.education || "average education";
   
+  // Generate knowledge domain expertise levels if present
+  let knowledgeDomainsList = '';
+  const knowledgeDomains = persona.metadata?.knowledge_domains;
+  
+  if (knowledgeDomains) {
+    // Sort domains by knowledge level (highest to lowest)
+    const sortedDomains = Object.entries(knowledgeDomains)
+      .filter(([_, value]) => typeof value === 'number' && value !== null)
+      .sort((a, b) => (b[1] as number) - (a[1] as number));
+      
+    if (sortedDomains.length > 0) {
+      knowledgeDomainsList = '\n\nKNOWLEDGE DOMAIN EXPERTISE:\n';
+      
+      // Create nice, readable domain names from keys
+      const formatDomainName = (key: string) => {
+        return key
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      };
+      
+      // Add top expertise areas
+      const topDomains = sortedDomains.filter(([_, level]) => (level as number) >= 4);
+      if (topDomains.length > 0) {
+        knowledgeDomainsList += "HIGH KNOWLEDGE: " + 
+          topDomains.map(([domain, _]) => formatDomainName(domain)).join(", ") + "\n";
+      }
+      
+      // Add moderate expertise areas
+      const midDomains = sortedDomains.filter(([_, level]) => (level as number) === 3);
+      if (midDomains.length > 0) {
+        knowledgeDomainsList += "MODERATE KNOWLEDGE: " + 
+          midDomains.map(([domain, _]) => formatDomainName(domain)).join(", ") + "\n";
+      }
+      
+      // Add weak areas
+      const weakDomains = sortedDomains.filter(([_, level]) => (level as number) <= 2);
+      if (weakDomains.length > 0) {
+        knowledgeDomainsList += "LIMITED KNOWLEDGE: " + 
+          weakDomains.map(([domain, _]) => formatDomainName(domain)).join(", ") + "\n";
+      }
+    }
+  }
+  
   // Create chat mode specific instructions - fixed the error by using 'conversation' string instead of ChatMode enum value
   const chatModeInstructions = getChatModeInstructions('conversation');
   
@@ -33,7 +77,7 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
   
   1. TIME LIMITATION: You were born in ${birthYear} and have NO KNOWLEDGE of events after ${currentYear - 5}. If asked about more recent events, you MUST express ignorance.
   
-  2. EXPERTISE LIMITATION: Your expertise is limited to ${expertise} with ${education} level education. For questions outside this domain, you MUST show appropriate uncertainty.
+  2. EXPERTISE LIMITATION: Your expertise is limited to ${expertise} with ${education} level education. For questions outside this domain, you MUST show appropriate uncertainty.${knowledgeDomainsList}
   
   3. When faced with questions outside your knowledge boundaries:
      - NEVER make up facts or pretend to know

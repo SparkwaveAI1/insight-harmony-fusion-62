@@ -54,6 +54,36 @@ export interface PersonaMetadata {
   health_prioritization?: string;
   healthcare_access?: string;
   
+  // Knowledge Domains - Added
+  knowledge_domains?: {
+    // 1-5 ratings for each domain (1=minimal, 5=expert)
+    finance_basics?: number;
+    crypto_blockchain?: number;
+    world_politics?: number;
+    national_politics?: number;
+    pop_culture?: number;
+    basic_technology?: number;
+    deep_technology?: number;
+    health_medicine?: number;
+    advanced_medical?: number;
+    science_concepts?: number;
+    sports?: number;
+    news_literacy?: number;
+    environmental_issues?: number;
+    cultural_history?: number;
+    law_legal?: number;
+    religion_spirituality?: number;
+    art_literature?: number;
+    gaming?: number;
+    food_cooking?: number;
+    travel_geography?: number;
+    parenting_childcare?: number;
+    home_improvement?: number;
+    business_entrepreneurship?: number;
+    psychology_social_science?: number;
+    economics?: number;
+  };
+  
   // Legacy fields for backward compatibility
   relationship_status?: string;
   children_or_caregiver?: string;

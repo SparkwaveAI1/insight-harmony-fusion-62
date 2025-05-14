@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -64,6 +63,35 @@ const personaTemplate = {
     mental_health_status: null,
     health_prioritization: null,
     healthcare_access: null,
+    
+    // Knowledge Domains - Added
+    knowledge_domains: {
+      finance_basics: null,
+      crypto_blockchain: null,
+      world_politics: null,
+      national_politics: null,
+      pop_culture: null,
+      basic_technology: null,
+      deep_technology: null,
+      health_medicine: null,
+      advanced_medical: null,
+      science_concepts: null,
+      sports: null,
+      news_literacy: null,
+      environmental_issues: null,
+      cultural_history: null,
+      law_legal: null,
+      religion_spirituality: null,
+      art_literature: null,
+      gaming: null,
+      food_cooking: null,
+      travel_geography: null,
+      parenting_childcare: null,
+      home_improvement: null,
+      business_entrepreneurship: null,
+      psychology_social_science: null,
+      economics: null,
+    },
   },
   trait_profile: {
     big_five: {
