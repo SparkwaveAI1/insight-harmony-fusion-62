@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -8,7 +7,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
-import { Persona } from "@/services/persona/types";
+import { Persona } from "@/services/persona";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   AlertDialog,
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deletePersona } from "@/services/persona/personaService";
+import { deletePersona } from "@/services/persona";
 
 interface DeletePersonaDialogProps {
   personaId: string;

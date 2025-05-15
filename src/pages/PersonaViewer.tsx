@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -11,7 +10,7 @@ import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import PersonaSummary from "@/components/personas/PersonaSummary";
 import { useParams, useLocation } from "react-router-dom";
-import { Persona } from "@/services/persona/types";
+import { Persona } from "@/services/persona";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Construction } from "lucide-react";
 

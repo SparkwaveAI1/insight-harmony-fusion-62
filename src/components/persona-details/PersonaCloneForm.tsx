@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Persona } from "@/services/persona/types";
+import { Persona } from "@/services/persona";
 import { usePersonaClone } from "./clone/usePersonaClone";
 import CloneFormContent from "./clone/CloneFormContent";
 import { CloneFormValues } from "./clone/cloneFormSchema";

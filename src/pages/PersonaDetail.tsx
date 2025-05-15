@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
@@ -7,8 +8,8 @@ import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import { toast } from "sonner";
-import { getPersonaByPersonaId } from "@/services/persona/personaService";
-import { Persona } from "@/services/persona/types";
+import { getPersonaByPersonaId } from "@/services/persona";
+import { Persona } from "@/services/persona";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
 import PersonaDemographics from "@/components/persona-details/PersonaDemographics";

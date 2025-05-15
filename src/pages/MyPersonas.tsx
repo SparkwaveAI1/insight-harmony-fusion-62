@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -10,7 +9,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import PersonaList from "@/components/personas/PersonaList";
 import PersonaSummary from "@/components/personas/PersonaSummary";
-import { Persona } from "@/services/persona/types";
+import { Persona } from "@/services/persona";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
