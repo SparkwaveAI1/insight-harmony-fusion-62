@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Persona } from "@/services/persona/types";
 import { usePersonaClone } from "./clone/usePersonaClone";
 import CloneFormContent from "./clone/CloneFormContent";
+import { CloneFormValues } from "./clone/cloneFormSchema";
 
 interface PersonaCloneFormProps {
   persona: Persona;
@@ -15,11 +16,12 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
   const [open, setOpen] = useState(false);
   const { form, onSubmit, isSubmitting } = usePersonaClone(persona);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CloneFormValues): Promise<boolean> => {
     const success = await onSubmit(data);
     if (success) {
       setOpen(false);
     }
+    return success;
   };
 
   return (
