@@ -7,6 +7,6 @@ export interface InterviewQuestion {
 export interface InterviewSection {
   section: string;
   notes: string;
-  questions: (string | InterviewQuestion)[];
-  responses?: string[];
+  questions: InterviewQuestion[];
+  responses?: string[]; // Keeping for backward compatibility
 }
