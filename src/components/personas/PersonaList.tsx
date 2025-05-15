@@ -35,34 +35,27 @@ export default function PersonaList({
         
         console.log("Total personas loaded:", data.length);
         
-        // Log all personas with their user_id values for debugging
-        data.forEach((persona, index) => {
-          console.log(`Persona ${index}: id=${persona.persona_id}, name=${persona.name}, user_id=${persona.user_id}`);
-        });
-        
-        // Apply filters based on the props
-        if (filterByCurrentUser && user) {
-          console.log("Filtering by current user:", user.id);
-          console.log("Before filter:", data.length, "personas");
-          
-          // Filter personas by user_id
-          data = data.filter(persona => {
-            const isMatch = persona.user_id === user.id;
-            console.log(`Checking persona ${persona.persona_id}: user_id=${persona.user_id}, user.id=${user.id}, match=${isMatch}`);
-            return isMatch;
-          });
-          
-          console.log("After filter:", data.length, "personas");
-        }
+        // Apply the correct filtering logic:
+        // 1. If we're in the library (publicOnly=true), show only public personas from other users and all personas from the current user
+        // 2. If we're filtering by current user, only show the current user's personas
+        // 3. If neither, follow the original logic
         
         if (publicOnly) {
-          data = data.filter(persona => persona.is_public);
-        }
-        
-        if (collectionId) {
-          // This would require an API call to get personas in a specific collection
-          const collectionPersonas = await getPersonasByCollection(collectionId);
-          data = collectionPersonas;
+          // For the public library, show:
+          // - Public personas from other users
+          // - All personas (public and private) from the current user
+          if (user) {
+            data = data.filter(persona => 
+              persona.is_public || // Public personas from anyone
+              persona.user_id === user.id // All personas (public and private) from current user
+            );
+          } else {
+            // If no user is logged in, only show public personas
+            data = data.filter(persona => persona.is_public);
+          }
+        } else if (filterByCurrentUser && user) {
+          // If filtering by current user, only show current user's personas
+          data = data.filter(persona => persona.user_id === user.id);
         }
         
         console.log(`Loaded ${data.length} personas with filters:`, 
@@ -107,7 +100,9 @@ export default function PersonaList({
     // If we're filtering by public only and a persona was made private, remove it from the list
     if (publicOnly && !isPublic) {
       setPersonas(prevPersonas => 
-        prevPersonas.filter(persona => persona.persona_id !== personaId)
+        prevPersonas.filter(persona => 
+          persona.persona_id !== personaId || persona.user_id === user?.id
+        )
       );
     }
   };
