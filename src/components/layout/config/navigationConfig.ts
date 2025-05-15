@@ -6,6 +6,7 @@ import {
   Briefcase,
   Settings,
   UserPlus,
+  Coins,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -35,6 +36,11 @@ export const navigationMenuItems = [
     icon: Briefcase,
   },
   {
+    title: "PRSNA Token",
+    url: "/prsna",
+    icon: Coins,
+  },
+  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
@@ -62,5 +68,10 @@ export const headerNavItems = [
     title: "Create",
     href: "/simulated-persona",
     icon: UserPlus,
+  },
+  {
+    title: "PRSNA",
+    href: "/prsna",
+    icon: Coins,
   },
 ];

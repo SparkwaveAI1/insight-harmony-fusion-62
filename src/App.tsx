@@ -42,6 +42,8 @@ import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScr
 import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
 import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
 
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+
 import "./App.css";
 
 // Create a client
@@ -61,49 +63,49 @@ function App() {
         <AuthProvider>
           <PersonaProvider>
             <Routes>
-              {/* Main marketing/landing page */}
+              {/* Public Routes - Accessible without login */}
               <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/sign-in" element={<Auth />} />
               
-              {/* App routes */}
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/persona-viewer" element={<PersonaViewer />} />
-              <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
-              <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
-              <Route path="/dual-chat" element={<DualChat />} />
-              <Route path="/your-persona" element={<YourPersona />} />
-              <Route path="/my-personas" element={<MyPersonas />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/:projectId" element={<ProjectDetail />} />
-              <Route path="/conversations/:conversationId" element={<ConversationDetail />} />
-              <Route path="/collections" element={<Collections />} />
-              <Route path="/collections/:collectionId" element={<CollectionDetail />} />
-              
-              {/* PRSNA token routes - consolidated section */}
+              {/* PRSNA token routes - public access */}
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
               <Route path="/prsna" element={<EarnPRSNA />} />
               <Route path="/prsna/roadmap" element={<Roadmap />} />
               <Route path="/prsna/whitepaper" element={<WhitePaper />} />
-              
-              {/* Research section */}
-              <Route path="/interviewer" element={<Interviewer />} />
-              <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/sign-in" element={<Auth />} />
-              <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
-              <Route path="/simulated-persona" element={<SimulatedPersona />} />
-              <Route path="/custom-research" element={<CustomResearch />} />
-              <Route path="/insight-conductor" element={<InsightConductor />} />
-              <Route path="/research" element={<Research />} />
-              <Route path="/participate" element={<ParticipateResearch />} />
-              <Route path="/interview-process" element={<InterviewProcess />} />
               <Route path="/whitepaper" element={<WhitePaper />} />
               
-              {/* Persona Creation Flow */}
-              <Route path="/create" element={<PersonaCreationLanding />} />
-              <Route path="/consent" element={<ConsentForm />} />
-              <Route path="/screener" element={<PersonaCreationScreener />} />
-              <Route path="/questionnaire" element={<PersonaCreationQuestionnaire />} />
-              <Route path="/complete" element={<PersonaCreationComplete />} />
+              {/* Protected Routes - Require authentication */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
+              <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
+              <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+              <Route path="/dual-chat" element={<ProtectedRoute><DualChat /></ProtectedRoute>} />
+              <Route path="/your-persona" element={<ProtectedRoute><YourPersona /></ProtectedRoute>} />
+              <Route path="/my-personas" element={<ProtectedRoute><MyPersonas /></ProtectedRoute>} />
+              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+              <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+              <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
+              <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+              <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+              
+              {/* Research section - Protected */}
+              <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
+              <Route path="/persona-ai-interviewer" element={<ProtectedRoute><PersonaAIInterviewer /></ProtectedRoute>} />
+              <Route path="/ai-focus-groups" element={<ProtectedRoute><AIFocusGroups /></ProtectedRoute>} />
+              <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
+              <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
+              <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />
+              <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
+              <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
+              <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
+              
+              {/* Persona Creation Flow - Protected */}
+              <Route path="/create" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />
+              <Route path="/consent" element={<ProtectedRoute><ConsentForm /></ProtectedRoute>} />
+              <Route path="/screener" element={<ProtectedRoute><PersonaCreationScreener /></ProtectedRoute>} />
+              <Route path="/questionnaire" element={<ProtectedRoute><PersonaCreationQuestionnaire /></ProtectedRoute>} />
+              <Route path="/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
               
               {/* 404 Route */}
               <Route path="*" element={<NotFound />} />
