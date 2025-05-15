@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
@@ -14,6 +15,7 @@ import PersonaLoadingState from "@/components/persona-details/PersonaLoadingStat
 import PersonaDemographics from "@/components/persona-details/PersonaDemographics";
 import PersonaKeyInsights from "@/components/persona-details/PersonaKeyInsights";
 import InterviewResponses from "@/components/persona-details/InterviewResponses";
+import PersonaCloneForm from "@/components/persona-details/PersonaCloneForm";
 import { formatName } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -126,6 +128,9 @@ const PersonaDetail = () => {
                       <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
                     </div>
                     <div className="flex items-center gap-4">
+                      {/* Add the Clone & Customize button */}
+                      <PersonaCloneForm persona={persona} />
+                      
                       <Button 
                         as={Link} 
                         to={`/persona/${persona.persona_id}/chat`}

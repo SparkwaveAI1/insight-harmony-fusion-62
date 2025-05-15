@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "./types";
 import { personaToDbPersona, dbPersonaToPersona } from "./mappers";
@@ -189,6 +188,37 @@ export async function deletePersona(personaId: string): Promise<boolean> {
   } catch (error) {
     console.error("Error deleting persona:", error);
     return false;
+  }
+}
+
+export async function clonePersona(personaData: Persona): Promise<Persona | null> {
+  try {
+    console.log("Cloning persona with customizations");
+    
+    // Generate a new persona_id
+    personaData.persona_id = crypto.randomUUID().substring(0, 8);
+    // Update creation date
+    personaData.creation_date = new Date().toISOString().split('T')[0];
+    
+    // Convert to the format expected by the database
+    const dbPersona = personaToDbPersona(personaData);
+    
+    const { data, error } = await supabase
+      .from('personas')
+      .insert(dbPersona)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error cloning persona:", error);
+      throw error;
+    }
+    
+    console.log("Persona successfully cloned:", data);
+    return dbPersonaToPersona(data);
+  } catch (error) {
+    console.error("Error in clonePersona:", error);
+    return null;
   }
 }
 
