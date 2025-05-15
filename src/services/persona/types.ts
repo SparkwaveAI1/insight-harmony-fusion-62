@@ -55,7 +55,7 @@ export interface PersonaMetadata {
   health_prioritization?: string;
   healthcare_access?: string;
   
-  // Knowledge Domains - Added
+  // Knowledge Domains - Expanded
   knowledge_domains?: {
     // 1-5 ratings for each domain (1=minimal, 5=expert)
     finance_basics?: number;
@@ -83,6 +83,7 @@ export interface PersonaMetadata {
     business_entrepreneurship?: number;
     psychology_social_science?: number;
     economics?: number;
+    // New knowledge domains can be added here
   };
   
   // Legacy fields for backward compatibility

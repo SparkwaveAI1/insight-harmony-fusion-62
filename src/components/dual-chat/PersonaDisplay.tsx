@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Card from '@/components/ui-custom/Card';
 import { Persona } from '@/services/persona/types';
@@ -58,25 +57,33 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
       "5e22fdc2": {
         decision: "Approaches decisions with careful research and data analysis. Prefers structured evaluation frameworks to reduce uncertainty.",
         driver: "Motivated by professional recognition and intellectual growth. Values stability and predictable outcomes over high-risk ventures.",
-        persuasion: "Responds best to logical arguments backed by credible evidence. Values detailed explanations over emotional appeals."
+        persuasion: "Responds best to logical arguments backed by credible evidence. Values detailed explanations over emotional appeals.",
+        bias: "Tends to favor established sources and conventional wisdom. May discount anecdotal evidence even when relevant.",
+        cognitive: "Analytical thinker who excels at breaking down complex problems but may sometimes miss intuitive solutions."
       },
       // Second persona: c69eb1eb
       "c69eb1eb": {
         decision: "Makes quick, intuitive decisions based on past experiences. Comfortable taking calculated risks when potential rewards are clear.",
         driver: "Motivated primarily by creative freedom and autonomy. Seeks opportunities for self-expression and innovation.",
-        persuasion: "Persuaded by stories and real-world examples rather than statistics. Appreciates authentic communication with emotional resonance."
+        persuasion: "Persuaded by stories and real-world examples rather than statistics. Appreciates authentic communication with emotional resonance.",
+        bias: "Overvalues personal experience and may discount expert opinion that contradicts lived experience.",
+        cognitive: "Divergent thinker who generates many possibilities before converging on a solution."
       },
       // Third persona: 4f7b9e3c
       "4f7b9e3c": {
         decision: "Balances intuition with collaborative input from trusted peers. Considers social and ethical implications before taking action.",
         driver: "Motivated by creating positive social impact through their work. Values community connection and shared accomplishments.",
-        persuasion: "Responds to inclusive language and community-focused messaging. Prefers solutions that benefit multiple stakeholders."
+        persuasion: "Responds to inclusive language and community-focused messaging. Prefers solutions that benefit multiple stakeholders.",
+        bias: "May prioritize group harmony over critical assessment of ideas. Tends to seek consensus even when disagreement would be productive.",
+        cognitive: "Integrative thinker who naturally synthesizes multiple perspectives into a cohesive view."
       },
       // Alina R persona
       "9f8540fa": {
         decision: "Relies on data visualization tools for complex financial decisions. Balances risk and reward through multi-scenario modeling.",
         driver: "Motivated by sustainable growth and ethical investing principles. Values work-life integration and financial security.",
-        persuasion: "Responds to evidence-based arguments with practical applications. Appreciates detailed analysis backed by real-world examples."
+        persuasion: "Responds to evidence-based arguments with practical applications. Appreciates detailed analysis backed by real-world examples.",
+        bias: "May over-index on quantifiable metrics while undervaluing qualitative factors that resist measurement.",
+        cognitive: "Structured problem-solver who excels at identifying patterns in complex datasets."
       }
     };
     
