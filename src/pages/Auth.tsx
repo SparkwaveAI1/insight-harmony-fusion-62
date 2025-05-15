@@ -13,6 +13,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const authFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
