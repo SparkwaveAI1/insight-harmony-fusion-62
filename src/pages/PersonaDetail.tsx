@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { MessageCircle, ChevronDown } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -16,11 +15,13 @@ import PersonaDemographics from "@/components/persona-details/PersonaDemographic
 import PersonaKeyInsights from "@/components/persona-details/PersonaKeyInsights";
 import InterviewResponses from "@/components/persona-details/InterviewResponses";
 import PersonaCloneForm from "@/components/persona-details/PersonaCloneForm";
+import DeletePersonaDialog from "@/components/personas/DeletePersonaDialog";
 import { formatName } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const PersonaDetail = () => {
   const { personaId } = useParams<{ personaId: string }>();
+  const navigate = useNavigate();
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [promptOpen, setPromptOpen] = useState(false);
@@ -47,6 +48,11 @@ const PersonaDetail = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handlePersonaDeleted = () => {
+    // Navigate back to personas list after deletion
+    navigate("/persona-viewer");
   };
 
   const getInterviewSections = () => {
@@ -128,8 +134,15 @@ const PersonaDetail = () => {
                       <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      {/* Add the Clone & Customize button */}
+                      {/* Clone & Customize button */}
                       <PersonaCloneForm persona={persona} />
+                      
+                      {/* Add Delete button */}
+                      <DeletePersonaDialog 
+                        personaId={persona.persona_id}
+                        personaName={persona.name}
+                        onDelete={handlePersonaDeleted}
+                      />
                       
                       <Button 
                         as={Link} 
