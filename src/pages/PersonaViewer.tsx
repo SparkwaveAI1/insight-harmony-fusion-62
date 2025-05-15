@@ -1,5 +1,7 @@
+
 import React, { useState } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,6 +20,7 @@ import { Construction } from "lucide-react";
 const queryClient = new QueryClient();
 
 const PersonaViewer = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { personaId } = useParams<{ personaId?: string }>();
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -70,6 +73,7 @@ const PersonaViewer = () => {
                       <PersonaList 
                         onPersonasLoad={setPersonas} 
                         publicOnly={isLibraryView}
+                        filterByCurrentUser={!isLibraryView}
                       />
                       {personas.length > 0 && <PersonaSummary personas={personas} />}
                     </>

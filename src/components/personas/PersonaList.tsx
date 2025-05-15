@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAllPersonas } from "@/services/persona"; // Updated import path
+import { getAllPersonas } from "@/services/persona"; 
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import PersonaLoadingState from "./PersonaLoadingState";
@@ -35,32 +35,27 @@ export default function PersonaList({
         
         console.log("Total personas loaded:", data.length);
         
-        // Apply the correct filtering logic:
-        // 1. If we're in the library (publicOnly=true), show only public personas from other users and all personas from the current user
-        // 2. If we're filtering by current user, only show the current user's personas
-        // 3. If neither, follow the original logic
-        
-        if (publicOnly) {
-          // For the public library, show:
-          // - Public personas from other users
-          // - All personas (public and private) from the current user
-          if (user) {
-            data = data.filter(persona => 
-              persona.is_public || // Public personas from anyone
-              persona.user_id === user.id // All personas (public and private) from current user
-            );
-          } else {
-            // If no user is logged in, only show public personas
-            data = data.filter(persona => persona.is_public);
-          }
+        // Apply filtering logic based on the view type
+        if (collectionId) {
+          // If we're in a collection, fetch personas for that collection
+          const collectionPersonas = await getPersonasByCollection(collectionId);
+          return collectionPersonas;
+        } else if (publicOnly) {
+          // For the public library (Persona Library view):
+          // 1. If user is logged in: Show all public personas + user's own personas (public or private)
+          // 2. If no user is logged in: Show only public personas
+          return user 
+            ? data.filter(persona => 
+                persona.is_public || 
+                persona.user_id === user.id
+              )
+            : data.filter(persona => persona.is_public);
         } else if (filterByCurrentUser && user) {
-          // If filtering by current user, only show current user's personas
-          data = data.filter(persona => persona.user_id === user.id);
+          // For My Personas view: Show only the current user's personas
+          return data.filter(persona => persona.user_id === user.id);
         }
         
-        console.log(`Loaded ${data.length} personas with filters:`, 
-          { filterByCurrentUser, publicOnly, collectionId });
-        
+        // Default: return all personas (should not happen in normal usage)
         return data;
       } catch (err) {
         console.error("Error loading personas:", err);
@@ -97,7 +92,8 @@ export default function PersonaList({
       )
     );
     
-    // If we're filtering by public only and a persona was made private, remove it from the list
+    // If we're in the public library and a persona was made private,
+    // remove it from the list only if it's not owned by the current user
     if (publicOnly && !isPublic) {
       setPersonas(prevPersonas => 
         prevPersonas.filter(persona => 
@@ -146,4 +142,4 @@ export default function PersonaList({
 }
 
 // Import the getPersonasByCollection function at the top of the file
-import { getPersonasByCollection } from "@/services/persona"; // Updated import path
+import { getPersonasByCollection } from "@/services/persona"; 

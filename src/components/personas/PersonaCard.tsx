@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
 import {
   Card,
@@ -30,6 +30,7 @@ interface PersonaCardProps {
 
 const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, onDelete }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isOwner = user?.id === persona.user_id;
   const [isPublic, setIsPublic] = useState(persona.is_public);
 
@@ -54,13 +55,20 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
     }
   };
 
+  const handleViewDetails = () => {
+    navigate(`/persona-detail/${persona.persona_id}`);
+  };
+
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex flex-col space-y-1">
-          <Link to={`/persona-detail/${persona.persona_id}`}>
-            <div className="text-sm font-medium">{persona.name}</div>
-          </Link>
+          <div 
+            className="text-sm font-medium hover:text-primary cursor-pointer" 
+            onClick={handleViewDetails}
+          >
+            {persona.name}
+          </div>
           <p className="text-xs text-muted-foreground">
             Created: {persona.creation_date}
           </p>
@@ -73,10 +81,8 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link to={`/persona-detail/${persona.persona_id}`}>
-                View Details
-              </Link>
+            <DropdownMenuItem onClick={handleViewDetails}>
+              View Details
             </DropdownMenuItem>
             {isOwner && (
               <>
@@ -108,7 +114,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
-      <CardContent>
+      <CardContent onClick={handleViewDetails} className="cursor-pointer">
         <p className="text-sm text-muted-foreground">
           {persona.prompt?.substring(0, 80) || "No description"}...
         </p>
