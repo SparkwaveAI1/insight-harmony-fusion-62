@@ -1,10 +1,9 @@
-
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 import { formatName } from '@/lib/utils';
-import { getPersonaByPersonaId } from '@/services/persona/personaService';
+import { getPersonaByPersonaId } from '@/services/persona'; // Updated import path
 
 interface PersonaFetcherProps {
   personaId: string;

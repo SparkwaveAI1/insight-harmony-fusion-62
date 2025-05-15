@@ -1,5 +1,5 @@
-import { useState } from "react";
-import {
+import React, { useState } from "react";
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -10,9 +10,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deletePersona } from "@/services/persona";
+import { deletePersona } from "@/services/persona"; // Updated import path
 
 interface DeletePersonaDialogProps {
   personaId: string;
@@ -20,56 +21,53 @@ interface DeletePersonaDialogProps {
   onDelete: () => void;
 }
 
-export default function DeletePersonaDialog({
-  personaId,
-  personaName,
-  onDelete,
-}: DeletePersonaDialogProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
+const DeletePersonaDialog: React.FC<DeletePersonaDialogProps> = ({ personaId, personaName, onDelete }) => {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
+    setIsLoading(true);
     try {
-      setIsDeleting(true);
-      await deletePersona(personaId);
-      toast.success(`Persona "${personaName}" has been deleted`);
-      onDelete();
+      const success = await deletePersona(personaId);
+      if (success) {
+        toast.success("Persona deleted successfully");
+        onDelete();
+      } else {
+        toast.error("Failed to delete persona");
+      }
     } catch (error) {
       console.error("Error deleting persona:", error);
       toast.error("Failed to delete persona");
     } finally {
-      setIsDeleting(false);
+      setIsLoading(false);
+      setOpen(false);
     }
   };
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <button
-          className="p-2 bg-background/90 rounded-full hover:bg-red-100 transition-colors"
-          title="Delete persona"
-          onClick={(e) => e.stopPropagation()} // Prevent event bubbling to parent
-        >
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </button>
+        <Button variant="destructive" size="sm">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Persona</AlertDialogTitle>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete "{personaName}"? This action cannot be undone.
+            This action cannot be undone. This will permanently delete the persona &quot;{personaName}&quot; from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="bg-red-500 hover:bg-red-600 text-white"
-          >
-            {isDeleting ? "Deleting..." : "Delete"}
+          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={isLoading}>
+            {isLoading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
-}
+};
+
+export default DeletePersonaDialog;

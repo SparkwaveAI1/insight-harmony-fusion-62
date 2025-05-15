@@ -1,7 +1,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { Persona } from './types';
-import { savePersona } from './personaService';
+import { savePersona } from './operations/savePersona'; // Updated import path
 import { supabase } from '@/integrations/supabase/client';
 
 export async function generatePersona(prompt: string): Promise<Persona | null> {

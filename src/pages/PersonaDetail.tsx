@@ -8,7 +8,7 @@ import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import { toast } from "sonner";
-import { getPersonaByPersonaId } from "@/services/persona";
+import { getPersonaByPersonaId } from "@/services/persona"; // Updated import path
 import { Persona } from "@/services/persona";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";

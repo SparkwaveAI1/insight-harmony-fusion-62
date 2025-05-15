@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAllPersonas } from "@/services/persona/personaService";
+import { getAllPersonas } from "@/services/persona"; // Updated import path
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import PersonaLoadingState from "./PersonaLoadingState";
@@ -151,4 +151,4 @@ export default function PersonaList({
 }
 
 // Import the getPersonasByCollection function at the top of the file
-import { getPersonasByCollection } from "@/services/persona/personaService";
+import { getPersonasByCollection } from "@/services/persona"; // Updated import path

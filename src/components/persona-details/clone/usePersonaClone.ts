@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
-import { Persona } from "@/services/persona";
+import { Persona } from "@/services/persona/types";
 import { clonePersona } from "@/services/persona";
 import { cloneFormSchema, CloneFormValues } from "./cloneFormSchema";
 

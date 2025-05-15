@@ -16,7 +16,7 @@ import {
   getPersonasNotInCollection, 
   addPersonaToCollection 
 } from "@/services/collections/personaCollectionOperations";
-import { getAllPersonas } from "@/services/persona/personaService";
+import { getAllPersonas } from '@/services/persona'; // Updated import path
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

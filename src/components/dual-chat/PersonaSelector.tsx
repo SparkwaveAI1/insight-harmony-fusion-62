@@ -12,7 +12,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import { getAllPersonas } from '@/services/persona/personaService';
+import { getAllPersonas } from '@/services/persona'; // Updated import path
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, LibraryIcon, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";

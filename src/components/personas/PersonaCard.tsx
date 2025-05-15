@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import AddToCollectionButton from "./AddToCollectionButton";
 import { Switch } from "@/components/ui/switch";
 import { Persona } from "@/services/persona/types";
-import { updatePersonaVisibility } from "@/services/persona/personaService";
+import { updatePersonaVisibility } from "@/services/persona"; // Updated import path
 import DeletePersonaDialog from "./DeletePersonaDialog";
 
 interface PersonaCardProps {

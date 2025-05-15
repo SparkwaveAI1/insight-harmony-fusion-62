@@ -2,7 +2,7 @@
 import React, { createContext, useState, useCallback, ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getPersonaByPersonaId } from '@/services/persona/personaService';
+import { getPersonaByPersonaId } from '@/services/persona'; // Updated import path
 import { Persona } from '@/services/persona/types';
 import { PersonaContextType } from './PersonaContext.types';
 import { supabase } from '@/integrations/supabase/client';
