@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
@@ -14,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
-import { updatePersonaVisibility } from "@/services/persona"; // Updated import path
+import { updatePersonaVisibility } from "@/services/persona"; 
 import { Persona } from "@/services/persona/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,17 +103,6 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
                     Clone Persona
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <DeletePersonaDialog
-                    personaId={persona.persona_id}
-                    personaName={persona.name}
-                    onDelete={() => {
-                      if (onDelete) {
-                        onDelete(persona.persona_id);
-                      }
-                    }}
-                  />
-                </DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
@@ -129,7 +119,21 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
         ) : (
           <Badge variant="outline">Private</Badge>
         )}
-        <AddToCollectionButton personaId={persona.persona_id} />
+        <div className="flex gap-2">
+          <AddToCollectionButton personaId={persona.persona_id} />
+          {isOwner && (
+            <DeletePersonaDialog
+              personaId={persona.persona_id}
+              personaName={persona.name}
+              userId={persona.user_id}
+              onDelete={() => {
+                if (onDelete) {
+                  onDelete(persona.persona_id);
+                }
+              }}
+            />
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

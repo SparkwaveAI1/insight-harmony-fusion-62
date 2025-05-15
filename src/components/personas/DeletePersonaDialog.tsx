@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   AlertDialog,
@@ -13,21 +14,39 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { deletePersona } from "@/services/persona"; // Updated import path
+import { deletePersona } from "@/services/persona";
+import { useAuth } from "@/context/AuthContext";
 
 interface DeletePersonaDialogProps {
   personaId: string;
   personaName: string;
   onDelete: () => void;
+  userId?: string;
 }
 
-const DeletePersonaDialog: React.FC<DeletePersonaDialogProps> = ({ personaId, personaName, onDelete }) => {
+const DeletePersonaDialog: React.FC<DeletePersonaDialogProps> = ({ 
+  personaId, 
+  personaName, 
+  onDelete,
+  userId 
+}) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  
+  // Check if current user is the owner of this persona
+  const isOwner = user?.id === userId;
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
+      if (!isOwner) {
+        toast.error("You don't have permission to delete this persona");
+        setOpen(false);
+        setIsLoading(false);
+        return;
+      }
+      
       const success = await deletePersona(personaId);
       if (success) {
         toast.success("Persona deleted successfully");
@@ -43,6 +62,11 @@ const DeletePersonaDialog: React.FC<DeletePersonaDialogProps> = ({ personaId, pe
       setOpen(false);
     }
   };
+
+  // Only render the delete button if the user is the owner
+  if (!isOwner) {
+    return null;
+  }
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>

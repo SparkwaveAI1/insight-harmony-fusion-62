@@ -8,7 +8,7 @@ import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import { toast } from "sonner";
-import { getPersonaByPersonaId } from "@/services/persona"; // Updated import path
+import { getPersonaByPersonaId } from "@/services/persona"; 
 import { Persona } from "@/services/persona";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
@@ -19,6 +19,7 @@ import PersonaCloneForm from "@/components/persona-details/PersonaCloneForm";
 import DeletePersonaDialog from "@/components/personas/DeletePersonaDialog";
 import { formatName } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAuth } from "@/context/AuthContext";
 
 const PersonaDetail = () => {
   const { personaId } = useParams<{ personaId: string }>();
@@ -26,6 +27,7 @@ const PersonaDetail = () => {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [promptOpen, setPromptOpen] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (personaId) {
@@ -55,6 +57,9 @@ const PersonaDetail = () => {
     // Navigate back to personas list after deletion
     navigate("/persona-viewer");
   };
+
+  // Check if current user is the owner of this persona
+  const isOwner = user?.id === persona?.user_id;
 
   const getInterviewSections = () => {
     if (!persona?.interview_sections) return [];
@@ -138,12 +143,15 @@ const PersonaDetail = () => {
                       {/* Clone & Customize button */}
                       <PersonaCloneForm persona={persona} />
                       
-                      {/* Add Delete button */}
-                      <DeletePersonaDialog 
-                        personaId={persona.persona_id}
-                        personaName={persona.name}
-                        onDelete={handlePersonaDeleted}
-                      />
+                      {/* Add Delete button - only visible to owner */}
+                      {isOwner && (
+                        <DeletePersonaDialog 
+                          personaId={persona.persona_id}
+                          personaName={persona.name}
+                          userId={persona.user_id}
+                          onDelete={handlePersonaDeleted}
+                        />
+                      )}
                       
                       <Button 
                         as={Link} 
