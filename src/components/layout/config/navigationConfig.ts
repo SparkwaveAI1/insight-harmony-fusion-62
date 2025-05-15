@@ -40,3 +40,27 @@ export const navigationMenuItems = [
     icon: Settings,
   },
 ];
+
+// Header navigation - simplified menu for the header
+export const headerNavItems = [
+  {
+    title: "Home",
+    href: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Personas",
+    href: "/persona-viewer",
+    icon: Users,
+  },
+  {
+    title: "Create",
+    href: "/simulated-persona",
+    icon: UserPlus,
+  },
+];
