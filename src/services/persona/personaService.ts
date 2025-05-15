@@ -201,8 +201,7 @@ export async function clonePersona(personaData: Persona): Promise<Persona | null
     // Update creation date
     personaData.creation_date = new Date().toISOString().split('T')[0];
     
-    // Create a sanitized version of the persona data
-    // Remove any fields that might not exist in the database schema
+    // Create a sanitized version of the persona data with all required fields
     const sanitizedPersona = {
       persona_id: personaData.persona_id,
       name: personaData.name,
@@ -212,6 +211,12 @@ export async function clonePersona(personaData: Persona): Promise<Persona | null
       interview_sections: personaData.interview_sections || {},
       trait_profile: personaData.trait_profile || {},
       linguistic_profile: personaData.linguistic_profile || {},
+      // Make sure the behavioral_modulation is never null
+      behavioral_modulation: personaData.behavioral_modulation || {},
+      // Make sure preinterview_tags is never null
+      preinterview_tags: personaData.preinterview_tags || [],
+      // Make sure simulation_directives is never null
+      simulation_directives: personaData.simulation_directives || {},
       is_public: false,
     };
     
