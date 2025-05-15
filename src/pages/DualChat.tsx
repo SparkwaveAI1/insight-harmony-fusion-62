@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";  // Changed from next/navigation
 import { v4 as uuidv4 } from 'uuid';
 
 import { useAuth } from "@/context/AuthContext";
@@ -14,7 +14,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ModeToggle } from "@/components/layout/ModeToggle";
 import {
   Select,
   SelectContent,
@@ -25,10 +24,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { generateResponse } from "@/services/open-ai";
-import { saveConversation, saveMessage } from "@/services/collections";
+import { createConversation, createMessage } from "@/services/collections/conversationService";
 import { ConversationMessage } from "@/services/collections/types";
 import PersonaSelector from "@/components/dual-chat/PersonaSelector";
+
+// Add a function to simulate generating responses from personas
+const generateResponse = async (persona: Persona, message: string): Promise<string> => {
+  try {
+    // This is a placeholder function, in a real app it would call an API
+    return `${persona.name} would respond: This is a simulated response to "${message}"`;
+  } catch (error) {
+    console.error("Error generating response:", error);
+    throw new Error("Failed to generate response");
+  }
+};
 
 const DualChat = () => {
   const [personaAId, setPersonaAId] = useState("");
@@ -42,7 +51,7 @@ const DualChat = () => {
   const [tags, setTags] = useState("");
   const [allPersonas, setAllPersonas] = useState<Persona[]>([]);
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPersonas = async () => {
@@ -153,20 +162,29 @@ const DualChat = () => {
         tags: tags.split(",").map((tag) => tag.trim()),
       };
 
-      const savedConversation = await saveConversation(conversationData);
-      setConversationId(savedConversation.id);
+      const savedConversation = await createConversation(
+        conversationData.project_id,
+        conversationData.title,
+        conversationData.persona_ids,
+        conversationData.tags
+      );
+      
+      if (savedConversation) {
+        setConversationId(savedConversation.id);
 
-      // Save messages
-      for (const msg of messages) {
-        const messageData = {
-          ...msg,
-          conversation_id: savedConversation.id,
-        };
-        await saveMessage(messageData);
+        // Save messages
+        for (const msg of messages) {
+          const messageData = {
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+            persona_id: msg.persona_id
+          };
+          await createMessage(savedConversation.id, messageData);
+        }
+
+        toast.success("Conversation saved successfully!");
+        navigate("/my-projects");
       }
-
-      toast.success("Conversation saved successfully!");
-      router.push("/my-projects");
     } catch (error) {
       console.error("Error saving conversation:", error);
       toast.error("Failed to save conversation.");

@@ -2,6 +2,12 @@
 import { Persona } from "@/services/persona/types";
 
 export interface PersonaContextType {
+  // All personas
+  personas: Persona[];
+  
+  // Update personas
+  setPersonas: (personas: Persona[]) => void;
+  
   // Current active persona
   activePersona: Persona | null;
   
