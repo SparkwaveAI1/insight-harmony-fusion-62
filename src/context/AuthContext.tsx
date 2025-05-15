@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,7 +67,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      toast.success("Check your email for the confirmation link");
+      
+      // Email confirmations are disabled, so we can show a success message
+      toast.success("Account created successfully! You can now sign in.");
     } catch (error: any) {
       toast.error(error.message || "Error signing up");
       throw error;

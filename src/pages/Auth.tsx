@@ -75,7 +75,9 @@ const Auth = () => {
       } else {
         await signUp(values.email, values.password);
         console.log("Sign up successful");
-        // Stay on page after signup since user needs to verify email
+        // With email confirmation disabled, we can now redirect to login
+        setActiveTab("login");
+        toast.success("Account created successfully! You can now sign in.");
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -250,6 +252,9 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
+                    <div className="text-sm text-muted-foreground">
+                      <p>Creating an account allows you to save and manage your personas.</p>
+                    </div>
                     <Button
                       type="submit"
                       className="w-full"
