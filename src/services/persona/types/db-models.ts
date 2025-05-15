@@ -1,0 +1,20 @@
+
+import { InterviewSection } from './interview';
+
+export interface DbPersona {
+  id: string;
+  persona_id: string;
+  name: string;
+  creation_date: string;
+  created_at: string;
+  metadata: any;
+  behavioral_modulation: any;
+  interview_sections: any;
+  linguistic_profile: any;
+  preinterview_tags: any;
+  simulation_directives: any;
+  trait_profile: any;
+  prompt?: string;
+  user_id?: string;
+  is_public?: boolean;
+}
