@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -15,7 +16,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { getAllPersonas } from "@/services/persona"; // Updated import path
 import { Persona } from "@/services/persona/types";
-import { addPersonasToCollection } from "@/services/collections";
+import { addPersonasToCollection } from "@/services/collections/personaCollectionOperations";
 
 interface AddPersonasToCollectionDialogProps {
   collectionId: string;

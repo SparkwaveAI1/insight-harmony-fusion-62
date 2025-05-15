@@ -1,10 +1,11 @@
+
 import React, { createContext, useState, useEffect } from "react";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "./AuthContext";
 import { PersonaContextType } from "./PersonaContext.types";
 import { getAllPersonas } from "@/services/persona"; // Updated import path
 
-const PersonaContext = createContext<PersonaContextType | undefined>(undefined);
+export const PersonaContext = createContext<PersonaContextType | undefined>(undefined);
 
 interface PersonaProviderProps {
   children: React.ReactNode;
@@ -12,9 +13,11 @@ interface PersonaProviderProps {
 
 export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) => {
   const [personas, setPersonas] = useState<Persona[]>([]);
+  const [activePersona, setActivePersona] = useState<Persona | null>(null);
+  const [activePersonas, setActivePersonas] = useState<Persona[]>([]);
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const loadPersonas = async () => {
@@ -30,7 +33,8 @@ export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) =>
           setPersonas(allPersonas);
         }
       } catch (err) {
-        setError(String(err));
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
       } finally {
         setIsLoading(false);
       }
@@ -39,11 +43,57 @@ export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) =>
     loadPersonas();
   }, [user]);
 
+  const loadPersona = async (personaId: string): Promise<Persona | null> => {
+    try {
+      setIsLoading(true);
+      // Find the persona in the current list or fetch it
+      const persona = personas.find(p => p.persona_id === personaId) || null;
+      setActivePersona(persona);
+      return persona;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMultiplePersonas = async (personaIds: string[]): Promise<Persona[]> => {
+    try {
+      setIsLoading(true);
+      // Filter personas from the current list based on the provided IDs
+      const foundPersonas = personas.filter(p => personaIds.includes(p.persona_id));
+      setActivePersonas(foundPersonas);
+      return foundPersonas;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearPersona = () => {
+    setActivePersona(null);
+  };
+
+  const clearPersonas = () => {
+    setActivePersonas([]);
+  };
+
   const value: PersonaContextType = {
     personas,
     setPersonas,
+    activePersona,
+    activePersonas,
     isLoading,
     error,
+    loadPersona,
+    loadMultiplePersonas,
+    clearPersona,
+    clearPersonas
   };
 
   return (
