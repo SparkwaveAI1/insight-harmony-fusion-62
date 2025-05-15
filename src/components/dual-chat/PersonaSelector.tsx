@@ -1,264 +1,87 @@
-
-import React, { useState } from 'react';
-import Card from '@/components/ui-custom/Card';
-import Button from '@/components/ui-custom/Button';
-import { Input } from '@/components/ui/input';
-import { 
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { useQuery } from '@tanstack/react-query';
-import { getAllPersonas } from '@/services/persona'; // Updated import path
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, LibraryIcon, UserPlus } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { getAllPersonas } from "@/services/persona"; // Updated import path
+import { Persona } from "@/services/persona/types";
 
 interface PersonaSelectorProps {
-  personaAId: string;
-  personaBId: string;
-  setPersonaAId: (id: string) => void;
-  setPersonaBId: (id: string) => void;
-  handleLoadPersonas: () => void;
-  autoChatActive: boolean;
-  isLoading: boolean;
+  value: string;
+  onValueChange: (value: string) => void;
 }
 
-const PersonaSelector: React.FC<PersonaSelectorProps> = ({
-  personaAId,
-  personaBId,
-  setPersonaAId,
-  setPersonaBId,
-  handleLoadPersonas,
-  autoChatActive,
-  isLoading
-}) => {
-  const [browseDialogOpen, setBrowseDialogOpen] = useState(false);
-  const [currentSelectionTarget, setCurrentSelectionTarget] = useState<'A' | 'B' | null>(null);
-  
-  // Fetch all personas from the library
-  const { data: allPersonas = [], isLoading: isLoadingPersonas } = useQuery({
-    queryKey: ['allPersonas'],
-    queryFn: async () => {
-      const personas = await getAllPersonas();
-      return personas.map(p => ({ id: p.persona_id, name: p.name, metadata: p.metadata }));
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
-  // Get persona name by ID
-  const getPersonaNameById = (id: string): string => {
-    const persona = allPersonas.find(p => p.id === id);
-    return persona ? persona.name : id;
-  };
-  
-  // Filter personas for the browse dialog
-  const [browseSearchTerm, setBrowseSearchTerm] = useState('');
-  const filteredBrowsePersonas = allPersonas.filter(persona => 
-    persona.name.toLowerCase().includes(browseSearchTerm.toLowerCase()) ||
-    (persona.metadata?.occupation || "").toLowerCase().includes(browseSearchTerm.toLowerCase())
-  );
-  
-  const handleOpenBrowseDialog = (target: 'A' | 'B') => {
-    setCurrentSelectionTarget(target);
-    setBrowseSearchTerm('');
-    setBrowseDialogOpen(true);
-  };
-  
-  const handleSelectPersona = (personaId: string) => {
-    if (currentSelectionTarget === 'A') {
-      setPersonaAId(personaId);
-    } else if (currentSelectionTarget === 'B') {
-      setPersonaBId(personaId);
-    }
-    setBrowseDialogOpen(false);
-  };
-  
+function PersonaSelector({ value, onValueChange }: PersonaSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const [personas, setPersonas] = useState<Persona[]>([]);
+
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        const allPersonas = await getAllPersonas();
+        setPersonas(allPersonas);
+      } catch (error) {
+        console.error("Error fetching personas:", error);
+      }
+    };
+
+    fetchPersonas();
+  }, []);
+
+  const selectedPersona = personas.find((persona) => persona.persona_id === value);
+
   return (
-    <Card className="mb-6">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Select Personas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Persona A Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Persona A</label>
-            <div className="flex flex-col space-y-2">
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleOpenBrowseDialog('A')}
-                  disabled={autoChatActive || isLoading}
-                  title="Browse Persona Library"
-                  className="w-full"
-                >
-                  <LibraryIcon className="h-4 w-4 mr-2" />
-                  Browse Persona Library
-                </Button>
-              </div>
-              
-              <Select
-                value={personaAId}
-                onValueChange={setPersonaAId}
-                disabled={autoChatActive || isLoading || isLoadingPersonas}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-[200px] justify-between"
+        >
+          {selectedPersona ? selectedPersona.name : "Select Persona"}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <Command>
+          <CommandInput placeholder="Search persona..." />
+          <CommandEmpty>No persona found.</CommandEmpty>
+          <CommandGroup>
+            {personas.map((persona) => (
+              <CommandItem
+                key={persona.persona_id}
+                value={persona.name}
+                onSelect={() => {
+                  onValueChange(persona.persona_id);
+                  setOpen(false);
+                }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a persona">
-                    {personaAId ? getPersonaNameById(personaAId) : "Select a persona"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="max-h-80">
-                  <SelectGroup>
-                    {allPersonas.map((persona) => (
-                      <SelectItem key={persona.id} value={persona.id}>
-                        {persona.name}
-                      </SelectItem>
-                    ))}
-                    {allPersonas.length === 0 && (
-                      <div className="py-2 px-2 text-sm text-muted-foreground">
-                        {isLoadingPersonas ? "Loading..." : "No personas found"}
-                      </div>
-                    )}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <Input 
-                value={personaAId} 
-                onChange={(e) => setPersonaAId(e.target.value)}
-                placeholder="Or enter Persona ID directly"
-                disabled={autoChatActive || isLoading}
-                className="text-xs"
-              />
-            </div>
-          </div>
-          
-          {/* Persona B Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Persona B</label>
-            <div className="flex flex-col space-y-2">
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleOpenBrowseDialog('B')}
-                  disabled={autoChatActive || isLoading}
-                  title="Browse Persona Library"
-                  className="w-full"
-                >
-                  <LibraryIcon className="h-4 w-4 mr-2" />
-                  Browse Persona Library
-                </Button>
-              </div>
-              
-              <Select
-                value={personaBId}
-                onValueChange={setPersonaBId}
-                disabled={autoChatActive || isLoading || isLoadingPersonas}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a persona">
-                    {personaBId ? getPersonaNameById(personaBId) : "Select a persona"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="max-h-80">
-                  <SelectGroup>
-                    {allPersonas.map((persona) => (
-                      <SelectItem key={persona.id} value={persona.id}>
-                        {persona.name}
-                      </SelectItem>
-                    ))}
-                    {allPersonas.length === 0 && (
-                      <div className="py-2 px-2 text-sm text-muted-foreground">
-                        {isLoadingPersonas ? "Loading..." : "No personas found"}
-                      </div>
-                    )}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <Input 
-                value={personaBId} 
-                onChange={(e) => setPersonaBId(e.target.value)}
-                placeholder="Or enter Persona ID directly"
-                disabled={autoChatActive || isLoading}
-                className="text-xs"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-end">
-          <Button 
-            onClick={handleLoadPersonas} 
-            disabled={!personaAId || !personaBId || autoChatActive || isLoading}
-          >
-            Load Personas
-          </Button>
-        </div>
-      </div>
-      
-      {/* Browse Persona Library Dialog */}
-      <Dialog open={browseDialogOpen} onOpenChange={setBrowseDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Browse Persona Library</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            {/* Search input */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search personas by name, occupation..."
-                className="pl-10"
-                value={browseSearchTerm}
-                onChange={(e) => setBrowseSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            {/* Personas list */}
-            <div className="max-h-[400px] overflow-y-auto space-y-2 pr-2">
-              {isLoadingPersonas ? (
-                Array(3).fill(0).map((_, i) => (
-                  <div key={i} className="flex items-center p-3 space-x-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-3/4 mb-2" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))
-              ) : filteredBrowsePersonas.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No personas match your search query.
-                </div>
-              ) : (
-                filteredBrowsePersonas.map((persona) => (
-                  <div
-                    key={persona.id}
-                    onClick={() => handleSelectPersona(persona.id)}
-                    className="flex items-center p-3 rounded-md cursor-pointer transition-colors hover:bg-muted/50"
-                  >
-                    {/* Persona info */}
-                    <div className="flex-1">
-                      <p className="font-medium">{persona.name}</p>
-                      <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3">
-                        {persona.metadata?.age && <span>Age: {persona.metadata.age}</span>}
-                        {persona.metadata?.gender && <span>{persona.metadata.gender}</span>}
-                        {persona.metadata?.occupation && <span>{persona.metadata.occupation}</span>}
-                      </div>
-                    </div>
-                    
-                    <UserPlus className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value === persona.persona_id ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {persona.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
-};
+}
 
 export default PersonaSelector;
