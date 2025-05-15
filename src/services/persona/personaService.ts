@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "./types";
 import { personaToDbPersona, dbPersonaToPersona } from "./mappers";
@@ -200,8 +201,22 @@ export async function clonePersona(personaData: Persona): Promise<Persona | null
     // Update creation date
     personaData.creation_date = new Date().toISOString().split('T')[0];
     
+    // Create a sanitized version of the persona data
+    // Remove any fields that might not exist in the database schema
+    const sanitizedPersona = {
+      persona_id: personaData.persona_id,
+      name: personaData.name,
+      creation_date: personaData.creation_date,
+      prompt: personaData.prompt,
+      metadata: personaData.metadata || {},
+      interview_sections: personaData.interview_sections || {},
+      trait_profile: personaData.trait_profile || {},
+      linguistic_profile: personaData.linguistic_profile || {},
+      is_public: false,
+    };
+    
     // Convert to the format expected by the database
-    const dbPersona = personaToDbPersona(personaData);
+    const dbPersona = personaToDbPersona(sanitizedPersona as Persona);
     
     const { data, error } = await supabase
       .from('personas')
