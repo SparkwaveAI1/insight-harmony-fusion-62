@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { savePersona } from "./operations/savePersona";
 import { Persona } from "./types";
 import { toast } from "sonner";
-import { generatePersonaImage } from "./operations/generatePersonaImage";
 
 export const generatePersona = async (prompt: string): Promise<Persona | null> => {
   try {
@@ -37,36 +36,11 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     const savedPersona = await savePersona(data.persona);
     
     if (savedPersona) {
-      console.log("Persona saved to database, now generating image...");
-      toast.info("Generating profile image...", { 
-        id: "image-generation", 
-        duration: 20000 
-      });
-      
-      // Generate image for the persona
-      const imageUrl = await generatePersonaImage(savedPersona);
-      
-      if (imageUrl) {
-        console.log("Profile image generated:", imageUrl);
-        toast.success("Profile image generated!", { id: "image-generation" });
-        
-        // Update the persona with the image URL
-        const updatedPersona = {
-          ...savedPersona,
-          profile_image_url: imageUrl
-        };
-        
-        // Save the updated persona with image URL
-        const finalPersona = await savePersona(updatedPersona);
-        return finalPersona;
-      } else {
-        console.warn("Failed to generate profile image, returning persona without image");
-        toast.error("Failed to generate profile image", { id: "image-generation" });
-        return savedPersona;
-      }
+      console.log("Persona saved to database successfully");
+      return savedPersona;
     }
     
-    return savedPersona;
+    return null;
   } catch (error) {
     console.error("Error in generatePersona:", error);
     toast.error("An unexpected error occurred");

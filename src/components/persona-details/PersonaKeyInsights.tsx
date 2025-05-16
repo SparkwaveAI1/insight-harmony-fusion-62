@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Brain, Target, Users } from "lucide-react";
 
@@ -100,13 +99,14 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       // Use multiple factors for decisions
       const decisions = [];
       
-      if (parseFloat(riskSensitivity) > 0.7) {
+      // Convert string values to numbers before comparison
+      if (parseFloat(String(riskSensitivity)) > 0.7) {
         decisions.push(`Takes a cautious approach to decision-making, carefully weighing potential downsides`);
-      } else if (parseFloat(riskSensitivity) < 0.3) {
+      } else if (parseFloat(String(riskSensitivity)) < 0.3) {
         decisions.push(`Embraces risk in decision-making, focusing on potential opportunities over threats`);
-      } else if (parseFloat(bigFive?.conscientiousness) > 0.7) {
+      } else if (parseFloat(String(bigFive?.conscientiousness)) > 0.7) {
         decisions.push(`Follows systematic decision-making processes with thorough evaluation of options`);
-      } else if (parseFloat(bigFive?.openness) > 0.7) {
+      } else if (parseFloat(String(bigFive?.openness)) > 0.7) {
         decisions.push(`Values innovative approaches and considers unconventional alternatives`);
       } else if (education?.includes("PhD") || education?.includes("Doctorate")) {
         decisions.push(`Applies rigorous analytical frameworks from academic training to complex decisions`);
@@ -119,11 +119,12 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       }
       
       // Add a second insight based on different factors
-      if (parseFloat(bigFive?.neuroticism) > 0.6) {
+      // Ensure we convert string values to numbers before comparison
+      if (parseFloat(String(bigFive?.neuroticism)) > 0.6) {
         decisions.push(`May second-guess decisions or seek reassurance after committing to a course of action`);
-      } else if (parseFloat(bigFive?.extraversion) > 0.6 && parseFloat(bigFive?.openness) > 0.5) {
+      } else if (parseFloat(String(bigFive?.extraversion)) > 0.6 && parseFloat(String(bigFive?.openness)) > 0.5) {
         decisions.push(`Often gathers input from others before finalizing important decisions`);
-      } else if (parseFloat(bigFive?.agreeableness) > 0.7) {
+      } else if (parseFloat(String(bigFive?.agreeableness)) > 0.7) {
         decisions.push(`Considers how decisions will impact relationships and group harmony`);
       } else if (occupation?.includes("Analyst") || occupation?.includes("Engineer") || occupation?.includes("Scientist")) {
         decisions.push(`Prioritizes objective data and measurable outcomes in decision processes`);
@@ -145,12 +146,12 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       
       const drivers = [];
       
-      // Primary motivation
-      if (parseFloat(moralFoundations?.care) > 0.7) {
+      // Primary motivation - ensure we convert string values to numbers before comparison
+      if (parseFloat(String(moralFoundations?.care)) > 0.7) {
         drivers.push(`Strongly motivated by opportunities to care for and support others`);
-      } else if (parseFloat(bigFive?.achievement) > 0.7 || parseFloat(extended?.self_efficacy) > 0.7) {
+      } else if (parseFloat(String(bigFive?.achievement)) > 0.7 || parseFloat(String(extended?.self_efficacy)) > 0.7) {
         drivers.push(`Driven by personal achievement and setting challenging goals`);
-      } else if (parseFloat(bigFive?.openness) > 0.7) {
+      } else if (parseFloat(String(bigFive?.openness)) > 0.7) {
         drivers.push(`Energized by intellectual exploration and creative possibilities`);
       } else if (age < 30) {
         drivers.push(`Motivated by building skills and establishing professional identity`);
@@ -162,14 +163,14 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
         drivers.push(`Motivated by a combination of professional growth and personal fulfillment`);
       }
       
-      // Secondary values
-      if (parseFloat(moralFoundations?.fairness) > 0.7) {
+      // Secondary values - ensure we convert string values to numbers before comparison
+      if (parseFloat(String(moralFoundations?.fairness)) > 0.7) {
         drivers.push(`Values equity and fairness in systems and relationships`);
-      } else if (parseFloat(bigFive?.extraversion) > 0.7) {
+      } else if (parseFloat(String(bigFive?.extraversion)) > 0.7) {
         drivers.push(`Energized by social recognition and collaborative achievements`);
-      } else if (parseFloat(bigFive?.conscientiousness) > 0.7) {
+      } else if (parseFloat(String(bigFive?.conscientiousness)) > 0.7) {
         drivers.push(`Values structure, organization, and following through on commitments`);
-      } else if (parseFloat(extended?.self_awareness) > 0.7) {
+      } else if (parseFloat(String(extended?.self_awareness)) > 0.7) {
         drivers.push(`Prioritizes authentic self-expression and personal growth`);
       } else {
         drivers.push(`Balances material security with opportunities for meaningful experiences`);
@@ -187,14 +188,14 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       
       const persuasion = [];
       
-      // Response to communication style
-      if (parseFloat(bigFive?.openness) < 0.4) {
+      // Response to communication style - ensure we convert string values to numbers before comparison
+      if (parseFloat(String(bigFive?.openness)) < 0.4) {
         persuasion.push(`Responds best to practical, straightforward communication with clear benefits`);
-      } else if (parseFloat(worldValues?.traditional_vs_secular) < 0.3) {
+      } else if (parseFloat(String(worldValues?.traditional_vs_secular)) < 0.3) {
         persuasion.push(`Receptive to messages that respect tradition and established values`);
       } else if (education?.includes("Graduate") || education?.includes("Master") || education?.includes("PhD")) {
         persuasion.push(`Values well-researched arguments that acknowledge complexity and nuance`);
-      } else if (parseFloat(extended?.truth_orientation) > 0.7) {
+      } else if (parseFloat(String(extended?.truth_orientation)) > 0.7) {
         persuasion.push(`Appreciates honest, direct communication even when messages are challenging`);
       } else if (occupation?.includes("Creative") || occupation?.includes("Marketing")) {
         persuasion.push(`Resonates with visually engaging content and narrative-driven approaches`);
@@ -202,14 +203,14 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
         persuasion.push(`Responds to balanced communication that addresses both logic and values`);
       }
       
-      // Trust-building factors
-      if (parseFloat(bigFive?.agreeableness) > 0.7) {
+      // Trust-building factors - ensure we convert string values to numbers before comparison
+      if (parseFloat(String(bigFive?.agreeableness)) > 0.7) {
         persuasion.push(`Builds trust through warm, collaborative communication styles`);
-      } else if (parseFloat(extended?.institutional_trust) < 0.4) {
+      } else if (parseFloat(String(extended?.institutional_trust)) < 0.4) {
         persuasion.push(`Values transparency and proof when evaluating claims from organizations`);
-      } else if (parseFloat(bigFive?.conscientiousness) > 0.7) {
+      } else if (parseFloat(String(bigFive?.conscientiousness)) > 0.7) {
         persuasion.push(`Appreciates thorough preparation and attention to detail in presentations`);
-      } else if (parseFloat(extended?.cognitive_flexibility) > 0.7) {
+      } else if (parseFloat(String(extended?.cognitive_flexibility)) > 0.7) {
         persuasion.push(`Open to reconsidering positions when presented with compelling new evidence`);
       } else {
         persuasion.push(`Evaluates both emotional resonance and factual accuracy when forming opinions`);
