@@ -2,11 +2,10 @@
 import {
   LayoutDashboard,
   Users,
-  MessageSquare,
   Briefcase,
-  Settings,
   UserPlus,
   Coins,
+  Folder,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -26,9 +25,9 @@ export const navigationMenuItems = [
     icon: UserPlus,
   },
   {
-    title: "Chat",
-    url: "/dual-chat",
-    icon: MessageSquare,
+    title: "Collections",
+    url: "/collections",
+    icon: Folder,
   },
   {
     title: "Projects",
@@ -39,11 +38,6 @@ export const navigationMenuItems = [
     title: "PRSNA Token",
     url: "/prsna",
     icon: Coins,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
   },
 ];
 
