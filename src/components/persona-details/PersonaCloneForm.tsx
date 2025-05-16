@@ -47,7 +47,7 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="secondary" 
+          variant="default" 
           className="flex items-center gap-2 flex-1"
         >
           <Copy className="h-4 w-4" />
