@@ -26,41 +26,90 @@ serve(async (req) => {
     // Extract demographic information
     const metadata = personaData.metadata || {};
     const traits = personaData.trait_profile || {};
-    const extendedTraits = traits.extended_traits || {};
+    const description = personaData.prompt || "";
     
     // Extract essential data
     const age = metadata.age || "adult";
     const gender = metadata.gender || "person";
     const ethnicity = metadata.race_ethnicity || "";
     const occupation = metadata.occupation || "";
+    const physicalDescription = metadata.physical_description || "";
     
-    // Extract additional details if available
-    const region = metadata.region || "";
-    const styleKeywords = [];
+    // Physical attributes that should be extracted from the description
+    let isOverweight = false;
+    let healthConditions = [];
     
-    // Personality-based style hints
-    if (traits.big_five) {
-      const bigFive = traits.big_five;
-      if (bigFive.openness && parseFloat(bigFive.openness) > 0.6) styleKeywords.push("creative");
-      if (bigFive.conscientiousness && parseFloat(bigFive.conscientiousness) > 0.6) styleKeywords.push("organized");
-      if (bigFive.extraversion && parseFloat(bigFive.extraversion) > 0.6) styleKeywords.push("outgoing");
-      if (bigFive.agreeableness && parseFloat(bigFive.agreeableness) > 0.6) styleKeywords.push("friendly");
-      if (bigFive.neuroticism && parseFloat(bigFive.neuroticism) > 0.6) styleKeywords.push("pensive");
+    // Parse the original description for physical attributes and health conditions
+    if (description) {
+      if (description.toLowerCase().includes("overweight") || 
+          description.toLowerCase().includes("obese") || 
+          description.toLowerCase().includes("heavy")) {
+        isOverweight = true;
+      }
+      
+      // Check for common health conditions
+      const conditions = ["diabetic", "diabetes", "asthma", "high blood pressure", "hypertension"];
+      conditions.forEach(condition => {
+        if (description.toLowerCase().includes(condition)) {
+          healthConditions.push(condition);
+        }
+      });
     }
     
-    // Construct the prompt with strict emphasis on headshot with plain background
-    let imagePrompt = `A professional headshot portrait photograph of a ${age}-year-old ${ethnicity} ${gender}`;
+    // Mental health aspects
+    let mentalHealthTraits = [];
+    if (description.toLowerCase().includes("depression") || 
+        description.toLowerCase().includes("depressed")) {
+      mentalHealthTraits.push("showing signs of depression");
+    }
+    if (description.toLowerCase().includes("anxious") || 
+        description.toLowerCase().includes("anxiety")) {
+      mentalHealthTraits.push("appears anxious");
+    }
+    if (description.toLowerCase().includes("tired") || 
+        description.toLowerCase().includes("exhausted")) {
+      mentalHealthTraits.push("looks tired");
+    }
     
+    // Social aspects that might be visible
+    let socialTraits = [];
+    if (description.toLowerCase().includes("trouble socially") || 
+        description.toLowerCase().includes("not many friends") || 
+        description.toLowerCase().includes("lonely")) {
+      socialTraits.push("appears somewhat uncomfortable or awkward");
+    }
+    
+    // Start building the prompt
+    let imagePrompt = `A realistic photograph of a ${age}-year-old ${ethnicity} ${gender}`;
+    
+    // Add physical description
+    if (isOverweight) {
+      imagePrompt += " who is overweight";
+    } else if (physicalDescription) {
+      imagePrompt += ` who is ${physicalDescription}`;
+    }
+    
+    // Add occupation
     if (occupation) {
       imagePrompt += ` who works as a ${occupation}`;
     }
     
-    if (styleKeywords.length > 0) {
-      imagePrompt += `. Their appearance is ${styleKeywords.slice(0, 2).join(", ")}`;
+    // Add health conditions if present
+    if (healthConditions.length > 0) {
+      imagePrompt += ` and has ${healthConditions.join(" and ")}`;
+    }
+    
+    // Add mental health and social traits
+    if (mentalHealthTraits.length > 0) {
+      imagePrompt += `. This person ${mentalHealthTraits.join(" and ")}`;
+    }
+    
+    if (socialTraits.length > 0) {
+      imagePrompt += ` and ${socialTraits.join(" and ")}`;
     }
     
     // Add specific instructions for professional headshot style
-    imagePrompt += `. IMPORTANT: This must be ONLY a professional headshot portrait with a completely solid plain background (white, light gray, or neutral color). The image should be framed from shoulders up, showing just the person's head and shoulders against a plain backdrop. The lighting should be even and professional, similar to a LinkedIn profile photo or corporate ID. Do not include any props, scenes, landscapes, cityscapes, objects, text, logos, or other people in the image. The background must be completely plain and uniform with no patterns, textures, or gradients.`;
+    imagePrompt += `. IMPORTANT: This must be a realistic headshot portrait with a plain background. The image should be framed from shoulders up, with natural lighting. This should be a CANDID REALISTIC photo, NOT idealized or beautified - show the actual physical traits described including weight, health conditions, and emotional state. Make sure the image honestly depicts the person described with all their physical characteristics.`;
     
     console.log("Generated prompt:", imagePrompt);
     
