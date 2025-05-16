@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -151,19 +152,6 @@ export default function PersonaDetailHeader({
             )}
           </Avatar>
           
-          {isOwner && (
-            <Button 
-              variant="outline" 
-              size="icon"
-              className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow"
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImage}
-              title="Generate profile image"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </Button>
-          )}
-          
           {isGeneratingImage && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full">
               <div className="animate-spin h-8 w-8 border-3 border-white border-t-transparent rounded-full"></div>
@@ -218,6 +206,19 @@ export default function PersonaDetailHeader({
             isOwner={isOwner} 
             onVisibilityChange={onVisibilityChange} 
           />
+          
+          {isOwner && !persona.profile_image_url && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateImage}
+              disabled={isGeneratingImage}
+              className="mt-2 flex items-center gap-2"
+            >
+              <ImageIcon className="h-4 w-4" />
+              Generate Profile Image
+            </Button>
+          )}
         </div>
       </div>
       
