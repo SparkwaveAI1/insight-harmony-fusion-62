@@ -6,9 +6,11 @@ export type SpeedInsight = {
 };
 
 export const determineCommunicationStyle = (persona: Persona): SpeedInsight => {
-  const numberOfWords = persona.linguistic_profile?.vocabulary_size || 0;
+  // Safe access with optional chaining and fallbacks for vocabulary_size
+  const vocabulary = persona.linguistic_profile?.default_output_length || '';
+  const isElaborate = vocabulary.includes('long') || vocabulary.includes('elaborate');
 
-  if (numberOfWords > 5000) {
+  if (isElaborate) {
     return { value: "Eloquent, Detailed", speed: "fast" };
   } else {
     return { value: "Concise, Direct", speed: "slow" };
@@ -16,9 +18,11 @@ export const determineCommunicationStyle = (persona: Persona): SpeedInsight => {
 };
 
 export const determineDecisionMakingStyle = (persona: Persona): SpeedInsight => {
-  const impulsivity = persona.trait_profile?.impulsivity || 0;
+  // Using big_five traits instead of direct property
+  const conscientiousness = persona.trait_profile?.big_five?.conscientiousness || '';
+  const isImpulsive = conscientiousness === 'low' || conscientiousness === 'very low';
 
-  if (impulsivity > 0.7) {
+  if (isImpulsive) {
     return { value: "Quick, Intuitive", speed: "fast" };
   } else {
     return { value: "Deliberate, Analytical", speed: "slow" };
@@ -26,9 +30,11 @@ export const determineDecisionMakingStyle = (persona: Persona): SpeedInsight => 
 };
 
 export const determineLearningStyle = (persona: Persona): SpeedInsight => {
-  const curiosity = persona.trait_profile?.curiosity || 0;
+  // Using big_five traits instead of direct property
+  const openness = persona.trait_profile?.big_five?.openness || '';
+  const isCurious = openness === 'high' || openness === 'very high';
 
-  if (curiosity > 0.6) {
+  if (isCurious) {
     return { value: "Exploratory, Experimental", speed: "fast" };
   } else {
     return { value: "Structured, Methodical", speed: "slow" };
@@ -36,9 +42,11 @@ export const determineLearningStyle = (persona: Persona): SpeedInsight => {
 };
 
 export const determineWorkEthic = (persona: Persona): SpeedInsight => {
-  const conscientiousness = persona.trait_profile?.conscientiousness || 0;
+  // Using big_five traits instead of direct property
+  const conscientiousness = persona.trait_profile?.big_five?.conscientiousness || '';
+  const isDiligent = conscientiousness === 'high' || conscientiousness === 'very high';
 
-  if (conscientiousness > 0.7) {
+  if (isDiligent) {
     return { value: "Diligent, Organized", speed: "slow" };
   } else {
     return { value: "Flexible, Adaptable", speed: "fast" };
@@ -46,9 +54,11 @@ export const determineWorkEthic = (persona: Persona): SpeedInsight => {
 };
 
 export const determineConflictResolutionStyle = (persona: Persona): SpeedInsight => {
-  const agreeableness = persona.trait_profile?.agreeableness || 0;
+  // Using big_five traits instead of direct property
+  const agreeableness = persona.trait_profile?.big_five?.agreeableness || '';
+  const isAccommodating = agreeableness === 'high' || agreeableness === 'very high';
 
-  if (agreeableness > 0.7) {
+  if (isAccommodating) {
     return { value: "Accommodating, Diplomatic", speed: "slow" };
   } else {
     return { value: "Assertive, Competitive", speed: "fast" };
@@ -56,9 +66,11 @@ export const determineConflictResolutionStyle = (persona: Persona): SpeedInsight
 };
 
 export const determineFeedbackPreference = (persona: Persona): SpeedInsight => {
-  const openness = persona.trait_profile?.openness || 0;
+  // Using big_five traits instead of direct property
+  const openness = persona.trait_profile?.big_five?.openness || '';
+  const isOpen = openness === 'high' || openness === 'very high';
 
-  if (openness > 0.6) {
+  if (isOpen) {
     return { value: "Constructive, Insightful", speed: "fast" };
   } else {
     return { value: "Positive, Encouraging", speed: "slow" };
@@ -66,9 +78,11 @@ export const determineFeedbackPreference = (persona: Persona): SpeedInsight => {
 };
 
 export const determineTeamworkStyle = (persona: Persona): SpeedInsight => {
-  const extraversion = persona.trait_profile?.extraversion || 0;
+  // Using big_five traits instead of direct property
+  const extraversion = persona.trait_profile?.big_five?.extraversion || '';
+  const isCollaborative = extraversion === 'high' || extraversion === 'very high';
 
-  if (extraversion > 0.6) {
+  if (isCollaborative) {
     return { value: "Collaborative, Enthusiastic", speed: "fast" };
   } else {
     return { value: "Independent, Focused", speed: "slow" };
@@ -76,9 +90,11 @@ export const determineTeamworkStyle = (persona: Persona): SpeedInsight => {
 };
 
 export const determineLeadershipStyle = (persona: Persona): SpeedInsight => {
-  const dominance = persona.trait_profile?.dominance || 0;
+  // Using extended_traits instead of direct property
+  const authority = persona.trait_profile?.moral_foundations?.authority || '';
+  const isDirective = authority === 'high' || authority === 'very high';
 
-  if (dominance > 0.7) {
+  if (isDirective) {
     return { value: "Directive, Visionary", speed: "fast" };
   } else {
     return { value: "Supportive, Facilitative", speed: "slow" };
@@ -86,9 +102,11 @@ export const determineLeadershipStyle = (persona: Persona): SpeedInsight => {
 };
 
 export const determineRiskTolerance = (persona: Persona): SpeedInsight => {
-  const neuroticism = persona.trait_profile?.neuroticism || 0;
+  // Using big_five traits instead of direct property
+  const neuroticism = persona.trait_profile?.big_five?.neuroticism || '';
+  const isAnxious = neuroticism === 'high' || neuroticism === 'very high';
 
-  if (neuroticism > 0.5) {
+  if (isAnxious) {
     return { value: "Cautious, Conservative", speed: "slow" };
   } else {
     return { value: "Bold, Adventurous", speed: "fast" };
@@ -96,12 +114,14 @@ export const determineRiskTolerance = (persona: Persona): SpeedInsight => {
 };
 
 export const determineStressResponse = (persona: Persona): SpeedInsight => {
-  const resilience = persona.trait_profile?.resilience || 0;
+  // Using dynamic_state instead of direct property
+  const stressLevel = persona.trait_profile?.dynamic_state?.current_stress_level || '';
+  const isReactive = stressLevel === 'high' || stressLevel === 'very high';
 
-  if (resilience > 0.6) {
-    return { value: "Composed, Optimistic", speed: "slow" };
-  } else {
+  if (isReactive) {
     return { value: "Anxious, Reactive", speed: "fast" };
+  } else {
+    return { value: "Composed, Optimistic", speed: "slow" };
   }
 };
 
@@ -126,9 +146,11 @@ export const determineSocialMediaUsage = (persona: Persona): SpeedInsight => {
 };
 
 export const determineShoppingHabits = (persona: Persona): SpeedInsight => {
-  const spendingHabits = persona.metadata?.spending_habits || 0;
+  // Using behavioral_economics instead of direct property
+  const spendingHabit = persona.trait_profile?.behavioral_economics?.present_bias || '';
+  const isImpulsive = spendingHabit === 'high' || spendingHabit === 'very high';
 
-  if (spendingHabits > 0.6) {
+  if (isImpulsive) {
     return { value: "Impulsive, Luxurious", speed: "fast" };
   } else {
     return { value: "Budget-conscious, Practical", speed: "slow" };
@@ -166,9 +188,11 @@ export const determineFoodPreferences = (persona: Persona): SpeedInsight => {
 };
 
 export const determinePetPreferences = (persona: Persona): SpeedInsight => {
-  const petAffinity = persona.metadata?.pet_affinity || 0;
+  // Using agreeableness as proxy for pet affinity
+  const agreeableness = persona.trait_profile?.big_five?.agreeableness || '';
+  const isAffectionate = agreeableness === 'high' || agreeableness === 'very high';
 
-  if (petAffinity > 0.6) {
+  if (isAffectionate) {
     return { value: "Affectionate, Caring", speed: "slow" };
   } else {
     return { value: "Independent, Minimalist", speed: "fast" };
@@ -216,9 +240,11 @@ export const determineExercisePreference = (persona: Persona): SpeedInsight => {
 };
 
 export const determinePoliticalAffiliation = (persona: Persona): SpeedInsight => {
-  const politicalViews = persona.metadata?.political_views || 0;
+  // Using political_compass instead of direct property
+  const political = persona.trait_profile?.political_compass?.authoritarian_libertarian || '';
+  const isVocal = political === 'very libertarian' || political === 'libertarian';
 
-  if (politicalViews > 0.6) {
+  if (isVocal) {
     return { value: "Activist, Vocal", speed: "fast" };
   } else {
     return { value: "Moderate, Reserved", speed: "slow" };
@@ -246,20 +272,33 @@ export const determineMoviePreference = (persona: Persona): SpeedInsight => {
 };
 
 export const determineMusicPreference = (persona: Persona): SpeedInsight => {
-  const musicTaste = persona.metadata?.music_taste || 0;
+  // Get demographic info from metadata
+  const demographics = persona.metadata?.demographics || {};
+  const ageGroup = demographics.age_group || '';
+  const isSenior = ageGroup.includes('65+') || ageGroup.includes('senior');
 
-  // Fix for the type error: Convert string to number before comparison
-  const age = typeof persona.trait_profile?.age === 'string' 
-    ? parseInt(persona.trait_profile.age, 10) 
-    : persona.trait_profile?.age || 0;
-
-  if (age > 65) {
+  if (isSenior) {
     return { value: "Classical, Jazz, Folk", speed: "slow" };
   }
 
-  if (musicTaste > 0.6) {
+  // Fallback to general classification
+  const isModern = persona.trait_profile?.big_five?.openness === 'high';
+  
+  if (isModern) {
     return { value: "Pop, Electronic", speed: "fast" };
   } else {
     return { value: "Alternative, Indie", speed: "slow" };
   }
+};
+
+export const getPersonaInsights = (persona: Persona): SpeedInsight[] => {
+  return [
+    determineCommunicationStyle(persona),
+    determineDecisionMakingStyle(persona),
+    determineLearningStyle(persona),
+    determineWorkEthic(persona),
+    determineConflictResolutionStyle(persona),
+    determineTeamworkStyle(persona),
+    determineLeadershipStyle(persona)
+  ];
 };
