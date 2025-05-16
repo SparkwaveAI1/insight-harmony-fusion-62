@@ -40,17 +40,28 @@ const UserProfile = () => {
 
     const fetchProfile = async () => {
       try {
+        // Specify the exact type for the data to avoid TypeScript errors
+        type ProfileResponse = {
+          username: string | null;
+          full_name: string | null;
+          avatar_url: string | null;
+        };
+
         const { data, error } = await supabase
-          .from("profiles")
-          .select("username, full_name, avatar_url")
-          .eq("id", user.id)
-          .single();
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', user.id)
+          .single<ProfileResponse>();
 
         if (error) {
           console.error("Error fetching profile:", error);
           // If profile doesn't exist, we'll just use email data
         } else if (data) {
-          setProfile(data);
+          setProfile({
+            username: data.username || "",
+            full_name: data.full_name || "",
+            avatar_url: data.avatar_url || "",
+          });
           setFormData({
             username: data.username || "",
             full_name: data.full_name || "",
@@ -82,24 +93,33 @@ const UserProfile = () => {
     try {
       // Check if profile exists
       const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", user.id)
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
         .single();
 
       if (existingProfile) {
         // Update existing profile
         const { error } = await supabase
-          .from("profiles")
-          .update(formData)
-          .eq("id", user.id);
+          .from('profiles')
+          .update({
+            username: formData.username,
+            full_name: formData.full_name,
+            avatar_url: formData.avatar_url,
+          })
+          .eq('id', user.id);
 
         if (error) throw error;
       } else {
         // Insert new profile
         const { error } = await supabase
-          .from("profiles")
-          .insert([{ id: user.id, ...formData }]);
+          .from('profiles')
+          .insert([{ 
+            id: user.id, 
+            username: formData.username,
+            full_name: formData.full_name,
+            avatar_url: formData.avatar_url,
+          }]);
 
         if (error) throw error;
       }
