@@ -14,7 +14,7 @@ export const interviewSections: InterviewSection[] = [
   },
   {
     section: "Daily Life & Rhythms",
-    notes: "Let tone drift naturally. Accept tangents, task switching, and emotional leakage.",
+    notes: "Let tone drift naturally. Accept tangents, task switching, and emotional leakage. Avoid default mentions of coffee or generic morning routines. Create unique, varied daily habits based on persona's background, region, and preferences.",
     questions: [
       "What's your typical day look like right now?",
       "What time of day do you feel most like yourself?",

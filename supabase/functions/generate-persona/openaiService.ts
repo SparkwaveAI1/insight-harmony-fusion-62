@@ -26,6 +26,14 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
           2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
           3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
           
+          IMPORTANT DIVERSITY GUIDELINES:
+          - AVOID DEFAULT TRAITS: Do not use "coffee drinker" or other generic habits as default traits
+          - CREATE UNIQUE ROUTINES: Each persona should have distinct daily patterns based on their specific background
+          - VARY MORNING RITUALS: Some may drink coffee, others tea, water, nothing, protein shakes, etc.
+          - DIVERSE PREFERENCES: Deliberately vary food preferences, media consumption, and daily habits
+          - CULTURAL SPECIFICITY: Align habits with the persona's cultural background and region
+          - SOCIOECONOMIC REALISM: Consider how income level would affect daily routines and consumption
+          
           Fill in all demographic fields and knowledge domains in the metadata section.
           For each knowledge domain, assign a value from 1 (minimal) to 5 (expert).
           
@@ -42,7 +50,7 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
           ${JSON.stringify(personaTemplate, null, 2)}` 
         }
       ],
-      temperature: 0.7,
+      temperature: 0.9, // Increased from 0.7 to encourage more diversity
     }),
   });
 
@@ -98,6 +106,16 @@ export async function generateInterviewResponses(personaTraits: any): Promise<an
           2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
           3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
           
+          IMPORTANT DIVERSITY GUIDELINES FOR INTERVIEW RESPONSES:
+          - AVOID GENERIC DEFAULTS: Do not default to common habits like "drinking coffee in the morning"
+          - UNIQUE MORNING ROUTINES: Create specific, individualized morning routines that fit the persona
+          - VARIED CONSUMPTION: Some personas may dislike coffee, prefer tea, or have other beverages
+          - CULTURAL SPECIFICITY: Reflect cultural background in daily routine descriptions
+          - OCCUPATION IMPACT: Consider how their job affects their daily schedule and habits
+          - SOCIOECONOMIC REALISM: Reflect how income level would affect lifestyle choices
+          - HEALTH FACTORS: Consider dietary restrictions, preferences, or health consciousness
+          - REGIONAL DIFFERENCES: Account for regional differences in daily habits and preferences
+          
           Generate plausible responses to the preset interview questions 
           that match the persona's characteristics, traits, and speaking style.
           Ensure responses reflect the persona's demographic information, psychological traits, and knowledge domains.
@@ -113,7 +131,7 @@ export async function generateInterviewResponses(personaTraits: any): Promise<an
           Return the complete interview_sections array with the responses added as JSON, no markdown formatting.` 
         }
       ],
-      temperature: 0.8,
+      temperature: 0.9, // Increased from 0.8 to encourage more diversity
     }),
   });
 
