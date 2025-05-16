@@ -46,13 +46,24 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
       return response.image_url;
     }
     
-    // Update the persona record with the image URL
-    const updated = await updatePersonaProfileImageUrl(persona.persona_id, storedImageUrl);
+    // Double-check if the persona record was updated correctly
+    console.log("Stored image URL:", storedImageUrl);
+    console.log("Now verifying persona record was updated with this URL...");
     
-    if (!updated) {
-      console.error("Failed to update persona record with image URL");
-      toast.error("Failed to update persona with image URL");
-      return storedImageUrl;
+    // Fetch the persona again to verify the update
+    const { data: updatedPersona, error: fetchError } = await supabase
+      .from('personas')
+      .select('profile_image_url')
+      .eq('persona_id', persona.persona_id)
+      .single();
+      
+    if (fetchError) {
+      console.error("Error verifying persona update:", fetchError);
+    } else {
+      console.log("Persona record now has profile_image_url:", updatedPersona?.profile_image_url);
+      if (updatedPersona?.profile_image_url !== storedImageUrl) {
+        console.warn("Image URL mismatch! Expected:", storedImageUrl, "Got:", updatedPersona?.profile_image_url);
+      }
     }
     
     console.log("Persona image saved to database:", storedImageUrl);

@@ -9,11 +9,12 @@ export async function uploadPersonaImageFromUrl(
   imageUrl: string
 ): Promise<string | null> {
   try {
-    console.log(`Uploading image for persona ${personaId} from URL`);
+    console.log(`Uploading image for persona ${personaId} from URL:`, imageUrl);
     
     // Fetch the image from the URL
     const response = await fetch(imageUrl);
     if (!response.ok) {
+      console.error(`Failed to fetch image from URL: ${response.status}`);
       throw new Error(`Failed to fetch image from URL: ${response.status}`);
     }
     
@@ -58,12 +59,13 @@ export async function updatePersonaProfileImage(
   imageUrl: string
 ): Promise<boolean> {
   try {
-    console.log(`Updating persona ${personaId} with new profile image URL`);
+    console.log(`Updating persona ${personaId} with new profile image URL:`, imageUrl);
     
-    // Use the new function from updatePersona.ts
+    // Use the function from updatePersona.ts
     const success = await updatePersonaProfileImageUrl(personaId, imageUrl);
     
     if (!success) {
+      console.error('Failed to update persona with image URL');
       throw new Error('Failed to update persona with image URL');
     }
     
@@ -81,10 +83,13 @@ export async function savePersonaProfileImage(
   imageUrl: string
 ): Promise<string | null> {
   try {
+    console.log(`Starting process to save profile image for persona: ${personaId}`);
+    
     // Upload the image and get the storage URL
     const storageUrl = await uploadPersonaImageFromUrl(personaId, imageUrl);
     
     if (!storageUrl) {
+      console.error('Failed to upload image to storage');
       throw new Error('Failed to upload image to storage');
     }
     
@@ -92,9 +97,11 @@ export async function savePersonaProfileImage(
     const updated = await updatePersonaProfileImage(personaId, storageUrl);
     
     if (!updated) {
+      console.error('Failed to update persona with new image URL');
       throw new Error('Failed to update persona with new image URL');
     }
     
+    console.log(`Successfully saved profile image for persona ${personaId}:`, storageUrl);
     return storageUrl;
   } catch (error) {
     console.error('Error in savePersonaProfileImage:', error);

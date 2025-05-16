@@ -28,7 +28,7 @@ export default function PersonaAvatar({
   }, [persona, persona.profile_image_url]);
   
   const handleImageError = () => {
-    console.log("Failed to load persona image:", persona.profile_image_url);
+    console.log("Failed to load persona image:", imageUrl);
     setImageError(true);
   };
   

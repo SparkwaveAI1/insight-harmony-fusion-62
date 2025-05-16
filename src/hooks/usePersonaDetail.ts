@@ -33,6 +33,7 @@ export function usePersonaDetail() {
       const data = await getPersonaByPersonaId(id);
       if (data) {
         console.log("Persona data loaded:", data);
+        console.log("Profile image URL:", data.profile_image_url);
         setPersona(data);
       } else {
         console.error("Persona not found with ID:", id);
@@ -102,6 +103,7 @@ export function usePersonaDetail() {
         toast.success("Profile image generated and saved successfully");
         // Update the local state with the new image URL
         setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+        console.log("Updated persona in state with new image URL:", imageUrl);
         return imageUrl;
       } else {
         toast.error("Failed to generate profile image");
