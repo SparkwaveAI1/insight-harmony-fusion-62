@@ -2,7 +2,6 @@
 import { Persona } from "../types";
 import { personaToDbPersona, dbPersonaToPersona } from "../mappers";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
 
 export async function clonePersona(personaData: Persona): Promise<Persona | null> {
   try {
@@ -15,9 +14,9 @@ export async function clonePersona(personaData: Persona): Promise<Persona | null
     personaData.creation_date = new Date().toISOString().split('T')[0];
     
     // Get the current user's ID
-    const { user } = await supabase.auth.getUser();
-    if (!user) {
-      console.error("No authenticated user found for cloning persona");
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      console.error("No authenticated user found for cloning persona", userError);
       throw new Error("Authentication required to clone persona");
     }
     
@@ -54,7 +53,7 @@ export async function clonePersona(personaData: Persona): Promise<Persona | null
       // Make sure simulation_directives is never null
       simulation_directives: personaData.simulation_directives || {},
       is_public: false,
-      user_id: user.id,
+      user_id: userData.user.id,
     };
     
     // If there are customization notes, make specific modifications to the persona
