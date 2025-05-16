@@ -46,26 +46,28 @@ export default function PersonaList({
           // If we're in a collection, fetch personas for that collection
           const collectionPersonas = await getPersonasByCollection(collectionId);
           return collectionPersonas;
-        } else if (filterByOtherUsers && publicOnly && user) {
-          // For Public Personas section: show only other users' public personas
-          return data.filter(persona => 
-            persona.is_public && persona.user_id !== user.id
-          );
-        } else if (publicOnly) {
-          // For the public library (Persona Library view):
-          // Show only public personas + user's own personas (public or private)
-          return user 
-            ? data.filter(persona => 
-                persona.is_public || 
-                persona.user_id === user.id
-              )
-            : data.filter(persona => persona.is_public);
         } else if (filterByCurrentUser && user) {
           // For My Personas view: Show only the current user's personas
+          console.log("Filtering by current user:", user.id);
           return data.filter(persona => persona.user_id === user.id);
+        } else if (filterByOtherUsers && publicOnly && user) {
+          // For Public Personas section: show only other users' public personas
+          console.log("Filtering by other users' public personas");
+          const filteredPersonas = data.filter(persona => 
+            persona.is_public && persona.user_id !== user.id
+          );
+          console.log("Other users' public personas count:", filteredPersonas.length);
+          return filteredPersonas;
+        } else if (publicOnly) {
+          // For the public library (Persona Library view):
+          // Show only public personas (if not filtered by other users)
+          console.log("Showing all public personas");
+          const filteredPersonas = data.filter(persona => persona.is_public);
+          console.log("All public personas count:", filteredPersonas.length);
+          return filteredPersonas;
         }
         
-        // Default: return all personas (should not happen in normal usage)
+        // Default: return all personas
         return data;
       } catch (err) {
         console.error("Error loading personas:", err);
@@ -88,6 +90,7 @@ export default function PersonaList({
   // Update local state when personas are loaded from React Query
   useEffect(() => {
     if (allPersonas) {
+      console.log("Setting personas state with count:", allPersonas.length);
       setPersonas(allPersonas);
     }
   }, [allPersonas]);

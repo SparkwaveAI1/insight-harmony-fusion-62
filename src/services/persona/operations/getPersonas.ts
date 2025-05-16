@@ -62,12 +62,18 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
 
 export async function getAllPersonas(): Promise<Persona[]> {
   try {
+    console.log("Fetching all personas from Supabase");
     const { data, error } = await supabase
       .from('personas')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching all personas:", error);
+      throw error;
+    }
+    
+    console.log(`Retrieved ${data?.length || 0} personas from database`);
     return data ? data.map(dbPersonaToPersona) : [];
   } catch (error) {
     console.error("Error getting all personas:", error);
