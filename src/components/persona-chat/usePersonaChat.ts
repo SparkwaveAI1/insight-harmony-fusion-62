@@ -1,14 +1,17 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
 import { ChatMode } from './ChatModeSelector';
+import { breakIntoMultipleMessages } from './utils/chatMessageUtils';
+import { sendMessageToPersona } from './api/personaApiService';
 
 export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversation') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isResponding, setIsResponding] = useState(false);
+  const [conversationContext, setConversationContext] = useState<string>('');
   const { loadPersona, activePersona, isLoading, error } = usePersona();
 
   // Load persona on mount
@@ -42,136 +45,6 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  // Helper function to break long responses into multiple messages
-  const breakIntoMultipleMessages = (responseText: string): string[] => {
-    // If response is already short, return as is
-    if (responseText.length < 100) return [responseText];
-    
-    // Split by paragraphs first
-    const paragraphs = responseText.split(/\n\n+/);
-    
-    // If we have multiple paragraphs, use those as separate messages
-    if (paragraphs.length > 1) {
-      return paragraphs.filter(p => p.trim().length > 0);
-    }
-    
-    // Otherwise, try to find natural breaking points like sentence endings
-    const sentences = responseText.match(/[^.!?]+[.!?]+/g) || [responseText];
-    
-    // If very long sentence, just break by length
-    if (sentences.length === 1 && sentences[0].length > 150) {
-      const chunks = [];
-      let current = '';
-      const words = responseText.split(' ');
-      
-      for (const word of words) {
-        if ((current + ' ' + word).length > 100) {
-          chunks.push(current);
-          current = word;
-        } else {
-          current += (current ? ' ' : '') + word;
-        }
-      }
-      
-      if (current) chunks.push(current);
-      return chunks;
-    }
-    
-    // Group sentences into reasonable message sizes
-    const messages = [];
-    let currentMessage = '';
-    
-    for (const sentence of sentences) {
-      if (currentMessage.length + sentence.length > 150) {
-        messages.push(currentMessage);
-        currentMessage = sentence;
-      } else {
-        currentMessage += currentMessage ? ' ' + sentence : sentence;
-      }
-    }
-    
-    if (currentMessage) messages.push(currentMessage);
-    return messages;
-  };
-
-  // Create knowledge boundary instructions based on persona metadata
-  const createKnowledgeBoundaries = (persona: Persona): string => {
-    const currentYear = new Date().getFullYear();
-    const personaAge = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
-    const birthYear = currentYear - personaAge;
-    
-    // Parse self_awareness as a number (default to 0.5 if parsing fails)
-    const selfAwareness = persona.trait_profile?.extended_traits?.self_awareness 
-      ? parseFloat(persona.trait_profile.extended_traits.self_awareness as string) 
-      : 0.5;
-      
-    // Parse overconfidence as a number (default to 0.5 if parsing fails)
-    const overconfidence = persona.trait_profile?.behavioral_economics?.overconfidence
-      ? parseFloat(persona.trait_profile.behavioral_economics.overconfidence as string)
-      : 0.5;
-    
-    const expertise = persona.metadata?.occupation || "your stated field";
-    const education = persona.metadata?.education_level || persona.metadata?.education || "average education";
-    
-    // Create chat mode specific instructions
-    const chatModeInstructions = getChatModeInstructions(chatMode);
-    
-    return `
-    CRITICAL KNOWLEDGE BOUNDARIES - STRICTLY ENFORCE THESE:
-    
-    1. TIME LIMITATION: You were born in ${birthYear} and have NO KNOWLEDGE of events after ${currentYear - 5}. If asked about more recent events, you MUST express ignorance.
-    
-    2. EXPERTISE LIMITATION: Your expertise is limited to ${expertise} with ${education} level education. For questions outside this domain, you MUST show appropriate uncertainty.
-    
-    3. When faced with questions outside your knowledge boundaries:
-       - NEVER make up facts or pretend to know
-       - Respond with "I don't know" or "That was after my time" for post-${currentYear - 5} events
-       - Show appropriate ${selfAwareness < 0.4 ? "reluctance to admit ignorance" : "willingness to acknowledge knowledge limits"}
-       - ${overconfidence > 0.7 ? "You may sometimes guess despite uncertainty" : "Express appropriate uncertainty when unsure"}
-    
-    ${chatModeInstructions}
-    
-    YOU ARE A SPECIFIC INDIVIDUAL with limited knowledge, NOT an AI with broad capabilities.
-    `;
-  };
-  
-  // Helper function to generate instructions based on chat mode
-  const getChatModeInstructions = (mode: ChatMode): string => {
-    switch (mode) {
-      case 'conversation':
-        return `
-    CONVERSATION MODE INSTRUCTIONS:
-    - You are engaging in casual conversation
-    - Ask follow-up questions naturally as you would in normal conversation
-    - Show curiosity about the other person
-    - Respond conversationally with occasional questions to maintain dialogue flow
-    - Be personable and authentic, reflecting your personality traits
-    `;
-      case 'research':
-        return `
-    RESEARCH MODE INSTRUCTIONS:
-    - You are being interviewed for research purposes
-    - Focus on providing your perspective, experiences, and opinions
-    - Only ask clarifying questions when absolutely necessary
-    - Avoid asking questions at the end of your responses unless you need clarification
-    - Your primary role is to share information about your thoughts, not to interview the user
-    - Provide detailed answers that reflect your background and perspective
-    `;
-      case 'roleplay':
-        return `
-    ROLEPLAY MODE INSTRUCTIONS:
-    - You are in a specific scenario (customer service, sales, etc.)
-    - Ask questions only when appropriate to your role
-    - Focus on purpose-driven communication related to the scenario
-    - If you're in a service role, ask questions to understand needs
-    - If you're in a client/customer role, ask questions about offerings
-    - Adjust question frequency based on your specific role in the scenario
-    `;
-      default:
-        return '';
-    }
-  };
-
   const handleSendMessage = async (inputMessage: string) => {
     if (!inputMessage.trim() || !activePersona || isResponding) return;
 
@@ -185,47 +58,20 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     setIsResponding(true);
 
     try {
-      console.log("Sending message to persona:", inputMessage);
-      console.log("Persona ID:", personaId);
       console.log("Chat Mode:", chatMode);
+      console.log("Conversation Context:", conversationContext);
       
-      const previousMessages = messages.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.content,
-      }));
-      
-      console.log("Previous messages:", previousMessages);
-      
-      // Create knowledge boundaries based on the persona's traits and metadata
-      const knowledgeBoundaries = activePersona ? createKnowledgeBoundaries(activePersona) : "";
-
-      const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
-        },
-        body: JSON.stringify({
-          persona_id: personaId,
-          previous_messages: [
-            ...previousMessages,
-            { role: 'user', content: inputMessage }
-          ],
-          knowledge_boundaries: knowledgeBoundaries,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Edge function error (${response.status}):`, errorText);
-        throw new Error(`Failed to get response: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("Received response from persona:", data.response);
+      const response = await sendMessageToPersona(
+        personaId,
+        inputMessage,
+        messages,
+        activePersona,
+        chatMode,
+        conversationContext
+      );
       
       // Break long responses into multiple sequential messages
-      const messageSegments = breakIntoMultipleMessages(data.response);
+      const messageSegments = breakIntoMultipleMessages(response);
       
       // Add messages with slight delays to simulate typing
       for (let i = 0; i < messageSegments.length; i++) {
@@ -258,6 +104,7 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     isLoading,
     error,
     activePersona,
-    handleSendMessage
+    handleSendMessage,
+    setConversationContext
   };
 };

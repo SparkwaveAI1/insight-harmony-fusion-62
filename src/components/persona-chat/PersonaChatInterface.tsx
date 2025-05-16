@@ -13,6 +13,7 @@ import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSe
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
 import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
+import ConversationContext from '@/components/persona-chat/ConversationContext';
 import { toast } from 'sonner';
 
 interface PersonaChatInterfaceProps {
@@ -21,13 +22,15 @@ interface PersonaChatInterfaceProps {
 
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
+  const [conversationContext, setConversationContext] = useState<string>('');
   const {
     messages,
     isResponding,
     isLoading,
     error,
     activePersona,
-    handleSendMessage
+    handleSendMessage,
+    setConversationContext: updateContextInChat
   } = usePersonaChat(personaId, chatMode);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -35,6 +38,13 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Update context in usePersonaChat hook when it changes
+  useEffect(() => {
+    if (updateContextInChat) {
+      updateContextInChat(conversationContext);
+    }
+  }, [conversationContext, updateContextInChat]);
 
   if (isLoading) {
     return (
@@ -61,6 +71,13 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         onClick: () => navigate(`/projects/${projectId}`),
       },
     });
+  };
+
+  const handleContextChange = (newContext: string) => {
+    setConversationContext(newContext);
+    if (newContext) {
+      toast.success("Conversation context updated");
+    }
   };
 
   // Generate a default title from the conversation content
@@ -130,6 +147,12 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           </Button>
         )}
       </div>
+
+      {/* Conversation Context */}
+      <ConversationContext 
+        context={conversationContext} 
+        onContextChange={handleContextChange} 
+      />
 
       {/* Chat Mode Selector */}
       <ChatModeSelector selectedMode={chatMode} onChange={setChatMode} />

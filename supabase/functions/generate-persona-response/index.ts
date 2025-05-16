@@ -19,7 +19,15 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { persona_id, persona_role, previous_messages, knowledge_boundaries, personality_instructions } = await req.json()
+    const { 
+      persona_id, 
+      persona_role, 
+      previous_messages, 
+      knowledge_boundaries, 
+      personality_instructions,
+      chat_mode,
+      conversation_context
+    } = await req.json()
     
     // Log request info
     console.log(`Request to generate response for persona ${persona_id}`)
@@ -59,6 +67,19 @@ Deno.serve(async (req: Request) => {
     
     // Add the system message
     let systemMessage = createPersonaSystemMessage(persona)
+    
+    // Add conversation context if provided
+    if (conversation_context) {
+      systemMessage += `\n\n${'='.repeat(40)}\nCONVERSATION CONTEXT - CRITICALLY IMPORTANT\n${'='.repeat(40)}\n\n${conversation_context}\n\n${'='.repeat(40)}\n\nYOU MUST ACKNOWLEDGE AND INCORPORATE THIS CONTEXT IN YOUR RESPONSES. STAY IN CHARACTER BASED ON THIS CONTEXT.`;
+    }
+    
+    // Add chat mode if provided
+    if (chat_mode) {
+      const chatModeInstructions = getChatModeInstructions(chat_mode);
+      if (chatModeInstructions) {
+        systemMessage += `\n\n${'='.repeat(40)}\nCHAT MODE: ${chat_mode.toUpperCase()}\n${'='.repeat(40)}\n\n${chatModeInstructions}\n\n${'='.repeat(40)}`;
+      }
+    }
     
     // Forcefully add knowledge boundary instructions 
     if (knowledge_boundaries) {
@@ -125,3 +146,37 @@ Deno.serve(async (req: Request) => {
     )
   }
 })
+
+// Chat mode specific instructions
+function getChatModeInstructions(mode: string): string {
+  switch (mode) {
+    case 'conversation':
+      return `
+        You are engaging in casual conversation.
+        - Ask follow-up questions naturally as you would in normal conversation
+        - Show curiosity about the other person
+        - Respond conversationally with occasional questions to maintain dialogue flow
+        - Be personable and authentic, reflecting your personality traits
+      `;
+    case 'research':
+      return `
+        You are being interviewed for research purposes.
+        - Focus on providing your perspective, experiences, and opinions
+        - Only ask clarifying questions when absolutely necessary
+        - Avoid asking questions at the end of your responses unless you need clarification
+        - Your primary role is to share information about your thoughts, not to interview the user
+        - Provide detailed answers that reflect your background and perspective
+      `;
+    case 'roleplay':
+      return `
+        You are in a specific scenario as described in the conversation context.
+        - Fully embrace the role described in the context
+        - Stay in character at all times
+        - Respond as if you are actually in the described scenario
+        - Use language, knowledge and behaviors appropriate to the role and setting
+        - If no specific scenario was provided, ask for clarification about the role-play scenario
+      `;
+    default:
+      return '';
+  }
+}

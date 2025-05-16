@@ -1,63 +1,60 @@
 
-/**
- * Service for handling API calls to the persona service
- */
 import { toast } from 'sonner';
 import { Message } from '../types';
 import { Persona } from '@/services/persona/types';
-import { createKnowledgeBoundaries } from '../utils/personaInstructionsUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { ChatMode } from '../ChatModeSelector';
 
-/**
- * Sends a message to the persona API and retrieves the response
- * @param personaId The ID of the persona to send the message to
- * @param inputMessage The user's message
- * @param previousMessages Previous messages in the conversation
- * @param activePersona The active persona object
- * @returns The persona's response text
- */
 export const sendMessageToPersona = async (
   personaId: string,
-  inputMessage: string,
+  userMessage: string,
   previousMessages: Message[],
-  activePersona: Persona | null
+  activePersona: Persona,
+  chatMode: ChatMode = 'conversation',
+  conversationContext: string = ''
 ): Promise<string> => {
-  console.log("Sending message to persona:", inputMessage);
-  console.log("Persona ID:", personaId);
+  console.log(`Sending message to persona ${personaId} in ${chatMode} mode`);
   
-  const formattedPreviousMessages = previousMessages.map(msg => ({
-    role: msg.role === 'user' ? 'user' : 'assistant',
+  // Convert chat messages into a format suitable for the API
+  const formattedMessages = previousMessages.map(msg => ({
+    role: msg.role,
     content: msg.content,
   }));
-  
-  console.log("Previous messages:", formattedPreviousMessages);
-  
-  // Create knowledge boundaries based on the persona's traits and metadata
-  const knowledgeBoundaries = activePersona ? createKnowledgeBoundaries(activePersona) : "";
 
-  const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
-    },
-    body: JSON.stringify({
-      persona_id: personaId,
-      previous_messages: [
-        ...formattedPreviousMessages,
-        { role: 'user', content: inputMessage }
-      ],
-      knowledge_boundaries: knowledgeBoundaries,
-    }),
-  });
+  try {
+    // Add the new user message
+    formattedMessages.push({
+      role: 'user',
+      content: userMessage
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`Edge function error (${response.status}):`, errorText);
-    throw new Error(`Failed to get response: ${response.status} - ${errorText}`);
+    // Call the Supabase Edge Function
+    const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
+      },
+      body: JSON.stringify({
+        persona_id: personaId,
+        persona_role: 'assistant',
+        previous_messages: formattedMessages,
+        chat_mode: chatMode,
+        conversation_context: conversationContext
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Edge function error (${response.status}):`, errorText);
+      throw new Error(`Failed to get persona response: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response;
+  } catch (error) {
+    console.error('Error getting persona response:', error);
+    toast.error('Failed to get response from persona');
+    throw error;
   }
-
-  const data = await response.json();
-  console.log("Received response from persona:", data.response);
-  
-  return data.response;
 };

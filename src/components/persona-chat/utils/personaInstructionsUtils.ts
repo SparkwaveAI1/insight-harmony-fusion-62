@@ -131,3 +131,22 @@ export const getChatModeInstructions = (mode: ChatMode): string => {
       return '';
   }
 };
+
+/**
+ * Creates instructions for the persona based on the conversation context
+ * @param context The user-provided conversation context
+ * @returns A string containing context-based instructions
+ */
+export const createContextInstructions = (context: string): string => {
+  if (!context) return '';
+  
+  return `
+  CONVERSATION CONTEXT - CRITICALLY IMPORTANT:
+  
+  ${context}
+  
+  THIS CONTEXT DEFINES THE SETTING, SCENARIO, OR THEME OF THIS CONVERSATION.
+  STAY IN CHARACTER AND ACKNOWLEDGE THIS CONTEXT IN YOUR RESPONSES.
+  YOUR KNOWLEDGE, EXPERTISE, PERSONALITY, AND TIME PERIOD LIMITATIONS STILL APPLY.
+  `;
+};
