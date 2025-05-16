@@ -48,8 +48,7 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
       <DialogTrigger asChild>
         <Button 
           variant="secondary" 
-          size="sm"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-1"
         >
           <Copy className="h-4 w-4" />
           Clone & Customize

@@ -1,5 +1,5 @@
 
-import { MessageCircle, Share2, Trash } from "lucide-react";
+import { MessageCircle, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -22,31 +22,26 @@ export default function PersonaActionButtons({
     setIsDeleting(false);
   };
   
-  const copyPersonaLink = () => {
-    const url = `${window.location.origin}/persona/${personaId}`;
-    navigator.clipboard.writeText(url);
-  };
-  
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" onClick={onChatClick} className="flex items-center gap-2">
+      <Button 
+        variant="default" 
+        onClick={onChatClick} 
+        className="flex-1 flex items-center gap-2 min-w-[180px]"
+      >
         <MessageCircle className="h-4 w-4" />
         Chat with Persona
       </Button>
       
-      <Button variant="outline" onClick={copyPersonaLink} className="flex items-center gap-2">
-        <Share2 className="h-4 w-4" />
-        Share
-      </Button>
-      
       <Button 
-        variant="destructive" 
+        variant="outline" 
         onClick={handleDeletePersona} 
         disabled={isDeleting}
-        className="flex items-center gap-2"
+        size="icon"
+        className="text-muted-foreground hover:text-destructive hover:border-destructive"
       >
         <Trash className="h-4 w-4" />
-        {isDeleting ? "Deleting..." : "Delete"}
+        <span className="sr-only">{isDeleting ? "Deleting..." : "Delete"}</span>
       </Button>
     </div>
   );
