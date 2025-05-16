@@ -70,29 +70,22 @@ const PersonaViewer = () => {
                         </AlertDescription>
                       </Alert>
                       
-                      {isLibraryView ? (
-                        <>
-                          <h2 className="text-2xl font-bold mb-4">My Personas</h2>
-                          <PersonaList 
-                            onPersonasLoad={setMyPersonas} 
-                            filterByCurrentUser={true}
-                            className="mb-12"
-                          />
-                          
-                          <h2 className="text-2xl font-bold mb-4">Public Personas</h2>
-                          <PersonaList 
-                            onPersonasLoad={setPublicPersonas} 
-                            publicOnly={true}
-                            filterByOtherUsers={true}
-                            className="mb-6"
-                          />
-                        </>
-                      ) : (
-                        <PersonaList 
-                          onPersonasLoad={setMyPersonas} 
-                          filterByCurrentUser={true}
-                        />
-                      )}
+                      {/* My Personas Section */}
+                      <h2 className="text-2xl font-bold mb-4">My Personas</h2>
+                      <PersonaList 
+                        onPersonasLoad={setMyPersonas} 
+                        filterByCurrentUser={true}
+                        className="mb-12"
+                      />
+                      
+                      {/* Public Personas Section */}
+                      <h2 className="text-2xl font-bold mb-4">Public Personas</h2>
+                      <PersonaList 
+                        onPersonasLoad={setPublicPersonas} 
+                        publicOnly={true}
+                        filterByOtherUsers={true}
+                        className="mb-6"
+                      />
                     </>
                   )}
                 </div>
