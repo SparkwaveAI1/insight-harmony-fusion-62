@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Persona } from "@/services/persona/types";
 import { addPersonasToCollection, getPersonasNotInCollection } from "@/services/collections";
+import { dbPersonaToPersona } from "@/services/persona/mappers";
 
 interface AddPersonasToCollectionDialogProps {
   collectionId: string;
@@ -49,8 +50,10 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
         return;
       }
 
-      const availablePersonas = await getPersonasNotInCollection(collectionId, user.id);
-      setPersonas(availablePersonas);
+      const availablePersonasData = await getPersonasNotInCollection(collectionId, user.id);
+      // Transform the data using the dbPersonaToPersona mapper to ensure correct type
+      const transformedPersonas = availablePersonasData.map(dbPersonaToPersona);
+      setPersonas(transformedPersonas);
     } catch (error) {
       console.error("Error fetching personas not in collection:", error);
       toast.error("Failed to load available personas.");
