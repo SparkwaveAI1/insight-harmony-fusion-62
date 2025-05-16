@@ -1,96 +1,92 @@
 
-import React, { useRef, useEffect } from 'react';
-import { Message } from '@/components/persona-chat/types';
+import React, { useEffect, RefObject } from 'react';
+import { Avatar } from '@/components/ui/avatar';
+import { Message } from './types';
 
 interface MessageListProps {
   messages: Message[];
   isResponding: boolean;
+  messagesEndRef: RefObject<HTMLDivElement>;
   disableAutoScroll?: boolean;
-  messagesEndRef?: React.RefObject<HTMLDivElement>;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
   isResponding, 
-  disableAutoScroll = true, // Changed the default to true to prevent auto scrolling
-  messagesEndRef 
+  messagesEndRef,
+  disableAutoScroll = false
 }) => {
-  const defaultMessagesEndRef = useRef<HTMLDivElement>(null);
-  const actualEndRef = messagesEndRef || defaultMessagesEndRef;
-
+  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    // Only auto scroll if disableAutoScroll is not true
-    if (!disableAutoScroll && actualEndRef.current) {
-      actualEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!disableAutoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, disableAutoScroll, actualEndRef]);
-
-  // Function to add style variations based on message position and content
-  const getMessageStyle = (message: Message, index: number) => {
-    const isUser = message.role === 'user';
-    
-    if (isUser) return "bg-primary text-primary-foreground ml-4";
-    
-    // Check if message contains emotion indicators
-    const hasEmphasis = /!/.test(message.content);
-    const hasQuestion = /\?/.test(message.content);
-    const isShort = message.content.length < 30;
-    const hasQuote = /"([^"]*)"/.test(message.content);
-    
-    // Create variations based on content and position
-    const variations = [
-      "bg-muted mr-4", // Default
-      "bg-muted/90 mr-4", // Subtle variation
-      "bg-muted/95 mr-4", // Another subtle variation
-      hasEmphasis ? "bg-muted/80 mr-4 border-l-2 border-primary/30" : "bg-muted/90 mr-4", // Emphasis
-      hasQuestion ? "bg-muted/90 mr-4 border-b border-muted-foreground/20" : "bg-muted mr-4", // Question
-      isShort ? "bg-muted/80 mr-4 rounded-xl" : "bg-muted mr-4", // Short response
-      hasQuote ? "bg-muted/95 mr-4 border-l-2 border-muted-foreground/30" : "bg-muted mr-4" // Contains quote
-    ];
-    
-    // Choose variation based on message content and position
-    const variationIndex = hasEmphasis ? 3 : 
-                         hasQuestion ? 4 : 
-                         isShort ? 5 : 
-                         hasQuote ? 6 : 
-                         index % 3; // Default rotation of subtle variations
-                         
-    return variations[variationIndex];
-  };
+  }, [messages, disableAutoScroll, messagesEndRef]);
 
   return (
     <div className="p-4 space-y-4">
       {messages.map((message, index) => (
-        <div
+        <div 
           key={index}
-          className={`flex ${
-            message.role === 'user' ? 'justify-end' : 'justify-start'
-          }`}
+          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
-          <div
-            className={`max-w-[80%] p-3 rounded-lg ${
-              getMessageStyle(message, index)
+          <div 
+            className={`max-w-[80%] rounded-lg p-3 ${
+              message.role === 'user'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted'
             }`}
           >
-            <p className="text-sm">{message.content}</p>
-            <span className="text-xs opacity-70 mt-1 block">
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
+            <div className="flex items-start gap-2">
+              {message.role === 'assistant' && (
+                <Avatar className="h-8 w-8 bg-primary/20 hidden sm:flex">
+                  <span className="text-xs font-semibold">AI</span>
+                </Avatar>
+              )}
+              
+              <div className="space-y-2">
+                {message.image && (
+                  <div className="mb-2">
+                    <img 
+                      src={message.image} 
+                      alt="Shared image" 
+                      className="max-w-full rounded-md max-h-[300px] object-contain"
+                    />
+                  </div>
+                )}
+                
+                <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                
+                {message.timestamp && (
+                  <div className="text-xs opacity-50 text-right">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                )}
+              </div>
+              
+              {message.role === 'user' && (
+                <Avatar className="h-8 w-8 bg-primary hidden sm:flex">
+                  <span className="text-xs font-semibold text-white">You</span>
+                </Avatar>
+              )}
+            </div>
           </div>
         </div>
       ))}
+      
       {isResponding && (
         <div className="flex justify-start">
-          <div className="max-w-[80%] p-3 rounded-lg bg-muted mr-4">
-            <div className="flex space-x-1">
-              <div className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce"></div>
-              <div className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              <div className="h-2 w-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          <div className="bg-muted rounded-lg p-3 max-w-[80%]">
+            <div className="flex space-x-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '600ms'}}></div>
             </div>
           </div>
         </div>
       )}
-      <div ref={actualEndRef} />
+      
+      <div ref={messagesEndRef} />
     </div>
   );
 };

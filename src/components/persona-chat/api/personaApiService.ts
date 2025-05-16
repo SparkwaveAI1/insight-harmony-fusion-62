@@ -11,7 +11,8 @@ export const sendMessageToPersona = async (
   previousMessages: Message[],
   activePersona: Persona,
   chatMode: ChatMode = 'conversation',
-  conversationContext: string = ''
+  conversationContext: string = '',
+  imageData?: string
 ): Promise<string> => {
   console.log(`Sending message to persona ${personaId} in ${chatMode} mode`);
   
@@ -19,14 +20,26 @@ export const sendMessageToPersona = async (
   const formattedMessages = previousMessages.map(msg => ({
     role: msg.role,
     content: msg.content,
+    image: msg.image,
   }));
 
   try {
     // Add the new user message
-    formattedMessages.push({
+    const newUserMessage: {
+      role: string;
+      content: string;
+      image?: string;
+    } = {
       role: 'user',
       content: userMessage
-    });
+    };
+    
+    // Add image data if present
+    if (imageData) {
+      newUserMessage.image = imageData;
+    }
+    
+    formattedMessages.push(newUserMessage);
 
     // Call the Supabase Edge Function
     const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
@@ -40,7 +53,8 @@ export const sendMessageToPersona = async (
         persona_role: 'assistant',
         previous_messages: formattedMessages,
         chat_mode: chatMode,
-        conversation_context: conversationContext
+        conversation_context: conversationContext,
+        has_image: !!imageData
       }),
     });
 

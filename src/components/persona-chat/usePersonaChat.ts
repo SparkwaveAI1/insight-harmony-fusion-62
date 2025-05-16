@@ -45,13 +45,26 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  const handleSendMessage = async (inputMessage: string) => {
-    if (!inputMessage.trim() || !activePersona || isResponding) return;
+  const handleSendMessage = async (inputMessage: string, imageFile: File | null = null) => {
+    if ((!inputMessage.trim() && !imageFile) || !activePersona || isResponding) return;
+
+    let imageBase64: string | undefined;
+    
+    if (imageFile) {
+      try {
+        imageBase64 = await convertFileToBase64(imageFile);
+      } catch (error) {
+        console.error('Error converting image to base64:', error);
+        toast.error('Failed to process image');
+        return;
+      }
+    }
 
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
       timestamp: new Date(),
+      image: imageBase64,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -67,7 +80,8 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
         messages,
         activePersona,
         chatMode,
-        conversationContext
+        conversationContext,
+        imageBase64
       );
       
       // Break long responses into multiple sequential messages
@@ -96,6 +110,15 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
       toast.error(`Failed to get response from persona: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsResponding(false);
     }
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   return {

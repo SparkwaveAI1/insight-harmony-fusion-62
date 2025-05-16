@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -78,6 +77,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     if (newContext) {
       toast.success("Conversation context updated");
     }
+  };
+
+  const handleSendMessageWithImage = (message: string, imageFile: File | null) => {
+    handleSendMessage(message, imageFile);
   };
 
   // Generate a default title from the conversation content
@@ -172,7 +175,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </ScrollArea>
         
         <MessageInput
-          onSendMessage={handleSendMessage}
+          onSendMessage={handleSendMessageWithImage}
           isResponding={isResponding}
         />
       </Card>

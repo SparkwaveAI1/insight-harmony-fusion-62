@@ -9,6 +9,7 @@ const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || ''
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  image?: string
   name?: string
 }
 
@@ -26,7 +27,8 @@ Deno.serve(async (req: Request) => {
       knowledge_boundaries, 
       personality_instructions,
       chat_mode,
-      conversation_context
+      conversation_context,
+      has_image
     } = await req.json()
     
     // Log request info
@@ -81,6 +83,11 @@ Deno.serve(async (req: Request) => {
       }
     }
     
+    // Add image handling instructions if the user shared an image
+    if (has_image) {
+      systemMessage += `\n\n${'='.repeat(40)}\nIMAGE ANALYSIS INSTRUCTIONS\n${'='.repeat(40)}\n\nThe user has shared an image with you. Analyze this image from your persona's perspective. Consider:\n\n1. What would ${persona.name} notice first about this image?\n2. How would ${persona.name} react to this image based on their background, preferences, and values?\n3. Maintain your character's perspective, tone, and vocabulary when discussing the image.\n\nRespond naturally as if you're seeing this image in a normal conversation. Do not list out answers to the questions above - just incorporate your analysis naturally into your response.\n\n${'='.repeat(40)}`;
+    }
+    
     // Forcefully add knowledge boundary instructions 
     if (knowledge_boundaries) {
       // Add a separator to make knowledge boundaries more visually distinct
@@ -94,11 +101,40 @@ Deno.serve(async (req: Request) => {
     
     messages.push({ role: "system", content: systemMessage })
     
-    // Add the previous messages
+    // Add the previous messages, adapting format for images
     if (previous_messages && previous_messages.length > 0) {
       // Only add the most recent 10 messages to avoid hitting token limits
-      const recentMessages = previous_messages.slice(-10)
-      messages.push(...recentMessages)
+      const recentMessages = previous_messages.slice(-10);
+      
+      // Transform messages for OpenAI API format
+      const transformedMessages = recentMessages.map(msg => {
+        if (msg.image) {
+          // Format the message to include both image and text content
+          return {
+            role: msg.role,
+            content: [
+              {
+                type: "text",
+                text: msg.content || "Here's an image for you to look at:"
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: msg.image
+                }
+              }
+            ]
+          };
+        } else {
+          // Regular text message
+          return {
+            role: msg.role,
+            content: msg.content
+          };
+        }
+      });
+      
+      messages.push(...transformedMessages);
     }
     
     console.log("Generating response with OpenAI API...")
@@ -111,7 +147,7 @@ Deno.serve(async (req: Request) => {
         Authorization: `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o', // Use GPT-4o which has vision capabilities
         messages: messages,
         temperature: 0.9,  // Increased to allow more personality variation
         max_tokens: 500,
