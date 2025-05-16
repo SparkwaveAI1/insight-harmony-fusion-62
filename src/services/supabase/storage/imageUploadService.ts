@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { updatePersonaProfileImageUrl } from '@/services/persona/operations/updatePersona';
 
 // Upload a persona profile image from a URL
 export async function uploadPersonaImageFromUrl(
@@ -51,7 +52,7 @@ export async function uploadPersonaImageFromUrl(
   }
 }
 
-// Update persona record with new profile image URL
+// Update persona record with new profile image URL - using the new function
 export async function updatePersonaProfileImage(
   personaId: string, 
   imageUrl: string
@@ -59,14 +60,11 @@ export async function updatePersonaProfileImage(
   try {
     console.log(`Updating persona ${personaId} with new profile image URL`);
     
-    const { error } = await supabase
-      .from('personas')
-      .update({ profile_image_url: imageUrl })
-      .eq('persona_id', personaId);
-      
-    if (error) {
-      console.error('Error updating persona with image URL:', error);
-      throw error;
+    // Use the new function from updatePersona.ts
+    const success = await updatePersonaProfileImageUrl(personaId, imageUrl);
+    
+    if (!success) {
+      throw new Error('Failed to update persona with image URL');
     }
     
     console.log('Persona record updated with new profile image URL');

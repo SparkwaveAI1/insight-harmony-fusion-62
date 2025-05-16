@@ -42,3 +42,24 @@ export async function updatePersonaName(personaId: string, name: string): Promis
     return false;
   }
 }
+
+/**
+ * Updates the profile image URL of a persona
+ */
+export async function updatePersonaProfileImageUrl(personaId: string, imageUrl: string): Promise<boolean> {
+  try {
+    console.log(`Updating persona ${personaId} with profile image URL: ${imageUrl}`);
+    
+    const { error } = await supabase
+      .from('personas')
+      .update({ profile_image_url: imageUrl })
+      .eq('persona_id', personaId);
+
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating persona profile image URL:", error);
+    return false;
+  }
+}
