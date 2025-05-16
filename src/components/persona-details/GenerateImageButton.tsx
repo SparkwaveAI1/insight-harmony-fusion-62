@@ -6,14 +6,19 @@ interface GenerateImageButtonProps {
   isVisible: boolean;
   isGenerating: boolean;
   onGenerate: () => void;
+  hasImage: boolean;
 }
 
 export default function GenerateImageButton({
   isVisible,
   isGenerating,
-  onGenerate
+  onGenerate,
+  hasImage
 }: GenerateImageButtonProps) {
-  if (!isVisible) return null;
+  // Don't show if not visible or if there's already an image
+  if (!isVisible || (hasImage && !isGenerating)) return null;
+  
+  const buttonText = hasImage ? "Regenerate Profile Image" : "Generate Profile Image";
   
   return (
     <Button
@@ -24,7 +29,7 @@ export default function GenerateImageButton({
       className="mt-2 flex items-center gap-2"
     >
       <ImageIcon className="h-4 w-4" />
-      Generate Profile Image
+      {buttonText}
     </Button>
   );
 }

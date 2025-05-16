@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
 import { toast } from "sonner";
+import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
 
 export interface GenerateImageResponse {
   success: boolean;
@@ -33,7 +34,19 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     }
     
     console.log("Successfully generated persona image:", response.image_url);
-    return response.image_url;
+    
+    // Save the generated image to Supabase storage and update the persona record
+    const storedImageUrl = await savePersonaProfileImage(persona.persona_id, response.image_url);
+    
+    if (!storedImageUrl) {
+      console.error("Failed to save persona image to storage");
+      toast.error("Generated image but failed to save it permanently");
+      // Return the temporary URL anyway so the user can see the image
+      return response.image_url;
+    }
+    
+    console.log("Persona image saved to storage:", storedImageUrl);
+    return storedImageUrl;
   } catch (error) {
     console.error("Error in generatePersonaImage:", error);
     toast.error("An unexpected error occurred while generating the persona image");

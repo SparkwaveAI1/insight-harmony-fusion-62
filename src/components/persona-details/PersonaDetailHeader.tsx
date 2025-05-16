@@ -90,6 +90,8 @@ export default function PersonaDetailHeader({
     );
   }
 
+  const hasProfileImage = !!persona.profile_image_url;
+
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
       <div className="flex items-center gap-4">
@@ -127,9 +129,10 @@ export default function PersonaDetailHeader({
           />
           
           <GenerateImageButton
-            isVisible={isOwner && !persona.profile_image_url}
+            isVisible={isOwner}
             isGenerating={isGeneratingImage}
             onGenerate={handleGenerateImage}
+            hasImage={hasProfileImage}
           />
         </div>
       </div>
