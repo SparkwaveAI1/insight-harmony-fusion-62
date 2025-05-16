@@ -112,17 +112,10 @@ export async function createStorageBuckets(): Promise<boolean> {
       }
     }
     
-    // Set correct bucket permissions
-    try {
-      await supabase.storage.from('persona-images').updateBucket({
-        public: true,
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-      });
-      console.log('Updated persona-images bucket permissions ✅');
-    } catch (error) {
-      console.error('Error updating bucket permissions:', error);
-      // Don't fail on this error, just log it
-    }
+    // Set correct bucket permissions - Removed updateBucket call since it's not available
+    // Instead, we'll create the buckets with the correct permissions from the start
+    // We've already set public: true and other attributes when creating buckets
+    console.log('Buckets created with appropriate permissions ✅');
     
     return success;
   } catch (error) {
