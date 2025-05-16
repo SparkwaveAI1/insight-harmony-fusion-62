@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, UserRound } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   NavigationMenu,
@@ -14,6 +14,15 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/context/AuthContext";
 import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 import { headerNavItems } from "./config/navigationConfig";
 
@@ -22,6 +31,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
+  const { user, signOut } = useAuth();
   // We'll only show the wallet options on the ecosystem page, not the prsna page
   const isEarnPage = location.pathname === "/prsna-ecosystem";
   
@@ -94,6 +104,37 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {/* Action Buttons (right side) - Desktop */}
           <div className="hidden md:flex items-center gap-4">
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem className="font-medium">{user.email}</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <UserRound className="mr-2 h-4 w-4" />
+                      <span>Your Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => signOut()}
+                    className="text-red-600 cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <ActionButtons 
               showWalletOptions={isEarnPage}
               isWalletConnected={isWalletConnected}
@@ -128,4 +169,3 @@ const Header = () => {
 };
 
 export default Header;
-

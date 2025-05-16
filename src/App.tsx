@@ -27,6 +27,7 @@ import CustomResearch from "./pages/CustomResearch";
 import InsightConductor from "./pages/InsightConductor";
 import Research from "./pages/Research";
 import Auth from "./pages/Auth";
+import UserProfile from "./pages/UserProfile"; // New import
 import NotFound from "./pages/NotFound";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import InterviewProcess from "./pages/InterviewProcess";
@@ -73,6 +74,9 @@ function App() {
               <Route path="/prsna/roadmap" element={<Roadmap />} />
               <Route path="/prsna/whitepaper" element={<WhitePaper />} />
               <Route path="/whitepaper" element={<WhitePaper />} />
+              
+              {/* User Profile Route */}
+              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               
               {/* Protected Routes - Require authentication */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
