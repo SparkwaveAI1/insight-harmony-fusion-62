@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,7 +34,6 @@ import { Persona } from "@/services/persona/types";
 import { getAllPersonas } from "@/services/persona";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
-import { useNavigate } from "react-router-dom";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 
 const CollectionDetail = () => {
