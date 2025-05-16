@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Persona } from "@/services/persona";
 import { usePersonaClone } from "./clone/usePersonaClone";
 import CloneFormContent from "./clone/CloneFormContent";
@@ -19,6 +19,11 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
 
   const handleSubmit = async (data: CloneFormValues) => {
     try {
+      if (!data.customization_notes || data.customization_notes.trim() === '') {
+        toast.warning("Please provide customization instructions to make your new persona unique");
+        return false;
+      }
+      
       const success = await onSubmit(data);
       if (success) {
         setOpen(false);
@@ -47,6 +52,10 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Generate Customized Persona</DialogTitle>
+          <DialogDescription>
+            Create a modified version of this persona with customized traits and characteristics.
+            The more specific your customization instructions, the better the results will be.
+          </DialogDescription>
         </DialogHeader>
         <CloneFormContent 
           form={form} 

@@ -7,6 +7,53 @@ const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 export async function generatePersonaTraits(prompt: string, personaTemplate: PersonaTemplate): Promise<any> {
   console.log("Generating persona traits from prompt:", prompt);
   
+  // Check if the prompt contains customization instructions and extract them
+  const hasCustomizationInstructions = prompt.includes("IMPORTANT CUSTOMIZATION INSTRUCTIONS:");
+  let customizationContent = "";
+  
+  if (hasCustomizationInstructions) {
+    // Extract the customization instructions for special emphasis to the AI
+    const customizationMatch = prompt.match(/IMPORTANT CUSTOMIZATION INSTRUCTIONS:\s*([\s\S]+?)(?=\n\nPlease create|$)/);
+    if (customizationMatch && customizationMatch[1]) {
+      customizationContent = customizationMatch[1].trim();
+      console.log("Detected customization instructions:", customizationContent);
+    }
+  }
+  
+  // Create system instructions with emphasis on customizations if present
+  let systemInstruction = `You are an AI specialized in creating realistic personas for research. 
+    Given a brief description, generate a detailed psychological and demographic profile following the template exactly.
+    
+    Pay special attention to the comprehensive trait architecture:
+    1. Base Traits (OCEAN, Moral Foundations, World Values, Political Compass, Behavioral Economics)
+    2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
+    3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+    
+    IMPORTANT DIVERSITY GUIDELINES:
+    - AVOID DEFAULT TRAITS: Do not use "coffee drinker" or other generic habits as default traits
+    - CREATE UNIQUE ROUTINES: Each persona should have distinct daily patterns based on their specific background
+    - VARY MORNING RITUALS: Some may drink coffee, others tea, water, nothing, protein shakes, etc.
+    - DIVERSE PREFERENCES: Deliberately vary food preferences, media consumption, and daily habits
+    - CULTURAL SPECIFICITY: Align habits with the persona's cultural background and region
+    - SOCIOECONOMIC REALISM: Consider how income level would affect daily routines and consumption
+    
+    Fill in all demographic fields and knowledge domains in the metadata section.
+    For each knowledge domain, assign a value from 1 (minimal) to 5 (expert).
+    
+    For trait values, use decimal values between 0 and 1 (like 0.7) or descriptive labels 
+    that make psychological sense based on the persona.
+    
+    Maintain internal consistency while allowing for realistic contradictions.
+    Return the output as valid JSON matching the provided template exactly.`;
+
+  // If customization instructions are present, add them to the system instructions
+  if (customizationContent) {
+    systemInstruction += `\n\nCRITICAL CUSTOMIZATION REQUIRED: These customizations must be deeply integrated into the persona's traits and personality:
+    ${customizationContent}
+    
+    The customization instructions should significantly influence ALL aspects of the persona, including their trait values, preferences, behaviors, and knowledge domains.`;
+  }
+  
   const traitsResponse = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -18,34 +65,16 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
       messages: [
         { 
           role: "system", 
-          content: `You are an AI specialized in creating realistic personas for research. 
-          Given a brief description, generate a detailed psychological and demographic profile following the template exactly.
-          
-          Pay special attention to the comprehensive trait architecture:
-          1. Base Traits (OCEAN, Moral Foundations, World Values, Political Compass, Behavioral Economics)
-          2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
-          3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
-          
-          IMPORTANT DIVERSITY GUIDELINES:
-          - AVOID DEFAULT TRAITS: Do not use "coffee drinker" or other generic habits as default traits
-          - CREATE UNIQUE ROUTINES: Each persona should have distinct daily patterns based on their specific background
-          - VARY MORNING RITUALS: Some may drink coffee, others tea, water, nothing, protein shakes, etc.
-          - DIVERSE PREFERENCES: Deliberately vary food preferences, media consumption, and daily habits
-          - CULTURAL SPECIFICITY: Align habits with the persona's cultural background and region
-          - SOCIOECONOMIC REALISM: Consider how income level would affect daily routines and consumption
-          
-          Fill in all demographic fields and knowledge domains in the metadata section.
-          For each knowledge domain, assign a value from 1 (minimal) to 5 (expert).
-          
-          For trait values, use decimal values between 0 and 1 (like 0.7) or descriptive labels 
-          that make psychological sense based on the persona.
-          
-          Maintain internal consistency while allowing for realistic contradictions.
-          Return the output as valid JSON matching the provided template exactly.` 
+          content: systemInstruction
         },
         { 
           role: "user", 
-          content: `Create a realistic persona based on this description: "${prompt}".
+          content: `Create a realistic persona based on this description: "${
+            // Clean up the prompt if it contains the customization markers
+            hasCustomizationInstructions ? 
+              prompt.replace(/IMPORTANT CUSTOMIZATION INSTRUCTIONS:[\s\S]+?(?=\n\nPlease create|$)/, "").trim() : 
+              prompt
+          }".
           Fill in all the values according to the template structure below. Return ONLY the JSON data, no markdown formatting.
           ${JSON.stringify(personaTemplate, null, 2)}` 
         }
@@ -76,6 +105,12 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     
     personaTraits = JSON.parse(jsonContent);
     console.log("Successfully parsed persona traits");
+    
+    // If customization was requested, store it in the persona metadata
+    if (customizationContent && personaTraits.metadata) {
+      personaTraits.metadata.customization_instructions = customizationContent;
+      personaTraits.metadata.was_customized = true;
+    }
   } catch (error) {
     console.error("Error parsing OpenAI response:", error);
     console.error("Raw content:", traitsData.choices[0].message.content);

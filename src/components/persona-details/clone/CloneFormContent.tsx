@@ -57,10 +57,11 @@ const CloneFormContent = ({
                     placeholder="Original persona generation prompt" 
                     className="min-h-[100px]"
                     {...field} 
+                    readOnly
                   />
                 </FormControl>
                 <FormDescription>
-                  This base prompt will be used to generate the new persona.
+                  This base prompt will be used with your customizations to generate the new persona.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -75,13 +76,14 @@ const CloneFormContent = ({
                 <FormLabel>Customization Instructions</FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="e.g., Make this persona more funny, more prone to anger, or more politically aligned with..." 
-                    className="min-h-[80px]"
+                    placeholder="Examples: Make this persona more extroverted, make them more politically conservative, make them more interested in technology, make them have stronger opinions about environmental issues..." 
+                    className="min-h-[120px]"
                     {...field} 
                   />
                 </FormControl>
                 <FormDescription>
-                  Specify how this new persona should differ from the original one.
+                  Specify how this new persona should differ from the original one. Be specific and detailed in your instructions.
+                  The AI will integrate these customizations into all aspects of the persona.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -104,7 +106,7 @@ const CloneFormContent = ({
             className="flex items-center gap-2"
           >
             <Copy className="h-4 w-4" />
-            {isSubmitting ? "Generating..." : "Generate New Persona"}
+            {isSubmitting ? "Generating..." : "Generate Customized Persona"}
           </Button>
         </div>
       </form>
