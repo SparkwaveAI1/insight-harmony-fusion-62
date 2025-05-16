@@ -10,7 +10,6 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import PersonaList from "@/components/personas/PersonaList";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
-import PersonaSummary from "@/components/personas/PersonaSummary";
 import { useParams, useLocation } from "react-router-dom";
 import { Persona } from "@/services/persona";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,7 +22,8 @@ const PersonaViewer = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { personaId } = useParams<{ personaId?: string }>();
-  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [myPersonas, setMyPersonas] = useState<Persona[]>([]);
+  const [publicPersonas, setPublicPersonas] = useState<Persona[]>([]);
   const location = useLocation();
   
   // Determine if we're in the public library view
@@ -70,12 +70,29 @@ const PersonaViewer = () => {
                         </AlertDescription>
                       </Alert>
                       
-                      <PersonaList 
-                        onPersonasLoad={setPersonas} 
-                        publicOnly={isLibraryView}
-                        filterByCurrentUser={!isLibraryView}
-                      />
-                      {personas.length > 0 && <PersonaSummary personas={personas} />}
+                      {isLibraryView ? (
+                        <>
+                          <h2 className="text-2xl font-bold mb-4">My Personas</h2>
+                          <PersonaList 
+                            onPersonasLoad={setMyPersonas} 
+                            filterByCurrentUser={true}
+                            className="mb-12"
+                          />
+                          
+                          <h2 className="text-2xl font-bold mb-4">Public Personas</h2>
+                          <PersonaList 
+                            onPersonasLoad={setPublicPersonas} 
+                            publicOnly={true}
+                            filterByOtherUsers={true}
+                            className="mb-6"
+                          />
+                        </>
+                      ) : (
+                        <PersonaList 
+                          onPersonasLoad={setMyPersonas} 
+                          filterByCurrentUser={true}
+                        />
+                      )}
                     </>
                   )}
                 </div>

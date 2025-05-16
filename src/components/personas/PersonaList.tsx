@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllPersonas } from "@/services/persona"; 
@@ -7,27 +8,33 @@ import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import PersonaCard from "./PersonaCard";
 import { Persona } from "@/services/persona/types";
+import { getPersonasByCollection } from "@/services/persona";
+import { cn } from "@/lib/utils";
 
 interface PersonaListProps {
   onPersonasLoad?: (personas: Persona[]) => void;
   filterByCurrentUser?: boolean;
+  filterByOtherUsers?: boolean;
   publicOnly?: boolean;
   collectionId?: string;
   onDeleteCollection?: () => void;
+  className?: string;
 }
 
 export default function PersonaList({ 
   onPersonasLoad, 
-  filterByCurrentUser = false, 
+  filterByCurrentUser = false,
+  filterByOtherUsers = false,
   publicOnly = false,
   collectionId,
-  onDeleteCollection
+  onDeleteCollection,
+  className
 }: PersonaListProps) {
   const { user } = useAuth();
   
   // Use React Query to fetch personas
   const { data: allPersonas = [], isLoading, error } = useQuery({
-    queryKey: ['personas', { filterByCurrentUser, publicOnly, collectionId, userId: user?.id }],
+    queryKey: ['personas', { filterByCurrentUser, filterByOtherUsers, publicOnly, collectionId, userId: user?.id }],
     queryFn: async () => {
       try {
         let data = await getAllPersonas();
@@ -39,6 +46,11 @@ export default function PersonaList({
           // If we're in a collection, fetch personas for that collection
           const collectionPersonas = await getPersonasByCollection(collectionId);
           return collectionPersonas;
+        } else if (filterByOtherUsers && publicOnly && user) {
+          // For Public Personas section: show only other users' public personas
+          return data.filter(persona => 
+            persona.is_public && persona.user_id !== user.id
+          );
         } else if (publicOnly) {
           // For the public library (Persona Library view):
           // Show only public personas + user's own personas (public or private)
@@ -126,7 +138,7 @@ export default function PersonaList({
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className={cn("grid md:grid-cols-2 lg:grid-cols-3 gap-6", className)}>
       {personas.map((persona) => (
         <PersonaCard 
           key={persona.persona_id} 
@@ -138,6 +150,3 @@ export default function PersonaList({
     </div>
   );
 }
-
-// Import the getPersonasByCollection function at the top of the file
-import { getPersonasByCollection } from "@/services/persona";
