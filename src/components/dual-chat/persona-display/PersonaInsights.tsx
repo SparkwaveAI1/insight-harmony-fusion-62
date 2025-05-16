@@ -1,20 +1,20 @@
 
 import React from 'react';
 import { Brain, Target, Users, Sparkles, LineChart } from 'lucide-react';
-
-interface PersonaInsight {
-  decision: string;
-  driver: string;
-  persuasion: string;
-  bias: string;
-  cognitive: string;
-}
+import { SpeedInsight } from './PersonaInsightUtils';
 
 interface PersonaInsightsProps {
-  insights: PersonaInsight;
+  insights: SpeedInsight[];
 }
 
 const PersonaInsights: React.FC<PersonaInsightsProps> = ({ insights }) => {
+  // Extract insights for each category
+  const communicationInsight = insights.find(i => i.category === 'communication') || { value: 'Not available', speed: 'slow' };
+  const decisionInsight = insights.find(i => i.category === 'decision') || { value: 'Not available', speed: 'slow' };
+  const learningInsight = insights.find(i => i.category === 'learning') || { value: 'Not available', speed: 'slow' };
+  const workEthicInsight = insights.find(i => i.category === 'workEthic') || { value: 'Not available', speed: 'slow' };
+  const conflictInsight = insights.find(i => i.category === 'conflict') || { value: 'Not available', speed: 'slow' };
+
   return (
     <>
       {/* Decisions section */}
@@ -23,43 +23,43 @@ const PersonaInsights: React.FC<PersonaInsightsProps> = ({ insights }) => {
           <Brain className="h-3 w-3 text-primary" />
           <h4 className="text-sm font-medium">Decisions</h4>
         </div>
-        <p className="text-xs">{insights.decision}</p>
+        <p className="text-xs">{decisionInsight.value}</p>
       </div>
       
       {/* Drivers section */}
       <div className="mt-3 bg-green-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <Target className="h-3 w-3 text-primary" />
-          <h4 className="text-sm font-medium">Drivers</h4>
+          <h4 className="text-sm font-medium">Communication</h4>
         </div>
-        <p className="text-xs">{insights.driver}</p>
+        <p className="text-xs">{communicationInsight.value}</p>
       </div>
       
-      {/* Persuasion section */}
+      {/* Learning section */}
       <div className="mt-3 bg-purple-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <Users className="h-3 w-3 text-primary" />
-          <h4 className="text-sm font-medium">Discussion & Persuasion</h4>
+          <h4 className="text-sm font-medium">Learning Style</h4>
         </div>
-        <p className="text-xs">{insights.persuasion}</p>
+        <p className="text-xs">{learningInsight.value}</p>
       </div>
       
-      {/* Bias section */}
+      {/* Work Ethic section */}
       <div className="mt-3 bg-amber-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <Sparkles className="h-3 w-3 text-primary" />
-          <h4 className="text-sm font-medium">Biases & Beliefs</h4>
+          <h4 className="text-sm font-medium">Work Ethic</h4>
         </div>
-        <p className="text-xs">{insights.bias}</p>
+        <p className="text-xs">{workEthicInsight.value}</p>
       </div>
       
-      {/* Cognitive style section */}
+      {/* Conflict Resolution section */}
       <div className="mt-3 bg-cyan-50/30 p-2 rounded">
         <div className="flex items-center gap-1 mb-1">
           <LineChart className="h-3 w-3 text-primary" />
-          <h4 className="text-sm font-medium">Cognitive Style</h4>
+          <h4 className="text-sm font-medium">Conflict Resolution</h4>
         </div>
-        <p className="text-xs">{insights.cognitive}</p>
+        <p className="text-xs">{conflictInsight.value}</p>
       </div>
     </>
   );
