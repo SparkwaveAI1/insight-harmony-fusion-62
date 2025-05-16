@@ -49,8 +49,13 @@ Please create a persona with the above customizations applied. The customization
       const generatedPersona = await generatePersona(enhancedPrompt);
       
       if (generatedPersona) {
-        // Update the name to the user-specified name
+        console.log("Original name from form:", data.name);
+        console.log("Before name update, persona has name:", generatedPersona.name);
+        
+        // Explicitly set the name to the user-specified name from the form
         generatedPersona.name = data.name;
+        
+        console.log("After name update, persona now has name:", generatedPersona.name);
         
         // Store the customization notes in the metadata for reference
         if (generatedPersona.metadata && data.customization_notes) {

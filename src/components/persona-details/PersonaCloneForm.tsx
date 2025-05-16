@@ -4,7 +4,7 @@ import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Persona } from "@/services/persona";
-import { usePersonaClone } from "./clone/usePersonaClone";
+import { usePersonaClone } from "@/hooks/usePersonaClone";
 import CloneFormContent from "./clone/CloneFormContent";
 import { CloneFormValues } from "./clone/cloneFormSchema";
 import { toast } from "sonner";
@@ -24,6 +24,12 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
         return false;
       }
       
+      if (!data.name || data.name.trim() === '') {
+        toast.warning("Please provide a name for your new persona");
+        return false;
+      }
+      
+      console.log("Submitting form with data:", data);
       const success = await onSubmit(data);
       if (success) {
         setOpen(false);

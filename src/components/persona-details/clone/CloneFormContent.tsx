@@ -37,10 +37,13 @@ const CloneFormContent = ({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Persona Name</FormLabel>
+                <FormLabel>Persona Name <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
                   <Input placeholder="Enter name for the new persona" {...field} />
                 </FormControl>
+                <FormDescription>
+                  Give your customized persona a unique name to distinguish it from the original.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -73,7 +76,7 @@ const CloneFormContent = ({
             name="customization_notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Customization Instructions</FormLabel>
+                <FormLabel>Customization Instructions <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Examples: Make this persona more extroverted, make them more politically conservative, make them more interested in technology, make them have stronger opinions about environmental issues..." 
