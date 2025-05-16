@@ -134,11 +134,10 @@ export default function PersonaDetailHeader({
         </div>
       </div>
       
-      <div className="flex flex-col gap-3 w-full md:w-auto md:min-w-[240px]">
+      <div className="flex flex-col gap-3 w-full md:w-[240px]">
         <PersonaCloneForm persona={persona} />
         <PersonaActionButtons
           personaId={persona.persona_id}
-          onDelete={handleDeletePersona}
           onChatClick={handleChatClick}
         />
       </div>

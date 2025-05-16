@@ -44,32 +44,34 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="default" 
-          className="flex items-center gap-2 flex-1"
-        >
-          <Copy className="h-4 w-4" />
-          Clone & Customize
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl">Generate Customized Persona</DialogTitle>
-          <DialogDescription>
-            Create a modified version of this persona with customized traits and characteristics.
-            The more specific your customization instructions, the better the results will be.
-          </DialogDescription>
-        </DialogHeader>
-        <CloneFormContent 
-          form={form} 
-          onSubmit={handleSubmit} 
-          isSubmitting={isSubmitting} 
-          onCancel={() => setOpen(false)} 
-        />
-      </DialogContent>
-    </Dialog>
+    <div className="w-full">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            variant="default" 
+            className="w-full flex items-center justify-center gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            Clone & Customize
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Generate Customized Persona</DialogTitle>
+            <DialogDescription>
+              Create a modified version of this persona with customized traits and characteristics.
+              The more specific your customization instructions, the better the results will be.
+            </DialogDescription>
+          </DialogHeader>
+          <CloneFormContent 
+            form={form} 
+            onSubmit={handleSubmit} 
+            isSubmitting={isSubmitting} 
+            onCancel={() => setOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

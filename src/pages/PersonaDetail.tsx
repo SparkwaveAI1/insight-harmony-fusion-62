@@ -10,6 +10,7 @@ import PersonaLoadingState from "@/components/persona-details/PersonaLoadingStat
 import PersonaDetailHeader from "@/components/persona-details/PersonaDetailHeader";
 import PersonaContent from "@/components/persona-details/PersonaContent";
 import NotFoundState from "@/components/persona-details/NotFoundState";
+import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton"; // Import new component
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
 
@@ -62,6 +63,16 @@ const PersonaDetail = () => {
                   />
                   
                   <PersonaContent persona={persona} />
+                  
+                  {/* Add Delete button at the bottom of the page */}
+                  {isOwner && (
+                    <div className="max-w-md mx-auto">
+                      <DeletePersonaButton 
+                        onDelete={handlePersonaDeleted} 
+                        isOwner={isOwner} 
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </div>
