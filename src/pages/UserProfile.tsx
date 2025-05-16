@@ -1,73 +1,15 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import ProfileForm from "@/components/profile/ProfileForm";
 import ProfileSummary from "@/components/profile/ProfileSummary";
-
-interface UserProfile {
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-}
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const UserProfile = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const navigate = useNavigate();
-
-  // Fetch user profile data
-  useEffect(() => {
-    if (!user) {
-      navigate("/sign-in");
-      return;
-    }
-
-    const fetchProfile = async () => {
-      try {
-        // Specify the exact type for the data to avoid TypeScript errors
-        type ProfileResponse = {
-          username: string | null;
-          full_name: string | null;
-          avatar_url: string | null;
-        };
-
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('username, full_name, avatar_url')
-          .eq('id', user.id)
-          .single<ProfileResponse>();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          // If profile doesn't exist, we'll just use email data
-        } else if (data) {
-          setProfile({
-            username: data.username || "",
-            full_name: data.full_name || "",
-            avatar_url: data.avatar_url || "",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user, navigate]);
-
-  const handleProfileUpdate = (updatedProfile: UserProfile) => {
-    setProfile(updatedProfile);
-  };
+  const { profile, loading, updateProfile } = useUserProfile();
 
   if (loading) {
     return (
@@ -105,7 +47,7 @@ const UserProfile = () => {
                 <CardContent>
                   <ProfileForm 
                     initialProfile={profile || {}}
-                    onProfileUpdate={handleProfileUpdate}
+                    onProfileUpdate={updateProfile}
                   />
                 </CardContent>
               </Card>
