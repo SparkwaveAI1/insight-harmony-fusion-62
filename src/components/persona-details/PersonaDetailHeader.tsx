@@ -151,12 +151,13 @@ export default function PersonaDetailHeader({
             )}
           </Avatar>
           
-          {isOwner && !isGeneratingImage && !persona.profile_image_url && (
+          {isOwner && (
             <Button 
               variant="outline" 
               size="icon"
               className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow"
               onClick={handleGenerateImage}
+              disabled={isGeneratingImage}
               title="Generate profile image"
             >
               <ImageIcon className="h-4 w-4" />
