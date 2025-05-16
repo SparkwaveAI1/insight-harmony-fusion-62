@@ -30,17 +30,26 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     }
 
     console.log("Successfully generated persona:", data.persona.name);
-    toast.success("Persona generated successfully!", { id: "persona-generation" });
     
     // Save the persona to the database
-    const savedPersona = await savePersona(data.persona);
-    
-    if (savedPersona) {
-      console.log("Persona saved to database successfully");
-      return savedPersona;
+    try {
+      const savedPersona = await savePersona(data.persona);
+      
+      if (savedPersona) {
+        console.log("Persona saved to database successfully with ID:", savedPersona.persona_id);
+        toast.success("Persona generated successfully!", { id: "persona-generation" });
+        return savedPersona;
+      } else {
+        console.error("Failed to save persona to database - savePersona returned null");
+        toast.error("Failed to save persona to database", { id: "persona-generation" });
+        return null;
+      }
+    } catch (saveError) {
+      console.error("Error saving persona to database:", saveError);
+      toast.error(`Error saving persona: ${saveError.message || "Unknown error"}`, { id: "persona-generation" });
+      // Return the unsaved persona as a fallback
+      return data.persona;
     }
-    
-    return null;
   } catch (error) {
     console.error("Error in generatePersona:", error);
     toast.error("An unexpected error occurred");

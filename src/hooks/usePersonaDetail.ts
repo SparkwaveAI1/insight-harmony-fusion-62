@@ -11,6 +11,7 @@ export function usePersonaDetail() {
   const navigate = useNavigate();
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
 
@@ -108,6 +109,8 @@ export function usePersonaDetail() {
   const handleImageGenerated = async () => {
     if (!personaId || !persona || !user) return null;
     
+    setIsGeneratingImage(true);
+    
     try {
       toast.info("Generating profile image...");
       const imageUrl = await generatePersonaImage(persona);
@@ -134,6 +137,8 @@ export function usePersonaDetail() {
       console.error("Error generating profile image:", error);
       toast.error("An error occurred while generating the profile image");
       return null;
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -145,6 +150,7 @@ export function usePersonaDetail() {
     isLoading,
     isPublic,
     isOwner,
+    isGeneratingImage,
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
