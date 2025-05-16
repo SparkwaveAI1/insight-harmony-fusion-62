@@ -45,7 +45,7 @@ const PersonaVisibilityToggle = ({
   };
 
   return (
-    <div className="flex items-center space-x-2 mt-4">
+    <div className="flex items-center space-x-2 mt-2">
       <div className="flex items-center space-x-2">
         <Switch 
           id="visibility-toggle" 

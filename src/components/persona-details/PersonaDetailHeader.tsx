@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Pencil1Icon, ChatBubbleIcon, TrashIcon, Share2Icon, GlobeIcon, LockClosedIcon } from "@radix-ui/react-icons";
+import { Pencil, MessageCircle, Trash, Share2, Globe, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -12,16 +12,20 @@ import { deletePersona, updatePersonaName } from "@/services/persona";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
-  isLoading: boolean;
-  onPersonaDeleted?: () => void;
-  onNameUpdated?: (newName: string) => void;
+  isOwner: boolean;
+  isPublic: boolean;
+  onVisibilityChange: (newVisibility: boolean) => void;
+  onDelete: () => void;
+  onNameUpdate: (name: string) => void;
 }
 
 export default function PersonaDetailHeader({ 
   persona, 
-  isLoading, 
-  onPersonaDeleted,
-  onNameUpdated
+  isOwner, 
+  isPublic,
+  onVisibilityChange,
+  onDelete: onPersonaDeleted,
+  onNameUpdate: onNameUpdated
 }: PersonaDetailHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(persona?.name || "");
@@ -97,7 +101,7 @@ export default function PersonaDetailHeader({
     toast.success("Persona link copied to clipboard");
   };
 
-  if (isLoading) {
+  if (!persona) {
     return (
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-4">
@@ -147,7 +151,7 @@ export default function PersonaDetailHeader({
                 className="h-6 w-6"
                 onClick={handleStartEditing}
               >
-                <Pencil1Icon className="h-3 w-3" />
+                <Pencil className="h-3 w-3" />
                 <span className="sr-only">Edit name</span>
               </Button>
             </div>
@@ -155,26 +159,31 @@ export default function PersonaDetailHeader({
           <p className="text-sm text-muted-foreground flex items-center gap-2">
             {persona.is_public ? (
               <>
-                <GlobeIcon className="h-3 w-3" /> Public
+                <Globe className="h-3 w-3" /> Public
               </>
             ) : (
               <>
-                <LockClosedIcon className="h-3 w-3" /> Private
+                <Lock className="h-3 w-3" /> Private
               </>
             )}
-            <PersonaVisibilityToggle persona={persona} />
           </p>
+          <PersonaVisibilityToggle 
+            personaId={persona.persona_id} 
+            isPublic={isPublic} 
+            isOwner={isOwner} 
+            onVisibilityChange={onVisibilityChange} 
+          />
         </div>
       </div>
       
       <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
         <Button variant="outline" onClick={handleChatClick} className="flex items-center gap-2">
-          <ChatBubbleIcon className="h-4 w-4" />
+          <MessageCircle className="h-4 w-4" />
           Chat with Persona
         </Button>
         
         <Button variant="outline" onClick={copyPersonaLink} className="flex items-center gap-2">
-          <Share2Icon className="h-4 w-4" />
+          <Share2 className="h-4 w-4" />
           Share
         </Button>
         
@@ -184,7 +193,7 @@ export default function PersonaDetailHeader({
           disabled={isDeleting}
           className="flex items-center gap-2"
         >
-          <TrashIcon className="h-4 w-4" />
+          <Trash className="h-4 w-4" />
           {isDeleting ? "Deleting..." : "Delete"}
         </Button>
       </div>
