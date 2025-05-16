@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllPersonas } from "@/services/persona"; 
@@ -42,8 +41,7 @@ export default function PersonaList({
           return collectionPersonas;
         } else if (publicOnly) {
           // For the public library (Persona Library view):
-          // 1. If user is logged in: Show all public personas + user's own personas (public or private)
-          // 2. If no user is logged in: Show only public personas
+          // Show only public personas + user's own personas (public or private)
           return user 
             ? data.filter(persona => 
                 persona.is_public || 
@@ -142,4 +140,4 @@ export default function PersonaList({
 }
 
 // Import the getPersonasByCollection function at the top of the file
-import { getPersonasByCollection } from "@/services/persona"; 
+import { getPersonasByCollection } from "@/services/persona";

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, MoreHorizontal } from "lucide-react";
+import { Eye, EyeOff, MoreHorizontal, UserCheck } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -19,16 +19,21 @@ import { updatePersonaVisibility } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import DeletePersonaDialog from "./DeletePersonaDialog";
 import AddToCollectionButton from "./AddToCollectionButton";
 
 interface PersonaCardProps {
   persona: Persona;
   onVisibilityChange?: (personaId: string, isPublic: boolean) => void;
   onDelete?: (personaId: string) => void;
+  showDeleteButton?: boolean;
 }
 
-const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, onDelete }) => {
+const PersonaCard: React.FC<PersonaCardProps> = ({ 
+  persona, 
+  onVisibilityChange, 
+  onDelete,
+  showDeleteButton = false // Default to not showing delete button
+}) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isOwner = user?.id === persona.user_id;
@@ -63,11 +68,20 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-shadow duration-200">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex flex-col space-y-1">
-          <div 
-            className="text-sm font-medium hover:text-primary cursor-pointer" 
-            onClick={handleViewDetails}
-          >
-            {persona.name}
+          <div className="flex items-center gap-2">
+            <div 
+              className="text-sm font-medium hover:text-primary cursor-pointer" 
+              onClick={handleViewDetails}
+            >
+              {persona.name}
+            </div>
+            {/* Owner indicator badge */}
+            {isOwner && (
+              <div className="flex items-center text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400 rounded-full px-2 py-0.5">
+                <UserCheck className="h-3 w-3 mr-1" />
+                <span>Owner</span>
+              </div>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             Created: {persona.creation_date}
@@ -120,25 +134,15 @@ const PersonaCard: React.FC<PersonaCardProps> = ({ persona, onVisibilityChange, 
         </p>
       </CardContent>
       <CardFooter className="flex items-center justify-between">
-        {persona.is_public ? (
-          <Badge variant="secondary">Public</Badge>
-        ) : (
-          <Badge variant="outline">Private</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {persona.is_public ? (
+            <Badge variant="secondary">Public</Badge>
+          ) : (
+            <Badge variant="outline">Private</Badge>
+          )}
+        </div>
         <div className="flex gap-2">
           <AddToCollectionButton personaId={persona.persona_id} />
-          {isOwner && (
-            <DeletePersonaDialog
-              personaId={persona.persona_id}
-              personaName={persona.name}
-              userId={persona.user_id}
-              onDelete={() => {
-                if (onDelete) {
-                  onDelete(persona.persona_id);
-                }
-              }}
-            />
-          )}
         </div>
       </CardFooter>
     </Card>
