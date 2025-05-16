@@ -54,7 +54,7 @@ serve(async (req) => {
     if (metadata.occupation && metadata.occupation.includes("creative")) styleKeywords.push("artistic");
     if (extendedTraits.self_efficacy && parseFloat(extendedTraits.self_efficacy) > 0.6) styleKeywords.push("confident");
     
-    // Construct the prompt with emphasis on realism
+    // Construct the prompt with emphasis on realism and plain background
     let imagePrompt = `A realistic portrait photograph of an everyday, average ${age}-year-old ${ethnicity} ${gender}`;
     
     if (occupation) {
@@ -69,8 +69,8 @@ serve(async (req) => {
       imagePrompt += `. Located in ${region}`;
     }
     
-    // Add specific instructions for realism and diversity
-    imagePrompt += `. The photo should look like a real person with natural features, not idealized or overly attractive. Include natural imperfections, realistic skin texture, and normal facial asymmetry. The lighting should be natural and not overly professional. The background should be simple and realistic for an ID photo or social media profile picture. Show a genuine, authentic-looking person that could exist in the real world.`;
+    // Add specific instructions for realism, plain background, and diversity
+    imagePrompt += `. The photo should look like a real person with natural features, not idealized or overly attractive. Include natural imperfections, realistic skin texture, and normal facial asymmetry. The background should be completely plain and neutral (solid white, light gray, or soft blue). The lighting should be even and flattering, similar to a professional headshot. Frame the image from shoulders up as a proper portrait photo. Show a genuine, authentic-looking person that could exist in the real world.`;
     
     console.log("Generated prompt:", imagePrompt);
     
