@@ -7,7 +7,7 @@ export {
   getAllPersonas, 
   getPersonasByCollection 
 } from './operations/getPersonas';
-export { updatePersonaVisibility } from './operations/updatePersona';
+export { updatePersonaVisibility, updatePersonaName } from './operations/updatePersona';
 export { deletePersona } from './operations/deletePersona';
 export { clonePersona } from './operations/clonePersona';
 export { generatePersona } from './personaGenerator';

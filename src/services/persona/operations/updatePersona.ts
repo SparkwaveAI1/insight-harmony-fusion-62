@@ -21,3 +21,24 @@ export async function updatePersonaVisibility(personaId: string, isPublic: boole
     return false;
   }
 }
+
+/**
+ * Updates the name of a persona
+ */
+export async function updatePersonaName(personaId: string, name: string): Promise<boolean> {
+  try {
+    console.log(`Updating persona ${personaId} name to "${name}"`);
+    
+    const { error } = await supabase
+      .from('personas')
+      .update({ name: name })
+      .eq('persona_id', personaId);
+
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating persona name:", error);
+    return false;
+  }
+}

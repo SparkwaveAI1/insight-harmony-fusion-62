@@ -22,7 +22,8 @@ const PersonaDetail = () => {
     isPublic,
     isOwner,
     handleVisibilityChange,
-    handlePersonaDeleted
+    handlePersonaDeleted,
+    handleNameUpdate
   } = usePersonaDetail();
 
   return (
@@ -46,6 +47,7 @@ const PersonaDetail = () => {
                     isPublic={isPublic}
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
+                    onNameUpdate={handleNameUpdate}
                   />
                   
                   <PersonaContent persona={persona} />

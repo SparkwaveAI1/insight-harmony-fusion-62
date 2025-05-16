@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility } from "@/services/persona";
+import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -71,6 +71,25 @@ export function usePersonaDetail() {
     }
   };
 
+  // Handle name update
+  const handleNameUpdate = async (name: string) => {
+    if (!personaId || !user) return;
+    
+    try {
+      const success = await updatePersonaName(personaId, name);
+      if (success) {
+        setPersona(prev => prev ? { ...prev, name } : null);
+        toast.success("Persona name updated successfully");
+      } else {
+        toast.error("Failed to update persona name");
+      }
+    } catch (error) {
+      console.error("Error updating persona name:", error);
+      toast.error("Failed to update persona name");
+      throw error;
+    }
+  };
+
   // Check if current user is the owner of this persona
   const isOwner = user?.id === persona?.user_id;
 
@@ -80,6 +99,7 @@ export function usePersonaDetail() {
     isPublic,
     isOwner,
     handleVisibilityChange,
-    handlePersonaDeleted
+    handlePersonaDeleted,
+    handleNameUpdate
   };
 }
