@@ -11,7 +11,6 @@ import PersonaDetailHeader from "@/components/persona-details/PersonaDetailHeade
 import PersonaContent from "@/components/persona-details/PersonaContent";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
-import PersonaPromptSection from "@/components/persona-details/PersonaPromptSection";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -48,8 +47,6 @@ const PersonaDetail = () => {
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
                   />
-                  
-                  <PersonaPromptSection prompt={persona.prompt} />
                   
                   <PersonaContent persona={persona} />
                 </>
