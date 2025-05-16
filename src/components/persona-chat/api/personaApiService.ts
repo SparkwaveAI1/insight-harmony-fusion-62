@@ -39,7 +39,8 @@ export const sendMessageToPersona = async (
       newUserMessage.image = imageData;
     }
     
-    formattedMessages.push(newUserMessage);
+    // Make TypeScript happy by ensuring the types match
+    formattedMessages.push(newUserMessage as typeof formattedMessages[0]);
 
     // Call the Supabase Edge Function
     const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
