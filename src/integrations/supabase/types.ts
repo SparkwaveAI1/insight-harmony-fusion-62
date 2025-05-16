@@ -209,6 +209,7 @@ export type Database = {
           name: string
           persona_id: string
           preinterview_tags: Json
+          profile_image_url: string | null
           prompt: string | null
           simulation_directives: Json
           trait_profile: Json
@@ -226,6 +227,7 @@ export type Database = {
           name: string
           persona_id: string
           preinterview_tags: Json
+          profile_image_url?: string | null
           prompt?: string | null
           simulation_directives: Json
           trait_profile: Json
@@ -243,6 +245,7 @@ export type Database = {
           name?: string
           persona_id?: string
           preinterview_tags?: Json
+          profile_image_url?: string | null
           prompt?: string | null
           simulation_directives?: Json
           trait_profile?: Json
