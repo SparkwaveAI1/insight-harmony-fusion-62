@@ -1,5 +1,5 @@
 
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface GenerateImageButtonProps {
@@ -15,10 +15,8 @@ export default function GenerateImageButton({
   onGenerate,
   hasImage
 }: GenerateImageButtonProps) {
-  // Don't show if not visible or if there's already an image
-  if (!isVisible || (hasImage && !isGenerating)) return null;
-  
-  const buttonText = hasImage ? "Regenerate Profile Image" : "Generate Profile Image";
+  // Don't show if not visible
+  if (!isVisible) return null;
   
   return (
     <Button
@@ -28,8 +26,14 @@ export default function GenerateImageButton({
       disabled={isGenerating}
       className="mt-2 flex items-center gap-2"
     >
-      <ImageIcon className="h-4 w-4" />
-      {buttonText}
+      {isGenerating ? (
+        <RefreshCw className="h-4 w-4 animate-spin" />
+      ) : hasImage ? (
+        <RefreshCw className="h-4 w-4" />
+      ) : (
+        <ImageIcon className="h-4 w-4" />
+      )}
+      {hasImage ? "Regenerate Image" : "Generate Image"}
     </Button>
   );
 }

@@ -33,83 +33,113 @@ serve(async (req) => {
     const gender = metadata.gender || "person";
     const ethnicity = metadata.race_ethnicity || "";
     const occupation = metadata.occupation || "";
-    const physicalDescription = metadata.physical_description || "";
     
-    // Physical attributes that should be extracted from the description
-    let isOverweight = false;
+    // Physical attributes that should be explicitly extracted from the description
+    let bodyType = "";
     let healthConditions = [];
+    let emotionalState = "";
     
     // Parse the original description for physical attributes and health conditions
     if (description) {
+      // Check for body type descriptions
       if (description.toLowerCase().includes("overweight") || 
           description.toLowerCase().includes("obese") || 
-          description.toLowerCase().includes("heavy")) {
-        isOverweight = true;
+          description.toLowerCase().includes("heavy") || 
+          description.toLowerCase().includes("fat")) {
+        bodyType = "overweight";
+      } else if (description.toLowerCase().includes("thin") || 
+                description.toLowerCase().includes("skinny") || 
+                description.toLowerCase().includes("underweight")) {
+        bodyType = "thin";
       }
       
       // Check for common health conditions
-      const conditions = ["diabetic", "diabetes", "asthma", "high blood pressure", "hypertension"];
-      conditions.forEach(condition => {
-        if (description.toLowerCase().includes(condition)) {
+      const conditionKeywords = {
+        "diabetic": "diabetic",
+        "diabetes": "diabetic",
+        "asthma": "with asthma",
+        "high blood pressure": "with high blood pressure",
+        "hypertension": "with hypertension",
+        "heart condition": "with a heart condition",
+        "obese": "who is obese"
+      };
+      
+      Object.entries(conditionKeywords).forEach(([keyword, condition]) => {
+        if (description.toLowerCase().includes(keyword)) {
           healthConditions.push(condition);
+        }
+      });
+      
+      // Check for emotional states
+      const emotionalKeywords = {
+        "depression": "looking depressed",
+        "depressed": "looking depressed",
+        "sad": "with a sad expression",
+        "anxious": "with an anxious expression",
+        "anxiety": "with an anxious expression",
+        "tired": "looking tired and worn",
+        "exhausted": "looking exhausted",
+        "stressed": "looking stressed"
+      };
+      
+      Object.entries(emotionalKeywords).forEach(([keyword, state]) => {
+        if (description.toLowerCase().includes(keyword)) {
+          emotionalState = state;
         }
       });
     }
     
-    // Mental health aspects
-    let mentalHealthTraits = [];
-    if (description.toLowerCase().includes("depression") || 
-        description.toLowerCase().includes("depressed")) {
-      mentalHealthTraits.push("showing signs of depression");
-    }
-    if (description.toLowerCase().includes("anxious") || 
-        description.toLowerCase().includes("anxiety")) {
-      mentalHealthTraits.push("appears anxious");
-    }
-    if (description.toLowerCase().includes("tired") || 
-        description.toLowerCase().includes("exhausted")) {
-      mentalHealthTraits.push("looks tired");
-    }
-    
     // Social aspects that might be visible
-    let socialTraits = [];
+    let socialDescription = "";
     if (description.toLowerCase().includes("trouble socially") || 
         description.toLowerCase().includes("not many friends") || 
-        description.toLowerCase().includes("lonely")) {
-      socialTraits.push("appears somewhat uncomfortable or awkward");
+        description.toLowerCase().includes("lonely") ||
+        description.toLowerCase().includes("awkward")) {
+      socialDescription = "with an awkward, uncomfortable expression";
     }
     
-    // Start building the prompt
+    // Build the base prompt
     let imagePrompt = `A realistic photograph of a ${age}-year-old ${ethnicity} ${gender}`;
     
-    // Add physical description
-    if (isOverweight) {
-      imagePrompt += " who is overweight";
-    } else if (physicalDescription) {
-      imagePrompt += ` who is ${physicalDescription}`;
+    // Add body type if specified
+    if (bodyType) {
+      imagePrompt += ` who is ${bodyType}`;
     }
     
-    // Add occupation
+    // Add occupation if available
     if (occupation) {
-      imagePrompt += ` who works as a ${occupation}`;
+      imagePrompt += ` working as a ${occupation}`;
     }
     
-    // Add health conditions if present
+    // Add health conditions
     if (healthConditions.length > 0) {
-      imagePrompt += ` and has ${healthConditions.join(" and ")}`;
+      imagePrompt += `, ${healthConditions.join(", ")}`;
     }
     
-    // Add mental health and social traits
-    if (mentalHealthTraits.length > 0) {
-      imagePrompt += `. This person ${mentalHealthTraits.join(" and ")}`;
+    // Add emotional state
+    if (emotionalState) {
+      imagePrompt += `, ${emotionalState}`;
     }
     
-    if (socialTraits.length > 0) {
-      imagePrompt += ` and ${socialTraits.join(" and ")}`;
+    // Add social characteristics
+    if (socialDescription) {
+      imagePrompt += `, ${socialDescription}`;
     }
     
-    // Add specific instructions for professional headshot style
-    imagePrompt += `. IMPORTANT: This must be a realistic headshot portrait with a plain background. The image should be framed from shoulders up, with natural lighting. This should be a CANDID REALISTIC photo, NOT idealized or beautified - show the actual physical traits described including weight, health conditions, and emotional state. Make sure the image honestly depicts the person described with all their physical characteristics.`;
+    // Add specific instructions to ensure accurate representation
+    imagePrompt += `. IMPORTANT: This must be a realistic portrait photo, NOT idealized or beautified. The image should accurately show the person with ${bodyType || "average"} body type, with realistic facial features that match their ${age} years and life circumstances. Do not make the person attractive, stylish, or well-groomed unless specifically mentioned in the description.`;
+    
+    if (bodyType === "overweight") {
+      imagePrompt += " The person should be clearly and realistically overweight with visible weight in the face and neck.";
+    }
+    
+    if (emotionalState) {
+      imagePrompt += ` The facial expression must clearly show ${emotionalState.replace("looking ", "")}.`;
+    }
+    
+    if (healthConditions.length > 0) {
+      imagePrompt += " Health conditions should be visible in their appearance.";
+    }
     
     console.log("Generated prompt:", imagePrompt);
     
