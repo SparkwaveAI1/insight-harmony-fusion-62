@@ -50,12 +50,12 @@ serve(async (req) => {
     
     // Add cultural and contextual hints
     if (metadata.religious_practice_level === "devout") styleKeywords.push("modest");
-    if (metadata.income_level && metadata.income_level.includes("high")) styleKeywords.push("polished");
+    if (metadata.income_level && metadata.income_level.includes("high")) styleKeywords.push("well-dressed");
     if (metadata.occupation && metadata.occupation.includes("creative")) styleKeywords.push("artistic");
     if (extendedTraits.self_efficacy && parseFloat(extendedTraits.self_efficacy) > 0.6) styleKeywords.push("confident");
     
-    // Construct the prompt
-    let imagePrompt = `A professional profile photo of a ${age}-year-old ${ethnicity} ${gender}`;
+    // Construct the prompt with emphasis on realism
+    let imagePrompt = `A realistic portrait photograph of an everyday, average ${age}-year-old ${ethnicity} ${gender}`;
     
     if (occupation) {
       imagePrompt += ` who works as a ${occupation}`;
@@ -69,7 +69,8 @@ serve(async (req) => {
       imagePrompt += `. Located in ${region}`;
     }
     
-    imagePrompt += `. The photo has professional lighting, neutral background, and looks like a high-quality social media or professional profile picture. The image is a head and shoulders portrait showing their face clearly.`;
+    // Add specific instructions for realism and diversity
+    imagePrompt += `. The photo should look like a real person with natural features, not idealized or overly attractive. Include natural imperfections, realistic skin texture, and normal facial asymmetry. The lighting should be natural and not overly professional. The background should be simple and realistic for an ID photo or social media profile picture. Show a genuine, authentic-looking person that could exist in the real world.`;
     
     console.log("Generated prompt:", imagePrompt);
     
