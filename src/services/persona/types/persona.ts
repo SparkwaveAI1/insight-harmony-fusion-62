@@ -22,5 +22,6 @@ export interface Persona {
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
+  profile_image_url?: string; // Added profile image URL field
   [key: string]: any;
 }

@@ -1,84 +1,75 @@
 
-import { v4 as uuidv4 } from 'uuid';
-import { Persona } from './types';
-import { savePersona } from './operations/savePersona'; // Updated import path
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
+import { savePersona } from "./operations/savePersona";
+import { Persona } from "./types";
+import { toast } from "sonner";
+import { generatePersonaImage } from "./operations/generatePersonaImage";
 
-export async function generatePersona(prompt: string): Promise<Persona | null> {
+export const generatePersona = async (prompt: string): Promise<Persona | null> => {
   try {
-    // Fetch the current user's ID to associate with the persona
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
+    toast.info("Generating persona...", {
+      id: "persona-generation",
+      duration: 10000,
+    });
     
-    if (!userId) {
-      console.error("No authenticated user found when generating persona");
-      throw new Error("You must be logged in to create personas");
-    } else {
-      console.log("Creating persona for user:", userId);
-    }
-    
-    // Create a unique ID for the persona
-    const personaId = uuidv4().substring(0, 8);
-    
-    console.log("Sending request to generate persona with prompt:", prompt);
-    
-    // Call the Supabase Edge Function to generate the persona
-    const response = await fetch(`https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/generate-persona`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-      },
-      body: JSON.stringify({ 
-        prompt,
-        userId // Send the userId to the Edge Function
-      }),
+    console.log("Starting persona generation for prompt:", prompt);
+
+    const { data, error } = await supabase.functions.invoke('generate-persona', {
+      body: { prompt }
     });
 
-    // Check for HTTP errors
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Error response from API:", response.status, errorText);
-      throw new Error(`Error generating persona: ${response.statusText} (${response.status})`);
+    if (error) {
+      console.error("Error generating persona:", error);
+      toast.error("Failed to generate persona", { id: "persona-generation" });
+      return null;
     }
 
-    // Parse the response
-    const personaData = await response.json();
-    console.log("Generated persona data received:", personaData);
-    
-    // Validate the response
-    if (!personaData || !personaData.success) {
-      console.error("Invalid response from API:", personaData);
-      throw new Error(personaData?.error || 'Invalid response from persona generation API');
+    if (!data.success || !data.persona) {
+      console.error("Persona generation failed:", data.error || "Unknown error");
+      toast.error(`Failed to generate persona: ${data.error || "Unknown error"}`, { id: "persona-generation" });
+      return null;
     }
-    
-    // Add additional fields to the persona according to the database schema
-    const persona: Persona = {
-      ...personaData.persona,
-      id: uuidv4(),
-      persona_id: personaId,
-      creation_date: new Date().toISOString().split('T')[0],
-      created_at: new Date().toISOString(),
-      prompt,
-      is_public: false,
-      user_id: userId, // Set the user_id from the authenticated user
-    };
-    
-    console.log("Final persona object to be saved:", persona);
+
+    console.log("Successfully generated persona:", data.persona.name);
+    toast.success("Persona generated successfully!", { id: "persona-generation" });
     
     // Save the persona to the database
-    const savedPersona = await savePersona(persona);
+    const savedPersona = await savePersona(data.persona);
     
-    if (!savedPersona) {
-      console.error("Failed to save persona to database");
-      throw new Error("Failed to save persona to database");
+    if (savedPersona) {
+      console.log("Persona saved to database, now generating image...");
+      toast.info("Generating profile image...", { 
+        id: "image-generation", 
+        duration: 20000 
+      });
+      
+      // Generate image for the persona
+      const imageUrl = await generatePersonaImage(savedPersona);
+      
+      if (imageUrl) {
+        console.log("Profile image generated:", imageUrl);
+        toast.success("Profile image generated!", { id: "image-generation" });
+        
+        // Update the persona with the image URL
+        const updatedPersona = {
+          ...savedPersona,
+          profile_image_url: imageUrl
+        };
+        
+        // Save the updated persona with image URL
+        const finalPersona = await savePersona(updatedPersona);
+        return finalPersona;
+      } else {
+        console.warn("Failed to generate profile image, returning persona without image");
+        toast.error("Failed to generate profile image", { id: "image-generation" });
+        return savedPersona;
+      }
     }
     
-    console.log("Successfully saved persona:", savedPersona);
-    return persona;
-    
+    return savedPersona;
   } catch (error) {
     console.error("Error in generatePersona:", error);
-    throw error;
+    toast.error("An unexpected error occurred");
+    return null;
   }
-}
+};

@@ -1,139 +1,193 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { MessageCircle, Pencil, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Pencil1Icon, ChatBubbleIcon, TrashIcon, Share2Icon, GlobeIcon, LockClosedIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { formatName } from "@/lib/utils";
-import { Persona } from "@/services/persona";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
-import PersonaCloneForm from "./PersonaCloneForm";
-import DeletePersonaDialog from "@/components/personas/DeletePersonaDialog";
+import { Persona } from "@/services/persona/types";
+import { deletePersona, updatePersonaName } from "@/services/persona";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
-  isOwner: boolean;
-  isPublic: boolean;
-  onVisibilityChange: (isPublic: boolean) => void;
-  onDelete: () => void;
-  onNameUpdate: (name: string) => Promise<void>;
+  isLoading: boolean;
+  onPersonaDeleted?: () => void;
+  onNameUpdated?: (newName: string) => void;
 }
 
-const PersonaDetailHeader = ({ 
+export default function PersonaDetailHeader({ 
   persona, 
-  isOwner, 
-  isPublic, 
-  onVisibilityChange, 
-  onDelete,
-  onNameUpdate
-}: PersonaDetailHeaderProps) => {
+  isLoading, 
+  onPersonaDeleted,
+  onNameUpdated
+}: PersonaDetailHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(persona.name);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleEditClick = () => {
-    setName(persona.name);
+  const [newName, setNewName] = useState(persona?.name || "");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
+  
+  const handleStartEditing = () => {
     setIsEditing(true);
+    setNewName(persona.name);
   };
-
-  const handleNameSave = async () => {
-    if (!name.trim() || name === persona.name) {
-      setIsEditing(false);
+  
+  const handleSaveName = async () => {
+    if (!newName.trim()) {
+      toast.error("Name cannot be empty");
       return;
     }
-
-    setIsUpdating(true);
+    
     try {
-      await onNameUpdate(name);
-      setIsEditing(false);
+      const updated = await updatePersonaName(persona.persona_id, newName);
+      if (updated) {
+        toast.success("Persona name updated");
+        setIsEditing(false);
+        onNameUpdated?.(newName);
+      } else {
+        toast.error("Failed to update persona name");
+      }
     } catch (error) {
       console.error("Error updating persona name:", error);
-    } finally {
-      setIsUpdating(false);
+      toast.error("An error occurred while updating the name");
     }
+  };
+  
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setNewName(persona.name);
+  };
+  
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSaveName();
+    } else if (e.key === "Escape") {
+      handleCancelEditing();
+    }
+  };
+  
+  const handleDeletePersona = async () => {
+    setIsDeleting(true);
+    
+    try {
+      const success = await deletePersona(persona.persona_id);
+      if (success) {
+        toast.success("Persona deleted successfully");
+        onPersonaDeleted?.();
+        navigate("/persona-viewer");
+      } else {
+        toast.error("Failed to delete persona");
+      }
+    } catch (error) {
+      console.error("Error deleting persona:", error);
+      toast.error("An error occurred while deleting the persona");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
+  const handleChatClick = () => {
+    navigate(`/persona/${persona.persona_id}/chat`);
+  };
+  
+  const copyPersonaLink = () => {
+    const url = `${window.location.origin}/persona/${persona.persona_id}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Persona link copied to clipboard");
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleNameSave();
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      setName(persona.name);
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between py-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
-      <div className="space-y-2">
-        {isEditing ? (
-          <div className="flex items-center gap-2">
-            <Input 
-              type="text" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              onKeyDown={handleKeyDown}
-              autoFocus
-              className="text-xl font-bold max-w-md"
-            />
-            <Button 
-              size="sm" 
-              onClick={handleNameSave} 
-              disabled={isUpdating || !name.trim() || name === persona.name}
-              className="ml-2"
-            >
-              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : 'Save'}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold font-plasmik">{formatName(persona.name)}</h1>
-            {isOwner && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleEditClick}
-                className="p-1 h-auto"
-              >
-                <Pencil className="w-4 h-4" />
-                <span className="sr-only">Edit Name</span>
-              </Button>
-            )}
-          </div>
-        )}
-        <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
+      <div className="flex items-center gap-4">
+        <Avatar className="h-16 w-16 bg-primary/10 text-primary text-2xl font-bold">
+          {persona.profile_image_url ? (
+            <AvatarImage src={persona.profile_image_url} alt={persona.name} />
+          ) : (
+            <AvatarFallback>{persona.name.charAt(0)}</AvatarFallback>
+          )}
+        </Avatar>
         
-        <PersonaVisibilityToggle 
-          personaId={persona.persona_id}
-          isPublic={isPublic}
-          isOwner={isOwner}
-          onVisibilityChange={onVisibilityChange}
-        />
+        <div>
+          {isEditing ? (
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="border rounded px-2 py-1 text-xl font-semibold"
+                autoFocus
+              />
+              <div className="flex gap-1">
+                <Button size="sm" variant="ghost" onClick={handleSaveName}>Save</Button>
+                <Button size="sm" variant="ghost" onClick={handleCancelEditing}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold">{persona.name}</h1>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                onClick={handleStartEditing}
+              >
+                <Pencil1Icon className="h-3 w-3" />
+                <span className="sr-only">Edit name</span>
+              </Button>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            {persona.is_public ? (
+              <>
+                <GlobeIcon className="h-3 w-3" /> Public
+              </>
+            ) : (
+              <>
+                <LockClosedIcon className="h-3 w-3" /> Private
+              </>
+            )}
+            <PersonaVisibilityToggle persona={persona} />
+          </p>
+        </div>
       </div>
       
-      <div className="flex items-center gap-4">
-        <PersonaCloneForm persona={persona} />
+      <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
+        <Button variant="outline" onClick={handleChatClick} className="flex items-center gap-2">
+          <ChatBubbleIcon className="h-4 w-4" />
+          Chat with Persona
+        </Button>
         
-        {isOwner && (
-          <DeletePersonaDialog 
-            personaId={persona.persona_id}
-            personaName={persona.name}
-            userId={persona.user_id || ''}
-            onDelete={onDelete}
-          />
-        )}
+        <Button variant="outline" onClick={copyPersonaLink} className="flex items-center gap-2">
+          <Share2Icon className="h-4 w-4" />
+          Share
+        </Button>
         
         <Button 
-          asChild
+          variant="destructive" 
+          onClick={handleDeletePersona} 
+          disabled={isDeleting}
           className="flex items-center gap-2"
         >
-          <Link to={`/persona/${persona.persona_id}/chat`}>
-            <MessageCircle className="w-4 h-4" />
-            Chat with Persona
-          </Link>
+          <TrashIcon className="h-4 w-4" />
+          {isDeleting ? "Deleting..." : "Delete"}
         </Button>
       </div>
     </div>
   );
-};
-
-export default PersonaDetailHeader;
+}

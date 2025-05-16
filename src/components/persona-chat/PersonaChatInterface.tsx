@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -5,6 +6,7 @@ import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
@@ -124,10 +126,16 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       </div>
       
       {/* Persona badge */}
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-muted">
-        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
-          {activePersona.name.charAt(0)}
-        </div>
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-muted">
+        <Avatar className="w-12 h-12 rounded-full border-2 border-primary/20">
+          {activePersona.profile_image_url ? (
+            <AvatarImage src={activePersona.profile_image_url} alt={activePersona.name} />
+          ) : (
+            <AvatarFallback className="bg-primary/20 text-primary font-bold text-lg">
+              {activePersona.name.charAt(0)}
+            </AvatarFallback>
+          )}
+        </Avatar>
         <div>
           <p className="font-medium">{activePersona.name}</p>
           <p className="text-xs text-muted-foreground">
@@ -170,7 +178,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
             messages={messages} 
             isResponding={isResponding} 
             messagesEndRef={messagesEndRef}
-            disableAutoScroll={true}  
+            disableAutoScroll={true}
+            personaImageUrl={activePersona.profile_image_url}
           />
         </ScrollArea>
         

@@ -11,6 +11,7 @@ export { updatePersonaVisibility, updatePersonaName } from './operations/updateP
 export { deletePersona } from './operations/deletePersona';
 export { clonePersona } from './operations/clonePersona';
 export { generatePersona } from './personaGenerator';
+export { generatePersonaImage } from './operations/generatePersonaImage';
 
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';

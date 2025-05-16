@@ -1,6 +1,6 @@
 
 import React, { useEffect, RefObject } from 'react';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Message } from './types';
 
 interface MessageListProps {
@@ -8,13 +8,15 @@ interface MessageListProps {
   isResponding: boolean;
   messagesEndRef: RefObject<HTMLDivElement>;
   disableAutoScroll?: boolean;
+  personaImageUrl?: string;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
   messages, 
   isResponding, 
   messagesEndRef,
-  disableAutoScroll = false
+  disableAutoScroll = false,
+  personaImageUrl
 }) => {
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -40,7 +42,11 @@ const MessageList: React.FC<MessageListProps> = ({
             <div className="flex items-start gap-2">
               {message.role === 'assistant' && (
                 <Avatar className="h-8 w-8 bg-primary/20 hidden sm:flex">
-                  <span className="text-xs font-semibold">AI</span>
+                  {personaImageUrl ? (
+                    <AvatarImage src={personaImageUrl} alt="AI Persona" />
+                  ) : (
+                    <span className="text-xs font-semibold">AI</span>
+                  )}
                 </Avatar>
               )}
               

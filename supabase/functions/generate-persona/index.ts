@@ -71,6 +71,9 @@ serve(async (req) => {
       console.log("Updated persona with interview responses");
     }
 
+    // Store the original prompt
+    personaTraits.prompt = prompt;
+
     console.log("Returning generated persona");
     return new Response(
       JSON.stringify({
