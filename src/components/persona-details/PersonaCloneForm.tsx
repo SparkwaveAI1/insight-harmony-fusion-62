@@ -27,7 +27,7 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
       return false;
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      toast.error("Failed to clone persona");
+      toast.error("Failed to generate new persona");
       return false;
     }
   };
@@ -46,7 +46,7 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Clone & Customize Persona</DialogTitle>
+          <DialogTitle className="text-xl">Generate Customized Persona</DialogTitle>
         </DialogHeader>
         <CloneFormContent 
           form={form} 

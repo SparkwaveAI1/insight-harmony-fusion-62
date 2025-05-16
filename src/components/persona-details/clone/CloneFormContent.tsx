@@ -39,7 +39,7 @@ const CloneFormContent = ({
               <FormItem>
                 <FormLabel>Persona Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter name for the cloned persona" {...field} />
+                  <Input placeholder="Enter name for the new persona" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -60,7 +60,7 @@ const CloneFormContent = ({
                   />
                 </FormControl>
                 <FormDescription>
-                  This is the original prompt used to generate this persona.
+                  This base prompt will be used to generate the new persona.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -72,7 +72,7 @@ const CloneFormContent = ({
             name="customization_notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Customization Notes</FormLabel>
+                <FormLabel>Customization Instructions</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="e.g., Make this persona more funny, more prone to anger, or more politically aligned with..." 
@@ -81,7 +81,7 @@ const CloneFormContent = ({
                   />
                 </FormControl>
                 <FormDescription>
-                  Add specific instructions on how to modify this persona.
+                  Specify how this new persona should differ from the original one.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -104,7 +104,7 @@ const CloneFormContent = ({
             className="flex items-center gap-2"
           >
             <Copy className="h-4 w-4" />
-            {isSubmitting ? "Creating..." : "Create Clone"}
+            {isSubmitting ? "Generating..." : "Generate New Persona"}
           </Button>
         </div>
       </form>
