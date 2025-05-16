@@ -20,7 +20,7 @@ export const sendMessageToPersona = async (
   const formattedMessages = previousMessages.map(msg => ({
     role: msg.role,
     content: msg.content,
-    image: msg.image,
+    image: msg.image || undefined,
   }));
 
   try {
