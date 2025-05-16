@@ -23,7 +23,8 @@ const PersonaDetail = () => {
     isOwner,
     handleVisibilityChange,
     handlePersonaDeleted,
-    handleNameUpdate
+    handleNameUpdate,
+    handleImageGenerated
   } = usePersonaDetail();
 
   return (
@@ -48,6 +49,7 @@ const PersonaDetail = () => {
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
                     onNameUpdate={handleNameUpdate}
+                    onImageGenerated={handleImageGenerated}
                   />
                   
                   <PersonaContent persona={persona} />

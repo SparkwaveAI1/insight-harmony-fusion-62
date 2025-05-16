@@ -2,13 +2,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Pencil, MessageCircle, Trash, Share2, Globe, Lock } from "lucide-react";
+import { Pencil, MessageCircle, Trash, Share2, Globe, Lock, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import { Persona } from "@/services/persona/types";
-import { deletePersona, updatePersonaName } from "@/services/persona";
+import { deletePersona, updatePersonaName, generatePersonaImage } from "@/services/persona";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
@@ -17,6 +17,7 @@ interface PersonaDetailHeaderProps {
   onVisibilityChange: (newVisibility: boolean) => void;
   onDelete: () => void;
   onNameUpdate: (name: string) => void;
+  onImageGenerated?: (imageUrl: string) => void;
 }
 
 export default function PersonaDetailHeader({ 
@@ -25,11 +26,13 @@ export default function PersonaDetailHeader({
   isPublic,
   onVisibilityChange,
   onDelete: onPersonaDeleted,
-  onNameUpdate: onNameUpdated
+  onNameUpdate: onNameUpdated,
+  onImageGenerated
 }: PersonaDetailHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(persona?.name || "");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const navigate = useNavigate();
   
   const handleStartEditing = () => {
@@ -101,6 +104,28 @@ export default function PersonaDetailHeader({
     toast.success("Persona link copied to clipboard");
   };
 
+  const handleGenerateImage = async () => {
+    if (isGeneratingImage) return;
+    
+    setIsGeneratingImage(true);
+    toast.info("Generating profile image...");
+    
+    try {
+      const imageUrl = await generatePersonaImage(persona);
+      if (imageUrl) {
+        toast.success("Profile image generated successfully");
+        onImageGenerated?.(imageUrl);
+      } else {
+        toast.error("Failed to generate profile image");
+      }
+    } catch (error) {
+      console.error("Error generating profile image:", error);
+      toast.error("An error occurred while generating the profile image");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   if (!persona) {
     return (
       <div className="flex items-center justify-between py-4">
@@ -118,13 +143,33 @@ export default function PersonaDetailHeader({
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
       <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16 bg-primary/10 text-primary text-2xl font-bold">
-          {persona.profile_image_url ? (
-            <AvatarImage src={persona.profile_image_url} alt={persona.name} />
-          ) : (
-            <AvatarFallback>{persona.name.charAt(0)}</AvatarFallback>
+        <div className="relative">
+          <Avatar className="h-16 w-16 bg-primary/10 text-primary text-2xl font-bold">
+            {persona.profile_image_url ? (
+              <AvatarImage src={persona.profile_image_url} alt={persona.name} />
+            ) : (
+              <AvatarFallback>{persona.name.charAt(0)}</AvatarFallback>
+            )}
+          </Avatar>
+          
+          {isOwner && !isGeneratingImage && !persona.profile_image_url && (
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full shadow"
+              onClick={handleGenerateImage}
+              title="Generate profile image"
+            >
+              <ImageIcon className="h-4 w-4" />
+            </Button>
           )}
-        </Avatar>
+          
+          {isGeneratingImage && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full">
+              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+            </div>
+          )}
+        </div>
         
         <div>
           {isEditing ? (

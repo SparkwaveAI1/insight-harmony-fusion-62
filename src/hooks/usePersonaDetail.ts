@@ -90,6 +90,11 @@ export function usePersonaDetail() {
     }
   };
 
+  // Handle image generation
+  const handleImageGenerated = (imageUrl: string) => {
+    setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+  };
+
   // Check if current user is the owner of this persona
   const isOwner = user?.id === persona?.user_id;
 
@@ -100,6 +105,7 @@ export function usePersonaDetail() {
     isOwner,
     handleVisibilityChange,
     handlePersonaDeleted,
-    handleNameUpdate
+    handleNameUpdate,
+    handleImageGenerated
   };
 }
