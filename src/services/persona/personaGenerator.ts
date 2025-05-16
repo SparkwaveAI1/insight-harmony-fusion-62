@@ -30,6 +30,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     }
 
     console.log("Successfully generated persona:", data.persona.name);
+    console.log("Generated persona ID:", data.persona.persona_id);
     
     // Save the persona to the database
     try {
@@ -48,7 +49,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
       console.error("Error saving persona to database:", saveError);
       toast.error(`Error saving persona: ${saveError.message || "Unknown error"}`, { id: "persona-generation" });
       // Return the unsaved persona as a fallback
-      return data.persona;
+      return null;
     }
   } catch (error) {
     console.error("Error in generatePersona:", error);

@@ -163,8 +163,8 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       // Primary motivation - ensure we convert string values to numbers before comparison
       const careValue = typeof moralFoundations?.care === 'string' ? 
         parseFloat(moralFoundations.care) : (moralFoundations?.care || 0.5);
-      const achievementValue = typeof bigFive?.achievement === 'string' ? 
-        parseFloat(bigFive.achievement) : (bigFive?.achievement || 0.5);
+      const achievementValue = typeof extended?.achievement === 'string' ? 
+        parseFloat(extended.achievement) : (extended?.achievement || 0.5);
       const selfEfficacyValue = typeof extended?.self_efficacy === 'string' ? 
         parseFloat(extended.self_efficacy) : (extended?.self_efficacy || 0.5);
       const opennessValue = typeof bigFive?.openness === 'string' ? 

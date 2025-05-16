@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -15,8 +15,15 @@ import { Persona } from "@/services/persona";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Construction } from "lucide-react";
 
-// Create a QueryClient for this route
-const queryClient = new QueryClient();
+// Create a QueryClient with specific retry configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1, // Only retry once for failed queries
+      staleTime: 30000, // Consider data fresh for 30 seconds
+    },
+  },
+});
 
 const PersonaViewer = () => {
   const navigate = useNavigate();
@@ -28,6 +35,11 @@ const PersonaViewer = () => {
   
   // Determine if we're in the public library view
   const isLibraryView = location.pathname.includes('/persona-library');
+
+  // Reset the query cache when component mounts to ensure fresh data
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['personas'] });
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -73,7 +85,7 @@ const PersonaViewer = () => {
                       {/* My Personas Section */}
                       <h2 className="text-2xl font-bold mb-4">My Personas</h2>
                       <PersonaList 
-                        onPersonasLoad={setMyPersonas} 
+                        onPersonasLoad={setMyPersonas}
                         filterByCurrentUser={true}
                         className="mb-12"
                       />
@@ -81,7 +93,7 @@ const PersonaViewer = () => {
                       {/* Public Personas Section */}
                       <h2 className="text-2xl font-bold mb-4">Public Personas</h2>
                       <PersonaList 
-                        onPersonasLoad={setPublicPersonas} 
+                        onPersonasLoad={setPublicPersonas}
                         publicOnly={true}
                         filterByOtherUsers={true}
                         className="mb-6"

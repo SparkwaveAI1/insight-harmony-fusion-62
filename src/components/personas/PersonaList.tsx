@@ -37,6 +37,7 @@ export default function PersonaList({
     queryKey: ['personas', { filterByCurrentUser, filterByOtherUsers, publicOnly, collectionId, userId: user?.id }],
     queryFn: async () => {
       try {
+        console.log("Fetching personas with filters:", { filterByCurrentUser, filterByOtherUsers, publicOnly, collectionId });
         let data = await getAllPersonas();
         
         console.log("Total personas loaded:", data.length);
@@ -49,7 +50,9 @@ export default function PersonaList({
         } else if (filterByCurrentUser && user) {
           // For My Personas view: Show only the current user's personas
           console.log("Filtering by current user:", user.id);
-          return data.filter(persona => persona.user_id === user.id);
+          const userPersonas = data.filter(persona => persona.user_id === user.id);
+          console.log("Current user's personas count:", userPersonas.length);
+          return userPersonas;
         } else if (filterByOtherUsers && publicOnly && user) {
           // For Public Personas section: show only other users' public personas
           console.log("Filtering by other users' public personas");
@@ -76,6 +79,7 @@ export default function PersonaList({
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true, // Add this to ensure a refresh when component mounts
   });
   
   // Update the parent component with loaded personas
