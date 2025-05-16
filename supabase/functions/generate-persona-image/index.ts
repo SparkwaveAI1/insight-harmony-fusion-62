@@ -56,7 +56,7 @@ serve(async (req) => {
       // Check for common health conditions
       const conditionKeywords = {
         "diabetic": "diabetic",
-        "diabetes": "diabetic",
+        "diabetes": "with diabetes",
         "asthma": "with asthma",
         "high blood pressure": "with high blood pressure",
         "hypertension": "with hypertension",
@@ -72,12 +72,12 @@ serve(async (req) => {
       
       // Check for emotional states
       const emotionalKeywords = {
-        "depression": "looking depressed",
-        "depressed": "looking depressed",
+        "depression": "with a sad, tired expression",
+        "depressed": "with a sad, tired expression",
         "sad": "with a sad expression",
-        "anxious": "with an anxious expression",
-        "anxiety": "with an anxious expression",
-        "tired": "looking tired and worn",
+        "anxious": "with a worried expression",
+        "anxiety": "with a worried expression",
+        "tired": "looking tired",
         "exhausted": "looking exhausted",
         "stressed": "looking stressed"
       };
@@ -95,11 +95,11 @@ serve(async (req) => {
         description.toLowerCase().includes("not many friends") || 
         description.toLowerCase().includes("lonely") ||
         description.toLowerCase().includes("awkward")) {
-      socialDescription = "with an awkward, uncomfortable expression";
+      socialDescription = "with an uncomfortable, slightly awkward expression";
     }
     
-    // Build the base prompt
-    let imagePrompt = `A realistic photograph of a ${age}-year-old ${ethnicity} ${gender}`;
+    // Build the base prompt - using "photograph" and emphasizing realism
+    let imagePrompt = `A highly realistic photograph of a ${age}-year-old ${ethnicity} ${gender}`;
     
     // Add body type if specified
     if (bodyType) {
@@ -126,24 +126,27 @@ serve(async (req) => {
       imagePrompt += `, ${socialDescription}`;
     }
     
-    // Add specific instructions to ensure accurate representation
-    imagePrompt += `. IMPORTANT: This must be a realistic portrait photo, NOT idealized or beautified. The image should accurately show the person with ${bodyType || "average"} body type, with realistic facial features that match their ${age} years and life circumstances. Do not make the person attractive, stylish, or well-groomed unless specifically mentioned in the description.`;
+    // Add specific instructions to ensure photorealistic, non-cartoonish representation
+    imagePrompt += `. IMPORTANT: Create a PHOTOREALISTIC portrait, absolutely not cartoonish or illustrated. Use photographic realism like a high-quality candid photograph. The image must be completely realistic with proper lighting, skin texture, and natural facial features. Show the person with ${bodyType || "average"} body type in a natural pose.`;
     
     if (bodyType === "overweight") {
-      imagePrompt += " The person should be clearly and realistically overweight with visible weight in the face and neck.";
+      imagePrompt += " The person should be genuinely overweight with visible weight in the face and body, but avoid any exaggeration or caricature.";
     }
     
     if (emotionalState) {
-      imagePrompt += ` The facial expression must clearly show ${emotionalState.replace("looking ", "")}.`;
+      imagePrompt += ` The facial expression should naturally show ${emotionalState.replace(/with a |looking /g, "")}.`;
     }
     
     if (healthConditions.length > 0) {
-      imagePrompt += " Health conditions should be visible in their appearance.";
+      imagePrompt += " Health conditions should be subtly visible in their appearance without exaggeration.";
     }
+
+    // Add specifics about photo quality and style
+    imagePrompt += " The photograph should look like it was taken with a professional camera with natural lighting, shallow depth of field, and realistic colors. Absolutely NO cartoon style, NO illustration style, NO exaggerated features.";
     
     console.log("Generated prompt:", imagePrompt);
     
-    // Call the OpenAI Image Generation API
+    // Call the OpenAI Image Generation API with quality set to "hd" and updated parameters
     const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -156,7 +159,8 @@ serve(async (req) => {
         n: 1,
         size: "1024x1024",
         response_format: "url",
-        quality: "hd"
+        quality: "hd",
+        style: "natural" // Use natural style for more photorealistic results
       })
     });
     
