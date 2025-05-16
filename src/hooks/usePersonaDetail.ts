@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage } from "@/services/persona";
+import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -47,10 +47,23 @@ export function usePersonaDetail() {
     }
   }, [persona]);
 
-  const handlePersonaDeleted = () => {
-    // Navigate back to personas list after deletion
-    toast.success("Persona deleted successfully");
-    navigate("/persona-viewer");
+  const handlePersonaDeleted = async (): Promise<void> => {
+    if (!personaId || !user) return Promise.resolve();
+    
+    try {
+      const success = await deletePersona(personaId);
+      if (success) {
+        toast.success("Persona deleted successfully");
+        navigate("/persona-viewer");
+      } else {
+        toast.error("Failed to delete persona");
+      }
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error deleting persona:", error);
+      toast.error("Failed to delete persona");
+      return Promise.reject(error);
+    }
   };
 
   // Handle visibility toggle

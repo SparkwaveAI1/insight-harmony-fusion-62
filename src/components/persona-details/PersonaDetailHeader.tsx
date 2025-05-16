@@ -18,7 +18,7 @@ interface PersonaDetailHeaderProps {
   isOwner: boolean;
   isPublic: boolean;
   onVisibilityChange: (newVisibility: boolean) => void;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
   onNameUpdate: (name: string) => void;
   onImageGenerated: () => Promise<string | null>;
 }
@@ -37,14 +37,10 @@ export default function PersonaDetailHeader({
   
   const handleDeletePersona = async () => {
     try {
-      const success = await deletePersona(persona.persona_id);
-      if (success) {
-        toast.success("Persona deleted successfully");
-        onPersonaDeleted?.();
-        navigate("/persona-viewer");
-      } else {
-        toast.error("Failed to delete persona");
-      }
+      await deletePersona(persona.persona_id);
+      toast.success("Persona deleted successfully");
+      await onPersonaDeleted?.();
+      navigate("/persona-viewer");
     } catch (error) {
       console.error("Error deleting persona:", error);
       toast.error("An error occurred while deleting the persona");
