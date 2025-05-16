@@ -46,7 +46,7 @@ export function usePersonaClone(persona: Persona) {
         console.log("Persona generated successfully:", generatedPersona);
         toast.success("Customized persona created successfully!");
         
-        // Navigate to the new persona detail page
+        // Navigate to the new persona detail page with the correct path
         navigate(`/persona/${generatedPersona.persona_id}`);
         return true;
       } else {

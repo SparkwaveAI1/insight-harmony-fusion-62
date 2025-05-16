@@ -45,7 +45,7 @@ const PersonaCreationComplete = () => {
     // Add a slight delay to ensure the toast is visible
     const timer = setTimeout(() => {
       console.log("Redirecting to created persona...", personaId);
-      navigate(`/persona-detail/${personaId}`);
+      navigate(`/persona/${personaId}`);
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -57,7 +57,7 @@ const PersonaCreationComplete = () => {
 
   const handleViewPersonas = () => {
     if (personaId) {
-      navigate(`/persona-detail/${personaId}`);
+      navigate(`/persona/${personaId}`);
     } else {
       navigate('/my-personas');
     }
