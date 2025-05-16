@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MessageCircle } from "lucide-react";
-import Button from "@/components/ui-custom/Button";
+import { Button } from "@/components/ui/button";
 import { formatName } from "@/lib/utils";
 import { Persona } from "@/services/persona";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
@@ -45,18 +45,19 @@ const PersonaDetailHeader = ({
           <DeletePersonaDialog 
             personaId={persona.persona_id}
             personaName={persona.name}
-            userId={persona.user_id}
+            userId={persona.user_id || ''}
             onDelete={onDelete}
           />
         )}
         
         <Button 
-          as={Link} 
-          to={`/persona/${persona.persona_id}/chat`}
+          asChild
           className="flex items-center gap-2"
         >
-          <MessageCircle className="w-4 h-4" />
-          Chat with Persona
+          <Link to={`/persona/${persona.persona_id}/chat`}>
+            <MessageCircle className="w-4 h-4" />
+            Chat with Persona
+          </Link>
         </Button>
       </div>
     </div>

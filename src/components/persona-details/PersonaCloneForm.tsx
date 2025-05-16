@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Persona } from "@/services/persona";
 import { usePersonaClone } from "./clone/usePersonaClone";
 import CloneFormContent from "./clone/CloneFormContent";
 import { CloneFormValues } from "./clone/cloneFormSchema";
+import { toast } from "sonner";
 
 interface PersonaCloneFormProps {
   persona: Persona;
@@ -15,12 +17,19 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
   const [open, setOpen] = useState(false);
   const { form, onSubmit, isSubmitting } = usePersonaClone(persona);
 
-  const handleSubmit = async (data: CloneFormValues): Promise<boolean> => {
-    const success = await onSubmit(data);
-    if (success) {
-      setOpen(false);
+  const handleSubmit = async (data: CloneFormValues) => {
+    try {
+      const success = await onSubmit(data);
+      if (success) {
+        setOpen(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      toast.error("Failed to clone persona");
+      return false;
     }
-    return success;
   };
 
   return (

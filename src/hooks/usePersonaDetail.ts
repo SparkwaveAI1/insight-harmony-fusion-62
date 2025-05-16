@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId } from "@/services/persona";
+import { getPersonaByPersonaId, updatePersonaVisibility } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -29,11 +29,13 @@ export function usePersonaDetail() {
   const loadPersona = async (id: string) => {
     setIsLoading(true);
     try {
+      console.log("Loading persona with ID:", id);
       const data = await getPersonaByPersonaId(id);
       if (data) {
         console.log("Persona data loaded:", data);
         setPersona(data);
       } else {
+        console.error("Persona not found with ID:", id);
         toast.error("Persona not found");
       }
     } catch (error) {
@@ -46,13 +48,27 @@ export function usePersonaDetail() {
   
   const handlePersonaDeleted = () => {
     // Navigate back to personas list after deletion
+    toast.success("Persona deleted successfully");
     navigate("/persona-viewer");
   };
 
   // Handle visibility toggle
-  const handleVisibilityChange = (newVisibility: boolean) => {
-    setIsPublic(newVisibility);
-    setPersona(prev => prev ? { ...prev, is_public: newVisibility } : null);
+  const handleVisibilityChange = async (newVisibility: boolean) => {
+    if (!personaId || !user) return;
+    
+    try {
+      const success = await updatePersonaVisibility(personaId, newVisibility);
+      if (success) {
+        setIsPublic(newVisibility);
+        setPersona(prev => prev ? { ...prev, is_public: newVisibility } : null);
+        toast.success(`Persona visibility ${newVisibility ? 'published' : 'set to private'}`);
+      } else {
+        toast.error("Failed to update visibility");
+      }
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      toast.error("Failed to update visibility");
+    }
   };
 
   // Check if current user is the owner of this persona
