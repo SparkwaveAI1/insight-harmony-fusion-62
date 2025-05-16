@@ -19,7 +19,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { persona_id, persona_role, previous_messages, knowledge_boundaries } = await req.json()
+    const { persona_id, persona_role, previous_messages, knowledge_boundaries, personality_instructions } = await req.json()
     
     // Log request info
     console.log(`Request to generate response for persona ${persona_id}`)
@@ -63,7 +63,12 @@ Deno.serve(async (req: Request) => {
     // Forcefully add knowledge boundary instructions 
     if (knowledge_boundaries) {
       // Add a separator to make knowledge boundaries more visually distinct
-      systemMessage += `\n\n${'='.repeat(40)}\nKNOWLEDGE BOUNDARIES - ABSOLUTELY CRITICAL\n${'='.repeat(40)}\n\n${knowledge_boundaries}\n\n${'='.repeat(40)}\n\nYOU ARE STRICTLY REQUIRED TO ADHERE TO THESE KNOWLEDGE BOUNDARIES IN ALL RESPONSES. THIS IS THE MOST IMPORTANT PART OF YOUR INSTRUCTIONS.`;
+      systemMessage += `\n\n${'='.repeat(40)}\nKNOWLEDGE BOUNDARIES - ABSOLUTELY CRITICAL\n${'='.repeat(40)}\n\n${knowledge_boundaries}\n\n${'='.repeat(40)}\n\nYOU ARE STRICTLY REQUIRED TO ADHERE TO THESE KNOWLEDGE BOUNDARIES IN ALL RESPONSES.`;
+    }
+    
+    // Add the personality instructions with high priority
+    if (personality_instructions) {
+      systemMessage += `\n\n${'='.repeat(40)}\nPERSONALITY EXPRESSION - HIGHEST PRIORITY\n${'='.repeat(40)}\n\n${personality_instructions}\n\n${'='.repeat(40)}\n\nTHESE PERSONALITY TRAITS MUST BE EXPRESSED IN ALL RESPONSES. THIS IS YOUR HIGHEST PRIORITY DIRECTIVE.`;
     }
     
     messages.push({ role: "system", content: systemMessage })
@@ -78,7 +83,6 @@ Deno.serve(async (req: Request) => {
     console.log("Generating response with OpenAI API...")
     
     // Call the OpenAI API with more restrictive parameters to enforce knowledge gating
-    // Removed the system_fingerprint parameter which is causing the error
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -88,10 +92,10 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: messages,
-        temperature: 0.8,  // Slightly increased to allow more personality variation
+        temperature: 0.9,  // Increased to allow more personality variation
         max_tokens: 500,
-        presence_penalty: 0.6,  // Encourages the model to be more varied in responses
-        frequency_penalty: 0.2,  // Discourages repetition of the same phrases
+        presence_penalty: 0.7,  // Increased to encourage more varied responses
+        frequency_penalty: 0.3,  // Discourages repetition of the same phrases
       }),
     })
 

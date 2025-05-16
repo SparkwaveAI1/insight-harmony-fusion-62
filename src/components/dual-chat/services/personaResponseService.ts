@@ -1,8 +1,8 @@
-
 import { Message } from '../types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
+import { generatePersonalityInstructions } from './personalityInstructionsService';
 
 export const generatePersonaResponse = async (
   personaId: string,
@@ -33,11 +33,18 @@ export const generatePersonaResponse = async (
       console.error("Error fetching persona data:", personaError);
     }
     
-    // Create extremely strict knowledge boundary instructions based on persona metadata
+    // Generate personality-driven instructions
+    let personalityInstructions = "";
     let knowledgeBoundaryInstructions = "";
+    
     if (persona) {
-      const currentYear = new Date().getFullYear();
       const typedPersona = persona as unknown as Persona;
+      
+      // Generate personality instructions based on trait profile
+      personalityInstructions = generatePersonalityInstructions(typedPersona);
+      
+      // Create knowledge boundary instructions (keeping existing code)
+      const currentYear = new Date().getFullYear();
       const personaAge = typedPersona.metadata?.age ? parseInt(typedPersona.metadata.age) : 30;
       const birthYear = currentYear - personaAge;
       
@@ -211,6 +218,7 @@ export const generatePersonaResponse = async (
     }
     
     console.log("Applied knowledge boundaries:", knowledgeBoundaryInstructions);
+    console.log("Applied personality instructions:", personalityInstructions);
     
     // Call the Supabase Edge Function for persona response
     const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
@@ -223,7 +231,8 @@ export const generatePersonaResponse = async (
         persona_id: personaId,
         persona_role: personaRole,
         previous_messages: formattedMessages,
-        knowledge_boundaries: knowledgeBoundaryInstructions
+        knowledge_boundaries: knowledgeBoundaryInstructions,
+        personality_instructions: personalityInstructions
       }),
     });
 
