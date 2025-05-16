@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { MessageCircle, ChevronDown } from "lucide-react";
+import { MessageCircle, ChevronDown, Globe, Lock } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import Button from "@/components/ui-custom/Button";
 import { toast } from "sonner";
-import { getPersonaByPersonaId } from "@/services/persona"; 
+import { getPersonaByPersonaId, updatePersonaVisibility } from "@/services/persona"; 
 import { Persona } from "@/services/persona";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
@@ -20,6 +20,7 @@ import DeletePersonaDialog from "@/components/personas/DeletePersonaDialog";
 import { formatName } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAuth } from "@/context/AuthContext";
+import { Switch } from "@/components/ui/switch";
 
 const PersonaDetail = () => {
   const { personaId } = useParams<{ personaId: string }>();
@@ -28,12 +29,19 @@ const PersonaDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [promptOpen, setPromptOpen] = useState(false);
   const { user } = useAuth();
+  const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
     if (personaId) {
       loadPersona(personaId);
     }
   }, [personaId]);
+
+  useEffect(() => {
+    if (persona) {
+      setIsPublic(persona.is_public || false);
+    }
+  }, [persona]);
 
   const loadPersona = async (id: string) => {
     setIsLoading(true);
@@ -56,6 +64,27 @@ const PersonaDetail = () => {
   const handlePersonaDeleted = () => {
     // Navigate back to personas list after deletion
     navigate("/persona-viewer");
+  };
+
+  // Handle visibility toggle
+  const handleVisibilityChange = async () => {
+    if (!personaId || !persona || !isOwner) return;
+
+    try {
+      const newVisibility = !isPublic;
+      const success = await updatePersonaVisibility(personaId, newVisibility);
+      
+      if (success) {
+        setIsPublic(newVisibility);
+        setPersona(prev => prev ? { ...prev, is_public: newVisibility } : null);
+        toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
+      } else {
+        toast.error("Failed to update visibility");
+      }
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      toast.error("Failed to update visibility");
+    }
   };
 
   // Check if current user is the owner of this persona
@@ -138,6 +167,40 @@ const PersonaDetail = () => {
                     <div className="space-y-2">
                       <h1 className="text-3xl font-bold font-plasmik">{formatName(persona.name)}</h1>
                       <p className="text-muted-foreground">ID: {persona.persona_id} • Created: {persona.creation_date}</p>
+                      
+                      {/* Visibility toggle for owners */}
+                      {isOwner && (
+                        <div className="flex items-center space-x-2 mt-4">
+                          <div className="flex items-center space-x-2">
+                            <Switch 
+                              id="visibility-toggle" 
+                              checked={isPublic}
+                              onCheckedChange={handleVisibilityChange}
+                            />
+                            <label 
+                              htmlFor="visibility-toggle" 
+                              className="text-sm font-medium cursor-pointer flex items-center"
+                            >
+                              {isPublic ? (
+                                <>
+                                  <Globe className="w-4 h-4 mr-1 text-green-500" />
+                                  <span>Public</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Lock className="w-4 h-4 mr-1 text-amber-500" />
+                                  <span>Private</span>
+                                </>
+                              )}
+                            </label>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {isPublic 
+                              ? "This persona is visible to everyone" 
+                              : "Only you can see this persona"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-4">
                       {/* Clone & Customize button */}
