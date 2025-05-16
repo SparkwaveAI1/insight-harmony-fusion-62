@@ -90,30 +90,140 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       return customPersonas['9f8540fa'];
     }
     
-    // Generate insights based on metadata if available
-    const occupation = metadata?.occupation || "";
-    const age = metadata?.age || "";
-    const education = metadata?.education_level || "";
-    const region = metadata?.region || "";
-    
-    // Fallback to generating insights based on available metadata
-    // These will be unique based on the combination of demographic factors
-    const generatedInsights = {
-      decisions: [
-        `${occupation ? `Uses ${occupation.toLowerCase()} expertise when evaluating options` : "Evaluates options through data-driven analysis"}`,
-        `${age > 40 ? "Draws on extensive life experience when making choices" : "Open to exploring innovative approaches and taking calculated risks"}`
-      ],
-      drivers: [
-        `${education.includes("Master") || education.includes("PhD") ? "Motivated by intellectual challenges and continuous learning" : "Motivated by practical outcomes and tangible results"}`,
-        `${region ? `Influenced by ${region}'s cultural and economic environment` : "Balances personal growth with professional advancement"}`
-      ],
-      persuasion: [
-        `${occupation.includes("Manager") || occupation.includes("Director") ? "Responds to well-structured proposals with clear ROI" : "Appreciates authentic communication with relatable examples"}`,
-        `${education.includes("Business") ? "Evaluates opportunities through a strategic business lens" : "Values both emotional connection and logical reasoning"}`
-      ]
+    // Generate more nuanced insights based on multiple data points
+    const generateDecisions = () => {
+      const bigFive = metadata?.trait_profile?.big_five || {};
+      const occupation = metadata?.occupation || "";
+      const education = metadata?.education_level || "";
+      const riskSensitivity = metadata?.trait_profile?.behavioral_economics?.risk_sensitivity || 0.5;
+      
+      // Use multiple factors for decisions
+      const decisions = [];
+      
+      if (parseFloat(riskSensitivity) > 0.7) {
+        decisions.push(`Takes a cautious approach to decision-making, carefully weighing potential downsides`);
+      } else if (parseFloat(riskSensitivity) < 0.3) {
+        decisions.push(`Embraces risk in decision-making, focusing on potential opportunities over threats`);
+      } else if (parseFloat(bigFive?.conscientiousness) > 0.7) {
+        decisions.push(`Follows systematic decision-making processes with thorough evaluation of options`);
+      } else if (parseFloat(bigFive?.openness) > 0.7) {
+        decisions.push(`Values innovative approaches and considers unconventional alternatives`);
+      } else if (education?.includes("PhD") || education?.includes("Doctorate")) {
+        decisions.push(`Applies rigorous analytical frameworks from academic training to complex decisions`);
+      } else if (occupation?.includes("Manager") || occupation?.includes("Executive") || occupation?.includes("Director")) {
+        decisions.push(`Balances analytical thinking with practical business considerations`);
+      } else if (occupation?.includes("Artist") || occupation?.includes("Creative") || occupation?.includes("Designer")) {
+        decisions.push(`Leads with intuition and creative vision when evaluating options`);
+      } else {
+        decisions.push(`Combines practical experience with thoughtful analysis when making choices`);
+      }
+      
+      // Add a second insight based on different factors
+      if (parseFloat(bigFive?.neuroticism) > 0.6) {
+        decisions.push(`May second-guess decisions or seek reassurance after committing to a course of action`);
+      } else if (parseFloat(bigFive?.extraversion) > 0.6 && parseFloat(bigFive?.openness) > 0.5) {
+        decisions.push(`Often gathers input from others before finalizing important decisions`);
+      } else if (parseFloat(bigFive?.agreeableness) > 0.7) {
+        decisions.push(`Considers how decisions will impact relationships and group harmony`);
+      } else if (occupation?.includes("Analyst") || occupation?.includes("Engineer") || occupation?.includes("Scientist")) {
+        decisions.push(`Prioritizes objective data and measurable outcomes in decision processes`);
+      } else if (occupation?.includes("Teacher") || occupation?.includes("Healthcare")) {
+        decisions.push(`Weighs both immediate needs and long-term development in decision-making`);
+      } else {
+        decisions.push(`Adapts decision approach based on the specific context and stakes involved`);
+      }
+      
+      return decisions;
     };
     
-    return generatedInsights;
+    const generateDrivers = () => {
+      const bigFive = metadata?.trait_profile?.big_five || {};
+      const extended = metadata?.trait_profile?.extended_traits || {};
+      const moralFoundations = metadata?.trait_profile?.moral_foundations || {};
+      const age = metadata?.age ? parseInt(metadata.age) : 35;
+      const region = metadata?.region || "";
+      
+      const drivers = [];
+      
+      // Primary motivation
+      if (parseFloat(moralFoundations?.care) > 0.7) {
+        drivers.push(`Strongly motivated by opportunities to care for and support others`);
+      } else if (parseFloat(bigFive?.achievement) > 0.7 || parseFloat(extended?.self_efficacy) > 0.7) {
+        drivers.push(`Driven by personal achievement and setting challenging goals`);
+      } else if (parseFloat(bigFive?.openness) > 0.7) {
+        drivers.push(`Energized by intellectual exploration and creative possibilities`);
+      } else if (age < 30) {
+        drivers.push(`Motivated by building skills and establishing professional identity`);
+      } else if (age > 50) {
+        drivers.push(`Drawn to meaningful work that aligns with personal values and legacy`);
+      } else if (region) {
+        drivers.push(`Balances career ambitions with cultural values common in ${region}`);
+      } else {
+        drivers.push(`Motivated by a combination of professional growth and personal fulfillment`);
+      }
+      
+      // Secondary values
+      if (parseFloat(moralFoundations?.fairness) > 0.7) {
+        drivers.push(`Values equity and fairness in systems and relationships`);
+      } else if (parseFloat(bigFive?.extraversion) > 0.7) {
+        drivers.push(`Energized by social recognition and collaborative achievements`);
+      } else if (parseFloat(bigFive?.conscientiousness) > 0.7) {
+        drivers.push(`Values structure, organization, and following through on commitments`);
+      } else if (parseFloat(extended?.self_awareness) > 0.7) {
+        drivers.push(`Prioritizes authentic self-expression and personal growth`);
+      } else {
+        drivers.push(`Balances material security with opportunities for meaningful experiences`);
+      }
+      
+      return drivers;
+    };
+    
+    const generatePersuasion = () => {
+      const bigFive = metadata?.trait_profile?.big_five || {};
+      const extended = metadata?.trait_profile?.extended_traits || {};
+      const worldValues = metadata?.trait_profile?.world_values || {};
+      const occupation = metadata?.occupation || "";
+      const education = metadata?.education_level || "";
+      
+      const persuasion = [];
+      
+      // Response to communication style
+      if (parseFloat(bigFive?.openness) < 0.4) {
+        persuasion.push(`Responds best to practical, straightforward communication with clear benefits`);
+      } else if (parseFloat(worldValues?.traditional_vs_secular) < 0.3) {
+        persuasion.push(`Receptive to messages that respect tradition and established values`);
+      } else if (education?.includes("Graduate") || education?.includes("Master") || education?.includes("PhD")) {
+        persuasion.push(`Values well-researched arguments that acknowledge complexity and nuance`);
+      } else if (parseFloat(extended?.truth_orientation) > 0.7) {
+        persuasion.push(`Appreciates honest, direct communication even when messages are challenging`);
+      } else if (occupation?.includes("Creative") || occupation?.includes("Marketing")) {
+        persuasion.push(`Resonates with visually engaging content and narrative-driven approaches`);
+      } else {
+        persuasion.push(`Responds to balanced communication that addresses both logic and values`);
+      }
+      
+      // Trust-building factors
+      if (parseFloat(bigFive?.agreeableness) > 0.7) {
+        persuasion.push(`Builds trust through warm, collaborative communication styles`);
+      } else if (parseFloat(extended?.institutional_trust) < 0.4) {
+        persuasion.push(`Values transparency and proof when evaluating claims from organizations`);
+      } else if (parseFloat(bigFive?.conscientiousness) > 0.7) {
+        persuasion.push(`Appreciates thorough preparation and attention to detail in presentations`);
+      } else if (parseFloat(extended?.cognitive_flexibility) > 0.7) {
+        persuasion.push(`Open to reconsidering positions when presented with compelling new evidence`);
+      } else {
+        persuasion.push(`Evaluates both emotional resonance and factual accuracy when forming opinions`);
+      }
+      
+      return persuasion;
+    };
+    
+    // Return dynamically generated insights
+    return {
+      decisions: generateDecisions(),
+      drivers: generateDrivers(),
+      persuasion: generatePersuasion()
+    };
   };
   
   // Get the personalized insights

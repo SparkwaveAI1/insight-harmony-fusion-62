@@ -60,65 +60,154 @@ export const getPersonaInsights = (persona: Persona): PersonaInsight => {
     return customPersonas["9f8540fa"];
   }
   
-  // Generate insights based on traits if available
-  const risk = persona.trait_profile?.behavioral_economics?.risk_sensitivity 
-    ? parseFloat(persona.trait_profile.behavioral_economics.risk_sensitivity) 
-    : 0.5;
+  // Generate more varied insights based on persona traits
   
-  const openness = persona.trait_profile?.big_five?.openness
-    ? parseFloat(persona.trait_profile.big_five.openness)
-    : 0.5;
+  // Extract key traits with fallbacks
+  const traits = persona.trait_profile || {};
+  const bigFive = traits.big_five || {};
+  const extendedTraits = traits.extended_traits || {};
+  const behEcon = traits.behavioral_economics || {};
+  const moralFoundations = traits.moral_foundations || {};
   
-  const agreeableness = persona.trait_profile?.big_five?.agreeableness
-    ? parseFloat(persona.trait_profile.big_five.agreeableness)
-    : 0.5;
-    
-  // New trait analysis
-  const truthOrientation = persona.trait_profile?.extended_traits?.truth_orientation
-    ? parseFloat(persona.trait_profile.extended_traits.truth_orientation)
-    : 0.5;
-    
-  const cognitiveFlexibility = persona.trait_profile?.extended_traits?.cognitive_flexibility
-    ? parseFloat(persona.trait_profile.extended_traits.cognitive_flexibility)
-    : 0.5;
+  // Parse trait values
+  const risk = parseFloat(behEcon.risk_sensitivity as string) || 0.5;
+  const openness = parseFloat(bigFive.openness as string) || 0.5;
+  const conscientiousness = parseFloat(bigFive.conscientiousness as string) || 0.5;
+  const extraversion = parseFloat(bigFive.extraversion as string) || 0.5;
+  const agreeableness = parseFloat(bigFive.agreeableness as string) || 0.5;
+  const neuroticism = parseFloat(bigFive.neuroticism as string) || 0.5;
+  const selfAwareness = parseFloat(extendedTraits.self_awareness as string) || 0.5;
+  const truthOrientation = parseFloat(extendedTraits.truth_orientation as string) || 0.5;
+  const cognitiveFlexibility = parseFloat(extendedTraits.cognitive_flexibility as string) || 0.5;
+  const needForClosure = parseFloat(extendedTraits.need_for_cognitive_closure as string) || 0.5;
+  const conformity = parseFloat(extendedTraits.conformity_tendency as string) || 0.5;
   
-  const needForClosure = persona.trait_profile?.extended_traits?.need_for_cognitive_closure
-    ? parseFloat(persona.trait_profile.extended_traits.need_for_cognitive_closure)
-    : 0.5;
-    
-  const conformity = persona.trait_profile?.extended_traits?.conformity_tendency
-    ? parseFloat(persona.trait_profile.extended_traits.conformity_tendency)
-    : 0.5;
-    
-  // Create personalized insights based on the persona's traits
+  // Get metadata values
   const occupation = persona.metadata?.occupation || "";
-  const age = persona.metadata?.age ? parseInt(persona.metadata.age as string) : 30;
+  const age = parseInt(persona.metadata?.age as string) || 30;
   const education = persona.metadata?.education_level || "";
+  const region = persona.metadata?.region || "";
   
-  // Generate unique insights for this persona based on their traits and demographics
+  // Generate decision insight based on multiple factors
+  let decisionInsight = "";
+  if (conscientiousness > 0.7) {
+    decisionInsight = "Methodical decision-maker who carefully researches options before committing. Prefers having complete information and clear processes.";
+  } else if (openness > 0.7) {
+    decisionInsight = "Creative decision-maker who considers unconventional options and innovative approaches. Comfortable with ambiguity and experimentation.";
+  } else if (risk < 0.3) {
+    decisionInsight = "Cautious decision-maker who prioritizes stability and predictability. Carefully weighs potential downsides before acting.";
+  } else if (risk > 0.7) {
+    decisionInsight = "Bold decision-maker willing to embrace uncertainty for potential high rewards. Comfortable pivoting quickly when circumstances change.";
+  } else if (needForClosure > 0.7) {
+    decisionInsight = "Decisive and quick to form judgments. Prefers closure and certainty over extended deliberation and ambiguity.";
+  } else if (education.includes("MBA") || education.includes("Business")) {
+    decisionInsight = "Strategic decision-maker who weighs competitive factors and market dynamics. Balances analytical frameworks with practical considerations.";
+  } else if (occupation.includes("Teacher") || occupation.includes("Healthcare")) {
+    decisionInsight = "People-centered decision-maker who considers human impacts alongside pragmatic factors. Values both short-term needs and long-term development.";
+  } else {
+    decisionInsight = "Balanced decision-maker who adapts approach based on the situation. Combines analytical thinking with practical experience.";
+  }
+  
+  // Generate driver insight based on different factors
+  let driverInsight = "";
+  if (moralFoundations?.care > 0.7) {
+    driverInsight = "Deeply motivated by opportunities to help others and prevent harm. Finds purpose in work that supports community welfare and wellbeing.";
+  } else if (extraversion > 0.7 && age < 35) {
+    driverInsight = "Energized by social recognition and collaborative environments. Seeks opportunities to connect with others and build professional networks.";
+  } else if (openness > 0.7 && conscientiousness > 0.6) {
+    driverInsight = "Driven by intellectual growth and mastery of complex skills. Values structured environments that still allow for creativity and innovation.";
+  } else if (neuroticism > 0.7) {
+    driverInsight = "Motivated by creating security and stability. Works diligently to prevent negative outcomes and establish reliable systems.";
+  } else if (region && region.includes("East Coast") || region.includes("New York")) {
+    driverInsight = "Influenced by fast-paced professional environments that reward ambition and results. Values efficiency and direct communication.";
+  } else if (region && (region.includes("West Coast") || region.includes("California"))) {
+    driverInsight = "Shaped by innovation-focused culture that values work-life balance. Appreciates flexible environments that support both career and personal goals.";
+  } else if (occupation.includes("Artist") || occupation.includes("Creator") || occupation.includes("Writer")) {
+    driverInsight = "Motivated by authentic self-expression and creating meaningful work. Values autonomy and opportunities for creative control.";
+  } else {
+    driverInsight = "Balances professional advancement with personal fulfillment. Seeks environments that provide both practical rewards and meaningful engagement.";
+  }
+  
+  // Generate persuasion insight based on different factors
+  let persuasionInsight = "";
+  if (truthOrientation > 0.7) {
+    persuasionInsight = "Responds best to factually accurate, evidence-based arguments. Values honesty and directness even when messages are challenging.";
+  } else if (agreeableness > 0.7) {
+    persuasionInsight = "Appreciates collaborative, inclusive communication approaches. Builds trust through warm interactions and consensus-building.";
+  } else if (openness < 0.3) {
+    persuasionInsight = "Responds to practical, straightforward communication with clear benefits. Prefers familiar concepts over novel or abstract ideas.";
+  } else if (cognitiveFlexibility > 0.7) {
+    persuasionInsight = "Open to considering multiple perspectives and changing views when presented with compelling evidence. Values intellectual exchange.";
+  } else if (education.includes("Science") || education.includes("Engineering")) {
+    persuasionInsight = "Persuaded by logical arguments with clear supporting evidence. Appreciates precision and technical accuracy in communication.";
+  } else if (occupation.includes("Sales") || occupation.includes("Marketing")) {
+    persuasionInsight = "Responsive to both emotional appeals and practical benefits. Evaluates ideas through both analytical and intuitive lenses.";
+  } else {
+    persuasionInsight = "Balances consideration of facts with personal values when forming opinions. Appreciates authentic communication that acknowledges complexity.";
+  }
+  
+  // Generate bias insight based on different factors  
+  let biasInsight = "";
+  if (truthOrientation < 0.4) {
+    biasInsight = "May prioritize social harmony or self-interest over factual accuracy. Tends to engage in motivated reasoning when challenged.";
+  } else if (conformity > 0.7) {
+    biasInsight = "Strongly influenced by social norms and group consensus. May discount contradictory evidence that challenges established views.";
+  } else if (needForClosure > 0.7) {
+    biasInsight = "Tends to form quick judgments and resist changing them. May selectively seek information that confirms existing beliefs.";
+  } else if (cognitiveFlexibility < 0.3) {
+    biasInsight = "Hesitant to reconsider established viewpoints even when presented with new evidence. Prefers familiar frameworks and explanations.";
+  } else if (selfAwareness < 0.4) {
+    biasInsight = "Limited recognition of personal biases and blind spots. May overestimate objectivity of own thinking process.";
+  } else {
+    biasInsight = "Generally balanced in evaluating information, though may show some preference for data that aligns with existing beliefs and values.";
+  }
+  
+  // Generate cognitive style insight based on different factors
+  let cognitiveInsight = "";
+  if (openness > 0.7 && cognitiveFlexibility > 0.7) {
+    cognitiveInsight = "Divergent thinker who readily explores multiple interpretations and possibilities before converging on solutions.";
+  } else if (conscientiousness > 0.7 && needForClosure > 0.6) {
+    cognitiveInsight = "Structured, sequential thinker who prefers clearly defined problems and methodical problem-solving approaches.";
+  } else if (agreeableness > 0.7 && extraversion > 0.6) {
+    cognitiveInsight = "Collaborative thinker who naturally integrates multiple perspectives and values group consensus in problem solving.";
+  } else if (neuroticism > 0.7) {
+    cognitiveInsight = "Detail-oriented thinker with strong anticipation of potential problems. May sometimes focus too much on what could go wrong.";
+  } else if (education.includes("PhD") || education.includes("Research")) {
+    cognitiveInsight = "Analytical thinker trained to examine problems systematically and consider evidence from multiple angles before drawing conclusions.";
+  } else {
+    cognitiveInsight = "Pragmatic thinker who balances consideration of details with the bigger picture. Adapts thinking style based on context and needs.";
+  }
+  
+  // Return varied and nuanced insights
   return {
-    decision: risk > 0.6 
-      ? "Cautious decision-maker who thoroughly evaluates options before acting. Prefers established solutions with proven track records."
-      : "Comfortable with ambiguity and quick to make decisions with incomplete information. Willing to pivot when circumstances change.",
-    
-    driver: openness > 0.6
-      ? `${age > 40 ? "Experienced explorer who" : "Young innovator who"} seeks novel experiences and intellectual challenges. Values creative expression and autonomy.`
-      : `${occupation ? `Practical ${occupation.toLowerCase()} who` : "Pragmatic individual who"} prioritizes tangible results and proven methods. Values consistency and reliability.`,
-    
-    persuasion: agreeableness > 0.6
-      ? `${education.includes("Social") ? "Socially-minded communicator who" : "Collaborative thinker who"} values harmony in discussions and responds to cooperative approaches.`
-      : `${education.includes("Business") || education.includes("Economics") ? "Strategic thinker who" : "Direct communicator who"} focuses on facts, logic, and bottom-line results.`,
-      
-    bias: truthOrientation < 0.4
-      ? "May prioritize social harmony or self-interest over factual accuracy. Tends to engage in motivated reasoning when challenged."
-      : conformity > 0.7
-      ? "Strongly influenced by social norms and group consensus. May discount contradictory evidence that challenges established views."
-      : "Generally balanced in evaluating information, though may show some preference for data that confirms existing beliefs.",
-      
-    cognitive: cognitiveFlexibility > 0.7 && needForClosure < 0.4
-      ? "Highly adaptive thinker comfortable with ambiguity. Open to revising beliefs when presented with new information."
-      : cognitiveFlexibility < 0.4 && needForClosure > 0.7
-      ? "Prefers clear answers and structured thinking. May resist changing established views even when confronted with contradictory evidence."
-      : "Balances between structure and flexibility in thinking. Can adapt to new information but values some consistency in beliefs."
+    decision: decisionInsight,
+    driver: driverInsight,
+    persuasion: persuasionInsight,
+    bias: biasInsight,
+    cognitive: cognitiveInsight
   };
 };
+
+// Utility function to parse trait values
+function parseTraitValue(value: any, defaultValue: number): number {
+  if (value === undefined || value === null) return defaultValue;
+  
+  if (typeof value === 'number') {
+    return value;
+  }
+  
+  if (typeof value === 'string') {
+    // Try to parse as number
+    const parsed = parseFloat(value);
+    if (!isNaN(parsed)) {
+      return parsed;
+    }
+    
+    // Check for high/medium/low strings
+    if (value.toLowerCase().includes('high')) return 0.8;
+    if (value.toLowerCase().includes('medium')) return 0.5;
+    if (value.toLowerCase().includes('low')) return 0.2;
+  }
+  
+  return defaultValue;
+}
