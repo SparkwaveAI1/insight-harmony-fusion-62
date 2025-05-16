@@ -1,213 +1,265 @@
+import { Persona } from "@/services/persona/types";
 
-import { Persona } from '@/services/persona/types';
-
-export interface PersonaInsight {
-  decision: string;
-  driver: string;
-  persuasion: string;
-  bias: string;
-  cognitive: string;
-}
-
-// Helper function to get unique persona insights
-export const getPersonaInsights = (persona: Persona): PersonaInsight => {
-  // Custom insights for specific personas
-  const customPersonas: Record<string, PersonaInsight> = {
-    // First persona: 5e22fdc2
-    "5e22fdc2": {
-      decision: "Approaches decisions with careful research and data analysis. Prefers structured evaluation frameworks to reduce uncertainty.",
-      driver: "Motivated by professional recognition and intellectual growth. Values stability and predictable outcomes over high-risk ventures.",
-      persuasion: "Responds best to logical arguments backed by credible evidence. Values detailed explanations over emotional appeals.",
-      bias: "Tends to favor established sources and conventional wisdom. May discount anecdotal evidence even when relevant.",
-      cognitive: "Analytical thinker who excels at breaking down complex problems but may sometimes miss intuitive solutions."
-    },
-    // Second persona: c69eb1eb
-    "c69eb1eb": {
-      decision: "Makes quick, intuitive decisions based on past experiences. Comfortable taking calculated risks when potential rewards are clear.",
-      driver: "Motivated primarily by creative freedom and autonomy. Seeks opportunities for self-expression and innovation.",
-      persuasion: "Persuaded by stories and real-world examples rather than statistics. Appreciates authentic communication with emotional resonance.",
-      bias: "Overvalues personal experience and may discount expert opinion that contradicts lived experience.",
-      cognitive: "Divergent thinker who generates many possibilities before converging on a solution."
-    },
-    // Third persona: 4f7b9e3c
-    "4f7b9e3c": {
-      decision: "Balances intuition with collaborative input from trusted peers. Considers social and ethical implications before taking action.",
-      driver: "Motivated by creating positive social impact through their work. Values community connection and shared accomplishments.",
-      persuasion: "Responds to inclusive language and community-focused messaging. Prefers solutions that benefit multiple stakeholders.",
-      bias: "May prioritize group harmony over critical assessment of ideas. Tends to seek consensus even when disagreement would be productive.",
-      cognitive: "Integrative thinker who naturally synthesizes multiple perspectives into a cohesive view."
-    },
-    // Alina R persona
-    "9f8540fa": {
-      decision: "Relies on data visualization tools for complex financial decisions. Balances risk and reward through multi-scenario modeling.",
-      driver: "Motivated by sustainable growth and ethical investing principles. Values work-life integration and financial security.",
-      persuasion: "Responds to evidence-based arguments with practical applications. Appreciates detailed analysis backed by real-world examples.",
-      bias: "May over-index on quantifiable metrics while undervaluing qualitative factors that resist measurement.",
-      cognitive: "Structured problem-solver who excels at identifying patterns in complex datasets."
-    }
-  };
-  
-  // Check if this is a persona with custom insights
-  if (persona.persona_id && customPersonas[persona.persona_id]) {
-    return customPersonas[persona.persona_id];
-  }
-  
-  // Check if this is Alina R
-  const isAlinaR = persona.persona_id === '9f8540fa' || 
-                  (persona.name?.includes('Alina') && persona.metadata?.occupation === 'Financial Analyst');
-  
-  if (isAlinaR) {
-    return customPersonas["9f8540fa"];
-  }
-  
-  // Generate more varied insights based on persona traits
-  
-  // Extract key traits with fallbacks
-  const traits = persona.trait_profile || {};
-  const bigFive = traits.big_five || {};
-  const extendedTraits = traits.extended_traits || {};
-  const behEcon = traits.behavioral_economics || {};
-  const moralFoundations = traits.moral_foundations || {};
-  
-  // Parse trait values
-  const risk = parseFloat(behEcon.risk_sensitivity as string) || 0.5;
-  const openness = parseFloat(bigFive.openness as string) || 0.5;
-  const conscientiousness = parseFloat(bigFive.conscientiousness as string) || 0.5;
-  const extraversion = parseFloat(bigFive.extraversion as string) || 0.5;
-  const agreeableness = parseFloat(bigFive.agreeableness as string) || 0.5;
-  const neuroticism = parseFloat(bigFive.neuroticism as string) || 0.5;
-  const selfAwareness = parseFloat(extendedTraits.self_awareness as string) || 0.5;
-  const truthOrientation = parseFloat(extendedTraits.truth_orientation as string) || 0.5;
-  const cognitiveFlexibility = parseFloat(extendedTraits.cognitive_flexibility as string) || 0.5;
-  const needForClosure = parseFloat(extendedTraits.need_for_cognitive_closure as string) || 0.5;
-  const conformity = parseFloat(extendedTraits.conformity_tendency as string) || 0.5;
-  
-  // Get metadata values
-  const occupation = persona.metadata?.occupation || "";
-  const age = parseInt(persona.metadata?.age as string) || 30;
-  const education = persona.metadata?.education_level || "";
-  const region = persona.metadata?.region || "";
-  
-  // Generate decision insight based on multiple factors
-  let decisionInsight = "";
-  if (conscientiousness > 0.7) {
-    decisionInsight = "Methodical decision-maker who carefully researches options before committing. Prefers having complete information and clear processes.";
-  } else if (openness > 0.7) {
-    decisionInsight = "Creative decision-maker who considers unconventional options and innovative approaches. Comfortable with ambiguity and experimentation.";
-  } else if (risk < 0.3) {
-    decisionInsight = "Cautious decision-maker who prioritizes stability and predictability. Carefully weighs potential downsides before acting.";
-  } else if (risk > 0.7) {
-    decisionInsight = "Bold decision-maker willing to embrace uncertainty for potential high rewards. Comfortable pivoting quickly when circumstances change.";
-  } else if (needForClosure > 0.7) {
-    decisionInsight = "Decisive and quick to form judgments. Prefers closure and certainty over extended deliberation and ambiguity.";
-  } else if (education.includes("MBA") || education.includes("Business")) {
-    decisionInsight = "Strategic decision-maker who weighs competitive factors and market dynamics. Balances analytical frameworks with practical considerations.";
-  } else if (occupation.includes("Teacher") || occupation.includes("Healthcare")) {
-    decisionInsight = "People-centered decision-maker who considers human impacts alongside pragmatic factors. Values both short-term needs and long-term development.";
-  } else {
-    decisionInsight = "Balanced decision-maker who adapts approach based on the situation. Combines analytical thinking with practical experience.";
-  }
-  
-  // Generate driver insight based on different factors
-  let driverInsight = "";
-  if (moralFoundations?.care > 0.7) {
-    driverInsight = "Deeply motivated by opportunities to help others and prevent harm. Finds purpose in work that supports community welfare and wellbeing.";
-  } else if (extraversion > 0.7 && age < 35) {
-    driverInsight = "Energized by social recognition and collaborative environments. Seeks opportunities to connect with others and build professional networks.";
-  } else if (openness > 0.7 && conscientiousness > 0.6) {
-    driverInsight = "Driven by intellectual growth and mastery of complex skills. Values structured environments that still allow for creativity and innovation.";
-  } else if (neuroticism > 0.7) {
-    driverInsight = "Motivated by creating security and stability. Works diligently to prevent negative outcomes and establish reliable systems.";
-  } else if (region && region.includes("East Coast") || region.includes("New York")) {
-    driverInsight = "Influenced by fast-paced professional environments that reward ambition and results. Values efficiency and direct communication.";
-  } else if (region && (region.includes("West Coast") || region.includes("California"))) {
-    driverInsight = "Shaped by innovation-focused culture that values work-life balance. Appreciates flexible environments that support both career and personal goals.";
-  } else if (occupation.includes("Artist") || occupation.includes("Creator") || occupation.includes("Writer")) {
-    driverInsight = "Motivated by authentic self-expression and creating meaningful work. Values autonomy and opportunities for creative control.";
-  } else {
-    driverInsight = "Balances professional advancement with personal fulfillment. Seeks environments that provide both practical rewards and meaningful engagement.";
-  }
-  
-  // Generate persuasion insight based on different factors
-  let persuasionInsight = "";
-  if (truthOrientation > 0.7) {
-    persuasionInsight = "Responds best to factually accurate, evidence-based arguments. Values honesty and directness even when messages are challenging.";
-  } else if (agreeableness > 0.7) {
-    persuasionInsight = "Appreciates collaborative, inclusive communication approaches. Builds trust through warm interactions and consensus-building.";
-  } else if (openness < 0.3) {
-    persuasionInsight = "Responds to practical, straightforward communication with clear benefits. Prefers familiar concepts over novel or abstract ideas.";
-  } else if (cognitiveFlexibility > 0.7) {
-    persuasionInsight = "Open to considering multiple perspectives and changing views when presented with compelling evidence. Values intellectual exchange.";
-  } else if (education.includes("Science") || education.includes("Engineering")) {
-    persuasionInsight = "Persuaded by logical arguments with clear supporting evidence. Appreciates precision and technical accuracy in communication.";
-  } else if (occupation.includes("Sales") || occupation.includes("Marketing")) {
-    persuasionInsight = "Responsive to both emotional appeals and practical benefits. Evaluates ideas through both analytical and intuitive lenses.";
-  } else {
-    persuasionInsight = "Balances consideration of facts with personal values when forming opinions. Appreciates authentic communication that acknowledges complexity.";
-  }
-  
-  // Generate bias insight based on different factors  
-  let biasInsight = "";
-  if (truthOrientation < 0.4) {
-    biasInsight = "May prioritize social harmony or self-interest over factual accuracy. Tends to engage in motivated reasoning when challenged.";
-  } else if (conformity > 0.7) {
-    biasInsight = "Strongly influenced by social norms and group consensus. May discount contradictory evidence that challenges established views.";
-  } else if (needForClosure > 0.7) {
-    biasInsight = "Tends to form quick judgments and resist changing them. May selectively seek information that confirms existing beliefs.";
-  } else if (cognitiveFlexibility < 0.3) {
-    biasInsight = "Hesitant to reconsider established viewpoints even when presented with new evidence. Prefers familiar frameworks and explanations.";
-  } else if (selfAwareness < 0.4) {
-    biasInsight = "Limited recognition of personal biases and blind spots. May overestimate objectivity of own thinking process.";
-  } else {
-    biasInsight = "Generally balanced in evaluating information, though may show some preference for data that aligns with existing beliefs and values.";
-  }
-  
-  // Generate cognitive style insight based on different factors
-  let cognitiveInsight = "";
-  if (openness > 0.7 && cognitiveFlexibility > 0.7) {
-    cognitiveInsight = "Divergent thinker who readily explores multiple interpretations and possibilities before converging on solutions.";
-  } else if (conscientiousness > 0.7 && needForClosure > 0.6) {
-    cognitiveInsight = "Structured, sequential thinker who prefers clearly defined problems and methodical problem-solving approaches.";
-  } else if (agreeableness > 0.7 && extraversion > 0.6) {
-    cognitiveInsight = "Collaborative thinker who naturally integrates multiple perspectives and values group consensus in problem solving.";
-  } else if (neuroticism > 0.7) {
-    cognitiveInsight = "Detail-oriented thinker with strong anticipation of potential problems. May sometimes focus too much on what could go wrong.";
-  } else if (education.includes("PhD") || education.includes("Research")) {
-    cognitiveInsight = "Analytical thinker trained to examine problems systematically and consider evidence from multiple angles before drawing conclusions.";
-  } else {
-    cognitiveInsight = "Pragmatic thinker who balances consideration of details with the bigger picture. Adapts thinking style based on context and needs.";
-  }
-  
-  // Return varied and nuanced insights
-  return {
-    decision: decisionInsight,
-    driver: driverInsight,
-    persuasion: persuasionInsight,
-    bias: biasInsight,
-    cognitive: cognitiveInsight
-  };
+export type SpeedInsight = {
+  value: string;
+  speed: "fast" | "slow";
 };
 
-// Utility function to parse trait values
-function parseTraitValue(value: any, defaultValue: number): number {
-  if (value === undefined || value === null) return defaultValue;
-  
-  if (typeof value === 'number') {
-    return value;
+export const determineCommunicationStyle = (persona: Persona): SpeedInsight => {
+  const numberOfWords = persona.linguistic_profile?.vocabulary_size || 0;
+
+  if (numberOfWords > 5000) {
+    return { value: "Eloquent, Detailed", speed: "fast" };
+  } else {
+    return { value: "Concise, Direct", speed: "slow" };
   }
-  
-  if (typeof value === 'string') {
-    // Try to parse as number
-    const parsed = parseFloat(value);
-    if (!isNaN(parsed)) {
-      return parsed;
-    }
-    
-    // Check for high/medium/low strings
-    if (value.toLowerCase().includes('high')) return 0.8;
-    if (value.toLowerCase().includes('medium')) return 0.5;
-    if (value.toLowerCase().includes('low')) return 0.2;
+};
+
+export const determineDecisionMakingStyle = (persona: Persona): SpeedInsight => {
+  const impulsivity = persona.trait_profile?.impulsivity || 0;
+
+  if (impulsivity > 0.7) {
+    return { value: "Quick, Intuitive", speed: "fast" };
+  } else {
+    return { value: "Deliberate, Analytical", speed: "slow" };
   }
-  
-  return defaultValue;
-}
+};
+
+export const determineLearningStyle = (persona: Persona): SpeedInsight => {
+  const curiosity = persona.trait_profile?.curiosity || 0;
+
+  if (curiosity > 0.6) {
+    return { value: "Exploratory, Experimental", speed: "fast" };
+  } else {
+    return { value: "Structured, Methodical", speed: "slow" };
+  }
+};
+
+export const determineWorkEthic = (persona: Persona): SpeedInsight => {
+  const conscientiousness = persona.trait_profile?.conscientiousness || 0;
+
+  if (conscientiousness > 0.7) {
+    return { value: "Diligent, Organized", speed: "slow" };
+  } else {
+    return { value: "Flexible, Adaptable", speed: "fast" };
+  }
+};
+
+export const determineConflictResolutionStyle = (persona: Persona): SpeedInsight => {
+  const agreeableness = persona.trait_profile?.agreeableness || 0;
+
+  if (agreeableness > 0.7) {
+    return { value: "Accommodating, Diplomatic", speed: "slow" };
+  } else {
+    return { value: "Assertive, Competitive", speed: "fast" };
+  }
+};
+
+export const determineFeedbackPreference = (persona: Persona): SpeedInsight => {
+  const openness = persona.trait_profile?.openness || 0;
+
+  if (openness > 0.6) {
+    return { value: "Constructive, Insightful", speed: "fast" };
+  } else {
+    return { value: "Positive, Encouraging", speed: "slow" };
+  }
+};
+
+export const determineTeamworkStyle = (persona: Persona): SpeedInsight => {
+  const extraversion = persona.trait_profile?.extraversion || 0;
+
+  if (extraversion > 0.6) {
+    return { value: "Collaborative, Enthusiastic", speed: "fast" };
+  } else {
+    return { value: "Independent, Focused", speed: "slow" };
+  }
+};
+
+export const determineLeadershipStyle = (persona: Persona): SpeedInsight => {
+  const dominance = persona.trait_profile?.dominance || 0;
+
+  if (dominance > 0.7) {
+    return { value: "Directive, Visionary", speed: "fast" };
+  } else {
+    return { value: "Supportive, Facilitative", speed: "slow" };
+  }
+};
+
+export const determineRiskTolerance = (persona: Persona): SpeedInsight => {
+  const neuroticism = persona.trait_profile?.neuroticism || 0;
+
+  if (neuroticism > 0.5) {
+    return { value: "Cautious, Conservative", speed: "slow" };
+  } else {
+    return { value: "Bold, Adventurous", speed: "fast" };
+  }
+};
+
+export const determineStressResponse = (persona: Persona): SpeedInsight => {
+  const resilience = persona.trait_profile?.resilience || 0;
+
+  if (resilience > 0.6) {
+    return { value: "Composed, Optimistic", speed: "slow" };
+  } else {
+    return { value: "Anxious, Reactive", speed: "fast" };
+  }
+};
+
+export const determineTechnologyAdoption = (persona: Persona): SpeedInsight => {
+  const techSavviness = persona.metadata?.tech_savviness || 0;
+
+  if (techSavviness > 0.6) {
+    return { value: "Early Adopter, Innovative", speed: "fast" };
+  } else {
+    return { value: "Traditional, Practical", speed: "slow" };
+  }
+};
+
+export const determineSocialMediaUsage = (persona: Persona): SpeedInsight => {
+  const socialEngagement = persona.metadata?.social_engagement || 0;
+
+  if (socialEngagement > 0.6) {
+    return { value: "Active, Influential", speed: "fast" };
+  } else {
+    return { value: "Passive, Observational", speed: "slow" };
+  }
+};
+
+export const determineShoppingHabits = (persona: Persona): SpeedInsight => {
+  const spendingHabits = persona.metadata?.spending_habits || 0;
+
+  if (spendingHabits > 0.6) {
+    return { value: "Impulsive, Luxurious", speed: "fast" };
+  } else {
+    return { value: "Budget-conscious, Practical", speed: "slow" };
+  }
+};
+
+export const determineTravelPreferences = (persona: Persona): SpeedInsight => {
+  const travelStyle = persona.metadata?.travel_style || 0;
+
+  if (travelStyle > 0.6) {
+    return { value: "Adventurous, Spontaneous", speed: "fast" };
+  } else {
+    return { value: "Planned, Relaxing", speed: "slow" };
+  }
+};
+
+export const determineEntertainmentChoices = (persona: Persona): SpeedInsight => {
+  const entertainmentStyle = persona.metadata?.entertainment_style || 0;
+
+  if (entertainmentStyle > 0.6) {
+    return { value: "Social, Lively", speed: "fast" };
+  } else {
+    return { value: "Quiet, Reflective", speed: "slow" };
+  }
+};
+
+export const determineFoodPreferences = (persona: Persona): SpeedInsight => {
+  const culinaryTaste = persona.metadata?.culinary_taste || 0;
+
+  if (culinaryTaste > 0.6) {
+    return { value: "Adventurous, Gourmet", speed: "fast" };
+  } else {
+    return { value: "Simple, Comforting", speed: "slow" };
+  }
+};
+
+export const determinePetPreferences = (persona: Persona): SpeedInsight => {
+  const petAffinity = persona.metadata?.pet_affinity || 0;
+
+  if (petAffinity > 0.6) {
+    return { value: "Affectionate, Caring", speed: "slow" };
+  } else {
+    return { value: "Independent, Minimalist", speed: "fast" };
+  }
+};
+
+export const determineVehiclePreference = (persona: Persona): SpeedInsight => {
+  const vehicleChoice = persona.metadata?.vehicle_choice || 0;
+
+  if (vehicleChoice > 0.6) {
+    return { value: "Sporty, Stylish", speed: "fast" };
+  } else {
+    return { value: "Practical, Reliable", speed: "slow" };
+  }
+};
+
+export const determineHomeDecorStyle = (persona: Persona): SpeedInsight => {
+  const decorTaste = persona.metadata?.decor_taste || 0;
+
+  if (decorTaste > 0.6) {
+    return { value: "Modern, Trendy", speed: "fast" };
+  } else {
+    return { value: "Classic, Comfortable", speed: "slow" };
+  }
+};
+
+export const determineReadingPreference = (persona: Persona): SpeedInsight => {
+  const readingHabits = persona.metadata?.reading_habits || 0;
+
+  if (readingHabits > 0.6) {
+    return { value: "Diverse, Intellectual", speed: "fast" };
+  } else {
+    return { value: "Casual, Practical", speed: "slow" };
+  }
+};
+
+export const determineExercisePreference = (persona: Persona): SpeedInsight => {
+  const fitnessLevel = persona.metadata?.fitness_level || 0;
+
+  if (fitnessLevel > 0.6) {
+    return { value: "Intense, Competitive", speed: "fast" };
+  } else {
+    return { value: "Moderate, Relaxing", speed: "slow" };
+  }
+};
+
+export const determinePoliticalAffiliation = (persona: Persona): SpeedInsight => {
+  const politicalViews = persona.metadata?.political_views || 0;
+
+  if (politicalViews > 0.6) {
+    return { value: "Activist, Vocal", speed: "fast" };
+  } else {
+    return { value: "Moderate, Reserved", speed: "slow" };
+  }
+};
+
+export const determineReligiousAffiliation = (persona: Persona): SpeedInsight => {
+  const religiousBeliefs = persona.metadata?.religious_beliefs || 0;
+
+  if (religiousBeliefs > 0.6) {
+    return { value: "Devout, Traditional", speed: "slow" };
+  } else {
+    return { value: "Secular, Open-minded", speed: "fast" };
+  }
+};
+
+export const determineMoviePreference = (persona: Persona): SpeedInsight => {
+  const movieTaste = persona.metadata?.movie_taste || 0;
+
+  if (movieTaste > 0.6) {
+    return { value: "Action, Thriller", speed: "fast" };
+  } else {
+    return { value: "Drama, Romance", speed: "slow" };
+  }
+};
+
+export const determineMusicPreference = (persona: Persona): SpeedInsight => {
+  const musicTaste = persona.metadata?.music_taste || 0;
+
+  // Fix for the type error: Convert string to number before comparison
+  const age = typeof persona.trait_profile?.age === 'string' 
+    ? parseInt(persona.trait_profile.age, 10) 
+    : persona.trait_profile?.age || 0;
+
+  if (age > 65) {
+    return { value: "Classical, Jazz, Folk", speed: "slow" };
+  }
+
+  if (musicTaste > 0.6) {
+    return { value: "Pop, Electronic", speed: "fast" };
+  } else {
+    return { value: "Alternative, Indie", speed: "slow" };
+  }
+};

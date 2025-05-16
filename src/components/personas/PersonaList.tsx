@@ -33,7 +33,7 @@ export default function PersonaList({
   const { user } = useAuth();
   
   // Use React Query to fetch personas
-  const { data: allPersonas = [], isLoading, error } = useQuery({
+  const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['personas', { filterByCurrentUser, filterByOtherUsers, publicOnly, collectionId, userId: user?.id }],
     queryFn: async () => {
       try {
@@ -41,6 +41,7 @@ export default function PersonaList({
         let data = await getAllPersonas();
         
         console.log("Total personas loaded:", data.length);
+        console.log("User ID for filtering:", user?.id);
         
         // Apply filtering logic based on the view type
         if (collectionId) {
@@ -50,7 +51,10 @@ export default function PersonaList({
         } else if (filterByCurrentUser && user) {
           // For My Personas view: Show only the current user's personas
           console.log("Filtering by current user:", user.id);
-          const userPersonas = data.filter(persona => persona.user_id === user.id);
+          const userPersonas = data.filter(persona => {
+            console.log("Checking persona:", persona.persona_id, "user_id:", persona.user_id);
+            return persona.user_id === user.id;
+          });
           console.log("Current user's personas count:", userPersonas.length);
           return userPersonas;
         } else if (filterByOtherUsers && publicOnly && user) {
@@ -80,6 +84,7 @@ export default function PersonaList({
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: true, // Add this to ensure a refresh when component mounts
+    refetchOnWindowFocus: true // Refetch when window regains focus
   });
   
   // Update the parent component with loaded personas
@@ -118,6 +123,9 @@ export default function PersonaList({
         )
       );
     }
+    
+    // Force a refetch to ensure we have the latest data
+    refetch();
   };
 
   const handleDelete = (personaId: string) => {
@@ -130,6 +138,9 @@ export default function PersonaList({
     if (collectionId && personas.length <= 1 && onDeleteCollection) {
       onDeleteCollection();
     }
+    
+    // Force a refetch to ensure we have the latest data
+    refetch();
   };
 
   if (isLoading) {
