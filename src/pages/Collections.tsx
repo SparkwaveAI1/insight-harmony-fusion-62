@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -108,8 +107,9 @@ const Collections = () => {
     setDeleteDialogOpen(true);
   };
 
+  // IMPORTANT CHANGE: Update the navigation to use '/collections/' instead of '/collection/'
   const viewCollection = (collectionId: string) => {
-    navigate(`/collection/${collectionId}`);
+    navigate(`/collections/${collectionId}`);
   };
 
   return (

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   Card,
@@ -28,13 +29,14 @@ import {
   getCollectionById,
   deleteCollection,
   getPersonasInCollection,
-} from "@/services/collections"; // Updated import path
+} from "@/services/collections"; 
 import { Collection } from "@/services/collections/types";
 import { Persona } from "@/services/persona/types";
 import { getAllPersonas } from "@/services/persona";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import { useNavigate } from "react-router-dom";
+import NotFoundState from "@/components/persona-details/NotFoundState";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
@@ -111,6 +113,11 @@ const CollectionDetail = () => {
       loadPersonas(collectionId);
     }
   };
+
+  // Add a not found state if collection couldn't be loaded
+  if (!isLoading && !collection) {
+    return <NotFoundState />;
+  }
 
   return (
     <div className="container py-6">

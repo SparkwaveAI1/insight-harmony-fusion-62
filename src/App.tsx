@@ -86,7 +86,10 @@ function App() {
               <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
               <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
               <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+              
+              {/* IMPORTANT: Add support for both URL formats to avoid breaking existing links */}
               <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+              <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
               
               {/* Research section - Protected */}
               <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
