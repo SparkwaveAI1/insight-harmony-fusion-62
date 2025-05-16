@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage } from "@/services/persona";
@@ -14,19 +14,7 @@ export function usePersonaDetail() {
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
 
-  useEffect(() => {
-    if (personaId) {
-      loadPersona(personaId);
-    }
-  }, [personaId]);
-
-  useEffect(() => {
-    if (persona) {
-      setIsPublic(persona.is_public || false);
-    }
-  }, [persona]);
-
-  const loadPersona = async (id: string) => {
+  const loadPersona = useCallback(async (id: string) => {
     setIsLoading(true);
     try {
       console.log("Loading persona with ID:", id);
@@ -45,8 +33,20 @@ export function usePersonaDetail() {
     } finally {
       setIsLoading(false);
     }
-  };
-  
+  }, []);
+
+  useEffect(() => {
+    if (personaId) {
+      loadPersona(personaId);
+    }
+  }, [personaId, loadPersona]);
+
+  useEffect(() => {
+    if (persona) {
+      setIsPublic(persona.is_public || false);
+    }
+  }, [persona]);
+
   const handlePersonaDeleted = () => {
     // Navigate back to personas list after deletion
     toast.success("Persona deleted successfully");
@@ -93,7 +93,7 @@ export function usePersonaDetail() {
 
   // Handle image generation
   const handleImageGenerated = async () => {
-    if (!personaId || !persona || !user) return;
+    if (!personaId || !persona || !user) return null;
     
     try {
       toast.info("Generating profile image...");
@@ -101,8 +101,16 @@ export function usePersonaDetail() {
       
       if (imageUrl) {
         toast.success("Profile image generated and saved successfully");
-        // Update the local state with the new image URL
-        setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+        
+        // Force reload the persona to ensure we have the updated image URL
+        const refreshedPersona = await getPersonaByPersonaId(personaId);
+        if (refreshedPersona) {
+          console.log("Refreshed persona data with new image:", refreshedPersona.profile_image_url);
+          setPersona(refreshedPersona);
+        } else {
+          // Fallback: Update the local state with the new image URL
+          setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+        }
         console.log("Updated persona in state with new image URL:", imageUrl);
         return imageUrl;
       } else {

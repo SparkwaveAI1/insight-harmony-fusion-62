@@ -20,15 +20,17 @@ export default function PersonaAvatar({
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(persona.profile_image_url);
   
-  // Reset image error state when persona or image URL changes
+  // Reset image error state and update URL when persona changes
   useEffect(() => {
-    setImageError(false);
-    setImageUrl(persona.profile_image_url);
-    console.log("PersonaAvatar: profile_image_url updated:", persona.profile_image_url);
-  }, [persona, persona.profile_image_url]);
+    if (persona.profile_image_url) {
+      console.log("PersonaAvatar: Updating image URL:", persona.profile_image_url);
+      setImageError(false);
+      setImageUrl(persona.profile_image_url);
+    }
+  }, [persona.persona_id, persona.profile_image_url]);
   
   const handleImageError = () => {
-    console.log("Failed to load persona image:", imageUrl);
+    console.error("Failed to load persona image:", imageUrl);
     setImageError(true);
   };
   

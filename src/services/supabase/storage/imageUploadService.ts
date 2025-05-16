@@ -11,11 +11,31 @@ export async function uploadPersonaImageFromUrl(
   try {
     console.log(`Uploading image for persona ${personaId} from URL:`, imageUrl);
     
+    if (!imageUrl) {
+      console.error('Invalid image URL: empty string');
+      return null;
+    }
+    
+    // Validate the URL format
+    try {
+      new URL(imageUrl);
+    } catch (e) {
+      console.error('Invalid image URL format:', e);
+      return null;
+    }
+    
     // Fetch the image from the URL
     const response = await fetch(imageUrl);
     if (!response.ok) {
       console.error(`Failed to fetch image from URL: ${response.status}`);
       throw new Error(`Failed to fetch image from URL: ${response.status}`);
+    }
+    
+    // Check content type to ensure it's an image
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      console.error(`URL does not point to an image. Content-Type: ${contentType}`);
+      throw new Error(`URL does not point to an image. Content-Type: ${contentType}`);
     }
     
     // Convert the image to a blob
@@ -53,7 +73,7 @@ export async function uploadPersonaImageFromUrl(
   }
 }
 
-// Update persona record with new profile image URL - using the new function
+// Update persona record with new profile image URL
 export async function updatePersonaProfileImage(
   personaId: string, 
   imageUrl: string

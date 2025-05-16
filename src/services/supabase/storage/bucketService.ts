@@ -54,11 +54,20 @@ export async function createStorageBuckets(): Promise<boolean> {
     
     // Create persona-images bucket if needed
     try {
-      await supabase.storage.createBucket('persona-images', {
-        public: true,
-        fileSizeLimit: 10485760, // 10MB
-      });
-      console.log('Created persona-images bucket ✅');
+      const { data: existingBuckets } = await supabase.storage.listBuckets();
+      const bucketExists = existingBuckets?.some(b => b.name === 'persona-images');
+      
+      if (!bucketExists) {
+        const { data, error } = await supabase.storage.createBucket('persona-images', {
+          public: true,
+          fileSizeLimit: 10485760, // 10MB
+        });
+        
+        if (error) throw error;
+        console.log('Created persona-images bucket ✅');
+      } else {
+        console.log('Persona-images bucket already exists ✅');
+      }
     } catch (error: any) {
       // If bucket already exists, that's fine
       if (error.message && error.message.includes('already exists')) {
@@ -101,6 +110,18 @@ export async function createStorageBuckets(): Promise<boolean> {
         console.error('Error creating interview-audio bucket:', error);
         success = false;
       }
+    }
+    
+    // Set correct bucket permissions
+    try {
+      await supabase.storage.from('persona-images').updateBucket({
+        public: true,
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+      });
+      console.log('Updated persona-images bucket permissions ✅');
+    } catch (error) {
+      console.error('Error updating bucket permissions:', error);
+      // Don't fail on this error, just log it
     }
     
     return success;
