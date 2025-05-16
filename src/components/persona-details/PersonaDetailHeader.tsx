@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Globe, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Persona } from "@/services/persona/types";
-import { deletePersona, generatePersonaImage } from "@/services/persona";
+import { deletePersona } from "@/services/persona";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaAvatar from "./PersonaAvatar";
 import PersonaNameEditor from "./PersonaNameEditor";
@@ -19,7 +19,7 @@ interface PersonaDetailHeaderProps {
   onVisibilityChange: (newVisibility: boolean) => void;
   onDelete: () => void;
   onNameUpdate: (name: string) => void;
-  onImageGenerated?: (imageUrl: string) => void;
+  onImageGenerated: () => Promise<string | null>;
 }
 
 export default function PersonaDetailHeader({ 
@@ -58,14 +58,10 @@ export default function PersonaDetailHeader({
     if (isGeneratingImage) return;
     
     setIsGeneratingImage(true);
-    toast.info("Generating profile image...");
     
     try {
-      const imageUrl = await generatePersonaImage(persona);
-      if (imageUrl) {
-        toast.success("Profile image generated successfully");
-        onImageGenerated?.(imageUrl);
-      } else {
+      const imageUrl = await onImageGenerated();
+      if (!imageUrl) {
         toast.error("Failed to generate profile image");
       }
     } catch (error) {

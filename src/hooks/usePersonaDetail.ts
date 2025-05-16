@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName } from "@/services/persona";
+import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -91,8 +91,27 @@ export function usePersonaDetail() {
   };
 
   // Handle image generation
-  const handleImageGenerated = (imageUrl: string) => {
-    setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+  const handleImageGenerated = async () => {
+    if (!personaId || !persona || !user) return;
+    
+    try {
+      toast.info("Generating profile image...");
+      const imageUrl = await generatePersonaImage(persona);
+      
+      if (imageUrl) {
+        toast.success("Profile image generated and saved successfully");
+        // Update the local state with the new image URL
+        setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+        return imageUrl;
+      } else {
+        toast.error("Failed to generate profile image");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error generating profile image:", error);
+      toast.error("An error occurred while generating the profile image");
+      return null;
+    }
   };
 
   // Check if current user is the owner of this persona

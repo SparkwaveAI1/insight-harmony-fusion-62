@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
 import { toast } from "sonner";
 import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
+import { updatePersonaProfileImageUrl } from "./updatePersona";
 
 export interface GenerateImageResponse {
   success: boolean;
@@ -45,7 +46,16 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
       return response.image_url;
     }
     
-    console.log("Persona image saved to storage:", storedImageUrl);
+    // Update the persona record with the image URL
+    const updated = await updatePersonaProfileImageUrl(persona.persona_id, storedImageUrl);
+    
+    if (!updated) {
+      console.error("Failed to update persona record with image URL");
+      toast.error("Failed to update persona with image URL");
+      return storedImageUrl;
+    }
+    
+    console.log("Persona image saved to database:", storedImageUrl);
     return storedImageUrl;
   } catch (error) {
     console.error("Error in generatePersonaImage:", error);
