@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "sonner";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -11,6 +11,7 @@ import PersonaDetailHeader from "@/components/persona-details/PersonaDetailHeade
 import PersonaContent from "@/components/persona-details/PersonaContent";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
+import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -26,6 +27,14 @@ const PersonaDetail = () => {
     handleNameUpdate,
     handleImageGenerated
   } = usePersonaDetail();
+
+  // Ensure storage buckets exist when the component mounts
+  useEffect(() => {
+    const setupStorage = async () => {
+      await ensureStorageBuckets();
+    };
+    setupStorage();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

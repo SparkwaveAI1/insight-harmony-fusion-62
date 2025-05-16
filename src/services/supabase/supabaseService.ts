@@ -36,6 +36,16 @@ export {
   saveAudio
 } from './storage/uploadService';
 
+export {
+  uploadPersonaImageFromUrl,
+  savePersonaProfileImage
+} from './storage/imageUploadService';
+
+export {
+  ensureStorageBuckets,
+  createStorageBuckets
+} from './storage/bucketService';
+
 // Export profiles table creation function
 export { 
   createProfilesTable, 

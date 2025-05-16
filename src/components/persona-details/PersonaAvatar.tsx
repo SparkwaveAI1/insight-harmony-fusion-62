@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageIcon } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Persona } from "@/services/persona/types";
@@ -18,22 +18,31 @@ export default function PersonaAvatar({
   onGenerateImage 
 }: PersonaAvatarProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | undefined>(persona.profile_image_url);
+  
+  // Reset image error state when persona or image URL changes
+  useEffect(() => {
+    setImageError(false);
+    setImageUrl(persona.profile_image_url);
+    console.log("PersonaAvatar: profile_image_url updated:", persona.profile_image_url);
+  }, [persona, persona.profile_image_url]);
   
   const handleImageError = () => {
     console.log("Failed to load persona image:", persona.profile_image_url);
     setImageError(true);
   };
   
-  const hasValidImage = persona.profile_image_url && !imageError;
+  const hasValidImage = imageUrl && !imageError;
   
   return (
     <div className="relative">
       <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold">
         {hasValidImage ? (
           <AvatarImage 
-            src={persona.profile_image_url} 
+            src={imageUrl} 
             alt={persona.name} 
             onError={handleImageError}
+            className="object-cover"
           />
         ) : (
           <AvatarFallback>{persona.name.charAt(0).toUpperCase()}</AvatarFallback>

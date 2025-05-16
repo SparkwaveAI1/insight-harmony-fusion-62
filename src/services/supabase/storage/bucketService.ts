@@ -27,11 +27,12 @@ export async function ensureStorageBuckets(): Promise<boolean> {
     const bucketNames = bucketList?.map(bucket => bucket.name) || [];
     const hasTranscriptsBucket = bucketNames.includes('transcripts');
     const hasAudioBucket = bucketNames.includes('interview-audio');
+    const hasPersonaImagesBucket = bucketNames.includes('persona-images');
     
-    console.log('Bucket check results:', { hasTranscriptsBucket, hasAudioBucket });
+    console.log('Bucket check results:', { hasTranscriptsBucket, hasAudioBucket, hasPersonaImagesBucket });
     
     // If buckets don't exist, try to create them
-    if (!hasTranscriptsBucket || !hasAudioBucket) {
+    if (!hasTranscriptsBucket || !hasAudioBucket || !hasPersonaImagesBucket) {
       return await createStorageBuckets();
     }
     
@@ -50,6 +51,23 @@ export async function createStorageBuckets(): Promise<boolean> {
   try {
     console.log('Creating storage buckets...');
     let success = true;
+    
+    // Create persona-images bucket if needed
+    try {
+      await supabase.storage.createBucket('persona-images', {
+        public: true,
+        fileSizeLimit: 10485760, // 10MB
+      });
+      console.log('Created persona-images bucket ✅');
+    } catch (error: any) {
+      // If bucket already exists, that's fine
+      if (error.message && error.message.includes('already exists')) {
+        console.log('Persona-images bucket already exists ✅');
+      } else {
+        console.error('Error creating persona-images bucket:', error);
+        success = false;
+      }
+    }
     
     // Create transcripts bucket if needed
     try {
