@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -130,7 +129,7 @@ export default function PersonaDetailHeader({
     return (
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="h-32 w-32 rounded-full" />
           <div className="space-y-2">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-4 w-24" />
@@ -144,7 +143,7 @@ export default function PersonaDetailHeader({
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
       <div className="flex items-center gap-4">
         <div className="relative">
-          <Avatar className="h-16 w-16 bg-primary/10 text-primary text-2xl font-bold">
+          <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold">
             {persona.profile_image_url ? (
               <AvatarImage src={persona.profile_image_url} alt={persona.name} />
             ) : (
@@ -156,7 +155,7 @@ export default function PersonaDetailHeader({
             <Button 
               variant="outline" 
               size="icon"
-              className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full shadow"
+              className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow"
               onClick={handleGenerateImage}
               title="Generate profile image"
             >
@@ -166,7 +165,7 @@ export default function PersonaDetailHeader({
           
           {isGeneratingImage && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full">
-              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+              <div className="animate-spin h-8 w-8 border-3 border-white border-t-transparent rounded-full"></div>
             </div>
           )}
         </div>
