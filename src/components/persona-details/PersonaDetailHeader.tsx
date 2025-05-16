@@ -11,6 +11,7 @@ import PersonaAvatar from "./PersonaAvatar";
 import PersonaNameEditor from "./PersonaNameEditor";
 import PersonaActionButtons from "./PersonaActionButtons";
 import GenerateImageButton from "./GenerateImageButton";
+import PersonaCloneForm from "./PersonaCloneForm";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
@@ -133,11 +134,15 @@ export default function PersonaDetailHeader({
         </div>
       </div>
       
-      <PersonaActionButtons
-        personaId={persona.persona_id}
-        onDelete={handleDeletePersona}
-        onChatClick={handleChatClick}
-      />
+      <div className="flex flex-col gap-4 w-full md:w-auto">
+        <PersonaCloneForm persona={persona} />
+        
+        <PersonaActionButtons
+          personaId={persona.persona_id}
+          onDelete={handleDeletePersona}
+          onChatClick={handleChatClick}
+        />
+      </div>
     </div>
   );
 }
