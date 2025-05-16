@@ -16,8 +16,8 @@ const NotFound = () => {
     // Check if the user was trying to access a persona detail page
     if (location.pathname.includes('/persona-detail/') || 
         location.pathname.includes('/your-persona/')) {
-      toast.error("The persona could not be found. Redirecting you to your personas.");
-      setTimeout(() => navigate("/my-personas"), 2000);
+      toast.error("The persona could not be found. Redirecting you to personas.");
+      setTimeout(() => navigate("/persona-viewer"), 2000);
       return;
     }
     
@@ -31,8 +31,8 @@ const NotFound = () => {
     
     // Check if the user was coming from persona creation
     if (location.pathname.includes('/persona-creation')) {
-      toast.info("Redirecting to your personas...");
-      setTimeout(() => navigate("/my-personas"), 1000);
+      toast.info("Redirecting to personas...");
+      setTimeout(() => navigate("/persona-viewer"), 1000);
       return;
     }
   }, [location.pathname, navigate]);

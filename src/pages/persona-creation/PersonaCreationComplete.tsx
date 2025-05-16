@@ -59,7 +59,7 @@ const PersonaCreationComplete = () => {
     if (personaId) {
       navigate(`/persona/${personaId}`);
     } else {
-      navigate('/my-personas');
+      navigate('/persona-viewer');
     }
   };
 
@@ -128,10 +128,10 @@ const PersonaCreationComplete = () => {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => navigate('/my-personas')}
+                onClick={() => navigate('/persona-viewer')}
                 className="px-6 py-2 rounded-md transition-colors"
               >
-                View My Personas
+                View Personas
               </Button>
             </div>
           </>
@@ -156,7 +156,7 @@ const PersonaCreationComplete = () => {
               onClick={handleViewPersonas}
               className="bg-primary text-white px-6 py-2 rounded-md hover:bg-primary/90 transition-colors"
             >
-              {personaId ? `View ${personaName}` : "View My Personas"}
+              {personaId ? `View ${personaName}` : "View Personas"}
             </Button>
           </>
         )}

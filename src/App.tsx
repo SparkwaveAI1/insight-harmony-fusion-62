@@ -17,7 +17,6 @@ import ConversationDetail from "./pages/ConversationDetail";
 import YourPersona from "./pages/YourPersona";
 import Interviewer from "./pages/Interviewer";
 import PRSNAEcosystem from "./pages/PRSNAEcosystem";
-import MyPersonas from "./pages/MyPersonas";
 import Collections from "./pages/Collections";
 import CollectionDetail from "./pages/CollectionDetail";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
@@ -83,7 +82,6 @@ function App() {
               <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
               <Route path="/dual-chat" element={<ProtectedRoute><DualChat /></ProtectedRoute>} />
               <Route path="/your-persona" element={<ProtectedRoute><YourPersona /></ProtectedRoute>} />
-              <Route path="/my-personas" element={<ProtectedRoute><MyPersonas /></ProtectedRoute>} />
               <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
               <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
               <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
