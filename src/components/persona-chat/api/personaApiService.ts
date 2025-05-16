@@ -26,7 +26,7 @@ export const sendMessageToPersona = async (
   try {
     // Add the new user message
     const newUserMessage: {
-      role: string;
+      role: 'user' | 'assistant';
       content: string;
       image?: string;
     } = {
