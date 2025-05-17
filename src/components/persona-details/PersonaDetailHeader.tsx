@@ -84,28 +84,6 @@ export default function PersonaDetailHeader({
   }
 
   const hasProfileImage = !!persona.profile_image_url;
-  
-  // Extract a concise image ID from the URL
-  const extractImageId = (url: string): string => {
-    if (!url) return 'None';
-    
-    // Try to extract the img- part which is the actual image ID
-    const imgMatch = url.match(/img-([a-zA-Z0-9]+)/);
-    if (imgMatch && imgMatch[1]) {
-      return imgMatch[1];
-    }
-    
-    // If no img- pattern found, use the last part of the URL path
-    const urlParts = url.split('/');
-    const lastPart = urlParts[urlParts.length - 1];
-    
-    // If the last part contains query parameters, extract just the filename
-    if (lastPart.includes('?')) {
-      return lastPart.split('?')[0];
-    }
-    
-    return lastPart || 'Unknown';
-  };
 
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
@@ -137,9 +115,9 @@ export default function PersonaDetailHeader({
             )}
           </p>
           
-          {/* Add Image ID information in a more concise format */}
+          {/* Display Persona ID instead of Image ID */}
           <p className="text-xs text-muted-foreground mt-1">
-            Image ID: {persona.profile_image_url ? extractImageId(persona.profile_image_url) : 'None'}
+            Persona ID: {persona.persona_id || 'Not available'}
           </p>
           
           <PersonaVisibilityToggle 
