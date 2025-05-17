@@ -102,22 +102,9 @@ export default function PersonaDetailHeader({
             onNameUpdate={onNameUpdated}
           />
           
-          {/* Display Image ID instead of duplicating public/private status */}
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            {isPublic ? (
-              <>
-                <Globe className="h-3 w-3" /> Public
-              </>
-            ) : (
-              <>
-                <Lock className="h-3 w-3" /> Private
-              </>
-            )}
-          </p>
-          
-          {/* Add Image ID information */}
+          {/* Display Persona ID instead of Image ID */}
           <p className="text-xs text-muted-foreground mt-1">
-            Image ID: {persona.profile_image_url ? persona.profile_image_url.split('/').pop() : 'None'}
+            Persona ID: {persona.persona_id}
           </p>
           
           <PersonaVisibilityToggle 
