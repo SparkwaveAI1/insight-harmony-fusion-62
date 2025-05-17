@@ -13,6 +13,7 @@ import {
  */
 export function usePersonaImage(personaId: string | undefined, persona: Persona | null) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isImageMigrating, setIsImageMigrating] = useState(false);
 
   // Check if an image URL is from OpenAI (temporary) rather than Supabase storage
   const isOpenAIImageUrl = (url?: string): boolean => {
@@ -27,14 +28,29 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
       return loadedPersona;
     }
 
-    console.log("Detected OpenAI temporary URL, saving to permanent storage:", loadedPersona.profile_image_url);
+    setIsImageMigrating(true);
     
     try {
-      // Use the savePersonaImage function
-      const storedImageUrl = await savePersonaImage(
+      console.log("Detected OpenAI temporary URL, saving to permanent storage:", loadedPersona.profile_image_url);
+      
+      // Use the savePersonaImage function with a timeout to prevent hanging
+      const saveImagePromise = savePersonaImage(
         loadedPersona.persona_id, 
         loadedPersona.profile_image_url
       );
+      
+      // Set a timeout to prevent hanging if the image save takes too long
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => {
+          console.warn("Image migration timed out");
+          resolve(null);
+        }, 5000);
+      });
+      
+      // Race between save operation and timeout
+      const storedImageUrl = await Promise.race([saveImagePromise, timeoutPromise]);
+      
+      setIsImageMigrating(false);
       
       if (storedImageUrl) {
         console.log("Successfully migrated OpenAI image to Supabase storage:", storedImageUrl);
@@ -51,6 +67,7 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
       };
     } catch (error) {
       console.error("Error migrating OpenAI image to Supabase storage:", error);
+      setIsImageMigrating(false);
       return {
         ...loadedPersona,
         profile_image_url: undefined // Clear the expired URL
@@ -91,6 +108,7 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
 
   return {
     isGeneratingImage,
+    isImageMigrating,
     ensureImagePersistence,
     handleImageGenerated,
     isOpenAIImageUrl

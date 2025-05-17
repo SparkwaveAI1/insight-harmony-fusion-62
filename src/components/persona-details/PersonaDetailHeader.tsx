@@ -17,6 +17,7 @@ interface PersonaDetailHeaderProps {
   persona: Persona;
   isOwner: boolean;
   isPublic: boolean;
+  isImageMigrating?: boolean;
   onVisibilityChange: (newVisibility: boolean) => void;
   onDelete: () => Promise<void>;
   onNameUpdate: (name: string) => void;
@@ -27,6 +28,7 @@ export default function PersonaDetailHeader({
   persona, 
   isOwner, 
   isPublic,
+  isImageMigrating = false,
   onVisibilityChange,
   onDelete: onPersonaDeleted,
   onNameUpdate: onNameUpdated,
@@ -92,6 +94,7 @@ export default function PersonaDetailHeader({
           persona={persona}
           isOwner={isOwner}
           isGeneratingImage={isGeneratingImage}
+          isImageMigrating={isImageMigrating}
           onGenerateImage={handleGenerateImage}
         />
         

@@ -14,7 +14,7 @@ export function usePersonaDetail() {
   const { user } = useAuth();
   
   // Use the extracted specialized hooks
-  const { persona, setPersona, isLoading, reloadPersona } = usePersonaData(personaId);
+  const { persona, setPersona, isLoading, reloadPersona, isImageMigrating } = usePersonaData(personaId);
   const { isPublic, setIsPublic, handleVisibilityChange, handlePersonaDeleted, handleNameUpdate } = usePersonaActions(personaId);
   const { isGeneratingImage, handleImageGenerated } = usePersonaImage(personaId, persona);
 
@@ -70,6 +70,7 @@ export function usePersonaDetail() {
     isPublic,
     isOwner,
     isGeneratingImage,
+    isImageMigrating,
     handleVisibilityChange: wrappedHandleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate: wrappedHandleNameUpdate,

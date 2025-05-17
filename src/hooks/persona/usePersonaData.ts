@@ -11,9 +11,10 @@ import { usePersonaImage } from "./usePersonaImage";
 export function usePersonaData(personaId: string | undefined) {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadAttempts, setLoadAttempts] = useState(0);
   
   // Use the extracted image handling hook
-  const { ensureImagePersistence, isOpenAIImageUrl } = usePersonaImage(personaId, persona);
+  const { ensureImagePersistence, isOpenAIImageUrl, isImageMigrating } = usePersonaImage(personaId, persona);
 
   const loadPersona = useCallback(async (id: string) => {
     setIsLoading(true);
@@ -30,6 +31,9 @@ export function usePersonaData(personaId: string | undefined) {
           if (isOpenAIImageUrl(data.profile_image_url)) {
             console.log("OpenAI image URL detected, attempting to migrate");
             try {
+              // Set persona immediately with current data to prevent loading state
+              setPersona(data);
+              // Then update it when the image migration completes
               const updatedPersona = await ensureImagePersistence(data);
               setPersona(updatedPersona);
             } catch (imageError) {
@@ -52,10 +56,18 @@ export function usePersonaData(personaId: string | undefined) {
     } catch (error) {
       console.error("Error loading persona:", error);
       toast.error("Failed to load persona details");
+      
+      // If we've tried less than 3 times and still failing, try again
+      if (loadAttempts < 3) {
+        setLoadAttempts(prev => prev + 1);
+        setTimeout(() => {
+          if (personaId) loadPersona(personaId);
+        }, 1000);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [ensureImagePersistence, isOpenAIImageUrl]);
+  }, [ensureImagePersistence, isOpenAIImageUrl, loadAttempts]);
 
   useEffect(() => {
     if (personaId) {
@@ -67,6 +79,7 @@ export function usePersonaData(personaId: string | undefined) {
     persona,
     setPersona,
     isLoading,
+    isImageMigrating,
     reloadPersona: personaId ? () => loadPersona(personaId) : undefined
   };
 }

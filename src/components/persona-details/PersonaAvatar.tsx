@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, RefreshCw } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Persona } from "@/services/persona/types";
 
@@ -9,26 +9,31 @@ interface PersonaAvatarProps {
   isOwner: boolean;
   isGeneratingImage: boolean;
   onGenerateImage: () => void;
+  isImageMigrating?: boolean;
 }
 
 export default function PersonaAvatar({ 
   persona, 
   isOwner, 
-  isGeneratingImage, 
+  isGeneratingImage,
+  isImageMigrating = false,
   onGenerateImage 
 }: PersonaAvatarProps) {
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(persona.profile_image_url);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Reset image error state and update URL when persona changes
   useEffect(() => {
     if (persona.profile_image_url) {
       console.log("PersonaAvatar: Updating image URL:", persona.profile_image_url);
       setImageError(false);
+      setImageLoaded(false);
       setImageUrl(persona.profile_image_url);
     } else {
       setImageError(true);
       setImageUrl(undefined);
+      setImageLoaded(false);
     }
   }, [persona.persona_id, persona.profile_image_url]);
   
@@ -36,32 +41,40 @@ export default function PersonaAvatar({
     console.error("Failed to load persona image:", imageUrl);
     setImageError(true);
     setImageUrl(undefined);
+    setImageLoaded(false);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
   };
   
   const hasValidImage = imageUrl && !imageError;
+  const isProcessing = isGeneratingImage || isImageMigrating;
   
   return (
-    <div className="relative cursor-pointer group" onClick={isOwner ? onGenerateImage : undefined}>
-      <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold">
+    <div className="relative cursor-pointer group" onClick={isOwner && !isProcessing ? onGenerateImage : undefined}>
+      <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold transition-opacity">
         {hasValidImage ? (
           <AvatarImage 
             src={imageUrl} 
             alt={persona.name} 
             onError={handleImageError}
-            className="object-cover"
+            onLoad={handleImageLoad}
+            className={`object-cover ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
           />
         ) : (
           <AvatarFallback>{persona.name.charAt(0).toUpperCase()}</AvatarFallback>
         )}
       </Avatar>
       
-      {isGeneratingImage && (
+      {isProcessing && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full">
           <div className="animate-spin h-8 w-8 border-3 border-white border-t-transparent rounded-full"></div>
         </div>
       )}
       
-      {isOwner && !isGeneratingImage && (
+      {isOwner && !isProcessing && (
         <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
           <div className="text-white flex flex-col items-center">
             <ImageIcon className="h-6 w-6" />
