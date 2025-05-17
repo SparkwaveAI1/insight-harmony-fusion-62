@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,14 +29,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (event, currentSession) => {
         console.log("Auth state changed:", event);
         
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setSession(null);
-        } else if (currentSession) {
-          setUser(currentSession.user);
-          setSession(currentSession);
-        }
-        
+        // Handle auth state changes synchronously
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
         setIsLoading(false);
       }
     );
@@ -48,15 +42,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Checking for existing session...");
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         
-        if (existingSession) {
-          console.log("Found existing session:", existingSession.user?.email);
-          setUser(existingSession.user);
+        // Don't set state if listener already updated it
+        if (isLoading) {
+          console.log("Setting initial session state:", !!existingSession);
           setSession(existingSession);
-        } else {
-          console.log("No existing session found");
+          setUser(existingSession?.user || null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       } catch (error) {
         console.error("Error checking auth session:", error);
         setIsLoading(false);

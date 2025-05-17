@@ -1,172 +1,276 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import Button from "@/components/ui-custom/Button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
-import { Toaster } from "@/components/ui/toaster";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+
+const authFormSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+});
+
+type AuthFormValues = z.infer<typeof authFormSchema>;
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
-  const { user, signIn, signUp, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, signUp, user, forgotPassword } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isResetMode = searchParams.get('reset') === 'true';
 
-  // Handle redirection if user is already logged in
+  const form = useForm<AuthFormValues>({
+    resolver: zodResolver(authFormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const forgotPasswordForm = useForm<ForgotPasswordValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  // Add debug logging for user state
   useEffect(() => {
     console.log("Auth page - Current user state:", user);
+    
+    // Redirect if already logged in
     if (user) {
       console.log("User is already authenticated, redirecting to home page");
-      
-      // Check if we have a saved redirect path
-      const redirectPath = sessionStorage.getItem('redirectAfterLogin') || "/";
-      sessionStorage.removeItem('redirectAfterLogin'); // Clear the stored path
-      
-      navigate(redirectPath);
+      navigate("/");
     }
   }, [user, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: AuthFormValues) => {
     setAuthError(null);
-    setIsSubmitting(true);
-    
+    setIsLoading(true);
     try {
-      await signIn(email, password);
-      // Auth context's useEffect will handle the redirect
+      console.log(`Attempting to ${activeTab === "login" ? "sign in" : "sign up"} with email:`, values.email);
+      
+      if (activeTab === "login") {
+        await signIn(values.email, values.password);
+        console.log("Sign in successful, navigating to home page");
+        navigate("/");
+      } else {
+        await signUp(values.email, values.password);
+        console.log("Sign up successful");
+        // With email confirmation disabled, we can now redirect to login
+        setActiveTab("login");
+        toast.success("Account created successfully! You can now sign in.");
+      }
     } catch (error: any) {
-      setAuthError(error.message || "Failed to sign in");
+      console.error("Authentication error:", error);
+      setAuthError(error.message || "Authentication failed. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onForgotPassword = async (values: ForgotPasswordValues) => {
     setAuthError(null);
-    setIsSubmitting(true);
-    
+    setIsLoading(true);
     try {
-      await signUp(email, password);
-      // After signup, we'll redirect to home or prompt to sign in
-      setAuthError(null);
+      console.log("Requesting password reset for:", values.email);
+      await forgotPassword(values.email);
+      setShowForgotPassword(false);
     } catch (error: any) {
-      setAuthError(error.message || "Failed to sign up");
+      console.error("Password reset error:", error);
+      setAuthError(error.message || "Password reset failed. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
+
+  // If user is already authenticated, don't render the page
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow flex items-center justify-center py-12 px-4">
-        <div className="w-full max-w-md">
-          <Card>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold">Sign in to your account</CardTitle>
-              <CardDescription>Enter your email and password to sign in</CardDescription>
-            </CardHeader>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
+      <main className="flex-grow flex items-center justify-center py-16 px-4">
+        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-center mb-6">Welcome to PersonaAI</h1>
+          
+          {authError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
+          
+          {showForgotPassword ? (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-center mb-4">Reset Password</h2>
+              <p className="text-sm text-gray-600 text-center mb-6">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+              <Form {...forgotPasswordForm}>
+                <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPassword)} className="space-y-4">
+                  <FormField
+                    control={forgotPasswordForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="you@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowForgotPassword(false)}
+                    >
+                      Back to Login
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      isLoading={isLoading}
+                    >
+                      Send Reset Link
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          ) : (
+            <Tabs 
+              defaultValue="login" 
+              value={activeTab} 
+              onValueChange={(v) => setActiveTab(v as "login" | "signup")}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2 w-full mb-6">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn}>
-                  <CardContent className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="example@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
+              <TabsContent value="login">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="text-right">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input 
-                        id="password" 
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    
-                    {authError && (
-                      <div className="text-sm text-red-500 py-2">
-                        {authError}
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full" type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Signing in..." : "Sign In"}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      isLoading={isLoading}
+                    >
+                      Sign In
                     </Button>
-                  </CardFooter>
-                </form>
+                  </form>
+                </Form>
               </TabsContent>
               
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp}>
-                  <CardContent className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input 
-                        id="signup-email" 
-                        type="email" 
-                        placeholder="example@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      <p>Creating an account allows you to save and manage your personas.</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input 
-                        id="signup-password" 
-                        type="password" 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Password must be at least 6 characters
-                      </p>
-                    </div>
-                    
-                    {authError && (
-                      <div className="text-sm text-red-500 py-2">
-                        {authError}
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full" type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? "Creating account..." : "Create account"}
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      isLoading={isLoading}
+                    >
+                      Create Account
                     </Button>
-                  </CardFooter>
-                </form>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
-          </Card>
+          )}
         </div>
       </main>
       <Footer />
-      <Toaster />
     </div>
   );
 };
