@@ -51,6 +51,9 @@ serve(async (req) => {
                 description.toLowerCase().includes("skinny") || 
                 description.toLowerCase().includes("underweight")) {
         bodyType = "thin";
+      } else {
+        // If not specified, randomly assign overweight to ~50% of personas to match US demographics
+        bodyType = Math.random() < 0.5 ? "slightly overweight" : "average weight";
       }
       
       // Check for common health conditions
@@ -72,14 +75,17 @@ serve(async (req) => {
       
       // Check for emotional states
       const emotionalKeywords = {
-        "depression": "with a sad, tired expression",
-        "depressed": "with a sad, tired expression",
-        "sad": "with a sad expression",
-        "anxious": "with a worried expression",
-        "anxiety": "with a worried expression",
-        "tired": "looking tired",
-        "exhausted": "looking exhausted",
-        "stressed": "looking stressed"
+        "depression": "with a slightly sad expression",
+        "depressed": "with a slightly sad expression",
+        "sad": "with a slightly sad expression",
+        "anxious": "with a slightly worried expression",
+        "anxiety": "with a slightly worried expression",
+        "tired": "looking slightly tired",
+        "exhausted": "looking slightly tired",
+        "stressed": "looking slightly stressed",
+        "happy": "with a warm smile",
+        "cheerful": "with a friendly smile",
+        "optimistic": "with a positive expression"
       };
       
       Object.entries(emotionalKeywords).forEach(([keyword, state]) => {
@@ -87,90 +93,97 @@ serve(async (req) => {
           emotionalState = state;
         }
       });
+      
+      // Default to neutral expression if none specified
+      if (!emotionalState) {
+        emotionalState = "with a neutral expression";
+      }
     }
     
-    // Social aspects that might be visible
-    let socialDescription = "";
-    if (description.toLowerCase().includes("trouble socially") || 
-        description.toLowerCase().includes("not many friends") || 
-        description.toLowerCase().includes("lonely") ||
-        description.toLowerCase().includes("awkward")) {
-      socialDescription = "with an uncomfortable, slightly awkward expression";
-    }
-    
-    // Determine appropriate clothing based on occupation
+    // Determine appropriate clothing based on persona traits and occupation
     let clothing = "";
     if (occupation) {
-      // Professional occupations
-      if (occupation.toLowerCase().includes("doctor") || 
-          occupation.toLowerCase().includes("physician") || 
-          occupation.toLowerCase().includes("surgeon")) {
-        clothing = "wearing professional medical attire like a white coat over business casual clothing";
-      } 
-      else if (occupation.toLowerCase().includes("lawyer") || 
-               occupation.toLowerCase().includes("attorney") || 
-               occupation.toLowerCase().includes("executive") ||
-               occupation.toLowerCase().includes("manager") ||
-               occupation.toLowerCase().includes("business")) {
-        clothing = "wearing a professional business suit with a button-up shirt and tie/blouse";
-      }
-      else if (occupation.toLowerCase().includes("teacher") || 
-               occupation.toLowerCase().includes("professor")) {
-        clothing = "wearing professional casual attire with a collared shirt/blouse";
-      }
-      else if (occupation.toLowerCase().includes("chef") || 
-               occupation.toLowerCase().includes("cook")) {
-        clothing = "wearing chef's attire including a chef coat";
-      }
-      else if (occupation.toLowerCase().includes("police") || 
-               occupation.toLowerCase().includes("officer") ||
-               occupation.toLowerCase().includes("security")) {
-        clothing = "in a professional uniform with badge and appropriate insignia";
-      }
-      else if (occupation.toLowerCase().includes("construction") || 
-               occupation.toLowerCase().includes("mechanic") ||
-               occupation.toLowerCase().includes("technician") ||
-               occupation.toLowerCase().includes("engineer") ||
-               occupation.toLowerCase().includes("electrician")) {
-        clothing = "wearing appropriate workwear including a shirt and safety equipment";
-      }
-      else if (occupation.toLowerCase().includes("athlete") || 
-               occupation.toLowerCase().includes("trainer") ||
-               occupation.toLowerCase().includes("fitness")) {
-        clothing = "in athletic clothing including a proper shirt/top and athletic pants/shorts";
-      }
-      else if (occupation.toLowerCase().includes("artist") || 
-               occupation.toLowerCase().includes("creative")) {
-        clothing = "in casual but stylish clothing, fully dressed";
-      }
-      else if (occupation.toLowerCase().includes("farmer") || 
-               occupation.toLowerCase().includes("rancher")) {
-        clothing = "in practical work clothing, long-sleeved shirt and jeans";
-      }
-      else if (occupation.toLowerCase().includes("driver") || 
-               occupation.toLowerCase().includes("trucker")) {
-        clothing = "in casual but practical clothing, wearing a collared shirt";
-      }
-      else {
-        // Default for other occupations
-        clothing = "in appropriate professional clothing including a button-up shirt/blouse";
+      if (gender.toLowerCase() === "female" || gender.toLowerCase().includes("woman")) {
+        // Professional female attire
+        if (occupation.toLowerCase().includes("doctor") || 
+            occupation.toLowerCase().includes("physician") || 
+            occupation.toLowerCase().includes("surgeon")) {
+          clothing = "wearing professional women's medical attire like a white coat over a blouse";
+        } 
+        else if (occupation.toLowerCase().includes("lawyer") || 
+                 occupation.toLowerCase().includes("attorney") || 
+                 occupation.toLowerCase().includes("executive") ||
+                 occupation.toLowerCase().includes("manager")) {
+          clothing = "wearing a professional women's business suit or blazer with a blouse";
+        }
+        else if (occupation.toLowerCase().includes("teacher") || 
+                 occupation.toLowerCase().includes("professor")) {
+          clothing = "wearing professional casual women's attire with a blouse";
+        }
+        else if (occupation.toLowerCase().includes("chef") || 
+                 occupation.toLowerCase().includes("cook")) {
+          clothing = "wearing chef's attire adapted for women";
+        }
+        else if (occupation.toLowerCase().includes("police") || 
+                 occupation.toLowerCase().includes("officer") ||
+                 occupation.toLowerCase().includes("security")) {
+          clothing = "in a women's professional uniform appropriate for law enforcement";
+        }
+        else {
+          // Default for other occupations
+          clothing = "in appropriate professional women's attire including a blouse or top";
+        }
+      } else {
+        // Professional male attire
+        if (occupation.toLowerCase().includes("doctor") || 
+            occupation.toLowerCase().includes("physician") || 
+            occupation.toLowerCase().includes("surgeon")) {
+          clothing = "wearing professional men's medical attire like a white coat over a dress shirt";
+        } 
+        else if (occupation.toLowerCase().includes("lawyer") || 
+                 occupation.toLowerCase().includes("attorney") || 
+                 occupation.toLowerCase().includes("executive") ||
+                 occupation.toLowerCase().includes("manager")) {
+          clothing = "wearing a professional men's business suit with a button-up shirt and tie";
+        }
+        else if (occupation.toLowerCase().includes("teacher") || 
+                 occupation.toLowerCase().includes("professor")) {
+          clothing = "wearing professional casual men's attire with a collared shirt";
+        }
+        else if (occupation.toLowerCase().includes("chef") || 
+                 occupation.toLowerCase().includes("cook")) {
+          clothing = "wearing men's chef attire";
+        }
+        else if (occupation.toLowerCase().includes("police") || 
+                 occupation.toLowerCase().includes("officer") ||
+                 occupation.toLowerCase().includes("security")) {
+          clothing = "in a men's professional uniform appropriate for law enforcement";
+        }
+        else {
+          // Default for other occupations
+          clothing = "in appropriate professional men's attire including a collared shirt";
+        }
       }
     } else {
       // Generic clothing if no occupation is specified
-      clothing = "dressed in proper casual attire including a shirt/top and pants/skirt";
+      if (gender.toLowerCase() === "female" || gender.toLowerCase().includes("woman")) {
+        clothing = "dressed in casual yet professional women's attire";
+      } else {
+        clothing = "dressed in casual yet professional men's attire";
+      }
     }
     
-    // Build the base prompt - using "photograph" and emphasizing realism
-    let imagePrompt = `A highly realistic photograph of a ${age}-year-old ${ethnicity} ${gender}`;
+    // Build the base prompt - using "headshot photograph" and emphasizing realism
+    let imagePrompt = `Professional headshot photograph of a ${age}-year-old ${ethnicity} ${gender}`;
     
     // Add body type if specified
     if (bodyType) {
-      imagePrompt += ` who is ${bodyType}`;
+      imagePrompt += ` with a ${bodyType} build`;
     }
     
     // Add occupation if available
     if (occupation) {
-      imagePrompt += ` working as a ${occupation}`;
+      imagePrompt += ` who works as a ${occupation}`;
     }
     
     // Add clothing description
@@ -186,28 +199,16 @@ serve(async (req) => {
       imagePrompt += `, ${emotionalState}`;
     }
     
-    // Add social characteristics
-    if (socialDescription) {
-      imagePrompt += `, ${socialDescription}`;
+    // Add specific instructions to ensure photorealistic, headshot-style portrait
+    imagePrompt += `. IMPORTANT: Create a high-quality, PHOTOREALISTIC professional headshot portrait with a plain, neutral background. Use photographic realism like a professional LinkedIn profile photo. The image must have proper studio lighting, realistic skin texture, and natural facial features. The photo should be well-composed with the subject's face being the main focus, with shoulders visible. THE SUBJECT MUST BE APPROPRIATELY DRESSED FOR THEIR PROFESSION. No cartoon style, no illustration style, no exaggerated features.`;
+    
+    // Additional specifics for body type
+    if (bodyType === "overweight" || bodyType === "slightly overweight") {
+      imagePrompt += " The person should have a realistic face with appropriate fullness that suggests their weight, without exaggeration.";
     }
     
-    // Add specific instructions to ensure photorealistic, non-cartoonish representation WITH CLOTHING
-    imagePrompt += `. IMPORTANT: Create a PHOTOREALISTIC portrait, absolutely not cartoonish or illustrated. Use photographic realism like a high-quality professional headshot or passport photo. The image must be completely realistic with proper lighting, skin texture, and natural facial features. Show the person with ${bodyType || "average"} body type in a natural pose, FULLY CLOTHED in appropriate attire for their profession or casual setting. THE PERSON MUST BE WEARING PROPER CLOTHING THAT COVERS THEIR TORSO AND BODY APPROPRIATELY.`;
-    
-    if (bodyType === "overweight") {
-      imagePrompt += " The person should be genuinely overweight with visible weight in the face and body, but avoid any exaggeration or caricature.";
-    }
-    
-    if (emotionalState) {
-      imagePrompt += ` The facial expression should naturally show ${emotionalState.replace(/with a |looking /g, "")}.`;
-    }
-    
-    if (healthConditions.length > 0) {
-      imagePrompt += " Health conditions should be subtly visible in their appearance without exaggeration.";
-    }
-
-    // Add specifics about photo quality and style
-    imagePrompt += " The photograph should look like it was taken with a professional camera with natural lighting, shallow depth of field, and realistic colors. Absolutely NO cartoon style, NO illustration style, NO exaggerated features, and NO NUDITY WHATSOEVER - ensure the person is appropriately dressed for their context.";
+    // Add specifics about photo quality
+    imagePrompt += " The photograph should look like it was taken by a professional portrait photographer with clean, natural lighting, shallow depth of field, and accurate skin tones. The background should be simple and neutral (like light gray, soft blue, or beige) to make the subject stand out.";
     
     console.log("Generated prompt:", imagePrompt);
     
