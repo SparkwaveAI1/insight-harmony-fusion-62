@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -101,8 +102,9 @@ export default function PersonaDetailHeader({
             onNameUpdate={onNameUpdated}
           />
           
+          {/* Display Image ID instead of duplicating public/private status */}
           <p className="text-sm text-muted-foreground flex items-center gap-2">
-            {persona.is_public ? (
+            {isPublic ? (
               <>
                 <Globe className="h-3 w-3" /> Public
               </>
@@ -111,6 +113,11 @@ export default function PersonaDetailHeader({
                 <Lock className="h-3 w-3" /> Private
               </>
             )}
+          </p>
+          
+          {/* Add Image ID information */}
+          <p className="text-xs text-muted-foreground mt-1">
+            Image ID: {persona.profile_image_url ? persona.profile_image_url.split('/').pop() : 'None'}
           </p>
           
           <PersonaVisibilityToggle 
