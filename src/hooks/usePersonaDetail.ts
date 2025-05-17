@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
+import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
 
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
@@ -15,6 +16,43 @@ export function usePersonaDetail() {
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
 
+  // Check if an image URL is from OpenAI (temporary) rather than Supabase storage
+  const isOpenAIImageUrl = (url?: string): boolean => {
+    if (!url) return false;
+    return url.includes('oaidalleapiprodscus.blob.core') || 
+           url.includes('api.openai.com');
+  };
+
+  // Ensure OpenAI images are saved to Supabase storage
+  const ensureImagePersistence = async (loadedPersona: Persona): Promise<Persona> => {
+    if (!loadedPersona.profile_image_url || !isOpenAIImageUrl(loadedPersona.profile_image_url)) {
+      return loadedPersona;
+    }
+
+    console.log("Detected OpenAI temporary URL, saving to permanent storage:", loadedPersona.profile_image_url);
+    
+    try {
+      const storedImageUrl = await savePersonaProfileImage(
+        loadedPersona.persona_id, 
+        loadedPersona.profile_image_url
+      );
+      
+      if (storedImageUrl) {
+        console.log("Successfully migrated OpenAI image to Supabase storage:", storedImageUrl);
+        return {
+          ...loadedPersona,
+          profile_image_url: storedImageUrl
+        };
+      }
+      
+      console.error("Failed to migrate OpenAI image to Supabase storage");
+      return loadedPersona;
+    } catch (error) {
+      console.error("Error migrating OpenAI image to Supabase storage:", error);
+      return loadedPersona;
+    }
+  };
+
   const loadPersona = useCallback(async (id: string) => {
     setIsLoading(true);
     try {
@@ -23,7 +61,14 @@ export function usePersonaDetail() {
       if (data) {
         console.log("Persona data loaded:", data);
         console.log("Profile image URL:", data.profile_image_url);
-        setPersona(data);
+        
+        // Check if the image URL is from OpenAI and needs to be migrated to Supabase
+        if (isOpenAIImageUrl(data.profile_image_url)) {
+          const updatedPersona = await ensureImagePersistence(data);
+          setPersona(updatedPersona);
+        } else {
+          setPersona(data);
+        }
       } else {
         console.error("Persona not found with ID:", id);
         toast.error("Persona not found");
