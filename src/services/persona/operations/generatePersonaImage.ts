@@ -34,9 +34,10 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
       return null;
     }
     
-    console.log("Successfully generated image URL:", response.image_url);
+    console.log("Successfully generated image URL from OpenAI:", response.image_url);
     
     // Save the generated image to Supabase storage and update the persona record
+    console.log("Attempting to save image to Supabase storage...");
     const storedImageUrl = await savePersonaProfileImage(persona.persona_id, response.image_url);
     
     if (!storedImageUrl) {

@@ -32,7 +32,9 @@ const PersonaDetail = () => {
   // Ensure storage buckets exist when the component mounts
   useEffect(() => {
     const setupStorage = async () => {
-      await ensureStorageBuckets();
+      console.log("PersonaDetail: Ensuring storage buckets exist...");
+      const result = await ensureStorageBuckets();
+      console.log("Storage buckets setup result:", result);
     };
     setupStorage();
   }, []);

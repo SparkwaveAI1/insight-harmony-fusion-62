@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { updatePersonaProfileImageUrl } from '@/services/persona/operations/updatePersona';
+import { toast } from 'sonner';
 
 // Ensure the required storage buckets exist
 export async function ensurePersonaImageBucket(): Promise<boolean> {
@@ -66,8 +67,13 @@ export async function uploadPersonaImageFromUrl(
       return null;
     }
     
-    // Fetch the image from the URL
-    const response = await fetch(imageUrl);
+    // Fetch the image from the URL with appropriate headers
+    const response = await fetch(imageUrl, {
+      headers: {
+        'Accept': 'image/*'
+      }
+    });
+    
     if (!response.ok) {
       console.error(`Failed to fetch image from URL: ${response.status}`);
       throw new Error(`Failed to fetch image from URL: ${response.status}`);
@@ -80,8 +86,16 @@ export async function uploadPersonaImageFromUrl(
       throw new Error(`URL does not point to an image. Content-Type: ${contentType}`);
     }
     
+    console.log('Successfully downloaded image from OpenAI, content type:', contentType);
+    
     // Convert the image to a blob
     const imageBlob = await response.blob();
+    console.log('Image blob size:', imageBlob.size);
+    
+    if (imageBlob.size === 0) {
+      console.error('Downloaded image has zero size');
+      throw new Error('Downloaded image has zero size');
+    }
     
     // Generate a unique file name
     const fileName = `${personaId}_${uuidv4()}.png`;
@@ -99,6 +113,8 @@ export async function uploadPersonaImageFromUrl(
       console.error('Error uploading persona image to storage:', error);
       throw error;
     }
+    
+    console.log('Successfully uploaded image to Supabase storage:', data.path);
     
     // Get the public URL for the uploaded image
     const { data: urlData } = supabase

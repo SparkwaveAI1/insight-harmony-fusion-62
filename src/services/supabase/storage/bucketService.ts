@@ -25,6 +25,19 @@ export async function createStorageBucket(
   try {
     console.log(`Creating storage bucket: ${name} (public: ${isPublic})`);
     
+    // First check if the bucket already exists
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    if (listError) {
+      console.error(`Error checking if bucket ${name} exists:`, listError);
+    } else {
+      const bucketExists = buckets?.some(bucket => bucket.name === name);
+      if (bucketExists) {
+        console.log(`Bucket ${name} already exists, no need to create it`);
+        return true;
+      }
+    }
+    
+    // Create the bucket if it doesn't already exist
     const { error } = await supabase.storage.createBucket(name, {
       public: isPublic
     });
@@ -88,6 +101,8 @@ export async function ensureStorageBuckets(): Promise<boolean> {
       return await createStorageBuckets();
     }
     
+    console.log('Existing buckets:', existingBuckets?.map(b => b.name) || []);
+    
     // Create missing buckets
     const existingBucketNames = existingBuckets?.map(b => b.name) || [];
     const missingBuckets = STORAGE_BUCKETS.filter(
@@ -99,7 +114,7 @@ export async function ensureStorageBuckets(): Promise<boolean> {
       return true;
     }
     
-    console.log(`Creating ${missingBuckets.length} missing storage buckets...`);
+    console.log(`Creating ${missingBuckets.length} missing storage buckets:`, missingBuckets.map(b => b.name));
     
     const results = await Promise.all(
       missingBuckets.map(bucket => 
