@@ -62,7 +62,7 @@ export default function PersonaAvatar({
           <div className="text-white flex flex-col items-center">
             <ImageIcon className="h-6 w-6" />
             <span className="text-xs mt-1">
-              {hasValidImage ? "Change Image" : "Generate Image"}
+              {hasValidImage ? "Regenerate Image" : "Generate Image"}
             </span>
           </div>
         </div>

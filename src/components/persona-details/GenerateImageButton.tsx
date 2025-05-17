@@ -15,8 +15,8 @@ export default function GenerateImageButton({
   onGenerate,
   hasImage
 }: GenerateImageButtonProps) {
-  // Don't show if not visible or if already has an image (and not currently generating)
-  if (!isVisible || (hasImage && !isGenerating)) return null;
+  // Remove the condition that hides the button if the persona already has an image
+  if (!isVisible) return null;
   
   return (
     <Button
@@ -31,7 +31,7 @@ export default function GenerateImageButton({
       ) : (
         <ImageIcon className="h-4 w-4" />
       )}
-      Generate Image
+      {hasImage ? "Regenerate Image" : "Generate Image"}
     </Button>
   );
 }

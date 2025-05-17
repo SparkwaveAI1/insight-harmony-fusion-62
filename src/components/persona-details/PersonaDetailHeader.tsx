@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -121,6 +120,7 @@ export default function PersonaDetailHeader({
             onVisibilityChange={onVisibilityChange} 
           />
           
+          {/* Always show the generate/regenerate image button for owners */}
           <GenerateImageButton
             isVisible={isOwner}
             isGenerating={isGeneratingImage}
