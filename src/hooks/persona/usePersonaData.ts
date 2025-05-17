@@ -12,17 +12,24 @@ export function usePersonaData(personaId: string | undefined) {
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   
   // Use the extracted image handling hook
   const { ensureImagePersistence, isOpenAIImageUrl, isImageMigrating } = usePersonaImage(personaId, persona);
 
   const loadPersona = useCallback(async (id: string) => {
+    if (isRetrying) return;
+    
     setIsLoading(true);
     try {
       console.log("Loading persona with ID:", id);
       const data = await getPersonaByPersonaId(id);
+      
       if (data) {
         console.log("Persona data loaded:", data);
+        
+        // Set persona immediately with current data
+        setPersona(data);
         
         // Check if the image URL is potentially expired
         if (data.profile_image_url) {
@@ -30,24 +37,34 @@ export function usePersonaData(personaId: string | undefined) {
           
           if (isOpenAIImageUrl(data.profile_image_url)) {
             console.log("OpenAI image URL detected, attempting to migrate");
+            
             try {
-              // Set persona immediately with current data to prevent loading state
-              setPersona(data);
-              // Then update it when the image migration completes
-              const updatedPersona = await ensureImagePersistence(data);
-              setPersona(updatedPersona);
+              // Try to migrate the image with a timeout
+              const timeoutPromise = new Promise<null>((_, reject) => {
+                setTimeout(() => reject(new Error("Image migration timed out")), 3000);
+              });
+              
+              // Race between the actual migration and the timeout
+              const updatedPersona = await Promise.race([
+                ensureImagePersistence(data),
+                timeoutPromise
+              ]);
+              
+              if (updatedPersona) {
+                setPersona(updatedPersona);
+              }
             } catch (imageError) {
-              console.error("Failed to process image, continuing with persona data:", imageError);
-              setPersona({
-                ...data,
-                profile_image_url: undefined // Clear potentially expired URL
+              console.error("Failed to process image, clearing URL:", imageError);
+              // Update the persona with a cleared image URL
+              setPersona(prevPersona => {
+                if (!prevPersona) return data;
+                return {
+                  ...prevPersona,
+                  profile_image_url: undefined // Clear potentially expired URL
+                };
               });
             }
-          } else {
-            setPersona(data);
           }
-        } else {
-          setPersona(data);
         }
       } else {
         console.error("Persona not found with ID:", id);
@@ -57,17 +74,28 @@ export function usePersonaData(personaId: string | undefined) {
       console.error("Error loading persona:", error);
       toast.error("Failed to load persona details");
       
-      // If we've tried less than 3 times and still failing, try again
+      // If we've tried less than 3 times and still failing, try again after a delay
       if (loadAttempts < 3) {
         setLoadAttempts(prev => prev + 1);
+        setIsRetrying(true);
+        
         setTimeout(() => {
+          setIsRetrying(false);
           if (personaId) loadPersona(personaId);
-        }, 1000);
+        }, 1500);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [ensureImagePersistence, isOpenAIImageUrl, loadAttempts]);
+  }, [ensureImagePersistence, isOpenAIImageUrl, loadAttempts, isRetrying, personaId]);
+
+  // Reset attempts when personaId changes
+  useEffect(() => {
+    if (personaId) {
+      setLoadAttempts(0);
+      setIsRetrying(false);
+    }
+  }, [personaId]);
 
   useEffect(() => {
     if (personaId) {

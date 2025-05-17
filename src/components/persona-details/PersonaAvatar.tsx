@@ -22,6 +22,7 @@ export default function PersonaAvatar({
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(persona.profile_image_url);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageAttempts, setImageAttempts] = useState(0);
   
   // Reset image error state and update URL when persona changes
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function PersonaAvatar({
       setImageError(false);
       setImageLoaded(false);
       setImageUrl(persona.profile_image_url);
+      setImageAttempts(0);
     } else {
       setImageError(true);
       setImageUrl(undefined);
@@ -39,6 +41,15 @@ export default function PersonaAvatar({
   
   const handleImageError = () => {
     console.error("Failed to load persona image:", imageUrl);
+    
+    // Increment attempts and try once more with a cache-busting URL
+    if (imageAttempts === 0 && imageUrl) {
+      console.log("Attempting to reload image with cache busting");
+      setImageAttempts(prev => prev + 1);
+      setImageUrl(`${imageUrl}?t=${Date.now()}`);
+      return;
+    }
+    
     setImageError(true);
     setImageUrl(undefined);
     setImageLoaded(false);

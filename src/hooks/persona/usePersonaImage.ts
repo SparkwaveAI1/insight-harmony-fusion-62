@@ -44,13 +44,11 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
         setTimeout(() => {
           console.warn("Image migration timed out");
           resolve(null);
-        }, 5000);
+        }, 3000);
       });
       
       // Race between save operation and timeout
       const storedImageUrl = await Promise.race([saveImagePromise, timeoutPromise]);
-      
-      setIsImageMigrating(false);
       
       if (storedImageUrl) {
         console.log("Successfully migrated OpenAI image to Supabase storage:", storedImageUrl);
@@ -67,11 +65,12 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
       };
     } catch (error) {
       console.error("Error migrating OpenAI image to Supabase storage:", error);
-      setIsImageMigrating(false);
       return {
         ...loadedPersona,
         profile_image_url: undefined // Clear the expired URL
       };
+    } finally {
+      setIsImageMigrating(false);
     }
   };
 
@@ -86,13 +85,18 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
       const imageUrl = await generatePersonaImage(persona);
       
       if (imageUrl) {
-        toast.success("Profile image generated and saved successfully");
+        toast.success("Profile image generated successfully");
         
-        // Force reload the persona to ensure we have the updated image URL
-        const refreshedPersona = await getPersonaByPersonaId(personaId);
-        console.log("Refreshed persona data with new image:", refreshedPersona?.profile_image_url);
-        
-        return refreshedPersona?.profile_image_url || imageUrl;
+        try {
+          // Force reload the persona to ensure we have the updated image URL
+          const refreshedPersona = await getPersonaByPersonaId(personaId);
+          console.log("Refreshed persona data with new image:", refreshedPersona?.profile_image_url);
+          
+          return refreshedPersona?.profile_image_url || imageUrl;
+        } catch (error) {
+          console.error("Error refreshing persona data:", error);
+          return imageUrl;
+        }
       } else {
         toast.error("Failed to generate profile image");
         return null;

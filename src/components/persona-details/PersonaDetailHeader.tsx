@@ -68,6 +68,14 @@ export default function PersonaDetailHeader({
       toast.error("An error occurred while generating the profile image");
     } finally {
       setIsGeneratingImage(false);
+      
+      // Add a short timeout to refresh the page after image generation
+      setTimeout(() => {
+        // Force refresh by changing the URL slightly and then back
+        const currentUrl = window.location.href;
+        navigate(currentUrl + '?refresh=true');
+        setTimeout(() => navigate(currentUrl), 100);
+      }, 500);
     }
   };
 
@@ -120,7 +128,7 @@ export default function PersonaDetailHeader({
           {/* Always show the generate/regenerate image button for owners */}
           <GenerateImageButton
             isVisible={isOwner}
-            isGenerating={isGeneratingImage}
+            isGenerating={isGeneratingImage || isImageMigrating}
             onGenerate={handleGenerateImage}
             hasImage={hasProfileImage}
           />
