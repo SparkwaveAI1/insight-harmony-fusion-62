@@ -22,12 +22,26 @@ export function usePersonaData(personaId: string | undefined) {
       const data = await getPersonaByPersonaId(id);
       if (data) {
         console.log("Persona data loaded:", data);
-        console.log("Profile image URL:", data.profile_image_url);
         
-        // Check if the image URL is from OpenAI and needs to be migrated to Supabase
-        if (isOpenAIImageUrl(data.profile_image_url)) {
-          const updatedPersona = await ensureImagePersistence(data);
-          setPersona(updatedPersona);
+        // Check if the image URL is potentially expired
+        if (data.profile_image_url) {
+          console.log("Profile image URL:", data.profile_image_url);
+          
+          if (isOpenAIImageUrl(data.profile_image_url)) {
+            console.log("OpenAI image URL detected, attempting to migrate");
+            try {
+              const updatedPersona = await ensureImagePersistence(data);
+              setPersona(updatedPersona);
+            } catch (imageError) {
+              console.error("Failed to process image, continuing with persona data:", imageError);
+              setPersona({
+                ...data,
+                profile_image_url: undefined // Clear potentially expired URL
+              });
+            }
+          } else {
+            setPersona(data);
+          }
         } else {
           setPersona(data);
         }
@@ -52,6 +66,7 @@ export function usePersonaData(personaId: string | undefined) {
   return {
     persona,
     setPersona,
-    isLoading
+    isLoading,
+    reloadPersona: personaId ? () => loadPersona(personaId) : undefined
   };
 }

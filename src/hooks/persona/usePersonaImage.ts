@@ -45,10 +45,16 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
       }
       
       console.error("Failed to migrate OpenAI image to Supabase storage");
-      return loadedPersona;
+      return {
+        ...loadedPersona,
+        profile_image_url: undefined // Clear the expired URL
+      };
     } catch (error) {
       console.error("Error migrating OpenAI image to Supabase storage:", error);
-      return loadedPersona;
+      return {
+        ...loadedPersona,
+        profile_image_url: undefined // Clear the expired URL
+      };
     }
   };
 

@@ -26,12 +26,16 @@ export default function PersonaAvatar({
       console.log("PersonaAvatar: Updating image URL:", persona.profile_image_url);
       setImageError(false);
       setImageUrl(persona.profile_image_url);
+    } else {
+      setImageError(true);
+      setImageUrl(undefined);
     }
   }, [persona.persona_id, persona.profile_image_url]);
   
   const handleImageError = () => {
     console.error("Failed to load persona image:", imageUrl);
     setImageError(true);
+    setImageUrl(undefined);
   };
   
   const hasValidImage = imageUrl && !imageError;

@@ -14,7 +14,7 @@ export function usePersonaDetail() {
   const { user } = useAuth();
   
   // Use the extracted specialized hooks
-  const { persona, setPersona, isLoading } = usePersonaData(personaId);
+  const { persona, setPersona, isLoading, reloadPersona } = usePersonaData(personaId);
   const { isPublic, setIsPublic, handleVisibilityChange, handlePersonaDeleted, handleNameUpdate } = usePersonaActions(personaId);
   const { isGeneratingImage, handleImageGenerated } = usePersonaImage(personaId, persona);
 
@@ -53,6 +53,10 @@ export function usePersonaDetail() {
     const imageUrl = await handleImageGenerated();
     if (imageUrl) {
       updatePersonaAfterAction({ profile_image_url: imageUrl });
+      // After setting the image URL, reload the persona to ensure we have the latest data
+      if (reloadPersona) {
+        setTimeout(reloadPersona, 500);
+      }
     }
     return imageUrl;
   };
