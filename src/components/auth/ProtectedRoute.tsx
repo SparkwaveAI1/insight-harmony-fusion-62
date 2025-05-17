@@ -40,5 +40,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Only render children when authenticated
-  return authChecked && user ? <>{children}</> : null;
+  return authChecked ? <>{children}</> : null;
 };
