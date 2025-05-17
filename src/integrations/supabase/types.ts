@@ -196,44 +196,6 @@ export type Database = {
         }
         Relationships: []
       }
-      persona_images: {
-        Row: {
-          created_at: string | null
-          file_path: string
-          id: string
-          is_current: boolean | null
-          original_url: string | null
-          persona_id: string
-          storage_url: string
-        }
-        Insert: {
-          created_at?: string | null
-          file_path: string
-          id?: string
-          is_current?: boolean | null
-          original_url?: string | null
-          persona_id: string
-          storage_url: string
-        }
-        Update: {
-          created_at?: string | null
-          file_path?: string
-          id?: string
-          is_current?: boolean | null
-          original_url?: string | null
-          persona_id?: string
-          storage_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "persona_images_persona_id_fkey"
-            columns: ["persona_id"]
-            isOneToOne: false
-            referencedRelation: "personas"
-            referencedColumns: ["persona_id"]
-          },
-        ]
-      }
       personas: {
         Row: {
           behavioral_modulation: Json

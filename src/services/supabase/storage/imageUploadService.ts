@@ -2,42 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { updatePersonaProfileImageUrl } from '@/services/persona/operations/updatePersona';
-import { toast } from 'sonner';
-
-// Ensure the required storage buckets exist
-export async function ensurePersonaImageBucket(): Promise<boolean> {
-  try {
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error('Error listing buckets:', listError);
-      return false;
-    }
-    
-    const bucketExists = buckets?.some(bucket => bucket.name === 'persona-images');
-    
-    if (!bucketExists) {
-      console.log('Creating persona-images bucket...');
-      const { error: createError } = await supabase.storage.createBucket('persona-images', {
-        public: true
-      });
-      
-      if (createError) {
-        console.error('Error creating persona-images bucket:', createError);
-        return false;
-      }
-      
-      console.log('Successfully created persona-images bucket');
-    } else {
-      console.log('Persona-images bucket already exists');
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error ensuring persona-images bucket:', error);
-    return false;
-  }
-}
 
 // Upload a persona profile image from a URL
 export async function uploadPersonaImageFromUrl(
@@ -60,20 +24,8 @@ export async function uploadPersonaImageFromUrl(
       return null;
     }
     
-    // Ensure the bucket exists
-    const bucketReady = await ensurePersonaImageBucket();
-    if (!bucketReady) {
-      console.error('Failed to ensure persona-images bucket');
-      return null;
-    }
-    
-    // Fetch the image from the URL with appropriate headers
-    const response = await fetch(imageUrl, {
-      headers: {
-        'Accept': 'image/*'
-      }
-    });
-    
+    // Fetch the image from the URL
+    const response = await fetch(imageUrl);
     if (!response.ok) {
       console.error(`Failed to fetch image from URL: ${response.status}`);
       throw new Error(`Failed to fetch image from URL: ${response.status}`);
@@ -86,19 +38,26 @@ export async function uploadPersonaImageFromUrl(
       throw new Error(`URL does not point to an image. Content-Type: ${contentType}`);
     }
     
-    console.log('Successfully downloaded image from OpenAI, content type:', contentType);
-    
     // Convert the image to a blob
     const imageBlob = await response.blob();
-    console.log('Image blob size:', imageBlob.size);
-    
-    if (imageBlob.size === 0) {
-      console.error('Downloaded image has zero size');
-      throw new Error('Downloaded image has zero size');
-    }
     
     // Generate a unique file name
     const fileName = `${personaId}_${uuidv4()}.png`;
+    
+    // Check if bucket exists, and create it if needed
+    const { data: buckets } = await supabase.storage.listBuckets();
+    
+    if (!buckets || !buckets.some(bucket => bucket.name === 'persona-images')) {
+      console.log('Persona-images bucket does not exist, creating...');
+      const { error: bucketError } = await supabase.storage.createBucket('persona-images', {
+        public: true
+      });
+      
+      if (bucketError) {
+        console.error('Error creating persona-images bucket:', bucketError);
+        // Continue anyway, as the bucket might already exist with a different permission structure
+      }
+    }
     
     // Upload the image to Supabase storage
     const { data, error } = await supabase
@@ -113,8 +72,6 @@ export async function uploadPersonaImageFromUrl(
       console.error('Error uploading persona image to storage:', error);
       throw error;
     }
-    
-    console.log('Successfully uploaded image to Supabase storage:', data.path);
     
     // Get the public URL for the uploaded image
     const { data: urlData } = supabase
@@ -131,6 +88,30 @@ export async function uploadPersonaImageFromUrl(
   }
 }
 
+// Update persona record with new profile image URL
+export async function updatePersonaProfileImage(
+  personaId: string, 
+  imageUrl: string
+): Promise<boolean> {
+  try {
+    console.log(`Updating persona ${personaId} with new profile image URL:`, imageUrl);
+    
+    // Use the function from updatePersona.ts
+    const success = await updatePersonaProfileImageUrl(personaId, imageUrl);
+    
+    if (!success) {
+      console.error('Failed to update persona with image URL');
+      throw new Error('Failed to update persona with image URL');
+    }
+    
+    console.log('Persona record updated with new profile image URL');
+    return true;
+  } catch (error) {
+    console.error('Error in updatePersonaProfileImage:', error);
+    return false;
+  }
+}
+
 // Save persona profile image - combined operation
 export async function savePersonaProfileImage(
   personaId: string, 
@@ -144,11 +125,19 @@ export async function savePersonaProfileImage(
     
     if (!storageUrl) {
       console.error('Failed to upload image to storage');
-      return null;
+      // Fall back to using the original URL directly
+      console.log('Falling back to using original URL directly');
+      const directUpdateSuccess = await updatePersonaProfileImage(personaId, imageUrl);
+      
+      if (directUpdateSuccess) {
+        return imageUrl;
+      }
+      
+      throw new Error('Failed to upload image to storage and direct update also failed');
     }
     
     // Update the persona record with the new image URL
-    const updated = await updatePersonaProfileImageUrl(personaId, storageUrl);
+    const updated = await updatePersonaProfileImage(personaId, storageUrl);
     
     if (!updated) {
       console.error('Failed to update persona with new image URL');

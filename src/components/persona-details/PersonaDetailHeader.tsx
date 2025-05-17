@@ -17,24 +17,20 @@ interface PersonaDetailHeaderProps {
   persona: Persona;
   isOwner: boolean;
   isPublic: boolean;
-  isImageMigrating?: boolean;
   onVisibilityChange: (newVisibility: boolean) => void;
   onDelete: () => Promise<void>;
   onNameUpdate: (name: string) => void;
   onImageGenerated: () => Promise<string | null>;
-  reloadPersona?: () => void;
 }
 
 export default function PersonaDetailHeader({ 
   persona, 
   isOwner, 
   isPublic,
-  isImageMigrating = false,
   onVisibilityChange,
   onDelete: onPersonaDeleted,
   onNameUpdate: onNameUpdated,
-  onImageGenerated,
-  reloadPersona
+  onImageGenerated
 }: PersonaDetailHeaderProps) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const navigate = useNavigate();
@@ -59,21 +55,10 @@ export default function PersonaDetailHeader({
     if (isGeneratingImage) return;
     
     setIsGeneratingImage(true);
-    toast.info("Generating profile image...");
     
     try {
       const imageUrl = await onImageGenerated();
-      
-      if (imageUrl) {
-        toast.success("Profile image generated successfully");
-        
-        // Reload persona data after a short delay
-        setTimeout(() => {
-          if (reloadPersona) {
-            reloadPersona();
-          }
-        }, 500);
-      } else {
+      if (!imageUrl) {
         toast.error("Failed to generate profile image");
       }
     } catch (error) {
@@ -107,7 +92,6 @@ export default function PersonaDetailHeader({
           persona={persona}
           isOwner={isOwner}
           isGeneratingImage={isGeneratingImage}
-          isImageMigrating={isImageMigrating}
           onGenerateImage={handleGenerateImage}
         />
         
@@ -118,7 +102,7 @@ export default function PersonaDetailHeader({
             onNameUpdate={onNameUpdated}
           />
           
-          {/* Display Persona ID */}
+          {/* Display Persona ID instead of Image ID */}
           <p className="text-xs text-muted-foreground mt-1">
             Persona ID: {persona.persona_id}
           </p>
@@ -133,7 +117,7 @@ export default function PersonaDetailHeader({
           {/* Always show the generate/regenerate image button for owners */}
           <GenerateImageButton
             isVisible={isOwner}
-            isGenerating={isGeneratingImage || isImageMigrating}
+            isGenerating={isGeneratingImage}
             onGenerate={handleGenerateImage}
             hasImage={hasProfileImage}
           />
