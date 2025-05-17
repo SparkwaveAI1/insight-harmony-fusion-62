@@ -15,8 +15,8 @@ export default function GenerateImageButton({
   onGenerate,
   hasImage
 }: GenerateImageButtonProps) {
-  // Don't show if not visible
-  if (!isVisible) return null;
+  // Don't show if not visible or if already has an image (and not currently generating)
+  if (!isVisible || (hasImage && !isGenerating)) return null;
   
   return (
     <Button
@@ -28,12 +28,10 @@ export default function GenerateImageButton({
     >
       {isGenerating ? (
         <RefreshCw className="h-4 w-4 animate-spin" />
-      ) : hasImage ? (
-        <RefreshCw className="h-4 w-4" />
       ) : (
         <ImageIcon className="h-4 w-4" />
       )}
-      {hasImage ? "Regenerate Image" : "Generate Image"}
+      Generate Image
     </Button>
   );
 }

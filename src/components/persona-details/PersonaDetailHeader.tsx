@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Globe, Lock, RefreshCw } from "lucide-react";
+import { Globe, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Persona } from "@/services/persona/types";
 import { deletePersona } from "@/services/persona";
