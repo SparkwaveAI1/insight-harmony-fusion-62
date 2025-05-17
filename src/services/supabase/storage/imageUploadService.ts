@@ -44,6 +44,21 @@ export async function uploadPersonaImageFromUrl(
     // Generate a unique file name
     const fileName = `${personaId}_${uuidv4()}.png`;
     
+    // Check if bucket exists, and create it if needed
+    const { data: buckets } = await supabase.storage.listBuckets();
+    
+    if (!buckets || !buckets.some(bucket => bucket.name === 'persona-images')) {
+      console.log('Persona-images bucket does not exist, creating...');
+      const { error: bucketError } = await supabase.storage.createBucket('persona-images', {
+        public: true
+      });
+      
+      if (bucketError) {
+        console.error('Error creating persona-images bucket:', bucketError);
+        // Continue anyway, as the bucket might already exist with a different permission structure
+      }
+    }
+    
     // Upload the image to Supabase storage
     const { data, error } = await supabase
       .storage
@@ -110,7 +125,15 @@ export async function savePersonaProfileImage(
     
     if (!storageUrl) {
       console.error('Failed to upload image to storage');
-      throw new Error('Failed to upload image to storage');
+      // Fall back to using the original URL directly
+      console.log('Falling back to using original URL directly');
+      const directUpdateSuccess = await updatePersonaProfileImage(personaId, imageUrl);
+      
+      if (directUpdateSuccess) {
+        return imageUrl;
+      }
+      
+      throw new Error('Failed to upload image to storage and direct update also failed');
     }
     
     // Update the persona record with the new image URL

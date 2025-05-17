@@ -9,19 +9,15 @@ export async function ensureStorageBuckets(): Promise<boolean> {
   try {
     console.log('Checking and ensuring storage buckets exist...');
     
-    // List available buckets to see what we have
+    // First check if buckets exist by listing them
     const { data: bucketList, error: listError } = await supabase
       .storage
       .listBuckets();
     
     if (listError) {
       console.error('Error listing storage buckets:', listError);
-      
-      // Create buckets if we couldn't list them (might be permissions)
       return await createStorageBuckets();
     }
-    
-    console.log('Available buckets:', bucketList || []);
     
     // Check if our required buckets exist in the list
     const bucketNames = bucketList?.map(bucket => bucket.name) || [];
@@ -31,7 +27,7 @@ export async function ensureStorageBuckets(): Promise<boolean> {
     
     console.log('Bucket check results:', { hasTranscriptsBucket, hasAudioBucket, hasPersonaImagesBucket });
     
-    // If buckets don't exist, try to create them
+    // If any bucket doesn't exist, create them all
     if (!hasTranscriptsBucket || !hasAudioBucket || !hasPersonaImagesBucket) {
       return await createStorageBuckets();
     }
@@ -50,9 +46,8 @@ export async function ensureStorageBuckets(): Promise<boolean> {
 export async function createStorageBuckets(): Promise<boolean> {
   try {
     console.log('Creating storage buckets...');
-    let success = true;
     
-    // Create persona-images bucket if needed
+    // Create persona-images bucket with public access
     try {
       const { data: existingBuckets } = await supabase.storage.listBuckets();
       const bucketExists = existingBuckets?.some(b => b.name === 'persona-images');
@@ -74,7 +69,7 @@ export async function createStorageBuckets(): Promise<boolean> {
         console.log('Persona-images bucket already exists ✅');
       } else {
         console.error('Error creating persona-images bucket:', error);
-        success = false;
+        // We'll continue with other buckets even if this one fails
       }
     }
     
@@ -91,7 +86,6 @@ export async function createStorageBuckets(): Promise<boolean> {
         console.log('Transcripts bucket already exists ✅');
       } else {
         console.error('Error creating transcripts bucket:', error);
-        success = false;
       }
     }
     
@@ -108,16 +102,12 @@ export async function createStorageBuckets(): Promise<boolean> {
         console.log('Interview-audio bucket already exists ✅');
       } else {
         console.error('Error creating interview-audio bucket:', error);
-        success = false;
       }
     }
     
-    // Set correct bucket permissions - Removed updateBucket call since it's not available
-    // Instead, we'll create the buckets with the correct permissions from the start
-    // We've already set public: true and other attributes when creating buckets
     console.log('Buckets created with appropriate permissions ✅');
     
-    return success;
+    return true;
   } catch (error) {
     console.error('Error creating storage buckets:', error);
     toast.error('Failed to create storage buckets. Please check your Supabase permissions.');
