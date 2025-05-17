@@ -2,8 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
 import { toast } from "sonner";
-import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
-import { updatePersonaProfileImageUrl } from "./updatePersona";
+import { savePersonaImage } from "./personaImageService";
 
 export interface GenerateImageResponse {
   success: boolean;
@@ -36,21 +35,16 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     
     console.log("Successfully generated image URL from OpenAI:", response.image_url);
     
-    // Save the generated image to Supabase storage and update the persona record
-    console.log("Attempting to save image to Supabase storage...");
-    const storedImageUrl = await savePersonaProfileImage(persona.persona_id, response.image_url);
+    // Use the new savePersonaImage function to both save to storage and record in persona_images
+    const storedImageUrl = await savePersonaImage(persona.persona_id, response.image_url);
     
     if (!storedImageUrl) {
-      console.error("Failed to save persona image to storage");
-      toast.error("Generated image but failed to save it permanently");
-      
-      // Attempt direct database update with the temporary URL as a fallback
-      console.log("Attempting direct database update with temporary URL...");
-      await updatePersonaProfileImageUrl(persona.persona_id, response.image_url);
-      return response.image_url;
+      console.error("Failed to save persona image");
+      toast.error("Generated image but failed to save it");
+      return response.image_url; // Return the temporary URL as fallback
     }
     
-    console.log("Persona image saved to Supabase storage:", storedImageUrl);
+    console.log("Persona image successfully saved:", storedImageUrl);
     return storedImageUrl;
   } catch (error) {
     console.error("Error in generatePersonaImage:", error);

@@ -17,5 +17,13 @@ export { clonePersona } from './operations/clonePersona';
 export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
 
+// Export the new persona image service
+export {
+  savePersonaImage,
+  updatePersonaProfileImage,
+  getCurrentPersonaImage,
+  getPersonaImages
+} from './operations/personaImageService';
+
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';

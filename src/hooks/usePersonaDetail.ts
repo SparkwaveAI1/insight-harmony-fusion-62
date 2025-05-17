@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
-import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
+import { savePersonaImage } from "@/services/persona/operations/personaImageService";
 
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
@@ -32,7 +32,8 @@ export function usePersonaDetail() {
     console.log("Detected OpenAI temporary URL, saving to permanent storage:", loadedPersona.profile_image_url);
     
     try {
-      const storedImageUrl = await savePersonaProfileImage(
+      // Use the new savePersonaImage function instead
+      const storedImageUrl = await savePersonaImage(
         loadedPersona.persona_id, 
         loadedPersona.profile_image_url
       );
