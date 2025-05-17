@@ -6,6 +6,8 @@ import {
   UserPlus,
   Coins,
   Folder,
+  FlaskConical,
+  Microscope,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -33,6 +35,16 @@ export const navigationMenuItems = [
     title: "Projects",
     url: "/projects",
     icon: Briefcase,
+  },
+  {
+    title: "Interviewer",
+    url: "/interviewer",
+    icon: Microscope,
+  },
+  {
+    title: "Researcher",
+    url: "/research",
+    icon: FlaskConical,
   },
   {
     title: "PRSNA Token",
