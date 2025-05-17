@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { ImageIcon, RefreshCw } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Persona } from "@/services/persona/types";
 
@@ -24,38 +24,47 @@ export default function PersonaAvatar({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageAttempts, setImageAttempts] = useState(0);
   
-  // Reset image error state and update URL when persona changes
+  // Reset image error state and update URL when persona changes or image URL changes
   useEffect(() => {
     if (persona.profile_image_url) {
-      console.log("PersonaAvatar: Updating image URL:", persona.profile_image_url);
-      setImageError(false);
-      setImageLoaded(false);
-      setImageUrl(persona.profile_image_url);
-      setImageAttempts(0);
+      // Only update if the URL has actually changed (to prevent unnecessary reloads)
+      if (persona.profile_image_url !== imageUrl) {
+        console.log("PersonaAvatar: Updating image URL:", persona.profile_image_url);
+        setImageError(false);
+        setImageLoaded(false);
+        setImageUrl(persona.profile_image_url);
+        setImageAttempts(0);
+      }
     } else {
+      // No image URL available, show fallback
       setImageError(true);
       setImageUrl(undefined);
       setImageLoaded(false);
     }
-  }, [persona.persona_id, persona.profile_image_url]);
+  }, [persona.persona_id, persona.profile_image_url, imageUrl]);
   
   const handleImageError = () => {
     console.error("Failed to load persona image:", imageUrl);
     
-    // Increment attempts and try once more with a cache-busting URL
+    // Increment attempts and try once more with a cache-busting URL (only once)
     if (imageAttempts === 0 && imageUrl) {
       console.log("Attempting to reload image with cache busting");
       setImageAttempts(prev => prev + 1);
-      setImageUrl(`${imageUrl}?t=${Date.now()}`);
+      
+      // Add cache-busting parameter
+      const cacheBuster = `?t=${Date.now()}`;
+      setImageUrl(`${imageUrl}${cacheBuster}`);
       return;
     }
     
+    // After retry fails, give up and show fallback
     setImageError(true);
     setImageUrl(undefined);
     setImageLoaded(false);
   };
 
   const handleImageLoad = () => {
+    console.log("Image loaded successfully:", imageUrl);
     setImageLoaded(true);
     setImageError(false);
   };
@@ -65,7 +74,7 @@ export default function PersonaAvatar({
   
   return (
     <div className="relative cursor-pointer group" onClick={isOwner && !isProcessing ? onGenerateImage : undefined}>
-      <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold transition-opacity">
+      <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold">
         {hasValidImage ? (
           <AvatarImage 
             src={imageUrl} 

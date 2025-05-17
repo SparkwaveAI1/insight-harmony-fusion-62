@@ -53,10 +53,6 @@ export function usePersonaDetail() {
     const imageUrl = await handleImageGenerated();
     if (imageUrl) {
       updatePersonaAfterAction({ profile_image_url: imageUrl });
-      // After setting the image URL, reload the persona to ensure we have the latest data
-      if (reloadPersona) {
-        setTimeout(reloadPersona, 500);
-      }
     }
     return imageUrl;
   };
@@ -71,6 +67,7 @@ export function usePersonaDetail() {
     isOwner,
     isGeneratingImage,
     isImageMigrating,
+    reloadPersona,
     handleVisibilityChange: wrappedHandleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate: wrappedHandleNameUpdate,

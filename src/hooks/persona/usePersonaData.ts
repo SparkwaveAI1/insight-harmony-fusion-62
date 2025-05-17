@@ -13,58 +13,36 @@ export function usePersonaData(personaId: string | undefined) {
   const [isLoading, setIsLoading] = useState(true);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
   
   // Use the extracted image handling hook
-  const { ensureImagePersistence, isOpenAIImageUrl, isImageMigrating } = usePersonaImage(personaId, persona);
+  const { isOpenAIImageUrl, isImageMigrating } = usePersonaImage(personaId, persona);
 
   const loadPersona = useCallback(async (id: string) => {
     if (isRetrying) return;
     
     setIsLoading(true);
     try {
-      console.log("Loading persona with ID:", id);
+      console.log(`Loading persona with ID: ${id} (attempt ${loadAttempts + 1})`);
       const data = await getPersonaByPersonaId(id);
       
       if (data) {
-        console.log("Persona data loaded:", data);
+        console.log("Persona data loaded successfully:", data);
         
-        // Set persona immediately with current data
-        setPersona(data);
-        
-        // Check if the image URL is potentially expired
-        if (data.profile_image_url) {
-          console.log("Profile image URL:", data.profile_image_url);
+        // Check for OpenAI image URL and handle appropriately
+        if (data.profile_image_url && isOpenAIImageUrl(data.profile_image_url)) {
+          console.log("OpenAI URL detected, clearing to prevent loading issues:", data.profile_image_url);
           
-          if (isOpenAIImageUrl(data.profile_image_url)) {
-            console.log("OpenAI image URL detected, attempting to migrate");
-            
-            try {
-              // Try to migrate the image with a timeout
-              const timeoutPromise = new Promise<null>((_, reject) => {
-                setTimeout(() => reject(new Error("Image migration timed out")), 3000);
-              });
-              
-              // Race between the actual migration and the timeout
-              const updatedPersona = await Promise.race([
-                ensureImagePersistence(data),
-                timeoutPromise
-              ]);
-              
-              if (updatedPersona) {
-                setPersona(updatedPersona);
-              }
-            } catch (imageError) {
-              console.error("Failed to process image, clearing URL:", imageError);
-              // Update the persona with a cleared image URL
-              setPersona(prevPersona => {
-                if (!prevPersona) return data;
-                return {
-                  ...prevPersona,
-                  profile_image_url: undefined // Clear potentially expired URL
-                };
-              });
-            }
-          }
+          // Create a copy with a fixed image URL
+          const updatedData = {
+            ...data,
+            profile_image_url: undefined  // Clear problematic URL
+          };
+          
+          setPersona(updatedData);
+        } else {
+          // Set the persona with the data as-is
+          setPersona(data);
         }
       } else {
         console.error("Persona not found with ID:", id);
@@ -72,22 +50,30 @@ export function usePersonaData(personaId: string | undefined) {
       }
     } catch (error) {
       console.error("Error loading persona:", error);
-      toast.error("Failed to load persona details");
       
       // If we've tried less than 3 times and still failing, try again after a delay
-      if (loadAttempts < 3) {
+      if (loadAttempts < 2) {
         setLoadAttempts(prev => prev + 1);
         setIsRetrying(true);
         
+        // Increase backoff time with each retry
+        const backoffTime = 1000 * (loadAttempts + 1);
+        
+        console.log(`Retrying in ${backoffTime}ms...`);
         setTimeout(() => {
           setIsRetrying(false);
-          if (personaId) loadPersona(personaId);
-        }, 1500);
+          if (personaId) {
+            // Force a reload by updating the forceRefresh state
+            setForceRefresh(prev => prev + 1);
+          }
+        }, backoffTime);
+      } else {
+        toast.error("Failed to load persona details after multiple attempts");
       }
     } finally {
       setIsLoading(false);
     }
-  }, [ensureImagePersistence, isOpenAIImageUrl, loadAttempts, isRetrying, personaId]);
+  }, [isOpenAIImageUrl, loadAttempts, isRetrying, personaId]);
 
   // Reset attempts when personaId changes
   useEffect(() => {
@@ -97,17 +83,26 @@ export function usePersonaData(personaId: string | undefined) {
     }
   }, [personaId]);
 
+  // Load persona when personaId changes or forceRefresh is triggered
   useEffect(() => {
     if (personaId) {
       loadPersona(personaId);
     }
-  }, [personaId, loadPersona]);
+  }, [personaId, loadPersona, forceRefresh]);
+
+  // Function to manually reload the persona
+  const reloadPersona = useCallback(() => {
+    if (personaId) {
+      setLoadAttempts(0);
+      setForceRefresh(prev => prev + 1);
+    }
+  }, [personaId]);
 
   return {
     persona,
     setPersona,
     isLoading,
     isImageMigrating,
-    reloadPersona: personaId ? () => loadPersona(personaId) : undefined
+    reloadPersona
   };
 }

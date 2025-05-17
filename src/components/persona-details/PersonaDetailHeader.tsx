@@ -22,6 +22,7 @@ interface PersonaDetailHeaderProps {
   onDelete: () => Promise<void>;
   onNameUpdate: (name: string) => void;
   onImageGenerated: () => Promise<string | null>;
+  reloadPersona?: () => void;
 }
 
 export default function PersonaDetailHeader({ 
@@ -32,7 +33,8 @@ export default function PersonaDetailHeader({
   onVisibilityChange,
   onDelete: onPersonaDeleted,
   onNameUpdate: onNameUpdated,
-  onImageGenerated
+  onImageGenerated,
+  reloadPersona
 }: PersonaDetailHeaderProps) {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const navigate = useNavigate();
@@ -57,10 +59,21 @@ export default function PersonaDetailHeader({
     if (isGeneratingImage) return;
     
     setIsGeneratingImage(true);
+    toast.info("Generating profile image...");
     
     try {
       const imageUrl = await onImageGenerated();
-      if (!imageUrl) {
+      
+      if (imageUrl) {
+        toast.success("Profile image generated successfully");
+        
+        // Reload persona data after a short delay
+        setTimeout(() => {
+          if (reloadPersona) {
+            reloadPersona();
+          }
+        }, 500);
+      } else {
         toast.error("Failed to generate profile image");
       }
     } catch (error) {
@@ -68,14 +81,6 @@ export default function PersonaDetailHeader({
       toast.error("An error occurred while generating the profile image");
     } finally {
       setIsGeneratingImage(false);
-      
-      // Add a short timeout to refresh the page after image generation
-      setTimeout(() => {
-        // Force refresh by changing the URL slightly and then back
-        const currentUrl = window.location.href;
-        navigate(currentUrl + '?refresh=true');
-        setTimeout(() => navigate(currentUrl), 100);
-      }, 500);
     }
   };
 
@@ -113,7 +118,7 @@ export default function PersonaDetailHeader({
             onNameUpdate={onNameUpdated}
           />
           
-          {/* Display Persona ID instead of Image ID */}
+          {/* Display Persona ID */}
           <p className="text-xs text-muted-foreground mt-1">
             Persona ID: {persona.persona_id}
           </p>

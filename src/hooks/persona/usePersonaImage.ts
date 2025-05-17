@@ -4,8 +4,7 @@ import { toast } from "sonner";
 import { Persona } from "@/services/persona/types";
 import { 
   generatePersonaImage, 
-  getPersonaByPersonaId, 
-  savePersonaImage 
+  getPersonaByPersonaId
 } from "@/services/persona";
 
 /**
@@ -22,88 +21,44 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
            url.includes('api.openai.com');
   };
 
-  // Ensure OpenAI images are saved to Supabase storage
-  const ensureImagePersistence = async (loadedPersona: Persona): Promise<Persona> => {
-    if (!loadedPersona.profile_image_url || !isOpenAIImageUrl(loadedPersona.profile_image_url)) {
-      return loadedPersona;
-    }
-
-    setIsImageMigrating(true);
-    
-    try {
-      console.log("Detected OpenAI temporary URL, saving to permanent storage:", loadedPersona.profile_image_url);
-      
-      // Use the savePersonaImage function with a timeout to prevent hanging
-      const saveImagePromise = savePersonaImage(
-        loadedPersona.persona_id, 
-        loadedPersona.profile_image_url
-      );
-      
-      // Set a timeout to prevent hanging if the image save takes too long
-      const timeoutPromise = new Promise<null>((resolve) => {
-        setTimeout(() => {
-          console.warn("Image migration timed out");
-          resolve(null);
-        }, 3000);
-      });
-      
-      // Race between save operation and timeout
-      const storedImageUrl = await Promise.race([saveImagePromise, timeoutPromise]);
-      
-      if (storedImageUrl) {
-        console.log("Successfully migrated OpenAI image to Supabase storage:", storedImageUrl);
-        return {
-          ...loadedPersona,
-          profile_image_url: storedImageUrl
-        };
-      }
-      
-      console.error("Failed to migrate OpenAI image to Supabase storage");
-      return {
-        ...loadedPersona,
-        profile_image_url: undefined // Clear the expired URL
-      };
-    } catch (error) {
-      console.error("Error migrating OpenAI image to Supabase storage:", error);
-      return {
-        ...loadedPersona,
-        profile_image_url: undefined // Clear the expired URL
-      };
-    } finally {
-      setIsImageMigrating(false);
-    }
-  };
-
-  // Handle image generation
+  // Handle image generation with improved error handling
   const handleImageGenerated = async () => {
     if (!personaId || !persona) return null;
     
     setIsGeneratingImage(true);
     
     try {
-      toast.info("Generating profile image...");
-      const imageUrl = await generatePersonaImage(persona);
+      // Use a timeout to prevent hanging
+      const generatePromise = generatePersonaImage(persona);
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => {
+          console.warn("Image generation timed out");
+          resolve(null);
+        }, 30000); // 30 second timeout
+      });
       
-      if (imageUrl) {
-        toast.success("Profile image generated successfully");
-        
-        try {
-          // Force reload the persona to ensure we have the updated image URL
-          const refreshedPersona = await getPersonaByPersonaId(personaId);
-          console.log("Refreshed persona data with new image:", refreshedPersona?.profile_image_url);
-          
-          return refreshedPersona?.profile_image_url || imageUrl;
-        } catch (error) {
-          console.error("Error refreshing persona data:", error);
-          return imageUrl;
-        }
-      } else {
-        toast.error("Failed to generate profile image");
+      // Race between the generation and timeout
+      const result = await Promise.race([generatePromise, timeoutPromise]);
+      
+      if (!result) {
+        console.error("Image generation timed out or failed");
         return null;
       }
+      
+      // Attempt to refresh persona data to get the latest image URL
+      try {
+        const refreshedPersona = await getPersonaByPersonaId(personaId);
+        if (refreshedPersona?.profile_image_url) {
+          return refreshedPersona.profile_image_url;
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing persona data:", refreshError);
+      }
+      
+      return result; // Return the image URL from generation
+      
     } catch (error) {
       console.error("Error generating profile image:", error);
-      toast.error("An error occurred while generating the profile image");
       return null;
     } finally {
       setIsGeneratingImage(false);
@@ -113,7 +68,6 @@ export function usePersonaImage(personaId: string | undefined, persona: Persona 
   return {
     isGeneratingImage,
     isImageMigrating,
-    ensureImagePersistence,
     handleImageGenerated,
     isOpenAIImageUrl
   };

@@ -24,6 +24,7 @@ const PersonaDetail = () => {
     isPublic,
     isOwner,
     isImageMigrating,
+    reloadPersona,
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
@@ -34,8 +35,7 @@ const PersonaDetail = () => {
   useEffect(() => {
     const setupStorage = async () => {
       console.log("PersonaDetail: Ensuring storage buckets exist...");
-      const result = await ensureStorageBuckets();
-      console.log("Storage buckets setup result:", result);
+      await ensureStorageBuckets();
     };
     setupStorage();
   }, []);
@@ -64,6 +64,7 @@ const PersonaDetail = () => {
                     onDelete={handlePersonaDeleted}
                     onNameUpdate={handleNameUpdate}
                     onImageGenerated={handleImageGenerated}
+                    reloadPersona={reloadPersona}
                   />
                   
                   <PersonaContent persona={persona} />
