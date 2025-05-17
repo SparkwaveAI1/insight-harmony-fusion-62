@@ -1,191 +1,60 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
-import { Persona } from "@/services/persona/types";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { savePersonaImage } from "@/services/persona/operations/personaImageService";
+import { usePersonaData } from "./persona/usePersonaData";
+import { usePersonaActions } from "./persona/usePersonaActions";
+import { usePersonaImage } from "./persona/usePersonaImage";
+import { useEffect } from "react";
 
+/**
+ * Main hook for persona detail functionality, composed of smaller specialized hooks
+ */
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
-  const navigate = useNavigate();
-  const [persona, setPersona] = useState<Persona | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { user } = useAuth();
-  const [isPublic, setIsPublic] = useState(false);
+  
+  // Use the extracted specialized hooks
+  const { persona, setPersona, isLoading } = usePersonaData(personaId);
+  const { isPublic, setIsPublic, handleVisibilityChange, handlePersonaDeleted, handleNameUpdate } = usePersonaActions(personaId);
+  const { isGeneratingImage, handleImageGenerated } = usePersonaImage(personaId, persona);
 
-  // Check if an image URL is from OpenAI (temporary) rather than Supabase storage
-  const isOpenAIImageUrl = (url?: string): boolean => {
-    if (!url) return false;
-    return url.includes('oaidalleapiprodscus.blob.core') || 
-           url.includes('api.openai.com');
-  };
-
-  // Ensure OpenAI images are saved to Supabase storage
-  const ensureImagePersistence = async (loadedPersona: Persona): Promise<Persona> => {
-    if (!loadedPersona.profile_image_url || !isOpenAIImageUrl(loadedPersona.profile_image_url)) {
-      return loadedPersona;
-    }
-
-    console.log("Detected OpenAI temporary URL, saving to permanent storage:", loadedPersona.profile_image_url);
-    
-    try {
-      // Use the new savePersonaImage function instead
-      const storedImageUrl = await savePersonaImage(
-        loadedPersona.persona_id, 
-        loadedPersona.profile_image_url
-      );
-      
-      if (storedImageUrl) {
-        console.log("Successfully migrated OpenAI image to Supabase storage:", storedImageUrl);
-        return {
-          ...loadedPersona,
-          profile_image_url: storedImageUrl
-        };
-      }
-      
-      console.error("Failed to migrate OpenAI image to Supabase storage");
-      return loadedPersona;
-    } catch (error) {
-      console.error("Error migrating OpenAI image to Supabase storage:", error);
-      return loadedPersona;
-    }
-  };
-
-  const loadPersona = useCallback(async (id: string) => {
-    setIsLoading(true);
-    try {
-      console.log("Loading persona with ID:", id);
-      const data = await getPersonaByPersonaId(id);
-      if (data) {
-        console.log("Persona data loaded:", data);
-        console.log("Profile image URL:", data.profile_image_url);
-        
-        // Check if the image URL is from OpenAI and needs to be migrated to Supabase
-        if (isOpenAIImageUrl(data.profile_image_url)) {
-          const updatedPersona = await ensureImagePersistence(data);
-          setPersona(updatedPersona);
-        } else {
-          setPersona(data);
-        }
-      } else {
-        console.error("Persona not found with ID:", id);
-        toast.error("Persona not found");
-      }
-    } catch (error) {
-      console.error("Error loading persona:", error);
-      toast.error("Failed to load persona details");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (personaId) {
-      loadPersona(personaId);
-    }
-  }, [personaId, loadPersona]);
-
+  // Sync isPublic state with persona data
   useEffect(() => {
     if (persona) {
       setIsPublic(persona.is_public || false);
     }
-  }, [persona]);
+  }, [persona, setIsPublic]);
 
-  const handlePersonaDeleted = async (): Promise<void> => {
-    if (!personaId || !user) return Promise.resolve();
-    
-    try {
-      const success = await deletePersona(personaId);
-      if (success) {
-        toast.success("Persona deleted successfully");
-        navigate("/persona-viewer");
-      } else {
-        toast.error("Failed to delete persona");
-      }
-      return Promise.resolve();
-    } catch (error) {
-      console.error("Error deleting persona:", error);
-      toast.error("Failed to delete persona");
-      return Promise.reject(error);
+  // Update persona in state after operations that modify it
+  const updatePersonaAfterAction = (updatedFields: Partial<typeof persona>) => {
+    if (persona) {
+      setPersona({ ...persona, ...updatedFields });
     }
   };
 
-  // Handle visibility toggle
-  const handleVisibilityChange = async (newVisibility: boolean) => {
-    if (!personaId || !user) return;
-    
-    try {
-      const success = await updatePersonaVisibility(personaId, newVisibility);
-      if (success) {
-        setIsPublic(newVisibility);
-        setPersona(prev => prev ? { ...prev, is_public: newVisibility } : null);
-        toast.success(`Persona visibility ${newVisibility ? 'published' : 'set to private'}`);
-      } else {
-        toast.error("Failed to update visibility");
-      }
-    } catch (error) {
-      console.error("Error updating visibility:", error);
-      toast.error("Failed to update visibility");
+  // Wrapped actions that update the local state
+  const wrappedHandleVisibilityChange = async (newVisibility: boolean) => {
+    const success = await handleVisibilityChange(newVisibility);
+    if (success) {
+      updatePersonaAfterAction({ is_public: newVisibility });
     }
+    return success;
   };
 
-  // Handle name update
-  const handleNameUpdate = async (name: string) => {
-    if (!personaId || !user) return;
-    
-    try {
-      const success = await updatePersonaName(personaId, name);
-      if (success) {
-        setPersona(prev => prev ? { ...prev, name } : null);
-        toast.success("Persona name updated successfully");
-      } else {
-        toast.error("Failed to update persona name");
-      }
-    } catch (error) {
-      console.error("Error updating persona name:", error);
-      toast.error("Failed to update persona name");
-      throw error;
+  const wrappedHandleNameUpdate = async (name: string) => {
+    const success = await handleNameUpdate(name);
+    if (success) {
+      updatePersonaAfterAction({ name });
     }
+    return success;
   };
 
-  // Handle image generation
-  const handleImageGenerated = async () => {
-    if (!personaId || !persona || !user) return null;
-    
-    setIsGeneratingImage(true);
-    
-    try {
-      toast.info("Generating profile image...");
-      const imageUrl = await generatePersonaImage(persona);
-      
-      if (imageUrl) {
-        toast.success("Profile image generated and saved successfully");
-        
-        // Force reload the persona to ensure we have the updated image URL
-        const refreshedPersona = await getPersonaByPersonaId(personaId);
-        if (refreshedPersona) {
-          console.log("Refreshed persona data with new image:", refreshedPersona.profile_image_url);
-          setPersona(refreshedPersona);
-        } else {
-          // Fallback: Update the local state with the new image URL
-          setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
-        }
-        console.log("Updated persona in state with new image URL:", imageUrl);
-        return imageUrl;
-      } else {
-        toast.error("Failed to generate profile image");
-        return null;
-      }
-    } catch (error) {
-      console.error("Error generating profile image:", error);
-      toast.error("An error occurred while generating the profile image");
-      return null;
-    } finally {
-      setIsGeneratingImage(false);
+  const wrappedHandleImageGenerated = async () => {
+    const imageUrl = await handleImageGenerated();
+    if (imageUrl) {
+      updatePersonaAfterAction({ profile_image_url: imageUrl });
     }
+    return imageUrl;
   };
 
   // Check if current user is the owner of this persona
@@ -197,9 +66,9 @@ export function usePersonaDetail() {
     isPublic,
     isOwner,
     isGeneratingImage,
-    handleVisibilityChange,
+    handleVisibilityChange: wrappedHandleVisibilityChange,
     handlePersonaDeleted,
-    handleNameUpdate,
-    handleImageGenerated
+    handleNameUpdate: wrappedHandleNameUpdate,
+    handleImageGenerated: wrappedHandleImageGenerated
   };
 }
