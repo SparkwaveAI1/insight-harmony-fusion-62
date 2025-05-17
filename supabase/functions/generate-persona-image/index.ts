@@ -105,47 +105,59 @@ serve(async (req) => {
       if (occupation.toLowerCase().includes("doctor") || 
           occupation.toLowerCase().includes("physician") || 
           occupation.toLowerCase().includes("surgeon")) {
-        clothing = "wearing professional medical attire";
+        clothing = "wearing professional medical attire like a white coat over business casual clothing";
       } 
       else if (occupation.toLowerCase().includes("lawyer") || 
                occupation.toLowerCase().includes("attorney") || 
                occupation.toLowerCase().includes("executive") ||
                occupation.toLowerCase().includes("manager") ||
                occupation.toLowerCase().includes("business")) {
-        clothing = "wearing a professional business suit";
+        clothing = "wearing a professional business suit with a button-up shirt and tie/blouse";
       }
       else if (occupation.toLowerCase().includes("teacher") || 
                occupation.toLowerCase().includes("professor")) {
-        clothing = "wearing professional casual attire";
+        clothing = "wearing professional casual attire with a collared shirt/blouse";
       }
       else if (occupation.toLowerCase().includes("chef") || 
                occupation.toLowerCase().includes("cook")) {
-        clothing = "wearing chef's attire";
+        clothing = "wearing chef's attire including a chef coat";
       }
       else if (occupation.toLowerCase().includes("police") || 
                occupation.toLowerCase().includes("officer") ||
                occupation.toLowerCase().includes("security")) {
-        clothing = "in a professional uniform";
+        clothing = "in a professional uniform with badge and appropriate insignia";
       }
       else if (occupation.toLowerCase().includes("construction") || 
                occupation.toLowerCase().includes("mechanic") ||
                occupation.toLowerCase().includes("technician") ||
                occupation.toLowerCase().includes("engineer") ||
                occupation.toLowerCase().includes("electrician")) {
-        clothing = "wearing appropriate workwear";
+        clothing = "wearing appropriate workwear including a shirt and safety equipment";
       }
       else if (occupation.toLowerCase().includes("athlete") || 
                occupation.toLowerCase().includes("trainer") ||
                occupation.toLowerCase().includes("fitness")) {
-        clothing = "in athletic casual clothing";
+        clothing = "in athletic clothing including a proper shirt/top and athletic pants/shorts";
+      }
+      else if (occupation.toLowerCase().includes("artist") || 
+               occupation.toLowerCase().includes("creative")) {
+        clothing = "in casual but stylish clothing, fully dressed";
+      }
+      else if (occupation.toLowerCase().includes("farmer") || 
+               occupation.toLowerCase().includes("rancher")) {
+        clothing = "in practical work clothing, long-sleeved shirt and jeans";
+      }
+      else if (occupation.toLowerCase().includes("driver") || 
+               occupation.toLowerCase().includes("trucker")) {
+        clothing = "in casual but practical clothing, wearing a collared shirt";
       }
       else {
         // Default for other occupations
-        clothing = "in appropriate professional clothing";
+        clothing = "in appropriate professional clothing including a button-up shirt/blouse";
       }
     } else {
       // Generic clothing if no occupation is specified
-      clothing = "dressed in casual but appropriate attire";
+      clothing = "dressed in proper casual attire including a shirt/top and pants/skirt";
     }
     
     // Build the base prompt - using "photograph" and emphasizing realism
@@ -179,8 +191,8 @@ serve(async (req) => {
       imagePrompt += `, ${socialDescription}`;
     }
     
-    // Add specific instructions to ensure photorealistic, non-cartoonish representation
-    imagePrompt += `. IMPORTANT: Create a PHOTOREALISTIC portrait, absolutely not cartoonish or illustrated. Use photographic realism like a high-quality professional headshot or passport photo. The image must be completely realistic with proper lighting, skin texture, and natural facial features. Show the person with ${bodyType || "average"} body type in a natural pose, fully clothed in appropriate attire for their profession or casual setting.`;
+    // Add specific instructions to ensure photorealistic, non-cartoonish representation WITH CLOTHING
+    imagePrompt += `. IMPORTANT: Create a PHOTOREALISTIC portrait, absolutely not cartoonish or illustrated. Use photographic realism like a high-quality professional headshot or passport photo. The image must be completely realistic with proper lighting, skin texture, and natural facial features. Show the person with ${bodyType || "average"} body type in a natural pose, FULLY CLOTHED in appropriate attire for their profession or casual setting. THE PERSON MUST BE WEARING PROPER CLOTHING THAT COVERS THEIR TORSO AND BODY APPROPRIATELY.`;
     
     if (bodyType === "overweight") {
       imagePrompt += " The person should be genuinely overweight with visible weight in the face and body, but avoid any exaggeration or caricature.";
@@ -195,7 +207,7 @@ serve(async (req) => {
     }
 
     // Add specifics about photo quality and style
-    imagePrompt += " The photograph should look like it was taken with a professional camera with natural lighting, shallow depth of field, and realistic colors. Absolutely NO cartoon style, NO illustration style, NO exaggerated features.";
+    imagePrompt += " The photograph should look like it was taken with a professional camera with natural lighting, shallow depth of field, and realistic colors. Absolutely NO cartoon style, NO illustration style, NO exaggerated features, and NO NUDITY WHATSOEVER - ensure the person is appropriately dressed for their context.";
     
     console.log("Generated prompt:", imagePrompt);
     
