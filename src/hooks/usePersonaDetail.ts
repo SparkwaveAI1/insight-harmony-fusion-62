@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
+import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,7 +11,6 @@ export function usePersonaDetail() {
   const navigate = useNavigate();
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
 
@@ -22,7 +21,6 @@ export function usePersonaDetail() {
       const data = await getPersonaByPersonaId(id);
       if (data) {
         console.log("Persona data loaded:", data);
-        console.log("Profile image URL:", data.profile_image_url);
         setPersona(data);
       } else {
         console.error("Persona not found with ID:", id);
@@ -105,41 +103,9 @@ export function usePersonaDetail() {
     }
   };
 
-  // Handle image generation
+  // This is a no-op placeholder that returns null since we're removing image functionality
   const handleImageGenerated = async () => {
-    if (!personaId || !persona || !user) return null;
-    
-    setIsGeneratingImage(true);
-    
-    try {
-      toast.info("Generating profile image...");
-      const imageUrl = await generatePersonaImage(persona);
-      
-      if (imageUrl) {
-        toast.success("Profile image generated and saved successfully");
-        
-        // Force reload the persona to ensure we have the updated image URL
-        const refreshedPersona = await getPersonaByPersonaId(personaId);
-        if (refreshedPersona) {
-          console.log("Refreshed persona data with new image:", refreshedPersona.profile_image_url);
-          setPersona(refreshedPersona);
-        } else {
-          // Fallback: Update the local state with the new image URL
-          setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
-        }
-        console.log("Updated persona in state with new image URL:", imageUrl);
-        return imageUrl;
-      } else {
-        toast.error("Failed to generate profile image");
-        return null;
-      }
-    } catch (error) {
-      console.error("Error generating profile image:", error);
-      toast.error("An error occurred while generating the profile image");
-      return null;
-    } finally {
-      setIsGeneratingImage(false);
-    }
+    return null;
   };
 
   // Check if current user is the owner of this persona
@@ -150,7 +116,6 @@ export function usePersonaDetail() {
     isLoading,
     isPublic,
     isOwner,
-    isGeneratingImage,
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
