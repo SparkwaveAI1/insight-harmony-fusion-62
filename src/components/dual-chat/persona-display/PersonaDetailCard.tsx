@@ -4,6 +4,7 @@ import { Persona } from '@/services/persona/types';
 import PersonaDemographicsCard from './PersonaDemographicsCard';
 import PersonaInsights from './PersonaInsights';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { SpeedInsight } from './PersonaInsightUtils';
 
 interface PersonaDetailCardProps {
   persona: Persona;
@@ -18,6 +19,39 @@ const PersonaDetailCard: React.FC<PersonaDetailCardProps> = ({ persona }) => {
       .toUpperCase()
       .substring(0, 2);
   };
+  
+  // Create mock insights based on persona data
+  const createInsightsFromPersona = (persona: Persona): SpeedInsight[] => {
+    return [
+      {
+        category: 'decision',
+        value: persona.trait_profile?.decision_making_style || 'Balanced decision-maker',
+        speed: 'medium'
+      },
+      {
+        category: 'communication',
+        value: persona.trait_profile?.communication_style || 'Clear communicator',
+        speed: 'fast'
+      },
+      {
+        category: 'learning',
+        value: persona.trait_profile?.learning_style || 'Adaptive learner',
+        speed: 'medium'
+      },
+      {
+        category: 'workEthic',
+        value: persona.trait_profile?.work_ethic || 'Dedicated worker',
+        speed: 'fast'
+      },
+      {
+        category: 'conflict',
+        value: persona.trait_profile?.conflict_resolution_style || 'Collaborative problem solver',
+        speed: 'medium'
+      }
+    ];
+  };
+  
+  const insights = createInsightsFromPersona(persona);
   
   return (
     <div className="border rounded-md p-4 bg-[#F5F5F7]">
@@ -36,7 +70,7 @@ const PersonaDetailCard: React.FC<PersonaDetailCardProps> = ({ persona }) => {
       </div>
       
       <PersonaDemographicsCard persona={persona} />
-      <PersonaInsights persona={persona} />
+      <PersonaInsights insights={insights} />
     </div>
   );
 };
