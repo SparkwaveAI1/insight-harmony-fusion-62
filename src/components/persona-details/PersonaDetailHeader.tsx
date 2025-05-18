@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -93,28 +92,28 @@ export default function PersonaDetailHeader({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
-      <div className="flex items-start gap-4">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-6">
+      <div className="flex items-start gap-6">
         <div className="relative">
-          <Avatar className="w-20 h-20 border shadow-sm">
+          <Avatar className="w-24 h-24 border shadow-sm">
             {persona.profile_image_url ? (
               <AvatarImage src={persona.profile_image_url} alt={persona.name} />
             ) : (
-              <AvatarFallback>{getInitials(persona.name)}</AvatarFallback>
+              <AvatarFallback className="text-2xl">{getInitials(persona.name)}</AvatarFallback>
             )}
           </Avatar>
           
           {isOwner && (
             <button 
-              className="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full shadow-sm hover:bg-primary/90 transition-colors"
+              className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-sm hover:bg-primary/90 transition-colors"
               onClick={handleGenerateImage}
               disabled={isGeneratingImage}
               title="Generate profile image"
             >
               {isGeneratingImage ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <Camera className="h-4 w-4" />
+                <Camera className="h-5 w-5" />
               )}
             </button>
           )}
@@ -125,10 +124,11 @@ export default function PersonaDetailHeader({
             personaId={persona.persona_id}
             initialName={persona.name}
             onNameUpdate={onNameUpdated}
+            className="text-2xl font-semibold"
           />
           
           {/* Display Persona ID */}
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 mb-2">
             Persona ID: {persona.persona_id}
           </p>
           

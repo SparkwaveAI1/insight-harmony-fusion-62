@@ -25,16 +25,16 @@ const PersonaDetailCard: React.FC<PersonaDetailCardProps> = ({ persona }) => {
   
   return (
     <div className="border rounded-md p-4 bg-[#F5F5F7]">
-      <div className="flex items-center gap-3 mb-4">
-        <Avatar className="h-12 w-12 border">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+        <Avatar className="h-20 w-20 border shadow-sm">
           {persona.profile_image_url ? (
             <AvatarImage src={persona.profile_image_url} alt={persona.name} />
           ) : (
-            <AvatarFallback>{getInitials(persona.name)}</AvatarFallback>
+            <AvatarFallback className="text-xl">{getInitials(persona.name)}</AvatarFallback>
           )}
         </Avatar>
         <div>
-          <h3 className="text-lg font-medium">{persona.name}</h3>
+          <h3 className="text-2xl font-medium">{persona.name}</h3>
           <p className="text-sm text-muted-foreground">ID: {persona.persona_id}</p>
         </div>
       </div>

@@ -35,12 +35,12 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
       <Card className="mb-6 p-4 shadow-sm">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="border rounded-md p-4 bg-[#F5F5F7]">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>{personaA ? getInitials(personaA.name) : "A"}</AvatarFallback>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="text-lg">{personaA ? getInitials(personaA.name) : "A"}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-semibold">Persona A {personaA ? '(Loaded)' : '(Not Loaded)'}</p>
+                <p className="text-xl font-semibold">Persona A {personaA ? '(Loaded)' : '(Not Loaded)'}</p>
                 <p className="text-sm text-muted-foreground">ID: {personaAId}</p>
               </div>
             </div>
@@ -51,12 +51,12 @@ const PersonaDisplay: React.FC<PersonaDisplayProps> = ({
             )}
           </div>
           <div className="border rounded-md p-4 bg-[#F5F5F7]">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>{personaB ? getInitials(personaB.name) : "B"}</AvatarFallback>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="text-lg">{personaB ? getInitials(personaB.name) : "B"}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-semibold">Persona B {personaB ? '(Loaded)' : '(Not Loaded)'}</p>
+                <p className="text-xl font-semibold">Persona B {personaB ? '(Loaded)' : '(Not Loaded)'}</p>
                 <p className="text-sm text-muted-foreground">ID: {personaBId}</p>
               </div>
             </div>
