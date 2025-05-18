@@ -3,25 +3,40 @@ import React from 'react';
 import { Persona } from '@/services/persona/types';
 import PersonaDemographicsCard from './PersonaDemographicsCard';
 import PersonaInsights from './PersonaInsights';
-import { getPersonaInsights } from './PersonaInsightUtils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface PersonaDetailCardProps {
   persona: Persona;
 }
 
 const PersonaDetailCard: React.FC<PersonaDetailCardProps> = ({ persona }) => {
-  const insights = getPersonaInsights(persona);
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   return (
-    <div className="border rounded-md p-4 bg-[#F8F9FA]">
-      <h3 className="text-lg font-semibold">{persona.name}</h3>
-      <p className="text-sm text-muted-foreground">ID: {persona.persona_id}</p>
+    <div className="border rounded-md p-4 bg-[#F5F5F7]">
+      <div className="flex items-center gap-3 mb-4">
+        <Avatar className="h-12 w-12 border">
+          {persona.profile_image_url ? (
+            <AvatarImage src={persona.profile_image_url} alt={persona.name} />
+          ) : (
+            <AvatarFallback>{getInitials(persona.name)}</AvatarFallback>
+          )}
+        </Avatar>
+        <div>
+          <h3 className="text-lg font-medium">{persona.name}</h3>
+          <p className="text-sm text-muted-foreground">ID: {persona.persona_id}</p>
+        </div>
+      </div>
       
-      {/* Demographics */}
       <PersonaDemographicsCard persona={persona} />
-      
-      {/* Insights */}
-      <PersonaInsights insights={insights} />
+      <PersonaInsights persona={persona} />
     </div>
   );
 };

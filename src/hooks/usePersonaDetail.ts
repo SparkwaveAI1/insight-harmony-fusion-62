@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
+import { generatePersonaImage } from "@/services/persona/operations/generatePersonaImage";
 
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
@@ -103,9 +104,29 @@ export function usePersonaDetail() {
     }
   };
 
-  // This is a no-op placeholder that returns null since we're removing image functionality
-  const handleImageGenerated = async () => {
-    return null;
+  // Generate and update persona image
+  const handleImageGenerated = async (): Promise<string | null> => {
+    if (!personaId || !user || !persona) {
+      toast.error("Cannot generate image: missing data");
+      return null;
+    }
+    
+    try {
+      console.log("Starting image generation for persona:", personaId);
+      const imageUrl = await generatePersonaImage(persona);
+      
+      if (imageUrl) {
+        console.log("Image generated successfully:", imageUrl);
+        setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+        return imageUrl;
+      } else {
+        console.error("Image generation failed - no URL returned");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error generating persona image:", error);
+      throw error;
+    }
   };
 
   // Check if current user is the owner of this persona
