@@ -1,3 +1,4 @@
+
 /// <reference types="vite/client" />
 
 // Define the table_exists RPC function type
@@ -255,3 +256,4 @@ declare module '@/integrations/supabase/types' {
     | null
     | { [key: string]: Json | undefined }
     | Json[]
+}

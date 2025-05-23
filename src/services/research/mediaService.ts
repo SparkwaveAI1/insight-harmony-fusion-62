@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ResearchMedia } from "./types";
@@ -115,7 +116,7 @@ export const uploadResearchMedia = async (
         column_name: 'media_ids',
         row_id: projectId,
         new_element: mediaData.id
-      }
+      } as any
     );
       
     if (updateError) throw updateError;
@@ -187,7 +188,7 @@ export const deleteResearchMedia = async (mediaId: string, projectId: string): P
         column_name: 'media_ids',
         row_id: projectId,
         element_to_remove: mediaId
-      }
+      } as any
     );
       
     if (updateError) throw updateError;
