@@ -108,7 +108,7 @@ export const uploadResearchMedia = async (
       
     if (mediaError) throw mediaError;
     
-    // Update the project with the new media ID
+    // Update the project with the new media ID using a custom RPC function
     const { error: updateError } = await supabase.rpc(
       'array_append_element',
       {
@@ -180,7 +180,7 @@ export const deleteResearchMedia = async (mediaId: string, projectId: string): P
       
     if (deleteError) throw deleteError;
     
-    // Update the project to remove the media ID
+    // Update the project to remove the media ID using a custom RPC function
     const { error: updateError } = await supabase.rpc(
       'array_remove_element',
       {

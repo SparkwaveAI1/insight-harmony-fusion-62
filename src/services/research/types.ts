@@ -1,20 +1,21 @@
 
-import type { Json, Database as SupabaseDatabase } from "@/integrations/supabase/types";
+// Import the properly defined Database type from the Supabase types file
+import type { Json, Database } from "@/integrations/supabase/types";
 
 // Use the properly imported Database type
-export type ResearchProject = SupabaseDatabase["public"]["Tables"]["research_projects"]["Row"];
+export type ResearchProject = Database["public"]["Tables"]["research_projects"]["Row"];
 
 export type ResearchProjectInsert = Omit<
-  SupabaseDatabase["public"]["Tables"]["research_projects"]["Insert"],
+  Database["public"]["Tables"]["research_projects"]["Insert"],
   "id" | "created_at" | "updated_at"
 >;
 
 export type ResearchProjectUpdate = Partial<Omit<ResearchProjectInsert, "created_by">>;
 
-export type ResearchMedia = SupabaseDatabase["public"]["Tables"]["research_media"]["Row"];
+export type ResearchMedia = Database["public"]["Tables"]["research_media"]["Row"];
 
 export type ResearchMediaInsert = Omit<
-  SupabaseDatabase["public"]["Tables"]["research_media"]["Insert"],
+  Database["public"]["Tables"]["research_media"]["Insert"],
   "id" | "created_at" | "updated_at"
 >;
 
