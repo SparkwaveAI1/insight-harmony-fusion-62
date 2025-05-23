@@ -8,9 +8,17 @@ import { ResearchProject, ResearchProjectInsert, ResearchProjectUpdate } from ".
  */
 export const getUserResearchProjects = async (): Promise<ResearchProject[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast.error("You must be logged in to view research projects");
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from("research_projects")
       .select("*")
+      .eq("created_by", user.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -52,6 +60,12 @@ export const createResearchProject = async (project: ResearchProjectInsert): Pro
     
     if (!user) {
       toast.error("You must be logged in to create a research project");
+      return null;
+    }
+    
+    // Ensure project has a title
+    if (!project.title) {
+      toast.error("Project title is required");
       return null;
     }
     
