@@ -7,7 +7,7 @@ import UnderConstructionAlert from "@/components/projects/UnderConstructionAlert
 import ProjectsHeader from "@/components/projects/ProjectsHeader";
 import ProjectsList from "@/components/projects/ProjectsList";
 import CreateProjectDialog from "@/components/projects/CreateProjectDialog";
-import useProjects from "@/hooks/projects/useProjects";
+import useProjectsPage from "@/hooks/projects/useProjectsPage";
 
 const Projects = () => {
   const {
@@ -22,7 +22,7 @@ const Projects = () => {
     handleCreateProject,
     handleDeleteProject,
     formatDate
-  } = useProjects();
+  } = useProjectsPage();
 
   return (
     <div className="min-h-screen flex flex-col">
