@@ -1,5 +1,5 @@
 
-import { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
 export type ResearchProject = Database["public"]["Tables"]["research_projects"]["Row"];
 

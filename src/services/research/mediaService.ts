@@ -109,12 +109,15 @@ export const uploadResearchMedia = async (
     if (mediaError) throw mediaError;
     
     // Update the project with the new media ID
-    const { error: updateError } = await supabase
-      .from('research_projects')
-      .update({
-        media_ids: supabase.sql`array_append(media_ids, ${mediaData.id})`
-      })
-      .eq('id', projectId);
+    const { error: updateError } = await supabase.rpc(
+      'array_append_element',
+      {
+        table_name: 'research_projects',
+        column_name: 'media_ids',
+        row_id: projectId,
+        new_element: mediaData.id
+      }
+    );
       
     if (updateError) throw updateError;
     
@@ -178,12 +181,15 @@ export const deleteResearchMedia = async (mediaId: string, projectId: string): P
     if (deleteError) throw deleteError;
     
     // Update the project to remove the media ID
-    const { error: updateError } = await supabase
-      .from('research_projects')
-      .update({
-        media_ids: supabase.sql`array_remove(media_ids, ${mediaId})`
-      })
-      .eq('id', projectId);
+    const { error: updateError } = await supabase.rpc(
+      'array_remove_element',
+      {
+        table_name: 'research_projects',
+        column_name: 'media_ids',
+        row_id: projectId,
+        element_to_remove: mediaId
+      }
+    );
       
     if (updateError) throw updateError;
     

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ResearchProject, ResearchProjectInsert, ResearchProjectUpdate } from "./types";
@@ -70,7 +71,16 @@ export const createResearchProject = async (project: ResearchProjectInsert): Pro
     
     const { data, error } = await supabase
       .from("research_projects")
-      .insert({ ...project, created_by: user.id })
+      .insert({ 
+        title: project.title,
+        description: project.description, 
+        instructions: project.instructions,
+        persona_ids: project.persona_ids || [],
+        collection_ids: project.collection_ids || [],
+        media_ids: project.media_ids || [],
+        session_ids: project.session_ids || [],
+        created_by: user.id 
+      })
       .select()
       .single();
 
