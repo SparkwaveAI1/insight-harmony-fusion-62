@@ -9,3 +9,12 @@ export type ResearchProjectInsert = Omit<
 >;
 
 export type ResearchProjectUpdate = Partial<Omit<ResearchProjectInsert, "created_by">>;
+
+export type ResearchMedia = Database["public"]["Tables"]["research_media"]["Row"];
+
+export type ResearchMediaInsert = Omit<
+  Database["public"]["Tables"]["research_media"]["Insert"],
+  "id" | "created_at" | "updated_at"
+>;
+
+export type ResearchMediaUpdate = Partial<Omit<ResearchMediaInsert, "user_id">>;

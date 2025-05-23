@@ -345,6 +345,65 @@ export type Database = {
         }
         Relationships: []
       }
+      research_media: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          is_processed: boolean | null
+          metadata: Json | null
+          original_name: string
+          project_id: string
+          text_content: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          is_processed?: boolean | null
+          metadata?: Json | null
+          original_name: string
+          project_id: string
+          text_content?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_processed?: boolean | null
+          metadata?: Json | null
+          original_name?: string
+          project_id?: string
+          text_content?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_media_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "research_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       research_projects: {
         Row: {
           collection_ids: string[]

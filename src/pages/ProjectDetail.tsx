@@ -24,24 +24,33 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
-import { ArrowLeft, Calendar, Edit2, FileText, MessageSquare, MoreHorizontal, Plus, Trash, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Edit2, FileText, Loader2, MessageSquare, Plus, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { getProjectById, getProjectConversations, updateProject } from "@/services/collections";
 import { toast } from "sonner";
 import { Conversation } from "@/services/collections/types";
+import MediaUploader from "@/components/research/MediaUploader";
+import MediaList from "@/components/research/MediaList";
+import { getResearchProjectMedia } from "@/services/research/mediaService";
+import { ResearchMedia } from "@/services/research/types";
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [project, setProject] = useState<any>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<ResearchMedia[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMediaLoading, setIsMediaLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState<string | null>("");
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("conversations");
 
   useEffect(() => {
     const loadProject = async () => {
@@ -72,6 +81,25 @@ const ProjectDetail = () => {
     loadProject();
   }, [projectId, navigate]);
 
+  useEffect(() => {
+    const loadMediaFiles = async () => {
+      if (!projectId) return;
+      setIsMediaLoading(true);
+      try {
+        const media = await getResearchProjectMedia(projectId);
+        setMediaFiles(media);
+      } catch (error) {
+        console.error("Error loading media files:", error);
+      } finally {
+        setIsMediaLoading(false);
+      }
+    };
+
+    if (activeTab === "media" && projectId) {
+      loadMediaFiles();
+    }
+  }, [projectId, activeTab]);
+
   const handleUpdateProject = async () => {
     try {
       setIsEditing(true);
@@ -96,6 +124,15 @@ const ProjectDetail = () => {
       toast.error("Failed to update project");
     } finally {
       setIsEditing(false);
+    }
+  };
+
+  const handleMediaUploadComplete = async () => {
+    if (projectId) {
+      setIsMediaLoading(true);
+      const media = await getResearchProjectMedia(projectId);
+      setMediaFiles(media);
+      setIsMediaLoading(false);
     }
   };
 
@@ -154,69 +191,114 @@ const ProjectDetail = () => {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                          <CardTitle>Conversations</CardTitle>
-                          <CardDescription>
-                            Chat conversations saved in this project
-                          </CardDescription>
-                        </div>
-                        
-                        <Button asChild>
-                          <Link to="/dual-chat">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Conversation
-                          </Link>
-                        </Button>
-                      </CardHeader>
-                      <CardContent>
-                        {conversations.length > 0 ? (
-                          <div className="space-y-3">
-                            {conversations.map((conversation) => (
-                              <Card key={conversation.id} className="bg-muted/30">
-                                <CardContent className="p-4">
-                                  <div className="flex justify-between items-start">
-                                    <div className="space-y-1">
-                                      <h3 className="font-medium">{conversation.title}</h3>
-                                      <p className="text-sm text-muted-foreground">
-                                        <Calendar className="h-3 w-3 inline-block mr-1" />
-                                        {format(new Date(conversation.created_at), "MMM d, yyyy")}
-                                      </p>
-                                    </div>
-                                    
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      asChild
-                                      className="text-primary"
-                                    >
-                                      <Link to={`/conversations/${conversation.id}`}>
-                                        <MessageSquare className="h-4 w-4 mr-1" />
-                                        View
-                                      </Link>
-                                    </Button>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-8 flex flex-col items-center justify-center text-center">
-                            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                              <FileText className="h-6 w-6 text-muted-foreground" />
+                    <Tabs 
+                      value={activeTab} 
+                      onValueChange={setActiveTab} 
+                      className="space-y-4"
+                    >
+                      <TabsList>
+                        <TabsTrigger value="conversations">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Conversations
+                        </TabsTrigger>
+                        <TabsTrigger value="media">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Media & Documents
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="conversations">
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                              <CardTitle>Conversations</CardTitle>
+                              <CardDescription>
+                                Chat conversations saved in this project
+                              </CardDescription>
                             </div>
-                            <h3 className="font-medium mb-1">No conversations yet</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                              Start a new conversation with personas and save it to this project
-                            </p>
+                            
                             <Button asChild>
-                              <Link to="/dual-chat">Start New Conversation</Link>
+                              <Link to="/dual-chat">
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Conversation
+                              </Link>
                             </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                          </CardHeader>
+                          <CardContent>
+                            {conversations.length > 0 ? (
+                              <div className="space-y-3">
+                                {conversations.map((conversation) => (
+                                  <Card key={conversation.id} className="bg-muted/30">
+                                    <CardContent className="p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                          <h3 className="font-medium">{conversation.title}</h3>
+                                          <p className="text-sm text-muted-foreground">
+                                            <Calendar className="h-3 w-3 inline-block mr-1" />
+                                            {format(new Date(conversation.created_at), "MMM d, yyyy")}
+                                          </p>
+                                        </div>
+                                        
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          asChild
+                                          className="text-primary"
+                                        >
+                                          <Link to={`/conversations/${conversation.id}`}>
+                                            <MessageSquare className="h-4 w-4 mr-1" />
+                                            View
+                                          </Link>
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="p-8 flex flex-col items-center justify-center text-center">
+                                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                                  <FileText className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                                <h3 className="font-medium mb-1">No conversations yet</h3>
+                                <p className="text-sm text-muted-foreground mb-4">
+                                  Start a new conversation with personas and save it to this project
+                                </p>
+                                <Button asChild>
+                                  <Link to="/dual-chat">Start New Conversation</Link>
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                      
+                      <TabsContent value="media">
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                              <CardTitle>Media & Documents</CardTitle>
+                              <CardDescription>
+                                Upload documents and images to your research project
+                              </CardDescription>
+                            </div>
+                            
+                            <Button onClick={() => setUploadDialogOpen(true)}>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload File
+                            </Button>
+                          </CardHeader>
+                          <CardContent>
+                            <MediaList 
+                              media={mediaFiles}
+                              projectId={projectId || ""}
+                              isLoading={isMediaLoading}
+                              onDeleteComplete={handleMediaUploadComplete}
+                            />
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
                   </div>
                   
                   <div>
@@ -268,6 +350,17 @@ const ProjectDetail = () => {
                             {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
                           </p>
                         </div>
+                        
+                        <Separator />
+                        
+                        <div>
+                          <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                            Media Files
+                          </h3>
+                          <p>
+                            {mediaFiles.length} file{mediaFiles.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -282,7 +375,7 @@ const ProjectDetail = () => {
                 <DialogHeader>
                   <DialogTitle>Edit Project</DialogTitle>
                   <DialogDescription>
-                    Update the details of your project.
+                    Update the details of your research project.
                   </DialogDescription>
                 </DialogHeader>
                 
@@ -328,6 +421,14 @@ const ProjectDetail = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {/* Media Upload Dialog */}
+            <MediaUploader
+              projectId={projectId || ""}
+              open={uploadDialogOpen}
+              onOpenChange={setUploadDialogOpen}
+              onUploadComplete={handleMediaUploadComplete}
+            />
           </div>
         </SidebarInset>
       </div>
