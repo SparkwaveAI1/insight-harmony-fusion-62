@@ -345,6 +345,48 @@ export type Database = {
         }
         Relationships: []
       }
+      research_projects: {
+        Row: {
+          collection_ids: string[]
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          instructions: string | null
+          media_ids: string[]
+          persona_ids: string[]
+          session_ids: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          collection_ids?: string[]
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          media_ids?: string[]
+          persona_ids?: string[]
+          session_ids?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          collection_ids?: string[]
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          media_ids?: string[]
+          persona_ids?: string[]
+          session_ids?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_api_keys: {
         Row: {
           created_at: string | null
