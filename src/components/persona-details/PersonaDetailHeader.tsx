@@ -1,14 +1,16 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Globe, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Loader2 } from "lucide-react";
 import { Persona } from "@/services/persona/types";
 import { deletePersona } from "@/services/persona";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
+import PersonaAvatar from "./PersonaAvatar";
 import PersonaNameEditor from "./PersonaNameEditor";
 import PersonaActionButtons from "./PersonaActionButtons";
+import GenerateImageButton from "./GenerateImageButton";
 import PersonaCloneForm from "./PersonaCloneForm";
 
 interface PersonaDetailHeaderProps {
@@ -30,8 +32,8 @@ export default function PersonaDetailHeader({
   onNameUpdate: onNameUpdated,
   onImageGenerated
 }: PersonaDetailHeaderProps) {
-  const navigate = useNavigate();
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const navigate = useNavigate();
   
   const handleDeletePersona = async () => {
     try {
@@ -48,16 +50,15 @@ export default function PersonaDetailHeader({
   const handleChatClick = () => {
     navigate(`/persona/${persona.persona_id}/chat`);
   };
-
+  
   const handleGenerateImage = async () => {
     if (isGeneratingImage) return;
     
     setIsGeneratingImage(true);
+    
     try {
       const imageUrl = await onImageGenerated();
-      if (imageUrl) {
-        toast.success("Profile image generated successfully");
-      } else {
+      if (!imageUrl) {
         toast.error("Failed to generate profile image");
       }
     } catch (error) {
@@ -72,6 +73,7 @@ export default function PersonaDetailHeader({
     return (
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-4">
+          <Skeleton className="h-32 w-32 rounded-full" />
           <div className="space-y-2">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-4 w-24" />
@@ -81,55 +83,41 @@ export default function PersonaDetailHeader({
     );
   }
 
-  // Extract initials for avatar fallback
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  const hasProfileImage = !!persona.profile_image_url;
 
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-6 gap-6">
-      <div className="flex items-start gap-6">
-        <div className="relative">
-          <Avatar className="w-24 h-24 border shadow-sm">
-            {persona.profile_image_url ? (
-              <AvatarImage src={persona.profile_image_url} alt={persona.name} />
-            ) : (
-              <AvatarFallback className="text-2xl">{getInitials(persona.name)}</AvatarFallback>
-            )}
-          </Avatar>
-          
-          {isOwner && (
-            <button 
-              className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-sm hover:bg-primary/90 transition-colors"
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImage}
-              title="Generate profile image"
-            >
-              {isGeneratingImage ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Camera className="h-5 w-5" />
-              )}
-            </button>
-          )}
-        </div>
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
+      <div className="flex items-center gap-4">
+        <PersonaAvatar 
+          persona={persona}
+          isOwner={isOwner}
+          isGeneratingImage={isGeneratingImage}
+          onGenerateImage={handleGenerateImage}
+        />
         
         <div>
           <PersonaNameEditor 
             personaId={persona.persona_id}
             initialName={persona.name}
             onNameUpdate={onNameUpdated}
-            className="text-2xl font-semibold"
           />
           
-          {/* Display Persona ID */}
-          <p className="text-sm text-muted-foreground mt-1 mb-2">
-            Persona ID: {persona.persona_id}
+          {/* Display public/private status */}
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            {isPublic ? (
+              <>
+                <Globe className="h-3 w-3" /> Public
+              </>
+            ) : (
+              <>
+                <Lock className="h-3 w-3" /> Private
+              </>
+            )}
+          </p>
+          
+          {/* Display Persona ID instead of Image ID */}
+          <p className="text-xs text-muted-foreground mt-1">
+            Persona ID: {persona.persona_id || 'Not available'}
           </p>
           
           <PersonaVisibilityToggle 
@@ -137,6 +125,14 @@ export default function PersonaDetailHeader({
             isPublic={isPublic} 
             isOwner={isOwner} 
             onVisibilityChange={onVisibilityChange} 
+          />
+          
+          {/* Always show the generate/regenerate image button for owners */}
+          <GenerateImageButton
+            isVisible={isOwner}
+            isGenerating={isGeneratingImage}
+            onGenerate={handleGenerateImage}
+            hasImage={hasProfileImage}
           />
         </div>
       </div>

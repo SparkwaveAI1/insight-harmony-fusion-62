@@ -1,99 +1,94 @@
 
 import { useState } from "react";
-import { Check, Pen, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updatePersonaName } from "@/services/persona";
 
 interface PersonaNameEditorProps {
   personaId: string;
   initialName: string;
-  onNameUpdate?: (name: string) => void;
-  className?: string;
+  onNameUpdate: (name: string) => void;
 }
 
-export default function PersonaNameEditor({
-  personaId,
-  initialName,
-  onNameUpdate,
-  className
+export default function PersonaNameEditor({ 
+  personaId, 
+  initialName, 
+  onNameUpdate 
 }: PersonaNameEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(initialName);
-  const [originalName] = useState(initialName);
-
-  const handleEdit = () => {
+  const [newName, setNewName] = useState(initialName);
+  
+  const handleStartEditing = () => {
     setIsEditing(true);
+    setNewName(initialName);
   };
-
-  const handleCancel = () => {
-    setName(originalName);
-    setIsEditing(false);
-  };
-
-  const handleSave = async () => {
-    if (name.trim() === "") {
+  
+  const handleSaveName = async () => {
+    if (!newName.trim()) {
       toast.error("Name cannot be empty");
       return;
     }
-
+    
     try {
-      await updatePersonaName(personaId, name);
-      onNameUpdate?.(name);
-      setIsEditing(false);
-      toast.success("Name updated successfully");
+      const updated = await updatePersonaName(personaId, newName);
+      if (updated) {
+        toast.success("Persona name updated");
+        setIsEditing(false);
+        onNameUpdate(newName);
+      } else {
+        toast.error("Failed to update persona name");
+      }
     } catch (error) {
-      console.error("Failed to update name:", error);
-      toast.error("Failed to update name");
+      console.error("Error updating persona name:", error);
+      toast.error("An error occurred while updating the name");
     }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setNewName(initialName);
+  };
+  
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      handleSave();
+      handleSaveName();
     } else if (e.key === "Escape") {
-      handleCancel();
+      handleCancelEditing();
     }
   };
-
+  
   if (isEditing) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex gap-2 items-center">
         <input
           type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={handleKeyPress}
+          className="border rounded px-2 py-1 text-xl font-semibold"
           autoFocus
         />
-        <button
-          onClick={handleSave}
-          className="p-1.5 bg-green-50 text-green-600 rounded-full hover:bg-green-100"
-        >
-          <Check className="w-4 h-4" />
-        </button>
-        <button
-          onClick={handleCancel}
-          className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" onClick={handleSaveName}>Save</Button>
+          <Button size="sm" variant="ghost" onClick={handleCancelEditing}>Cancel</Button>
+        </div>
       </div>
     );
   }
-
+  
   return (
-    <div className="flex items-center gap-2 group">
-      <h1 className={cn("font-medium", className)}>
-        {name}
-      </h1>
-      <button
-        onClick={handleEdit}
-        className="p-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
+    <div className="flex items-center gap-2">
+      <h1 className="text-xl font-semibold">{initialName}</h1>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-6 w-6"
+        onClick={handleStartEditing}
       >
-        <Pen className="w-4 h-4" />
-      </button>
+        <Pencil className="h-3 w-3" />
+        <span className="sr-only">Edit name</span>
+      </Button>
     </div>
   );
 }
