@@ -47,23 +47,38 @@ export const getUserCollections = async (): Promise<Collection[]> => {
  */
 export const getUserCollectionsWithCount = async (): Promise<CollectionWithPersonaCount[]> => {
   try {
-    const { data, error } = await supabase
+    // Since we removed the view, we'll manually count the personas
+    const { data: collections, error: collectionsError } = await supabase
       .from("collections")
-      .select(`
-        *,
-        persona_count: collection_personas(count)
-      `)
+      .select("*")
       .order("updated_at", { ascending: false });
 
-    if (error) throw error;
+    if (collectionsError) throw collectionsError;
+
+    // Get persona counts for each collection
+    const collectionsWithCount = await Promise.all(
+      (collections || []).map(async (collection) => {
+        const { count, error: countError } = await supabase
+          .from("collection_personas")
+          .select("*", { count: "exact", head: true })
+          .eq("collection_id", collection.id);
+
+        if (countError) {
+          console.error("Error counting personas for collection:", countError);
+          return {
+            ...collection,
+            persona_count: 0
+          };
+        }
+
+        return {
+          ...collection,
+          persona_count: count || 0
+        };
+      })
+    );
     
-    // Transform the data to match the CollectionWithPersonaCount interface
-    const transformedData = data?.map(collection => ({
-      ...collection,
-      persona_count: collection.persona_count?.[0]?.count || 0
-    })) as CollectionWithPersonaCount[];
-    
-    return transformedData || [];
+    return collectionsWithCount;
   } catch (error) {
     console.error("Error fetching collections with count:", error);
     toast.error("Failed to fetch collections");

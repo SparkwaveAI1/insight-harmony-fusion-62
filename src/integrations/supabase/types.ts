@@ -136,13 +136,6 @@ export type Database = {
             foreignKeyName: "conversations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "project_conversations"
-            referencedColumns: ["project_id"]
-          },
-          {
-            foreignKeyName: "conversations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -195,6 +188,44 @@ export type Database = {
           unlock_code?: string | null
         }
         Relationships: []
+      }
+      persona_images: {
+        Row: {
+          created_at: string | null
+          file_path: string
+          id: string
+          is_current: boolean | null
+          original_url: string | null
+          persona_id: string
+          storage_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_path: string
+          id?: string
+          is_current?: boolean | null
+          original_url?: string | null
+          persona_id: string
+          storage_url: string
+        }
+        Update: {
+          created_at?: string | null
+          file_path?: string
+          id?: string
+          is_current?: boolean | null
+          original_url?: string | null
+          persona_id?: string
+          storage_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_images_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["persona_id"]
+          },
+        ]
       }
       personas: {
         Row: {
@@ -345,28 +376,7 @@ export type Database = {
       }
     }
     Views: {
-      collection_personas_count: {
-        Row: {
-          collection_id: string | null
-          count: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "collection_personas_collection_id_fkey"
-            columns: ["collection_id"]
-            isOneToOne: false
-            referencedRelation: "collections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_conversations: {
-        Row: {
-          count: number | null
-          project_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       [_ in never]: never
