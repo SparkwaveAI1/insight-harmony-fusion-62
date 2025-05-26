@@ -1,5 +1,5 @@
 
-import { ensureTablesExist, displayParticipantsTableInfo } from './database/tableService';
+import { ensureTablesExist } from './database/tableService';
 import { getSetupSQLScripts } from './database/setupScripts';
 
 /**
@@ -13,4 +13,4 @@ export interface DatabaseFunctions {
 }
 
 // Re-export everything for backward compatibility
-export { ensureTablesExist, displayParticipantsTableInfo, getSetupSQLScripts };
+export { ensureTablesExist, getSetupSQLScripts };

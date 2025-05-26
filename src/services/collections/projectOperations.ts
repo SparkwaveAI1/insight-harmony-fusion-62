@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Project, ProjectWithConversationCount } from "./types";
@@ -59,32 +58,28 @@ export const getUserProjectsWithCount = async (): Promise<ProjectWithConversatio
       return [];
     }
     
-    // Now get the counts from the project_conversations view
-    const { data: counts, error: countsError } = await supabase
-      .from("project_conversations")
-      .select("project_id, count");
-    
-    if (countsError) {
-      console.error("Error fetching conversation counts:", countsError);
-      // Continue with projects but without counts
-      return projects.map(project => ({
-        ...project,
-        conversation_count: 0
-      }));
-    }
-    
-    // Create a map of project_id to count
-    const countMap = new Map();
-    counts?.forEach(item => {
-      // Convert count to number before storing in the map
-      countMap.set(item.project_id, typeof item.count === 'string' ? parseInt(item.count) : item.count || 0);
-    });
-    
-    // Merge projects with counts
-    const projectsWithCount = projects.map(project => ({
-      ...project,
-      conversation_count: countMap.get(project.id) || 0
-    }));
+    // Manually count conversations for each project
+    const projectsWithCount = await Promise.all(
+      projects.map(async (project) => {
+        const { count, error: countError } = await supabase
+          .from("conversations")
+          .select("*", { count: "exact", head: true })
+          .eq("project_id", project.id);
+
+        if (countError) {
+          console.error("Error counting conversations for project:", countError);
+          return {
+            ...project,
+            conversation_count: 0
+          };
+        }
+
+        return {
+          ...project,
+          conversation_count: count || 0
+        };
+      })
+    );
     
     return projectsWithCount;
   } catch (error) {
