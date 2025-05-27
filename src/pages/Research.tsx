@@ -1,9 +1,7 @@
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
-import ResearchHero from "@/components/sections/research/ResearchHero";
-import ResearchModes from "@/components/sections/research/ResearchModes";
-import ResearchOutcomes from "@/components/sections/research/ResearchOutcomes";
+import ResearchInterface from "@/components/research/ResearchInterface";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -17,13 +15,13 @@ const Research = () => {
           <div className="relative flex min-h-svh flex-col">
             <Header />
             <main className="flex-1 pt-24">
-              <div className="container py-6">
-                <div className="flex items-center justify-between">
+              <div className="container py-6 h-full">
+                <div className="flex items-center justify-between mb-4">
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
-                <ResearchHero />
-                <ResearchModes />
-                <ResearchOutcomes />
+                <div className="h-[calc(100vh-12rem)]">
+                  <ResearchInterface />
+                </div>
               </div>
             </main>
             <Footer />

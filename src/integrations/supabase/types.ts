@@ -70,24 +70,30 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          file_attachments: Json | null
           id: string
           persona_id: string | null
+          responding_persona_id: string | null
           role: string
         }
         Insert: {
           content: string
           conversation_id: string
           created_at?: string
+          file_attachments?: Json | null
           id?: string
           persona_id?: string | null
+          responding_persona_id?: string | null
           role: string
         }
         Update: {
           content?: string
           conversation_id?: string
           created_at?: string
+          file_attachments?: Json | null
           id?: string
           persona_id?: string | null
+          responding_persona_id?: string | null
           role?: string
         }
         Relationships: [
@@ -102,30 +108,39 @@ export type Database = {
       }
       conversations: {
         Row: {
+          active_persona_ids: string[] | null
+          auto_mode: boolean | null
           created_at: string
           id: string
           persona_ids: string[]
           project_id: string
+          session_type: string | null
           tags: string[]
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          active_persona_ids?: string[] | null
+          auto_mode?: boolean | null
           created_at?: string
           id?: string
           persona_ids?: string[]
           project_id: string
+          session_type?: string | null
           tags?: string[]
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          active_persona_ids?: string[] | null
+          auto_mode?: boolean | null
           created_at?: string
           id?: string
           persona_ids?: string[]
           project_id?: string
+          session_type?: string | null
           tags?: string[]
           title?: string
           updated_at?: string
