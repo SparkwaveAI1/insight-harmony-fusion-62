@@ -26,30 +26,10 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   onSelectResponder
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [awaitingPersonaSelection, setAwaitingPersonaSelection] = React.useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Check if we're waiting for persona selection after user message
-  useEffect(() => {
-    if (!autoMode && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'user' && !isLoading) {
-        setAwaitingPersonaSelection(true);
-      } else {
-        setAwaitingPersonaSelection(false);
-      }
-    } else {
-      setAwaitingPersonaSelection(false);
-    }
-  }, [messages, autoMode, isLoading]);
-
-  const handlePersonaSelect = (personaId: string) => {
-    setAwaitingPersonaSelection(false);
-    onSelectResponder(personaId);
-  };
 
   const getPersonaInfo = (personaId: string) => {
     return loadedPersonas.find(p => p.persona_id === personaId);
@@ -82,32 +62,28 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
                 <span>Generating response...</span>
               </div>
             )}
-
-            {/* Persona Selection UI */}
-            {awaitingPersonaSelection && (
-              <div className="border-2 border-dashed border-primary/50 rounded-lg p-4">
-                <h4 className="font-medium mb-3">Select next responder:</h4>
-                <PersonaSelector
-                  personas={loadedPersonas}
-                  onSelect={handlePersonaSelect}
-                />
-              </div>
-            )}
             
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
       </Card>
 
+      {/* Persona Selection - Always visible when not in auto mode */}
+      {!autoMode && (
+        <Card className="mb-4 p-4">
+          <h4 className="font-medium mb-3">Select persona to respond:</h4>
+          <PersonaSelector
+            personas={loadedPersonas}
+            onSelect={onSelectResponder}
+          />
+        </Card>
+      )}
+
       {/* Input */}
       <ResearchMessageInput
         onSendMessage={onSendMessage}
-        disabled={isLoading || awaitingPersonaSelection}
-        placeholder={
-          awaitingPersonaSelection 
-            ? "Select a persona to respond first..."
-            : "Type your message to continue the research conversation..."
-        }
+        disabled={isLoading}
+        placeholder="Type your message to continue the research conversation..."
       />
     </div>
   );

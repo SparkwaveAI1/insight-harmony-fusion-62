@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -172,15 +171,6 @@ export const useResearchSession = () => {
         return;
       }
 
-      // Get the last user message
-      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-      if (!lastUserMessage) {
-        console.error('No user message found to respond to');
-        toast.error('No message to respond to');
-        return;
-      }
-
-      console.log('Responding to message:', lastUserMessage.content);
       console.log('Current conversation messages:', messages.length);
 
       // Create context about other personas in the session
@@ -201,15 +191,20 @@ export const useResearchSession = () => {
 
       console.log('Conversation history being sent:', conversationHistory.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
 
+      // Use the last message as the prompt, or a generic prompt if no messages yet
+      const promptMessage = messages.length > 0 
+        ? messages[messages.length - 1].content
+        : 'Please introduce yourself and share your thoughts on the topic we\'re discussing.';
+
       // Generate response using existing persona chat service with research mode
       const response = await sendMessageToPersona(
         personaId,
-        lastUserMessage.content,
+        promptMessage,
         conversationHistory,
         persona,
-        'research', // Use research mode instead of conversation
+        'research',
         `This is a research conversation with multiple AI personas. You are participating alongside other personas. You should respond to the ongoing conversation context, not as if this is a first greeting. Look at the conversation history to understand what has been discussed so far.${personaContext}`,
-        lastUserMessage.image
+        messages.length > 0 ? messages[messages.length - 1].image : undefined
       );
 
       console.log('Generated response:', response.substring(0, 100) + '...');
