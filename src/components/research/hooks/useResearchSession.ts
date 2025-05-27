@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +36,35 @@ export const useResearchSession = () => {
         return false;
       }
 
+      // First, create or get a default research project
+      let projectId: string;
+      
+      // Try to find an existing research project for this user
+      const { data: existingProjects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('name', 'Research Sessions')
+        .limit(1);
+
+      if (existingProjects && existingProjects.length > 0) {
+        projectId = existingProjects[0].id;
+      } else {
+        // Create a new research project
+        const { data: newProject, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            name: 'Research Sessions',
+            description: 'Default project for research sessions',
+            user_id: user.id
+          })
+          .select('id')
+          .single();
+
+        if (projectError) throw projectError;
+        projectId = newProject.id;
+      }
+
       // Create research conversation
       const { data: conversation, error } = await supabase
         .from('conversations')
@@ -46,7 +74,7 @@ export const useResearchSession = () => {
           active_persona_ids: personaIds,
           auto_mode: autoMode,
           persona_ids: personaIds,
-          project_id: 'research-session', // We'll create a default research project later
+          project_id: projectId,
           user_id: user.id,
           tags: ['research']
         })
