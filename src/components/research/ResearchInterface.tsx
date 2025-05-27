@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Settings, Download, Trash2 } from 'lucide-react';
+import { Users, Settings, Download, Trash2, Send } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { useResearchSession } from './hooks/useResearchSession';
@@ -37,6 +37,17 @@ const ResearchInterface = () => {
   const handleClearSession = () => {
     console.log('Clear session functionality to be implemented');
   };
+
+  const handleSendToActivePersona = async () => {
+    if (loadedPersonas.length > 0) {
+      const activePersona = loadedPersonas[0];
+      console.log('Sending chat to active persona:', activePersona.name);
+      await selectPersonaResponder(activePersona.persona_id);
+    }
+  };
+
+  // Show button when there's an active persona and messages exist
+  const shouldShowSendButton = loadedPersonas.length > 0 && messages.length > 0;
 
   if (showPersonaLoader || !sessionId) {
     return (
@@ -128,6 +139,28 @@ const ResearchInterface = () => {
           ))}
         </div>
       </Card>
+
+      {/* Send to Persona Button */}
+      {shouldShowSendButton && (
+        <Card className="flex-shrink-0 mb-4 p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-sm">Send to Active Persona</h4>
+              <p className="text-xs text-muted-foreground">
+                Send the current conversation to {loadedPersonas[0]?.name} for their response
+              </p>
+            </div>
+            <Button 
+              onClick={handleSendToActivePersona}
+              disabled={isLoading}
+              className="ml-4"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {isLoading ? 'Sending...' : 'Send to Persona'}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Research Conversation */}
       <div className="flex-1 min-h-0">
