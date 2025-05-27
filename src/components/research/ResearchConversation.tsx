@@ -37,18 +37,7 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Persona Selection - Always visible when not in auto mode */}
-      {!autoMode && (
-        <Card className="mb-4 p-4">
-          <h4 className="font-medium mb-3">Select persona to respond:</h4>
-          <PersonaSelector
-            personas={loadedPersonas}
-            onSelect={onSelectResponder}
-          />
-        </Card>
-      )}
-
-      {/* Messages */}
+      {/* Messages - Conversation Box */}
       <Card className="flex-1 min-h-0 mb-4">
         <ScrollArea className="h-full p-4">
           <div className="space-y-4">
@@ -85,6 +74,17 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
         disabled={isLoading}
         placeholder="Type your message to continue the research conversation..."
       />
+
+      {/* Persona Selection - Below input as send buttons */}
+      {!autoMode && (
+        <Card className="mt-4 p-4">
+          <h4 className="font-medium mb-3">Or select a persona to respond next:</h4>
+          <PersonaSelector
+            personas={loadedPersonas}
+            onSelect={onSelectResponder}
+          />
+        </Card>
+      )}
     </div>
   );
 };
