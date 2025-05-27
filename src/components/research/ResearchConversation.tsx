@@ -31,6 +31,12 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    console.log('ResearchConversation: messages count:', messages.length);
+    console.log('ResearchConversation: loaded personas count:', loadedPersonas.length);
+    console.log('ResearchConversation: autoMode:', autoMode);
+  }, [messages, loadedPersonas, autoMode]);
+
   const getPersonaInfo = (personaId: string) => {
     return loadedPersonas.find(p => p.persona_id === personaId);
   };
@@ -38,34 +44,39 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Messages - Conversation Box */}
-      <Card className="flex-1 min-h-0 mb-4">
-        <ScrollArea className="h-full p-4">
-          <div className="space-y-4">
-            {messages.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <h3 className="text-lg font-medium mb-2">Research Session Started</h3>
-                <p>Send your first message to begin the conversation with your selected personas.</p>
-              </div>
-            )}
-            
-            {messages.map((message, index) => (
-              <ResearchMessage
-                key={index}
-                message={message}
-                persona={message.responding_persona_id ? getPersonaInfo(message.responding_persona_id) : undefined}
-              />
-            ))}
-            
-            {isLoading && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                <span>Generating response...</span>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+      <Card className="flex-1 min-h-0 mb-4 border border-gray-200">
+        <div className="h-full p-4">
+          <ScrollArea className="h-full">
+            <div className="space-y-4">
+              {messages.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <h3 className="text-lg font-medium mb-2">Research Session Started</h3>
+                  <p>Send your first message to begin the conversation with your selected personas.</p>
+                </div>
+              )}
+              
+              {messages.map((message, index) => {
+                console.log('Rendering message:', index, message.role, message.content.substring(0, 50));
+                return (
+                  <ResearchMessage
+                    key={index}
+                    message={message}
+                    persona={message.responding_persona_id ? getPersonaInfo(message.responding_persona_id) : undefined}
+                  />
+                );
+              })}
+              
+              {isLoading && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <span>Generating response...</span>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+        </div>
       </Card>
 
       {/* Input */}
