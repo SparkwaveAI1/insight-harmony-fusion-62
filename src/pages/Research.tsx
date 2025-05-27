@@ -14,12 +14,12 @@ const Research = () => {
         <SidebarInset>
           <div className="relative flex min-h-svh flex-col">
             <Header />
-            <main className="flex-1 pt-24">
-              <div className="container py-6 h-full">
+            <main className="flex-1 pt-24 pb-4">
+              <div className="container h-full max-h-[calc(100vh-8rem)]">
                 <div className="flex items-center justify-between mb-4">
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
-                <div className="h-[calc(100vh-12rem)]">
+                <div className="h-[calc(100vh-12rem)] overflow-hidden">
                   <ResearchInterface />
                 </div>
               </div>

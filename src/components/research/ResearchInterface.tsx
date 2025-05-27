@@ -34,26 +34,28 @@ const ResearchInterface = () => {
 
   if (showPersonaLoader || !sessionId) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Research Session</h1>
-          <p className="text-muted-foreground">
-            Select up to 6 personas to participate in your research conversation
-          </p>
+      <div className="h-full overflow-y-auto">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Research Session</h1>
+            <p className="text-muted-foreground">
+              Select up to 6 personas to participate in your research conversation
+            </p>
+          </div>
+          <PersonaLoader
+            maxPersonas={6}
+            onStartSession={handleStartSession}
+            isLoading={isLoading}
+          />
         </div>
-        <PersonaLoader
-          maxPersonas={6}
-          onStartSession={handleStartSession}
-          isLoading={isLoading}
-        />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full max-w-6xl mx-auto p-4">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -85,7 +87,7 @@ const ResearchInterface = () => {
       </div>
 
       {/* Loaded Personas */}
-      <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/30 rounded-lg">
+      <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/30 rounded-lg flex-shrink-0">
         {loadedPersonas.map((persona) => (
           <div key={persona.persona_id} className="flex items-center gap-2">
             <Badge variant="outline" className="flex items-center gap-2">
@@ -97,7 +99,7 @@ const ResearchInterface = () => {
       </div>
 
       {/* Research Conversation */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <ResearchConversation
           messages={messages}
           loadedPersonas={loadedPersonas}
