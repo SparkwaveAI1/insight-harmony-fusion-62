@@ -7,24 +7,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Users, Settings, Download, Trash2, Send } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
-import { useResearchSession } from './hooks/useResearchSession';
+import { SessionData } from './hooks/types';
 
-const ResearchInterface = () => {
-  const {
-    sessionId,
-    loadedPersonas,
-    messages,
-    isLoading,
-    createSession,
-    sendMessage,
-    selectPersonaResponder
-  } = useResearchSession();
+interface ResearchInterfaceProps {
+  sessionData: SessionData;
+  onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
+  onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
+  onSelectResponder: (personaId: string) => Promise<void>;
+}
 
+const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
+  sessionData,
+  onCreateSession,
+  onSendMessage,
+  onSelectResponder
+}) => {
+  const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
-    const success = await createSession(selectedPersonas);
+    const success = await onCreateSession(selectedPersonas);
     if (success) {
       setShowPersonaLoader(false);
     }
@@ -42,7 +45,7 @@ const ResearchInterface = () => {
     if (loadedPersonas.length > 0) {
       const activePersona = loadedPersonas[0];
       console.log('Sending chat to active persona:', activePersona.name);
-      await selectPersonaResponder(activePersona.persona_id);
+      await onSelectResponder(activePersona.persona_id);
     }
   };
 
@@ -168,8 +171,8 @@ const ResearchInterface = () => {
           messages={messages}
           loadedPersonas={loadedPersonas}
           isLoading={isLoading}
-          onSendMessage={sendMessage}
-          onSelectResponder={selectPersonaResponder}
+          onSendMessage={onSendMessage}
+          onSelectResponder={onSelectResponder}
         />
       </div>
     </div>

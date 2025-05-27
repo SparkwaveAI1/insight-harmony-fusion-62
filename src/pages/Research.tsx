@@ -9,10 +9,21 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 
 const Research = () => {
   const {
+    sessionId,
     loadedPersonas,
     messages,
+    isLoading,
+    createSession,
+    sendMessage,
     selectPersonaResponder
   } = useResearchSession();
+
+  const sessionData = {
+    sessionId,
+    loadedPersonas,
+    messages,
+    isLoading
+  };
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -27,7 +38,12 @@ const Research = () => {
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
                 <div className="h-[calc(100vh-2rem)]">
-                  <ResearchInterface />
+                  <ResearchInterface 
+                    sessionData={sessionData}
+                    onCreateSession={createSession}
+                    onSendMessage={sendMessage}
+                    onSelectResponder={selectPersonaResponder}
+                  />
                 </div>
               </div>
             </main>
