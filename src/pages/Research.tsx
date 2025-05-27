@@ -2,11 +2,29 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import ResearchInterface from "@/components/research/ResearchInterface";
+import { PersonaResponseSelector } from "@/components/research/PersonaResponseSelector";
+import { useResearchSession } from "@/components/research/hooks/useResearchSession";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 
 const Research = () => {
+  const {
+    loadedPersonas,
+    messages,
+    autoMode,
+    selectPersonaResponder
+  } = useResearchSession();
+
+  // Determine if persona selector should be shown
+  const shouldShowPersonaSelector = () => {
+    if (autoMode || messages.length === 0) return false;
+    
+    // Show selector after user messages
+    const lastMessage = messages[messages.length - 1];
+    return lastMessage?.role === 'user';
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
@@ -22,6 +40,13 @@ const Research = () => {
                 <div className="h-[calc(100vh-2rem)]">
                   <ResearchInterface />
                 </div>
+                
+                {/* Separate Persona Response Selector - Outside Chat Window */}
+                <PersonaResponseSelector
+                  personas={loadedPersonas}
+                  onSelect={selectPersonaResponder}
+                  isVisible={shouldShowPersonaSelector()}
+                />
               </div>
             </main>
             <Footer />

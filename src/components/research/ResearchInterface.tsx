@@ -165,19 +165,6 @@ const ResearchInterface = () => {
           onSelectResponder={selectPersonaResponder}
         />
       </div>
-
-      {/* Persona Response Selector - Below Chat Input */}
-      {shouldShowPersonaSelector() && (
-        <Card className="flex-shrink-0 mt-4 p-4 bg-muted/30 border-dashed">
-          <h4 className="font-medium mb-3 text-sm text-muted-foreground">
-            Select which persona should respond next:
-          </h4>
-          <PersonaSelector
-            personas={loadedPersonas}
-            onSelect={selectPersonaResponder}
-          />
-        </Card>
-      )}
     </div>
   );
 };
