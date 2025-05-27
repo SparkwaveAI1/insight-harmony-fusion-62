@@ -18,16 +18,23 @@ export const PersonaResponseSelector: React.FC<PersonaResponseSelectorProps> = (
   onSelect,
   isVisible
 }) => {
-  if (!isVisible) return null;
+  console.log('PersonaResponseSelector rendered:', { isVisible, personasCount: personas.length });
+  
+  if (!isVisible) {
+    console.log('PersonaResponseSelector not visible');
+    return null;
+  }
+
+  console.log('PersonaResponseSelector showing with personas:', personas.map(p => p.name));
 
   return (
-    <Card className="mt-6 p-6 bg-gradient-to-r from-primary/5 to-secondary/5 border-2 border-dashed border-primary/20">
+    <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-dashed border-blue-200">
       <div className="flex items-center gap-2 mb-4">
-        <MessageCircle className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold text-primary">Choose Next Responder</h3>
+        <MessageCircle className="h-5 w-5 text-blue-600" />
+        <h3 className="text-lg font-semibold text-blue-800">Choose Next Responder</h3>
       </div>
       
-      <p className="text-muted-foreground mb-6">
+      <p className="text-gray-600 mb-6">
         Select which persona should respond to the conversation next:
       </p>
       
@@ -36,19 +43,22 @@ export const PersonaResponseSelector: React.FC<PersonaResponseSelectorProps> = (
           <Button
             key={persona.persona_id}
             variant="outline"
-            onClick={() => onSelect(persona.persona_id)}
-            className="h-auto p-4 justify-start hover:bg-primary/10 hover:border-primary transition-all duration-200 group"
+            onClick={() => {
+              console.log('Persona selected:', persona.name, persona.persona_id);
+              onSelect(persona.persona_id);
+            }}
+            className="h-auto p-4 justify-start hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 group border-2"
           >
             <div className="flex items-start gap-3 w-full">
-              <Avatar className="h-12 w-12 flex-shrink-0 ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+              <Avatar className="h-12 w-12 flex-shrink-0 ring-2 ring-blue-200 group-hover:ring-blue-400 transition-all">
                 <AvatarImage src={persona.image_url} />
-                <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                <AvatarFallback className="bg-blue-100 text-blue-700 font-bold text-sm">
                   {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
-                <div className="font-semibold text-sm text-left truncate w-full group-hover:text-primary transition-colors">
+                <div className="font-semibold text-sm text-left truncate w-full group-hover:text-blue-700 transition-colors">
                   {persona.name}
                 </div>
                 

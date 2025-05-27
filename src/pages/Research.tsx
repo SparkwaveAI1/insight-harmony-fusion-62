@@ -16,14 +16,32 @@ const Research = () => {
     selectPersonaResponder
   } = useResearchSession();
 
-  // Determine if persona selector should be shown
+  // Show persona selector when in manual mode and there are personas loaded
+  // and the last message is from user (not auto-responding)
   const shouldShowPersonaSelector = () => {
-    if (autoMode || messages.length === 0) return false;
+    console.log('Checking persona selector visibility:', {
+      autoMode,
+      messagesLength: messages.length,
+      loadedPersonasLength: loadedPersonas.length,
+      lastMessageRole: messages.length > 0 ? messages[messages.length - 1]?.role : 'none'
+    });
+    
+    // Don't show if auto mode is on
+    if (autoMode) return false;
+    
+    // Don't show if no personas loaded
+    if (loadedPersonas.length === 0) return false;
+    
+    // Don't show if no messages yet
+    if (messages.length === 0) return false;
     
     // Show selector after user messages
     const lastMessage = messages[messages.length - 1];
     return lastMessage?.role === 'user';
   };
+
+  const showSelector = shouldShowPersonaSelector();
+  console.log('Should show persona selector:', showSelector);
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -41,12 +59,16 @@ const Research = () => {
                   <ResearchInterface />
                 </div>
                 
-                {/* Separate Persona Response Selector - Outside Chat Window */}
-                <PersonaResponseSelector
-                  personas={loadedPersonas}
-                  onSelect={selectPersonaResponder}
-                  isVisible={shouldShowPersonaSelector()}
-                />
+                {/* Persona Response Selector - Always Outside Chat Window */}
+                {showSelector && (
+                  <div className="mt-4">
+                    <PersonaResponseSelector
+                      personas={loadedPersonas}
+                      onSelect={selectPersonaResponder}
+                      isVisible={true}
+                    />
+                  </div>
+                )}
               </div>
             </main>
             <Footer />
