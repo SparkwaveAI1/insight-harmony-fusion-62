@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
@@ -151,13 +152,8 @@ export const useResearchSession = () => {
     }
   }, [sessionId]);
 
-  const selectPersonaResponder = useCallback(async (personaId: string) => {
-    console.log('Selecting persona responder:', personaId);
-    await generatePersonaResponse(personaId);
-  }, []);
-
-  const generatePersonaResponse = useCallback(async (personaId: string) => {
-    if (!sessionId) {
+  const generatePersonaResponse = useCallback(async (personaId: string, currentSessionId: string, currentMessages: (Message & { responding_persona_id?: string })[], currentPersonas: Persona[]) => {
+    if (!currentSessionId) {
       console.error('No session ID available');
       return;
     }
@@ -166,17 +162,17 @@ export const useResearchSession = () => {
       setIsLoading(true);
       console.log('Generating response for persona:', personaId);
       
-      const persona = loadedPersonas.find(p => p.persona_id === personaId);
+      const persona = currentPersonas.find(p => p.persona_id === personaId);
       if (!persona) {
         console.error('Persona not found:', personaId);
         toast.error('Selected persona not found');
         return;
       }
 
-      console.log('Current conversation messages:', messages.length);
+      console.log('Current conversation messages:', currentMessages.length);
 
-      // Build the complete conversation history for context - THIS WAS THE ISSUE
-      const conversationHistory: Message[] = messages.map(m => ({
+      // Build the complete conversation history for context
+      const conversationHistory: Message[] = currentMessages.map(m => ({
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.content,
         timestamp: m.timestamp,
@@ -186,19 +182,19 @@ export const useResearchSession = () => {
       console.log('Conversation history being sent:', conversationHistory.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
 
       // Create a comprehensive prompt that includes the conversation context
-      const contextualPrompt = messages.length > 0 
-        ? `Based on our conversation so far, please provide your thoughts and perspective. Here's the context of what we've been discussing: ${messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`
+      const contextualPrompt = currentMessages.length > 0 
+        ? `Based on our conversation so far, please provide your thoughts and perspective. Here's the context of what we've been discussing: ${currentMessages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`
         : 'Please introduce yourself and share your thoughts on the topic we\'re discussing.';
 
       // Generate response using existing persona chat service with research mode
       const response = await sendMessageToPersona(
         personaId,
         contextualPrompt,
-        conversationHistory, // Now properly passing the conversation history
+        conversationHistory,
         persona,
         'research',
         `This is a research conversation. You should respond to the ongoing conversation context, taking into account everything that has been discussed so far. Look at the conversation history to understand what has been discussed and provide your perspective as ${persona.name}.`,
-        messages.length > 0 ? messages[messages.length - 1].image : undefined
+        currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].image : undefined
       );
 
       console.log('Generated response:', response.substring(0, 100) + '...');
@@ -217,7 +213,7 @@ export const useResearchSession = () => {
       await supabase
         .from('conversation_messages')
         .insert({
-          conversation_id: sessionId,
+          conversation_id: currentSessionId,
           role: 'assistant',
           content: response,
           persona_id: personaId,
@@ -228,11 +224,30 @@ export const useResearchSession = () => {
 
     } catch (error) {
       console.error('Error generating persona response:', error);
-      toast.error(`Failed to generate response from ${loadedPersonas.find(p => p.persona_id === personaId)?.name || 'persona'}`);
+      toast.error(`Failed to generate response from ${currentPersonas.find(p => p.persona_id === personaId)?.name || 'persona'}`);
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, loadedPersonas, messages]);
+  }, []);
+
+  const selectPersonaResponder = useCallback(async (personaId: string) => {
+    console.log('Selecting persona responder:', personaId);
+    // Use current values from state, not from closure
+    setMessages(currentMessages => {
+      setLoadedPersonas(currentPersonas => {
+        setSessionId(currentSessionId => {
+          if (currentSessionId) {
+            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas);
+          } else {
+            console.error('No session ID available');
+          }
+          return currentSessionId;
+        });
+        return currentPersonas;
+      });
+      return currentMessages;
+    });
+  }, [generatePersonaResponse]);
 
   const addPersonaToSession = useCallback(async (personaId: string) => {
     // Implementation for adding persona to existing session
