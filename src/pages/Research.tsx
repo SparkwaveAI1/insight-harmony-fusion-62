@@ -2,7 +2,6 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import ResearchInterface from "@/components/research/ResearchInterface";
-import { PersonaResponseSelector } from "@/components/research/PersonaResponseSelector";
 import { useResearchSession } from "@/components/research/hooks/useResearchSession";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -14,36 +13,6 @@ const Research = () => {
     messages,
     selectPersonaResponder
   } = useResearchSession();
-
-  // Show persona selector when there are personas loaded and the last message is from user
-  const shouldShowPersonaSelector = () => {
-    console.log('Checking persona selector visibility:', {
-      messagesLength: messages.length,
-      loadedPersonasLength: loadedPersonas.length,
-      lastMessageRole: messages.length > 0 ? messages[messages.length - 1]?.role : 'none'
-    });
-    
-    // Don't show if no personas loaded
-    if (loadedPersonas.length === 0) {
-      console.log('No personas loaded');
-      return false;
-    }
-    
-    // Don't show if no messages yet
-    if (messages.length === 0) {
-      console.log('No messages yet');
-      return false;
-    }
-    
-    // Show selector after user messages
-    const lastMessage = messages[messages.length - 1];
-    const shouldShow = lastMessage?.role === 'user';
-    console.log('Last message role:', lastMessage?.role, 'Should show:', shouldShow);
-    return shouldShow;
-  };
-
-  const showSelector = shouldShowPersonaSelector();
-  console.log('Should show persona selector:', showSelector);
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -60,17 +29,6 @@ const Research = () => {
                 <div className="h-[calc(100vh-2rem)]">
                   <ResearchInterface />
                 </div>
-                
-                {/* Persona Response Selector - Always Outside Chat Window */}
-                {showSelector && (
-                  <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4 z-50">
-                    <PersonaResponseSelector
-                      personas={loadedPersonas}
-                      onSelect={selectPersonaResponder}
-                      isVisible={true}
-                    />
-                  </div>
-                )}
               </div>
             </main>
             <Footer />

@@ -34,7 +34,7 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Central Chat Window - Threaded Log */}
+      {/* Central Chat Window */}
       <Card className="flex-1 min-h-0 mb-4 border border-gray-200">
         <div className="h-full p-6">
           <ScrollArea className="h-full">
@@ -42,7 +42,7 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
               {messages.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <h3 className="text-xl font-medium mb-3">Research Session Started</h3>
-                  <p className="text-base">Send your first message to begin the conversation with your selected personas.</p>
+                  <p className="text-base">Send your first message to begin the conversation with your selected persona.</p>
                 </div>
               )}
               
@@ -67,7 +67,7 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
         </div>
       </Card>
 
-      {/* User Input Box - Always Visible at Bottom */}
+      {/* User Input Box */}
       <div className="flex-shrink-0">
         <ResearchMessageInput
           onSendMessage={onSendMessage}

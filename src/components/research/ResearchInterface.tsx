@@ -16,8 +16,6 @@ const ResearchInterface = () => {
     messages,
     isLoading,
     createSession,
-    addPersonaToSession,
-    removePersonaFromSession,
     sendMessage,
     selectPersonaResponder
   } = useResearchSession();
@@ -33,12 +31,10 @@ const ResearchInterface = () => {
   };
 
   const handleExportTranscript = () => {
-    // Future: Export conversation transcript
     console.log('Export transcript functionality to be implemented');
   };
 
   const handleClearSession = () => {
-    // Future: Clear current session
     console.log('Clear session functionality to be implemented');
   };
 
@@ -109,7 +105,7 @@ const ResearchInterface = () => {
         </div>
       </div>
 
-      {/* Loaded Personas - Enhanced Display */}
+      {/* Loaded Personas Display */}
       <Card className="flex-shrink-0 mb-4 p-4 bg-muted/30">
         <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Persona:</h4>
         <div className="flex flex-wrap gap-3">
@@ -133,7 +129,7 @@ const ResearchInterface = () => {
         </div>
       </Card>
 
-      {/* Research Conversation - Main Interface */}
+      {/* Research Conversation */}
       <div className="flex-1 min-h-0">
         <ResearchConversation
           messages={messages}
