@@ -19,7 +19,7 @@ const Research = () => {
                 <div className="flex items-center justify-between mb-4">
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
-                <div className="h-[calc(100vh-6rem)]">
+                <div className="h-[calc(100vh-2rem)]">
                   <ResearchInterface />
                 </div>
               </div>
