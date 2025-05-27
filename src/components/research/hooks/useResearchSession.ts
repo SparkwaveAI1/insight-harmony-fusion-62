@@ -1,10 +1,9 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { usePersona } from '@/hooks/usePersona';
-import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
+import { Message } from '@/components/persona-chat/types';
+import { supabase } from '@/integrations/supabase/client';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 
 export const useResearchSession = () => {
