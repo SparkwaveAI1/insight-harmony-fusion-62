@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,17 +151,36 @@ export const useResearchSession = () => {
   }, [sessionId, autoMode, loadedPersonas, messages]);
 
   const selectPersonaResponder = useCallback(async (personaId: string) => {
+    console.log('Selecting persona responder:', personaId);
     await generatePersonaResponse(personaId);
   }, []);
 
   const generatePersonaResponse = useCallback(async (personaId: string) => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      console.error('No session ID available');
+      return;
+    }
 
     try {
       setIsLoading(true);
+      console.log('Generating response for persona:', personaId);
       
       const persona = loadedPersonas.find(p => p.persona_id === personaId);
-      if (!persona) return;
+      if (!persona) {
+        console.error('Persona not found:', personaId);
+        toast.error('Selected persona not found');
+        return;
+      }
+
+      // Get the last user message
+      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+      if (!lastUserMessage) {
+        console.error('No user message found to respond to');
+        toast.error('No message to respond to');
+        return;
+      }
+
+      console.log('Responding to message:', lastUserMessage.content);
 
       // Create context about other personas in the session
       const otherPersonas = loadedPersonas.filter(p => p.persona_id !== personaId);
@@ -170,20 +190,23 @@ export const useResearchSession = () => {
           ).join(', ')}`
         : '';
 
-      // Get the last user message
-      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-      if (!lastUserMessage) return;
-
       // Generate response using existing persona chat service
       const response = await sendMessageToPersona(
         personaId,
-        lastUserMessage.content + personaContext,
-        messages,
+        lastUserMessage.content,
+        messages.map(m => ({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.content,
+          timestamp: m.timestamp,
+          image: m.image
+        })),
         persona,
         'conversation',
         `This is a research conversation with multiple AI personas. You are participating alongside other personas. Please provide thoughtful, authentic responses based on your persona characteristics.${personaContext}`,
         lastUserMessage.image
       );
+
+      console.log('Generated response:', response.substring(0, 100) + '...');
 
       // Add persona response to messages
       const assistantMessage: Message & { responding_persona_id?: string } = {
@@ -206,9 +229,11 @@ export const useResearchSession = () => {
           responding_persona_id: personaId
         });
 
+      console.log('Response saved successfully');
+
     } catch (error) {
       console.error('Error generating persona response:', error);
-      toast.error('Failed to generate response');
+      toast.error(`Failed to generate response from ${loadedPersonas.find(p => p.persona_id === personaId)?.name || 'persona'}`);
     } finally {
       setIsLoading(false);
     }
