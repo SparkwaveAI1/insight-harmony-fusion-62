@@ -181,6 +181,7 @@ export const useResearchSession = () => {
       }
 
       console.log('Responding to message:', lastUserMessage.content);
+      console.log('Current conversation messages:', messages.length);
 
       // Create context about other personas in the session
       const otherPersonas = loadedPersonas.filter(p => p.persona_id !== personaId);
@@ -190,19 +191,24 @@ export const useResearchSession = () => {
           ).join(', ')}`
         : '';
 
-      // Generate response using existing persona chat service
+      // Build the complete conversation history for context
+      const conversationHistory: Message[] = messages.map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content,
+        timestamp: m.timestamp,
+        image: m.image
+      }));
+
+      console.log('Conversation history being sent:', conversationHistory.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
+
+      // Generate response using existing persona chat service with research mode
       const response = await sendMessageToPersona(
         personaId,
         lastUserMessage.content,
-        messages.map(m => ({
-          role: m.role === 'user' ? 'user' : 'assistant',
-          content: m.content,
-          timestamp: m.timestamp,
-          image: m.image
-        })),
+        conversationHistory,
         persona,
-        'conversation',
-        `This is a research conversation with multiple AI personas. You are participating alongside other personas. Please provide thoughtful, authentic responses based on your persona characteristics.${personaContext}`,
+        'research', // Use research mode instead of conversation
+        `This is a research conversation with multiple AI personas. You are participating alongside other personas. You should respond to the ongoing conversation context, not as if this is a first greeting. Look at the conversation history to understand what has been discussed so far.${personaContext}`,
         lastUserMessage.image
       );
 
