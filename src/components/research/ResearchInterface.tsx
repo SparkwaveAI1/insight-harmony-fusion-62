@@ -53,7 +53,7 @@ const ResearchInterface = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full max-h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <div className="flex items-center gap-4">
@@ -98,8 +98,8 @@ const ResearchInterface = () => {
         ))}
       </div>
 
-      {/* Research Conversation */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      {/* Research Conversation - Main content area */}
+      <div className="flex-1 min-h-0">
         <ResearchConversation
           messages={messages}
           loadedPersonas={loadedPersonas}
