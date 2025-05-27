@@ -25,6 +25,7 @@ const ResearchInterface = () => {
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
 
   const handleStartSession = async (selectedPersonas: string[]) => {
+    console.log('Starting session with personas:', selectedPersonas);
     const success = await createSession(selectedPersonas);
     if (success) {
       setShowPersonaLoader(false);
@@ -48,11 +49,11 @@ const ResearchInterface = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Research Session</h1>
             <p className="text-muted-foreground">
-              Select up to 6 personas to participate in your research conversation
+              Select a persona to participate in your research conversation
             </p>
           </div>
           <PersonaLoader
-            maxPersonas={6}
+            maxPersonas={1}
             onStartSession={handleStartSession}
             isLoading={isLoading}
           />
@@ -69,7 +70,7 @@ const ResearchInterface = () => {
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             <span className="font-semibold">Research Session</span>
-            <Badge variant="secondary">{loadedPersonas.length}/6 Personas</Badge>
+            <Badge variant="secondary">{loadedPersonas.length}/1 Persona</Badge>
             <Badge variant="outline" className="text-xs">
               {messages.length} messages
             </Badge>
@@ -110,7 +111,7 @@ const ResearchInterface = () => {
 
       {/* Loaded Personas - Enhanced Display */}
       <Card className="flex-shrink-0 mb-4 p-4 bg-muted/30">
-        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
+        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Persona:</h4>
         <div className="flex flex-wrap gap-3">
           {loadedPersonas.map((persona) => (
             <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">

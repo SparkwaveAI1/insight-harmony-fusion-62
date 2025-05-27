@@ -63,7 +63,7 @@ const Research = () => {
                 
                 {/* Persona Response Selector - Always Outside Chat Window */}
                 {showSelector && (
-                  <div className="mt-4 mb-8">
+                  <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4 z-50">
                     <PersonaResponseSelector
                       personas={loadedPersonas}
                       onSelect={selectPersonaResponder}

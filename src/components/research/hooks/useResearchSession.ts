@@ -18,6 +18,7 @@ export const useResearchSession = () => {
   const createSession = useCallback(async (personaIds: string[]): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log('Creating session with personas:', personaIds);
       
       // Get the user's ID
       const { data: { user } } = await supabase.auth.getUser();
@@ -30,6 +31,8 @@ export const useResearchSession = () => {
       const selectedPersonas = (personas || []).filter(p => 
         personaIds.includes(p.persona_id)
       );
+      
+      console.log('Selected personas:', selectedPersonas);
       
       if (selectedPersonas.length === 0) {
         toast.error('No valid personas selected');
@@ -87,6 +90,7 @@ export const useResearchSession = () => {
       setLoadedPersonas(selectedPersonas);
       setMessages([]);
       
+      console.log('Session created successfully:', conversation.id);
       toast.success('Research session started successfully');
       return true;
     } catch (error) {
@@ -99,10 +103,14 @@ export const useResearchSession = () => {
   }, [personas]);
 
   const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
-    if (!sessionId || !content.trim()) return;
+    if (!sessionId || !content.trim()) {
+      console.log('Cannot send message - missing sessionId or content:', { sessionId, hasContent: !!content.trim() });
+      return;
+    }
 
     try {
       setIsLoading(true);
+      console.log('Sending message:', content);
 
       // Add user message to local state
       const userMessage: Message & { responding_persona_id?: string } = {
@@ -112,10 +120,15 @@ export const useResearchSession = () => {
         image: imageFile ? await convertFileToBase64(imageFile) : undefined
       };
 
-      setMessages(prev => [...prev, userMessage]);
+      console.log('Adding user message to state');
+      setMessages(prev => {
+        const newMessages = [...prev, userMessage];
+        console.log('Updated messages:', newMessages.length);
+        return newMessages;
+      });
 
       // Save user message to database
-      await supabase
+      const { error: dbError } = await supabase
         .from('conversation_messages')
         .insert({
           conversation_id: sessionId,
@@ -124,6 +137,12 @@ export const useResearchSession = () => {
           persona_id: null,
           responding_persona_id: null
         });
+
+      if (dbError) {
+        console.error('Error saving message to database:', dbError);
+      } else {
+        console.log('Message saved to database successfully');
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -157,14 +176,6 @@ export const useResearchSession = () => {
 
       console.log('Current conversation messages:', messages.length);
 
-      // Create context about other personas in the session
-      const otherPersonas = loadedPersonas.filter(p => p.persona_id !== personaId);
-      const personaContext = otherPersonas.length > 0 
-        ? `\n\nOther participants in this research session: ${otherPersonas.map(p => 
-            `${p.name} (${p.metadata?.occupation || 'Unknown occupation'})`
-          ).join(', ')}`
-        : '';
-
       // Build the complete conversation history for context
       const conversationHistory: Message[] = messages.map(m => ({
         role: m.role === 'user' ? 'user' : 'assistant',
@@ -187,7 +198,7 @@ export const useResearchSession = () => {
         conversationHistory,
         persona,
         'research',
-        `This is a research conversation with multiple AI personas. You are participating alongside other personas. You should respond to the ongoing conversation context, not as if this is a first greeting. Look at the conversation history to understand what has been discussed so far.${personaContext}`,
+        `This is a research conversation. You should respond to the ongoing conversation context, not as if this is a first greeting. Look at the conversation history to understand what has been discussed so far.`,
         messages.length > 0 ? messages[messages.length - 1].image : undefined
       );
 

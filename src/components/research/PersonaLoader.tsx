@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { usePersona } from '@/hooks/usePersona';
@@ -16,11 +15,11 @@ interface PersonaLoaderProps {
 }
 
 export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
-  maxPersonas,
+  maxPersonas = 1, // Default to 1 for single persona selection
   onStartSession,
   isLoading
 }) => {
-  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
+  const [selectedPersona, setSelectedPersona] = useState<string>(''); // Single persona selection
   const [searchTerm, setSearchTerm] = useState('');
   const { personas } = usePersona();
 
@@ -28,20 +27,13 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     persona.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handlePersonaToggle = (personaId: string) => {
-    setSelectedPersonas(prev => {
-      if (prev.includes(personaId)) {
-        return prev.filter(id => id !== personaId);
-      } else if (prev.length < maxPersonas) {
-        return [...prev, personaId];
-      }
-      return prev;
-    });
+  const handlePersonaSelect = (personaId: string) => {
+    setSelectedPersona(personaId);
   };
 
   const handleStartSession = () => {
-    if (selectedPersonas.length > 0) {
-      onStartSession(selectedPersonas);
+    if (selectedPersona) {
+      onStartSession([selectedPersona]);
     }
   };
 
@@ -49,9 +41,9 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Select Personas for Research Session
+          Select a Persona for Research Session
           <Badge variant="secondary">
-            {selectedPersonas.length}/{maxPersonas} selected
+            {selectedPersona ? '1' : '0'}/1 selected
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -70,24 +62,21 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
         {/* Persona List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
           {filteredPersonas.map((persona) => {
-            const isSelected = selectedPersonas.includes(persona.persona_id);
-            const isDisabled = !isSelected && selectedPersonas.length >= maxPersonas;
+            const isSelected = selectedPersona === persona.persona_id;
 
             return (
               <Card
                 key={persona.persona_id}
                 className={`cursor-pointer transition-colors ${
-                  isSelected ? 'ring-2 ring-primary' : ''
-                } ${isDisabled ? 'opacity-50' : ''}`}
-                onClick={() => !isDisabled && handlePersonaToggle(persona.persona_id)}
+                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
+                }`}
+                onClick={() => handlePersonaSelect(persona.persona_id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={isSelected}
-                      disabled={isDisabled}
-                      className="mt-1"
-                    />
+                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${
+                      isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'
+                    }`} />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium truncate">{persona.name}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -117,10 +106,10 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
         <div className="flex justify-center pt-4">
           <Button
             onClick={handleStartSession}
-            disabled={selectedPersonas.length === 0 || isLoading}
+            disabled={!selectedPersona || isLoading}
             size="lg"
           >
-            {isLoading ? 'Starting Session...' : `Start Research Session with ${selectedPersonas.length} Persona${selectedPersonas.length !== 1 ? 's' : ''}`}
+            {isLoading ? 'Starting Session...' : selectedPersona ? `Start Research Session with 1 Persona` : 'Select a Persona to Continue'}
           </Button>
         </div>
       </CardContent>
