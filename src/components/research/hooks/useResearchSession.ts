@@ -176,7 +176,7 @@ export const useResearchSession = () => {
 
       console.log('Current conversation messages:', messages.length);
 
-      // Build the complete conversation history for context
+      // Build the complete conversation history for context - THIS WAS THE ISSUE
       const conversationHistory: Message[] = messages.map(m => ({
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.content,
@@ -186,19 +186,19 @@ export const useResearchSession = () => {
 
       console.log('Conversation history being sent:', conversationHistory.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
 
-      // Use the last message as the prompt, or a generic prompt if no messages yet
-      const promptMessage = messages.length > 0 
-        ? messages[messages.length - 1].content
+      // Create a comprehensive prompt that includes the conversation context
+      const contextualPrompt = messages.length > 0 
+        ? `Based on our conversation so far, please provide your thoughts and perspective. Here's the context of what we've been discussing: ${messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`
         : 'Please introduce yourself and share your thoughts on the topic we\'re discussing.';
 
       // Generate response using existing persona chat service with research mode
       const response = await sendMessageToPersona(
         personaId,
-        promptMessage,
-        conversationHistory,
+        contextualPrompt,
+        conversationHistory, // Now properly passing the conversation history
         persona,
         'research',
-        `This is a research conversation. You should respond to the ongoing conversation context, not as if this is a first greeting. Look at the conversation history to understand what has been discussed so far.`,
+        `This is a research conversation. You should respond to the ongoing conversation context, taking into account everything that has been discussed so far. Look at the conversation history to understand what has been discussed and provide your perspective as ${persona.name}.`,
         messages.length > 0 ? messages[messages.length - 1].image : undefined
       );
 
