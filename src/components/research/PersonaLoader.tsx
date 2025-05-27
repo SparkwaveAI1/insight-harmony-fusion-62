@@ -22,18 +22,9 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
 }) => {
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
-  const { personas, loadPersonas } = usePersona();
+  const { personas } = usePersona();
 
-  useEffect(() => {
-    loadPersonas();
-  }, [loadPersonas]);
-
-  useEffect(() => {
-    setAvailablePersonas(personas || []);
-  }, [personas]);
-
-  const filteredPersonas = availablePersonas.filter(persona =>
+  const filteredPersonas = (personas || []).filter(persona =>
     persona.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

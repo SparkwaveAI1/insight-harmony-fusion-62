@@ -14,7 +14,7 @@ export const useResearchSession = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autoMode, setAutoMode] = useState(false);
   
-  const { personas, loadPersonas } = usePersona();
+  const { personas } = usePersona();
 
   const createSession = useCallback(async (personaIds: string[]): Promise<boolean> => {
     try {
@@ -27,8 +27,7 @@ export const useResearchSession = () => {
         return false;
       }
 
-      // Load full persona data
-      await loadPersonas();
+      // Get selected personas from the already loaded personas
       const selectedPersonas = (personas || []).filter(p => 
         personaIds.includes(p.persona_id)
       );
@@ -69,7 +68,7 @@ export const useResearchSession = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [personas, loadPersonas, autoMode]);
+  }, [personas, autoMode]);
 
   const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
     if (!sessionId || !content.trim()) return;
