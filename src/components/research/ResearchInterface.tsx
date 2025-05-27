@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, MessageCircle, Settings, Play, Pause } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Users, MessageCircle, Settings, Play, Pause, Download, Trash2 } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { useResearchSession } from './hooks/useResearchSession';
@@ -32,6 +33,16 @@ const ResearchInterface = () => {
     }
   };
 
+  const handleExportTranscript = () => {
+    // Future: Export conversation transcript
+    console.log('Export transcript functionality to be implemented');
+  };
+
+  const handleClearSession = () => {
+    // Future: Clear current session
+    console.log('Clear session functionality to be implemented');
+  };
+
   if (showPersonaLoader || !sessionId) {
     return (
       <div className="h-full overflow-y-auto">
@@ -54,13 +65,16 @@ const ResearchInterface = () => {
 
   return (
     <div className="flex flex-col h-full max-h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+      {/* Session Header */}
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             <span className="font-semibold">Research Session</span>
             <Badge variant="secondary">{loadedPersonas.length}/6 Personas</Badge>
+            <Badge variant="outline" className="text-xs">
+              {messages.length} messages
+            </Badge>
           </div>
           
           <Button
@@ -78,27 +92,59 @@ const ResearchInterface = () => {
           <Button
             variant="outline"
             size="sm"
+            onClick={handleExportTranscript}
+            disabled={messages.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearSession}
+            disabled={messages.length === 0}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowPersonaLoader(true)}
           >
             <Settings className="h-4 w-4 mr-2" />
-            Manage Personas
+            Manage
           </Button>
         </div>
       </div>
 
-      {/* Loaded Personas */}
-      <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/30 rounded-lg flex-shrink-0">
-        {loadedPersonas.map((persona) => (
-          <div key={persona.persona_id} className="flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              {persona.name}
-            </Badge>
-          </div>
-        ))}
-      </div>
+      {/* Loaded Personas - Enhanced Display */}
+      <Card className="flex-shrink-0 mb-4 p-4 bg-muted/30">
+        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
+        <div className="flex flex-wrap gap-3">
+          {loadedPersonas.map((persona) => (
+            <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={persona.image_url} />
+                <AvatarFallback className="text-xs">
+                  {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{persona.name}</span>
+              {persona.metadata?.occupation && (
+                <Badge variant="outline" className="text-xs">
+                  {persona.metadata.occupation}
+                </Badge>
+              )}
+              <div className="w-2 h-2 bg-green-500 rounded-full" title="Active" />
+            </div>
+          ))}
+        </div>
+      </Card>
 
-      {/* Research Conversation - Main content area */}
+      {/* Research Conversation - Main Interface */}
       <div className="flex-1 min-h-0">
         <ResearchConversation
           messages={messages}
