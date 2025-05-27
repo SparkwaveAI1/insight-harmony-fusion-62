@@ -52,10 +52,11 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
                 )}
               </div>
               
-              {/* Key traits preview */}
-              {persona.trait_profile?.personality_traits && (
+              {/* Key traits preview using correct trait structure */}
+              {persona.trait_profile?.big_five && (
                 <div className="text-xs text-muted-foreground line-clamp-1 w-full text-left">
-                  {Object.entries(persona.trait_profile.personality_traits)
+                  {Object.entries(persona.trait_profile.big_five)
+                    .filter(([_, value]) => value !== null)
                     .slice(0, 2)
                     .map(([trait, score]) => `${trait}: ${score}`)
                     .join(', ')}
