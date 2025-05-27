@@ -4,10 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, MessageCircle, Settings, Play, Pause, Download, Trash2 } from 'lucide-react';
+import { Users, Settings, Download, Trash2 } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
-import { PersonaSelector } from './PersonaSelector';
 import { useResearchSession } from './hooks/useResearchSession';
 
 const ResearchInterface = () => {
@@ -16,8 +15,6 @@ const ResearchInterface = () => {
     loadedPersonas,
     messages,
     isLoading,
-    autoMode,
-    setAutoMode,
     createSession,
     addPersonaToSession,
     removePersonaFromSession,
@@ -42,15 +39,6 @@ const ResearchInterface = () => {
   const handleClearSession = () => {
     // Future: Clear current session
     console.log('Clear session functionality to be implemented');
-  };
-
-  // Determine if persona selector should be shown
-  const shouldShowPersonaSelector = () => {
-    if (autoMode || messages.length === 0) return false;
-    
-    // Show selector after user messages, but not if there's already a persona response following
-    const lastMessage = messages[messages.length - 1];
-    return lastMessage?.role === 'user';
   };
 
   if (showPersonaLoader || !sessionId) {
@@ -86,16 +74,6 @@ const ResearchInterface = () => {
               {messages.length} messages
             </Badge>
           </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAutoMode(!autoMode)}
-            className="flex items-center gap-2"
-          >
-            {autoMode ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {autoMode ? 'Auto Mode' : 'Manual Mode'}
-          </Button>
         </div>
         
         <div className="flex items-center gap-2">
@@ -159,7 +137,6 @@ const ResearchInterface = () => {
         <ResearchConversation
           messages={messages}
           loadedPersonas={loadedPersonas}
-          autoMode={autoMode}
           isLoading={isLoading}
           onSendMessage={sendMessage}
           onSelectResponder={selectPersonaResponder}

@@ -12,32 +12,34 @@ const Research = () => {
   const {
     loadedPersonas,
     messages,
-    autoMode,
     selectPersonaResponder
   } = useResearchSession();
 
-  // Show persona selector when in manual mode and there are personas loaded
-  // and the last message is from user (not auto-responding)
+  // Show persona selector when there are personas loaded and the last message is from user
   const shouldShowPersonaSelector = () => {
     console.log('Checking persona selector visibility:', {
-      autoMode,
       messagesLength: messages.length,
       loadedPersonasLength: loadedPersonas.length,
       lastMessageRole: messages.length > 0 ? messages[messages.length - 1]?.role : 'none'
     });
     
-    // Don't show if auto mode is on
-    if (autoMode) return false;
-    
     // Don't show if no personas loaded
-    if (loadedPersonas.length === 0) return false;
+    if (loadedPersonas.length === 0) {
+      console.log('No personas loaded');
+      return false;
+    }
     
     // Don't show if no messages yet
-    if (messages.length === 0) return false;
+    if (messages.length === 0) {
+      console.log('No messages yet');
+      return false;
+    }
     
     // Show selector after user messages
     const lastMessage = messages[messages.length - 1];
-    return lastMessage?.role === 'user';
+    const shouldShow = lastMessage?.role === 'user';
+    console.log('Last message role:', lastMessage?.role, 'Should show:', shouldShow);
+    return shouldShow;
   };
 
   const showSelector = shouldShowPersonaSelector();
@@ -61,7 +63,7 @@ const Research = () => {
                 
                 {/* Persona Response Selector - Always Outside Chat Window */}
                 {showSelector && (
-                  <div className="mt-4">
+                  <div className="mt-4 mb-8">
                     <PersonaResponseSelector
                       personas={loadedPersonas}
                       onSelect={selectPersonaResponder}

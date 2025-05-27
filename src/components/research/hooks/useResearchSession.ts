@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,6 @@ export const useResearchSession = () => {
   const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [messages, setMessages] = useState<(Message & { responding_persona_id?: string })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [autoMode, setAutoMode] = useState(false);
   
   const { personas } = usePersona();
 
@@ -72,7 +72,7 @@ export const useResearchSession = () => {
           title: `Research Session - ${new Date().toLocaleDateString()}`,
           session_type: 'research',
           active_persona_ids: personaIds,
-          auto_mode: autoMode,
+          auto_mode: false,
           persona_ids: personaIds,
           project_id: projectId,
           user_id: user.id,
@@ -96,7 +96,7 @@ export const useResearchSession = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [personas, autoMode]);
+  }, [personas]);
 
   const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
     if (!sessionId || !content.trim()) return;
@@ -125,29 +125,13 @@ export const useResearchSession = () => {
           responding_persona_id: null
         });
 
-      // In auto mode, automatically select next responder
-      if (autoMode && loadedPersonas.length > 0) {
-        // Simple logic: rotate through personas or use random selection
-        const lastPersonaMessage = [...messages].reverse().find(m => m.responding_persona_id);
-        let nextPersonaIndex = 0;
-        
-        if (lastPersonaMessage) {
-          const lastPersonaIndex = loadedPersonas.findIndex(p => 
-            p.persona_id === lastPersonaMessage.responding_persona_id
-          );
-          nextPersonaIndex = (lastPersonaIndex + 1) % loadedPersonas.length;
-        }
-        
-        const nextPersona = loadedPersonas[nextPersonaIndex];
-        await generatePersonaResponse(nextPersona.persona_id);
-      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, autoMode, loadedPersonas, messages]);
+  }, [sessionId]);
 
   const selectPersonaResponder = useCallback(async (personaId: string) => {
     console.log('Selecting persona responder:', personaId);
@@ -264,8 +248,6 @@ export const useResearchSession = () => {
     loadedPersonas,
     messages,
     isLoading,
-    autoMode,
-    setAutoMode,
     createSession,
     addPersonaToSession,
     removePersonaFromSession,

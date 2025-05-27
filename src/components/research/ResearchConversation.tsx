@@ -10,7 +10,6 @@ import { Persona } from '@/services/persona/types';
 interface ResearchConversationProps {
   messages: (Message & { responding_persona_id?: string })[];
   loadedPersonas: Persona[];
-  autoMode: boolean;
   isLoading: boolean;
   onSendMessage: (message: string, imageFile?: File | null) => void;
   onSelectResponder: (personaId: string) => void;
@@ -19,7 +18,6 @@ interface ResearchConversationProps {
 export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   messages,
   loadedPersonas,
-  autoMode,
   isLoading,
   onSendMessage,
   onSelectResponder
