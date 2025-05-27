@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Users, MessageCircle, Settings, Play, Pause, Download, Trash2 } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
+import { PersonaSelector } from './PersonaSelector';
 import { useResearchSession } from './hooks/useResearchSession';
 
 const ResearchInterface = () => {
@@ -41,6 +42,15 @@ const ResearchInterface = () => {
   const handleClearSession = () => {
     // Future: Clear current session
     console.log('Clear session functionality to be implemented');
+  };
+
+  // Determine if persona selector should be shown
+  const shouldShowPersonaSelector = () => {
+    if (autoMode || messages.length === 0) return false;
+    
+    // Show selector after user messages, but not if there's already a persona response following
+    const lastMessage = messages[messages.length - 1];
+    return lastMessage?.role === 'user';
   };
 
   if (showPersonaLoader || !sessionId) {
@@ -155,6 +165,19 @@ const ResearchInterface = () => {
           onSelectResponder={selectPersonaResponder}
         />
       </div>
+
+      {/* Persona Response Selector - Below Chat Input */}
+      {shouldShowPersonaSelector() && (
+        <Card className="flex-shrink-0 mt-4 p-4 bg-muted/30 border-dashed">
+          <h4 className="font-medium mb-3 text-sm text-muted-foreground">
+            Select which persona should respond next:
+          </h4>
+          <PersonaSelector
+            personas={loadedPersonas}
+            onSelect={selectPersonaResponder}
+          />
+        </Card>
+      )}
     </div>
   );
 };

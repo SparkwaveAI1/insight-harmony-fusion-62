@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResearchMessageInput } from './ResearchMessageInput';
 import { ResearchMessage } from './ResearchMessage';
-import { PersonaSelector } from './PersonaSelector';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
 
@@ -35,16 +34,6 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
     return loadedPersonas.find(p => p.persona_id === personaId);
   };
 
-  const shouldShowPersonaSelector = (index: number) => {
-    if (autoMode) return false;
-    
-    // Show selector after user messages, but not if there's already a persona response following
-    const message = messages[index];
-    const nextMessage = messages[index + 1];
-    
-    return message.role === 'user' && (!nextMessage || nextMessage.role === 'user');
-  };
-
   return (
     <div className="flex flex-col h-full">
       {/* Central Chat Window - Threaded Log */}
@@ -60,25 +49,11 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
               )}
               
               {messages.map((message, index) => (
-                <div key={index} className="space-y-4">
-                  <ResearchMessage
-                    message={message}
-                    persona={message.responding_persona_id ? getPersonaInfo(message.responding_persona_id) : undefined}
-                  />
-                  
-                  {/* Persona Response Selector - Show after user messages */}
-                  {shouldShowPersonaSelector(index) && (
-                    <Card className="p-4 bg-muted/30 border-dashed">
-                      <h4 className="font-medium mb-3 text-sm text-muted-foreground">
-                        Select which persona should respond next:
-                      </h4>
-                      <PersonaSelector
-                        personas={loadedPersonas}
-                        onSelect={onSelectResponder}
-                      />
-                    </Card>
-                  )}
-                </div>
+                <ResearchMessage
+                  key={index}
+                  message={message}
+                  persona={message.responding_persona_id ? getPersonaInfo(message.responding_persona_id) : undefined}
+                />
               ))}
               
               {isLoading && (
