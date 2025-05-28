@@ -7,6 +7,11 @@ interface PersonaKeyInsightsProps {
 }
 
 const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
+  // Add debugging to see what data we're working with
+  console.log("PersonaKeyInsights received metadata:", metadata);
+  console.log("Persona ID:", metadata?.persona_id);
+  console.log("Trait profile:", metadata?.trait_profile);
+
   // Generate unique insights based on persona ID
   const generateUniqueInsights = (personaId: string, metadata: any) => {
     // Personas we're specifically customizing
@@ -60,6 +65,21 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
           "Prefers solutions that benefit multiple stakeholders"
         ]
       },
+      // Ray Wv2 persona: ee23e252
+      "ee23e252": {
+        decisions: [
+          "Makes decisions based on practical experience and proven methods",
+          "Considers long-term consequences before committing to major changes"
+        ],
+        drivers: [
+          "Motivated by achieving measurable results and tangible outcomes",
+          "Values consistency and reliability in both work and relationships"
+        ],
+        persuasion: [
+          "Responds to straightforward communication with clear benefits",
+          "Prefers evidence-based arguments over theoretical concepts"
+        ]
+      },
       // The existing Alina R profile
       "9f8540fa": {
         decisions: [
@@ -79,199 +99,187 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
 
     // First check if we have a custom persona by ID
     if (personaId && customPersonas[personaId]) {
+      console.log(`Using custom insights for persona: ${personaId}`);
       return customPersonas[personaId];
     }
 
-    // If no match by ID, check if it's Alina by name/occupation (maintain backward compatibility)
-    const isAlinaR = metadata?.persona_id === '9f8540fa' || 
-                    (metadata?.name?.includes('Alina') && metadata?.occupation === 'Financial Analyst');
+    console.log(`Generating dynamic insights for persona: ${personaId}`);
     
-    if (isAlinaR) {
-      return customPersonas['9f8540fa'];
-    }
-    
-    // Generate more nuanced insights based on multiple data points
+    // Generate more accurate insights based on the actual trait data
     const generateDecisions = () => {
-      const bigFive = metadata?.trait_profile?.big_five || {};
-      const occupation = metadata?.occupation || "";
-      const education = metadata?.education_level || "";
-      const riskSensitivity = metadata?.trait_profile?.behavioral_economics?.risk_sensitivity || 0.5;
-      
-      // Use multiple factors for decisions
       const decisions = [];
+      const traitProfile = metadata?.trait_profile || {};
       
-      // Convert string values to numbers for comparison - improved handling
-      const parseTraitValue = (value: any): number => {
-        if (typeof value === 'number') return value;
+      // More robust trait value parsing
+      const getTraitValue = (path: string): number => {
+        const parts = path.split('.');
+        let value = traitProfile;
+        
+        for (const part of parts) {
+          value = value?.[part];
+          if (value === undefined || value === null) break;
+        }
+        
+        if (typeof value === 'number') return Math.max(0, Math.min(1, value));
         if (typeof value === 'string') {
           const parsed = parseFloat(value);
-          return isNaN(parsed) ? 0.5 : parsed;
+          if (!isNaN(parsed)) return Math.max(0, Math.min(1, parsed));
+          
+          // Handle descriptive values
+          const lowerValue = value.toLowerCase();
+          if (lowerValue.includes('very high') || lowerValue.includes('high')) return 0.8;
+          if (lowerValue.includes('moderate') || lowerValue.includes('medium')) return 0.5;
+          if (lowerValue.includes('low') || lowerValue.includes('very low')) return 0.2;
         }
-        return 0.5;
+        
+        return 0.5; // Default fallback
       };
+
+      const conscientiousness = getTraitValue('big_five.conscientiousness');
+      const openness = getTraitValue('big_five.openness');
+      const riskSensitivity = getTraitValue('behavioral_economics.risk_sensitivity');
+      const neuroticism = getTraitValue('big_five.neuroticism');
       
-      const riskValue = parseTraitValue(riskSensitivity);
-      const conscientiousnessValue = parseTraitValue(bigFive?.conscientiousness);
-      const opennessValue = parseTraitValue(bigFive?.openness);
-      
-      if (riskValue > 0.7) {
-        decisions.push(`Takes a cautious approach to decision-making, carefully weighing potential downsides`);
-      } else if (riskValue < 0.3) {
-        decisions.push(`Embraces risk in decision-making, focusing on potential opportunities over threats`);
-      } else if (conscientiousnessValue > 0.7) {
-        decisions.push(`Follows systematic decision-making processes with thorough evaluation of options`);
-      } else if (opennessValue > 0.7) {
-        decisions.push(`Values innovative approaches and considers unconventional alternatives`);
-      } else if (education?.includes("PhD") || education?.includes("Doctorate")) {
-        decisions.push(`Applies rigorous analytical frameworks from academic training to complex decisions`);
-      } else if (occupation?.includes("Manager") || occupation?.includes("Executive") || occupation?.includes("Director")) {
-        decisions.push(`Balances analytical thinking with practical business considerations`);
-      } else if (occupation?.includes("Artist") || occupation?.includes("Creative") || occupation?.includes("Designer")) {
-        decisions.push(`Leads with intuition and creative vision when evaluating options`);
+      console.log('Decision traits:', { conscientiousness, openness, riskSensitivity, neuroticism });
+
+      // Primary decision-making style
+      if (conscientiousness > 0.7) {
+        decisions.push("Follows systematic decision-making processes with thorough evaluation of options");
+      } else if (openness > 0.7) {
+        decisions.push("Values innovative approaches and considers unconventional alternatives");
+      } else if (riskSensitivity > 0.7) {
+        decisions.push("Takes a cautious approach to decision-making, carefully weighing potential downsides");
+      } else if (riskSensitivity < 0.3) {
+        decisions.push("Embraces calculated risks in decision-making, focusing on potential opportunities");
       } else {
-        decisions.push(`Combines practical experience with thoughtful analysis when making choices`);
+        decisions.push("Combines practical experience with thoughtful analysis when making choices");
       }
-      
-      // Add a second insight based on different factors
-      const neuroticismValue = parseTraitValue(bigFive?.neuroticism);
-      const extraversionValue = parseTraitValue(bigFive?.extraversion);
-      const agreeablenessValue = parseTraitValue(bigFive?.agreeableness);
-      
-      if (neuroticismValue > 0.6) {
-        decisions.push(`May second-guess decisions or seek reassurance after committing to a course of action`);
-      } else if (extraversionValue > 0.6 && opennessValue > 0.5) {
-        decisions.push(`Often gathers input from others before finalizing important decisions`);
-      } else if (agreeablenessValue > 0.7) {
-        decisions.push(`Considers how decisions will impact relationships and group harmony`);
-      } else if (occupation?.includes("Analyst") || occupation?.includes("Engineer") || occupation?.includes("Scientist")) {
-        decisions.push(`Prioritizes objective data and measurable outcomes in decision processes`);
-      } else if (occupation?.includes("Teacher") || occupation?.includes("Healthcare")) {
-        decisions.push(`Weighs both immediate needs and long-term development in decision-making`);
+
+      // Secondary decision factor
+      if (neuroticism > 0.6) {
+        decisions.push("May seek additional validation or reassurance for important decisions");
+      } else if (conscientiousness > 0.6) {
+        decisions.push("Adapts decision approach based on the specific context and stakes involved");
       } else {
-        decisions.push(`Adapts decision approach based on the specific context and stakes involved`);
+        decisions.push("Balances intuition with analytical thinking in decision processes");
       }
-      
+
       return decisions;
     };
     
     const generateDrivers = () => {
-      const bigFive = metadata?.trait_profile?.big_five || {};
-      const extended = metadata?.trait_profile?.extended_traits || {};
-      const moralFoundations = metadata?.trait_profile?.moral_foundations || {};
-      const age = metadata?.age ? parseInt(metadata.age) : 35;
-      const region = metadata?.region || "";
-      
       const drivers = [];
+      const traitProfile = metadata?.trait_profile || {};
       
-      // Helper function for parsing trait values
-      const parseTraitValue = (value: any): number => {
-        if (typeof value === 'number') return value;
+      const getTraitValue = (path: string): number => {
+        const parts = path.split('.');
+        let value = traitProfile;
+        
+        for (const part of parts) {
+          value = value?.[part];
+          if (value === undefined || value === null) break;
+        }
+        
+        if (typeof value === 'number') return Math.max(0, Math.min(1, value));
         if (typeof value === 'string') {
           const parsed = parseFloat(value);
-          return isNaN(parsed) ? 0.5 : parsed;
+          if (!isNaN(parsed)) return Math.max(0, Math.min(1, parsed));
+          
+          const lowerValue = value.toLowerCase();
+          if (lowerValue.includes('very high') || lowerValue.includes('high')) return 0.8;
+          if (lowerValue.includes('moderate') || lowerValue.includes('medium')) return 0.5;
+          if (lowerValue.includes('low') || lowerValue.includes('very low')) return 0.2;
         }
+        
         return 0.5;
       };
+
+      const achievement = getTraitValue('extended_traits.achievement');
+      const care = getTraitValue('moral_foundations.care');
+      const fairness = getTraitValue('moral_foundations.fairness');
+      const extraversion = getTraitValue('big_five.extraversion');
       
+      console.log('Driver traits:', { achievement, care, fairness, extraversion });
+
       // Primary motivation
-      const careValue = parseTraitValue(moralFoundations?.care);
-      const achievementValue = parseTraitValue(extended?.achievement);
-      const selfEfficacyValue = parseTraitValue(extended?.self_efficacy);
-      const opennessValue = parseTraitValue(bigFive?.openness);
-      
-      if (careValue > 0.7) {
-        drivers.push(`Strongly motivated by opportunities to care for and support others`);
-      } else if (achievementValue > 0.7 || selfEfficacyValue > 0.7) {
-        drivers.push(`Driven by personal achievement and setting challenging goals`);
-      } else if (opennessValue > 0.7) {
-        drivers.push(`Energized by intellectual exploration and creative possibilities`);
-      } else if (age < 30) {
-        drivers.push(`Motivated by building skills and establishing professional identity`);
-      } else if (age > 50) {
-        drivers.push(`Drawn to meaningful work that aligns with personal values and legacy`);
-      } else if (region) {
-        drivers.push(`Balances career ambitions with cultural values common in ${region}`);
+      if (achievement > 0.7) {
+        drivers.push("Driven by personal achievement and setting challenging goals");
+      } else if (care > 0.7) {
+        drivers.push("Strongly motivated by opportunities to care for and support others");
+      } else if (fairness > 0.7) {
+        drivers.push("Values equity and fairness in systems and relationships");
       } else {
-        drivers.push(`Motivated by a combination of professional growth and personal fulfillment`);
+        drivers.push("Motivated by a combination of professional growth and personal fulfillment");
       }
-      
-      // Secondary values
-      const fairnessValue = parseTraitValue(moralFoundations?.fairness);
-      const extraversionValue = parseTraitValue(bigFive?.extraversion);
-      const conscientiousnessValue = parseTraitValue(bigFive?.conscientiousness);
-      const selfAwarenessValue = parseTraitValue(extended?.self_awareness);
-      
-      if (fairnessValue > 0.7) {
-        drivers.push(`Values equity and fairness in systems and relationships`);
-      } else if (extraversionValue > 0.7) {
-        drivers.push(`Energized by social recognition and collaborative achievements`);
-      } else if (conscientiousnessValue > 0.7) {
-        drivers.push(`Values structure, organization, and following through on commitments`);
-      } else if (selfAwarenessValue > 0.7) {
-        drivers.push(`Prioritizes authentic self-expression and personal growth`);
+
+      // Secondary motivation
+      if (extraversion > 0.7) {
+        drivers.push("Energized by social recognition and collaborative achievements");
+      } else if (metadata?.age && parseInt(metadata.age) < 30) {
+        drivers.push("Motivated by building skills and establishing professional identity");
+      } else if (metadata?.age && parseInt(metadata.age) > 50) {
+        drivers.push("Drawn to meaningful work that aligns with personal values and legacy");
       } else {
-        drivers.push(`Balances material security with opportunities for meaningful experiences`);
+        drivers.push("Balances material security with opportunities for meaningful experiences");
       }
-      
+
       return drivers;
     };
     
     const generatePersuasion = () => {
-      const bigFive = metadata?.trait_profile?.big_five || {};
-      const extended = metadata?.trait_profile?.extended_traits || {};
-      const worldValues = metadata?.trait_profile?.world_values || {};
-      const occupation = metadata?.occupation || "";
-      const education = metadata?.education_level || "";
-      
       const persuasion = [];
+      const traitProfile = metadata?.trait_profile || {};
       
-      // Helper function for parsing trait values
-      const parseTraitValue = (value: any): number => {
-        if (typeof value === 'number') return value;
+      const getTraitValue = (path: string): number => {
+        const parts = path.split('.');
+        let value = traitProfile;
+        
+        for (const part of parts) {
+          value = value?.[part];
+          if (value === undefined || value === null) break;
+        }
+        
+        if (typeof value === 'number') return Math.max(0, Math.min(1, value));
         if (typeof value === 'string') {
           const parsed = parseFloat(value);
-          return isNaN(parsed) ? 0.5 : parsed;
+          if (!isNaN(parsed)) return Math.max(0, Math.min(1, parsed));
+          
+          const lowerValue = value.toLowerCase();
+          if (lowerValue.includes('very high') || lowerValue.includes('high')) return 0.8;
+          if (lowerValue.includes('moderate') || lowerValue.includes('medium')) return 0.5;
+          if (lowerValue.includes('low') || lowerValue.includes('very low')) return 0.2;
         }
+        
         return 0.5;
       };
+
+      const openness = getTraitValue('big_five.openness');
+      const agreeableness = getTraitValue('big_five.agreeableness');
+      const conscientiousness = getTraitValue('big_five.conscientiousness');
+      const truthOrientation = getTraitValue('extended_traits.truth_orientation');
       
-      // Response to communication style
-      const opennessValue = parseTraitValue(bigFive?.openness);
-      const traditionalValue = parseTraitValue(worldValues?.traditional_vs_secular);
-      const truthOrientationValue = parseTraitValue(extended?.truth_orientation);
-      
-      if (opennessValue < 0.4) {
-        persuasion.push(`Responds best to practical, straightforward communication with clear benefits`);
-      } else if (traditionalValue < 0.3) {
-        persuasion.push(`Receptive to messages that respect tradition and established values`);
-      } else if (education?.includes("Graduate") || education?.includes("Master") || education?.includes("PhD")) {
-        persuasion.push(`Values well-researched arguments that acknowledge complexity and nuance`);
-      } else if (truthOrientationValue > 0.7) {
-        persuasion.push(`Appreciates honest, direct communication even when messages are challenging`);
-      } else if (occupation?.includes("Creative") || occupation?.includes("Marketing")) {
-        persuasion.push(`Resonates with visually engaging content and narrative-driven approaches`);
+      console.log('Persuasion traits:', { openness, agreeableness, conscientiousness, truthOrientation });
+
+      // Communication preference
+      if (openness < 0.4) {
+        persuasion.push("Responds best to practical, straightforward communication with clear benefits");
+      } else if (truthOrientation > 0.7) {
+        persuasion.push("Appreciates honest, direct communication even when messages are challenging");
+      } else if (openness > 0.7) {
+        persuasion.push("Values well-researched arguments that acknowledge complexity and nuance");
       } else {
-        persuasion.push(`Responds to balanced communication that addresses both logic and values`);
+        persuasion.push("Responds to balanced communication that addresses both logic and values");
       }
-      
-      // Trust-building factors
-      const agreeablenessValue = parseTraitValue(bigFive?.agreeableness);
-      const institutionalTrustValue = parseTraitValue(extended?.institutional_trust);
-      const conscientiousnessValue = parseTraitValue(bigFive?.conscientiousness);
-      const cognitiveFlexibilityValue = parseTraitValue(extended?.cognitive_flexibility);
-      
-      if (agreeablenessValue > 0.7) {
-        persuasion.push(`Builds trust through warm, collaborative communication styles`);
-      } else if (institutionalTrustValue < 0.4) {
-        persuasion.push(`Values transparency and proof when evaluating claims from organizations`);
-      } else if (conscientiousnessValue > 0.7) {
-        persuasion.push(`Appreciates thorough preparation and attention to detail in presentations`);
-      } else if (cognitiveFlexibilityValue > 0.7) {
-        persuasion.push(`Open to reconsidering positions when presented with compelling new evidence`);
+
+      // Trust-building preference
+      if (agreeableness > 0.7) {
+        persuasion.push("Builds trust through warm, collaborative communication styles");
+      } else if (conscientiousness > 0.7) {
+        persuasion.push("Appreciates thorough preparation and attention to detail in presentations");
       } else {
-        persuasion.push(`Evaluates both emotional resonance and factual accuracy when forming opinions`);
+        persuasion.push("Evaluates both emotional resonance and factual accuracy when forming opinions");
       }
-      
+
       return persuasion;
     };
     
@@ -286,6 +294,8 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
   // Get the personalized insights
   const personaId = metadata?.persona_id;
   const insights = generateUniqueInsights(personaId, metadata);
+  
+  console.log("Generated insights:", insights);
   
   // Extract the appropriate insights
   const decisions = insights.decisions;
