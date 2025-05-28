@@ -47,6 +47,22 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
           highlightColor="bg-purple-50"
         />
         
+        {/* Cultural Dimensions - NEW */}
+        <TraitCategory 
+          value="cultural-dimensions"
+          title="Cultural Dimensions (Hofstede)"
+          traits={traitProfile.cultural_dimensions}
+          highlightColor="bg-orange-50"
+        />
+        
+        {/* Social Identity - NEW */}
+        <TraitCategory 
+          value="social-identity"
+          title="Social Identity & Group Dynamics"
+          traits={traitProfile.social_identity}
+          highlightColor="bg-teal-50"
+        />
+        
         {/* Behavioral Economics */}
         <TraitCategory 
           value="behavioral-economics"
@@ -77,6 +93,30 @@ interface TraitCategoryProps {
 const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryProps) => {
   if (!traits) return null;
   
+  // Handle nested objects like political_motivations
+  const renderTraitValue = (key: string, value: any) => {
+    if (typeof value === 'object' && value !== null) {
+      return (
+        <div key={key} className="ml-4 border-l-2 border-gray-200 pl-2">
+          <div className="font-medium capitalize mb-1">{key.replace(/_/g, ' ')}</div>
+          {Object.entries(value).map(([subKey, subValue]) => (
+            <div key={subKey} className="flex justify-between items-center py-1 text-sm">
+              <span className="capitalize text-gray-600">{subKey.replace(/_/g, ' ')}</span>
+              <span className="font-medium">{subValue}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+      <div key={key} className="flex justify-between items-center py-1 border-b border-muted last:border-0">
+        <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+        <span className="font-medium">{value}</span>
+      </div>
+    );
+  };
+  
   return (
     <AccordionItem value={value} className="border-0 mb-2">
       <AccordionTrigger className={`text-lg font-semibold py-2 px-3 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
@@ -85,14 +125,9 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
       <AccordionContent className="pt-4">
         <div className="grid gap-2">
           {Object.entries(traits).length > 0 ? (
-            Object.entries(traits).map(([trait, value]) => (
-              value && (
-                <div key={trait} className="flex justify-between items-center py-1 border-b border-muted last:border-0">
-                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
-                  <span className="font-medium">{value}</span>
-                </div>
-              )
-            ))
+            Object.entries(traits).map(([trait, value]) => 
+              value && renderTraitValue(trait, value)
+            )
           ) : (
             <p className="text-sm text-muted-foreground italic">No traits available</p>
           )}
