@@ -36,9 +36,9 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden">
-      {/* Conversation Display Area */}
+      {/* Conversation Display Area - Fixed height */}
       {showConversationArea && (
-        <Card className="flex-1 min-h-0 mb-4 border border-gray-200 overflow-hidden">
+        <Card className="flex-shrink-0 mb-4 border border-gray-200 overflow-hidden" style={{ height: '600px' }}>
           <div className="h-full p-6 flex flex-col">
             <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-6">
