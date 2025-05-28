@@ -4,10 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Settings, Download, Trash2, Send } from 'lucide-react';
+import { Users, Settings, Download, Trash2, Send, Save } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { SessionData } from './hooks/types';
+import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
 
 interface ResearchInterfaceProps {
   sessionData: SessionData;
@@ -24,6 +25,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
 }) => {
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
@@ -103,6 +105,25 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     }
   };
 
+  const handleSaveConversation = () => {
+    setShowSaveModal(true);
+  };
+
+  const handleConversationSaved = (conversationId: string, projectId: string) => {
+    console.log('Conversation saved successfully:', conversationId, 'to project:', projectId);
+    setShowSaveModal(false);
+    // User can continue the conversation after saving
+  };
+
+  // Convert research messages to the format expected by SaveConversationModal
+  const formatMessagesForSave = () => {
+    return messages.map(message => ({
+      role: message.role as "user" | "assistant",
+      content: message.content,
+      persona_id: message.responding_persona_id
+    }));
+  };
+
   // Show buttons when there are active personas and messages exist
   const shouldShowSendButtons = loadedPersonas.length > 0 && messages.length > 0;
 
@@ -142,6 +163,16 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveConversation}
+            disabled={messages.length === 0}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+          
           <Button
             variant="outline"
             size="sm"
@@ -233,6 +264,16 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           ))}
         </div>
       </Card>
+
+      {/* Save Conversation Modal */}
+      <SaveConversationModal
+        open={showSaveModal}
+        onOpenChange={setShowSaveModal}
+        messages={formatMessagesForSave()}
+        personaIds={loadedPersonas.map(p => p.persona_id)}
+        defaultTitle={`Research Session - ${new Date().toLocaleDateString()}`}
+        onSaved={handleConversationSaved}
+      />
     </div>
   );
 };
