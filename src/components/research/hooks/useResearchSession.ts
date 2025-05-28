@@ -223,7 +223,7 @@ export const useResearchSession = () => {
 
     } catch (error) {
       console.error('Error generating persona response:', error);
-      toast.error(`Failed to generate response from ${persona?.name || 'persona'}`);
+      toast.error(`Failed to generate response from ${loadedPersonas.find(p => p.persona_id === personaId)?.name || 'persona'}`);
     } finally {
       setIsLoading(false);
     }
