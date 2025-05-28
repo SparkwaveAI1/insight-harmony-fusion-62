@@ -15,11 +15,11 @@ interface PersonaLoaderProps {
 }
 
 export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
-  maxPersonas = 1, // Default to 1 for single persona selection
+  maxPersonas = 4, // Updated to 4 for multiple persona selection
   onStartSession,
   isLoading
 }) => {
-  const [selectedPersona, setSelectedPersona] = useState<string>(''); // Single persona selection
+  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]); // Multiple persona selection
   const [searchTerm, setSearchTerm] = useState('');
   const { personas } = usePersona();
 
@@ -28,12 +28,22 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
   );
 
   const handlePersonaSelect = (personaId: string) => {
-    setSelectedPersona(personaId);
+    setSelectedPersonas(prev => {
+      if (prev.includes(personaId)) {
+        // Remove if already selected
+        return prev.filter(id => id !== personaId);
+      } else if (prev.length < maxPersonas) {
+        // Add if under limit
+        return [...prev, personaId];
+      }
+      // If at limit, don't add
+      return prev;
+    });
   };
 
   const handleStartSession = () => {
-    if (selectedPersona) {
-      onStartSession([selectedPersona]);
+    if (selectedPersonas.length > 0) {
+      onStartSession(selectedPersonas);
     }
   };
 
@@ -41,9 +51,9 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Select a Persona for Research Session
+          Select Personas for Research Session (Up to {maxPersonas})
           <Badge variant="secondary">
-            {selectedPersona ? '1' : '0'}/1 selected
+            {selectedPersonas.length}/{maxPersonas} selected
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -62,15 +72,17 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
         {/* Persona List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
           {filteredPersonas.map((persona) => {
-            const isSelected = selectedPersona === persona.persona_id;
+            const isSelected = selectedPersonas.includes(persona.persona_id);
+            const canSelect = selectedPersonas.length < maxPersonas || isSelected;
 
             return (
               <Card
                 key={persona.persona_id}
                 className={`cursor-pointer transition-colors ${
-                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
+                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 
+                  canSelect ? 'hover:bg-muted/50' : 'opacity-50 cursor-not-allowed'
                 }`}
-                onClick={() => handlePersonaSelect(persona.persona_id)}
+                onClick={() => canSelect && handlePersonaSelect(persona.persona_id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
@@ -106,10 +118,12 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
         <div className="flex justify-center pt-4">
           <Button
             onClick={handleStartSession}
-            disabled={!selectedPersona || isLoading}
+            disabled={selectedPersonas.length === 0 || isLoading}
             size="lg"
           >
-            {isLoading ? 'Starting Session...' : selectedPersona ? `Start Research Session with 1 Persona` : 'Select a Persona to Continue'}
+            {isLoading ? 'Starting Session...' : 
+             selectedPersonas.length > 0 ? `Start Research Session with ${selectedPersonas.length} Persona${selectedPersonas.length > 1 ? 's' : ''}` : 
+             'Select at least 1 Persona to Continue'}
           </Button>
         </div>
       </CardContent>
