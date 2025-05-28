@@ -100,12 +100,19 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       // Use multiple factors for decisions
       const decisions = [];
       
-      // Convert string values to numbers for comparison
-      const riskValue = typeof riskSensitivity === 'string' ? parseFloat(riskSensitivity) : riskSensitivity;
-      const conscientiousnessValue = typeof bigFive?.conscientiousness === 'string' ? 
-        parseFloat(bigFive.conscientiousness) : (bigFive?.conscientiousness || 0.5);
-      const opennessValue = typeof bigFive?.openness === 'string' ? 
-        parseFloat(bigFive.openness) : (bigFive?.openness || 0.5);
+      // Convert string values to numbers for comparison - improved handling
+      const parseTraitValue = (value: any): number => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? 0.5 : parsed;
+        }
+        return 0.5;
+      };
+      
+      const riskValue = parseTraitValue(riskSensitivity);
+      const conscientiousnessValue = parseTraitValue(bigFive?.conscientiousness);
+      const opennessValue = parseTraitValue(bigFive?.openness);
       
       if (riskValue > 0.7) {
         decisions.push(`Takes a cautious approach to decision-making, carefully weighing potential downsides`);
@@ -126,13 +133,9 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       }
       
       // Add a second insight based on different factors
-      // Ensure we convert string values to numbers before comparison
-      const neuroticismValue = typeof bigFive?.neuroticism === 'string' ? 
-        parseFloat(bigFive.neuroticism) : (bigFive?.neuroticism || 0.5);
-      const extraversionValue = typeof bigFive?.extraversion === 'string' ? 
-        parseFloat(bigFive.extraversion) : (bigFive?.extraversion || 0.5);
-      const agreeablenessValue = typeof bigFive?.agreeableness === 'string' ? 
-        parseFloat(bigFive.agreeableness) : (bigFive?.agreeableness || 0.5);
+      const neuroticismValue = parseTraitValue(bigFive?.neuroticism);
+      const extraversionValue = parseTraitValue(bigFive?.extraversion);
+      const agreeablenessValue = parseTraitValue(bigFive?.agreeableness);
       
       if (neuroticismValue > 0.6) {
         decisions.push(`May second-guess decisions or seek reassurance after committing to a course of action`);
@@ -160,15 +163,21 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       
       const drivers = [];
       
-      // Primary motivation - ensure we convert string values to numbers before comparison
-      const careValue = typeof moralFoundations?.care === 'string' ? 
-        parseFloat(moralFoundations.care) : (moralFoundations?.care || 0.5);
-      const achievementValue = typeof extended?.achievement === 'string' ? 
-        parseFloat(extended.achievement) : (extended?.achievement || 0.5);
-      const selfEfficacyValue = typeof extended?.self_efficacy === 'string' ? 
-        parseFloat(extended.self_efficacy) : (extended?.self_efficacy || 0.5);
-      const opennessValue = typeof bigFive?.openness === 'string' ? 
-        parseFloat(bigFive.openness) : (bigFive?.openness || 0.5);
+      // Helper function for parsing trait values
+      const parseTraitValue = (value: any): number => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? 0.5 : parsed;
+        }
+        return 0.5;
+      };
+      
+      // Primary motivation
+      const careValue = parseTraitValue(moralFoundations?.care);
+      const achievementValue = parseTraitValue(extended?.achievement);
+      const selfEfficacyValue = parseTraitValue(extended?.self_efficacy);
+      const opennessValue = parseTraitValue(bigFive?.openness);
       
       if (careValue > 0.7) {
         drivers.push(`Strongly motivated by opportunities to care for and support others`);
@@ -186,15 +195,11 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
         drivers.push(`Motivated by a combination of professional growth and personal fulfillment`);
       }
       
-      // Secondary values - ensure we convert string values to numbers before comparison
-      const fairnessValue = typeof moralFoundations?.fairness === 'string' ? 
-        parseFloat(moralFoundations.fairness) : (moralFoundations?.fairness || 0.5);
-      const extraversionValue = typeof bigFive?.extraversion === 'string' ? 
-        parseFloat(bigFive.extraversion) : (bigFive?.extraversion || 0.5);
-      const conscientiousnessValue = typeof bigFive?.conscientiousness === 'string' ? 
-        parseFloat(bigFive.conscientiousness) : (bigFive?.conscientiousness || 0.5);
-      const selfAwarenessValue = typeof extended?.self_awareness === 'string' ? 
-        parseFloat(extended.self_awareness) : (extended?.self_awareness || 0.5);
+      // Secondary values
+      const fairnessValue = parseTraitValue(moralFoundations?.fairness);
+      const extraversionValue = parseTraitValue(bigFive?.extraversion);
+      const conscientiousnessValue = parseTraitValue(bigFive?.conscientiousness);
+      const selfAwarenessValue = parseTraitValue(extended?.self_awareness);
       
       if (fairnessValue > 0.7) {
         drivers.push(`Values equity and fairness in systems and relationships`);
@@ -220,13 +225,20 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
       
       const persuasion = [];
       
-      // Response to communication style - ensure we convert string values to numbers before comparison
-      const opennessValue = typeof bigFive?.openness === 'string' ? 
-        parseFloat(bigFive.openness) : (bigFive?.openness || 0.5);
-      const traditionalValue = typeof worldValues?.traditional_vs_secular === 'string' ? 
-        parseFloat(worldValues.traditional_vs_secular) : (worldValues?.traditional_vs_secular || 0.5);
-      const truthOrientationValue = typeof extended?.truth_orientation === 'string' ? 
-        parseFloat(extended.truth_orientation) : (extended?.truth_orientation || 0.5);
+      // Helper function for parsing trait values
+      const parseTraitValue = (value: any): number => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? 0.5 : parsed;
+        }
+        return 0.5;
+      };
+      
+      // Response to communication style
+      const opennessValue = parseTraitValue(bigFive?.openness);
+      const traditionalValue = parseTraitValue(worldValues?.traditional_vs_secular);
+      const truthOrientationValue = parseTraitValue(extended?.truth_orientation);
       
       if (opennessValue < 0.4) {
         persuasion.push(`Responds best to practical, straightforward communication with clear benefits`);
@@ -242,15 +254,11 @@ const PersonaKeyInsights = ({ metadata }: PersonaKeyInsightsProps) => {
         persuasion.push(`Responds to balanced communication that addresses both logic and values`);
       }
       
-      // Trust-building factors - ensure we convert string values to numbers before comparison
-      const agreeablenessValue = typeof bigFive?.agreeableness === 'string' ? 
-        parseFloat(bigFive.agreeableness) : (bigFive?.agreeableness || 0.5);
-      const institutionalTrustValue = typeof extended?.institutional_trust === 'string' ? 
-        parseFloat(extended.institutional_trust) : (extended?.institutional_trust || 0.5);
-      const conscientiousnessValue = typeof bigFive?.conscientiousness === 'string' ? 
-        parseFloat(bigFive.conscientiousness) : (bigFive?.conscientiousness || 0.5);
-      const cognitiveFlexibilityValue = typeof extended?.cognitive_flexibility === 'string' ? 
-        parseFloat(extended.cognitive_flexibility) : (extended?.cognitive_flexibility || 0.5);
+      // Trust-building factors
+      const agreeablenessValue = parseTraitValue(bigFive?.agreeableness);
+      const institutionalTrustValue = parseTraitValue(extended?.institutional_trust);
+      const conscientiousnessValue = parseTraitValue(bigFive?.conscientiousness);
+      const cognitiveFlexibilityValue = parseTraitValue(extended?.cognitive_flexibility);
       
       if (agreeablenessValue > 0.7) {
         persuasion.push(`Builds trust through warm, collaborative communication styles`);
