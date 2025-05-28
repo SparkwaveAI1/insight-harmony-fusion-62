@@ -1,5 +1,6 @@
 
 import { PersonaTemplate } from "./types.ts";
+import { generateEmotionalTriggers } from "./emotionalTriggerGenerator.ts";
 
 const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 
@@ -105,6 +106,12 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     
     personaTraits = JSON.parse(jsonContent);
     console.log("Successfully parsed persona traits");
+    
+    // Generate emotional triggers based on the persona traits and original prompt
+    console.log("Generating emotional triggers...");
+    const emotionalTriggers = generateEmotionalTriggers(personaTraits, prompt);
+    personaTraits.emotional_triggers = emotionalTriggers;
+    console.log("Generated emotional triggers:", emotionalTriggers);
     
     // If customization was requested, store it in the persona metadata
     if (customizationContent && personaTraits.metadata) {

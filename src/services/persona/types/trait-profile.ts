@@ -11,6 +11,25 @@ export interface EmotionalTriggersProfile {
   negative_triggers: EmotionalTrigger[];
 }
 
+// Enhanced emotional trigger types beyond basic emotions
+export type EmotionType = 
+  // Basic emotions
+  | "anger" | "joy" | "sadness" | "fear" | "disgust" | "surprise"
+  // Complex emotions  
+  | "contempt" | "pride" | "shame" | "guilt" | "envy" | "nostalgia"
+  // Social emotions
+  | "embarrassment" | "loyalty" | "protective" | "betrayal" | "validation"
+  // Cognitive emotions
+  | "curiosity" | "confusion" | "skepticism" | "intellectual_excitement"
+  // Values-based emotions
+  | "moral_outrage" | "righteousness" | "compassion" | "indignation"
+  // Achievement emotions
+  | "accomplishment" | "frustration" | "determination" | "overwhelm"
+  // Connection emotions
+  | "belonging" | "isolation" | "empathy" | "dismissal"
+  // Discovery emotions
+  | "wonder" | "boredom" | "fascination" | "disappointment";
+
 export interface TraitProfile {
   // 1. Base Traits (Empirically Anchored Models)
   
@@ -71,8 +90,10 @@ export interface TraitProfile {
     conflict_avoidance?: string | null;
     cognitive_flexibility?: string | null;
     need_for_cognitive_closure?: string | null;
-    // NEW: Emotional Intensity Component
+    // Enhanced emotional traits
     emotional_intensity?: string | null;
+    emotional_regulation?: string | null;
+    trigger_sensitivity?: string | null;
   };
   
   // 3. Dynamic State Modifiers
@@ -81,5 +102,6 @@ export interface TraitProfile {
     emotional_stability_context?: string | null;
     motivation_orientation?: string | null;
     trust_volatility?: string | null;
+    trigger_threshold?: string | null;
   };
 }

@@ -40,8 +40,11 @@ export function detectEmotionalTriggers(
       const stressModulation = currentStressLevel * 0.3;
       const neuroticismBoost = neuroticism * 0.4;
       
+      // Enhanced calculation for different emotion types
+      const emotionTypeMultiplier = getEmotionTypeMultiplier(trigger.emotion_type, 'positive');
+      
       const finalIntensity = Math.min(10, 
-        baseIntensity + personalityAmplification + stressModulation + neuroticismBoost
+        (baseIntensity + personalityAmplification + stressModulation + neuroticismBoost) * emotionTypeMultiplier
       );
       
       triggeredEmotions.push({
@@ -65,8 +68,11 @@ export function detectEmotionalTriggers(
       const stressAmplification = currentStressLevel * 0.5;
       const neuroticismBoost = neuroticism * 0.6;
       
+      // Enhanced calculation for different emotion types
+      const emotionTypeMultiplier = getEmotionTypeMultiplier(trigger.emotion_type, 'negative');
+      
       const finalIntensity = Math.min(10, 
-        baseIntensity + personalityAmplification + stressAmplification + neuroticismBoost
+        (baseIntensity + personalityAmplification + stressAmplification + neuroticismBoost) * emotionTypeMultiplier
       );
       
       triggeredEmotions.push({
@@ -79,6 +85,36 @@ export function detectEmotionalTriggers(
   });
   
   return triggeredEmotions;
+}
+
+function getEmotionTypeMultiplier(emotionType: string, valence: 'positive' | 'negative'): number {
+  // Different emotion types have different natural intensities
+  const emotionIntensities: Record<string, number> = {
+    // High intensity emotions
+    'moral_outrage': 1.4,
+    'betrayal': 1.3,
+    'protective': 1.3,
+    'rage': 1.3,
+    
+    // Medium-high intensity
+    'anger': 1.2,
+    'pride': 1.2,
+    'shame': 1.2,
+    'contempt': 1.2,
+    
+    // Medium intensity
+    'joy': 1.0,
+    'sadness': 1.0,
+    'fear': 1.0,
+    'curiosity': 1.0,
+    
+    // Lower intensity
+    'nostalgia': 0.8,
+    'confusion': 0.7,
+    'boredom': 0.6,
+  };
+  
+  return emotionIntensities[emotionType] || 1.0;
 }
 
 export function generateEmotionalStateInstructions(triggeredEmotions: TriggeredEmotion[]): string {
@@ -127,6 +163,7 @@ function getIntensityDescription(intensity: number): string {
 function getEmotionSpecificInstructions(dominantEmotion: TriggeredEmotion): string {
   switch (dominantEmotion.emotion_type.toLowerCase()) {
     case 'anger':
+    case 'rage':
       return `
 ANGER RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
 - Use forceful, direct language
@@ -136,12 +173,14 @@ ANGER RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
 - Challenge opposing viewpoints aggressively`;
       
     case 'disgust':
+    case 'moral_outrage':
       return `
-DISGUST RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
+DISGUST/MORAL OUTRAGE RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
 - Express moral revulsion clearly
 - Use dismissive language when appropriate
 - Show contempt for things that violate your values
-- Don't hide your disapproval`;
+- Don't hide your disapproval
+- Express righteous indignation`;
       
     case 'fear':
     case 'anxiety':
@@ -150,24 +189,62 @@ FEAR/ANXIETY RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
 - Express genuine concern and worry
 - Show defensiveness about threats to your values
 - Use language that conveys urgency and alarm
-- Don't downplay legitimate fears`;
+- Don't downplay legitimate fears
+- Show protective instincts`;
       
     case 'joy':
     case 'happiness':
+    case 'pride':
       return `
-JOY RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
+JOY/PRIDE RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
 - Show genuine enthusiasm and excitement
 - Use positive, energetic language
 - Express happiness without reservation
-- Share what makes you feel good about this topic`;
+- Share what makes you feel good about this topic
+- Display confidence and satisfaction`;
       
     case 'sadness':
+    case 'disappointment':
       return `
 SADNESS RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
 - Express genuine disappointment or melancholy
 - Show emotional vulnerability when appropriate
 - Use language that conveys the weight of your feelings
-- Don't hide your emotional pain`;
+- Don't hide your emotional pain
+- Reflect on loss or missed opportunities`;
+      
+    case 'contempt':
+      return `
+CONTEMPT RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
+- Display clear superiority and disdain
+- Use dismissive language
+- Show that you consider the subject beneath you
+- Express scorn without apology`;
+      
+    case 'betrayal':
+      return `
+BETRAYAL RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
+- Express deep hurt and anger
+- Show that trust has been violated
+- Use language that conveys personal injury
+- Display wounded feelings combined with anger`;
+      
+    case 'protective':
+      return `
+PROTECTIVE RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
+- Show fierce defense of what you care about
+- Express willingness to fight for your values
+- Use strong, defending language
+- Display maternal/paternal protective instincts`;
+      
+    case 'curiosity':
+    case 'intellectual_excitement':
+      return `
+CURIOSITY RESPONSE PROTOCOL (Intensity: ${dominantEmotion.intensity}/10):
+- Show genuine interest and engagement
+- Ask probing questions
+- Express fascination with new ideas
+- Display intellectual hunger`;
       
     default:
       return `
