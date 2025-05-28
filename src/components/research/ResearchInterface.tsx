@@ -120,7 +120,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       </div>
 
       {/* Loaded Personas Display */}
-      <Card className="flex-shrink-0 mb-4 p-4 bg-muted/30">
+      <Card className="flex-shrink-0 mb-8 p-4 bg-muted/30">
         <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
         <div className="flex flex-wrap gap-3">
           {loadedPersonas.map((persona) => (
@@ -156,7 +156,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
 
       {/* Send to Persona Buttons - moved below the conversation */}
       {shouldShowSendButtons && (
-        <Card className="flex-shrink-0 mt-4 p-4 bg-blue-50 border-blue-200">
+        <Card className="flex-shrink-0 mt-6 p-4 bg-blue-50 border-blue-200">
           <div className="space-y-3">
             <h4 className="font-medium text-sm">Send to Personas</h4>
             <p className="text-xs text-muted-foreground">
