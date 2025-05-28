@@ -52,16 +52,30 @@ export interface TraitProfile {
     liberty?: string | null;
   };
   
-  // C. World Values Survey Axes
+  // C. Enhanced World Values Survey
   world_values?: {
     traditional_vs_secular?: string | null;
     survival_vs_self_expression?: string | null;
+    materialist_vs_postmaterialist?: string | null; // NEW: Third dimension
   };
   
-  // D. Political Compass Dimensions
+  // D. Enhanced Political Compass with Behavioral Modeling
   political_compass?: {
     economic?: string | null;
     authoritarian_libertarian?: string | null;
+    cultural_conservative_progressive?: string | null; // NEW: Separate cultural axis
+    // Political Behavior Architecture
+    political_salience?: string | null; // NEW: How central politics is to identity (0-100)
+    group_fusion_level?: string | null; // NEW: Identity fusion with political group
+    outgroup_threat_sensitivity?: string | null; // NEW: Threat perception from opposing views
+    commons_orientation?: string | null; // NEW: Views on shared responsibility/public goods
+    // Political Motivations
+    political_motivations?: {
+      material_interest?: string | null; // Economic benefit/harm focus
+      moral_vision?: string | null; // Justice/fairness focus
+      cultural_preservation?: string | null; // Heritage/tradition focus
+      status_reordering?: string | null; // Hierarchy change desires
+    };
   };
   
   // E. Behavioral Economics Traits

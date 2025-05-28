@@ -26,9 +26,25 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     Given a brief description, generate a detailed psychological and demographic profile following the template exactly.
     
     Pay special attention to the comprehensive trait architecture:
-    1. Base Traits (OCEAN, Moral Foundations, World Values, Political Compass, Behavioral Economics)
+    1. Base Traits (OCEAN, Moral Foundations, Enhanced World Values, Enhanced Political Compass, Behavioral Economics)
     2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
     3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+    
+    ENHANCED POLITICAL COMPASS GUIDELINES:
+    - Political Salience (0-100): How central politics is to identity. Higher = more emotional reactivity to political topics
+    - Group Fusion Level (0-1): Identity fusion with political group. Higher = extreme loyalty, self-sacrifice for group
+    - Outgroup Threat Sensitivity (0-1): How threatening opposing political views feel. Ties to worldview danger/safety
+    - Commons Orientation (0-1): Views on shared responsibility and public goods
+    - Political Motivations: Rate each 0-1:
+      * Material Interest: Economic benefit/harm focus
+      * Moral Vision: Justice/fairness focus  
+      * Cultural Preservation: Heritage/tradition focus
+      * Status Reordering: Desire to change/maintain hierarchies
+    
+    ENHANCED WORLD VALUES GUIDELINES:
+    - Traditional vs Secular (0-1): 0=traditional/religious, 1=secular/rational
+    - Survival vs Self-Expression (0-1): 0=survival/security focus, 1=self-expression/quality of life
+    - Materialist vs Post-Materialist (0-1): 0=economic security priority, 1=self-actualization priority
     
     IMPORTANT DIVERSITY GUIDELINES:
     - AVOID DEFAULT TRAITS: Do not use "coffee drinker" or other generic habits as default traits
@@ -41,10 +57,12 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     Fill in all demographic fields and knowledge domains in the metadata section.
     For each knowledge domain, assign a value from 1 (minimal) to 5 (expert).
     
-    For trait values, use decimal values between 0 and 1 (like 0.7) or descriptive labels 
-    that make psychological sense based on the persona.
+    For trait values, use decimal values between 0 and 1 (like 0.7) for all numerical traits.
+    Ensure internal consistency while allowing for realistic contradictions.
     
-    Maintain internal consistency while allowing for realistic contradictions.
+    Political traits should reflect realistic combinations - someone with high political salience 
+    and group fusion will show more extreme views and emotional reactivity.
+    
     Return the output as valid JSON matching the provided template exactly.`;
 
   // If customization instructions are present, add them to the system instructions

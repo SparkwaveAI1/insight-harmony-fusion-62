@@ -1,3 +1,4 @@
+
 // Types for persona generation
 
 export interface EmotionalTrigger {
@@ -107,10 +108,22 @@ export interface PersonaTemplate {
     world_values: {
       traditional_vs_secular: number | null;
       survival_vs_self_expression: number | null;
+      materialist_vs_postmaterialist: number | null;
     };
     political_compass: {
       economic: number | null;
       authoritarian_libertarian: number | null;
+      cultural_conservative_progressive: number | null;
+      political_salience: number | null;
+      group_fusion_level: number | null;
+      outgroup_threat_sensitivity: number | null;
+      commons_orientation: number | null;
+      political_motivations: {
+        material_interest: number | null;
+        moral_vision: number | null;
+        cultural_preservation: number | null;
+        status_reordering: number | null;
+      };
     };
     behavioral_economics: {
       present_bias: number | null;
@@ -135,14 +148,16 @@ export interface PersonaTemplate {
       conflict_avoidance: number | null;
       cognitive_flexibility: number | null;
       need_for_cognitive_closure: number | null;
-      // NEW: Emotional Intensity Component
       emotional_intensity: number | null;
+      emotional_regulation: number | null;
+      trigger_sensitivity: number | null;
     };
     dynamic_state: {
       current_stress_level: number | null;
       emotional_stability_context: string | null;
       motivation_orientation: string | null;
       trust_volatility: number | null;
+      trigger_threshold: number | null;
     };
   };
   behavioral_modulation: {

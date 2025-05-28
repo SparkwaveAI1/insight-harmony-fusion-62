@@ -1,3 +1,4 @@
+
 import { PersonaTemplate } from "./types.ts";
 
 // Define persona template structure
@@ -110,16 +111,28 @@ export const personaTemplate: PersonaTemplate = {
       liberty: null,
     },
     
-    // C. World Values Survey Axes
+    // C. Enhanced World Values Survey
     world_values: {
       traditional_vs_secular: null,
       survival_vs_self_expression: null,
+      materialist_vs_postmaterialist: null,
     },
     
-    // D. Political Compass Dimensions
+    // D. Enhanced Political Compass with Behavioral Modeling
     political_compass: {
       economic: null,
       authoritarian_libertarian: null,
+      cultural_conservative_progressive: null,
+      political_salience: null,
+      group_fusion_level: null,
+      outgroup_threat_sensitivity: null,
+      commons_orientation: null,
+      political_motivations: {
+        material_interest: null,
+        moral_vision: null,
+        cultural_preservation: null,
+        status_reordering: null,
+      },
     },
     
     // E. Behavioral Economics Traits
@@ -148,8 +161,10 @@ export const personaTemplate: PersonaTemplate = {
       conflict_avoidance: null,
       cognitive_flexibility: null,
       need_for_cognitive_closure: null,
-      // NEW: Emotional Intensity Component
+      // Enhanced emotional traits
       emotional_intensity: null,
+      emotional_regulation: null,
+      trigger_sensitivity: null,
     },
     
     // Dynamic State Modifiers
@@ -158,6 +173,7 @@ export const personaTemplate: PersonaTemplate = {
       emotional_stability_context: null,
       motivation_orientation: null,
       trust_volatility: null,
+      trigger_threshold: null,
     },
   },
   behavioral_modulation: {
