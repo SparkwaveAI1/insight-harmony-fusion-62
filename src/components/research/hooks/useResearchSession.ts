@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
@@ -71,7 +72,7 @@ export const useResearchSession = () => {
       const { data: conversation, error } = await supabase
         .from('conversations')
         .insert({
-          title: `Research Session - ${new Date().toLocaleDateString()} (${selectedPersonas.length} personas)`,
+          title: `Research Session - ${new Date().toLocaleDateString()}`,
           session_type: 'research',
           active_persona_ids: personaIds,
           auto_mode: false,
@@ -90,7 +91,7 @@ export const useResearchSession = () => {
       setMessages([]);
       
       console.log('Session created successfully:', conversation.id);
-      toast.success(`Research session started with ${selectedPersonas.length} persona${selectedPersonas.length !== 1 ? 's' : ''}`);
+      toast.success('Research session started successfully');
       return true;
     } catch (error) {
       console.error('Error creating research session:', error);
@@ -151,8 +152,8 @@ export const useResearchSession = () => {
     }
   }, [sessionId]);
 
-  const selectPersonaResponder = useCallback(async (personaId: string) => {
-    if (!sessionId) {
+  const generatePersonaResponse = useCallback(async (personaId: string, currentSessionId: string, currentMessages: (Message & { responding_persona_id?: string })[], currentPersonas: Persona[]) => {
+    if (!currentSessionId) {
       console.error('No session ID available');
       return;
     }
@@ -161,17 +162,17 @@ export const useResearchSession = () => {
       setIsLoading(true);
       console.log('Generating response for persona:', personaId);
       
-      const persona = loadedPersonas.find(p => p.persona_id === personaId);
+      const persona = currentPersonas.find(p => p.persona_id === personaId);
       if (!persona) {
         console.error('Persona not found:', personaId);
         toast.error('Selected persona not found');
         return;
       }
 
-      console.log('Current conversation messages:', messages.length);
+      console.log('Current conversation messages:', currentMessages.length);
 
       // Build the complete conversation history for context
-      const conversationHistory: Message[] = messages.map(m => ({
+      const conversationHistory: Message[] = currentMessages.map(m => ({
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.content,
         timestamp: m.timestamp,
@@ -181,8 +182,8 @@ export const useResearchSession = () => {
       console.log('Conversation history being sent:', conversationHistory.map(m => `${m.role}: ${m.content.substring(0, 50)}...`));
 
       // Create a comprehensive prompt that includes the conversation context
-      const contextualPrompt = messages.length > 0 
-        ? `Based on our conversation so far, please provide your thoughts and perspective. Here's the context of what we've been discussing: ${messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`
+      const contextualPrompt = currentMessages.length > 0 
+        ? `Based on our conversation so far, please provide your thoughts and perspective. Here's the context of what we've been discussing: ${currentMessages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`
         : 'Please introduce yourself and share your thoughts on the topic we\'re discussing.';
 
       // Generate response using existing persona chat service with research mode
@@ -193,7 +194,7 @@ export const useResearchSession = () => {
         persona,
         'research',
         `This is a research conversation. You should respond to the ongoing conversation context, taking into account everything that has been discussed so far. Look at the conversation history to understand what has been discussed and provide your perspective as ${persona.name}.`,
-        messages.length > 0 ? messages[messages.length - 1].image : undefined
+        currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].image : undefined
       );
 
       console.log('Generated response:', response.substring(0, 100) + '...');
@@ -212,7 +213,7 @@ export const useResearchSession = () => {
       await supabase
         .from('conversation_messages')
         .insert({
-          conversation_id: sessionId,
+          conversation_id: currentSessionId,
           role: 'assistant',
           content: response,
           persona_id: personaId,
@@ -223,11 +224,40 @@ export const useResearchSession = () => {
 
     } catch (error) {
       console.error('Error generating persona response:', error);
-      toast.error(`Failed to generate response from ${loadedPersonas.find(p => p.persona_id === personaId)?.name || 'persona'}`);
+      toast.error(`Failed to generate response from ${currentPersonas.find(p => p.persona_id === personaId)?.name || 'persona'}`);
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, messages, loadedPersonas]);
+  }, []);
+
+  const selectPersonaResponder = useCallback(async (personaId: string) => {
+    console.log('Selecting persona responder:', personaId);
+    // Use current values from state, not from closure
+    setMessages(currentMessages => {
+      setLoadedPersonas(currentPersonas => {
+        setSessionId(currentSessionId => {
+          if (currentSessionId) {
+            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas);
+          } else {
+            console.error('No session ID available');
+          }
+          return currentSessionId;
+        });
+        return currentPersonas;
+      });
+      return currentMessages;
+    });
+  }, [generatePersonaResponse]);
+
+  const addPersonaToSession = useCallback(async (personaId: string) => {
+    // Implementation for adding persona to existing session
+    // This would update the active_persona_ids array
+  }, [sessionId]);
+
+  const removePersonaFromSession = useCallback(async (personaId: string) => {
+    // Implementation for removing persona from session
+    // This would update the active_persona_ids array
+  }, [sessionId]);
 
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -244,6 +274,8 @@ export const useResearchSession = () => {
     messages,
     isLoading,
     createSession,
+    addPersonaToSession,
+    removePersonaFromSession,
     sendMessage,
     selectPersonaResponder
   };
