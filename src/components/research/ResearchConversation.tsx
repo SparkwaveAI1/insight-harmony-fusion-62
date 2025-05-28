@@ -55,7 +55,7 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
               ))}
               
               {isLoading && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex items-center gap-2 text-muted-foreground py-4">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                   <span>Generating response...</span>
                 </div>
@@ -67,14 +67,14 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
         </div>
       </Card>
 
-      {/* User Input Box */}
-      <div className="flex-shrink-0">
+      {/* User Input Box - Always visible */}
+      <Card className="flex-shrink-0 p-4 border border-gray-200">
         <ResearchMessageInput
           onSendMessage={onSendMessage}
           disabled={isLoading}
           placeholder="Type your message and optionally attach reference documents..."
         />
-      </div>
+      </Card>
     </div>
   );
 };
