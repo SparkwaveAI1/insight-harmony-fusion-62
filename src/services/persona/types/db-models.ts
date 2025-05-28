@@ -14,6 +14,7 @@ export interface DbPersona {
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: any;
+  emotional_triggers: any;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
