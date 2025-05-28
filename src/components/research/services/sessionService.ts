@@ -1,12 +1,14 @@
 
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Persona } from '@/services/persona/types';
+import { getAllPersonas } from '@/services/persona';
 
-export const createResearchSession = async (
-  personaIds: string[],
-  personas: Persona[]
-): Promise<{ success: boolean; sessionId?: string; selectedPersonas?: Persona[] }> => {
+export const createResearchSession = async (personaIds: string[]): Promise<{
+  success: boolean;
+  sessionId?: string;
+  selectedPersonas?: Persona[];
+}> => {
   try {
     console.log('Creating session with personas:', personaIds);
     
@@ -17,8 +19,9 @@ export const createResearchSession = async (
       return { success: false };
     }
 
-    // Get selected personas from the already loaded personas
-    const selectedPersonas = (personas || []).filter(p => 
+    // Fetch fresh personas to ensure we have the latest data
+    const allPersonas = await getAllPersonas();
+    const selectedPersonas = allPersonas.filter(p => 
       personaIds.includes(p.persona_id)
     );
     
@@ -79,10 +82,10 @@ export const createResearchSession = async (
     console.log('Session created successfully:', conversation.id);
     toast.success('Research session started successfully');
     
-    return { 
-      success: true, 
-      sessionId: conversation.id, 
-      selectedPersonas 
+    return {
+      success: true,
+      sessionId: conversation.id,
+      selectedPersonas
     };
   } catch (error) {
     console.error('Error creating research session:', error);

@@ -72,3 +72,23 @@ export const createPersonaMessage = (
     responding_persona_id: personaId
   };
 };
+
+export const sendUserMessage = async (
+  sessionId: string,
+  content: string,
+  imageFile?: File | null
+): Promise<ResearchMessage> => {
+  if (!sessionId || !content.trim()) {
+    throw new Error('Missing sessionId or content');
+  }
+
+  console.log('Sending message:', content);
+
+  // Create user message
+  const userMessage = await createUserMessage(content, imageFile);
+
+  // Save user message to database
+  await saveUserMessage(sessionId, content);
+
+  return userMessage;
+};
