@@ -32,12 +32,12 @@ const Research = () => {
         <SidebarInset>
           <div className="relative flex min-h-svh flex-col">
             <Header />
-            <main className="flex-1 pt-24">
-              <div className="container h-full">
-                <div className="flex items-center justify-between mb-4">
+            <main className="flex-1 min-h-0">
+              <div className="container h-full flex flex-col">
+                <div className="flex items-center justify-between mb-4 pt-24 flex-shrink-0">
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
-                <div className="h-[calc(100vh-2rem)]">
+                <div className="flex-1 min-h-0">
                   <ResearchInterface 
                     sessionData={sessionData}
                     onCreateSession={createSession}
