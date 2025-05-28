@@ -247,6 +247,7 @@ export type Database = {
           behavioral_modulation: Json
           created_at: string | null
           creation_date: string
+          emotional_triggers: Json | null
           id: string
           interview_sections: Json
           is_public: boolean | null
@@ -265,6 +266,7 @@ export type Database = {
           behavioral_modulation: Json
           created_at?: string | null
           creation_date: string
+          emotional_triggers?: Json | null
           id?: string
           interview_sections: Json
           is_public?: boolean | null
@@ -283,6 +285,7 @@ export type Database = {
           behavioral_modulation?: Json
           created_at?: string | null
           creation_date?: string
+          emotional_triggers?: Json | null
           id?: string
           interview_sections?: Json
           is_public?: boolean | null

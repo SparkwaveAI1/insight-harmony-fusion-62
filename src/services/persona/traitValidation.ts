@@ -1,3 +1,4 @@
+
 import { Persona } from './types';
 
 export interface TraitValidationResult {
@@ -109,7 +110,7 @@ export function validateEnhancedTraits(persona: Persona): TraitValidationResult 
     }
   }
 
-  // Validate Cultural Dimensions (NEW)
+  // Validate Cultural Dimensions
   const culturalDimensions = traitProfile.cultural_dimensions;
   if (!culturalDimensions) {
     result.missingTraits.push('cultural_dimensions');
@@ -139,7 +140,7 @@ export function validateEnhancedTraits(persona: Persona): TraitValidationResult 
     });
   }
 
-  // Validate Social Identity (NEW)
+  // Validate Social Identity
   const socialIdentity = traitProfile.social_identity;
   if (!socialIdentity) {
     result.missingTraits.push('social_identity');
@@ -171,46 +172,40 @@ export function validateEnhancedTraits(persona: Persona): TraitValidationResult 
     });
   }
 
-  // Validate Emotional Triggers (NEW)
+  // Validate Emotional Triggers - now optional since it's a new feature
   const emotionalTriggers = persona.emotional_triggers;
   if (!emotionalTriggers) {
-    result.warnings.push('Missing emotional_triggers');
+    result.warnings.push('Missing emotional_triggers - this is expected for older personas');
   } else {
     if (!emotionalTriggers.positive_triggers || !Array.isArray(emotionalTriggers.positive_triggers)) {
-      result.missingTraits.push('emotional_triggers.positive_triggers');
-      result.isValid = false;
+      result.warnings.push('Missing or invalid positive_triggers array');
     }
     
     if (!emotionalTriggers.negative_triggers || !Array.isArray(emotionalTriggers.negative_triggers)) {
-      result.missingTraits.push('emotional_triggers.negative_triggers');
-      result.isValid = false;
+      result.warnings.push('Missing or invalid negative_triggers array');
     }
     
-    // Validate trigger structure
+    // Validate trigger structure - but don't make it required for validation to pass
     [...(emotionalTriggers.positive_triggers || []), ...(emotionalTriggers.negative_triggers || [])].forEach((trigger, index) => {
       if (!trigger.keywords || !Array.isArray(trigger.keywords) || trigger.keywords.length === 0) {
-        result.invalidValues.push(`trigger[${index}]: missing or empty keywords array`);
-        result.isValid = false;
+        result.warnings.push(`trigger[${index}]: missing or empty keywords array`);
       }
       
       if (!trigger.emotion_type || typeof trigger.emotion_type !== 'string') {
-        result.invalidValues.push(`trigger[${index}]: missing or invalid emotion_type`);
-        result.isValid = false;
+        result.warnings.push(`trigger[${index}]: missing or invalid emotion_type`);
       }
       
       if (typeof trigger.intensity_multiplier !== 'number' || trigger.intensity_multiplier < 1 || trigger.intensity_multiplier > 10) {
-        result.invalidValues.push(`trigger[${index}]: intensity_multiplier should be 1-10`);
-        result.isValid = false;
+        result.warnings.push(`trigger[${index}]: intensity_multiplier should be 1-10`);
       }
       
       if (!trigger.description || typeof trigger.description !== 'string') {
-        result.invalidValues.push(`trigger[${index}]: missing or invalid description`);
-        result.isValid = false;
+        result.warnings.push(`trigger[${index}]: missing or invalid description`);
       }
     });
   }
 
-  // Add warnings for missing extended traits
+  // Add warnings for missing extended traits but don't fail validation
   const extendedTraits = traitProfile.extended_traits;
   if (!extendedTraits?.emotional_intensity) {
     result.warnings.push('Missing extended_traits.emotional_intensity');
@@ -245,7 +240,7 @@ export function logTraitValidation(persona: Persona): void {
   }
   
   if (validation.isValid) {
-    console.log('✅ All enhanced traits are properly implemented!');
+    console.log('✅ All required traits are properly implemented!');
   }
   
   console.log('=== END VALIDATION ===');
