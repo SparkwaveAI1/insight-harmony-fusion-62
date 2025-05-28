@@ -94,7 +94,7 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
   if (!traits) return null;
   
   // Handle nested objects like political_motivations
-  const renderTraitValue = (key: string, value: any) => {
+  const renderTraitValue = (key: string, value: any): React.ReactNode => {
     if (typeof value === 'object' && value !== null) {
       return (
         <div key={key} className="ml-4 border-l-2 border-gray-200 pl-2">
@@ -102,7 +102,7 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
           {Object.entries(value).map(([subKey, subValue]) => (
             <div key={subKey} className="flex justify-between items-center py-1 text-sm">
               <span className="capitalize text-gray-600">{subKey.replace(/_/g, ' ')}</span>
-              <span className="font-medium">{subValue}</span>
+              <span className="font-medium">{String(subValue)}</span>
             </div>
           ))}
         </div>
@@ -112,7 +112,7 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
     return (
       <div key={key} className="flex justify-between items-center py-1 border-b border-muted last:border-0">
         <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-        <span className="font-medium">{value}</span>
+        <span className="font-medium">{String(value)}</span>
       </div>
     );
   };
