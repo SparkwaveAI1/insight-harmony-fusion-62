@@ -35,12 +35,12 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   const showConversationArea = loadedPersonas.length > 0;
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Conversation Display Area - Twice as big vertically */}
+    <div className="flex flex-col h-full max-h-full overflow-hidden">
+      {/* Conversation Display Area */}
       {showConversationArea && (
-        <Card className="flex-[2] min-h-0 mb-4 border border-gray-200">
-          <div className="h-full p-6">
-            <ScrollArea className="h-full">
+        <Card className="flex-1 min-h-0 mb-4 border border-gray-200 overflow-hidden">
+          <div className="h-full p-6 flex flex-col">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-6">
                 {messages.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground">
@@ -71,9 +71,9 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
         </Card>
       )}
 
-      {/* Chat Input - Smaller relative size */}
+      {/* Chat Input - Fixed height */}
       {showConversationArea && (
-        <Card className="flex-[1] p-4 border border-gray-200">
+        <Card className="flex-shrink-0 p-4 border border-gray-200">
           <ResearchMessageInput
             onSendMessage={onSendMessage}
             disabled={isLoading}
