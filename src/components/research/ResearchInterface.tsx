@@ -143,9 +143,20 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         </div>
       </Card>
 
-      {/* Send to Persona Buttons */}
+      {/* Research Conversation */}
+      <div className="flex-1 min-h-0">
+        <ResearchConversation
+          messages={messages}
+          loadedPersonas={loadedPersonas}
+          isLoading={isLoading}
+          onSendMessage={onSendMessage}
+          onSelectResponder={onSelectResponder}
+        />
+      </div>
+
+      {/* Send to Persona Buttons - moved below the conversation */}
       {shouldShowSendButtons && (
-        <Card className="flex-shrink-0 mb-4 p-4 bg-blue-50 border-blue-200">
+        <Card className="flex-shrink-0 mt-4 p-4 bg-blue-50 border-blue-200">
           <div className="space-y-3">
             <h4 className="font-medium text-sm">Send to Personas</h4>
             <p className="text-xs text-muted-foreground">
@@ -168,17 +179,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           </div>
         </Card>
       )}
-
-      {/* Research Conversation */}
-      <div className="flex-1 min-h-0">
-        <ResearchConversation
-          messages={messages}
-          loadedPersonas={loadedPersonas}
-          isLoading={isLoading}
-          onSendMessage={onSendMessage}
-          onSelectResponder={onSelectResponder}
-        />
-      </div>
     </div>
   );
 };
