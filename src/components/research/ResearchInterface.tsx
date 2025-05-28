@@ -119,30 +119,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         </div>
       </div>
 
-      {/* Loaded Personas Display */}
-      <Card className="flex-shrink-0 mb-8 p-4 bg-muted/30">
-        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
-        <div className="flex flex-wrap gap-3">
-          {loadedPersonas.map((persona) => (
-            <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={persona.image_url} />
-                <AvatarFallback className="text-xs">
-                  {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium">{persona.name}</span>
-              {persona.metadata?.occupation && (
-                <Badge variant="outline" className="text-xs">
-                  {persona.metadata.occupation}
-                </Badge>
-              )}
-              <div className="w-2 h-2 bg-green-500 rounded-full" title="Active" />
-            </div>
-          ))}
-        </div>
-      </Card>
-
       {/* Research Conversation */}
       <div className="flex-1 min-h-0">
         <ResearchConversation
@@ -154,7 +130,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         />
       </div>
 
-      {/* Send to Persona Buttons - moved below the conversation */}
+      {/* Send to Persona Buttons */}
       {shouldShowSendButtons && (
         <Card className="flex-shrink-0 mt-6 p-4 bg-blue-50 border-blue-200">
           <div className="space-y-3">
@@ -179,6 +155,30 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           </div>
         </Card>
       )}
+
+      {/* Loaded Personas Display - moved to bottom */}
+      <Card className="flex-shrink-0 mt-6 p-4 bg-muted/30">
+        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
+        <div className="flex flex-wrap gap-3">
+          {loadedPersonas.map((persona) => (
+            <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={persona.image_url} />
+                <AvatarFallback className="text-xs">
+                  {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{persona.name}</span>
+              {persona.metadata?.occupation && (
+                <Badge variant="outline" className="text-xs">
+                  {persona.metadata.occupation}
+                </Badge>
+              )}
+              <div className="w-2 h-2 bg-green-500 rounded-full" title="Active" />
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 };
