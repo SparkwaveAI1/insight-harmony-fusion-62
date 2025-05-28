@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { savePersona } from "./operations/savePersona";
 import { Persona } from "./types";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
+import { logTraitValidation } from "./traitValidation";
 
 export const generatePersona = async (prompt: string): Promise<Persona | null> => {
   try {
@@ -38,6 +38,33 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
 
     console.log("Successfully generated persona:", data.persona.name);
     console.log("Generated persona ID:", data.persona.persona_id);
+    
+    // Validate the enhanced traits
+    console.log("=== VALIDATING ENHANCED TRAITS ===");
+    logTraitValidation(data.persona);
+    
+    // Log specific enhanced trait values for verification
+    console.log("=== ENHANCED TRAIT VALUES ===");
+    const traitProfile = data.persona.trait_profile;
+    
+    if (traitProfile?.world_values) {
+      console.log("World Values:", {
+        traditional_vs_secular: traitProfile.world_values.traditional_vs_secular,
+        survival_vs_self_expression: traitProfile.world_values.survival_vs_self_expression,
+        materialist_vs_postmaterialist: traitProfile.world_values.materialist_vs_postmaterialist
+      });
+    }
+    
+    if (traitProfile?.political_compass) {
+      console.log("Enhanced Political Compass:", {
+        political_salience: traitProfile.political_compass.political_salience,
+        group_fusion_level: traitProfile.political_compass.group_fusion_level,
+        outgroup_threat_sensitivity: traitProfile.political_compass.outgroup_threat_sensitivity,
+        commons_orientation: traitProfile.political_compass.commons_orientation,
+        cultural_conservative_progressive: traitProfile.political_compass.cultural_conservative_progressive,
+        political_motivations: traitProfile.political_compass.political_motivations
+      });
+    }
     
     // Add the user_id to the persona before saving
     if (userId) {

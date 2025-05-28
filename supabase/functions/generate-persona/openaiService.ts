@@ -30,21 +30,24 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
     3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
     
-    ENHANCED POLITICAL COMPASS GUIDELINES:
+    ENHANCED POLITICAL COMPASS GUIDELINES - CRITICAL IMPLEMENTATION:
     - Political Salience (0-100): How central politics is to identity. Higher = more emotional reactivity to political topics
     - Group Fusion Level (0-1): Identity fusion with political group. Higher = extreme loyalty, self-sacrifice for group
     - Outgroup Threat Sensitivity (0-1): How threatening opposing political views feel. Ties to worldview danger/safety
     - Commons Orientation (0-1): Views on shared responsibility and public goods
+    - Cultural Conservative Progressive (0-1): Separate from economic axis - cultural values and social change
     - Political Motivations: Rate each 0-1:
       * Material Interest: Economic benefit/harm focus
       * Moral Vision: Justice/fairness focus  
       * Cultural Preservation: Heritage/tradition focus
       * Status Reordering: Desire to change/maintain hierarchies
     
-    ENHANCED WORLD VALUES GUIDELINES:
+    ENHANCED WORLD VALUES GUIDELINES - CRITICAL IMPLEMENTATION:
     - Traditional vs Secular (0-1): 0=traditional/religious, 1=secular/rational
     - Survival vs Self-Expression (0-1): 0=survival/security focus, 1=self-expression/quality of life
     - Materialist vs Post-Materialist (0-1): 0=economic security priority, 1=self-actualization priority
+    
+    MANDATORY: ALL ENHANCED TRAITS MUST BE POPULATED. Do not leave any of the new political compass or world values fields as null.
     
     IMPORTANT DIVERSITY GUIDELINES:
     - AVOID DEFAULT TRAITS: Do not use "coffee drinker" or other generic habits as default traits
@@ -124,6 +127,72 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     
     personaTraits = JSON.parse(jsonContent);
     console.log("Successfully parsed persona traits");
+    
+    // ENHANCED LOGGING: Log the new trait structures
+    console.log("=== ENHANCED TRAIT VERIFICATION ===");
+    
+    // Check World Values
+    if (personaTraits.trait_profile?.world_values) {
+      console.log("World Values traits:", JSON.stringify(personaTraits.trait_profile.world_values, null, 2));
+      const worldValues = personaTraits.trait_profile.world_values;
+      console.log("- Traditional vs Secular:", worldValues.traditional_vs_secular);
+      console.log("- Survival vs Self-Expression:", worldValues.survival_vs_self_expression);
+      console.log("- Materialist vs Post-Materialist:", worldValues.materialist_vs_postmaterialist);
+    } else {
+      console.error("WARNING: World Values traits missing!");
+    }
+    
+    // Check Political Compass
+    if (personaTraits.trait_profile?.political_compass) {
+      console.log("Political Compass traits:", JSON.stringify(personaTraits.trait_profile.political_compass, null, 2));
+      const politicalCompass = personaTraits.trait_profile.political_compass;
+      console.log("- Political Salience:", politicalCompass.political_salience);
+      console.log("- Group Fusion Level:", politicalCompass.group_fusion_level);
+      console.log("- Outgroup Threat Sensitivity:", politicalCompass.outgroup_threat_sensitivity);
+      console.log("- Commons Orientation:", politicalCompass.commons_orientation);
+      console.log("- Cultural Conservative Progressive:", politicalCompass.cultural_conservative_progressive);
+      
+      if (politicalCompass.political_motivations) {
+        console.log("Political Motivations:", JSON.stringify(politicalCompass.political_motivations, null, 2));
+        console.log("  - Material Interest:", politicalCompass.political_motivations.material_interest);
+        console.log("  - Moral Vision:", politicalCompass.political_motivations.moral_vision);
+        console.log("  - Cultural Preservation:", politicalCompass.political_motivations.cultural_preservation);
+        console.log("  - Status Reordering:", politicalCompass.political_motivations.status_reordering);
+      } else {
+        console.error("WARNING: Political Motivations missing!");
+      }
+    } else {
+      console.error("WARNING: Political Compass traits missing!");
+    }
+    
+    // Verify all required enhanced traits are present
+    const missingTraits = [];
+    if (!personaTraits.trait_profile?.world_values?.materialist_vs_postmaterialist) {
+      missingTraits.push("world_values.materialist_vs_postmaterialist");
+    }
+    if (!personaTraits.trait_profile?.political_compass?.political_salience) {
+      missingTraits.push("political_compass.political_salience");
+    }
+    if (!personaTraits.trait_profile?.political_compass?.group_fusion_level) {
+      missingTraits.push("political_compass.group_fusion_level");
+    }
+    if (!personaTraits.trait_profile?.political_compass?.outgroup_threat_sensitivity) {
+      missingTraits.push("political_compass.outgroup_threat_sensitivity");
+    }
+    if (!personaTraits.trait_profile?.political_compass?.commons_orientation) {
+      missingTraits.push("political_compass.commons_orientation");
+    }
+    if (!personaTraits.trait_profile?.political_compass?.cultural_conservative_progressive) {
+      missingTraits.push("political_compass.cultural_conservative_progressive");
+    }
+    
+    if (missingTraits.length > 0) {
+      console.error("MISSING ENHANCED TRAITS:", missingTraits);
+    } else {
+      console.log("✅ All enhanced traits successfully generated!");
+    }
+    
+    console.log("=== END TRAIT VERIFICATION ===");
     
     // Generate emotional triggers based on the persona traits and original prompt
     console.log("Generating emotional triggers...");
