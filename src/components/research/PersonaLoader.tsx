@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { usePersona } from '@/hooks/usePersona';
+import { getAllPersonas } from '@/services/persona';
 import { Persona } from '@/services/persona/types';
 
 interface PersonaLoaderProps {
@@ -15,15 +15,35 @@ interface PersonaLoaderProps {
 }
 
 export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
-  maxPersonas = 4, // Updated to 4 for multiple persona selection
+  maxPersonas = 4,
   onStartSession,
   isLoading
 }) => {
-  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]); // Multiple persona selection
+  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const { personas } = usePersona();
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
 
-  const filteredPersonas = (personas || []).filter(persona =>
+  // Fetch personas directly to ensure fresh data
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        setIsLoadingPersonas(true);
+        console.log('Fetching fresh personas for research session');
+        const allPersonas = await getAllPersonas();
+        console.log(`Loaded ${allPersonas.length} personas for research`);
+        setPersonas(allPersonas);
+      } catch (error) {
+        console.error('Error fetching personas:', error);
+      } finally {
+        setIsLoadingPersonas(false);
+      }
+    };
+
+    fetchPersonas();
+  }, []);
+
+  const filteredPersonas = personas.filter(persona =>
     persona.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -46,6 +66,19 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
       onStartSession(selectedPersonas);
     }
   };
+
+  if (isLoadingPersonas) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3">Loading personas...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
@@ -108,7 +141,7 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
           })}
         </div>
 
-        {filteredPersonas.length === 0 && (
+        {filteredPersonas.length === 0 && !isLoadingPersonas && (
           <div className="text-center py-8 text-muted-foreground">
             No personas found matching your search.
           </div>
