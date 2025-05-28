@@ -143,6 +143,28 @@ export const personaTemplate: PersonaTemplate = {
       risk_sensitivity: null,
       scarcity_sensitivity: null,
     },
+
+    // F. Cultural Dimensions (Hofstede's Framework)
+    cultural_dimensions: {
+      power_distance: null,
+      individualism_vs_collectivism: null,
+      masculinity_vs_femininity: null,
+      uncertainty_avoidance: null,
+      long_term_orientation: null,
+      indulgence_vs_restraint: null,
+    },
+
+    // G. Social Identity and Group Dynamics
+    social_identity: {
+      identity_strength: null,
+      identity_complexity: null,
+      ingroup_bias_tendency: null,
+      outgroup_bias_tendency: null,
+      social_dominance_orientation: null,
+      system_justification: null,
+      intergroup_contact_comfort: null,
+      cultural_intelligence: null,
+    },
     
     // Extended Traits
     extended_traits: {

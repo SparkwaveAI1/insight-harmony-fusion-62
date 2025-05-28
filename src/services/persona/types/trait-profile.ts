@@ -86,6 +86,28 @@ export interface TraitProfile {
     risk_sensitivity?: string | null;
     scarcity_sensitivity?: string | null;
   };
+
+  // F. Cultural Dimensions (Hofstede's Framework)
+  cultural_dimensions?: {
+    power_distance?: string | null; // Acceptance of power inequality (0-1)
+    individualism_vs_collectivism?: string | null; // Individual vs group focus (0-1, 0=collectivist, 1=individualist)
+    masculinity_vs_femininity?: string | null; // Competition vs cooperation focus (0-1, 0=feminine, 1=masculine)
+    uncertainty_avoidance?: string | null; // Tolerance for ambiguity and uncertainty (0-1)
+    long_term_orientation?: string | null; // Future vs tradition focus (0-1, 0=short-term, 1=long-term)
+    indulgence_vs_restraint?: string | null; // Gratification control (0-1, 0=restraint, 1=indulgence)
+  };
+
+  // G. Social Identity and Group Dynamics
+  social_identity?: {
+    identity_strength?: string | null; // How strongly they identify with groups (0-1)
+    identity_complexity?: string | null; // Number and diversity of social identities (0-1)
+    ingroup_bias_tendency?: string | null; // Favoritism toward own groups (0-1)
+    outgroup_bias_tendency?: string | null; // Prejudice toward other groups (0-1)
+    social_dominance_orientation?: string | null; // Support for group hierarchies (0-1)
+    system_justification?: string | null; // Tendency to defend status quo (0-1)
+    intergroup_contact_comfort?: string | null; // Ease with diverse groups (0-1)
+    cultural_intelligence?: string | null; // Ability to navigate cultural differences (0-1)
+  };
   
   // 2. Extended Traits
   extended_traits?: {

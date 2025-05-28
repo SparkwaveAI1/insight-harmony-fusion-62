@@ -1,4 +1,3 @@
-
 // Types for persona generation
 
 export interface EmotionalTrigger {
@@ -131,6 +130,24 @@ export interface PersonaTemplate {
       overconfidence: number | null;
       risk_sensitivity: number | null;
       scarcity_sensitivity: number | null;
+    };
+    cultural_dimensions: {
+      power_distance: number | null;
+      individualism_vs_collectivism: number | null;
+      masculinity_vs_femininity: number | null;
+      uncertainty_avoidance: number | null;
+      long_term_orientation: number | null;
+      indulgence_vs_restraint: number | null;
+    };
+    social_identity: {
+      identity_strength: number | null;
+      identity_complexity: number | null;
+      ingroup_bias_tendency: number | null;
+      outgroup_bias_tendency: number | null;
+      social_dominance_orientation: number | null;
+      system_justification: number | null;
+      intergroup_contact_comfort: number | null;
+      cultural_intelligence: number | null;
     };
     extended_traits: {
       truth_orientation: number | null;

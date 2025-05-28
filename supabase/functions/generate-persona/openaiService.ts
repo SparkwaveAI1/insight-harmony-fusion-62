@@ -27,8 +27,28 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     
     Pay special attention to the comprehensive trait architecture:
     1. Base Traits (OCEAN, Moral Foundations, Enhanced World Values, Enhanced Political Compass, Behavioral Economics)
-    2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
-    3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+    2. Cultural Dimensions (Hofstede's Framework)
+    3. Social Identity and Group Dynamics
+    4. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
+    5. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+    
+    CULTURAL DIMENSIONS GUIDELINES - CRITICAL IMPLEMENTATION:
+    - Power Distance (0-1): 0=egalitarian (low power distance), 1=hierarchical (high power distance)
+    - Individualism vs Collectivism (0-1): 0=collectivist (group harmony), 1=individualist (personal achievement)
+    - Masculinity vs Femininity (0-1): 0=feminine (cooperation, quality of life), 1=masculine (competition, achievement)
+    - Uncertainty Avoidance (0-1): 0=comfortable with ambiguity, 1=prefers structure and rules
+    - Long-term Orientation (0-1): 0=short-term (tradition, immediate results), 1=long-term (future planning, persistence)
+    - Indulgence vs Restraint (0-1): 0=restraint (strict social norms), 1=indulgence (free expression of desires)
+    
+    SOCIAL IDENTITY GUIDELINES - CRITICAL IMPLEMENTATION:
+    - Identity Strength (0-1): How strongly they identify with social groups
+    - Identity Complexity (0-1): Diversity and number of social identities they hold
+    - Ingroup Bias Tendency (0-1): Favoritism toward their own groups
+    - Outgroup Bias Tendency (0-1): Prejudice or suspicion toward other groups
+    - Social Dominance Orientation (0-1): Support for group-based hierarchies
+    - System Justification (0-1): Tendency to defend and rationalize the status quo
+    - Intergroup Contact Comfort (0-1): Ease and comfort when interacting with diverse groups
+    - Cultural Intelligence (0-1): Ability to function effectively in culturally diverse settings
     
     ENHANCED POLITICAL COMPASS GUIDELINES - CRITICAL IMPLEMENTATION:
     - Political Salience (0-100): How central politics is to identity. Higher = more emotional reactivity to political topics
@@ -47,7 +67,7 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     - Survival vs Self-Expression (0-1): 0=survival/security focus, 1=self-expression/quality of life
     - Materialist vs Post-Materialist (0-1): 0=economic security priority, 1=self-actualization priority
     
-    MANDATORY: ALL ENHANCED TRAITS MUST BE POPULATED. Do not leave any of the new political compass or world values fields as null.
+    MANDATORY: ALL ENHANCED TRAITS MUST BE POPULATED. Do not leave any of the new cultural dimensions, social identity, political compass, or world values fields as null.
     
     IMPORTANT DIVERSITY GUIDELINES:
     - AVOID DEFAULT TRAITS: Do not use "coffee drinker" or other generic habits as default traits
@@ -63,6 +83,8 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     For trait values, use decimal values between 0 and 1 (like 0.7) for all numerical traits.
     Ensure internal consistency while allowing for realistic contradictions.
     
+    Cultural dimensions should reflect the persona's cultural background and personal experiences.
+    Social identity traits should be consistent with their demographic profile and life experiences.
     Political traits should reflect realistic combinations - someone with high political salience 
     and group fusion will show more extreme views and emotional reactivity.
     
@@ -165,6 +187,36 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
       console.error("WARNING: Political Compass traits missing!");
     }
     
+    // Check Cultural Dimensions (NEW)
+    if (personaTraits.trait_profile?.cultural_dimensions) {
+      console.log("Cultural Dimensions traits:", JSON.stringify(personaTraits.trait_profile.cultural_dimensions, null, 2));
+      const culturalDimensions = personaTraits.trait_profile.cultural_dimensions;
+      console.log("- Power Distance:", culturalDimensions.power_distance);
+      console.log("- Individualism vs Collectivism:", culturalDimensions.individualism_vs_collectivism);
+      console.log("- Masculinity vs Femininity:", culturalDimensions.masculinity_vs_femininity);
+      console.log("- Uncertainty Avoidance:", culturalDimensions.uncertainty_avoidance);
+      console.log("- Long-term Orientation:", culturalDimensions.long_term_orientation);
+      console.log("- Indulgence vs Restraint:", culturalDimensions.indulgence_vs_restraint);
+    } else {
+      console.error("WARNING: Cultural Dimensions traits missing!");
+    }
+    
+    // Check Social Identity (NEW)
+    if (personaTraits.trait_profile?.social_identity) {
+      console.log("Social Identity traits:", JSON.stringify(personaTraits.trait_profile.social_identity, null, 2));
+      const socialIdentity = personaTraits.trait_profile.social_identity;
+      console.log("- Identity Strength:", socialIdentity.identity_strength);
+      console.log("- Identity Complexity:", socialIdentity.identity_complexity);
+      console.log("- Ingroup Bias Tendency:", socialIdentity.ingroup_bias_tendency);
+      console.log("- Outgroup Bias Tendency:", socialIdentity.outgroup_bias_tendency);
+      console.log("- Social Dominance Orientation:", socialIdentity.social_dominance_orientation);
+      console.log("- System Justification:", socialIdentity.system_justification);
+      console.log("- Intergroup Contact Comfort:", socialIdentity.intergroup_contact_comfort);
+      console.log("- Cultural Intelligence:", socialIdentity.cultural_intelligence);
+    } else {
+      console.error("WARNING: Social Identity traits missing!");
+    }
+    
     // Verify all required enhanced traits are present
     const missingTraits = [];
     if (!personaTraits.trait_profile?.world_values?.materialist_vs_postmaterialist) {
@@ -173,17 +225,11 @@ export async function generatePersonaTraits(prompt: string, personaTemplate: Per
     if (!personaTraits.trait_profile?.political_compass?.political_salience) {
       missingTraits.push("political_compass.political_salience");
     }
-    if (!personaTraits.trait_profile?.political_compass?.group_fusion_level) {
-      missingTraits.push("political_compass.group_fusion_level");
+    if (!personaTraits.trait_profile?.cultural_dimensions?.power_distance) {
+      missingTraits.push("cultural_dimensions.power_distance");
     }
-    if (!personaTraits.trait_profile?.political_compass?.outgroup_threat_sensitivity) {
-      missingTraits.push("political_compass.outgroup_threat_sensitivity");
-    }
-    if (!personaTraits.trait_profile?.political_compass?.commons_orientation) {
-      missingTraits.push("political_compass.commons_orientation");
-    }
-    if (!personaTraits.trait_profile?.political_compass?.cultural_conservative_progressive) {
-      missingTraits.push("political_compass.cultural_conservative_progressive");
+    if (!personaTraits.trait_profile?.social_identity?.identity_strength) {
+      missingTraits.push("social_identity.identity_strength");
     }
     
     if (missingTraits.length > 0) {
@@ -232,8 +278,10 @@ export async function generateInterviewResponses(personaTraits: any): Promise<an
           content: `You are an AI that simulates interviews for realistic personas. 
           Given a persona definition with a comprehensive trait architecture including:
           1. Base Traits (OCEAN, Moral Foundations, World Values, Political Compass, Behavioral Economics)
-          2. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
-          3. Dynamic State Modifiers (stress level, emotional stability context, etc.)
+          2. Cultural Dimensions (Hofstede's Framework)
+          3. Social Identity and Group Dynamics
+          4. Extended Traits (truth orientation, moral consistency, self-awareness, etc.)
+          5. Dynamic State Modifiers (stress level, emotional stability context, etc.)
           
           IMPORTANT DIVERSITY GUIDELINES FOR INTERVIEW RESPONSES:
           - AVOID GENERIC DEFAULTS: Do not default to common habits like "drinking coffee in the morning"

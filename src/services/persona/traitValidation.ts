@@ -110,6 +110,68 @@ export function validateEnhancedTraits(persona: Persona): TraitValidationResult 
     }
   }
 
+  // Validate Cultural Dimensions (NEW)
+  const culturalDimensions = traitProfile.cultural_dimensions;
+  if (!culturalDimensions) {
+    result.missingTraits.push('cultural_dimensions');
+    result.isValid = false;
+  } else {
+    const culturalTraits = [
+      'power_distance',
+      'individualism_vs_collectivism',
+      'masculinity_vs_femininity',
+      'uncertainty_avoidance',
+      'long_term_orientation',
+      'indulgence_vs_restraint'
+    ];
+    
+    culturalTraits.forEach(trait => {
+      const value = culturalDimensions[trait as keyof typeof culturalDimensions];
+      if (value === null || value === undefined) {
+        result.missingTraits.push(`cultural_dimensions.${trait}`);
+        result.isValid = false;
+      } else if (typeof value === 'string') {
+        const numValue = parseFloat(value);
+        if (isNaN(numValue) || numValue < 0 || numValue > 1) {
+          result.invalidValues.push(`cultural_dimensions.${trait}: ${value}`);
+          result.isValid = false;
+        }
+      }
+    });
+  }
+
+  // Validate Social Identity (NEW)
+  const socialIdentity = traitProfile.social_identity;
+  if (!socialIdentity) {
+    result.missingTraits.push('social_identity');
+    result.isValid = false;
+  } else {
+    const socialTraits = [
+      'identity_strength',
+      'identity_complexity',
+      'ingroup_bias_tendency',
+      'outgroup_bias_tendency',
+      'social_dominance_orientation',
+      'system_justification',
+      'intergroup_contact_comfort',
+      'cultural_intelligence'
+    ];
+    
+    socialTraits.forEach(trait => {
+      const value = socialIdentity[trait as keyof typeof socialIdentity];
+      if (value === null || value === undefined) {
+        result.missingTraits.push(`social_identity.${trait}`);
+        result.isValid = false;
+      } else if (typeof value === 'string') {
+        const numValue = parseFloat(value);
+        if (isNaN(numValue) || numValue < 0 || numValue > 1) {
+          result.invalidValues.push(`social_identity.${trait}: ${value}`);
+          result.isValid = false;
+        }
+      }
+    });
+  }
+
   // Add warnings for missing extended traits
   const extendedTraits = traitProfile.extended_traits;
   if (!extendedTraits?.emotional_intensity) {
