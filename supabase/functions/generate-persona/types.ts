@@ -124,6 +124,8 @@ export interface PersonaTemplate {
       conflict_avoidance: number | null;
       cognitive_flexibility: number | null;
       need_for_cognitive_closure: number | null;
+      // NEW: Emotional Intensity Component
+      emotional_intensity: number | null;
     };
     dynamic_state: {
       current_stress_level: number | null;

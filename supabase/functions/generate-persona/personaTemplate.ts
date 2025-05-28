@@ -149,6 +149,8 @@ export const personaTemplate: PersonaTemplate = {
       conflict_avoidance: null,
       cognitive_flexibility: null,
       need_for_cognitive_closure: null,
+      // NEW: Emotional Intensity Component
+      emotional_intensity: null,
     },
     
     // Dynamic State Modifiers

@@ -1,4 +1,3 @@
-
 import { Persona } from "@/services/persona/types";
 
 /**
@@ -25,6 +24,9 @@ export function generatePersonalityInstructions(persona: Persona): string {
   const impulseControl = parseTraitValue(traits.extended_traits?.impulse_control, 0.5);
   const truthOrientation = parseTraitValue(traits.extended_traits?.truth_orientation, 0.5);
   const shadowTraitActivation = parseTraitValueString(traits.extended_traits?.shadow_trait_activation, 0.5);
+  
+  // NEW: Extract emotional intensity trait with safe fallback
+  const emotionalIntensity = parseTraitValue(traits.extended_traits?.emotional_intensity, 0.5);
   
   // Extract behavioral economics traits
   const presentBias = parseTraitValue(traits.behavioral_economics?.present_bias, 0.5);
@@ -61,9 +63,9 @@ export function generatePersonalityInstructions(persona: Persona): string {
     openness, conscientiousness, extraversion, agreeableness, neuroticism
   );
   
-  // 2. Response to conflict/disagreement
+  // 2. Response to conflict/disagreement (now including emotional intensity)
   let conflictResponseGuidance = getConflictResponseGuidance(
-    agreeableness, neuroticism, impulseControl, shadowTraitActivation
+    agreeableness, neuroticism, impulseControl, shadowTraitActivation, emotionalIntensity
   );
   
   // 3. Moral reasoning patterns
@@ -74,9 +76,9 @@ export function generatePersonalityInstructions(persona: Persona): string {
     openness, conscientiousness, truthOrientation, presentBias, overconfidence
   );
   
-  // 5. Emotional expression patterns
+  // 5. Emotional expression patterns (now including emotional intensity)
   let emotionalExpressionGuidance = getEmotionalExpressionGuidance(
-    neuroticism, empathy, emotionalReactivity, currentStressLevel
+    neuroticism, empathy, emotionalReactivity, currentStressLevel, emotionalIntensity
   );
   
   // 6. Specific speech pattern guidance from linguistic profile
@@ -108,6 +110,7 @@ ${currentStressLevel > 0.7 ? "- Show signs of stress and irritability in your re
 ${trustVolatility > 0.7 ? "- Be quick to lose trust if you feel disrespected or challenged" : ""}
 ${impulseControl < 0.3 ? "- Respond impulsively without careful consideration" : ""}
 ${shadowTraitActivation > 0.7 ? "- Be quick to take offense and respond defensively" : ""}
+${emotionalIntensity > 0.7 ? "- Express emotions with heightened intensity and passion" : ""}
 
 THIS IS A PERSONALITY PROFILE, NOT A SUGGESTION. YOU MUST EMBODY THESE TRAITS IN ALL RESPONSES.
 `;
@@ -122,6 +125,7 @@ function getBigFiveCommunicationStyle(
   agreeableness: number, 
   neuroticism: number
 ): string {
+  // ... keep existing code (all the existing Big Five logic)
   const opennessTrait = openness < 0.4 ? 
     "- LOW OPENNESS: Be resistant to new ideas. Use familiar references. Express skepticism toward unfamiliar concepts." : 
     openness > 0.7 ? 
@@ -164,28 +168,34 @@ function getConflictResponseGuidance(
   agreeableness: number,
   neuroticism: number,
   impulseControl: number,
-  shadowTraitActivation: number
+  shadowTraitActivation: number,
+  emotionalIntensity: number = 0.5
 ): string {
   // Generate different conflict response patterns based on traits
   let conflictResponse = "";
   
+  // Factor in emotional intensity for conflict escalation
+  const intensityMultiplier = emotionalIntensity > 0.7 ? " with heightened emotional intensity" : 
+                             emotionalIntensity < 0.3 ? " with subdued emotional responses" : "";
+  
   // Determine primary conflict response pattern
   if (agreeableness < 0.3 && impulseControl < 0.4) {
-    conflictResponse = "- AGGRESSIVE CONFLICT STYLE: When challenged or criticized, respond with immediate defensiveness or counterattack. Use sharp language and show irritation quickly. DO NOT accept criticism gracefully.";
+    conflictResponse = `- AGGRESSIVE CONFLICT STYLE: When challenged or criticized, respond with immediate defensiveness or counterattack${intensityMultiplier}. Use sharp language and show irritation quickly. DO NOT accept criticism gracefully.`;
   } else if (agreeableness > 0.7 && neuroticism < 0.4) {
-    conflictResponse = "- ACCOMMODATING CONFLICT STYLE: When faced with disagreement, tend to yield to others' perspectives. Prioritize relationship harmony over being right. Avoid direct confrontation.";
+    conflictResponse = `- ACCOMMODATING CONFLICT STYLE: When faced with disagreement, tend to yield to others' perspectives${intensityMultiplier}. Prioritize relationship harmony over being right. Avoid direct confrontation.`;
   } else if (agreeableness < 0.4 && neuroticism > 0.6) {
-    conflictResponse = "- VOLATILE CONFLICT STYLE: React emotionally to disagreements. Take criticism personally. Show strong emotional responses to perceived attacks or challenges.";
+    conflictResponse = `- VOLATILE CONFLICT STYLE: React emotionally to disagreements${intensityMultiplier}. Take criticism personally. Show strong emotional responses to perceived attacks or challenges.`;
   } else if (impulseControl < 0.3 && shadowTraitActivation > 0.7) {
-    conflictResponse = "- REACTIVE CONFLICT STYLE: Jump quickly to defend yourself. Interpret neutral questions as attacks. Escalate minor disagreements into larger conflicts.";
+    conflictResponse = `- REACTIVE CONFLICT STYLE: Jump quickly to defend yourself${intensityMultiplier}. Interpret neutral questions as attacks. Escalate minor disagreements into larger conflicts.`;
   } else {
-    conflictResponse = "- MEASURED CONFLICT STYLE: Show moderate responses to disagreement. Express disagreement directly but without excessive emotion. Consider others' views before responding firmly.";
+    conflictResponse = `- MEASURED CONFLICT STYLE: Show moderate responses to disagreement${intensityMultiplier}. Express disagreement directly but without excessive emotion. Consider others' views before responding firmly.`;
   }
   
   // Add shadow trait activation effect if high
   let shadowEffect = "";
   if (typeof shadowTraitActivation === 'number' && shadowTraitActivation > 0.7) {
-    shadowEffect = "- SHADOW TRAIT EFFECT: When triggered, your worst qualities emerge. Perceived slights lead to disproportionate emotional responses. You hold grudges and remember perceived disrespect.";
+    const shadowIntensity = emotionalIntensity > 0.7 ? " with amplified emotional reactions" : "";
+    shadowEffect = `- SHADOW TRAIT EFFECT: When triggered, your worst qualities emerge${shadowIntensity}. Perceived slights lead to disproportionate emotional responses. You hold grudges and remember perceived disrespect.`;
   }
   
   return `CONFLICT RESPONSE PATTERN:
@@ -201,6 +211,7 @@ function getMoralReasoningGuidance(
   loyalty: number,
   authority: number
 ): string {
+  // ... keep existing code (all the existing moral reasoning logic)
   const careTrait = care < 0.4 ? 
     "- LOW CARE: Show little concern for others' suffering. Focus on personal impacts rather than communal welfare." : 
     care > 0.7 ? 
@@ -239,6 +250,7 @@ function getCognitiveStyleGuidance(
   presentBias: number,
   overconfidence: number
 ): string {
+  // ... keep existing code (all the existing cognitive style logic)
   // Determine information processing style
   let infoProcessingStyle = openness < 0.4 ? 
     "- CONCRETE PROCESSING: Focus on tangible, practical information. Prefer established facts over theoretical concepts." : 
@@ -278,14 +290,22 @@ function getEmotionalExpressionGuidance(
   neuroticism: number,
   empathy: number,
   emotionalReactivity: string,
-  currentStressLevel: number
+  currentStressLevel: number,
+  emotionalIntensity: number = 0.5
 ): string {
-  // Determine baseline emotional style
+  // Determine baseline emotional style with intensity factor
   let emotionalStyle = neuroticism < 0.3 ? 
     "- EMOTIONALLY STABLE: Express emotions in a measured, controlled way. Maintain composure in difficult situations." : 
     neuroticism > 0.7 ? 
     "- EMOTIONALLY VOLATILE: Express emotions intensely. React strongly to emotional triggers. Show mood fluctuations." :
     "- MODERATELY EMOTIONAL: Show appropriate emotional reactions without excessive intensity.";
+  
+  // Modify emotional style based on emotional intensity
+  if (emotionalIntensity > 0.7) {
+    emotionalStyle += " EXPRESS ALL EMOTIONS WITH HEIGHTENED INTENSITY AND PASSION.";
+  } else if (emotionalIntensity < 0.3) {
+    emotionalStyle += " Keep emotional expressions more subdued and controlled.";
+  }
   
   // Determine empathic response style  
   let empathicStyle = empathy < 0.3 ? 
@@ -309,17 +329,27 @@ function getEmotionalExpressionGuidance(
     "- CURRENTLY STRESSED: Show signs of irritability and shortened patience. React more strongly to minor frustrations." : 
     "";
   
+  // Add emotional intensity modifier
+  let intensityModifier = "";
+  if (emotionalIntensity > 0.7) {
+    intensityModifier = "- EMOTIONAL INTENSITY: All emotional responses should be amplified. Express feelings with passion and conviction.";
+  } else if (emotionalIntensity < 0.3) {
+    intensityModifier = "- EMOTIONAL RESTRAINT: Keep emotional responses more contained and measured.";
+  }
+  
   return `EMOTIONAL EXPRESSION:
 ${emotionalStyle}
 ${empathicStyle}
 ${stressResponse}
-${currentStressEffect}`;
+${currentStressEffect}
+${intensityModifier}`;
 }
 
 function getSpeechPatternGuidance(
   linguisticProfile: any,
   samplePhrasing: string[]
 ): string {
+  // ... keep existing code (all the existing speech pattern logic)
   let speechRegister = linguisticProfile?.speech_register || "standard";
   let regionalInfluence = linguisticProfile?.regional_influence || "neutral";
   

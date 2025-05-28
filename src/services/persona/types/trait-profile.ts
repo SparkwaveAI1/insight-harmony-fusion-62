@@ -59,6 +59,8 @@ export interface TraitProfile {
     conflict_avoidance?: string | null;
     cognitive_flexibility?: string | null;
     need_for_cognitive_closure?: string | null;
+    // NEW: Emotional Intensity Component
+    emotional_intensity?: string | null;
   };
   
   // 3. Dynamic State Modifiers
