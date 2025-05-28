@@ -1,4 +1,3 @@
-
 import { Persona } from './types';
 
 export interface TraitValidationResult {
@@ -168,6 +167,45 @@ export function validateEnhancedTraits(persona: Persona): TraitValidationResult 
           result.invalidValues.push(`social_identity.${trait}: ${value}`);
           result.isValid = false;
         }
+      }
+    });
+  }
+
+  // Validate Emotional Triggers (NEW)
+  const emotionalTriggers = persona.emotional_triggers;
+  if (!emotionalTriggers) {
+    result.warnings.push('Missing emotional_triggers');
+  } else {
+    if (!emotionalTriggers.positive_triggers || !Array.isArray(emotionalTriggers.positive_triggers)) {
+      result.missingTraits.push('emotional_triggers.positive_triggers');
+      result.isValid = false;
+    }
+    
+    if (!emotionalTriggers.negative_triggers || !Array.isArray(emotionalTriggers.negative_triggers)) {
+      result.missingTraits.push('emotional_triggers.negative_triggers');
+      result.isValid = false;
+    }
+    
+    // Validate trigger structure
+    [...(emotionalTriggers.positive_triggers || []), ...(emotionalTriggers.negative_triggers || [])].forEach((trigger, index) => {
+      if (!trigger.keywords || !Array.isArray(trigger.keywords) || trigger.keywords.length === 0) {
+        result.invalidValues.push(`trigger[${index}]: missing or empty keywords array`);
+        result.isValid = false;
+      }
+      
+      if (!trigger.emotion_type || typeof trigger.emotion_type !== 'string') {
+        result.invalidValues.push(`trigger[${index}]: missing or invalid emotion_type`);
+        result.isValid = false;
+      }
+      
+      if (typeof trigger.intensity_multiplier !== 'number' || trigger.intensity_multiplier < 1 || trigger.intensity_multiplier > 10) {
+        result.invalidValues.push(`trigger[${index}]: intensity_multiplier should be 1-10`);
+        result.isValid = false;
+      }
+      
+      if (!trigger.description || typeof trigger.description !== 'string') {
+        result.invalidValues.push(`trigger[${index}]: missing or invalid description`);
+        result.isValid = false;
       }
     });
   }

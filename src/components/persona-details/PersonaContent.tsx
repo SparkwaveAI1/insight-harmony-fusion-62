@@ -3,6 +3,8 @@ import React from "react";
 import Card from "@/components/ui-custom/Card";
 import PersonaKeyInsights from "./PersonaKeyInsights";
 import PersonaDemographics from "./PersonaDemographics";
+import PersonaTraits from "./PersonaTraits";
+import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
 import InterviewResponses from "./InterviewResponses";
 import PersonaPromptSection from "./PersonaPromptSection";
 import { Persona } from "@/services/persona";
@@ -74,6 +76,16 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
           <PersonaDemographics metadata={persona.metadata} />
         </div>
       </Card>
+      
+      <Card className="p-6 shadow-md bg-white border-gray-100">
+        <PersonaTraits traitProfile={persona.trait_profile} />
+      </Card>
+      
+      {persona.emotional_triggers && (
+        <Card className="p-6 shadow-md bg-white border-gray-100">
+          <PersonaEmotionalTriggers emotionalTriggers={persona.emotional_triggers} />
+        </Card>
+      )}
       
       <InterviewResponses sections={getInterviewSections()} />
       
