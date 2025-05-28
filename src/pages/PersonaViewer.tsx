@@ -12,8 +12,6 @@ import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import { useParams, useLocation } from "react-router-dom";
 import { Persona } from "@/services/persona";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Construction } from "lucide-react";
 
 // Create a QueryClient with specific retry configuration
 const queryClient = new QueryClient({
@@ -70,15 +68,6 @@ const PersonaViewerContent = () => {
                 </p>
               )}
               <div className="w-32 h-1 bg-accent mb-6"></div>
-              
-              {/* Development warning */}
-              <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-                <Construction className="h-5 w-5 text-amber-500" />
-                <AlertTitle className="text-amber-600">Under Development</AlertTitle>
-                <AlertDescription className="text-amber-600">
-                  Some features of the persona viewer are still under development and may not function correctly.
-                </AlertDescription>
-              </Alert>
               
               {/* My Personas Section */}
               <h2 className="text-2xl font-bold mb-4">My Personas</h2>
