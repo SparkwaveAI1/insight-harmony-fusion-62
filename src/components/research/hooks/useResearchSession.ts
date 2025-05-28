@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
@@ -72,7 +71,7 @@ export const useResearchSession = () => {
       const { data: conversation, error } = await supabase
         .from('conversations')
         .insert({
-          title: `Research Session - ${new Date().toLocaleDateString()}`,
+          title: `Research Session - ${new Date().toLocaleDateString()} (${selectedPersonas.length} personas)`,
           session_type: 'research',
           active_persona_ids: personaIds,
           auto_mode: false,
@@ -91,7 +90,7 @@ export const useResearchSession = () => {
       setMessages([]);
       
       console.log('Session created successfully:', conversation.id);
-      toast.success('Research session started successfully');
+      toast.success(`Research session started with ${selectedPersonas.length} persona${selectedPersonas.length !== 1 ? 's' : ''}`);
       return true;
     } catch (error) {
       console.error('Error creating research session:', error);
@@ -232,22 +231,18 @@ export const useResearchSession = () => {
 
   const selectPersonaResponder = useCallback(async (personaId: string) => {
     console.log('Selecting persona responder:', personaId);
-    // Use current values from state, not from closure
-    setMessages(currentMessages => {
-      setLoadedPersonas(currentPersonas => {
-        setSessionId(currentSessionId => {
-          if (currentSessionId) {
-            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas);
-          } else {
-            console.error('No session ID available');
-          }
-          return currentSessionId;
-        });
-        return currentPersonas;
-      });
-      return currentMessages;
-    });
-  }, [generatePersonaResponse]);
+    
+    // Get the current state values
+    const currentSessionId = sessionId;
+    const currentMessages = messages;
+    const currentPersonas = loadedPersonas;
+    
+    if (currentSessionId) {
+      generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas);
+    } else {
+      console.error('No session ID available');
+    }
+  }, [sessionId, messages, loadedPersonas, generatePersonaResponse]);
 
   const addPersonaToSession = useCallback(async (personaId: string) => {
     // Implementation for adding persona to existing session

@@ -41,16 +41,14 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     console.log('Clear session functionality to be implemented');
   };
 
-  const handleSendToActivePersona = async () => {
-    if (loadedPersonas.length > 0) {
-      const activePersona = loadedPersonas[0];
-      console.log('Sending chat to active persona:', activePersona.name);
-      await onSelectResponder(activePersona.persona_id);
-    }
+  const handleSendToPersona = async (personaId: string) => {
+    const persona = loadedPersonas.find(p => p.persona_id === personaId);
+    console.log('Sending chat to persona:', persona?.name);
+    await onSelectResponder(personaId);
   };
 
-  // Show button when there's an active persona and messages exist
-  const shouldShowSendButton = loadedPersonas.length > 0 && messages.length > 0;
+  // Show button when there are active personas and messages exist
+  const shouldShowSendButtons = loadedPersonas.length > 0 && messages.length > 0;
 
   if (showPersonaLoader || !sessionId) {
     return (
@@ -59,11 +57,11 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Research Session</h1>
             <p className="text-muted-foreground">
-              Select a persona to participate in your research conversation
+              Select up to 4 personas to participate in your research conversation
             </p>
           </div>
           <PersonaLoader
-            maxPersonas={1}
+            maxPersonas={4}
             onStartSession={handleStartSession}
             isLoading={isLoading}
           />
@@ -80,7 +78,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             <span className="font-semibold">Research Session</span>
-            <Badge variant="secondary">{loadedPersonas.length}/1 Persona</Badge>
+            <Badge variant="secondary">{loadedPersonas.length}/4 Personas</Badge>
             <Badge variant="outline" className="text-xs">
               {messages.length} messages
             </Badge>
@@ -121,17 +119,20 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
 
       {/* Loaded Personas Display */}
       <Card className="flex-shrink-0 mb-4 p-4 bg-muted/30">
-        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Persona:</h4>
-        <div className="flex flex-wrap gap-3">
-          {loadedPersonas.map((persona) => (
+        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {loadedPersonas.map((persona, index) => (
             <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
+              <Badge variant="outline" className="text-xs">
+                Persona {index + 1}
+              </Badge>
               <Avatar className="h-6 w-6">
                 <AvatarImage src={persona.image_url} />
                 <AvatarFallback className="text-xs">
                   {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">{persona.name}</span>
+              <span className="text-sm font-medium flex-1">{persona.name}</span>
               {persona.metadata?.occupation && (
                 <Badge variant="outline" className="text-xs">
                   {persona.metadata.occupation}
@@ -143,24 +144,30 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         </div>
       </Card>
 
-      {/* Send to Persona Button */}
-      {shouldShowSendButton && (
+      {/* Send to Persona Buttons */}
+      {shouldShowSendButtons && (
         <Card className="flex-shrink-0 mb-4 p-4 bg-blue-50 border-blue-200">
-          <div className="flex items-center justify-between">
+          <div className="space-y-3">
             <div>
-              <h4 className="font-medium text-sm">Send to Active Persona</h4>
+              <h4 className="font-medium text-sm">Send to Personas</h4>
               <p className="text-xs text-muted-foreground">
-                Send the current conversation to {loadedPersonas[0]?.name} for their response
+                Send the current conversation to any persona for their response
               </p>
             </div>
-            <Button 
-              onClick={handleSendToActivePersona}
-              disabled={isLoading}
-              className="ml-4"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              {isLoading ? 'Sending...' : 'Send to Persona'}
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {loadedPersonas.map((persona, index) => (
+                <Button 
+                  key={persona.persona_id}
+                  onClick={() => handleSendToPersona(persona.persona_id)}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="justify-start"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Sending...' : `Send to ${persona.name}`}
+                </Button>
+              ))}
+            </div>
           </div>
         </Card>
       )}
