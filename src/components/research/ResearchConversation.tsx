@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResearchMessageInput } from './ResearchMessageInput';
@@ -23,10 +23,6 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   onSelectResponder
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const getPersonaInfo = (personaId: string) => {
     return loadedPersonas.find(p => p.persona_id === personaId);
