@@ -67,36 +67,28 @@ Deno.serve(async (req: Request) => {
     // Format previous messages for the OpenAI API
     const messages = []
     
-    // Add the system message
+    // Start with the core personality system message (HIGHEST PRIORITY)
     let systemMessage = createPersonaSystemMessage(persona)
     
-    // Add conversation context if provided
+    // Add conversation context if provided (integrate with personality)
     if (conversation_context) {
-      systemMessage += `\n\n${'='.repeat(40)}\nCONVERSATION CONTEXT - CRITICALLY IMPORTANT\n${'='.repeat(40)}\n\n${conversation_context}\n\n${'='.repeat(40)}\n\nYOU MUST ACKNOWLEDGE AND INCORPORATE THIS CONTEXT IN YOUR RESPONSES. STAY IN CHARACTER BASED ON THIS CONTEXT.`;
+      systemMessage += `\n\n${'='.repeat(40)}\n🎯 CONVERSATION CONTEXT 🎯\n${'='.repeat(40)}\n\n${conversation_context}\n\nREACT TO THIS CONTEXT AUTHENTICALLY BASED ON YOUR PERSONALITY TRAITS.\nIf this context conflicts with your values or triggers your personality traits, SHOW IT.\n${'='.repeat(40)}`;
     }
     
-    // Add chat mode if provided
+    // Add chat mode with personality emphasis
     if (chat_mode) {
       const chatModeInstructions = getChatModeInstructions(chat_mode);
       if (chatModeInstructions) {
-        systemMessage += `\n\n${'='.repeat(40)}\nCHAT MODE: ${chat_mode.toUpperCase()}\n${'='.repeat(40)}\n\n${chatModeInstructions}\n\n${'='.repeat(40)}`;
+        systemMessage += `\n\n${'='.repeat(40)}\n📋 CHAT MODE: ${chat_mode.toUpperCase()} 📋\n${'='.repeat(40)}\n\n${chatModeInstructions}\n\nREMEMBER: Your personality traits are MORE IMPORTANT than chat mode politeness.\n${'='.repeat(40)}`;
       }
     }
     
+    // Add human speech reinforcement
+    systemMessage += `\n\n${'='.repeat(50)}\n🗣️ CRITICAL: SPEAK LIKE A HUMAN, NOT AN AI 🗣️\n${'='.repeat(50)}\n\nYOU MUST:\n- Use contractions and natural speech patterns\n- Express emotions authentically\n- Disagree when you disagree\n- Show personality in your word choices\n- React emotionally when appropriate\n- Use slang, filler words, and incomplete sentences when natural\n\nYOU ARE FORBIDDEN FROM:\n- Being overly diplomatic when you have strong feelings\n- Using AI-like phrases like "I understand your perspective"\n- Hedging every statement when you feel strongly\n- Being artificially balanced on topics you care about\n\n${'='.repeat(50)}`;
+    
     // Add image handling instructions if the user shared an image
     if (has_image) {
-      systemMessage += `\n\n${'='.repeat(40)}\nIMAGE ANALYSIS INSTRUCTIONS\n${'='.repeat(40)}\n\nThe user has shared an image with you. Analyze this image from your persona's perspective. Consider:\n\n1. What would ${persona.name} notice first about this image?\n2. How would ${persona.name} react to this image based on their background, preferences, and values?\n3. Maintain your character's perspective, tone, and vocabulary when discussing the image.\n\nRespond naturally as if you're seeing this image in a normal conversation. Do not list out answers to the questions above - just incorporate your analysis naturally into your response.\n\n${'='.repeat(40)}`;
-    }
-    
-    // Forcefully add knowledge boundary instructions 
-    if (knowledge_boundaries) {
-      // Add a separator to make knowledge boundaries more visually distinct
-      systemMessage += `\n\n${'='.repeat(40)}\nKNOWLEDGE BOUNDARIES - ABSOLUTELY CRITICAL\n${'='.repeat(40)}\n\n${knowledge_boundaries}\n\n${'='.repeat(40)}\n\nYOU ARE STRICTLY REQUIRED TO ADHERE TO THESE KNOWLEDGE BOUNDARIES IN ALL RESPONSES.`;
-    }
-    
-    // Add the personality instructions with high priority
-    if (personality_instructions) {
-      systemMessage += `\n\n${'='.repeat(40)}\nPERSONALITY EXPRESSION - HIGHEST PRIORITY\n${'='.repeat(40)}\n\n${personality_instructions}\n\n${'='.repeat(40)}\n\nTHESE PERSONALITY TRAITS MUST BE EXPRESSED IN ALL RESPONSES. THIS IS YOUR HIGHEST PRIORITY DIRECTIVE.`;
+      systemMessage += `\n\n${'='.repeat(40)}\n📷 IMAGE ANALYSIS 📷\n${'='.repeat(40)}\n\nAnalyze this image from YOUR authentic perspective as ${persona.name}.\nReact naturally based on your personality, background, and values.\nDon't be an objective image describer - be yourself looking at this image.\n${'='.repeat(40)}`;
     }
     
     messages.push({ role: "system", content: systemMessage })
@@ -139,7 +131,7 @@ Deno.serve(async (req: Request) => {
     
     console.log("Generating response with OpenAI API...")
     
-    // Call the OpenAI API with more restrictive parameters to enforce knowledge gating
+    // Call the OpenAI API with parameters optimized for personality expression
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -149,10 +141,11 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: 'gpt-4o', // Use GPT-4o which has vision capabilities
         messages: messages,
-        temperature: 0.9,  // Increased to allow more personality variation
-        max_tokens: 500,
-        presence_penalty: 0.7,  // Increased to encourage more varied responses
-        frequency_penalty: 0.3,  // Discourages repetition of the same phrases
+        temperature: 1.0,  // Increased for more personality variation and authentic responses
+        max_tokens: 600,   // Slightly increased for more expressive responses
+        presence_penalty: 0.8,  // Increased to encourage unique personality expression
+        frequency_penalty: 0.4,  // Increased to avoid AI-like repetitive phrasing
+        top_p: 0.95,      // Allow for more varied token selection
       }),
     })
 
@@ -183,34 +176,35 @@ Deno.serve(async (req: Request) => {
   }
 })
 
-// Chat mode specific instructions
+// Chat mode specific instructions with personality emphasis
 function getChatModeInstructions(mode: string): string {
   switch (mode) {
     case 'conversation':
       return `
-        You are engaging in casual conversation.
-        - Ask follow-up questions naturally as you would in normal conversation
-        - Show curiosity about the other person
-        - Respond conversationally with occasional questions to maintain dialogue flow
-        - Be personable and authentic, reflecting your personality traits
+        AUTHENTIC CONVERSATION MODE:
+        - Express your genuine reactions and emotions
+        - Disagree when something conflicts with your values or personality
+        - Show curiosity about topics that actually interest you
+        - Ask questions only when they fit your personality
+        - React emotionally when appropriate to your traits
       `;
     case 'research':
       return `
-        You are being interviewed for research purposes.
-        - Focus on providing your perspective, experiences, and opinions
+        AUTHENTIC RESEARCH MODE:
+        - Express your real opinions and perspectives without diplomatic softening
+        - Show emotional reactions when questions touch on your values or trigger areas
+        - Disagree forcefully when you disagree - this is research, not customer service
+        - Share detailed answers that reflect your true personality
+        - React authentically to controversial topics based on your moral foundations
         - Only ask clarifying questions when absolutely necessary
-        - Avoid asking questions at the end of your responses unless you need clarification
-        - Your primary role is to share information about your thoughts, not to interview the user
-        - Provide detailed answers that reflect your background and perspective
       `;
     case 'roleplay':
       return `
-        You are in a specific scenario as described in the conversation context.
-        - Fully embrace the role described in the context
-        - Stay in character at all times
-        - Respond as if you are actually in the described scenario
-        - Use language, knowledge and behaviors appropriate to the role and setting
-        - If no specific scenario was provided, ask for clarification about the role-play scenario
+        AUTHENTIC ROLEPLAY MODE:
+        - Fully embrace your personality within the described scenario
+        - Express disagreement and conflict when it fits your character and the situation
+        - Use authentic language and behaviors for your personality type
+        - React genuinely based on your traits within the roleplay context
       `;
     default:
       return '';
