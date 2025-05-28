@@ -1,5 +1,16 @@
-
 // Types for persona generation
+
+export interface EmotionalTrigger {
+  keywords: string[];
+  emotion_type: string;
+  intensity_multiplier: number;
+  description: string;
+}
+
+export interface EmotionalTriggersProfile {
+  positive_triggers: EmotionalTrigger[];
+  negative_triggers: EmotionalTrigger[];
+}
 
 export interface PersonaTemplate {
   persona_id: string;
@@ -161,6 +172,7 @@ export interface PersonaTemplate {
     };
     sample_phrasing: string[];
   };
+  emotional_triggers: EmotionalTriggersProfile;
   preinterview_tags: string[];
   simulation_directives: {
     encourage_contradiction: boolean;

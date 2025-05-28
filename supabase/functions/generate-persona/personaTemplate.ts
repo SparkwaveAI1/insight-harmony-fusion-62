@@ -1,4 +1,3 @@
-
 import { PersonaTemplate } from "./types.ts";
 
 // Define persona template structure
@@ -187,6 +186,10 @@ export const personaTemplate: PersonaTemplate = {
       mirroring_tendency: true,
     },
     sample_phrasing: [],
+  },
+  emotional_triggers: {
+    positive_triggers: [],
+    negative_triggers: []
   },
   preinterview_tags: [],
   simulation_directives: {

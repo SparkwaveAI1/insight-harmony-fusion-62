@@ -1,4 +1,16 @@
 
+export interface EmotionalTrigger {
+  keywords: string[];
+  emotion_type: string;
+  intensity_multiplier: number;
+  description: string;
+}
+
+export interface EmotionalTriggersProfile {
+  positive_triggers: EmotionalTrigger[];
+  negative_triggers: EmotionalTrigger[];
+}
+
 export interface TraitProfile {
   // 1. Base Traits (Empirically Anchored Models)
   

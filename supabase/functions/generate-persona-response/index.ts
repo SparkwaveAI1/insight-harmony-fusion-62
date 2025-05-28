@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 import { createPersonaSystemMessage } from '../_shared/personaSystemMessage.ts'
+import { detectEmotionalTriggers, generateEmotionalStateInstructions } from '../_shared/emotionalTriggerService.ts'
 import { generateChatResponse } from '../_shared/openai.ts'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || ''
@@ -69,6 +70,31 @@ Deno.serve(async (req: Request) => {
     
     // Start with the core personality system message (HIGHEST PRIORITY)
     let systemMessage = createPersonaSystemMessage(persona)
+    
+    // DETECT EMOTIONAL TRIGGERS from the most recent user message
+    const lastUserMessage = previous_messages?.findLast((msg: Message) => msg.role === 'user');
+    if (lastUserMessage && persona.emotional_triggers) {
+      console.log('Detecting emotional triggers for message:', lastUserMessage.content);
+      
+      // Extract personality traits for emotional amplification
+      const emotionalIntensity = parseFloat(persona.trait_profile?.extended_traits?.emotional_intensity || '0.5');
+      const currentStressLevel = parseFloat(persona.trait_profile?.dynamic_state?.current_stress_level || '0.5');
+      const neuroticism = parseFloat(persona.trait_profile?.big_five?.neuroticism || '0.5');
+      
+      const triggeredEmotions = detectEmotionalTriggers(
+        lastUserMessage.content,
+        persona.emotional_triggers,
+        emotionalIntensity,
+        currentStressLevel,
+        neuroticism
+      );
+      
+      if (triggeredEmotions.length > 0) {
+        console.log('Emotional triggers activated:', triggeredEmotions.map(e => `${e.emotion_type} (${e.intensity})`));
+        const emotionalInstructions = generateEmotionalStateInstructions(triggeredEmotions);
+        systemMessage += emotionalInstructions;
+      }
+    }
     
     // Add conversation context if provided (integrate with personality)
     if (conversation_context) {
