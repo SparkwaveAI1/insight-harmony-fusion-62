@@ -1,19 +1,16 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { usePersona } from '@/hooks/usePersona';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
 import { supabase } from '@/integrations/supabase/client';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
+import { getAllPersonas } from '@/services/persona';
 
 export const useResearchSession = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [messages, setMessages] = useState<(Message & { responding_persona_id?: string })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { personas } = usePersona();
 
   const createSession = useCallback(async (personaIds: string[]): Promise<boolean> => {
     try {
@@ -27,8 +24,9 @@ export const useResearchSession = () => {
         return false;
       }
 
-      // Get selected personas from the already loaded personas
-      const selectedPersonas = (personas || []).filter(p => 
+      // Fetch fresh personas to ensure we have the latest data
+      const allPersonas = await getAllPersonas();
+      const selectedPersonas = allPersonas.filter(p => 
         personaIds.includes(p.persona_id)
       );
       
@@ -100,7 +98,7 @@ export const useResearchSession = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [personas]);
+  }, []);
 
   const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
     if (!sessionId || !content.trim()) {
