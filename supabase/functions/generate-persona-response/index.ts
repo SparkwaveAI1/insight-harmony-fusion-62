@@ -101,16 +101,17 @@ Deno.serve(async (req: Request) => {
       systemMessage += `\n\n${'='.repeat(40)}\n🎯 CONVERSATION CONTEXT 🎯\n${'='.repeat(40)}\n\n${conversation_context}\n\nREACT TO THIS CONTEXT AUTHENTICALLY BASED ON YOUR PERSONALITY TRAITS.\nIf this context conflicts with your values or triggers your personality traits, SHOW IT.\n${'='.repeat(40)}`;
     }
     
-    // Add chat mode with personality emphasis
+    // Add enhanced chat mode instructions with linguistic variability
     if (chat_mode) {
-      const chatModeInstructions = getChatModeInstructions(chat_mode);
+      const chatModeInstructions = getChatModeInstructions(chat_mode, persona);
       if (chatModeInstructions) {
         systemMessage += `\n\n${'='.repeat(40)}\n📋 CHAT MODE: ${chat_mode.toUpperCase()} 📋\n${'='.repeat(40)}\n\n${chatModeInstructions}\n\nREMEMBER: Your personality traits are MORE IMPORTANT than chat mode politeness.\n${'='.repeat(40)}`;
       }
     }
     
-    // Add human speech reinforcement
-    systemMessage += `\n\n${'='.repeat(50)}\n🗣️ CRITICAL: SPEAK LIKE A HUMAN, NOT AN AI 🗣️\n${'='.repeat(50)}\n\nYOU MUST:\n- Use contractions and natural speech patterns\n- Express emotions authentically\n- Disagree when you disagree\n- Show personality in your word choices\n- React emotionally when appropriate\n- Use slang, filler words, and incomplete sentences when natural\n\nYOU ARE FORBIDDEN FROM:\n- Being overly diplomatic when you have strong feelings\n- Using AI-like phrases like "I understand your perspective"\n- Hedging every statement when you feel strongly\n- Being artificially balanced on topics you care about\n\n${'='.repeat(50)}`;
+    // Add human speech reinforcement with linguistic profile integration
+    const linguisticInstructions = generateLinguisticInstructions(persona);
+    systemMessage += linguisticInstructions;
     
     // Add image handling instructions if the user shared an image
     if (has_image) {
@@ -157,7 +158,10 @@ Deno.serve(async (req: Request) => {
     
     console.log("Generating response with OpenAI API...")
     
-    // Call the OpenAI API with parameters optimized for personality expression
+    // Generate response length parameters based on persona traits and linguistic profile
+    const responseParams = generateResponseParameters(persona, chat_mode);
+    
+    // Call the OpenAI API with parameters optimized for personality expression and variability
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -167,11 +171,11 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         model: 'gpt-4o', // Use GPT-4o which has vision capabilities
         messages: messages,
-        temperature: 1.0,  // Increased for more personality variation and authentic responses
-        max_tokens: 600,   // Slightly increased for more expressive responses
-        presence_penalty: 0.8,  // Increased to encourage unique personality expression
-        frequency_penalty: 0.4,  // Increased to avoid AI-like repetitive phrasing
-        top_p: 0.95,      // Allow for more varied token selection
+        temperature: responseParams.temperature,
+        max_tokens: responseParams.maxTokens,
+        presence_penalty: responseParams.presencePenalty,
+        frequency_penalty: responseParams.frequencyPenalty,
+        top_p: responseParams.topP,
       }),
     })
 
@@ -202,37 +206,135 @@ Deno.serve(async (req: Request) => {
   }
 })
 
-// Chat mode specific instructions with personality emphasis
-function getChatModeInstructions(mode: string): string {
-  switch (mode) {
-    case 'conversation':
-      return `
-        AUTHENTIC CONVERSATION MODE:
-        - Express your genuine reactions and emotions
-        - Disagree when something conflicts with your values or personality
-        - Show curiosity about topics that actually interest you
-        - Ask questions only when they fit your personality
-        - React emotionally when appropriate to your traits
-      `;
-    case 'research':
-      return `
-        AUTHENTIC RESEARCH MODE:
-        - Express your real opinions and perspectives without diplomatic softening
-        - Show emotional reactions when questions touch on your values or trigger areas
-        - Disagree forcefully when you disagree - this is research, not customer service
-        - Share detailed answers that reflect your true personality
-        - React authentically to controversial topics based on your moral foundations
-        - Only ask clarifying questions when absolutely necessary
-      `;
-    case 'roleplay':
-      return `
-        AUTHENTIC ROLEPLAY MODE:
-        - Fully embrace your personality within the described scenario
-        - Express disagreement and conflict when it fits your character and the situation
-        - Use authentic language and behaviors for your personality type
-        - React genuinely based on your traits within the roleplay context
-      `;
-    default:
-      return '';
+// Enhanced chat mode instructions with natural variability
+function getChatModeInstructions(mode: string, persona: any): string {
+  const baseInstructions = {
+    conversation: `
+      AUTHENTIC CONVERSATION MODE:
+      - Express your genuine reactions and emotions
+      - Disagree when something conflicts with your values or personality
+      - Show curiosity about topics that actually interest you
+      - Ask questions only when they fit your personality
+      - React emotionally when appropriate to your traits
+    `,
+    research: `
+      AUTHENTIC RESEARCH MODE - CRITICAL INSTRUCTIONS:
+      - This is NOT a customer service interaction - be completely authentic
+      - Express your real opinions and perspectives without diplomatic softening
+      - Show emotional reactions when questions touch on your values or trigger areas
+      - Disagree forcefully when you disagree - this is research, not customer service
+      - Share detailed answers that reflect your true personality when engaged
+      - React authentically to controversial topics based on your moral foundations
+      - VARY YOUR RESPONSE LENGTH NATURALLY based on your engagement and personality
+      - Sometimes be brief, sometimes elaborate - just like real people
+      - Don't feel obligated to ask clarifying questions unless it's genuinely natural for you
+    `,
+    roleplay: `
+      AUTHENTIC ROLEPLAY MODE:
+      - Fully embrace your personality within the described scenario
+      - Express disagreement and conflict when it fits your character and the situation
+      - Use authentic language and behaviors for your personality type
+      - React genuinely based on your traits within the roleplay context
+    `
+  };
+
+  return baseInstructions[mode] || '';
+}
+
+// Generate linguistic instructions based on persona profile
+function generateLinguisticInstructions(persona: any): string {
+  const linguisticProfile = persona.linguistic_profile || {};
+  const simulationDirectives = persona.simulation_directives || {};
+  
+  let instructions = `\n\n${'='.repeat(50)}\n🗣️ CRITICAL: SPEAK LIKE A HUMAN, NOT AN AI 🗣️\n${'='.repeat(50)}\n\n`;
+  
+  // Base human speech requirements
+  instructions += `YOU MUST:\n- Use contractions and natural speech patterns\n- Express emotions authentically\n- Disagree when you disagree\n- Show personality in your word choices\n- React emotionally when appropriate\n- Use slang, filler words, and incomplete sentences when natural\n\n`;
+  
+  // Linguistic profile specific instructions
+  if (linguisticProfile.default_output_length) {
+    const lengthMap = {
+      'very_short': 'Keep responses brief and to the point (1-2 sentences often)',
+      'short': 'Prefer shorter responses (2-4 sentences typically)',
+      'medium': 'Use moderate length responses (3-6 sentences typically)', 
+      'long': 'Give more detailed responses (5-10 sentences typically)',
+      'very_long': 'Provide comprehensive responses when engaged (8+ sentences)'
+    };
+    
+    instructions += `RESPONSE LENGTH PREFERENCE: ${lengthMap[linguisticProfile.default_output_length] || 'Vary naturally'}\n`;
   }
+  
+  if (linguisticProfile.speech_register) {
+    const registerMap = {
+      'formal': 'Use more formal language and complete sentences',
+      'informal': 'Use casual, relaxed language with contractions',
+      'colloquial': 'Use everyday speech with local expressions',
+      'technical': 'Use precise, technical language when relevant',
+      'street': 'Use street-smart, direct language'
+    };
+    
+    instructions += `SPEECH STYLE: ${registerMap[linguisticProfile.speech_register] || 'Use your natural style'}\n`;
+  }
+  
+  // Simulation directives for variability
+  if (simulationDirectives.response_length_variability) {
+    instructions += `RESPONSE VARIABILITY: Vary your response length significantly - sometimes be very brief (even one sentence), other times more elaborate based on your genuine interest and engagement\n`;
+  }
+  
+  instructions += `\nYOU ARE FORBIDDEN FROM:\n- Being overly diplomatic when you have strong feelings\n- Using AI-like phrases like "I understand your perspective"\n- Hedging every statement when you feel strongly\n- Being artificially balanced on topics you care about\n- Giving identical length responses repeatedly\n\n${'='.repeat(50)}`;
+  
+  return instructions;
+}
+
+// Generate response parameters based on persona traits and mode
+function generateResponseParameters(persona: any, chatMode: string) {
+  const extendedTraits = persona.trait_profile?.extended_traits || {};
+  const linguisticProfile = persona.linguistic_profile || {};
+  const simulationDirectives = persona.simulation_directives || {};
+  
+  // Base parameters
+  let temperature = 1.0;
+  let maxTokens = 600;
+  let presencePenalty = 0.8;
+  let frequencyPenalty = 0.4;
+  let topP = 0.95;
+  
+  // Adjust based on personality traits
+  const emotionalIntensity = parseFloat(extendedTraits.emotional_intensity || '0.5');
+  const cognitiveFlexibility = parseFloat(extendedTraits.cognitive_flexibility || '0.5');
+  
+  // Higher emotional intensity = higher temperature for more expressive responses
+  temperature = Math.min(1.2, 0.8 + (emotionalIntensity * 0.4));
+  
+  // Adjust token limits based on output length preference
+  if (linguisticProfile.default_output_length) {
+    const tokenMap = {
+      'very_short': 150,
+      'short': 300,
+      'medium': 500,
+      'long': 800,
+      'very_long': 1000
+    };
+    maxTokens = tokenMap[linguisticProfile.default_output_length] || 600;
+  }
+  
+  // Research mode gets more variability
+  if (chatMode === 'research') {
+    temperature = Math.min(1.3, temperature + 0.2);
+    presencePenalty = 0.9;
+    frequencyPenalty = 0.6;
+    
+    // Add randomness to max tokens for research to encourage length variability
+    const variance = maxTokens * 0.4;
+    maxTokens = Math.floor(maxTokens + (Math.random() - 0.5) * variance);
+    maxTokens = Math.max(100, Math.min(1200, maxTokens));
+  }
+  
+  return {
+    temperature,
+    maxTokens,
+    presencePenalty,
+    frequencyPenalty,
+    topP
+  };
 }
