@@ -45,33 +45,55 @@ PERSONA RESPONSE TO VALIDATE: "${response}"
 Rate this response on a scale of 0.0 to 1.0 for each metric:
 
 1. HUMANNESS (Does this sound like a real human, not AI?)
-   - Look for: natural speech patterns, imperfect grammar, personal quirks, emotional authenticity
-   - Avoid: overly polite AI language, perfect grammar, diplomatic hedging, "I understand" phrases
+   - CRITICAL VIOLATIONS (automatic 0.2 or lower):
+     * Starting with "Honestly," "Well," "To be honest," "Personally," "I think," "I feel like," "You know,"
+     * Using diplomatic AI phrases like "I understand," "That's a great question," "I appreciate," "It's worth noting"
+     * Overly balanced/diplomatic responses that hedge everything
+     * Perfect grammar and sentence structure (humans make mistakes)
+     * Responses that sound like customer service scripts
+   - Look for: natural speech patterns, authentic reactions, imperfect language, personality quirks
+   - Reward: contractions, slang, regional speech, emotional authenticity, direct opinions
 
 2. PERSONALITY_ALIGNMENT (Does this match the persona's personality traits?)
    - Check against Big Five traits, values, behavioral patterns
    - Look for trait-consistent reactions and language
+   - Should show strong opinions when traits dictate them
 
 3. SPEECH_PATTERN_AUTHENTICITY (Does this match how this person would actually speak?)
    - Consider education level, region, age, occupation
    - Look for appropriate vocabulary, slang, sentence structure
+   - Regional and demographic speech patterns
 
 4. UNIQUE_PERSPECTIVE (Does this show a distinct viewpoint based on background?)
    - Should reflect their specific experiences, not generic opinions
    - Avoid template responses that could come from anyone
+   - Show knowledge/ignorance appropriate to their background
 
 5. EMOTIONAL_TONE (Does the emotional response fit the personality?)
    - Check if emotional intensity matches traits like neuroticism, emotional stability
-   - Look for authentic emotional reactions
+   - Look for authentic emotional reactions, not muted diplomatic responses
 
 6. BACKGROUND_RELEVANCE (Does this incorporate their specific background/experience?)
    - References to their job, location, life experiences
    - Shows knowledge appropriate to their education/experience level
 
+STRICT SCORING RULES:
+- If response starts with "Honestly," "Well," "To be honest," "Personally," "I think," or "I feel like" → HUMANNESS = 0.2 maximum
+- If response uses diplomatic AI language → HUMANNESS = 0.3 maximum  
+- If response sounds like customer service → HUMANNESS = 0.2 maximum
+- Overall score should be HARSH - most AI responses should score below 0.6
+
 ALSO provide:
 - FEEDBACK: Specific issues found and suggestions for improvement
-- IMPROVED_RESPONSE: A more authentic version if score is below 0.7
-- SHOULD_REGENERATE: true if the response needs significant improvement
+- IMPROVED_RESPONSE: A more authentic version that avoids AI patterns and shows real personality
+- SHOULD_REGENERATE: true if the response needs significant improvement (score below 0.7)
+
+The improved response should:
+- Start differently (no "Honestly" or hedging words)
+- Show strong personality-driven reactions
+- Use authentic speech patterns for this person
+- Be more emotionally genuine
+- Show their specific perspective and background
 
 Return ONLY valid JSON in this exact format:
 {
@@ -85,8 +107,8 @@ Return ONLY valid JSON in this exact format:
     "overall": 0.0
   },
   "feedback": "Detailed feedback here",
-  "improvedResponse": "Improved version here (if needed)",
-  "shouldRegenerate": false
+  "improvedResponse": "Improved version here",
+  "shouldRegenerate": true
 }`
 
     console.log('Calling OpenAI for validation...')
@@ -103,7 +125,7 @@ Return ONLY valid JSON in this exact format:
         messages: [
           {
             role: 'system',
-            content: 'You are a persona authenticity validator. Analyze responses and return ONLY valid JSON with scores and feedback.'
+            content: 'You are a harsh persona authenticity validator. Your job is to catch AI-like responses and score them very strictly. Most responses should fail validation. Be extremely critical of any AI speech patterns.'
           },
           {
             role: 'user',
@@ -148,16 +170,16 @@ Return ONLY valid JSON in this exact format:
       // Return default scores if parsing fails
       validationResult = {
         scores: {
-          humanness: 0.6,
-          personalityAlignment: 0.6,
-          speechPatternAuthenticity: 0.6,
-          uniquePerspective: 0.6,
-          emotionalTone: 0.6,
-          backgroundRelevance: 0.6,
-          overall: 0.6
+          humanness: 0.3,
+          personalityAlignment: 0.3,
+          speechPatternAuthenticity: 0.3,
+          uniquePerspective: 0.3,
+          emotionalTone: 0.3,
+          backgroundRelevance: 0.3,
+          overall: 0.3
         },
-        feedback: 'Validation parsing failed - manual review recommended',
-        shouldRegenerate: false
+        feedback: 'Validation parsing failed - response likely contains AI patterns',
+        shouldRegenerate: true
       }
     }
     
