@@ -5,6 +5,7 @@ import { Message } from '@/components/persona-chat/types';
 import { ResearchMessage } from '../hooks/types';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 import { savePersonaResponse, createPersonaMessage } from './messageService';
+import { validatePersonaResponse, ValidationResult } from './personaValidatorService';
 
 export const generatePersonaResponse = async (
   personaId: string,
@@ -52,8 +53,8 @@ Key instructions:
 - Don't feel obligated to give structured, paragraph-formatted responses
 - Respond as you naturally would in a real conversation`;
 
-    // Generate response using existing persona chat service with enhanced research mode
-    const response = await sendMessageToPersona(
+    // Generate initial response
+    let response = await sendMessageToPersona(
       personaId,
       naturalResearchPrompt,
       conversationHistory,
@@ -63,15 +64,46 @@ Key instructions:
       currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].image : undefined
     );
 
-    console.log('Generated response:', response.substring(0, 100) + '...');
+    console.log('Initial response generated:', response.substring(0, 100) + '...');
+
+    // Validate and improve response
+    const conversationContext = conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n');
+    const lastUserMessage = currentMessages.filter(m => m.role === 'user').pop()?.content || '';
+    
+    const validationResult: ValidationResult = await validatePersonaResponse(
+      response,
+      persona,
+      conversationContext,
+      lastUserMessage
+    );
+
+    console.log('Validation scores:', validationResult.scores);
+    console.log('Overall authenticity score:', validationResult.scores.overall);
+
+    // Use improved response if available and score is low
+    if (validationResult.improvedResponse && validationResult.scores.overall < 0.7) {
+      console.log('Using improved response due to low authenticity score');
+      response = validationResult.improvedResponse;
+    }
+
+    // Log validation results for debugging
+    if (validationResult.scores.overall < 0.6) {
+      console.warn(`Low authenticity score for ${persona.name}:`, validationResult.feedback);
+    }
 
     // Create persona message
     const assistantMessage = createPersonaMessage(response, personaId);
 
+    // Add validation metadata to message for debugging
+    (assistantMessage as any).validation = {
+      scores: validationResult.scores,
+      feedback: validationResult.feedback
+    };
+
     // Save to database
     await savePersonaResponse(sessionId, personaId, response);
 
-    console.log('Response saved successfully');
+    console.log('Response saved successfully with validation scores');
 
     return assistantMessage;
 
