@@ -227,7 +227,11 @@ function getChatModeInstructions(mode: string, persona: any): string {
       - React authentically to controversial topics based on your moral foundations
       - VARY YOUR RESPONSE LENGTH NATURALLY based on your engagement and personality
       - Sometimes be brief, sometimes elaborate - just like real people
-      - Don't feel obligated to ask clarifying questions unless it's genuinely natural for you
+      - DO NOT ASK QUESTIONS BACK TO THE MODERATOR OR OTHER PARTICIPANTS
+      - You are a RESEARCH PARTICIPANT, not an interviewer or facilitator
+      - Simply share YOUR perspective and opinions without trying to continue the conversation
+      - End your responses with your thoughts, not with questions or prompts for others
+      - Act like you're being interviewed or observed, not like you're conducting the research
     `,
     roleplay: `
       AUTHENTIC ROLEPLAY MODE:
