@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
     const extendedTraits = persona.trait_profile?.extended_traits || {};
     
     // Create validation prompt
-    const validationPrompt = `You are an AI response validator focused on PERSONALITY AUTHENTICITY. Analyze this persona response for distinct personality expression.
+    const validationPrompt = `You are an AI response validator focused on HUMAN SPEECH AUTHENTICITY and PERSONALITY DISTINCTIVENESS. Analyze this persona response for natural conversation patterns and unique personality expression.
 
 PERSONA PROFILE:
 Name: ${persona.name}
@@ -58,13 +58,23 @@ PERSONA RESPONSE TO VALIDATE: "${response}"
 
 CRITICAL VALIDATION REQUIREMENTS:
 
-1. HUMANNESS (Does this sound like a real human, not AI?)
-   - AUTOMATIC FAIL (0.2 or lower) if starts with: "Honestly," "Well," "To be honest," "Personally," "I think," "I feel like," "You know,"
-   - AUTOMATIC FAIL (0.3 or lower) for diplomatic AI phrases: "I understand," "That's a great question," "I appreciate," "It's worth noting"
-   - Must use natural speech patterns, contractions, personality quirks
-   - Should show authentic emotional reactions based on traits
+1. HUMAN_SPEECH_PATTERNS (Does this sound like natural human conversation?)
+   - AUTOMATIC FAIL (0.2 or lower) for overly polished, essay-like responses
+   - AUTOMATIC FAIL (0.2 or lower) for responses that sound like written marketing copy
+   - AUTOMATIC FAIL (0.3 or lower) for lack of conversational flow and natural speech
+   - Must include natural speech elements: contractions, filler words, incomplete thoughts
+   - Should show conversational patterns: "I mean," "like," "you know," "kinda," "sorta"
+   - Natural digressions and tangential thoughts are GOOD
+   - Imperfect grammar and sentence structure is HUMAN
+   - References to immediate context ("that second one," "the maze thing")
 
-2. PERSONALITY_ALIGNMENT (Does this match THIS specific persona's traits?)
+2. RESPONSE_LENGTH_VARIATION (Does this vary naturally based on engagement?)
+   - Sometimes people give short, direct answers: "Nah, not really" or "Yeah, that one"
+   - Sometimes they elaborate when genuinely interested
+   - Length should match personality and emotional engagement with topic
+   - Overly consistent paragraph lengths = AI-like = FAIL
+
+3. PERSONALITY_ALIGNMENT (Does this match THIS specific persona's traits?)
    - HIGH Openness (>0.7): Should show creative/unconventional thinking, artistic appreciation, or intellectual curiosity
    - LOW Openness (<0.3): Should be practical, traditional, focused on concrete benefits
    - HIGH Agreeableness (>0.7): Should be cooperative, considerate, avoid harsh criticism
@@ -73,52 +83,63 @@ CRITICAL VALIDATION REQUIREMENTS:
    - LOW Neuroticism (<0.3): Should be calm, stable, measured
    - Response MUST reflect these trait levels authentically
 
-3. UNIQUE_PERSPECTIVE (Does this show a DISTINCT viewpoint different from other personas?)
+4. UNIQUE_PERSPECTIVE (Does this show a DISTINCT viewpoint different from other personas?)
    - CRITICAL: This persona should NOT have the same opinion as others would
    - Must reflect their specific background (${persona.metadata?.occupation || 'occupation'}, ${persona.metadata?.age || 'age'}, ${persona.metadata?.region || 'region'})
    - Should show knowledge/ignorance appropriate to their education/experience
    - Must demonstrate perspective that flows from THEIR personality traits, not generic opinions
    - Different personalities should genuinely DISAGREE or have different focuses
 
-4. BACKGROUND_RELEVANCE (Does this incorporate their specific life context?)
-   - Should reference or reflect their occupation, region, age, education level
-   - Knowledge should match their background
-   - Speech patterns should fit their demographic
+5. CONVERSATIONAL_AUTHENTICITY (Does this feel like a real person talking?)
+   - Should reference previous parts of conversation naturally
+   - May show signs of getting tired, distracted, or more/less engaged
+   - Might make casual observations or side comments
+   - Could show personality quirks in how they express themselves
+   - Natural transitions and connections to previous statements
 
-5. MORAL/VALUE EXPRESSION (Does this reflect their moral foundations?)
-   - High Care: Should show concern for harm/suffering
-   - Low Care: May be less empathetic to others' pain
-   - High Fairness: Should focus on justice/equality issues
-   - High Authority: Should respect traditional structures
-   - Low Authority: Should question or challenge hierarchies
+EXAMPLES OF GOOD HUMAN SPEECH PATTERNS:
+✓ "Yeah, I mean... that maze one's kinda interesting, I guess"
+✓ "Nah, not really feeling any of these"
+✓ "The beach thing? Come on, they're just... like, we've seen this a million times"
+✓ "I dunno, as someone who works with this stuff, it just feels lazy to me"
+✓ "That second one you showed - now that's got something"
+
+EXAMPLES OF BAD AI-LIKE PATTERNS:
+❌ "This ad is particularly effective because it employs several sophisticated marketing techniques"
+❌ "As someone who appreciates creative innovation, I find this advertisement compelling for multiple reasons"
+❌ "The strategic use of visual metaphors in this campaign creates a powerful emotional connection"
+❌ Any response that sounds like it could be from a marketing textbook
 
 STRICT SCORING RULES:
-- If response uses AI hedging language → HUMANNESS = 0.2 maximum
+- If response sounds like written marketing analysis → HUMAN_SPEECH_PATTERNS = 0.2 maximum
+- If response has same structure/length as AI-generated content → CONVERSATIONAL_AUTHENTICITY = 0.2 maximum
 - If personality traits don't match response → PERSONALITY_ALIGNMENT = 0.3 maximum
 - If this sounds like what ANY other persona would say → UNIQUE_PERSPECTIVE = 0.2 maximum
-- Most responses should score below 0.6 overall - be VERY harsh
-- Only truly authentic, personality-driven responses should score above 0.7
+- Most responses should score below 0.6 overall - be VERY harsh about human speech patterns
+- Only truly authentic, conversational responses should score above 0.7
 
 PROVIDE:
-- FEEDBACK: Specific personality misalignments and lack of uniqueness
-- IMPROVED_RESPONSE: A version that shows THIS persona's distinct personality and perspective
+- FEEDBACK: Specific issues with human speech patterns and personality authenticity
+- IMPROVED_RESPONSE: A version that sounds like a REAL PERSON talking naturally while showing THIS persona's distinct personality
 - SHOULD_REGENERATE: true if score below 0.7
 
 The improved response should:
+- Sound like natural human conversation with imperfections
+- Use casual speech patterns, contractions, and filler words
 - Show strong personality trait influence on opinion
 - Express a viewpoint that flows from THIS persona's specific traits
 - Potentially DISAGREE with what other personalities would say
-- Use authentic speech for their background
-- Show genuine emotional reactions based on their trait profile
+- Vary in length based on engagement level
+- Include natural conversational elements and digressions
 
 Return ONLY valid JSON in this exact format:
 {
   "scores": {
-    "humanness": 0.0,
+    "humanSpeechPatterns": 0.0,
+    "responseLengthVariation": 0.0,
     "personalityAlignment": 0.0,
-    "speechPatternAuthenticity": 0.0,
     "uniquePerspective": 0.0,
-    "emotionalTone": 0.0,
+    "conversationalAuthenticity": 0.0,
     "backgroundRelevance": 0.0,
     "overall": 0.0
   },
@@ -141,7 +162,7 @@ Return ONLY valid JSON in this exact format:
         messages: [
           {
             role: 'system',
-            content: 'You are a harsh persona authenticity validator specializing in personality psychology. Your job is to ensure each persona expresses DISTINCT opinions based on their specific personality traits. Most responses should fail validation for being too generic or not reflecting the specific personality profile. Be extremely critical.'
+            content: 'You are a harsh authenticity validator specializing in human conversation patterns and personality psychology. Your job is to ensure each persona sounds like a REAL PERSON talking naturally while expressing DISTINCT opinions based on their specific personality traits. Most responses should fail validation for being too polished, AI-like, or not reflecting natural human speech. Be extremely critical of anything that sounds like written content rather than spoken conversation.'
           },
           {
             role: 'user',
@@ -171,14 +192,14 @@ Return ONLY valid JSON in this exact format:
       const cleanedResponse = rawResponse.replace(/```json\n?|\n?```/g, '').trim()
       validationResult = JSON.parse(cleanedResponse)
       
-      // Calculate overall score
+      // Calculate overall score with heavier weight on human speech patterns
       validationResult.scores.overall = (
-        validationResult.scores.humanness * 0.20 +
-        validationResult.scores.personalityAlignment * 0.30 +
-        validationResult.scores.speechPatternAuthenticity * 0.15 +
-        validationResult.scores.uniquePerspective * 0.25 +
-        validationResult.scores.emotionalTone * 0.05 +
-        validationResult.scores.backgroundRelevance * 0.05
+        validationResult.scores.humanSpeechPatterns * 0.35 +
+        validationResult.scores.personalityAlignment * 0.25 +
+        validationResult.scores.conversationalAuthenticity * 0.20 +
+        validationResult.scores.uniquePerspective * 0.15 +
+        validationResult.scores.responseLengthVariation * 0.03 +
+        validationResult.scores.backgroundRelevance * 0.02
       )
       
     } catch (parseError) {
@@ -186,15 +207,15 @@ Return ONLY valid JSON in this exact format:
       // Return default scores if parsing fails
       validationResult = {
         scores: {
-          humanness: 0.3,
+          humanSpeechPatterns: 0.2,
+          responseLengthVariation: 0.3,
           personalityAlignment: 0.2,
-          speechPatternAuthenticity: 0.3,
           uniquePerspective: 0.2,
-          emotionalTone: 0.3,
+          conversationalAuthenticity: 0.2,
           backgroundRelevance: 0.3,
-          overall: 0.25
+          overall: 0.22
         },
-        feedback: 'Validation parsing failed - likely generic response that lacks personality specificity',
+        feedback: 'Validation parsing failed - likely overly polished response that lacks natural human speech patterns',
         shouldRegenerate: true
       }
     }

@@ -4,11 +4,11 @@ import { Persona } from '@/services/persona/types';
 
 export interface ValidationScore {
   overall: number;
-  humanness: number;
+  humanSpeechPatterns: number;
+  responseLengthVariation: number;
   personalityAlignment: number;
-  speechPatternAuthenticity: number;
   uniquePerspective: number;
-  emotionalTone: number;
+  conversationalAuthenticity: number;
   backgroundRelevance: number;
 }
 
@@ -25,7 +25,7 @@ export const validatePersonaResponse = async (
   conversationContext: string,
   userMessage: string
 ): Promise<ValidationResult> => {
-  console.log('Validating persona response for authenticity:', persona.name);
+  console.log('Validating persona response for human speech authenticity:', persona.name);
   
   try {
     // Call validation edge function
@@ -49,11 +49,11 @@ export const validatePersonaResponse = async (
       return {
         scores: {
           overall: 0.7,
-          humanness: 0.7,
+          humanSpeechPatterns: 0.7,
+          responseLengthVariation: 0.7,
           personalityAlignment: 0.7,
-          speechPatternAuthenticity: 0.7,
           uniquePerspective: 0.7,
-          emotionalTone: 0.7,
+          conversationalAuthenticity: 0.7,
           backgroundRelevance: 0.7
         },
         feedback: 'Validation service unavailable - using original response',
@@ -63,6 +63,7 @@ export const validatePersonaResponse = async (
 
     const result = await validationResponse.json();
     console.log('Validation scores:', result.scores);
+    console.log('Human speech patterns score:', result.scores.humanSpeechPatterns);
     console.log('Validation feedback:', result.feedback);
     
     return result;
@@ -73,11 +74,11 @@ export const validatePersonaResponse = async (
     return {
       scores: {
         overall: 0.7,
-        humanness: 0.7,
+        humanSpeechPatterns: 0.7,
+        responseLengthVariation: 0.7,
         personalityAlignment: 0.7,
-        speechPatternAuthenticity: 0.7,
         uniquePerspective: 0.7,
-        emotionalTone: 0.7,
+        conversationalAuthenticity: 0.7,
         backgroundRelevance: 0.7
       },
       feedback: 'Validation failed - using original response',
@@ -88,20 +89,20 @@ export const validatePersonaResponse = async (
 
 export const calculateOverallScore = (scores: ValidationScore): number => {
   const weights = {
-    humanness: 0.25,
-    personalityAlignment: 0.20,
-    speechPatternAuthenticity: 0.20,
+    humanSpeechPatterns: 0.35,
+    personalityAlignment: 0.25,
+    conversationalAuthenticity: 0.20,
     uniquePerspective: 0.15,
-    emotionalTone: 0.10,
-    backgroundRelevance: 0.10
+    responseLengthVariation: 0.03,
+    backgroundRelevance: 0.02
   };
   
   return (
-    scores.humanness * weights.humanness +
+    scores.humanSpeechPatterns * weights.humanSpeechPatterns +
     scores.personalityAlignment * weights.personalityAlignment +
-    scores.speechPatternAuthenticity * weights.speechPatternAuthenticity +
+    scores.conversationalAuthenticity * weights.conversationalAuthenticity +
     scores.uniquePerspective * weights.uniquePerspective +
-    scores.emotionalTone * weights.emotionalTone +
+    scores.responseLengthVariation * weights.responseLengthVariation +
     scores.backgroundRelevance * weights.backgroundRelevance
   );
 };
