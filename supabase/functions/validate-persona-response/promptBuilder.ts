@@ -11,6 +11,11 @@ export function buildValidationPrompt(
   const moralFoundations = persona.trait_profile?.moral_foundations || {};
   const extendedTraits = persona.trait_profile?.extended_traits || {};
   
+  // Analyze conversation for repetitive patterns
+  const conversationLines = conversationContext.split('\n');
+  const assistantLines = conversationLines.filter(line => line.startsWith('assistant:'));
+  const repetitivePatterns = analyzeRepetitivePatterns(assistantLines, persona);
+  
   return `You are an AI response validator focused on HUMAN SPEECH AUTHENTICITY and PERSONALITY DISTINCTIVENESS. Analyze this persona response for natural conversation patterns and unique personality expression.
 
 PERSONA PROFILE:
@@ -34,6 +39,14 @@ Authority: ${moralFoundations.authority || 'Unknown'} ${moralFoundations.authori
 
 CONVERSATION CONTEXT:
 ${conversationContext}
+
+${repetitivePatterns.length > 0 ? `
+REPETITIVE PATTERN ANALYSIS:
+This persona has shown the following repetitive patterns in the conversation:
+${repetitivePatterns.map(pattern => `- ${pattern}`).join('\n')}
+
+CRITICAL: Deduct points heavily if the response continues these repetitive patterns.
+` : ''}
 
 USER MESSAGE: "${userMessage}"
 
@@ -79,18 +92,27 @@ CRITICAL VALIDATION REQUIREMENTS:
    - Might make casual observations or side comments
    - Could show personality quirks in how they express themselves
    - Natural transitions and connections to previous statements
+   - CRITICAL: Should NOT repeat biographical information unnecessarily
+   - Should NOT constantly reference location, job, or background unless contextually relevant
+
+6. BACKGROUND_RELEVANCE (Contextual vs. repetitive background references)
+   - Background should be referenced ONLY when genuinely relevant to the topic
+   - PENALIZE heavily for unnecessary mentions of location, job, or demographic details
+   - People don't constantly identify themselves by their profession or location
+   - Real people show their background through their perspective, not by stating it
 
 EXAMPLES OF GOOD HUMAN SPEECH PATTERNS:
 ✓ "Yeah, I mean... that maze one's kinda interesting, I guess"
 ✓ "Nah, not really feeling any of these"
 ✓ "The beach thing? Come on, they're just... like, we've seen this a million times"
-✓ "I dunno, as someone who works with this stuff, it just feels lazy to me"
+✓ "I dunno, as someone who works with this stuff, it just feels lazy to me" (only if relevant)
 ✓ "That second one you showed - now that's got something"
 
 EXAMPLES OF BAD AI-LIKE PATTERNS:
 ❌ "This ad is particularly effective because it employs several sophisticated marketing techniques"
 ❌ "As someone who appreciates creative innovation, I find this advertisement compelling for multiple reasons"
 ❌ "The strategic use of visual metaphors in this campaign creates a powerful emotional connection"
+❌ "As a [profession] from [location], I think..." (when not contextually relevant)
 ❌ Any response that sounds like it could be from a marketing textbook
 
 STRICT SCORING RULES:
@@ -98,22 +120,14 @@ STRICT SCORING RULES:
 - If response has same structure/length as AI-generated content → CONVERSATIONAL_AUTHENTICITY = 0.2 maximum
 - If personality traits don't match response → PERSONALITY_ALIGNMENT = 0.3 maximum
 - If this sounds like what ANY other persona would say → UNIQUE_PERSPECTIVE = 0.2 maximum
+- If background references are unnecessary or repetitive → BACKGROUND_RELEVANCE = 0.2 maximum
 - Most responses should score below 0.6 overall - be VERY harsh about human speech patterns
 - Only truly authentic, conversational responses should score above 0.7
 
 PROVIDE:
-- FEEDBACK: Specific issues with human speech patterns and personality authenticity
-- IMPROVED_RESPONSE: A version that sounds like a REAL PERSON talking naturally while showing THIS persona's distinct personality
+- FEEDBACK: Specific issues with human speech patterns, personality authenticity, and conversational naturalness
+- IMPROVED_RESPONSE: A version that sounds like a REAL PERSON talking naturally while showing THIS persona's distinct personality without unnecessary biographical references
 - SHOULD_REGENERATE: true if score below 0.7
-
-The improved response should:
-- Sound like natural human conversation with imperfections
-- Use casual speech patterns, contractions, and filler words
-- Show strong personality trait influence on opinion
-- Express a viewpoint that flows from THIS persona's specific traits
-- Potentially DISAGREE with what other personalities would say
-- Vary in length based on engagement level
-- Include natural conversational elements and digressions
 
 Return ONLY valid JSON in this exact format:
 {
@@ -130,4 +144,44 @@ Return ONLY valid JSON in this exact format:
   "improvedResponse": "Improved version here",
   "shouldRegenerate": true
 }`;
+}
+
+function analyzeRepetitivePatterns(assistantLines: string[], persona: any): string[] {
+  const patterns: string[] = [];
+  const location = persona.metadata?.region || '';
+  const occupation = persona.metadata?.occupation || '';
+  
+  let locationMentions = 0;
+  let occupationMentions = 0;
+  let asPersonPhrases = 0;
+  
+  for (const line of assistantLines) {
+    const content = line.toLowerCase();
+    
+    if (location && content.includes(location.toLowerCase())) {
+      locationMentions++;
+    }
+    
+    if (occupation && content.includes(occupation.toLowerCase())) {
+      occupationMentions++;
+    }
+    
+    if (content.includes('as someone who') || content.includes('as a ') || content.includes('being a ')) {
+      asPersonPhrases++;
+    }
+  }
+  
+  if (locationMentions > 2) {
+    patterns.push(`Mentions location (${location}) ${locationMentions} times - overly repetitive`);
+  }
+  
+  if (occupationMentions > 2) {
+    patterns.push(`References occupation (${occupation}) ${occupationMentions} times - too frequent`);
+  }
+  
+  if (asPersonPhrases > 3) {
+    patterns.push(`Uses "as someone who/as a" phrases ${asPersonPhrases} times - unnatural repetition`);
+  }
+  
+  return patterns;
 }

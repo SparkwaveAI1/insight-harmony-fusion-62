@@ -3,6 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 import { createPersonaSystemMessage } from '../_shared/personaSystemMessage.ts'
 import { detectEmotionalTriggers, generateEmotionalStateInstructions } from '../_shared/emotionalTriggerService.ts'
+import { generateInterviewContextInstructions } from '../_shared/interviewContextService.ts'
+import { generateNaturalConversationInstructions } from '../_shared/conversationalContextService.ts'
 import { generateChatResponse } from '../_shared/openai.ts'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || ''
@@ -95,6 +97,28 @@ Deno.serve(async (req: Request) => {
         systemMessage += emotionalInstructions;
       }
     }
+    
+    // ADD INTERVIEW CONTEXT WHEN RELEVANT
+    if (lastUserMessage && persona.interview_sections) {
+      console.log('Checking for relevant interview context...');
+      const interviewInstructions = generateInterviewContextInstructions(
+        persona,
+        previous_messages || [],
+        lastUserMessage.content
+      );
+      if (interviewInstructions) {
+        systemMessage += interviewInstructions;
+      }
+    }
+    
+    // ADD NATURAL CONVERSATION CONTEXT
+    const messageCount = (previous_messages || []).length;
+    const conversationInstructions = generateNaturalConversationInstructions(
+      persona,
+      previous_messages || [],
+      messageCount
+    );
+    systemMessage += conversationInstructions;
     
     // Add conversation context if provided (integrate with personality)
     if (conversation_context) {
