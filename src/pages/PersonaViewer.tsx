@@ -32,6 +32,14 @@ const PersonaViewerContent = () => {
   const [myPersonas, setMyPersonas] = useState<Persona[]>([]);
   const [publicPersonas, setPublicPersonas] = useState<Persona[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // New filter states
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedAge, setSelectedAge] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedIncome, setSelectedIncome] = useState("");
+  const [selectedSourceType, setSelectedSourceType] = useState("");
+  
   const location = useLocation();
   const queryClient = useQueryClient();
   
@@ -46,6 +54,11 @@ const PersonaViewerContent = () => {
 
   const handleResetFilters = () => {
     setSearchQuery("");
+    setSelectedTags([]);
+    setSelectedAge("");
+    setSelectedRegion("");
+    setSelectedIncome("");
+    setSelectedSourceType("");
   };
 
   // If viewing a specific persona, show the detail view
@@ -89,11 +102,21 @@ const PersonaViewerContent = () => {
             <div className="w-32 h-1 bg-accent mb-6"></div>
           </div>
 
-          {/* Filter Section */}
+          {/* Filter Section - Now with enhanced functionality */}
           <FilterSection 
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onResetFilters={handleResetFilters}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            selectedAge={selectedAge}
+            onAgeChange={setSelectedAge}
+            selectedRegion={selectedRegion}
+            onRegionChange={setSelectedRegion}
+            selectedIncome={selectedIncome}
+            onIncomeChange={setSelectedIncome}
+            selectedSourceType={selectedSourceType}
+            onSourceTypeChange={setSelectedSourceType}
           />
 
           {/* Main Grid Area */}
@@ -105,6 +128,11 @@ const PersonaViewerContent = () => {
                 onPersonasLoad={setMyPersonas}
                 filterByCurrentUser={true}
                 searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedAge={selectedAge}
+                selectedRegion={selectedRegion}
+                selectedIncome={selectedIncome}
+                selectedSourceType={selectedSourceType}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               />
             </section>
@@ -117,6 +145,11 @@ const PersonaViewerContent = () => {
                 publicOnly={true}
                 filterByOtherUsers={true}
                 searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedAge={selectedAge}
+                selectedRegion={selectedRegion}
+                selectedIncome={selectedIncome}
+                selectedSourceType={selectedSourceType}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               />
             </section>

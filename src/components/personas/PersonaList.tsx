@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllPersonas } from "@/services/persona"; 
@@ -20,6 +19,11 @@ interface PersonaListProps {
   onDeleteCollection?: () => void;
   className?: string;
   searchQuery?: string;
+  selectedTags?: string[];
+  selectedAge?: string;
+  selectedRegion?: string;
+  selectedIncome?: string;
+  selectedSourceType?: string;
 }
 
 export default function PersonaList({ 
@@ -30,7 +34,12 @@ export default function PersonaList({
   collectionId,
   onDeleteCollection,
   className,
-  searchQuery = ""
+  searchQuery = "",
+  selectedTags = [],
+  selectedAge = "",
+  selectedRegion = "",
+  selectedIncome = "",
+  selectedSourceType = ""
 }: PersonaListProps) {
   const { user } = useAuth();
   
@@ -141,8 +150,49 @@ export default function PersonaList({
     });
   };
 
-  // Filter personas based on search query
-  const filteredPersonas = searchPersonas(personas, searchQuery);
+  // New filter function for advanced filters
+  const applyAdvancedFilters = (personas: Persona[]) => {
+    return personas.filter((persona) => {
+      // Tags filter - check metadata for use case tags
+      if (selectedTags.length > 0) {
+        const personaTags = persona.metadata?.tags || [];
+        const hasMatchingTag = selectedTags.some(tag => 
+          personaTags.includes(tag) ||
+          persona.name.toLowerCase().includes(tag) ||
+          persona.prompt?.toLowerCase().includes(tag)
+        );
+        if (!hasMatchingTag) return false;
+      }
+
+      // Demographics filters - check metadata
+      if (selectedAge) {
+        const personaAge = persona.metadata?.demographics?.age_range;
+        if (personaAge !== selectedAge) return false;
+      }
+
+      if (selectedRegion) {
+        const personaRegion = persona.metadata?.demographics?.region;
+        if (personaRegion !== selectedRegion) return false;
+      }
+
+      if (selectedIncome) {
+        const personaIncome = persona.metadata?.demographics?.income_level;
+        if (personaIncome !== selectedIncome) return false;
+      }
+
+      // Source type filter
+      if (selectedSourceType) {
+        const sourceType = persona.metadata?.source_type || "simulated";
+        if (sourceType !== selectedSourceType) return false;
+      }
+
+      return true;
+    });
+  };
+
+  // Apply both search and advanced filters
+  const searchedPersonas = searchPersonas(personas, searchQuery);
+  const filteredPersonas = applyAdvancedFilters(searchedPersonas);
 
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
     // Update local state when visibility changes
@@ -192,11 +242,11 @@ export default function PersonaList({
   }
 
   if (filteredPersonas.length === 0) {
-    if (searchQuery && personas.length > 0) {
+    if ((searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType) && personas.length > 0) {
       return (
         <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">No personas found matching "{searchQuery}"</p>
-          <p className="text-muted-foreground text-sm mt-2">Try adjusting your search terms or clearing the search</p>
+          <p className="text-muted-foreground text-lg">No personas found matching your filters</p>
+          <p className="text-muted-foreground text-sm mt-2">Try adjusting your search terms or clearing some filters</p>
         </div>
       );
     }
