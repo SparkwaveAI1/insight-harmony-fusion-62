@@ -19,6 +19,7 @@ interface PersonaListProps {
   collectionId?: string;
   onDeleteCollection?: () => void;
   className?: string;
+  searchQuery?: string;
 }
 
 export default function PersonaList({ 
@@ -28,7 +29,8 @@ export default function PersonaList({
   publicOnly = false,
   collectionId,
   onDeleteCollection,
-  className
+  className,
+  searchQuery = ""
 }: PersonaListProps) {
   const { user } = useAuth();
   
@@ -104,6 +106,18 @@ export default function PersonaList({
     }
   }, [allPersonas]);
 
+  // Filter personas based on search query
+  const filteredPersonas = personas.filter((persona) => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      persona.name.toLowerCase().includes(query) ||
+      persona.prompt?.toLowerCase().includes(query) ||
+      false // We'll add more searchable fields later (tags, etc.)
+    );
+  });
+
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
     // Update local state when visibility changes
     setPersonas(prevPersonas => 
@@ -151,13 +165,20 @@ export default function PersonaList({
     return <div className="p-4 text-red-500">Error loading personas: {String(error)}</div>;
   }
 
-  if (personas.length === 0) {
+  if (filteredPersonas.length === 0) {
+    if (searchQuery && personas.length > 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No personas found matching "{searchQuery}"</p>
+        </div>
+      );
+    }
     return <PersonaEmptyState />;
   }
 
   return (
-    <div className={cn("grid md:grid-cols-2 lg:grid-cols-3 gap-6", className)}>
-      {personas.map((persona) => (
+    <div className={cn(className)}>
+      {filteredPersonas.map((persona) => (
         <PersonaCard 
           key={persona.persona_id} 
           persona={persona}
