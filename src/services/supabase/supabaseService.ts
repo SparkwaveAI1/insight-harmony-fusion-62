@@ -42,8 +42,7 @@ export {
 } from './storage/imageUploadService';
 
 export {
-  ensureStorageBuckets,
-  createStorageBuckets
+  ensureStorageBuckets
 } from './storage/bucketService';
 
 // Export profiles table creation function
