@@ -24,54 +24,91 @@ export async function uploadPersonaImageFromUrl(
       return null;
     }
     
-    // Fetch the image from the URL
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      console.error(`Failed to fetch image from URL: ${response.status}`);
-      throw new Error(`Failed to fetch image from URL: ${response.status}`);
+    // Check if bucket exists first
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error listing buckets:', bucketsError);
+      return null;
     }
     
-    // Check content type to ensure it's an image
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.startsWith('image/')) {
-      console.error(`URL does not point to an image. Content-Type: ${contentType}`);
-      throw new Error(`URL does not point to an image. Content-Type: ${contentType}`);
-    }
+    const personaImagesBucket = buckets?.find(bucket => bucket.name === 'persona-images');
     
-    // Convert the image to a blob
-    const imageBlob = await response.blob();
-    
-    // Generate a unique file name
-    const fileName = `${personaId}_${uuidv4()}.png`;
-    
-    // Check if bucket exists, and create it if needed
-    const { data: buckets } = await supabase.storage.listBuckets();
-    
-    if (!buckets || !buckets.some(bucket => bucket.name === 'persona-images')) {
+    if (!personaImagesBucket) {
       console.log('Persona-images bucket does not exist, creating...');
       const { error: bucketError } = await supabase.storage.createBucket('persona-images', {
-        public: true
+        public: true,
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
+        fileSizeLimit: 10485760 // 10MB
       });
       
       if (bucketError) {
         console.error('Error creating persona-images bucket:', bucketError);
-        // Continue anyway, as the bucket might already exist with a different permission structure
+        return null;
       }
+      console.log('Successfully created persona-images bucket');
     }
+    
+    // Fetch the image from the URL with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    let response;
+    try {
+      response = await fetch(imageUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; PersonaAI/1.0)'
+        }
+      });
+      clearTimeout(timeoutId);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error(`Failed to fetch image from URL: ${fetchError.message}`);
+      return null;
+    }
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch image from URL: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      console.error(`URL does not point to an image. Content-Type: ${contentType}`);
+      return null;
+    }
+    
+    // Convert the image to a blob
+    const imageBlob = await response.blob();
+    console.log(`Downloaded image blob, size: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+    
+    // Generate a unique file name with proper extension
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileExtension = contentType.includes('png') ? 'png' : 
+                         contentType.includes('jpeg') ? 'jpg' : 
+                         contentType.includes('webp') ? 'webp' : 'png';
+    const fileName = `${personaId}_${timestamp}_${uuidv4().substring(0, 8)}.${fileExtension}`;
+    
+    console.log(`Uploading to Supabase storage with filename: ${fileName}`);
     
     // Upload the image to Supabase storage
     const { data, error } = await supabase
       .storage
       .from('persona-images')
       .upload(fileName, imageBlob, {
-        contentType: 'image/png',
-        upsert: true
+        contentType: contentType,
+        upsert: false, // Don't overwrite, create new file
+        cacheControl: '3600' // 1 hour cache
       });
       
     if (error) {
       console.error('Error uploading persona image to storage:', error);
-      throw error;
+      return null;
     }
+    
+    console.log('Successfully uploaded to storage:', data);
     
     // Get the public URL for the uploaded image
     const { data: urlData } = supabase
@@ -79,7 +116,7 @@ export async function uploadPersonaImageFromUrl(
       .from('persona-images')
       .getPublicUrl(fileName);
       
-    console.log('Image uploaded successfully, public URL:', urlData.publicUrl);
+    console.log('Generated public URL:', urlData.publicUrl);
     
     return urlData.publicUrl;
   } catch (error) {
@@ -101,7 +138,7 @@ export async function updatePersonaProfileImage(
     
     if (!success) {
       console.error('Failed to update persona with image URL');
-      throw new Error('Failed to update persona with image URL');
+      return false;
     }
     
     console.log('Persona record updated with new profile image URL');
@@ -119,29 +156,34 @@ export async function savePersonaProfileImage(
 ): Promise<string | null> {
   try {
     console.log(`Starting process to save profile image for persona: ${personaId}`);
+    console.log(`Original OpenAI URL: ${imageUrl}`);
     
     // Upload the image and get the storage URL
     const storageUrl = await uploadPersonaImageFromUrl(personaId, imageUrl);
     
     if (!storageUrl) {
-      console.error('Failed to upload image to storage');
+      console.error('Failed to upload image to storage, trying direct database update as fallback');
+      
       // Fall back to using the original URL directly
-      console.log('Falling back to using original URL directly');
       const directUpdateSuccess = await updatePersonaProfileImage(personaId, imageUrl);
       
       if (directUpdateSuccess) {
+        console.log('Successfully saved original OpenAI URL as fallback');
         return imageUrl;
       }
       
-      throw new Error('Failed to upload image to storage and direct update also failed');
+      console.error('Both storage upload and direct update failed');
+      return null;
     }
+    
+    console.log(`Successfully uploaded to storage: ${storageUrl}`);
     
     // Update the persona record with the new image URL
     const updated = await updatePersonaProfileImage(personaId, storageUrl);
     
     if (!updated) {
       console.error('Failed to update persona with new image URL');
-      throw new Error('Failed to update persona with new image URL');
+      return null;
     }
     
     console.log(`Successfully saved profile image for persona ${personaId}:`, storageUrl);
