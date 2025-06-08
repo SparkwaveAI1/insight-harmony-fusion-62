@@ -106,17 +106,43 @@ export default function PersonaList({
     }
   }, [allPersonas]);
 
-  // Filter personas based on search query
-  const filteredPersonas = personas.filter((persona) => {
-    if (!searchQuery) return true;
+  // Enhanced search function
+  const searchPersonas = (personas: Persona[], query: string) => {
+    if (!query.trim()) return personas;
     
-    const query = searchQuery.toLowerCase();
-    return (
-      persona.name.toLowerCase().includes(query) ||
-      persona.prompt?.toLowerCase().includes(query) ||
-      false // We'll add more searchable fields later (tags, etc.)
-    );
-  });
+    const searchTerm = query.toLowerCase().trim();
+    
+    return personas.filter((persona) => {
+      // Search in name
+      if (persona.name.toLowerCase().includes(searchTerm)) return true;
+      
+      // Search in prompt/description
+      if (persona.prompt?.toLowerCase().includes(searchTerm)) return true;
+      
+      // Search in trait profile
+      if (persona.trait_profile) {
+        const traitString = JSON.stringify(persona.trait_profile).toLowerCase();
+        if (traitString.includes(searchTerm)) return true;
+      }
+      
+      // Search in metadata
+      if (persona.metadata) {
+        const metadataString = JSON.stringify(persona.metadata).toLowerCase();
+        if (metadataString.includes(searchTerm)) return true;
+      }
+      
+      // Search in interview sections
+      if (persona.interview_sections) {
+        const interviewString = JSON.stringify(persona.interview_sections).toLowerCase();
+        if (interviewString.includes(searchTerm)) return true;
+      }
+      
+      return false;
+    });
+  };
+
+  // Filter personas based on search query
+  const filteredPersonas = searchPersonas(personas, searchQuery);
 
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
     // Update local state when visibility changes
@@ -169,7 +195,8 @@ export default function PersonaList({
     if (searchQuery && personas.length > 0) {
       return (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No personas found matching "{searchQuery}"</p>
+          <p className="text-muted-foreground text-lg">No personas found matching "{searchQuery}"</p>
+          <p className="text-muted-foreground text-sm mt-2">Try adjusting your search terms or clearing the search</p>
         </div>
       );
     }
