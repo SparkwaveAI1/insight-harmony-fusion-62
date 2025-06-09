@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
 import { toast } from "sonner";
-import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
 
 export interface GenerateImageResponse {
   success: boolean;
@@ -61,70 +60,17 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
       return null;
     }
     
-    console.log("✅ Successfully generated persona image URL:", response.image_url);
+    console.log("✅ Successfully generated and stored persona image:", response.image_url);
     console.log("Generated with prompt:", response.prompt);
     
-    // Save the generated image to Supabase storage and update the persona record
-    console.log("=== Starting image upload to Supabase storage ===");
-    const storedImageUrl = await savePersonaProfileImage(persona.persona_id, response.image_url);
-    
-    if (!storedImageUrl) {
-      console.error("❌ Failed to save persona image to storage - this means the OpenAI URL could not be downloaded");
-      toast.error("Failed to save the generated image permanently. The OpenAI URL may have expired or be inaccessible.");
-      return null;
-    }
-    
-    // Verify this is actually a Supabase storage URL, not the original OpenAI URL
-    const isSupabaseUrl = storedImageUrl.includes('.supabase.co/storage/');
-    if (!isSupabaseUrl) {
-      console.error("❌ Image was not properly stored in Supabase - still have OpenAI URL:", storedImageUrl);
-      toast.error("Failed to store image in permanent storage. Please try generating again.");
-      return null;
-    }
-    
-    console.log("✅ Successfully saved image to Supabase storage:", storedImageUrl);
-    
-    // Trigger download with the Supabase storage URL
+    // Trigger download of the generated image
     const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
-    console.log("Triggering download for Supabase URL:", storedImageUrl);
-    await downloadImage(storedImageUrl, fileName);
-    
-    // Verify the persona record was updated correctly
-    console.log("=== Verifying persona record update ===");
-    const { data: updatedPersona, error: fetchError } = await supabase
-      .from('personas')
-      .select('profile_image_url')
-      .eq('persona_id', persona.persona_id)
-      .single();
-      
-    if (fetchError) {
-      console.error("❌ Error verifying persona update:", fetchError);
-    } else {
-      console.log("✅ Persona record verified, profile_image_url:", updatedPersona?.profile_image_url);
-      
-      if (updatedPersona?.profile_image_url !== storedImageUrl) {
-        console.warn("⚠️  URL mismatch detected!");
-        console.warn("Expected:", storedImageUrl);
-        console.warn("Found in DB:", updatedPersona?.profile_image_url);
-        
-        // Try one more update if there's a mismatch
-        console.log("Attempting to fix URL mismatch...");
-        const { error: retryError } = await supabase
-          .from('personas')
-          .update({ profile_image_url: storedImageUrl })
-          .eq('persona_id', persona.persona_id);
-          
-        if (retryError) {
-          console.error("❌ Failed to fix URL mismatch:", retryError);
-        } else {
-          console.log("✅ Successfully fixed URL mismatch");
-        }
-      }
-    }
+    console.log("Triggering download for image:", response.image_url);
+    await downloadImage(response.image_url, fileName);
     
     console.log("=== Persona image generation completed ===");
-    toast.success("Persona image generated and saved successfully!");
-    return storedImageUrl;
+    toast.success("Persona image generated, saved, and downloaded successfully!");
+    return response.image_url;
   } catch (error) {
     console.error("❌ Error in generatePersonaImage:", error);
     toast.error("An unexpected error occurred while generating the persona image");

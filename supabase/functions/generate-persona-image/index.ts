@@ -1,8 +1,10 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { corsHeaders } from "../_shared/cors.ts";
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,6 +15,10 @@ serve(async (req) => {
   try {
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured in environment variables");
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Supabase configuration is missing");
     }
 
     const { personaData } = await req.json();
@@ -212,7 +218,7 @@ serve(async (req) => {
     
     console.log("Generated prompt:", imagePrompt);
     
-    // Call the OpenAI Image Generation API with quality set to "hd" and updated parameters
+    // Call the OpenAI Image Generation API requesting base64 format to avoid CORS issues
     const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -224,9 +230,9 @@ serve(async (req) => {
         prompt: imagePrompt,
         n: 1,
         size: "1024x1024",
-        response_format: "url",
+        response_format: "b64_json", // Request base64 instead of URL to avoid CORS
         quality: "hd",
-        style: "natural" // Use natural style for more photorealistic results
+        style: "natural"
       })
     });
     
@@ -238,17 +244,73 @@ serve(async (req) => {
     
     const imageData = await imageResponse.json();
     
-    if (!imageData.data || !imageData.data[0] || !imageData.data[0].url) {
+    if (!imageData.data || !imageData.data[0] || !imageData.data[0].b64_json) {
       throw new Error("Invalid response from OpenAI image generation");
     }
     
-    const imageUrl = imageData.data[0].url;
-    console.log("Successfully generated image URL:", imageUrl);
+    const base64Image = imageData.data[0].b64_json;
+    console.log("Successfully generated base64 image");
+    
+    // Now upload the base64 image directly to Supabase storage
+    console.log("Uploading image to Supabase storage");
+    
+    // Initialize Supabase client with service role key for server-side operations
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Convert base64 to blob
+    const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
+    const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
+    
+    // Generate a unique file name
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `${personaData.persona_id}_${timestamp}.png`;
+    
+    console.log(`Uploading to storage with filename: ${fileName}`);
+    
+    // Upload the image to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('persona-images')
+      .upload(fileName, imageBlob, {
+        contentType: 'image/png',
+        upsert: false,
+        cacheControl: '3600'
+      });
+      
+    if (uploadError) {
+      console.error('Error uploading image to storage:', uploadError);
+      throw new Error(`Failed to upload image: ${uploadError.message}`);
+    }
+    
+    console.log('Successfully uploaded to storage:', uploadData);
+    
+    // Get the public URL for the uploaded image
+    const { data: urlData } = supabase
+      .storage
+      .from('persona-images')
+      .getPublicUrl(fileName);
+      
+    const publicUrl = urlData.publicUrl;
+    console.log('Generated public URL:', publicUrl);
+    
+    // Update the persona record with the new image URL
+    console.log('Updating persona record with new image URL');
+    const { error: updateError } = await supabase
+      .from('personas')
+      .update({ profile_image_url: publicUrl })
+      .eq('persona_id', personaData.persona_id);
+      
+    if (updateError) {
+      console.error('Error updating persona with image URL:', updateError);
+      throw new Error(`Failed to update persona: ${updateError.message}`);
+    }
+    
+    console.log('Successfully updated persona record');
     
     return new Response(
       JSON.stringify({
         success: true,
-        image_url: imageUrl,
+        image_url: publicUrl,
         prompt: imagePrompt
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
