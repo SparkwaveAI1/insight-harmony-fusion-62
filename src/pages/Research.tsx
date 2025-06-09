@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Flask, Wand } from "lucide-react";
+import { Sparkles, FlaskConical, Wand } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Research = () => {
@@ -19,7 +19,7 @@ const Research = () => {
       path: "/focus-group"
     },
     {
-      icon: <Flask className="h-8 w-8 text-primary" />,
+      icon: <FlaskConical className="h-8 w-8 text-primary" />,
       title: "Structured Study Assistant",
       description: "Design a real market research study step-by-step, with personas, formats, and output goals.",
       path: "/structured-study"

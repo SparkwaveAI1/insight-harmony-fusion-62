@@ -6,7 +6,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Flask, ArrowLeft } from "lucide-react";
+import { FlaskConical, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const StructuredStudy = () => {
@@ -35,7 +35,7 @@ const StructuredStudy = () => {
 
                   <div className="text-center mb-12">
                     <div className="inline-flex items-center justify-center bg-primary/20 px-4 py-2 rounded-full mb-4">
-                      <Flask className="h-5 w-5 text-primary mr-2" />
+                      <FlaskConical className="h-5 w-5 text-primary mr-2" />
                       <span className="text-sm font-medium text-primary">Structured Study</span>
                     </div>
                     <h1 className="text-4xl font-bold mb-4 font-plasmik">Structured Study Assistant</h1>
