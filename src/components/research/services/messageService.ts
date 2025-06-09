@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/components/persona-chat/types';
 import { ResearchMessage, LoadedPersona } from '../hooks/types';
@@ -68,7 +69,7 @@ export const createPersonaMessage = (
     role: 'assistant',
     content,
     timestamp: new Date(),
-    responding_persona_id: personaId
+    personaId: personaId
   };
 };
 

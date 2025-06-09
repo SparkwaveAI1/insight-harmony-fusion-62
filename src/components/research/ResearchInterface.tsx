@@ -70,8 +70,8 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       
       if (message.role === 'user') {
         markdownContent += `**[${timestamp}] User:** ${message.content}\n\n`;
-      } else if (message.responding_persona_id) {
-        const persona = loadedPersonas.find(p => p.persona_id === message.responding_persona_id);
+      } else if (message.personaId) {
+        const persona = loadedPersonas.find(p => p.persona_id === message.personaId);
         const personaName = persona?.name || 'Unknown Persona';
         markdownContent += `**[${timestamp}] ${personaName}:** ${message.content}\n\n`;
       }
@@ -120,7 +120,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     return messages.map(message => ({
       role: message.role as "user" | "assistant",
       content: message.content,
-      persona_id: message.responding_persona_id
+      persona_id: message.personaId
     }));
   };
 
