@@ -89,12 +89,12 @@ const SaveConversationModal = ({
     setIsLoading(true);
     
     try {
-      // Create the conversation
+      // Create the conversation with just persona IDs
       const tagsArray = tags.trim() ? tags.split(",").map(tag => tag.trim()) : [];
       const conversation = await createConversation(
         selectedProjectId, 
         title,
-        personaIds,
+        personaIds,  // This should be string[], not Persona[]
         tagsArray
       );
       
