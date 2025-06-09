@@ -1,4 +1,6 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,10 +8,48 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Sparkles, ArrowLeft, Play } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PersonaLoader } from "@/components/research/PersonaLoader";
+import { toast } from "sonner";
 
 const QuickResearchSetup = () => {
+  const [objective, setObjective] = useState("");
+  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
+  const [isStarting, setIsStarting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleStartSession = async (personas: string[]) => {
+    if (!objective.trim()) {
+      toast.error("Please define your research objective first");
+      return;
+    }
+
+    setSelectedPersonas(personas);
+    setIsStarting(true);
+
+    try {
+      // Store the session data and navigate to the focus group interface
+      const sessionData = {
+        objective: objective.trim(),
+        personas: personas,
+        type: 'quick_research'
+      };
+      
+      // Store in sessionStorage for the research interface to pick up
+      sessionStorage.setItem('quickResearchSession', JSON.stringify(sessionData));
+      
+      toast.success("Starting your research session...");
+      navigate('/focus-group');
+    } catch (error) {
+      console.error('Error starting session:', error);
+      toast.error("Failed to start research session");
+      setIsStarting(false);
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
@@ -50,8 +90,15 @@ const QuickResearchSetup = () => {
                       <p className="text-muted-foreground mb-4">
                         What would you like to learn from this research session?
                       </p>
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground">This step will be implemented next</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="objective">Research Objective</Label>
+                        <Textarea
+                          id="objective"
+                          placeholder="e.g., Get feedback on our new product concept, understand user pain points with our current service, explore reactions to a marketing campaign..."
+                          value={objective}
+                          onChange={(e) => setObjective(e.target.value)}
+                          className="min-h-[100px]"
+                        />
                       </div>
                     </Card>
 
@@ -60,29 +107,11 @@ const QuickResearchSetup = () => {
                       <p className="text-muted-foreground mb-4">
                         Select up to 4 personas to participate in your research session.
                       </p>
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground">Persona selection will be implemented next</p>
-                      </div>
-                    </Card>
-
-                    <Card className="p-6">
-                      <h2 className="text-xl font-semibold mb-4">Step 3: Add Prompt</h2>
-                      <p className="text-muted-foreground mb-4">
-                        Set your initial question or topic to start the conversation.
-                      </p>
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground">Prompt setup will be implemented next</p>
-                      </div>
-                    </Card>
-
-                    <Card className="p-6">
-                      <h2 className="text-xl font-semibold mb-4">Step 4: Start Session</h2>
-                      <p className="text-muted-foreground mb-4">
-                        Launch your research session and begin the conversation.
-                      </p>
-                      <div className="bg-muted/30 rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground">Session launch will be implemented next</p>
-                      </div>
+                      <PersonaLoader
+                        maxPersonas={4}
+                        onStartSession={handleStartSession}
+                        isLoading={isStarting}
+                      />
                     </Card>
                   </div>
                 </div>
