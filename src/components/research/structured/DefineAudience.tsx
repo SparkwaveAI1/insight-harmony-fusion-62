@@ -22,7 +22,6 @@ export interface AudienceDefinition {
     occupation?: string;
   };
   selected_personas: string[];
-  custom_criteria?: string;
   search_criteria?: SearchCriteria;
 }
 
@@ -37,7 +36,6 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 }) => {
   const [targetDescription, setTargetDescription] = useState('');
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
-  const [customCriteria, setCustomCriteria] = useState('');
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,7 +100,9 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
         const personaAge = persona.metadata?.age;
         if (personaAge) {
           const ageMatch = criteria.demographics.age_ranges.some(range => {
-            const [min, max] = range.split('-').map(n => n === '65+' ? 100 : parseInt(n));
+            const [minStr, maxStr] = range.split('-');
+            const min = parseInt(minStr);
+            const max = maxStr === '65+' ? 100 : parseInt(maxStr);
             return personaAge >= min && personaAge <= max;
           });
           if (!ageMatch) demographicMatch = false;
@@ -181,7 +181,6 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       target_description: targetDescription.trim(),
       demographics: {},
       selected_personas: selectedPersonas,
-      custom_criteria: customCriteria.trim() || undefined,
       search_criteria: searchCriteria || undefined
     };
 
@@ -271,23 +270,6 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
               </p>
             </div>
           )}
-
-          {/* Optional Custom Criteria */}
-          <div>
-            <Label htmlFor="custom-criteria" className="text-base font-medium">
-              Additional Criteria (Optional)
-            </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Any specific behaviors, preferences, or characteristics to focus on
-            </p>
-            <Textarea
-              id="custom-criteria"
-              placeholder="e.g., Must have experience with online shopping, prefer mobile over desktop..."
-              value={customCriteria}
-              onChange={(e) => setCustomCriteria(e.target.value)}
-              className="min-h-[80px]"
-            />
-          </div>
         </div>
       </Card>
 
