@@ -180,8 +180,8 @@ serve(async (req) => {
       }
     }
     
-    // Build the base prompt - using "headshot photograph" and emphasizing realism
-    let imagePrompt = `Professional headshot photograph of a ${age}-year-old ${ethnicity} ${gender}`;
+    // Build the base prompt - using photo-realistic specifications
+    let imagePrompt = `A photo-realistic portrait of a ${age}-year-old ${ethnicity} ${gender}`;
     
     // Add body type if specified
     if (bodyType) {
@@ -206,8 +206,8 @@ serve(async (req) => {
       imagePrompt += `, ${emotionalState}`;
     }
     
-    // Add specific instructions to ensure photorealistic, headshot-style portrait
-    imagePrompt += `. IMPORTANT: Create a high-quality, PHOTOREALISTIC professional headshot portrait with a plain, neutral background. Use photographic realism like a professional LinkedIn profile photo. The image must have proper studio lighting, realistic skin texture, and natural facial features. The photo should be well-composed with the subject's face being the main focus, with shoulders visible. THE SUBJECT MUST BE APPROPRIATELY DRESSED FOR THEIR PROFESSION. No cartoon style, no illustration style, no exaggerated features.`;
+    // Add photo-realistic specifications
+    imagePrompt += `. Shot with a DSLR camera, natural lighting, ultra-detailed skin texture, shallow depth of field, clean background, 35mm lens, no artistic filters, no drawing or painting effects. This is not an illustration or 3D render — it is a real photograph. Professional headshot style with proper studio lighting, realistic skin texture, and natural facial features. The photo should be well-composed with the subject's face being the main focus, with shoulders visible.`;
     
     // Additional specifics for body type
     if (bodyType === "overweight" || bodyType === "slightly overweight") {
