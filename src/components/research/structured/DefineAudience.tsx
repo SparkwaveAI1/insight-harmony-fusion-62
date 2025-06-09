@@ -1,17 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Users, Plus, X } from 'lucide-react';
+import { Search, Users, Plus, X, Sparkles, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { PersonaLoader } from '../PersonaLoader';
 import { getAllPersonas } from '@/services/persona';
 import { Persona } from '@/services/persona/types';
-import { useEffect } from 'react';
+import { generateSearchCriteria, SearchCriteria } from '@/services/research/audienceCriteriaService';
+import { toast } from 'sonner';
 
 export interface AudienceDefinition {
   target_description: string;
@@ -23,6 +23,7 @@ export interface AudienceDefinition {
   };
   selected_personas: string[];
   custom_criteria?: string;
+  search_criteria?: SearchCriteria;
 }
 
 interface DefineAudienceProps {
@@ -38,8 +39,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [customCriteria, setCustomCriteria] = useState('');
   const [personas, setPersonas] = useState<Persona[]>([]);
+  const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
+  const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(null);
 
   // Fetch personas
   useEffect(() => {
@@ -48,8 +52,10 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
         setIsLoadingPersonas(true);
         const allPersonas = await getAllPersonas();
         setPersonas(allPersonas);
+        setFilteredPersonas(allPersonas);
       } catch (error) {
         console.error('Error fetching personas:', error);
+        toast.error('Failed to load personas');
       } finally {
         setIsLoadingPersonas(false);
       }
@@ -58,10 +64,104 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
     fetchPersonas();
   }, []);
 
-  const filteredPersonas = personas.filter(persona =>
-    persona.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    persona.metadata?.occupation?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Generate search criteria when target description changes
+  const handleGenerateCriteria = async () => {
+    if (!targetDescription.trim()) {
+      toast.error('Please enter a target audience description first');
+      return;
+    }
+
+    setIsGeneratingCriteria(true);
+    try {
+      const criteria = await generateSearchCriteria(targetDescription.trim());
+      setSearchCriteria(criteria);
+      applySearchCriteria(criteria);
+      toast.success('Search criteria generated successfully!');
+    } catch (error) {
+      console.error('Error generating criteria:', error);
+      toast.error('Failed to generate search criteria');
+    } finally {
+      setIsGeneratingCriteria(false);
+    }
+  };
+
+  // Apply search criteria to filter personas
+  const applySearchCriteria = (criteria: SearchCriteria) => {
+    const filtered = personas.filter(persona => {
+      // Check keywords against name, occupation, and other text fields
+      const keywordMatch = criteria.keywords.some(keyword => 
+        persona.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        persona.metadata?.occupation?.toLowerCase().includes(keyword.toLowerCase()) ||
+        persona.prompt?.toLowerCase().includes(keyword.toLowerCase())
+      );
+
+      // Check demographic criteria
+      let demographicMatch = true;
+
+      if (criteria.demographics.age_ranges && criteria.demographics.age_ranges.length > 0) {
+        const personaAge = persona.metadata?.age;
+        if (personaAge) {
+          const ageMatch = criteria.demographics.age_ranges.some(range => {
+            const [min, max] = range.split('-').map(n => n === '65+' ? 100 : parseInt(n));
+            return personaAge >= min && personaAge <= max;
+          });
+          if (!ageMatch) demographicMatch = false;
+        }
+      }
+
+      if (criteria.demographics.occupations && criteria.demographics.occupations.length > 0) {
+        const personaOccupation = persona.metadata?.occupation;
+        if (personaOccupation) {
+          const occupationMatch = criteria.demographics.occupations.some(occ =>
+            personaOccupation.toLowerCase().includes(occ.toLowerCase())
+          );
+          if (!occupationMatch) demographicMatch = false;
+        }
+      }
+
+      if (criteria.demographics.locations && criteria.demographics.locations.length > 0) {
+        const personaLocation = persona.metadata?.location || persona.metadata?.region;
+        if (personaLocation) {
+          const locationMatch = criteria.demographics.locations.some(loc =>
+            personaLocation.toLowerCase().includes(loc.toLowerCase())
+          );
+          if (!locationMatch) demographicMatch = false;
+        }
+      }
+
+      // Check use cases and interests
+      let interestMatch = true;
+      if (criteria.use_cases && criteria.use_cases.length > 0) {
+        const personaText = `${persona.name} ${persona.prompt || ''} ${JSON.stringify(persona.metadata || {})}`.toLowerCase();
+        interestMatch = criteria.use_cases.some(useCase =>
+          personaText.includes(useCase.toLowerCase())
+        );
+      }
+
+      return keywordMatch || (demographicMatch && interestMatch);
+    });
+
+    setFilteredPersonas(filtered);
+  };
+
+  // Apply manual search filter
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      if (searchCriteria) {
+        applySearchCriteria(searchCriteria);
+      } else {
+        setFilteredPersonas(personas);
+      }
+      return;
+    }
+
+    const basePersonas = searchCriteria ? filteredPersonas : personas;
+    const searched = basePersonas.filter(persona =>
+      persona.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      persona.metadata?.occupation?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredPersonas(searched);
+  }, [searchTerm, personas, searchCriteria]);
 
   const handlePersonaSelect = (personaId: string) => {
     setSelectedPersonas(prev => {
@@ -81,7 +181,8 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       target_description: targetDescription.trim(),
       demographics: {},
       selected_personas: selectedPersonas,
-      custom_criteria: customCriteria.trim() || undefined
+      custom_criteria: customCriteria.trim() || undefined,
+      search_criteria: searchCriteria || undefined
     };
 
     onAudienceDefined(audience);
@@ -118,6 +219,58 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
               className="min-h-[100px]"
             />
           </div>
+
+          {/* Generate Criteria Button */}
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleGenerateCriteria}
+              disabled={!targetDescription.trim() || isGeneratingCriteria}
+              className="gap-2"
+            >
+              {isGeneratingCriteria ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {isGeneratingCriteria ? 'Generating Criteria...' : 'Generate Search Criteria with AI'}
+            </Button>
+          </div>
+
+          {/* Display Generated Criteria */}
+          {searchCriteria && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 mb-2">AI-Generated Search Criteria</h4>
+              <div className="space-y-2 text-sm">
+                {searchCriteria.keywords.length > 0 && (
+                  <div>
+                    <span className="font-medium text-blue-700">Keywords: </span>
+                    <span className="text-blue-600">{searchCriteria.keywords.join(', ')}</span>
+                  </div>
+                )}
+                {searchCriteria.demographics.occupations && (
+                  <div>
+                    <span className="font-medium text-blue-700">Occupations: </span>
+                    <span className="text-blue-600">{searchCriteria.demographics.occupations.join(', ')}</span>
+                  </div>
+                )}
+                {searchCriteria.demographics.age_ranges && (
+                  <div>
+                    <span className="font-medium text-blue-700">Age Ranges: </span>
+                    <span className="text-blue-600">{searchCriteria.demographics.age_ranges.join(', ')}</span>
+                  </div>
+                )}
+                {searchCriteria.use_cases && (
+                  <div>
+                    <span className="font-medium text-blue-700">Use Cases: </span>
+                    <span className="text-blue-600">{searchCriteria.use_cases.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                Showing {filteredPersonas.length} personas matching these criteria
+              </p>
+            </div>
+          )}
 
           {/* Optional Custom Criteria */}
           <div>
@@ -262,7 +415,10 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
           {filteredPersonas.length === 0 && !isLoadingPersonas && (
             <div className="text-center py-8 text-muted-foreground">
-              No personas found matching your search.
+              {searchCriteria ? 
+                'No personas found matching the AI-generated criteria. Try refining your target audience description.' :
+                'No personas found matching your search.'
+              }
             </div>
           )}
         </div>
