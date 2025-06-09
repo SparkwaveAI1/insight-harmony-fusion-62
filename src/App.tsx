@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
@@ -104,6 +103,11 @@ function App() {
               <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
               <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />
               <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
+              <Route path="/research/setup/quick" element={<ProtectedRoute><QuickResearchSetup /></ProtectedRoute>} />
+              <Route path="/research/setup/structured" element={<ProtectedRoute><StructuredStudySetup /></ProtectedRoute>} />
+              <Route path="/focus-group" element={<ProtectedRoute><FocusGroup /></ProtectedRoute>} />
+              <Route path="/structured-study" element={<ProtectedRoute><StructuredStudy /></ProtectedRoute>} />
+              <Route path="/generate-study" element={<ProtectedRoute><GenerateStudy /></ProtectedRoute>} />
               <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
               <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
               

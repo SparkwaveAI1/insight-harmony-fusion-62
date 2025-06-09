@@ -16,13 +16,13 @@ const Research = () => {
       icon: <Sparkles className="h-8 w-8 text-primary" />,
       title: "Quick Research Setup",
       description: "Start a casual conversation with up to 4 personas. Great for quick feedback or ideation.",
-      path: "/focus-group"
+      path: "/research/setup/quick"
     },
     {
       icon: <FlaskConical className="h-8 w-8 text-primary" />,
-      title: "Structured Study Assistant",
+      title: "Structured Study Assistant", 
       description: "Design a real market research study step-by-step, with personas, formats, and output goals.",
-      path: "/structured-study"
+      path: "/research/setup/structured"
     },
     {
       icon: <Wand className="h-8 w-8 text-primary" />,
