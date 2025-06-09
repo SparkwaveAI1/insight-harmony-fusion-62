@@ -14,7 +14,13 @@ export interface GenerateImageResponse {
 
 const downloadImage = async (imageUrl: string, fileName: string) => {
   try {
+    console.log("Starting download from URL:", imageUrl);
     const response = await fetch(imageUrl);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -75,9 +81,15 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     const isSupabaseUrl = storedImageUrl.includes('.supabase.co/storage/');
     console.log(`Image saved as: ${isSupabaseUrl ? 'Supabase storage URL' : 'OpenAI fallback URL'}`);
     
-    // Download the image automatically
-    const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
-    await downloadImage(storedImageUrl, fileName);
+    // Only download if we have a Supabase storage URL (which should be publicly accessible)
+    if (isSupabaseUrl) {
+      const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
+      console.log("Triggering download for Supabase URL:", storedImageUrl);
+      await downloadImage(storedImageUrl, fileName);
+    } else {
+      console.warn("Skipping download - not a Supabase storage URL:", storedImageUrl);
+      toast.error("Image saved but automatic download failed - please right-click and save the image manually");
+    }
     
     // Verify the persona record was updated correctly
     console.log("=== Verifying persona record update ===");
