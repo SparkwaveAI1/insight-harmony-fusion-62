@@ -10,20 +10,27 @@ import { Button } from "@/components/ui/button";
 import { FlaskConical, ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DefineStudyGoals, StudyGoal } from "@/components/research/structured/DefineStudyGoals";
+import { SelectResearchFormat, ResearchFormat } from "@/components/research/structured/SelectResearchFormat";
 
 const StructuredStudySetup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [studyGoal, setStudyGoal] = useState<StudyGoal | null>(null);
+  const [researchFormat, setResearchFormat] = useState<ResearchFormat | null>(null);
 
   const handleGoalDefined = (goal: StudyGoal) => {
     setStudyGoal(goal);
     setCurrentStep(2);
   };
 
+  const handleFormatSelected = (format: ResearchFormat) => {
+    setResearchFormat(format);
+    setCurrentStep(3);
+  };
+
   const steps = [
-    { number: 1, title: "Study Type", description: "Define your research goals and objectives" },
-    { number: 2, title: "Audience", description: "Define your target audience and select personas" },
-    { number: 3, title: "Format", description: "Choose research format and methodology" },
+    { number: 1, title: "Study Goals", description: "Define your research goals and objectives" },
+    { number: 2, title: "Research Format", description: "Select the format that matches your study" },
+    { number: 3, title: "Audience", description: "Define your target audience and select personas" },
     { number: 4, title: "Output Goals", description: "Define insights and deliverables" },
     { number: 5, title: "Review + Launch", description: "Review configuration and launch" }
   ];
@@ -97,6 +104,10 @@ const StructuredStudySetup = () => {
                     )}
 
                     {currentStep === 2 && (
+                      <SelectResearchFormat onFormatSelected={handleFormatSelected} />
+                    )}
+
+                    {currentStep === 3 && (
                       <Card className="p-6">
                         <h2 className="text-xl font-semibold mb-4">Audience Definition</h2>
                         <div className="space-y-4">
@@ -104,6 +115,13 @@ const StructuredStudySetup = () => {
                             <h3 className="font-medium text-green-800 mb-2">Study Goal</h3>
                             <p className="text-green-700 text-sm">{studyGoal?.objective}</p>
                           </div>
+                          {researchFormat && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                              <h3 className="font-medium text-blue-800 mb-2">Research Format</h3>
+                              <p className="text-blue-700 text-sm">{researchFormat.description}</p>
+                              <p className="text-blue-600 text-xs mt-1">{researchFormat.persona_count}</p>
+                            </div>
+                          )}
                           <div className="bg-muted/30 rounded-lg p-4">
                             <p className="text-sm text-muted-foreground">Audience definition will be implemented next</p>
                           </div>
@@ -111,7 +129,7 @@ const StructuredStudySetup = () => {
                       </Card>
                     )}
 
-                    {currentStep > 2 && (
+                    {currentStep > 3 && (
                       <Card className="p-6">
                         <h2 className="text-xl font-semibold mb-4">{steps[currentStep - 1].title}</h2>
                         <div className="bg-muted/30 rounded-lg p-4">
@@ -134,7 +152,10 @@ const StructuredStudySetup = () => {
                     
                     <Button
                       onClick={() => setCurrentStep(Math.min(5, currentStep + 1))}
-                      disabled={currentStep === 1 && !studyGoal}
+                      disabled={
+                        (currentStep === 1 && !studyGoal) ||
+                        (currentStep === 2 && !researchFormat)
+                      }
                     >
                       Next
                       <ArrowRight className="h-4 w-4 ml-2" />
