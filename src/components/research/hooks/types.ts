@@ -3,9 +3,6 @@ import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
 
 export interface ResearchMessage extends Message {
-  id?: string;
-  responding_persona_id?: string;
-  targetPersonaId?: string;
   personaId?: string;
   personaName?: string;
   sessionId?: string;
@@ -14,6 +11,7 @@ export interface ResearchMessage extends Message {
 export interface LoadedPersona {
   persona_id: string;
   name: string;
+  image_url?: string;
   metadata?: any;
 }
 

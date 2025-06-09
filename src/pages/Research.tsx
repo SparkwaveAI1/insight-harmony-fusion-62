@@ -16,7 +16,7 @@ const Research = () => {
       icon: <Sparkles className="h-8 w-8 text-primary" />,
       title: "Quick Research Setup",
       description: "Start a casual conversation with up to 4 personas. Great for quick feedback or ideation.",
-      path: "/research/setup/quick"
+      path: "/focus-group"
     },
     {
       icon: <FlaskConical className="h-8 w-8 text-primary" />,
