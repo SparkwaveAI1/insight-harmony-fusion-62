@@ -99,11 +99,13 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       if (criteria.demographics.age_ranges && criteria.demographics.age_ranges.length > 0) {
         const personaAge = persona.metadata?.age;
         if (personaAge) {
+          // Convert age to number if it's a string
+          const ageAsNumber = typeof personaAge === 'string' ? parseInt(personaAge) : personaAge;
           const ageMatch = criteria.demographics.age_ranges.some(range => {
             const [minStr, maxStr] = range.split('-');
             const min = parseInt(minStr);
             const max = maxStr === '65+' ? 100 : parseInt(maxStr);
-            return personaAge >= min && personaAge <= max;
+            return ageAsNumber >= min && ageAsNumber <= max;
           });
           if (!ageMatch) demographicMatch = false;
         }
@@ -310,7 +312,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
                 {getSelectedPersonaDetails().map((persona) => (
                   <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={persona.image_url} />
+                      <AvatarImage src={persona.profile_image_url} />
                       <AvatarFallback className="text-xs">
                         {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </AvatarFallback>
@@ -363,7 +365,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={persona.image_url} />
+                            <AvatarImage src={persona.profile_image_url} />
                             <AvatarFallback className="text-xs">
                               {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </AvatarFallback>
