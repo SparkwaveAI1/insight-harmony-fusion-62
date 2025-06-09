@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
 import { toast } from "sonner";
 import { savePersonaProfileImage } from "@/services/supabase/storage/imageUploadService";
-import { updatePersonaProfileImageUrl } from "./updatePersona";
 
 export interface GenerateImageResponse {
   success: boolean;
@@ -70,16 +69,24 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     const storedImageUrl = await savePersonaProfileImage(persona.persona_id, response.image_url);
     
     if (!storedImageUrl) {
-      console.error("❌ Failed to save persona image to storage");
-      toast.error("Generated image but failed to save it permanently");
+      console.error("❌ Failed to save persona image to storage - this means the OpenAI URL could not be downloaded");
+      toast.error("Failed to save the generated image permanently. The OpenAI URL may have expired or be inaccessible.");
       return null;
     }
     
-    console.log("✅ Successfully saved image to storage:", storedImageUrl);
+    // Verify this is actually a Supabase storage URL, not the original OpenAI URL
+    const isSupabaseUrl = storedImageUrl.includes('.supabase.co/storage/');
+    if (!isSupabaseUrl) {
+      console.error("❌ Image was not properly stored in Supabase - still have OpenAI URL:", storedImageUrl);
+      toast.error("Failed to store image in permanent storage. Please try generating again.");
+      return null;
+    }
     
-    // Always trigger download with the final URL, regardless of whether it's Supabase or OpenAI
+    console.log("✅ Successfully saved image to Supabase storage:", storedImageUrl);
+    
+    // Trigger download with the Supabase storage URL
     const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
-    console.log("Triggering download for URL:", storedImageUrl);
+    console.log("Triggering download for Supabase URL:", storedImageUrl);
     await downloadImage(storedImageUrl, fileName);
     
     // Verify the persona record was updated correctly
@@ -116,6 +123,7 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     }
     
     console.log("=== Persona image generation completed ===");
+    toast.success("Persona image generated and saved successfully!");
     return storedImageUrl;
   } catch (error) {
     console.error("❌ Error in generatePersonaImage:", error);

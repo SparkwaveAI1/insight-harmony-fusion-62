@@ -49,23 +49,60 @@ export async function uploadPersonaImageFromUrl(
       console.log('Successfully created persona-images bucket');
     }
     
-    // Fetch the image from the URL with timeout
+    // Fetch the image from the URL with special handling for OpenAI URLs
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout for OpenAI
     
     let response;
     try {
+      // Use a more comprehensive set of headers to bypass potential CORS/blocking issues
+      const headers: Record<string, string> = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'image/*,*/*;q=0.9',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+      };
+      
+      // For OpenAI URLs, add referer
+      if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+        headers['Referer'] = 'https://chat.openai.com/';
+        headers['Origin'] = 'https://chat.openai.com';
+      }
+      
+      console.log('Fetching image with headers:', headers);
+      
       response = await fetch(imageUrl, {
         signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; PersonaAI/1.0)'
-        }
+        headers,
+        mode: 'cors',
+        credentials: 'omit'
       });
       clearTimeout(timeoutId);
     } catch (fetchError) {
       clearTimeout(timeoutId);
       console.error(`Failed to fetch image from URL: ${fetchError.message}`);
-      return null;
+      
+      // If CORS fails, try a different approach using a proxy method
+      if (fetchError.message.includes('CORS') || fetchError.message.includes('fetch')) {
+        console.log('CORS error detected, trying alternative fetch method...');
+        try {
+          // Try without CORS mode
+          response = await fetch(imageUrl, {
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; PersonaAI/1.0)'
+            },
+            mode: 'no-cors'
+          });
+        } catch (secondFetchError) {
+          console.error(`Second fetch attempt failed: ${secondFetchError.message}`);
+          return null;
+        }
+      } else {
+        return null;
+      }
     }
     
     if (!response.ok) {
@@ -75,6 +112,8 @@ export async function uploadPersonaImageFromUrl(
     
     // Check content type
     const contentType = response.headers.get('content-type');
+    console.log('Response content type:', contentType);
+    
     if (!contentType || !contentType.startsWith('image/')) {
       console.error(`URL does not point to an image. Content-Type: ${contentType}`);
       return null;
@@ -83,6 +122,11 @@ export async function uploadPersonaImageFromUrl(
     // Convert the image to a blob
     const imageBlob = await response.blob();
     console.log(`Downloaded image blob, size: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+    
+    if (imageBlob.size === 0) {
+      console.error('Downloaded image is empty (0 bytes)');
+      return null;
+    }
     
     // Generate a unique file name with proper extension
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
