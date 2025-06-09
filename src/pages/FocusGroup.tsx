@@ -50,6 +50,18 @@ const FocusGroup = () => {
     isLoading
   };
 
+  const handleCreateSession = async (selectedPersonas: string[]): Promise<boolean> => {
+    return await createSession(selectedPersonas);
+  };
+
+  const handleSendMessage = async (message: string, imageFile?: File): Promise<void> => {
+    await sendMessage(message, imageFile);
+  };
+
+  const handleSelectResponder = async (personaId: string): Promise<void> => {
+    await selectPersonaResponder(personaId);
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
@@ -65,9 +77,9 @@ const FocusGroup = () => {
                 <div className="flex-1 min-h-0">
                   <ResearchInterface 
                     sessionData={sessionData}
-                    onCreateSession={createSession}
-                    onSendMessage={sendMessage}
-                    onSelectResponder={selectPersonaResponder}
+                    onCreateSession={handleCreateSession}
+                    onSendMessage={handleSendMessage}
+                    onSelectResponder={handleSelectResponder}
                   />
                 </div>
               </div>

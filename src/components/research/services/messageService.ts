@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '@/components/persona-chat/types';
-import { ResearchMessage } from '../hooks/types';
+import { ResearchMessage, LoadedPersona } from '../hooks/types';
 
 export const saveUserMessage = async (
   sessionId: string,
@@ -91,4 +90,52 @@ export const sendUserMessage = async (
   await saveUserMessage(sessionId, content);
 
   return userMessage;
+};
+
+export const sendResearchMessage = async (
+  sessionId: string,
+  content: string,
+  loadedPersonas: LoadedPersona[],
+  targetPersonaId?: string
+): Promise<{ content: string; personaId: string; personaName: string }> => {
+  // Save user message first
+  await saveUserMessage(sessionId, content);
+  
+  // Select which persona should respond
+  let respondingPersona;
+  if (targetPersonaId) {
+    respondingPersona = loadedPersonas.find(p => p.persona_id === targetPersonaId);
+  } else {
+    // Default to first persona if no specific target
+    respondingPersona = loadedPersonas[0];
+  }
+  
+  if (!respondingPersona) {
+    throw new Error('No persona found to respond');
+  }
+  
+  // Generate response using the persona response service
+  const { data, error } = await supabase.functions.invoke('generate-persona-response', {
+    body: {
+      message: content,
+      personaId: respondingPersona.persona_id,
+      conversationId: sessionId
+    }
+  });
+  
+  if (error) {
+    console.error('Error generating persona response:', error);
+    throw new Error('Failed to generate persona response');
+  }
+  
+  const response = data.response || 'I understand your question, but I need a moment to think about it.';
+  
+  // Save persona response
+  await savePersonaResponse(sessionId, respondingPersona.persona_id, response);
+  
+  return {
+    content: response,
+    personaId: respondingPersona.persona_id,
+    personaName: respondingPersona.name
+  };
 };
