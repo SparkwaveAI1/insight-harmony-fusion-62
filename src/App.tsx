@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
@@ -27,6 +28,8 @@ import Research from "./pages/Research";
 import FocusGroup from "./pages/FocusGroup";
 import StructuredStudy from "./pages/StructuredStudy";
 import GenerateStudy from "./pages/GenerateStudy";
+import QuickResearchSetup from "./pages/research/QuickResearchSetup";
+import StructuredStudySetup from "./pages/research/StructuredStudySetup";
 import Auth from "./pages/Auth";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
