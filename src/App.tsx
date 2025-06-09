@@ -25,8 +25,11 @@ import SimulatedPersona from "./pages/SimulatedPersona";
 import CustomResearch from "./pages/CustomResearch";
 import InsightConductor from "./pages/InsightConductor";
 import Research from "./pages/Research";
+import FocusGroup from "./pages/FocusGroup";
+import StructuredStudy from "./pages/StructuredStudy";
+import GenerateStudy from "./pages/GenerateStudy";
 import Auth from "./pages/Auth";
-import UserProfile from "./pages/UserProfile"; // New import
+import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import InterviewProcess from "./pages/InterviewProcess";
