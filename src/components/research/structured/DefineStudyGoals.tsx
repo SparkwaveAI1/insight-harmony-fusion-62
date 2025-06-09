@@ -4,10 +4,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sparkles, HelpCircle, Check, Edit } from 'lucide-react';
+import { Sparkles, Check, Edit } from 'lucide-react';
 import { StudyGoalsAssistant } from './StudyGoalsAssistant';
 
 export interface StudyGoal {
@@ -75,27 +74,15 @@ export const DefineStudyGoals: React.FC<DefineStudyGoalsProps> = ({ onGoalDefine
         </p>
       </div>
 
-      {/* Option A: Manual Input */}
+      {/* Single unified interface */}
       <Card className="p-6">
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-medium">Option A: Just tell us your goal</h3>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Write in your own words. We'll help structure it after.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <h3 className="text-lg font-medium">Research Goal</h3>
           
           <div className="space-y-2">
-            <Label htmlFor="manual-goal">Research Goal</Label>
+            <Label htmlFor="research-goal">Describe your research objective</Label>
             <Textarea
-              id="manual-goal"
+              id="research-goal"
               placeholder="I want to understand why new users don't complete the onboarding flow"
               value={manualGoal}
               onChange={(e) => setManualGoal(e.target.value)}
@@ -120,24 +107,6 @@ export const DefineStudyGoals: React.FC<DefineStudyGoalsProps> = ({ onGoalDefine
               Help me craft a goal
             </Button>
           </div>
-        </div>
-      </Card>
-
-      {/* Option B: AI Assistant */}
-      <Card className="p-6 bg-muted/30">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Option B: Help me define my goal</h3>
-          <p className="text-muted-foreground">
-            Use our AI assistant to structure your research objectives step-by-step
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setShowAssistant(true)}
-            className="w-full"
-          >
-            <Sparkles className="h-4 w-4 mr-2" />
-            Launch Goal Assistant
-          </Button>
         </div>
       </Card>
 
