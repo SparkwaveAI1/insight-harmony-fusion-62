@@ -11,11 +11,13 @@ import { FlaskConical, ArrowLeft, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DefineStudyGoals, StudyGoal } from "@/components/research/structured/DefineStudyGoals";
 import { SelectResearchFormat, ResearchFormat } from "@/components/research/structured/SelectResearchFormat";
+import { DefineAudience, AudienceDefinition } from "@/components/research/structured/DefineAudience";
 
 const StructuredStudySetup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [studyGoal, setStudyGoal] = useState<StudyGoal | null>(null);
   const [researchFormat, setResearchFormat] = useState<ResearchFormat | null>(null);
+  const [audience, setAudience] = useState<AudienceDefinition | null>(null);
 
   const handleGoalDefined = (goal: StudyGoal) => {
     setStudyGoal(goal);
@@ -25,6 +27,11 @@ const StructuredStudySetup = () => {
   const handleFormatSelected = (format: ResearchFormat) => {
     setResearchFormat(format);
     setCurrentStep(3);
+  };
+
+  const handleAudienceDefined = (audienceDefinition: AudienceDefinition) => {
+    setAudience(audienceDefinition);
+    setCurrentStep(4);
   };
 
   const steps = [
@@ -108,8 +115,12 @@ const StructuredStudySetup = () => {
                     )}
 
                     {currentStep === 3 && (
+                      <DefineAudience onAudienceDefined={handleAudienceDefined} />
+                    )}
+
+                    {currentStep === 4 && (
                       <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4">Audience Definition</h2>
+                        <h2 className="text-xl font-semibold mb-4">Output Goals</h2>
                         <div className="space-y-4">
                           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <h3 className="font-medium text-green-800 mb-2">Study Goal</h3>
@@ -122,14 +133,21 @@ const StructuredStudySetup = () => {
                               <p className="text-blue-600 text-xs mt-1">{researchFormat.persona_count}</p>
                             </div>
                           )}
+                          {audience && (
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                              <h3 className="font-medium text-purple-800 mb-2">Target Audience</h3>
+                              <p className="text-purple-700 text-sm">{audience.target_description}</p>
+                              <p className="text-purple-600 text-xs mt-1">{audience.selected_personas.length} personas selected</p>
+                            </div>
+                          )}
                           <div className="bg-muted/30 rounded-lg p-4">
-                            <p className="text-sm text-muted-foreground">Audience definition will be implemented next</p>
+                            <p className="text-sm text-muted-foreground">Output goals definition will be implemented next</p>
                           </div>
                         </div>
                       </Card>
                     )}
 
-                    {currentStep > 3 && (
+                    {currentStep > 4 && (
                       <Card className="p-6">
                         <h2 className="text-xl font-semibold mb-4">{steps[currentStep - 1].title}</h2>
                         <div className="bg-muted/30 rounded-lg p-4">
@@ -154,7 +172,8 @@ const StructuredStudySetup = () => {
                       onClick={() => setCurrentStep(Math.min(5, currentStep + 1))}
                       disabled={
                         (currentStep === 1 && !studyGoal) ||
-                        (currentStep === 2 && !researchFormat)
+                        (currentStep === 2 && !researchFormat) ||
+                        (currentStep === 3 && !audience)
                       }
                     >
                       Next
