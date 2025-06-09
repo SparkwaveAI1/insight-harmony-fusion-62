@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { corsHeaders } from "../_shared/cors.ts";
@@ -219,6 +220,7 @@ serve(async (req) => {
     console.log("Generated prompt:", imagePrompt);
     
     // Call the OpenAI Image Generation API requesting base64 format to avoid CORS issues
+    console.log("Calling OpenAI API for image generation with base64 format...");
     const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
@@ -249,7 +251,7 @@ serve(async (req) => {
     }
     
     const base64Image = imageData.data[0].b64_json;
-    console.log("Successfully generated base64 image");
+    console.log("Successfully received base64 image from OpenAI");
     
     // Now upload the base64 image directly to Supabase storage
     console.log("Uploading image to Supabase storage");

@@ -13,6 +13,14 @@ export interface GenerateImageResponse {
 const downloadImage = async (imageUrl: string, fileName: string) => {
   try {
     console.log("Starting download from URL:", imageUrl);
+    
+    // Verify this is a Supabase storage URL before attempting download
+    if (!imageUrl.includes('supabase') && !imageUrl.includes('storage')) {
+      console.error("❌ Cannot download: URL is not a Supabase storage URL");
+      toast.error("Image download failed: Invalid storage URL");
+      return;
+    }
+    
     const response = await fetch(imageUrl);
     
     if (!response.ok) {
@@ -63,13 +71,19 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     console.log("✅ Successfully generated and stored persona image:", response.image_url);
     console.log("Generated with prompt:", response.prompt);
     
-    // Trigger download of the generated image
-    const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
-    console.log("Triggering download for image:", response.image_url);
-    await downloadImage(response.image_url, fileName);
+    // Only trigger download if we have a proper Supabase storage URL
+    if (response.image_url.includes('supabase') || response.image_url.includes('storage')) {
+      const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
+      console.log("Triggering download for image:", response.image_url);
+      await downloadImage(response.image_url, fileName);
+      
+      console.log("=== Persona image generation completed ===");
+      toast.success("Persona image generated, saved, and downloaded successfully!");
+    } else {
+      console.error("❌ Image generation completed but received invalid storage URL:", response.image_url);
+      toast.error("Image generation completed but download failed due to invalid storage URL");
+    }
     
-    console.log("=== Persona image generation completed ===");
-    toast.success("Persona image generated, saved, and downloaded successfully!");
     return response.image_url;
   } catch (error) {
     console.error("❌ Error in generatePersonaImage:", error);
