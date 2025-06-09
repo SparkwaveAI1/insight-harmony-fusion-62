@@ -77,19 +77,10 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     
     console.log("✅ Successfully saved image to storage:", storedImageUrl);
     
-    // Check if the URL is from Supabase storage or still the original OpenAI URL
-    const isSupabaseUrl = storedImageUrl.includes('.supabase.co/storage/');
-    console.log(`Image saved as: ${isSupabaseUrl ? 'Supabase storage URL' : 'OpenAI fallback URL'}`);
-    
-    // Only download if we have a Supabase storage URL (which should be publicly accessible)
-    if (isSupabaseUrl) {
-      const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
-      console.log("Triggering download for Supabase URL:", storedImageUrl);
-      await downloadImage(storedImageUrl, fileName);
-    } else {
-      console.warn("Skipping download - not a Supabase storage URL:", storedImageUrl);
-      toast.error("Image saved but automatic download failed - please right-click and save the image manually");
-    }
+    // Always trigger download with the final URL, regardless of whether it's Supabase or OpenAI
+    const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
+    console.log("Triggering download for URL:", storedImageUrl);
+    await downloadImage(storedImageUrl, fileName);
     
     // Verify the persona record was updated correctly
     console.log("=== Verifying persona record update ===");
