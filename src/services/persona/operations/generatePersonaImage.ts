@@ -12,6 +12,25 @@ export interface GenerateImageResponse {
   error?: string;
 }
 
+const downloadImage = async (imageUrl: string, fileName: string) => {
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    console.log("✅ Image downloaded successfully:", fileName);
+  } catch (error) {
+    console.error("❌ Failed to download image:", error);
+    toast.error("Failed to download image");
+  }
+};
+
 export const generatePersonaImage = async (persona: Persona): Promise<string | null> => {
   try {
     console.log("=== Starting persona image generation ===");
@@ -55,6 +74,10 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     // Check if the URL is from Supabase storage or still the original OpenAI URL
     const isSupabaseUrl = storedImageUrl.includes('.supabase.co/storage/');
     console.log(`Image saved as: ${isSupabaseUrl ? 'Supabase storage URL' : 'OpenAI fallback URL'}`);
+    
+    // Download the image automatically
+    const fileName = `${persona.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_persona_image.png`;
+    await downloadImage(storedImageUrl, fileName);
     
     // Verify the persona record was updated correctly
     console.log("=== Verifying persona record update ===");
