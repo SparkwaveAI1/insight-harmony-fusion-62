@@ -72,10 +72,13 @@ const ProjectDetail = () => {
           }
         } else {
           console.error("No project ID in URL params");
+          toast.error("Invalid project URL");
+          navigate("/projects");
         }
       } catch (error) {
         console.error("Error loading project:", error);
         toast.error("Failed to load project");
+        navigate("/projects");
       } finally {
         setIsLoading(false);
       }
