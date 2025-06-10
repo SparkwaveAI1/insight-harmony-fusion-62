@@ -2,8 +2,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './contexts/AuthContext';
-import { PersonaProvider } from './contexts/PersonaContext';
+import { AuthProvider } from './context/AuthContext';
+import { PersonaProvider } from './context/PersonaProvider';
 import Home from './pages/Index';
 import Login from './pages/Auth';
 import Register from './pages/Auth';
