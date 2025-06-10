@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -25,6 +26,7 @@ const Collections = () => {
   const navigate = useNavigate();
   const [collections, setCollections] = useState<CollectionWithPersonaCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -33,32 +35,54 @@ const Collections = () => {
   const [description, setDescription] = useState("");
 
   useEffect(() => {
+    console.log("=== COLLECTIONS PAGE DEBUG ===");
     console.log("Collections useEffect triggered");
     console.log("User:", user);
+    console.log("User ID:", user?.id);
+    console.log("User email:", user?.email);
     
     const fetchCollections = async () => {
-      console.log("Starting to fetch collections...");
+      console.log("=== STARTING COLLECTIONS FETCH ===");
       setLoading(true);
+      setError(null);
       
       try {
+        console.log("Calling getUserCollectionsWithCount...");
         const data = await getUserCollectionsWithCount();
-        console.log("Collections fetched successfully:", data);
-        setCollections(data);
+        console.log("Collections fetch response:", data);
+        console.log("Collections count:", data?.length || 0);
+        
+        if (Array.isArray(data)) {
+          setCollections(data);
+          console.log("Collections set successfully:", data.length, "items");
+        } else {
+          console.warn("Collections data is not an array:", data);
+          setCollections([]);
+        }
       } catch (error) {
-        console.error("Error fetching collections:", error);
-        toast.error("Failed to load collections");
+        console.error("=== COLLECTIONS FETCH ERROR ===");
+        console.error("Error details:", error);
+        console.error("Error message:", error instanceof Error ? error.message : String(error));
+        console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+        
+        setError(error instanceof Error ? error.message : "Failed to load collections");
+        toast.error("Failed to load collections: " + (error instanceof Error ? error.message : "Unknown error"));
       } finally {
         setLoading(false);
-        console.log("Loading state set to false");
+        console.log("=== COLLECTIONS FETCH COMPLETE ===");
+        console.log("Final loading state:", false);
       }
     };
 
-    if (user) {
-      console.log("User exists, fetching collections...");
+    if (user?.id) {
+      console.log("User exists with ID, fetching collections...");
       fetchCollections();
-    } else {
-      console.log("No user found, redirecting to sign-in");
+    } else if (user === null) {
+      console.log("No user found (user is null), redirecting to sign-in");
       navigate('/sign-in');
+    } else {
+      console.log("User is still loading (undefined), waiting...");
+      setLoading(false);
     }
   }, [user, navigate]);
 
@@ -68,12 +92,18 @@ const Collections = () => {
       return;
     }
 
-    const collection = await createCollection(name, description || null);
-    if (collection) {
-      setCreateDialogOpen(false);
-      setName("");
-      setDescription("");
-      fetchCollections();
+    try {
+      const collection = await createCollection(name, description || null);
+      if (collection) {
+        setCreateDialogOpen(false);
+        setName("");
+        setDescription("");
+        await fetchCollections();
+        toast.success("Collection created successfully");
+      }
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      toast.error("Failed to create collection");
     }
   };
 
@@ -83,14 +113,20 @@ const Collections = () => {
       return;
     }
 
-    const result = await updateCollection(selectedCollection.id, {
-      name,
-      description: description || null
-    });
+    try {
+      const result = await updateCollection(selectedCollection.id, {
+        name,
+        description: description || null
+      });
 
-    if (result) {
-      setEditDialogOpen(false);
-      fetchCollections();
+      if (result) {
+        setEditDialogOpen(false);
+        await fetchCollections();
+        toast.success("Collection updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating collection:", error);
+      toast.error("Failed to update collection");
     }
   };
 
@@ -102,7 +138,7 @@ const Collections = () => {
       if (result) {
         toast.success(`Collection "${selectedCollection.name}" deleted`);
         setDeleteDialogOpen(false);
-        fetchCollections();
+        await fetchCollections();
       }
     } catch (error) {
       console.error("Error deleting collection:", error);
@@ -111,7 +147,7 @@ const Collections = () => {
   };
 
   const openEditDialog = (collection: Collection, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation to collection detail
+    e.stopPropagation();
     setSelectedCollection(collection);
     setName(collection.name);
     setDescription(collection.description || "");
@@ -119,7 +155,7 @@ const Collections = () => {
   };
 
   const openDeleteDialog = (collection: Collection, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation to collection detail
+    e.stopPropagation();
     setSelectedCollection(collection);
     setDeleteDialogOpen(true);
   };
@@ -127,18 +163,51 @@ const Collections = () => {
   const fetchCollections = async () => {
     console.log("fetchCollections called");
     setLoading(true);
-    const data = await getUserCollectionsWithCount();
-    console.log("Collections data in fetchCollections:", data);
-    setCollections(data);
-    setLoading(false);
+    try {
+      const data = await getUserCollectionsWithCount();
+      console.log("Collections data in fetchCollections:", data);
+      setCollections(data || []);
+    } catch (error) {
+      console.error("Error in fetchCollections:", error);
+      setError(error instanceof Error ? error.message : "Failed to fetch collections");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // IMPORTANT CHANGE: Update the navigation to use '/collections/' instead of '/collection/'
   const viewCollection = (collectionId: string) => {
     navigate(`/collections/${collectionId}`);
   };
 
-  console.log("Rendering Collections component. Loading:", loading, "Collections count:", collections.length);
+  console.log("=== COLLECTIONS RENDER STATE ===");
+  console.log("Rendering Collections component");
+  console.log("Loading:", loading);
+  console.log("Error:", error);
+  console.log("Collections count:", collections?.length || 0);
+  console.log("User state:", user ? "logged in" : "not logged in");
+
+  // Show error state
+  if (error) {
+    return (
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <Header />
+          <AppSidebar />
+          <SidebarInset>
+            <main className="flex-1 p-6 flex flex-col mt-16">
+              <div className="flex flex-col items-center justify-center py-20">
+                <h1 className="text-2xl font-bold mb-4">Error Loading Collections</h1>
+                <p className="text-muted-foreground mb-4">{error}</p>
+                <Button onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
+              </div>
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>
