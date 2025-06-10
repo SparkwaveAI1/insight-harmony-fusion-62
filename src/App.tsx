@@ -25,6 +25,8 @@ import StructuredStudy from './pages/StructuredStudy';
 import QuickResearchSetup from './pages/research/QuickResearchSetup';
 import StructuredStudySetup from './pages/research/StructuredStudySetup';
 import StructuredStudySession from './pages/research/StructuredStudySession';
+import Interviewer from './pages/Interviewer';
+import EarnPRSNA from './pages/EarnPRSNA';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +64,8 @@ function App() {
               <Route path="/research/setup/structured" element={<StructuredStudySetup />} />
               <Route path="/research/session/structured" element={<StructuredStudySession />} />
               <Route path="/research/quick-setup" element={<QuickResearchSetup />} />
+              <Route path="/interviewer" element={<Interviewer />} />
+              <Route path="/prsna" element={<EarnPRSNA />} />
             </Routes>
           </PersonaProvider>
         </AuthProvider>
