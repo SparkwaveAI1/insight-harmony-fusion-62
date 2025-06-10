@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,8 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   });
 
   const [currentSelectedPersonas, setCurrentSelectedPersonas] = useState<string[]>(selectedPersonas);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCollection, setSelectedCollection] = useState<string>('all');
   const [filters, setFilters] = useState<AudienceFilters>({
     age_range: '',
     gender: '',
@@ -56,15 +59,17 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   const maxPersonas = 4;
 
   const {
-    filteredPersonas: personas,
+    personas,
     collections,
-    searchTerm,
-    setSearchTerm,
-    selectedCollection,
-    setSelectedCollection,
-    isLoadingPersonas: isLoading,
-    isLoadingCollections
+    isLoading,
+    loadPersonas,
+    loadCollections
   } = useAudienceData();
+
+  useEffect(() => {
+    loadCollections();
+    loadPersonas(searchTerm, selectedCollection, filters);
+  }, [searchTerm, selectedCollection, filters, loadPersonas, loadCollections]);
 
   const handlePersonaSelect = (personaId: string) => {
     setCurrentSelectedPersonas(prev => {
@@ -109,16 +114,34 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
         <div className="space-y-6">
           {/* Search and Filters */}
           <div className="space-y-4">
-            <PersonaSelectionFilters 
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedCollection={selectedCollection}
-              onCollectionChange={setSelectedCollection}
-              collections={collections}
-              isLoadingCollections={isLoadingCollections}
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search personas by name, occupation, or traits..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="All Collections" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Collections</SelectItem>
+                  {collections.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id}>
+                      {collection.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <PersonaSelectionFilters filters={filters} onFiltersChange={setFilters} />
           </div>
 
           {/* Selected Personas Preview */}
@@ -127,7 +150,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
               selectedPersonas={currentSelectedPersonas}
               personas={personas}
               maxPersonas={maxPersonas}
-              onPersonaRemove={(personaId) => {
+              onRemovePersona={(personaId) => {
                 setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
               }}
             />
@@ -226,16 +249,34 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
               
               {/* Search and Filters */}
               <div className="space-y-4 mb-6">
-                <PersonaSelectionFilters 
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  selectedCollection={selectedCollection}
-                  onCollectionChange={setSelectedCollection}
-                  collections={collections}
-                  isLoadingCollections={isLoadingCollections}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                />
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Search personas by name, occupation, or traits..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="All Collections" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Collections</SelectItem>
+                      {collections.map((collection) => (
+                        <SelectItem key={collection.id} value={collection.id}>
+                          {collection.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <PersonaSelectionFilters filters={filters} onFiltersChange={setFilters} />
               </div>
 
               {/* Selected Personas Preview */}
@@ -244,7 +285,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
                   selectedPersonas={currentSelectedPersonas}
                   personas={personas}
                   maxPersonas={maxPersonas}
-                  onPersonaRemove={(personaId) => {
+                  onRemovePersona={(personaId) => {
                     setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
                   }}
                 />

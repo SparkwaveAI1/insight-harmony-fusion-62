@@ -9,14 +9,12 @@ import { Persona } from '@/services/persona/types';
 interface SelectedPersonasPreviewProps {
   selectedPersonas: string[];
   personas: Persona[];
-  maxPersonas: number;
   onPersonaRemove: (personaId: string) => void;
 }
 
 export const SelectedPersonasPreview: React.FC<SelectedPersonasPreviewProps> = ({
   selectedPersonas,
   personas,
-  maxPersonas,
   onPersonaRemove
 }) => {
   const getSelectedPersonaDetails = () => {
@@ -31,7 +29,7 @@ export const SelectedPersonasPreview: React.FC<SelectedPersonasPreviewProps> = (
     <div className="border rounded-lg p-4 bg-muted/30">
       <h4 className="font-medium mb-3 flex items-center gap-2">
         <Users className="h-4 w-4" />
-        Selected Personas ({selectedPersonas.length}/{maxPersonas})
+        Selected Personas
       </h4>
       <div className="flex flex-wrap gap-2">
         {getSelectedPersonaDetails().map((persona) => (
