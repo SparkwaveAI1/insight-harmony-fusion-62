@@ -10,11 +10,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FlaskConical, ArrowLeft, Bot, Users, Lightbulb, BookOpen, Target } from "lucide-react";
+import { FlaskConical, ArrowLeft, Bot, Users, Lightbulb, BookOpen, Target, Database, FileText, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ResearchConversation from "@/components/research/ResearchConversation";
 import { useResearchSession } from "@/components/research/hooks/useResearchSession";
 import { toast } from "sonner";
+import { ConversationKnowledgeBase } from "@/components/research/ConversationKnowledgeBase";
 
 const StructuredStudySession = () => {
   const [searchParams] = useSearchParams();
@@ -26,14 +27,15 @@ const StructuredStudySession = () => {
   const [researchInsights, setResearchInsights] = useState<string[]>([]);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [assistantActive, setAssistantActive] = useState(true);
+  const [knowledgeBaseActive, setKnowledgeBaseActive] = useState(false);
 
   const {
     loadedPersonas,
     messages,
     isLoading,
     sessionId: currentSessionId,
-    handleSendMessage,
-    handleSelectResponder
+    sendMessage,
+    selectPersonaResponder
   } = useResearchSession({
     initialPersonas: personasParam ? personasParam.split(',') : [],
     projectId
@@ -132,6 +134,16 @@ const StructuredStudySession = () => {
                         </Badge>
                         
                         <Button
+                          variant={knowledgeBaseActive ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setKnowledgeBaseActive(!knowledgeBaseActive)}
+                          className="gap-2"
+                        >
+                          <Database className="h-4 w-4" />
+                          Knowledge Base
+                        </Button>
+                        
+                        <Button
                           variant={assistantActive ? "default" : "outline"}
                           size="sm"
                           onClick={() => setAssistantActive(!assistantActive)}
@@ -149,14 +161,24 @@ const StructuredStudySession = () => {
                     loadedPersonas={loadedPersonas}
                     messages={messages}
                     isLoading={isLoading}
-                    onSendMessage={handleSendMessage}
-                    onSelectResponder={handleSelectResponder}
+                    onSendMessage={sendMessage}
+                    onSelectResponder={selectPersonaResponder}
                     projectId={projectId}
                   />
                 </div>
 
+                {/* Knowledge Base Sidebar */}
+                {knowledgeBaseActive && (
+                  <div className="w-80 border-l bg-muted/30">
+                    <ConversationKnowledgeBase
+                      sessionId={currentSessionId}
+                      projectId={projectId}
+                    />
+                  </div>
+                )}
+
                 {/* AI Research Assistant Sidebar */}
-                {assistantActive && (
+                {assistantActive && !knowledgeBaseActive && (
                   <div className="w-80 border-l bg-muted/30">
                     <div className="p-4 border-b">
                       <div className="flex items-center gap-2 mb-2">
@@ -201,7 +223,7 @@ const StructuredStudySession = () => {
                                 size="sm"
                                 className="w-full text-left justify-start h-auto p-2 text-xs"
                                 onClick={() => {
-                                  handleSendMessage(question);
+                                  sendMessage(question);
                                   toast.success("Question sent to participants");
                                 }}
                               >
