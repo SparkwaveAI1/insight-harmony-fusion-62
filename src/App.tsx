@@ -13,6 +13,7 @@ import PersonaDetail from './pages/PersonaDetail';
 import PersonaCreate from './pages/persona-creation/PersonaCreationLanding';
 import PersonaEdit from './pages/PersonaDetail';
 import Collections from './pages/Collections';
+import CollectionDetail from './pages/CollectionDetail';
 import ProjectList from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectCreate from './pages/Projects';
@@ -45,6 +46,7 @@ function App() {
               <Route path="/personas/create" element={<PersonaCreate />} />
               <Route path="/personas/:id/edit" element={<PersonaEdit />} />
               <Route path="/collections" element={<Collections />} />
+              <Route path="/collections/:collectionId" element={<CollectionDetail />} />
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/projects/create" element={<ProjectCreate />} />
