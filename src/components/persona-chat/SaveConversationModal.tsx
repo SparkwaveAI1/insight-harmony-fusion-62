@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createProject, getUserProjects, Project, createConversation, saveConversationMessages } from "@/services/collections";
+import { createProject, getUserProjects, Project, createProjectConversation, saveConversationMessages } from "@/services/collections";
 import { Loader2, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,9 +34,8 @@ const SaveConversationModal = ({
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
-  const [tags, setTags] = useState<string>("");
+  const [showCreateProject, setShowCreateProject] = useState(false);
 
-  // Load user's projects
   useEffect(() => {
     if (open) {
       loadProjects();
@@ -43,16 +43,13 @@ const SaveConversationModal = ({
   }, [open]);
 
   const loadProjects = async () => {
-    setIsLoading(true);
-    const userProjects = await getUserProjects();
-    setProjects(userProjects);
-    
-    // Set default project if available
-    if (userProjects.length > 0 && !selectedProjectId) {
-      setSelectedProjectId(userProjects[0].id);
+    try {
+      const projectsData = await getUserProjects();
+      setProjects(projectsData);
+    } catch (error) {
+      console.error("Error loading projects:", error);
+      toast.error("Failed to load projects");
     }
-    
-    setIsLoading(false);
   };
 
   const handleCreateProject = async () => {
@@ -61,53 +58,62 @@ const SaveConversationModal = ({
       return;
     }
 
-    setIsLoading(true);
-    const project = await createProject(newProjectName, newProjectDescription || null);
-    
-    if (project) {
-      loadProjects();
-      setSelectedProjectId(project.id);
+    try {
+      setIsCreatingProject(true);
+      const newProject = await createProject(newProjectName, newProjectDescription || null);
+      
+      if (newProject) {
+        setProjects(prev => [newProject, ...prev]);
+        setSelectedProjectId(newProject.id);
+        setShowCreateProject(false);
+        setNewProjectName("");
+        setNewProjectDescription("");
+        toast.success("Project created successfully");
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast.error("Failed to create project");
+    } finally {
       setIsCreatingProject(false);
-      setNewProjectName("");
-      setNewProjectDescription("");
     }
-    
-    setIsLoading(false);
   };
 
-  const handleSaveConversation = async () => {
-    if (!selectedProjectId) {
-      toast.error("Please select or create a project");
-      return;
-    }
-
+  const handleSave = async () => {
     if (!title.trim()) {
-      toast.error("Please enter a conversation title");
+      toast.error("Conversation title is required");
       return;
     }
 
-    setIsLoading(true);
-    
+    if (!selectedProjectId) {
+      toast.error("Please select a project");
+      return;
+    }
+
     try {
-      // Create the conversation with just persona IDs
-      const tagsArray = tags.trim() ? tags.split(",").map(tag => tag.trim()) : [];
-      const conversation = await createConversation(
-        selectedProjectId, 
+      setIsLoading(true);
+
+      // Create conversation in the selected project
+      const conversation = await createProjectConversation(
+        selectedProjectId,
         title,
-        personaIds,  // This should be string[], not Persona[]
-        tagsArray
+        personaIds,
+        []
       );
-      
-      if (conversation) {
-        // Save the messages
-        const saved = await saveConversationMessages(conversation.id, messages);
-        
-        if (saved) {
-          toast.success("Conversation saved successfully");
-          onSaved(conversation.id, selectedProjectId);
-          onOpenChange(false);
-        }
+
+      if (!conversation) {
+        throw new Error("Failed to create conversation");
       }
+
+      // Save messages to the conversation
+      const messagesSaved = await saveConversationMessages(conversation.id, messages);
+
+      if (!messagesSaved) {
+        throw new Error("Failed to save conversation messages");
+      }
+
+      toast.success("Conversation saved successfully");
+      onSaved(conversation.id, selectedProjectId);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error saving conversation:", error);
       toast.error("Failed to save conversation");
@@ -118,67 +124,30 @@ const SaveConversationModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Save Conversation</DialogTitle>
           <DialogDescription>
-            Save this conversation to review later or share with your team.
+            Save this conversation to a project for future reference.
           </DialogDescription>
         </DialogHeader>
-        
-        {isCreatingProject ? (
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-project-name">Project Name</Label>
-              <Input
-                id="new-project-name"
-                placeholder="Enter project name"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="new-project-description">Description (Optional)</Label>
-              <Textarea
-                id="new-project-description"
-                placeholder="Enter project description"
-                value={newProjectDescription}
-                onChange={(e) => setNewProjectDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Button onClick={() => setIsCreatingProject(false)} variant="outline" className="flex-1">
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateProject} 
-                className="flex-1"
-                disabled={isLoading || !newProjectName.trim()}
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                Create Project
-              </Button>
-            </div>
+
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="title">Conversation Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter conversation title"
+            />
           </div>
-        ) : (
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Conversation Title</Label>
-              <Input
-                id="title"
-                placeholder="Enter a title for this conversation"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="project">Select Project</Label>
+
+          <div className="grid gap-2">
+            <Label>Project</Label>
+            {!showCreateProject ? (
               <div className="flex gap-2">
-                <Select value={selectedProjectId} onValueChange={setSelectedProjectId} disabled={isLoading}>
+                <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
@@ -190,41 +159,68 @@ const SaveConversationModal = ({
                     ))}
                   </SelectContent>
                 </Select>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setIsCreatingProject(true)}
-                  disabled={isLoading}
-                  title="Create new project"
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowCreateProject(true)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags (Optional, comma-separated)</Label>
-              <Input
-                id="tags"
-                placeholder="research, marketing, user-feedback"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-              />
-            </div>
-            
-            <DialogFooter className="sm:justify-start">
-              <Button
-                type="submit"
-                onClick={handleSaveConversation}
-                disabled={isLoading || !selectedProjectId || !title.trim()}
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                Save Conversation
-              </Button>
-            </DialogFooter>
+            ) : (
+              <div className="space-y-3 border rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Create New Project</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCreateProject(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                
+                <Input
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="Project name"
+                />
+                
+                <Textarea
+                  value={newProjectDescription}
+                  onChange={(e) => setNewProjectDescription(e.target.value)}
+                  placeholder="Project description (optional)"
+                  rows={2}
+                />
+                
+                <Button
+                  onClick={handleCreateProject}
+                  disabled={isCreatingProject || !newProjectName.trim()}
+                  className="w-full"
+                >
+                  {isCreatingProject && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Create Project
+                </Button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSave}
+            disabled={isLoading || !title.trim() || !selectedProjectId}
+          >
+            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Save className="h-4 w-4 mr-2" />
+            Save Conversation
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
