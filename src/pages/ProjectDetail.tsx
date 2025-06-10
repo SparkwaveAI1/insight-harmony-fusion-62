@@ -45,21 +45,31 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     const loadProject = async () => {
+      console.log("Loading project with ID:", projectId);
       setIsLoading(true);
       try {
         if (projectId) {
+          console.log("Fetching project data...");
           const projectData = await getProjectById(projectId);
+          console.log("Project data received:", projectData);
+          
+          console.log("Fetching conversations...");
           const conversationsData = await getProjectConversations(projectId);
+          console.log("Conversations data received:", conversationsData);
           
           if (projectData) {
             setProject(projectData);
             setProjectName(projectData.name);
             setProjectDescription(projectData.description || "");
             setConversations(conversationsData);
+            console.log("Project state updated successfully");
           } else {
+            console.error("No project data returned");
             toast.error("Project not found");
             navigate("/projects");
           }
+        } else {
+          console.error("No project ID in URL params");
         }
       } catch (error) {
         console.error("Error loading project:", error);
@@ -99,6 +109,8 @@ const ProjectDetail = () => {
     }
   };
 
+  console.log("Render state - isLoading:", isLoading, "project:", project, "conversations:", conversations);
+
   if (isLoading) {
     return (
       <SidebarProvider defaultOpen={true}>
@@ -120,7 +132,33 @@ const ProjectDetail = () => {
     );
   }
 
-  if (!project) return null;
+  if (!project) {
+    console.log("No project found, showing not found state");
+    return (
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <SidebarInset>
+            <div className="relative flex min-h-svh flex-col">
+              <Header />
+              <main className="flex-1 pt-24">
+                <div className="container py-6 flex items-center justify-center h-[60vh]">
+                  <div className="text-center">
+                    <h2 className="text-xl font-semibold mb-2">Project Not Found</h2>
+                    <p className="text-muted-foreground mb-4">The project you're looking for doesn't exist or you don't have access to it.</p>
+                    <Button asChild>
+                      <Link to="/projects">Back to Projects</Link>
+                    </Button>
+                  </div>
+                </div>
+              </main>
+              <Footer />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -164,9 +202,9 @@ const ProjectDetail = () => {
                         </div>
                         
                         <Button asChild>
-                          <Link to="/dual-chat">
+                          <Link to={`/research/setup/structured?project=${projectId}`}>
                             <Plus className="h-4 w-4 mr-2" />
-                            New Conversation
+                            New Study Session
                           </Link>
                         </Button>
                       </CardHeader>
@@ -208,10 +246,10 @@ const ProjectDetail = () => {
                             </div>
                             <h3 className="font-medium mb-1">No conversations yet</h3>
                             <p className="text-sm text-muted-foreground mb-4">
-                              Start a new conversation with personas and save it to this project
+                              Start a new structured study session to begin research with personas
                             </p>
                             <Button asChild>
-                              <Link to="/dual-chat">Start New Conversation</Link>
+                              <Link to={`/research/setup/structured?project=${projectId}`}>Start New Study Session</Link>
                             </Button>
                           </div>
                         )}
