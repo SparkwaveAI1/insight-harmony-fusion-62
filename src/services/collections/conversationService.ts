@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Conversation, ConversationMessage } from './types';
 
 /**
- * Creates a new conversation
+ * Creates a new conversation with string persona IDs
  */
 export const createConversation = async (
   projectId: string,
@@ -21,14 +21,14 @@ export const createConversation = async (
       return null;
     }
     
-    // Insert the conversation
+    // Insert the conversation with persona IDs as strings
     const { data, error } = await supabase
       .from("conversations")
       .insert({ 
         project_id: projectId,
         title,
         user_id: user.id,
-        persona_ids: personaIds,
+        persona_ids: personaIds,  // This is now correctly typed as string[]
         tags
       })
       .select()
