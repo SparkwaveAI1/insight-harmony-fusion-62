@@ -53,6 +53,12 @@ const StructuredStudySession = () => {
     loadSession();
   }, [sessionId]);
 
+  const handleSendMessage = async (message: string) => {
+    console.log("Sending message:", message);
+    // TODO: Implement actual message sending logic
+    toast.success("Message sent to research participants");
+  };
+
   if (isLoading) {
     return (
       <SidebarProvider defaultOpen={true}>
@@ -108,7 +114,17 @@ const StructuredStudySession = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
-                    <AIResearchAssistant session={session} />
+                    <AIResearchAssistant 
+                      researchInsights={[]}
+                      suggestedQuestions={[
+                        "What are your main pain points with this product?",
+                        "How does this fit into your daily routine?",
+                        "What would make this more valuable to you?"
+                      ]}
+                      messages={[]}
+                      onSendMessage={handleSendMessage}
+                      loadedPersonasCount={0}
+                    />
                   </div>
 
                   <div className="space-y-4">
