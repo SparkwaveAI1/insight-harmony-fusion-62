@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -276,8 +275,7 @@ const StructuredStudySetup = () => {
                           {audience && (
                             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                               <h3 className="font-medium text-purple-800 mb-2">Target Audience</h3>
-                              <p className="text-purple-700 text-sm">{audience.target_description}</p>
-                              <p className="text-purple-600 text-xs mt-1">{audience.selected_personas.length} personas selected</p>
+                              <p className="text-purple-700 text-sm">{audience.selected_personas.length} personas selected</p>
                             </div>
                           )}
                           {outputGoals && (
@@ -285,7 +283,7 @@ const StructuredStudySetup = () => {
                               <h3 className="font-medium text-amber-800 mb-2">Output Goals</h3>
                               <p className="text-amber-700 text-sm">{outputGoals.primary_goals.join(', ')}</p>
                               <p className="text-amber-600 text-xs mt-1">
-                                {outputGoals.deliverables.length} deliverables • {outputGoals.timeline}
+                                {outputGoals.deliverables.length} deliverables
                                 {outputGoals.project_id && " • Associated with project"}
                               </p>
                             </div>

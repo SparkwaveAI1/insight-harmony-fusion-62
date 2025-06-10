@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,8 +22,6 @@ export interface OutputGoal {
 export interface OutputGoalsData {
   primary_goals: string[];
   deliverables: OutputGoal[];
-  timeline: string;
-  stakeholders: string[];
   project_id: string | null;
 }
 
@@ -42,9 +41,6 @@ export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ onGoalsDef
   const [primaryGoals, setPrimaryGoals] = useState<string[]>([]);
   const [newGoal, setNewGoal] = useState("");
   const [deliverables, setDeliverables] = useState<OutputGoal[]>([]);
-  const [timeline, setTimeline] = useState("");
-  const [stakeholders, setStakeholders] = useState<string[]>([]);
-  const [newStakeholder, setNewStakeholder] = useState("");
 
   React.useEffect(() => {
     loadProjects();
@@ -87,17 +83,6 @@ export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ onGoalsDef
 
   const removePrimaryGoal = (goalToRemove: string) => {
     setPrimaryGoals(primaryGoals.filter(goal => goal !== goalToRemove));
-  };
-
-  const addStakeholder = () => {
-    if (newStakeholder.trim() && !stakeholders.includes(newStakeholder.trim())) {
-      setStakeholders([...stakeholders, newStakeholder.trim()]);
-      setNewStakeholder("");
-    }
-  };
-
-  const removeStakeholder = (stakeholderToRemove: string) => {
-    setStakeholders(stakeholders.filter(stakeholder => stakeholder !== stakeholderToRemove));
   };
 
   const toggleDeliverable = (type: OutputGoal['deliverable_type'], checked: boolean) => {
@@ -149,8 +134,6 @@ export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ onGoalsDef
     const outputGoalsData: OutputGoalsData = {
       primary_goals: primaryGoals,
       deliverables,
-      timeline: timeline || "Not specified",
-      stakeholders,
       project_id: selectedProjectId || null
     };
 
@@ -266,57 +249,6 @@ export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ onGoalsDef
           ))}
         </div>
       </Card>
-
-      {/* Timeline and Stakeholders */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-medium mb-4">Timeline</h3>
-          <Select value={timeline} onValueChange={setTimeline}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select timeline" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1-week">1 Week</SelectItem>
-              <SelectItem value="2-weeks">2 Weeks</SelectItem>
-              <SelectItem value="1-month">1 Month</SelectItem>
-              <SelectItem value="ongoing">Ongoing</SelectItem>
-            </SelectContent>
-          </Select>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-medium mb-4">Stakeholders</h3>
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add stakeholder"
-                value={newStakeholder}
-                onChange={(e) => setNewStakeholder(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addStakeholder()}
-              />
-              <Button onClick={addStakeholder} size="sm" disabled={!newStakeholder.trim()}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {stakeholders.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {stakeholders.map((stakeholder, index) => (
-                  <Badge key={index} variant="outline" className="px-2 py-1">
-                    {stakeholder}
-                    <button
-                      onClick={() => removeStakeholder(stakeholder)}
-                      className="ml-2 text-muted-foreground hover:text-foreground"
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
 
       {/* Submit Button */}
       <div className="flex justify-center pt-4">
