@@ -2,311 +2,188 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getUserProjects, createProject, Project } from '@/services/collections';
-import { Loader2, Plus, FolderPlus, Target, FileText, Presentation, BarChart3 } from 'lucide-react';
-import { toast } from 'sonner';
-
-export interface OutputGoal {
-  deliverable_type: 'summary_report' | 'insights_dashboard' | 'presentation' | 'raw_data' | 'recommendations';
-  description: string;
-  priority: 'high' | 'medium' | 'low';
-}
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Target, FileText, BarChart, Users, Lightbulb, TrendingUp } from 'lucide-react';
 
 export interface OutputGoalsData {
   primary_goals: string[];
-  deliverables: OutputGoal[];
-  project_id: string | null;
+  deliverables: string[];
+  custom_deliverable?: string;
+  project_id?: string | null;
 }
 
 interface DefineOutputGoalsProps {
   onGoalsDefined: (goals: OutputGoalsData) => void;
+  hideProjectSelection?: boolean;
 }
 
-export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ onGoalsDefined }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showCreateProject, setShowCreateProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [newProjectDescription, setNewProjectDescription] = useState("");
-  
-  // Output goals form state
-  const [primaryGoals, setPrimaryGoals] = useState<string[]>([]);
-  const [newGoal, setNewGoal] = useState("");
-  const [deliverables, setDeliverables] = useState<OutputGoal[]>([]);
+export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ 
+  onGoalsDefined, 
+  hideProjectSelection = false 
+}) => {
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedDeliverables, setSelectedDeliverables] = useState<string[]>([]);
+  const [customDeliverable, setCustomDeliverable] = useState('');
 
-  React.useEffect(() => {
-    loadProjects();
-  }, []);
+  const primaryGoals = [
+    { id: 'user_feedback', label: 'Collect User Feedback', icon: <Users className="h-4 w-4" /> },
+    { id: 'market_insights', label: 'Generate Market Insights', icon: <TrendingUp className="h-4 w-4" /> },
+    { id: 'product_validation', label: 'Validate Product Concepts', icon: <Target className="h-4 w-4" /> },
+    { id: 'competitive_analysis', label: 'Competitive Analysis', icon: <BarChart className="h-4 w-4" /> },
+    { id: 'feature_prioritization', label: 'Feature Prioritization', icon: <Lightbulb className="h-4 w-4" /> }
+  ];
 
-  const loadProjects = async () => {
-    setIsLoading(true);
-    const userProjects = await getUserProjects();
-    setProjects(userProjects);
-    setIsLoading(false);
+  const deliverableOptions = [
+    { id: 'executive_summary', label: 'Executive Summary' },
+    { id: 'detailed_report', label: 'Detailed Research Report' },
+    { id: 'persona_insights', label: 'Persona Insights & Quotes' },
+    { id: 'recommendations', label: 'Strategic Recommendations' },
+    { id: 'data_export', label: 'Raw Data Export' },
+    { id: 'presentation', label: 'Presentation Slides' }
+  ];
+
+  const handleGoalToggle = (goalId: string) => {
+    setSelectedGoals(prev => 
+      prev.includes(goalId) 
+        ? prev.filter(id => id !== goalId)
+        : [...prev, goalId]
+    );
   };
 
-  const handleCreateProject = async () => {
-    if (!newProjectName.trim()) {
-      toast.error("Project name is required");
-      return;
-    }
-
-    setIsLoading(true);
-    const project = await createProject(newProjectName, newProjectDescription || null);
-    
-    if (project) {
-      await loadProjects();
-      setSelectedProjectId(project.id);
-      setShowCreateProject(false);
-      setNewProjectName("");
-      setNewProjectDescription("");
-      toast.success("Project created successfully");
-    }
-    
-    setIsLoading(false);
-  };
-
-  const addPrimaryGoal = () => {
-    if (newGoal.trim() && !primaryGoals.includes(newGoal.trim())) {
-      setPrimaryGoals([...primaryGoals, newGoal.trim()]);
-      setNewGoal("");
-    }
-  };
-
-  const removePrimaryGoal = (goalToRemove: string) => {
-    setPrimaryGoals(primaryGoals.filter(goal => goal !== goalToRemove));
-  };
-
-  const toggleDeliverable = (type: OutputGoal['deliverable_type'], checked: boolean) => {
-    if (checked) {
-      const newDeliverable: OutputGoal = {
-        deliverable_type: type,
-        description: getDeliverableDescription(type),
-        priority: 'medium'
-      };
-      setDeliverables([...deliverables, newDeliverable]);
-    } else {
-      setDeliverables(deliverables.filter(d => d.deliverable_type !== type));
-    }
-  };
-
-  const getDeliverableDescription = (type: OutputGoal['deliverable_type']): string => {
-    const descriptions = {
-      summary_report: "Comprehensive summary of findings and insights",
-      insights_dashboard: "Interactive dashboard with key metrics and visualizations", 
-      presentation: "Presentation slides for stakeholder communication",
-      raw_data: "Raw conversation data and transcripts",
-      recommendations: "Actionable recommendations based on research findings"
-    };
-    return descriptions[type];
-  };
-
-  const getDeliverableIcon = (type: OutputGoal['deliverable_type']) => {
-    const icons = {
-      summary_report: <FileText className="h-4 w-4" />,
-      insights_dashboard: <BarChart3 className="h-4 w-4" />,
-      presentation: <Presentation className="h-4 w-4" />,
-      raw_data: <FileText className="h-4 w-4" />,
-      recommendations: <Target className="h-4 w-4" />
-    };
-    return icons[type];
+  const handleDeliverableToggle = (deliverableId: string) => {
+    setSelectedDeliverables(prev => 
+      prev.includes(deliverableId) 
+        ? prev.filter(id => id !== deliverableId)
+        : [...prev, deliverableId]
+    );
   };
 
   const handleSubmit = () => {
-    if (primaryGoals.length === 0) {
-      toast.error("Please add at least one primary goal");
+    if (selectedGoals.length === 0) {
       return;
     }
 
-    if (deliverables.length === 0) {
-      toast.error("Please select at least one deliverable");
-      return;
+    const finalDeliverables = [...selectedDeliverables];
+    if (customDeliverable.trim()) {
+      finalDeliverables.push(customDeliverable.trim());
     }
 
-    const outputGoalsData: OutputGoalsData = {
-      primary_goals: primaryGoals,
-      deliverables,
-      project_id: selectedProjectId || null
+    const outputGoals: OutputGoalsData = {
+      primary_goals: selectedGoals,
+      deliverables: finalDeliverables,
+      custom_deliverable: customDeliverable.trim() || undefined
     };
 
-    onGoalsDefined(outputGoalsData);
+    onGoalsDefined(outputGoals);
   };
-
-  const deliverableTypes: { type: OutputGoal['deliverable_type']; label: string }[] = [
-    { type: 'summary_report', label: 'Summary Report' },
-    { type: 'insights_dashboard', label: 'Insights Dashboard' },
-    { type: 'presentation', label: 'Presentation' },
-    { type: 'raw_data', label: 'Raw Data' },
-    { type: 'recommendations', label: 'Recommendations' }
-  ];
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold mb-2">Define Output Goals</h2>
         <p className="text-muted-foreground">
-          What do you want to achieve with this research study?
+          What do you want to achieve and what deliverables do you need?
         </p>
       </div>
 
-      {/* Project Selection */}
-      <Card className="p-6">
-        <h3 className="text-lg font-medium mb-4">Project Association</h3>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="project">Associate with Project (Optional)</Label>
-            <div className="flex gap-2">
-              <Select value={selectedProjectId} onValueChange={setSelectedProjectId} disabled={isLoading}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={() => setShowCreateProject(true)}
-                disabled={isLoading}
-                title="Create new project"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
-
       {/* Primary Goals */}
       <Card className="p-6">
-        <h3 className="text-lg font-medium mb-4">Primary Research Goals</h3>
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add a research goal (e.g., Understand user pain points)"
-              value={newGoal}
-              onChange={(e) => setNewGoal(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addPrimaryGoal()}
-            />
-            <Button onClick={addPrimaryGoal} disabled={!newGoal.trim()}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {primaryGoals.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {primaryGoals.map((goal, index) => (
-                <Badge key={index} variant="secondary" className="px-3 py-1">
-                  {goal}
-                  <button
-                    onClick={() => removePrimaryGoal(goal)}
-                    className="ml-2 text-muted-foreground hover:text-foreground"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          )}
+        <div className="mb-4">
+          <h3 className="text-lg font-medium mb-2">Primary Research Goals</h3>
+          <p className="text-sm text-muted-foreground">Select your main research objectives</p>
         </div>
-      </Card>
 
-      {/* Deliverables */}
-      <Card className="p-6">
-        <h3 className="text-lg font-medium mb-4">Expected Deliverables</h3>
-        <div className="space-y-3">
-          {deliverableTypes.map(({ type, label }) => (
-            <div key={type} className="flex items-start space-x-3">
-              <Checkbox
-                id={type}
-                checked={deliverables.some(d => d.deliverable_type === type)}
-                onCheckedChange={(checked) => toggleDeliverable(type, checked as boolean)}
-              />
-              <div className="flex-1">
-                <label htmlFor={type} className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                  {getDeliverableIcon(type)}
-                  {label}
-                </label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {getDeliverableDescription(type)}
-                </p>
+        <div className="grid md:grid-cols-2 gap-3">
+          {primaryGoals.map((goal) => (
+            <div
+              key={goal.id}
+              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                selectedGoals.includes(goal.id)
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-primary/50'
+              }`}
+              onClick={() => handleGoalToggle(goal.id)}
+            >
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={selectedGoals.includes(goal.id)}
+                  onChange={() => {}} // Handled by parent click
+                />
+                <div className="flex items-center gap-2 flex-1">
+                  {goal.icon}
+                  <span className="font-medium">{goal.label}</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </Card>
 
-      {/* Submit Button */}
-      <div className="flex justify-center pt-4">
-        <Button 
-          onClick={handleSubmit}
-          disabled={primaryGoals.length === 0 || deliverables.length === 0}
-          className="px-8"
-        >
-          <Target className="h-4 w-4 mr-2" />
-          Define Output Goals
-        </Button>
-      </div>
+      {/* Deliverables */}
+      <Card className="p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-medium mb-2">Research Deliverables</h3>
+          <p className="text-sm text-muted-foreground">What outputs do you need from this study?</p>
+        </div>
 
-      {/* Create Project Dialog */}
-      <Dialog open={showCreateProject} onOpenChange={setShowCreateProject}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-project-name">Project Name</Label>
-              <Input
-                id="new-project-name"
-                placeholder="Enter project name"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
+        <div className="space-y-3 mb-4">
+          {deliverableOptions.map((deliverable) => (
+            <div key={deliverable.id} className="flex items-center space-x-3">
+              <Checkbox
+                id={deliverable.id}
+                checked={selectedDeliverables.includes(deliverable.id)}
+                onCheckedChange={() => handleDeliverableToggle(deliverable.id)}
               />
+              <Label htmlFor={deliverable.id} className="flex-1">
+                {deliverable.label}
+              </Label>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="new-project-description">Description (Optional)</Label>
-              <Textarea
-                id="new-project-description"
-                placeholder="Enter project description"
-                value={newProjectDescription}
-                onChange={(e) => setNewProjectDescription(e.target.value)}
-                rows={3}
-              />
+          ))}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="custom-deliverable">Custom Deliverable (Optional)</Label>
+          <Textarea
+            id="custom-deliverable"
+            placeholder="Describe any specific deliverable you need..."
+            value={customDeliverable}
+            onChange={(e) => setCustomDeliverable(e.target.value)}
+            rows={2}
+          />
+        </div>
+      </Card>
+
+      {/* Summary */}
+      {selectedGoals.length > 0 && (
+        <Card className="p-4 bg-muted/30">
+          <h4 className="font-medium mb-2">Study Summary</h4>
+          <div className="space-y-2 text-sm">
+            <div>
+              <span className="text-muted-foreground">Goals: </span>
+              <span>{selectedGoals.length} selected</span>
             </div>
-            
-            <div className="flex gap-2 pt-4">
-              <Button onClick={() => setShowCreateProject(false)} variant="outline" className="flex-1">
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateProject} 
-                className="flex-1"
-                disabled={isLoading || !newProjectName.trim()}
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FolderPlus className="h-4 w-4 mr-2" />}
-                Create Project
-              </Button>
+            <div>
+              <span className="text-muted-foreground">Deliverables: </span>
+              <span>{selectedDeliverables.length + (customDeliverable.trim() ? 1 : 0)} items</span>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Card>
+      )}
+
+      <div className="flex justify-center">
+        <Button
+          onClick={handleSubmit}
+          disabled={selectedGoals.length === 0}
+          size="lg"
+          className="px-8"
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Continue to Review
+        </Button>
+      </div>
     </div>
   );
 };
