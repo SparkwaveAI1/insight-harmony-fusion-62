@@ -44,6 +44,9 @@ function App() {
               <Route path="/personas" element={<PersonaList />} />
               <Route path="/persona-viewer" element={<PersonaList />} />
               <Route path="/personas/:id" element={<PersonaDetail />} />
+              <Route path="/persona-detail/:id" element={<PersonaDetail />} />
+              <Route path="/personas/:personaId" element={<PersonaDetail />} />
+              <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
               <Route path="/personas/create" element={<PersonaCreate />} />
               <Route path="/personas/:id/edit" element={<PersonaEdit />} />
               <Route path="/collections" element={<Collections />} />
