@@ -58,16 +58,16 @@ const ProjectDetail = () => {
           const projectData = await getProjectById(projectId);
           console.log("Project data received:", projectData);
           
-          console.log("Fetching conversations...");
-          const conversationsData = await getProjectConversations(projectId);
-          console.log("Conversations data received:", conversationsData);
-          
           if (projectData) {
             setProject(projectData);
             setProjectName(projectData.name);
             setProjectDescription(projectData.description || "");
-            setConversations(conversationsData);
             console.log("Project state updated successfully");
+            
+            console.log("Fetching conversations...");
+            const conversationsData = await getProjectConversations(projectId);
+            console.log("Conversations data received:", conversationsData);
+            setConversations(conversationsData);
           } else {
             console.error("No project data returned");
             setHasError(true);
@@ -291,6 +291,11 @@ const ProjectDetail = () => {
                                 <p className="text-sm text-muted-foreground">
                                   Project details unavailable
                                 </p>
+                                {hasError && (
+                                  <p className="text-xs text-red-600 mt-2">
+                                    There was an error loading the project data. Please try refreshing the page.
+                                  </p>
+                                )}
                               </div>
                             )}
                           </CardContent>
