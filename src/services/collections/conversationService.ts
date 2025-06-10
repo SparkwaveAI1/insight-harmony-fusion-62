@@ -1,111 +1,118 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Conversation, ConversationMessage } from './types';
+import { Conversation, ConversationMessage } from "./types";
 
 /**
- * Creates a new conversation with string persona IDs
+ * Fetches a conversation by ID
  */
-export const createConversation = async (
-  projectId: string,
-  title: string,
-  personaIds: string[] = [],
-  tags: string[] = []
-): Promise<Conversation | null> => {
+export const getConversationById = async (id: string): Promise<Conversation | null> => {
   try {
-    // Get the user's ID
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast.error("You must be logged in to save a conversation");
-      return null;
-    }
-    
-    // Insert the conversation with persona IDs as strings
     const { data, error } = await supabase
       .from("conversations")
-      .insert({ 
-        project_id: projectId,
-        title,
-        user_id: user.id,
-        persona_ids: personaIds,  // This is now correctly typed as string[]
-        tags
-      })
-      .select()
+      .select("*")
+      .eq("id", id)
       .single();
 
     if (error) throw error;
     return data as Conversation;
   } catch (error) {
-    console.error("Error creating conversation:", error);
-    toast.error("Failed to save conversation");
+    console.error("Error fetching conversation:", error);
+    toast.error("Failed to fetch conversation");
     return null;
   }
 };
 
 /**
- * Creates a new message for a conversation
+ * Fetches messages for a conversation
  */
-export const createMessage = async (
-  conversationId: string,
-  message: { 
-    role: "user" | "assistant"; 
-    content: string; 
-    persona_id?: string | null;
-  }
-): Promise<ConversationMessage | null> => {
+export const getConversationMessages = async (conversationId: string): Promise<ConversationMessage[]> => {
   try {
     const { data, error } = await supabase
       .from("conversation_messages")
-      .insert({
-        conversation_id: conversationId,
-        role: message.role,
-        content: message.content,
-        persona_id: message.persona_id || null
-      })
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+    return data as ConversationMessage[] || [];
+  } catch (error) {
+    console.error("Error fetching conversation messages:", error);
+    toast.error("Failed to fetch conversation messages");
+    return [];
+  }
+};
+
+/**
+ * Creates a new conversation
+ */
+export const createConversation = async (
+  title: string,
+  personaIds: string[] = [],
+  tags: string[] = [],
+  projectId?: string
+): Promise<Conversation | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast.error("You must be logged in to create a conversation");
+      return null;
+    }
+    
+    const conversationData: any = {
+      title,
+      user_id: user.id,
+      persona_ids: personaIds,
+      tags,
+      session_type: 'chat'
+    };
+
+    if (projectId) {
+      conversationData.project_id = projectId;
+    }
+    
+    const { data, error } = await supabase
+      .from("conversations")
+      .insert(conversationData)
       .select()
       .single();
 
     if (error) throw error;
-    return data as ConversationMessage;
+    toast.success("Conversation created");
+    return data as Conversation;
   } catch (error) {
-    console.error("Error creating message:", error);
-    toast.error("Failed to save message");
+    console.error("Error creating conversation:", error);
+    toast.error("Failed to create conversation");
     return null;
   }
 };
 
 /**
- * Saves multiple messages to a conversation
+ * Saves messages to a conversation
  */
 export const saveConversationMessages = async (
   conversationId: string,
-  messages: { 
-    role: "user" | "assistant"; 
-    content: string; 
-    persona_id?: string | null;
-  }[]
+  messages: { role: string; content: string; persona_id?: string }[]
 ): Promise<boolean> => {
   try {
-    // Format messages for insertion
-    const formattedMessages = messages.map(message => ({
+    const messageData = messages.map(message => ({
       conversation_id: conversationId,
       role: message.role,
       content: message.content,
       persona_id: message.persona_id || null
     }));
-    
-    // Insert messages
+
     const { error } = await supabase
       .from("conversation_messages")
-      .insert(formattedMessages);
+      .insert(messageData);
 
     if (error) throw error;
-    
+    toast.success("Messages saved");
     return true;
   } catch (error) {
     console.error("Error saving conversation messages:", error);
-    toast.error("Failed to save conversation messages");
+    toast.error("Failed to save messages");
     return false;
   }
 };

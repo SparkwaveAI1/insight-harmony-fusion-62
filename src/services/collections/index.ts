@@ -2,13 +2,18 @@
 // Export all collection operations
 export {
   getUserCollections,
+  getUserCollectionsWithCount,
   getCollectionById,
   createCollection,
   updateCollection,
   deleteCollection,
   getCollectionPersonas,
   addPersonasToCollection,
-  removePersonaFromCollection
+  removePersonaFromCollection,
+  getPersonasNotInCollection,
+  addPersonaToCollection,
+  isPersonaInCollection,
+  getPersonasInCollection
 } from './collectionOperations';
 
 // Export all project operations
@@ -26,6 +31,14 @@ export {
   getProjectConversations,
   createProjectConversation
 } from './conversationOperations';
+
+// Export conversation service operations
+export {
+  getConversationById,
+  getConversationMessages,
+  createConversation,
+  saveConversationMessages
+} from './conversationService';
 
 // Export types
 export type {
