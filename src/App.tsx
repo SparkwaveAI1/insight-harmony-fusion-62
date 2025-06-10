@@ -5,8 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { PersonaProvider } from './context/PersonaProvider';
 import Home from './pages/Index';
-import Login from './pages/Auth';
-import Register from './pages/Auth';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/UserProfile';
 import PersonaList from './pages/PersonaViewer';
@@ -35,8 +34,9 @@ function App() {
           <PersonaProvider>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/sign-in" element={<Auth />} />
+              <Route path="/login" element={<Auth />} />
+              <Route path="/register" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/personas" element={<PersonaList />} />
