@@ -184,10 +184,33 @@ export default function ResearchConversation({
         </div>
       </div>
 
-      {/* Persona details sidebar */}
+      {/* Persona details sidebar - only show if we have a selected persona */}
       {selectedPersona && (
         <div className="w-80 border-l bg-muted/30">
-          <ResearchPersonaDisplay loadedPersonas={[selectedPersona]} />
+          <div className="p-4">
+            <h3 className="text-lg font-semibold mb-4">Persona Details</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedPersona.image_url} />
+                  <AvatarFallback>
+                    {selectedPersona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h4 className="font-medium">{selectedPersona.name}</h4>
+                  <p className="text-sm text-muted-foreground">{selectedPersona.persona_id}</p>
+                </div>
+              </div>
+              
+              {selectedPersona.prompt && (
+                <div>
+                  <h5 className="font-medium mb-2">Persona Description</h5>
+                  <p className="text-sm text-muted-foreground">{selectedPersona.prompt}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

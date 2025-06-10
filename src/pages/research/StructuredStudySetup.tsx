@@ -7,7 +7,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FlaskConical, ArrowLeft, ArrowRight, Save, Clock } from "lucide-react";
+import { FlaskConical, ArrowLeft, ArrowRight, Save, Clock, Rocket, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DefineStudyGoals, StudyGoal } from "@/components/research/structured/DefineStudyGoals";
 import { SelectResearchFormat, ResearchFormat } from "@/components/research/structured/SelectResearchFormat";
@@ -29,6 +29,7 @@ const StructuredStudySetup = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId);
   const [isLoading, setIsLoading] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
 
   // Load existing session if sessionId is provided
   useEffect(() => {
@@ -119,6 +120,33 @@ const StructuredStudySetup = () => {
   const handleStepChange = (newStep: number) => {
     setCurrentStep(newStep);
     saveSession({ current_step: newStep });
+  };
+
+  const handleLaunchStudy = async () => {
+    if (!studyGoal || !researchFormat || !audience || !outputGoals || !currentSessionId) {
+      toast.error("Please complete all steps before launching");
+      return;
+    }
+
+    setIsLaunching(true);
+    try {
+      // Mark session as completed
+      await structuredStudyService.updateSession(currentSessionId, {
+        status: 'completed'
+      });
+
+      // Navigate to research page with the selected personas
+      const personaIds = audience.selected_personas.join(',');
+      const projectParam = outputGoals.project_id ? `&project=${outputGoals.project_id}` : '';
+      navigate(`/research?personas=${personaIds}${projectParam}`);
+      
+      toast.success("Study launched! Starting research session...");
+    } catch (error) {
+      console.error('Error launching study:', error);
+      toast.error("Failed to launch study");
+    } finally {
+      setIsLaunching(false);
+    }
   };
 
   const steps = [
@@ -259,8 +287,15 @@ const StructuredStudySetup = () => {
 
                     {currentStep === 5 && (
                       <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4">Review & Launch</h2>
-                        <div className="space-y-4">
+                        <div className="text-center mb-6">
+                          <Rocket className="h-12 w-12 text-primary mx-auto mb-4" />
+                          <h2 className="text-2xl font-semibold mb-2">Ready to Launch Your Study</h2>
+                          <p className="text-muted-foreground">
+                            Review your configuration below and launch your research session
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-4 mb-8">
                           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <h3 className="font-medium text-green-800 mb-2">Study Goal</h3>
                             <p className="text-green-700 text-sm">{studyGoal?.objective}</p>
@@ -288,9 +323,27 @@ const StructuredStudySetup = () => {
                               </p>
                             </div>
                           )}
-                          <div className="bg-muted/30 rounded-lg p-4">
-                            <p className="text-sm text-muted-foreground">Study launch functionality will be implemented next</p>
-                          </div>
+                        </div>
+
+                        <div className="text-center">
+                          <Button 
+                            onClick={handleLaunchStudy} 
+                            disabled={isLaunching}
+                            size="lg"
+                            className="px-8"
+                          >
+                            {isLaunching ? (
+                              <>
+                                <Clock className="h-4 w-4 mr-2 animate-spin" />
+                                Launching Study...
+                              </>
+                            ) : (
+                              <>
+                                <Users className="h-4 w-4 mr-2" />
+                                Launch Research Session
+                              </>
+                            )}
+                          </Button>
                         </div>
                       </Card>
                     )}
@@ -307,19 +360,37 @@ const StructuredStudySetup = () => {
                       Previous
                     </Button>
                     
-                    <Button
-                      onClick={() => handleStepChange(Math.min(5, currentStep + 1))}
-                      disabled={
-                        (currentStep === 1 && !studyGoal) ||
-                        (currentStep === 2 && !researchFormat) ||
-                        (currentStep === 3 && !audience) ||
-                        (currentStep === 4 && !outputGoals) ||
-                        currentStep === 5
-                      }
-                    >
-                      Next
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
+                    {currentStep < 5 ? (
+                      <Button
+                        onClick={() => handleStepChange(Math.min(5, currentStep + 1))}
+                        disabled={
+                          (currentStep === 1 && !studyGoal) ||
+                          (currentStep === 2 && !researchFormat) ||
+                          (currentStep === 3 && !audience) ||
+                          (currentStep === 4 && !outputGoals)
+                        }
+                      >
+                        Next
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleLaunchStudy}
+                        disabled={isLaunching || !studyGoal || !researchFormat || !audience || !outputGoals}
+                      >
+                        {isLaunching ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Launching...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="h-4 w-4 mr-2" />
+                            Launch Study
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
