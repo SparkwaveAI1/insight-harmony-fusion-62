@@ -45,6 +45,8 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     const loadProject = async () => {
+      console.log("URL params:", { projectId });
+      console.log("Current window location:", window.location.href);
       console.log("Loading project with ID:", projectId);
       setIsLoading(true);
       try {
