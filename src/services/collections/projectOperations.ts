@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Project, ProjectWithConversationCount } from "./types";
@@ -27,9 +28,18 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
  */
 export const getUserProjects = async (): Promise<Project[]> => {
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("No authenticated user found");
+      return [];
+    }
+
     const { data, error } = await supabase
       .from("projects")
       .select("*")
+      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
