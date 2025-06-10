@@ -4,25 +4,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Users, Plus, X, Sparkles, Loader2 } from 'lucide-react';
+import { Search, Users, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { getAllPersonas } from '@/services/persona';
 import { Persona } from '@/services/persona/types';
-import { generateSearchCriteria, SearchCriteria } from '@/services/research/audienceCriteriaService';
 import { toast } from 'sonner';
 
 export interface AudienceDefinition {
-  target_description: string;
+  selected_personas: string[];
   demographics: {
     age_range?: string;
     income_level?: string;
     location?: string;
     occupation?: string;
   };
-  selected_personas: string[];
-  search_criteria?: SearchCriteria;
 }
 
 interface DefineAudienceProps {
@@ -128,78 +123,16 @@ const createSearchableText = (persona: Persona): string => {
 };
 
 // Enhanced search function
-const searchPersonas = (personas: Persona[], searchTerm: string, searchCriteria?: SearchCriteria): Persona[] => {
-  if (!searchTerm.trim() && !searchCriteria) {
+const searchPersonas = (personas: Persona[], searchTerm: string): Persona[] => {
+  if (!searchTerm.trim()) {
     return personas;
   }
   
-  let basePersonas = personas;
-  
-  // Apply AI criteria first if available
-  if (searchCriteria) {
-    basePersonas = personas.filter(persona => {
-      const keywordMatch = searchCriteria.keywords.some(keyword => 
-        createSearchableText(persona).includes(keyword.toLowerCase())
-      );
-
-      let demographicMatch = true;
-
-      if (searchCriteria.demographics.age_ranges && searchCriteria.demographics.age_ranges.length > 0) {
-        const personaAge = persona.metadata?.age;
-        if (personaAge) {
-          const ageAsNumber = typeof personaAge === 'string' ? parseInt(personaAge) : personaAge;
-          const ageMatch = searchCriteria.demographics.age_ranges.some(range => {
-            const [minStr, maxStr] = range.split('-');
-            const min = parseInt(minStr);
-            const max = maxStr === '65+' ? 100 : parseInt(maxStr);
-            return ageAsNumber >= min && ageAsNumber <= max;
-          });
-          if (!ageMatch) demographicMatch = false;
-        }
-      }
-
-      if (searchCriteria.demographics.occupations && searchCriteria.demographics.occupations.length > 0) {
-        const personaOccupation = persona.metadata?.occupation;
-        if (personaOccupation) {
-          const occupationMatch = searchCriteria.demographics.occupations.some(occ =>
-            personaOccupation.toLowerCase().includes(occ.toLowerCase())
-          );
-          if (!occupationMatch) demographicMatch = false;
-        }
-      }
-
-      if (searchCriteria.demographics.locations && searchCriteria.demographics.locations.length > 0) {
-        const personaLocation = persona.metadata?.location || persona.metadata?.region;
-        if (personaLocation) {
-          const locationMatch = searchCriteria.demographics.locations.some(loc =>
-            personaLocation.toLowerCase().includes(loc.toLowerCase())
-          );
-          if (!locationMatch) demographicMatch = false;
-        }
-      }
-
-      let interestMatch = true;
-      if (searchCriteria.use_cases && searchCriteria.use_cases.length > 0) {
-        const personaText = createSearchableText(persona);
-        interestMatch = searchCriteria.use_cases.some(useCase =>
-          personaText.includes(useCase.toLowerCase())
-        );
-      }
-
-      return keywordMatch || (demographicMatch && interestMatch);
-    });
-  }
-  
-  // Apply manual search on top of AI criteria
-  if (searchTerm.trim()) {
-    const searchLower = searchTerm.toLowerCase().trim();
-    return basePersonas.filter(persona => {
-      const searchableText = createSearchableText(persona);
-      return searchableText.includes(searchLower);
-    });
-  }
-  
-  return basePersonas;
+  const searchLower = searchTerm.toLowerCase().trim();
+  return personas.filter(persona => {
+    const searchableText = createSearchableText(persona);
+    return searchableText.includes(searchLower);
+  });
 };
 
 export const DefineAudience: React.FC<DefineAudienceProps> = ({ 
@@ -207,14 +140,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   maxPersonas = 6,
   initialAudience
 }) => {
-  const [targetDescription, setTargetDescription] = useState(initialAudience?.target_description || '');
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>(initialAudience?.selected_personas || []);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
-  const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
-  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(initialAudience?.search_criteria || null);
 
   // Fetch personas
   useEffect(() => {
@@ -237,35 +167,13 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
     fetchPersonas();
   }, []);
 
-  // Generate search criteria when target description changes
-  const handleGenerateCriteria = async () => {
-    if (!targetDescription.trim()) {
-      toast.error('Please enter a target audience description first');
-      return;
-    }
-
-    setIsGeneratingCriteria(true);
-    try {
-      const criteria = await generateSearchCriteria(targetDescription.trim());
-      setSearchCriteria(criteria);
-      const filtered = searchPersonas(personas, searchTerm, criteria);
-      setFilteredPersonas(filtered);
-      toast.success('Search criteria generated successfully!');
-    } catch (error) {
-      console.error('Error generating criteria:', error);
-      toast.error('Failed to generate search criteria');
-    } finally {
-      setIsGeneratingCriteria(false);
-    }
-  };
-
-  // Apply search when search term or criteria changes
+  // Apply search when search term changes
   useEffect(() => {
-    console.log('Search term or criteria changed:', searchTerm, searchCriteria);
-    const filtered = searchPersonas(personas, searchTerm, searchCriteria);
+    console.log('Search term changed:', searchTerm);
+    const filtered = searchPersonas(personas, searchTerm);
     console.log('Filtered personas count:', filtered.length);
     setFilteredPersonas(filtered);
-  }, [searchTerm, personas, searchCriteria]);
+  }, [searchTerm, personas]);
 
   const handlePersonaSelect = (personaId: string) => {
     setSelectedPersonas(prev => {
@@ -279,13 +187,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   };
 
   const handleContinue = () => {
-    if (!targetDescription.trim() || selectedPersonas.length === 0) return;
+    if (selectedPersonas.length === 0) return;
 
     const audience: AudienceDefinition = {
-      target_description: targetDescription.trim(),
-      demographics: {},
       selected_personas: selectedPersonas,
-      search_criteria: searchCriteria || undefined
+      demographics: {}
     };
 
     onAudienceDefined(audience);
@@ -298,84 +204,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-semibold mb-2">Define Your Target Audience</h2>
+        <h2 className="text-2xl font-semibold mb-2">Select Your Target Audience</h2>
         <p className="text-muted-foreground">
-          Describe your target audience and select personas that represent them
+          Choose personas that represent your target audience for this research study
         </p>
       </div>
-
-      {/* Target Audience Description */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="target-description" className="text-base font-medium">
-              Target Audience Description
-            </Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Describe who you want to research (e.g., "Young professionals aged 25-35 who use mobile apps for banking")
-            </p>
-            <Textarea
-              id="target-description"
-              placeholder="Describe your target audience..."
-              value={targetDescription}
-              onChange={(e) => setTargetDescription(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
-
-          {/* Generate Criteria Button */}
-          <div className="flex justify-center">
-            <Button 
-              onClick={handleGenerateCriteria}
-              disabled={!targetDescription.trim() || isGeneratingCriteria}
-              className="gap-2"
-            >
-              {isGeneratingCriteria ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              {isGeneratingCriteria ? 'Generating Criteria...' : 'Generate Search Criteria with AI'}
-            </Button>
-          </div>
-
-          {/* Display Generated Criteria */}
-          {searchCriteria && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2">AI-Generated Search Criteria</h4>
-              <div className="space-y-2 text-sm">
-                {searchCriteria.keywords.length > 0 && (
-                  <div>
-                    <span className="font-medium text-blue-700">Keywords: </span>
-                    <span className="text-blue-600">{searchCriteria.keywords.join(', ')}</span>
-                  </div>
-                )}
-                {searchCriteria.demographics.occupations && (
-                  <div>
-                    <span className="font-medium text-blue-700">Occupations: </span>
-                    <span className="text-blue-600">{searchCriteria.demographics.occupations.join(', ')}</span>
-                  </div>
-                )}
-                {searchCriteria.demographics.age_ranges && (
-                  <div>
-                    <span className="font-medium text-blue-700">Age Ranges: </span>
-                    <span className="text-blue-600">{searchCriteria.demographics.age_ranges.join(', ')}</span>
-                  </div>
-                )}
-                {searchCriteria.use_cases && (
-                  <div>
-                    <span className="font-medium text-blue-700">Use Cases: </span>
-                    <span className="text-blue-600">{searchCriteria.use_cases.join(', ')}</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-blue-600 mt-2">
-                Showing {filteredPersonas.length} personas matching these criteria
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
 
       {/* Persona Selection */}
       <Card className="p-6">
@@ -509,7 +342,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
           {filteredPersonas.length === 0 && !isLoadingPersonas && (
             <div className="text-center py-8 text-muted-foreground">
-              {searchCriteria || searchTerm ? 
+              {searchTerm ? 
                 'No personas found matching your search criteria. Try adjusting your search terms.' :
                 'No personas available.'
               }
@@ -522,7 +355,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       <div className="flex justify-center">
         <Button 
           onClick={handleContinue}
-          disabled={!targetDescription.trim() || selectedPersonas.length === 0}
+          disabled={selectedPersonas.length === 0}
           size="lg"
           className="px-8"
         >
