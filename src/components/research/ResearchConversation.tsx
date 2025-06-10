@@ -5,11 +5,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResearchMessageInput } from './ResearchMessageInput';
 import { ResearchMessage } from './ResearchMessage';
 import { Message } from '@/components/persona-chat/types';
-import { Persona } from '@/services/persona/types';
+import { LoadedPersona } from './hooks/types';
 
 interface ResearchConversationProps {
   messages: (Message & { responding_persona_id?: string })[];
-  loadedPersonas: Persona[];
+  loadedPersonas: LoadedPersona[];
   isLoading: boolean;
   onSendMessage: (message: string, imageFile?: File | null) => void;
   onSelectResponder: (personaId: string) => void;
