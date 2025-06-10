@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -20,15 +19,26 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
-import { ArrowLeft, Calendar, Edit2, FileText, MessageSquare, MoreHorizontal, Plus, Trash, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Edit2, FileText, MessageSquare, MoreHorizontal, Plus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
-import { getProjectById, getProjectConversations, updateProject } from "@/services/collections";
+import { getProjectById, getProjectConversations, updateProject, deleteProject } from "@/services/collections";
 import { toast } from "sonner";
 import { Conversation } from "@/services/collections/types";
 import { useAuth } from "@/context/AuthContext";
@@ -46,6 +56,7 @@ const ProjectDetail = () => {
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState<string | null>("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const loadProject = async () => {
@@ -148,6 +159,25 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+    
+    try {
+      setIsDeleting(true);
+      const success = await deleteProject(projectId);
+      
+      if (success) {
+        toast.success("Project deleted successfully");
+        navigate("/projects");
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -238,6 +268,36 @@ const ProjectDetail = () => {
                       <Edit2 className="h-4 w-4 mr-2" />
                       Edit Project
                     </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{project.name}"? This action cannot be undone.
+                            All conversations and data associated with this project will be permanently deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleDeleteProject}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            Delete Project
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    
                     <Button asChild>
                       <Link to="/projects">Back to Projects</Link>
                     </Button>
