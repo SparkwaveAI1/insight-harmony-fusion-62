@@ -147,6 +147,11 @@ const StructuredStudySetup = () => {
       return;
     }
 
+    if (!audience.selected_personas || audience.selected_personas.length === 0) {
+      toast.error("Please select at least one persona before launching");
+      return;
+    }
+
     setIsLaunching(true);
     try {
       // Mark session as completed
@@ -424,7 +429,7 @@ const StructuredStudySetup = () => {
                       Previous
                     </Button>
                     
-                    {currentStep < 6 ? (
+                    {currentStep < 6 && (
                       <Button
                         onClick={() => handleStepChange(Math.min(6, currentStep + 1))}
                         disabled={
@@ -437,23 +442,6 @@ const StructuredStudySetup = () => {
                       >
                         Next
                         <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleLaunchStudy}
-                        disabled={isLaunching || !studyGoal || !researchFormat || !audience || !outputGoals}
-                      >
-                        {isLaunching ? (
-                          <>
-                            <Clock className="h-4 w-4 mr-2 animate-spin" />
-                            Launching...
-                          </>
-                        ) : (
-                          <>
-                            <Rocket className="h-4 w-4 mr-2" />
-                            Launch Study
-                          </>
-                        )}
                       </Button>
                     )}
                   </div>
