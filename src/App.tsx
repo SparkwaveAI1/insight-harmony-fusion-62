@@ -42,6 +42,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/personas" element={<PersonaList />} />
+              <Route path="/persona-viewer" element={<PersonaList />} />
               <Route path="/personas/:id" element={<PersonaDetail />} />
               <Route path="/personas/create" element={<PersonaCreate />} />
               <Route path="/personas/:id/edit" element={<PersonaEdit />} />
