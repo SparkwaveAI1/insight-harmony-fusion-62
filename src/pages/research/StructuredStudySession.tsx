@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ const StructuredStudySession = () => {
     selectPersonaResponder
   } = useResearchSession({
     initialPersonas: personasParam ? personasParam.split(',') : [],
-    projectId
+    projectId: projectId || undefined
   });
 
   // AI Research Assistant functionality
