@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -32,6 +31,7 @@ import { getProjectById, getProjectConversations, updateProject } from "@/servic
 import { toast } from "sonner";
 import { Conversation } from "@/services/collections/types";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProjectDetail = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -48,11 +48,13 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     const loadProject = async () => {
-      console.log("Loading project - User:", user);
+      console.log("=== PROJECT LOADING DEBUG ===");
+      console.log("User:", user);
       console.log("Project ID from URL:", projectId);
+      console.log("User ID:", user?.id);
       
       if (!user) {
-        console.log("No user found, redirecting to login");
+        console.log("No user found, redirecting to sign-in");
         navigate('/sign-in');
         return;
       }
@@ -69,9 +71,27 @@ const ProjectDetail = () => {
       setHasError(false);
       
       try {
-        console.log("Fetching project data for ID:", projectId);
+        console.log("=== TESTING DIRECT SUPABASE QUERY ===");
+        
+        // Test direct Supabase query first
+        const { data: directData, error: directError } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", projectId)
+          .single();
+          
+        console.log("Direct Supabase query result:", { directData, directError });
+        
+        // Also test if user can see any projects at all
+        const { data: allProjects, error: allError } = await supabase
+          .from("projects")
+          .select("*");
+          
+        console.log("All projects query result:", { allProjects, allError });
+        
+        console.log("=== USING SERVICE FUNCTION ===");
         const projectData = await getProjectById(projectId);
-        console.log("Raw project data received:", projectData);
+        console.log("Service function result:", projectData);
         
         if (projectData) {
           console.log("Setting project data:", projectData);
