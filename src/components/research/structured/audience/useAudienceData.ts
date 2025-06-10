@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { getAllPersonas } from '@/services/persona';
-import { getUserCollections, getCollectionPersonas } from '@/services/collections';
+import { getAllPersonas, getPersonasByCollection } from '@/services/persona';
+import { getUserCollections } from '@/services/collections';
 import { Persona } from '@/services/persona/types';
 import { Collection } from '@/services/collections/types';
 import { searchPersonas } from './searchUtils';
@@ -49,20 +49,10 @@ export const useAudienceData = () => {
           // Fetch all personas
           allPersonas = await getAllPersonas();
         } else {
-          // Fetch personas from selected collection
+          // Fetch personas from selected collection using the correct function
           try {
-            const collectionPersonas = await getCollectionPersonas(selectedCollection);
-            console.log('Collection personas response:', collectionPersonas);
-            
-            // Handle the response structure properly
-            if (Array.isArray(collectionPersonas)) {
-              allPersonas = collectionPersonas
-                .map(cp => cp.personas)
-                .filter(Boolean) as Persona[];
-            } else {
-              console.warn('Unexpected collection personas response format');
-              allPersonas = [];
-            }
+            allPersonas = await getPersonasByCollection(selectedCollection);
+            console.log('Collection personas fetched:', allPersonas.length);
           } catch (collectionError) {
             console.error('Error fetching collection personas:', collectionError);
             // Fall back to empty array if collection fetch fails
