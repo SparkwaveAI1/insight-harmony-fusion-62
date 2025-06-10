@@ -58,15 +58,20 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
 
     setIsLoading(true);
     try {
+      console.log("Creating project:", newProjectName);
       const project = await createProject(newProjectName, newProjectDescription || null);
       
       if (project) {
+        console.log("Project created successfully:", project);
         await loadProjects();
         setSelectedProjectId(project.id);
         setIsCreatingProject(false);
         setNewProjectName("");
         setNewProjectDescription("");
         toast.success("Project created successfully");
+      } else {
+        console.error("Project creation returned null");
+        toast.error("Failed to create project");
       }
     } catch (error) {
       console.error('Error creating project:', error);
@@ -81,6 +86,7 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
       toast.error("Please select a project");
       return;
     }
+    console.log("Selected project:", selectedProjectId);
     onProjectSelected(selectedProjectId);
     onOpenChange(false);
   };
@@ -172,16 +178,20 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
                             <SelectItem key={project.id} value={project.id}>
                               <div className="flex flex-col">
                                 <span className="font-medium">{project.name}</span>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  <span className="flex items-center gap-1">
-                                    <Folder className="h-3 w-3" />
-                                    {stats.collections} collections
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Users className="h-3 w-3" />
-                                    {stats.personas} personas
-                                  </span>
-                                </div>
+                                {stats.collections > 0 || stats.personas > 0 ? (
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <Folder className="h-3 w-3" />
+                                      {stats.collections} collections
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Users className="h-3 w-3" />
+                                      {stats.personas} personas
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">Empty project</span>
+                                )}
                               </div>
                             </SelectItem>
                           );

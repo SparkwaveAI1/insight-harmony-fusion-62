@@ -24,7 +24,7 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
 };
 
 /**
- * Fetches all projects for the current user with their associated collections and personas
+ * Fetches all projects for the current user (basic version for selection dialogs)
  */
 export const getUserProjects = async (): Promise<Project[]> => {
   try {
@@ -36,27 +36,67 @@ export const getUserProjects = async (): Promise<Project[]> => {
       return [];
     }
 
-    const { data, error } = await supabase
+    console.log("Fetching projects for user:", user.id);
+
+    // First get basic projects
+    const { data: basicProjects, error: projectsError } = await supabase
       .from("projects")
-      .select(`
-        *,
-        project_collections (
-          collection_id,
-          collections (
-            id,
-            name,
-            description,
-            collection_personas (
-              persona_id
-            )
-          )
-        )
-      `)
+      .select("*")
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
-    if (error) throw error;
-    return data as Project[] || [];
+    if (projectsError) {
+      console.error("Error fetching basic projects:", projectsError);
+      throw projectsError;
+    }
+
+    console.log("Basic projects fetched:", basicProjects);
+
+    if (!basicProjects || basicProjects.length === 0) {
+      console.log("No projects found for user");
+      return [];
+    }
+
+    // Then try to get additional data (collections and personas) for each project
+    const projectsWithDetails = await Promise.all(
+      basicProjects.map(async (project) => {
+        try {
+          const { data: projectCollections, error: collectionsError } = await supabase
+            .from("project_collections")
+            .select(`
+              collection_id,
+              collections (
+                id,
+                name,
+                description,
+                collection_personas (
+                  persona_id
+                )
+              )
+            `)
+            .eq("project_id", project.id);
+
+          if (collectionsError) {
+            console.warn("Error fetching collections for project:", project.id, collectionsError);
+            // Return project without collection data if there's an error
+            return project;
+          }
+
+          return {
+            ...project,
+            project_collections: projectCollections || []
+          };
+        } catch (error) {
+          console.warn("Error processing project:", project.id, error);
+          // Return basic project if there's any error
+          return project;
+        }
+      })
+    );
+
+    console.log("Projects with details:", projectsWithDetails);
+    return projectsWithDetails as Project[];
+
   } catch (error) {
     console.error("Error fetching projects:", error);
     toast.error("Failed to fetch projects");
