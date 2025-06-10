@@ -203,10 +203,20 @@ export default function ResearchConversation({
                 </div>
               </div>
               
-              {selectedPersona.prompt && (
+              {selectedPersona.metadata && (
                 <div>
-                  <h5 className="font-medium mb-2">Persona Description</h5>
-                  <p className="text-sm text-muted-foreground">{selectedPersona.prompt}</p>
+                  <h5 className="font-medium mb-2">Persona Information</h5>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    {selectedPersona.metadata.age && (
+                      <p>Age: {selectedPersona.metadata.age}</p>
+                    )}
+                    {selectedPersona.metadata.occupation && (
+                      <p>Occupation: {selectedPersona.metadata.occupation}</p>
+                    )}
+                    {selectedPersona.metadata.region && (
+                      <p>Region: {selectedPersona.metadata.region}</p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
