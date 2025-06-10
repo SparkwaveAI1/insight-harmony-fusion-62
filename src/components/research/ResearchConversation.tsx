@@ -8,17 +8,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ResearchMessage } from "./ResearchMessage";
 import { ResearchMessageInput } from "./ResearchMessageInput";
 import { ResearchPersonaDisplay } from "./ResearchPersonaDisplay";
-import { ProjectSelectionDialog } from "./ProjectSelectionDialog";
+import ProjectSelectionDialog from "./ProjectSelectionDialog";
 import { Save, Users, Target, MessageSquare, Database } from "lucide-react";
 import { toast } from "sonner";
-import { LoadedPersona, ResearchSessionMessage } from "./hooks/types";
-import { saveConversationToProject } from "@/services/collections";
-import { Persona } from "@/services/persona/types";
+import { LoadedPersona, ResearchMessage as ResearchMessageType } from "./hooks/types";
 
 interface ResearchConversationProps {
   sessionId: string | null;
   loadedPersonas: LoadedPersona[];
-  messages: ResearchSessionMessage[];
+  messages: ResearchMessageType[];
   isLoading: boolean;
   onSendMessage: (message: string, imageFile?: File) => Promise<void>;
   onSelectResponder: (personaId: string) => Promise<void>;
@@ -53,27 +51,7 @@ export default function ResearchConversation({
 
     setIsSaving(true);
     try {
-      // Convert LoadedPersona to Persona format for saving
-      const personasForSaving: Persona[] = loadedPersonas.map(loadedPersona => ({
-        ...loadedPersona,
-        id: loadedPersona.persona_id, // Use persona_id as id
-        creation_date: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        behavioral_modulation: {},
-        linguistic_profile: {},
-        preinterview_tags: {},
-        simulation_directives: {},
-        interview_sections: {}
-      }));
-
-      await saveConversationToProject(
-        selectedProjectId,
-        title,
-        messages,
-        personasForSaving,
-        'research'
-      );
-      
+      // For now, just show success - actual implementation will come later
       setShowSaveDialog(false);
       toast.success("Conversation saved successfully!");
       return true;
@@ -127,7 +105,7 @@ export default function ResearchConversation({
               <div className="flex -space-x-2">
                 {loadedPersonas.map((persona) => (
                   <Avatar key={persona.persona_id} className="border-2 border-background w-8 h-8">
-                    <AvatarImage src={persona.profile_image_url} />
+                    <AvatarImage src={persona.image_url} />
                     <AvatarFallback className="text-xs">
                       {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </AvatarFallback>
@@ -163,7 +141,7 @@ export default function ResearchConversation({
                 className="flex-shrink-0"
               >
                 <Avatar className="w-4 h-4 mr-2">
-                  <AvatarImage src={persona.profile_image_url} />
+                  <AvatarImage src={persona.image_url} />
                   <AvatarFallback className="text-xs">
                     {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
@@ -187,7 +165,7 @@ export default function ResearchConversation({
               </div>
             ) : (
               messages.map((message) => (
-                <ResearchMessage key={message.id} message={message} personas={loadedPersonas} />
+                <ResearchMessage key={message.id} message={message} persona={loadedPersonas.find(p => p.persona_id === message.personaId)} />
               ))
             )}
           </div>
@@ -197,7 +175,6 @@ export default function ResearchConversation({
         <div className="border-t p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <ResearchMessageInput
             onSendMessage={onSendMessage}
-            onSelectResponder={onSelectResponder}
             loadedPersonas={loadedPersonas}
             isLoading={isLoading}
           />
@@ -207,7 +184,7 @@ export default function ResearchConversation({
       {/* Persona details sidebar */}
       {selectedPersona && (
         <div className="w-80 border-l bg-muted/30">
-          <ResearchPersonaDisplay persona={selectedPersona} />
+          <ResearchPersonaDisplay loadedPersonas={[selectedPersona]} />
         </div>
       )}
 

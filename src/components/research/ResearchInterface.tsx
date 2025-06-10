@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PersonaLoader } from './PersonaLoader';
-import { ResearchConversation } from './ResearchConversation';
+import ResearchConversation from './ResearchConversation';
 import { ResearchSessionHeader } from './ResearchSessionHeader';
 import { ResearchPersonaDisplay } from './ResearchPersonaDisplay';
 import { ResearchSendToPersonas } from './ResearchSendToPersonas';
@@ -182,11 +182,13 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       {/* Research Conversation */}
       <div className="flex-1 min-h-0">
         <ResearchConversation
+          sessionId={sessionId}
           messages={messages}
           loadedPersonas={loadedPersonas}
           isLoading={isLoading}
           onSendMessage={onSendMessage}
           onSelectResponder={onSelectResponder}
+          projectId={currentProjectId}
         />
       </div>
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +48,9 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
     const fetchPersonas = async () => {
       try {
         setIsLoadingPersonas(true);
+        console.log('Fetching all personas...');
         const allPersonas = await getAllPersonas();
+        console.log('Fetched personas:', allPersonas.length);
         setPersonas(allPersonas);
         setFilteredPersonas(allPersonas);
       } catch (error) {
@@ -84,6 +87,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
   // Apply search criteria to filter personas
   const applySearchCriteria = (criteria: SearchCriteria) => {
+    console.log('Applying search criteria:', criteria);
     const filtered = personas.filter(persona => {
       // Check keywords against name, occupation, and other text fields
       const keywordMatch = criteria.keywords.some(keyword => 
@@ -142,6 +146,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       return keywordMatch || (demographicMatch && interestMatch);
     });
 
+    console.log('Filtered personas after criteria:', filtered.length);
     setFilteredPersonas(filtered);
   };
 
@@ -150,12 +155,18 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
     console.log('Search term changed:', searchTerm);
     console.log('Total personas:', personas.length);
     
+    if (!searchTerm.trim() && !searchCriteria) {
+      // No search term and no AI criteria - show all personas
+      console.log('No search term, showing all personas');
+      setFilteredPersonas(personas);
+      return;
+    }
+
     let basePersonas = personas;
     
     // First apply AI criteria if available
     if (searchCriteria) {
       basePersonas = personas.filter(persona => {
-        // ... keep existing code (AI criteria filtering logic)
         const keywordMatch = searchCriteria.keywords.some(keyword => 
           persona.name.toLowerCase().includes(keyword.toLowerCase()) ||
           persona.metadata?.occupation?.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -210,7 +221,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       });
     }
     
-    // Then apply manual search on top of AI criteria
+    // Then apply manual search on top of AI criteria (or all personas if no AI criteria)
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase().trim();
       const searched = basePersonas.filter(persona =>
@@ -220,10 +231,10 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
         persona.metadata?.location?.toLowerCase().includes(searchLower) ||
         JSON.stringify(persona.metadata || {}).toLowerCase().includes(searchLower)
       );
-      console.log('Filtered personas count:', searched.length);
+      console.log('Filtered personas count after manual search:', searched.length);
       setFilteredPersonas(searched);
     } else {
-      console.log('No search term, using base personas:', basePersonas.length);
+      console.log('No manual search term, using base personas:', basePersonas.length);
       setFilteredPersonas(basePersonas);
     }
   }, [searchTerm, personas, searchCriteria]);
@@ -357,7 +368,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search personas by name or occupation..."
+              placeholder="Search personas by name, occupation, or other details..."
               value={searchTerm}
               onChange={(e) => {
                 console.log('Search input changed:', e.target.value);
@@ -465,9 +476,9 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
           {filteredPersonas.length === 0 && !isLoadingPersonas && (
             <div className="text-center py-8 text-muted-foreground">
-              {searchCriteria ? 
-                'No personas found matching the AI-generated criteria. Try refining your target audience description.' :
-                'No personas found matching your search.'
+              {searchCriteria || searchTerm ? 
+                'No personas found matching your search criteria. Try adjusting your search terms.' :
+                'No personas available.'
               }
             </div>
           )}
