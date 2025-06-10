@@ -6,7 +6,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, FlaskConical, Construction } from "lucide-react";
+import { Sparkles, FlaskConical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Research = () => {
@@ -21,12 +21,11 @@ const Research = () => {
       available: true
     },
     {
-      icon: <FlaskConical className="h-8 w-8 text-muted-foreground" />,
+      icon: <FlaskConical className="h-8 w-8 text-primary" />,
       title: "Structured Study Assistant", 
-      description: "Design a real market research study step-by-step, with personas, formats, and output goals.",
+      description: "Design a comprehensive market research study step-by-step, with personas, formats, and output goals.",
       path: "/research/setup/structured",
-      available: false,
-      status: "Under Construction"
+      available: true
     }
   ];
 
@@ -78,12 +77,6 @@ const Research = () => {
                               }`}>
                                 {module.title}
                               </h3>
-                              {!module.available && (
-                                <Badge variant="secondary" className="gap-1">
-                                  <Construction className="h-3 w-3" />
-                                  {module.status}
-                                </Badge>
-                              )}
                             </div>
                             
                             <p className="text-muted-foreground leading-relaxed">
@@ -99,8 +92,8 @@ const Research = () => {
                     <div className="bg-muted/30 rounded-lg p-8">
                       <h2 className="text-2xl font-semibold mb-4">Getting Started</h2>
                       <p className="text-muted-foreground max-w-3xl mx-auto">
-                        New to AI persona research? Start with <strong>Quick Research Setup</strong> to have a casual conversation with personas. 
-                        The <strong>Structured Study Assistant</strong> is currently under construction and will be available soon.
+                        New to AI persona research? Start with <strong>Quick Research Setup</strong> for casual conversations with personas, 
+                        or use the <strong>Structured Study Assistant</strong> for comprehensive market research with guided setup and structured outputs.
                       </p>
                     </div>
                   </div>
