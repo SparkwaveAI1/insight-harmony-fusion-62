@@ -269,35 +269,6 @@ const ProjectDetail = () => {
                       Edit Project
                     </Button>
                     
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{project.name}"? This action cannot be undone.
-                            All conversations and data associated with this project will be permanently deleted.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={handleDeleteProject}
-                            disabled={isDeleting}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            Delete Project
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    
                     <Button asChild>
                       <Link to="/projects">Back to Projects</Link>
                     </Button>
@@ -423,6 +394,47 @@ const ProjectDetail = () => {
                       </CardContent>
                     </Card>
                   </div>
+                </div>
+                
+                <div className="mt-12 border-t pt-8">
+                  <Card className="border-destructive/20">
+                    <CardHeader>
+                      <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                      <CardDescription>
+                        Permanently delete this project and all associated data. This action cannot be undone.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Project
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{project.name}"? This action cannot be undone.
+                              All conversations and data associated with this project will be permanently deleted.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={handleDeleteProject}
+                              disabled={isDeleting}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                              Delete Project
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </main>
