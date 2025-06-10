@@ -9,7 +9,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { ArrowLeft, Calendar, MoreHorizontal, Plus, Trash2, Edit } from "lucide-react";
 import { format } from "date-fns";
-import { getCollectionById, getCollectionPersonas, removePersonaFromCollection } from "@/services/collections";
+import { getCollectionById, getCollectionPersonas, removePersonaFromCollection, updateCollection } from "@/services/collections";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -40,45 +40,45 @@ const CollectionDetail = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [personaToRemove, setPersonaToRemove] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadCollectionData = async () => {
-      if (!collectionId) return;
-      
-      setIsLoading(true);
-      try {
-        const [collectionData, personasData] = await Promise.all([
-          getCollectionById(collectionId),
-          getCollectionPersonas(collectionId)
-        ]);
+  const loadCollectionData = async () => {
+    if (!collectionId) return;
+    
+    setIsLoading(true);
+    try {
+      const [collectionData, personasData] = await Promise.all([
+        getCollectionById(collectionId),
+        getCollectionPersonas(collectionId)
+      ]);
 
-        if (collectionData) {
-          setCollection(collectionData);
-          setCollectionName(collectionData.name);
-          setCollectionDescription(collectionData.description || "");
-        } else {
-          toast.error("Collection not found");
-          navigate("/collections");
-          return;
-        }
-
-        // Transform the personas data to match expected format
-        const transformedPersonas = personasData.map((item: any) => ({
-          persona_id: item.persona_id,
-          name: item.personas?.name || 'Unknown',
-          metadata: item.personas?.metadata || {},
-          added_at: item.added_at
-        }));
-
-        setPersonas(transformedPersonas);
-      } catch (error) {
-        console.error("Error loading collection:", error);
-        toast.error("Failed to load collection");
+      if (collectionData) {
+        setCollection(collectionData);
+        setCollectionName(collectionData.name);
+        setCollectionDescription(collectionData.description || "");
+      } else {
+        toast.error("Collection not found");
         navigate("/collections");
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    };
 
+      // Transform the personas data to match expected format
+      const transformedPersonas = personasData.map((item: any) => ({
+        persona_id: item.persona_id,
+        name: item.personas?.name || 'Unknown',
+        metadata: item.personas?.metadata || {},
+        added_at: item.added_at
+      }));
+
+      setPersonas(transformedPersonas);
+    } catch (error) {
+      console.error("Error loading collection:", error);
+      toast.error("Failed to load collection");
+      navigate("/collections");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadCollectionData();
   }, [collectionId, navigate]);
 
@@ -316,7 +316,7 @@ const CollectionDetail = () => {
             <AddPersonasToCollectionDialog
               open={addDialogOpen}
               onOpenChange={setAddDialogOpen}
-              collectionId={collectionId}
+              collectionId={collectionId!}
               onPersonasAdded={() => loadCollectionData()}
             />
 

@@ -1,42 +1,56 @@
 
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
-import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import ResearchConversation from "@/components/research/ResearchConversation";
-import { useResearchSession } from "@/components/research/hooks/useResearchSession";
-import { ConversationKnowledgeBase } from "@/components/research/ConversationKnowledgeBase";
-import { SessionHeader } from "@/components/research/structured-session/SessionHeader";
-import { AIResearchAssistant } from "@/components/research/structured-session/AIResearchAssistant";
-import { NoSessionFound } from "@/components/research/structured-session/NoSessionFound";
-import { useAIAssistant } from "@/components/research/structured-session/useAIAssistant";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getStructuredStudySession } from "@/services/structuredStudy/structuredStudyService";
+import { toast } from "sonner";
+import SessionHeader from "@/components/research/structured-session/SessionHeader";
+import NoSessionFound from "@/components/research/structured-session/NoSessionFound";
+import AIResearchAssistant from "@/components/research/structured-session/AIResearchAssistant";
 
 const StructuredStudySession = () => {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const [searchParams] = useSearchParams();
-  const personasParam = searchParams.get('personas');
-  const projectId = searchParams.get('project');
-  
-  const [assistantActive, setAssistantActive] = useState(true);
-  const [knowledgeBaseActive, setKnowledgeBaseActive] = useState(false);
+  const navigate = useNavigate();
+  const [session, setSession] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const {
-    loadedPersonas,
-    messages,
-    isLoading,
-    sessionId: currentSessionId,
-    sendMessage,
-    selectPersonaResponder
-  } = useResearchSession({
-    initialPersonas: personasParam ? personasParam.split(',') : [],
-    projectId: projectId || undefined
-  });
+  useEffect(() => {
+    const loadSession = async () => {
+      if (!sessionId) {
+        setIsLoading(false);
+        return;
+      }
 
-  const { researchInsights, suggestedQuestions } = useAIAssistant(messages, assistantActive);
+      try {
+        console.log("Loading session with ID:", sessionId);
+        const sessionData = await getStructuredStudySession(sessionId);
+        console.log("Session data loaded:", sessionData);
+        
+        if (sessionData) {
+          setSession(sessionData);
+        } else {
+          console.log("No session data found");
+          toast.error("Study session not found");
+        }
+      } catch (error) {
+        console.error("Error loading session:", error);
+        toast.error("Failed to load study session");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (!personasParam) {
+    loadSession();
+  }, [sessionId]);
+
+  if (isLoading) {
     return (
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
@@ -44,14 +58,26 @@ const StructuredStudySession = () => {
           <SidebarInset>
             <div className="relative flex min-h-svh flex-col">
               <Header />
-              <main className="flex-1 min-h-0 flex items-center justify-center">
-                <NoSessionFound />
+              <main className="flex-1 pt-24">
+                <div className="container py-6">
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p>Loading study session...</p>
+                    </div>
+                  </div>
+                </div>
               </main>
+              <Footer />
             </div>
           </SidebarInset>
         </div>
       </SidebarProvider>
     );
+  }
+
+  if (!session) {
+    return <NoSessionFound />;
   }
 
   return (
@@ -61,54 +87,60 @@ const StructuredStudySession = () => {
         <SidebarInset>
           <div className="relative flex min-h-svh flex-col">
             <Header />
-            <main className="flex-1 min-h-0">
-              <div className="h-full flex">
-                {/* Main research conversation */}
-                <div className="flex-1 flex flex-col min-w-0">
-                  <SessionHeader
-                    projectId={projectId}
-                    loadedPersonasCount={loadedPersonas.length}
-                    knowledgeBaseActive={knowledgeBaseActive}
-                    assistantActive={assistantActive}
-                    onToggleKnowledgeBase={() => setKnowledgeBaseActive(!knowledgeBaseActive)}
-                    onToggleAssistant={() => setAssistantActive(!assistantActive)}
-                  />
-
-                  <ResearchConversation
-                    sessionId={currentSessionId}
-                    loadedPersonas={loadedPersonas}
-                    messages={messages}
-                    isLoading={isLoading}
-                    onSendMessage={sendMessage}
-                    onSelectResponder={selectPersonaResponder}
-                    projectId={projectId}
-                  />
+            <main className="flex-1 pt-24">
+              <div className="container py-6">
+                <div className="flex items-center gap-4 mb-6">
+                  <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <SessionHeader session={session} />
                 </div>
 
-                {/* Knowledge Base Sidebar */}
-                {knowledgeBaseActive && (
-                  <div className="w-80 border-l bg-muted/30">
-                    <ConversationKnowledgeBase
-                      sessionId={currentSessionId}
-                      projectId={projectId}
-                    />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <AIResearchAssistant session={session} />
                   </div>
-                )}
 
-                {/* AI Research Assistant Sidebar */}
-                {assistantActive && !knowledgeBaseActive && (
-                  <AIResearchAssistant
-                    researchInsights={researchInsights}
-                    suggestedQuestions={suggestedQuestions}
-                    messages={messages}
-                    onSendMessage={sendMessage}
-                    loadedPersonasCount={loadedPersonas.length}
-                  />
-                )}
+                  <div className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Study Overview</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {session.study_goal && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Study Goal</h4>
+                            <p className="text-sm">{session.study_goal.description || "No description provided"}</p>
+                          </div>
+                        )}
+
+                        {session.audience_definition && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Target Audience</h4>
+                            <p className="text-sm">{session.audience_definition.description || "No description provided"}</p>
+                          </div>
+                        )}
+
+                        {session.research_format && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Research Format</h4>
+                            <p className="text-sm">{session.research_format.type || "Not specified"}</p>
+                          </div>
+                        )}
+
+                        {session.output_goals && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Output Goals</h4>
+                            <p className="text-sm">{session.output_goals.description || "No description provided"}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
               </div>
             </main>
             <Footer />
-            <Toaster />
           </div>
         </SidebarInset>
       </div>

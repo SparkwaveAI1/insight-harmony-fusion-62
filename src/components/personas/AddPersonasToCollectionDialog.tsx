@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,13 @@ const AddPersonasToCollectionDialog = ({
     setIsLoading(true);
     try {
       const personas = await getPersonasNotInCollection(collectionId);
-      setAvailablePersonas(personas);
+      // Transform the data to match our Persona interface
+      const transformedPersonas = personas.map((persona: any) => ({
+        persona_id: persona.persona_id,
+        name: persona.name,
+        metadata: typeof persona.metadata === 'object' ? persona.metadata : {}
+      }));
+      setAvailablePersonas(transformedPersonas);
     } catch (error) {
       console.error("Error loading available personas:", error);
       toast.error("Failed to load available personas");
