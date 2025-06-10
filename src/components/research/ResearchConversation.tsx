@@ -1,84 +1,225 @@
 
-import React, { useRef } from 'react';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ResearchMessageInput } from './ResearchMessageInput';
-import { ResearchMessage } from './ResearchMessage';
-import { Message } from '@/components/persona-chat/types';
-import { LoadedPersona } from './hooks/types';
+import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ResearchMessage } from "./ResearchMessage";
+import { ResearchMessageInput } from "./ResearchMessageInput";
+import { ResearchPersonaDisplay } from "./ResearchPersonaDisplay";
+import { ProjectSelectionDialog } from "./ProjectSelectionDialog";
+import { Save, Users, Target, MessageSquare, Database } from "lucide-react";
+import { toast } from "sonner";
+import { LoadedPersona, ResearchSessionMessage } from "./hooks/types";
+import { saveConversationToProject } from "@/services/collections";
+import { Persona } from "@/services/persona/types";
 
 interface ResearchConversationProps {
-  messages: (Message & { responding_persona_id?: string })[];
+  sessionId: string | null;
   loadedPersonas: LoadedPersona[];
+  messages: ResearchSessionMessage[];
   isLoading: boolean;
-  onSendMessage: (message: string, imageFile?: File | null) => void;
-  onSelectResponder: (personaId: string) => void;
+  onSendMessage: (message: string, imageFile?: File) => Promise<void>;
+  onSelectResponder: (personaId: string) => Promise<void>;
+  projectId?: string | null;
 }
 
-export const ResearchConversation: React.FC<ResearchConversationProps> = ({
-  messages,
+export default function ResearchConversation({
+  sessionId,
   loadedPersonas,
+  messages,
   isLoading,
   onSendMessage,
-  onSelectResponder
-}) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  onSelectResponder,
+  projectId
+}: ResearchConversationProps) {
+  const [selectedPersona, setSelectedPersona] = useState<LoadedPersona | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const getPersonaInfo = (personaId: string) => {
-    return loadedPersonas.find(p => p.persona_id === personaId);
+  // Select first persona by default
+  useEffect(() => {
+    if (loadedPersonas.length > 0 && !selectedPersona) {
+      setSelectedPersona(loadedPersonas[0]);
+    }
+  }, [loadedPersonas, selectedPersona]);
+
+  const handleSaveConversation = async (selectedProjectId: string, title: string) => {
+    if (!sessionId || messages.length === 0) {
+      toast.error("No conversation to save");
+      return false;
+    }
+
+    setIsSaving(true);
+    try {
+      // Convert LoadedPersona to Persona format for saving
+      const personasForSaving: Persona[] = loadedPersonas.map(loadedPersona => ({
+        ...loadedPersona,
+        id: loadedPersona.persona_id, // Use persona_id as id
+        creation_date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        behavioral_modulation: {},
+        linguistic_profile: {},
+        preinterview_tags: {},
+        simulation_directives: {},
+        interview_sections: {}
+      }));
+
+      await saveConversationToProject(
+        selectedProjectId,
+        title,
+        messages,
+        personasForSaving,
+        'research'
+      );
+      
+      setShowSaveDialog(false);
+      toast.success("Conversation saved successfully!");
+      return true;
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+      toast.error("Failed to save conversation");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const showConversationArea = loadedPersonas.length > 0;
+  if (loadedPersonas.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Users className="h-12 w-12 text-muted-foreground mx-auto" />
+          <div>
+            <h3 className="text-lg font-medium">No Personas Loaded</h3>
+            <p className="text-sm text-muted-foreground">
+              Start a research session to begin conversations with AI personas
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full max-h-full overflow-hidden">
-      {/* Conversation Display Area - Fixed height */}
-      {showConversationArea && (
-        <div className="flex-shrink-0 mb-4">
-          <Card className="border border-gray-200 h-[500px] flex flex-col">
-            <div className="p-6 flex flex-col h-full">
-              <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-6">
-                  {messages.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <h3 className="text-xl font-medium mb-3">Research Session Active</h3>
-                      <p className="text-base">Start your conversation by sending a message below.</p>
-                    </div>
-                  )}
-                  
-                  {messages.map((message, index) => (
-                    <ResearchMessage
-                      key={index}
-                      message={message}
-                      persona={message.responding_persona_id ? getPersonaInfo(message.responding_persona_id) : undefined}
-                    />
-                  ))}
-                  
-                  {isLoading && (
-                    <div className="flex items-center gap-2 text-muted-foreground py-4">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      <span>Generating response...</span>
-                    </div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
+    <div className="h-full flex">
+      {/* Main conversation area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header with personas and controls */}
+        <div className="border-b p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Research Session</h2>
+              </div>
+              
+              {projectId && (
+                <Badge variant="outline" className="gap-1">
+                  <Database className="h-3 w-3" />
+                  Project Session
+                </Badge>
+              )}
             </div>
-          </Card>
+
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {loadedPersonas.map((persona) => (
+                  <Avatar key={persona.persona_id} className="border-2 border-background w-8 h-8">
+                    <AvatarImage src={persona.profile_image_url} />
+                    <AvatarFallback className="text-xs">
+                      {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              
+              <Badge variant="secondary">
+                {loadedPersonas.length} Persona{loadedPersonas.length !== 1 ? 's' : ''}
+              </Badge>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSaveDialog(true)}
+                disabled={messages.length === 0 || isSaving}
+                className="gap-2"
+              >
+                <Save className="h-4 w-4" />
+                Save Conversation
+              </Button>
+            </div>
+          </div>
+
+          {/* Persona selector tabs */}
+          <div className="flex gap-2 mt-3 overflow-x-auto">
+            {loadedPersonas.map((persona) => (
+              <Button
+                key={persona.persona_id}
+                variant={selectedPersona?.persona_id === persona.persona_id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedPersona(persona)}
+                className="flex-shrink-0"
+              >
+                <Avatar className="w-4 h-4 mr-2">
+                  <AvatarImage src={persona.profile_image_url} />
+                  <AvatarFallback className="text-xs">
+                    {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                {persona.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Messages area */}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center py-12">
+                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">Start Your Research</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  Ask a question or share a topic to begin your research conversation with the loaded personas.
+                </p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <ResearchMessage key={message.id} message={message} personas={loadedPersonas} />
+              ))
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Message input */}
+        <div className="border-t p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <ResearchMessageInput
+            onSendMessage={onSendMessage}
+            onSelectResponder={onSelectResponder}
+            loadedPersonas={loadedPersonas}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
+
+      {/* Persona details sidebar */}
+      {selectedPersona && (
+        <div className="w-80 border-l bg-muted/30">
+          <ResearchPersonaDisplay persona={selectedPersona} />
         </div>
       )}
 
-      {/* Chat Input - Fixed height */}
-      {showConversationArea && (
-        <Card className="flex-shrink-0 p-4 border border-gray-200">
-          <ResearchMessageInput
-            onSendMessage={onSendMessage}
-            disabled={isLoading}
-            placeholder="Type your message and optionally attach reference documents..."
-          />
-        </Card>
-      )}
+      {/* Save conversation dialog */}
+      <ProjectSelectionDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        onSave={handleSaveConversation}
+        isLoading={isSaving}
+        title="Save Research Conversation"
+        description="Choose a project to save this research conversation to"
+      />
     </div>
   );
-};
+}

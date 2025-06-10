@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -148,21 +147,85 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
   // Apply manual search filter
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      if (searchCriteria) {
-        applySearchCriteria(searchCriteria);
-      } else {
-        setFilteredPersonas(personas);
-      }
-      return;
-    }
+    console.log('Search term changed:', searchTerm);
+    console.log('Total personas:', personas.length);
+    
+    let basePersonas = personas;
+    
+    // First apply AI criteria if available
+    if (searchCriteria) {
+      basePersonas = personas.filter(persona => {
+        // ... keep existing code (AI criteria filtering logic)
+        const keywordMatch = searchCriteria.keywords.some(keyword => 
+          persona.name.toLowerCase().includes(keyword.toLowerCase()) ||
+          persona.metadata?.occupation?.toLowerCase().includes(keyword.toLowerCase()) ||
+          persona.prompt?.toLowerCase().includes(keyword.toLowerCase())
+        );
 
-    const basePersonas = searchCriteria ? filteredPersonas : personas;
-    const searched = basePersonas.filter(persona =>
-      persona.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      persona.metadata?.occupation?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredPersonas(searched);
+        let demographicMatch = true;
+
+        if (searchCriteria.demographics.age_ranges && searchCriteria.demographics.age_ranges.length > 0) {
+          const personaAge = persona.metadata?.age;
+          if (personaAge) {
+            const ageAsNumber = typeof personaAge === 'string' ? parseInt(personaAge) : personaAge;
+            const ageMatch = searchCriteria.demographics.age_ranges.some(range => {
+              const [minStr, maxStr] = range.split('-');
+              const min = parseInt(minStr);
+              const max = maxStr === '65+' ? 100 : parseInt(maxStr);
+              return ageAsNumber >= min && ageAsNumber <= max;
+            });
+            if (!ageMatch) demographicMatch = false;
+          }
+        }
+
+        if (searchCriteria.demographics.occupations && searchCriteria.demographics.occupations.length > 0) {
+          const personaOccupation = persona.metadata?.occupation;
+          if (personaOccupation) {
+            const occupationMatch = searchCriteria.demographics.occupations.some(occ =>
+              personaOccupation.toLowerCase().includes(occ.toLowerCase())
+            );
+            if (!occupationMatch) demographicMatch = false;
+          }
+        }
+
+        if (searchCriteria.demographics.locations && searchCriteria.demographics.locations.length > 0) {
+          const personaLocation = persona.metadata?.location || persona.metadata?.region;
+          if (personaLocation) {
+            const locationMatch = searchCriteria.demographics.locations.some(loc =>
+              personaLocation.toLowerCase().includes(loc.toLowerCase())
+            );
+            if (!locationMatch) demographicMatch = false;
+          }
+        }
+
+        let interestMatch = true;
+        if (searchCriteria.use_cases && searchCriteria.use_cases.length > 0) {
+          const personaText = `${persona.name} ${persona.prompt || ''} ${JSON.stringify(persona.metadata || {})}`.toLowerCase();
+          interestMatch = searchCriteria.use_cases.some(useCase =>
+            personaText.includes(useCase.toLowerCase())
+          );
+        }
+
+        return keywordMatch || (demographicMatch && interestMatch);
+      });
+    }
+    
+    // Then apply manual search on top of AI criteria
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      const searched = basePersonas.filter(persona =>
+        persona.name.toLowerCase().includes(searchLower) ||
+        persona.metadata?.occupation?.toLowerCase().includes(searchLower) ||
+        persona.prompt?.toLowerCase().includes(searchLower) ||
+        persona.metadata?.location?.toLowerCase().includes(searchLower) ||
+        JSON.stringify(persona.metadata || {}).toLowerCase().includes(searchLower)
+      );
+      console.log('Filtered personas count:', searched.length);
+      setFilteredPersonas(searched);
+    } else {
+      console.log('No search term, using base personas:', basePersonas.length);
+      setFilteredPersonas(basePersonas);
+    }
   }, [searchTerm, personas, searchCriteria]);
 
   const handlePersonaSelect = (personaId: string) => {
@@ -296,7 +359,10 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
             <Input
               placeholder="Search personas by name or occupation..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                console.log('Search input changed:', e.target.value);
+                setSearchTerm(e.target.value);
+              }}
               className="pl-10"
             />
           </div>

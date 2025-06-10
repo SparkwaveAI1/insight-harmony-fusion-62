@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getUserProjects, createProject, Project } from '@/services/collections';
-import { Loader2, Plus, FolderPlus, Target, FileText, PresentationChart, BarChart3 } from 'lucide-react';
+import { Loader2, Plus, FolderPlus, Target, FileText, Presentation, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface OutputGoal {
@@ -129,7 +128,7 @@ export const DefineOutputGoals: React.FC<DefineOutputGoalsProps> = ({ onGoalsDef
     const icons = {
       summary_report: <FileText className="h-4 w-4" />,
       insights_dashboard: <BarChart3 className="h-4 w-4" />,
-      presentation: <PresentationChart className="h-4 w-4" />,
+      presentation: <Presentation className="h-4 w-4" />,
       raw_data: <FileText className="h-4 w-4" />,
       recommendations: <Target className="h-4 w-4" />
     };
