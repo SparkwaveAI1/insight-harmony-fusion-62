@@ -135,10 +135,11 @@ const StructuredStudySetup = () => {
         status: 'completed'
       });
 
-      // Navigate to research page with the selected personas
+      // Navigate to structured study session with the selected personas
       const personaIds = audience.selected_personas.join(',');
       const projectParam = outputGoals.project_id ? `&project=${outputGoals.project_id}` : '';
-      navigate(`/research?personas=${personaIds}${projectParam}`);
+      const sessionParam = `&session=${currentSessionId}`;
+      navigate(`/research/session/structured?personas=${personaIds}${projectParam}${sessionParam}`);
       
       toast.success("Study launched! Starting research session...");
     } catch (error) {
