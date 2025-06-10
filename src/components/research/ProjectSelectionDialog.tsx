@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getUserProjects, createProject, Project } from '@/services/collections';
+import { getUserProjects, createProject } from '@/services/collections/projectOperations';
+import { Project } from '@/services/collections/types';
 import { Loader2, Plus, Save, FolderPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,7 +23,7 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
   onProjectSelected
 }) => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
@@ -150,7 +151,7 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
                   <div className="flex gap-2">
                     <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder={projects.length > 0 ? "Select a project" : "No projects available"} />
+                        <SelectValue placeholder="Select a project" />
                       </SelectTrigger>
                       <SelectContent>
                         {projects.map((project) => (
