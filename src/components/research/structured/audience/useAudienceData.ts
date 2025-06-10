@@ -1,0 +1,91 @@
+
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { getAllPersonas } from '@/services/persona';
+import { getUserCollections, getPersonasInCollection } from '@/services/collections';
+import { Persona } from '@/services/persona/types';
+import { Collection } from '@/services/collections/types';
+import { searchPersonas } from './searchUtils';
+
+export const useAudienceData = () => {
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCollection, setSelectedCollection] = useState<string>('all');
+  const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
+
+  // Fetch collections
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        setIsLoadingCollections(true);
+        console.log('Fetching user collections...');
+        const userCollections = await getUserCollections();
+        console.log('Fetched collections:', userCollections.length);
+        setCollections(userCollections);
+      } catch (error) {
+        console.error('Error fetching collections:', error);
+        toast.error('Failed to load collections');
+      } finally {
+        setIsLoadingCollections(false);
+      }
+    };
+
+    fetchCollections();
+  }, []);
+
+  // Fetch personas
+  useEffect(() => {
+    const fetchPersonas = async () => {
+      try {
+        setIsLoadingPersonas(true);
+        console.log('Fetching personas for collection:', selectedCollection);
+        
+        let allPersonas: Persona[] = [];
+        
+        if (selectedCollection === 'all') {
+          // Fetch all personas
+          allPersonas = await getAllPersonas();
+        } else {
+          // Fetch personas from selected collection
+          const collectionPersonas = await getPersonasInCollection(selectedCollection);
+          allPersonas = collectionPersonas
+            .map(cp => cp.personas)
+            .filter(Boolean) as Persona[];
+        }
+        
+        console.log('Fetched personas:', allPersonas.length);
+        setPersonas(allPersonas);
+      } catch (error) {
+        console.error('Error fetching personas:', error);
+        toast.error('Failed to load personas');
+      } finally {
+        setIsLoadingPersonas(false);
+      }
+    };
+
+    fetchPersonas();
+  }, [selectedCollection]);
+
+  // Apply search when search term or personas change
+  useEffect(() => {
+    console.log('Search term changed:', searchTerm);
+    const filtered = searchPersonas(personas, searchTerm);
+    console.log('Filtered personas count:', filtered.length);
+    setFilteredPersonas(filtered);
+  }, [searchTerm, personas]);
+
+  return {
+    personas,
+    filteredPersonas,
+    collections,
+    searchTerm,
+    setSearchTerm,
+    selectedCollection,
+    setSelectedCollection,
+    isLoadingPersonas,
+    isLoadingCollections
+  };
+};
