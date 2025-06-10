@@ -35,10 +35,18 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
   }, [open]);
 
   const loadProjects = async () => {
-    setIsLoading(true);
-    const userProjects = await getUserProjects();
-    setProjects(userProjects);
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      console.log('Loading projects for dialog...');
+      const userProjects = await getUserProjects();
+      console.log('Projects loaded for dialog:', userProjects);
+      setProjects(userProjects);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      toast.error('Failed to load projects');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCreateProject = async () => {
@@ -48,21 +56,30 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
     }
 
     setIsLoading(true);
-    const project = await createProject(newProjectName, newProjectDescription || null);
-    
-    if (project) {
-      await loadProjects();
-      setSelectedProjectId(project.id);
-      setIsCreatingProject(false);
-      setNewProjectName("");
-      setNewProjectDescription("");
-      toast.success("Project created successfully");
+    try {
+      const project = await createProject(newProjectName, newProjectDescription || null);
+      
+      if (project) {
+        await loadProjects();
+        setSelectedProjectId(project.id);
+        setIsCreatingProject(false);
+        setNewProjectName("");
+        setNewProjectDescription("");
+        toast.success("Project created successfully");
+      }
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Failed to create project');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleContinueWithProject = () => {
+    if (!selectedProjectId) {
+      toast.error("Please select a project");
+      return;
+    }
     onProjectSelected(selectedProjectId);
     onOpenChange(false);
   };
@@ -121,53 +138,66 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
           </div>
         ) : (
           <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="project">Select Project (Optional)</Label>
-              <div className="flex gap-2">
-                <Select value={selectedProjectId} onValueChange={setSelectedProjectId} disabled={isLoading}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => setIsCreatingProject(true)}
-                  disabled={isLoading}
-                  title="Create new project"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <span className="text-sm text-muted-foreground">Loading projects...</span>
               </div>
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              <Button
-                onClick={handleContinueWithProject}
-                disabled={isLoading || !selectedProjectId}
-                className="w-full"
-              >
-                <FolderPlus className="h-4 w-4 mr-2" />
-                Continue with Selected Project
-              </Button>
-              
-              <Button
-                onClick={handleContinueWithoutProject}
-                variant="outline"
-                disabled={isLoading}
-                className="w-full"
-              >
-                Continue without Project
-              </Button>
-            </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="project">Select Project (Optional)</Label>
+                  <div className="flex gap-2">
+                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder={projects.length > 0 ? "Select a project" : "No projects available"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => setIsCreatingProject(true)}
+                      title="Create new project"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {projects.length === 0 && !isLoading && (
+                    <p className="text-xs text-muted-foreground">
+                      No projects found. Create a new project to organize your research.
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handleContinueWithProject}
+                    disabled={!selectedProjectId}
+                    className="w-full"
+                  >
+                    <FolderPlus className="h-4 w-4 mr-2" />
+                    Continue with Selected Project
+                  </Button>
+                  
+                  <Button
+                    onClick={handleContinueWithoutProject}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Continue without Project
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </DialogContent>
