@@ -11,6 +11,14 @@ export interface AudienceDefinition {
   };
 }
 
+export interface AudienceFilters {
+  age_range: string;
+  gender: string;
+  occupation: string;
+  region: string;
+  education: string;
+}
+
 export interface DefineAudienceProps {
   onAudienceDefined: (audience: AudienceDefinition) => void;
   maxPersonas?: number;
