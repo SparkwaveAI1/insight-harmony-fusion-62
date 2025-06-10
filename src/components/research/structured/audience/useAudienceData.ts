@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { getAllPersonas } from '@/services/persona';
-import { getUserCollections, getPersonasInCollection } from '@/services/collections';
+import { getUserCollections, getCollectionPersonas } from '@/services/collections';
 import { Persona } from '@/services/persona/types';
 import { Collection } from '@/services/collections/types';
 import { searchPersonas } from './searchUtils';
@@ -50,7 +50,7 @@ export const useAudienceData = () => {
           allPersonas = await getAllPersonas();
         } else {
           // Fetch personas from selected collection
-          const collectionPersonas = await getPersonasInCollection(selectedCollection);
+          const collectionPersonas = await getCollectionPersonas(selectedCollection);
           allPersonas = collectionPersonas
             .map(cp => cp.personas)
             .filter(Boolean) as Persona[];
