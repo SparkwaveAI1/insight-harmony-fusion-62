@@ -50,17 +50,24 @@ export const useAudienceData = () => {
           allPersonas = await getAllPersonas();
         } else {
           // Fetch personas from selected collection
-          const collectionPersonas = await getCollectionPersonas(selectedCollection);
-          console.log('Collection personas response:', collectionPersonas);
-          
-          // Handle the response structure properly
-          if (Array.isArray(collectionPersonas)) {
-            allPersonas = collectionPersonas
-              .map(cp => cp.personas)
-              .filter(Boolean) as Persona[];
-          } else {
-            console.warn('Unexpected collection personas response format');
+          try {
+            const collectionPersonas = await getCollectionPersonas(selectedCollection);
+            console.log('Collection personas response:', collectionPersonas);
+            
+            // Handle the response structure properly
+            if (Array.isArray(collectionPersonas)) {
+              allPersonas = collectionPersonas
+                .map(cp => cp.personas)
+                .filter(Boolean) as Persona[];
+            } else {
+              console.warn('Unexpected collection personas response format');
+              allPersonas = [];
+            }
+          } catch (collectionError) {
+            console.error('Error fetching collection personas:', collectionError);
+            // Fall back to empty array if collection fetch fails
             allPersonas = [];
+            toast.error('Failed to load personas from collection');
           }
         }
         
