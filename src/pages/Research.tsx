@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
-import { Sparkles, FlaskConical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, FlaskConical, Construction } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Research = () => {
@@ -16,13 +17,16 @@ const Research = () => {
       icon: <Sparkles className="h-8 w-8 text-primary" />,
       title: "Quick Research Setup",
       description: "Start a casual conversation with up to 4 personas. Great for quick feedback or ideation.",
-      path: "/focus-group"
+      path: "/focus-group",
+      available: true
     },
     {
-      icon: <FlaskConical className="h-8 w-8 text-primary" />,
+      icon: <FlaskConical className="h-8 w-8 text-muted-foreground" />,
       title: "Structured Study Assistant", 
       description: "Design a real market research study step-by-step, with personas, formats, and output goals.",
-      path: "/research/setup/structured"
+      path: "/research/setup/structured",
+      available: false,
+      status: "Under Construction"
     }
   ];
 
@@ -51,17 +55,41 @@ const Research = () => {
                     {researchModules.map((module, index) => (
                       <Card 
                         key={index}
-                        className="p-8 cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group"
-                        onClick={() => navigate(module.path)}
+                        className={`p-8 transition-all group relative ${
+                          module.available 
+                            ? 'cursor-pointer hover:border-primary/50 hover:shadow-lg' 
+                            : 'cursor-not-allowed opacity-75'
+                        }`}
+                        onClick={() => module.available && navigate(module.path)}
                       >
                         <div className="flex flex-col items-center text-center space-y-4">
-                          <div className="p-4 bg-primary/10 rounded-full group-hover:bg-primary/20 transition-colors">
+                          <div className={`p-4 rounded-full transition-colors ${
+                            module.available 
+                              ? 'bg-primary/10 group-hover:bg-primary/20' 
+                              : 'bg-muted'
+                          }`}>
                             {module.icon}
                           </div>
-                          <h3 className="text-xl font-semibold">{module.title}</h3>
-                          <p className="text-muted-foreground leading-relaxed">
-                            {module.description}
-                          </p>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-center gap-2">
+                              <h3 className={`text-xl font-semibold ${
+                                module.available ? '' : 'text-muted-foreground'
+                              }`}>
+                                {module.title}
+                              </h3>
+                              {!module.available && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <Construction className="h-3 w-3" />
+                                  {module.status}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-muted-foreground leading-relaxed">
+                              {module.description}
+                            </p>
+                          </div>
                         </div>
                       </Card>
                     ))}
@@ -72,7 +100,7 @@ const Research = () => {
                       <h2 className="text-2xl font-semibold mb-4">Getting Started</h2>
                       <p className="text-muted-foreground max-w-3xl mx-auto">
                         New to AI persona research? Start with <strong>Quick Research Setup</strong> to have a casual conversation with personas. 
-                        For more structured insights, try the <strong>Structured Study Assistant</strong>.
+                        The <strong>Structured Study Assistant</strong> is currently under construction and will be available soon.
                       </p>
                     </div>
                   </div>
