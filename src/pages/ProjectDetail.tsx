@@ -399,7 +399,7 @@ const ProjectDetail = () => {
                 <div className="mt-12 border-t pt-8">
                   <Card className="border-destructive/20">
                     <CardHeader>
-                      <CardTitle className="text-destructive">Delete Project</CardTitle>
+                      <CardTitle className="text-destructive">Danger Zone</CardTitle>
                       <CardDescription>
                         Permanently delete this project and all associated data. This action cannot be undone.
                       </CardDescription>
@@ -500,5 +500,3 @@ const ProjectDetail = () => {
 };
 
 export default ProjectDetail;
-
-</initial_code>
