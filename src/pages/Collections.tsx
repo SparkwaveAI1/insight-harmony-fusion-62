@@ -13,7 +13,7 @@ import {
   updateCollection
 } from "@/services/collections/collectionsService";
 import Button from "@/components/ui-custom/Button";
-import { Plus, Trash2, Edit, FolderOpen } from "lucide-react";
+import { Plus, Trash2, Edit, FolderOpen, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,17 +33,34 @@ const Collections = () => {
   const [description, setDescription] = useState("");
 
   useEffect(() => {
-    if (user) {
-      fetchCollections();
-    }
-  }, [user]);
+    console.log("Collections useEffect triggered");
+    console.log("User:", user);
+    
+    const fetchCollections = async () => {
+      console.log("Starting to fetch collections...");
+      setLoading(true);
+      
+      try {
+        const data = await getUserCollectionsWithCount();
+        console.log("Collections fetched successfully:", data);
+        setCollections(data);
+      } catch (error) {
+        console.error("Error fetching collections:", error);
+        toast.error("Failed to load collections");
+      } finally {
+        setLoading(false);
+        console.log("Loading state set to false");
+      }
+    };
 
-  const fetchCollections = async () => {
-    setLoading(true);
-    const data = await getUserCollectionsWithCount();
-    setCollections(data);
-    setLoading(false);
-  };
+    if (user) {
+      console.log("User exists, fetching collections...");
+      fetchCollections();
+    } else {
+      console.log("No user found, redirecting to sign-in");
+      navigate('/sign-in');
+    }
+  }, [user, navigate]);
 
   const handleCreateCollection = async () => {
     if (!name.trim()) {
@@ -107,10 +124,21 @@ const Collections = () => {
     setDeleteDialogOpen(true);
   };
 
+  const fetchCollections = async () => {
+    console.log("fetchCollections called");
+    setLoading(true);
+    const data = await getUserCollectionsWithCount();
+    console.log("Collections data in fetchCollections:", data);
+    setCollections(data);
+    setLoading(false);
+  };
+
   // IMPORTANT CHANGE: Update the navigation to use '/collections/' instead of '/collection/'
   const viewCollection = (collectionId: string) => {
     navigate(`/collections/${collectionId}`);
   };
+
+  console.log("Rendering Collections component. Loading:", loading, "Collections count:", collections.length);
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -133,10 +161,11 @@ const Collections = () => {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-48 rounded-lg bg-muted/30 animate-pulse"></div>
-                ))}
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                  <p>Loading collections...</p>
+                </div>
               </div>
             ) : collections.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-muted/10 rounded-lg">
@@ -160,7 +189,7 @@ const Collections = () => {
                 {collections.map((collection) => (
                   <div 
                     key={collection.id}
-                    className="relative border rounded-lg p-6 hover:shadow-md transition-shadow group"
+                    className="relative border rounded-lg p-6 hover:shadow-md transition-shadow group cursor-pointer"
                     onClick={() => viewCollection(collection.id)}
                   >
                     <div className="mb-4">
