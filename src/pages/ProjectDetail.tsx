@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -34,7 +35,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const ProjectDetail = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { id: projectId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [project, setProject] = useState<any>(null);
