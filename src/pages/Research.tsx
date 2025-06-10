@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card } from "@/components/ui/card";
-import { Sparkles, FlaskConical, Wand } from "lucide-react";
+import { Sparkles, FlaskConical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Research = () => {
@@ -23,12 +23,6 @@ const Research = () => {
       title: "Structured Study Assistant", 
       description: "Design a real market research study step-by-step, with personas, formats, and output goals.",
       path: "/research/setup/structured"
-    },
-    {
-      icon: <Wand className="h-8 w-8 text-primary" />,
-      title: "Generate Study From Goal",
-      description: "Just tell us what you want to learn. We'll build the rest for you.",
-      path: "/generate-study"
     }
   ];
 
@@ -53,7 +47,7 @@ const Research = () => {
                     </p>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-6">
+                  <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                     {researchModules.map((module, index) => (
                       <Card 
                         key={index}
@@ -78,8 +72,7 @@ const Research = () => {
                       <h2 className="text-2xl font-semibold mb-4">Getting Started</h2>
                       <p className="text-muted-foreground max-w-3xl mx-auto">
                         New to AI persona research? Start with <strong>Quick Research Setup</strong> to have a casual conversation with personas. 
-                        For more structured insights, try the <strong>Structured Study Assistant</strong>. 
-                        Or let our AI design everything with <strong>Generate Study From Goal</strong>.
+                        For more structured insights, try the <strong>Structured Study Assistant</strong>.
                       </p>
                     </div>
                   </div>
