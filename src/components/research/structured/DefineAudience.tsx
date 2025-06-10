@@ -4,10 +4,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Users, X } from 'lucide-react';
+import { Search, Users, X, FolderOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAllPersonas } from '@/services/persona';
+import { getUserCollections, getPersonasInCollection } from '@/services/collections';
 import { Persona } from '@/services/persona/types';
+import { Collection } from '@/services/collections/types';
 import { toast } from 'sonner';
 
 export interface AudienceDefinition {
@@ -144,18 +147,51 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCollection, setSelectedCollection] = useState<string>('all');
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
+
+  // Fetch collections
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        setIsLoadingCollections(true);
+        console.log('Fetching user collections...');
+        const userCollections = await getUserCollections();
+        console.log('Fetched collections:', userCollections.length);
+        setCollections(userCollections);
+      } catch (error) {
+        console.error('Error fetching collections:', error);
+        toast.error('Failed to load collections');
+      } finally {
+        setIsLoadingCollections(false);
+      }
+    };
+
+    fetchCollections();
+  }, []);
 
   // Fetch personas
   useEffect(() => {
     const fetchPersonas = async () => {
       try {
         setIsLoadingPersonas(true);
-        console.log('Fetching all personas...');
-        const allPersonas = await getAllPersonas();
+        console.log('Fetching personas for collection:', selectedCollection);
+        
+        let allPersonas: Persona[] = [];
+        
+        if (selectedCollection === 'all') {
+          // Fetch all personas
+          allPersonas = await getAllPersonas();
+        } else {
+          // Fetch personas from selected collection
+          const collectionPersonas = await getPersonasInCollection(selectedCollection);
+          allPersonas = collectionPersonas.map(cp => cp.personas).filter(Boolean) as Persona[];
+        }
+        
         console.log('Fetched personas:', allPersonas.length);
         setPersonas(allPersonas);
-        setFilteredPersonas(allPersonas);
       } catch (error) {
         console.error('Error fetching personas:', error);
         toast.error('Failed to load personas');
@@ -165,9 +201,9 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
     };
 
     fetchPersonas();
-  }, []);
+  }, [selectedCollection]);
 
-  // Apply search when search term changes
+  // Apply search when search term or personas change
   useEffect(() => {
     console.log('Search term changed:', searchTerm);
     const filtered = searchPersonas(personas, searchTerm);
@@ -225,17 +261,49 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
             </Badge>
           </div>
 
-          {/* Enhanced Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by demographics: age, occupation, location, income level, education..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-            <div className="text-xs text-muted-foreground mt-1">
-              Try: "millennial", "tech", "high income", "college", "manager", "urban", "25-35"
+          {/* Collection Filter and Search */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Collections Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Collection</label>
+              <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a collection" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      All Personas
+                    </div>
+                  </SelectItem>
+                  {collections.map((collection) => (
+                    <SelectItem key={collection.id} value={collection.id}>
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="h-4 w-4" />
+                        {collection.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Enhanced Search */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Search Personas</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by demographics: age, occupation, location..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Try: "millennial", "tech", "high income", "college", "manager", "urban", "25-35"
+              </div>
             </div>
           </div>
 
@@ -276,7 +344,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
           )}
 
           {/* Persona List */}
-          {isLoadingPersonas ? (
+          {isLoadingPersonas || isLoadingCollections ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               <span className="ml-3 text-sm">Loading personas...</span>
@@ -340,11 +408,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
             </div>
           )}
 
-          {filteredPersonas.length === 0 && !isLoadingPersonas && (
+          {filteredPersonas.length === 0 && !isLoadingPersonas && !isLoadingCollections && (
             <div className="text-center py-8 text-muted-foreground">
               {searchTerm ? 
                 'No personas found matching your search criteria. Try adjusting your search terms.' :
-                'No personas available.'
+                selectedCollection === 'all' ? 'No personas available.' : 'No personas found in this collection.'
               }
             </div>
           )}
