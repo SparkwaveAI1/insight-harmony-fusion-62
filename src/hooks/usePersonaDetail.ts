@@ -7,13 +7,16 @@ import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 
 export function usePersonaDetail() {
-  const { personaId } = useParams<{ personaId: string }>();
+  const params = useParams<{ personaId?: string; id?: string }>();
   const navigate = useNavigate();
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
+
+  // Get the persona ID from either personaId or id parameter
+  const personaId = params.personaId || params.id;
 
   const loadPersona = useCallback(async (id: string) => {
     setIsLoading(true);
@@ -38,9 +41,14 @@ export function usePersonaDetail() {
 
   useEffect(() => {
     if (personaId) {
+      console.log("usePersonaDetail - personaId from params:", personaId);
       loadPersona(personaId);
+    } else {
+      console.error("usePersonaDetail - No personaId found in params:", params);
+      setIsLoading(false);
+      toast.error("Invalid persona ID");
     }
-  }, [personaId, loadPersona]);
+  }, [personaId, loadPersona, params]);
 
   useEffect(() => {
     if (persona) {
