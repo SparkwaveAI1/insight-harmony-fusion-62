@@ -179,7 +179,7 @@ export default function ResearchConversation({
         <div className="border-t p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <ResearchMessageInput
             onSendMessage={onSendMessage}
-            isLoading={isLoading}
+            disabled={isLoading}
           />
         </div>
       </div>

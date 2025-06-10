@@ -243,11 +243,11 @@ const StructuredStudySetup = () => {
                   {/* Step Content */}
                   <div className="mb-8">
                     {currentStep === 1 && (
-                      <DefineStudyGoals onGoalDefined={handleGoalDefined} initialGoal={studyGoal} />
+                      <DefineStudyGoals onGoalDefined={handleGoalDefined} />
                     )}
 
                     {currentStep === 2 && (
-                      <SelectResearchFormat onFormatSelected={handleFormatSelected} initialFormat={researchFormat} />
+                      <SelectResearchFormat onFormatSelected={handleFormatSelected} />
                     )}
 
                     {currentStep === 3 && (
@@ -255,7 +255,7 @@ const StructuredStudySetup = () => {
                     )}
 
                     {currentStep === 4 && (
-                      <DefineOutputGoals onGoalsDefined={handleOutputGoalsDefined} initialGoals={outputGoals} />
+                      <DefineOutputGoals onGoalsDefined={handleOutputGoalsDefined} />
                     )}
 
                     {currentStep === 5 && (

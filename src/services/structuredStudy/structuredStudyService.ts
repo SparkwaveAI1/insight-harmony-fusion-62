@@ -26,10 +26,17 @@ export const structuredStudyService = {
   }): Promise<StructuredStudySession | null> {
     console.log('Creating structured study session:', data);
     
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('No authenticated user');
+      return null;
+    }
+
     const { data: session, error } = await supabase
       .from('structured_study_sessions')
       .insert({
         ...data,
+        user_id: user.id,
         current_step: data.current_step || 1,
         status: 'draft'
       })
@@ -41,7 +48,7 @@ export const structuredStudyService = {
       return null;
     }
 
-    return session;
+    return session as StructuredStudySession;
   },
 
   async updateSession(sessionId: string, updates: {
@@ -67,7 +74,7 @@ export const structuredStudyService = {
       return null;
     }
 
-    return session;
+    return session as StructuredStudySession;
   },
 
   async getSession(sessionId: string): Promise<StructuredStudySession | null> {
@@ -84,7 +91,7 @@ export const structuredStudyService = {
       return null;
     }
 
-    return session;
+    return session as StructuredStudySession;
   },
 
   async getUserSessions(): Promise<StructuredStudySession[]> {
@@ -100,7 +107,7 @@ export const structuredStudyService = {
       return [];
     }
 
-    return sessions || [];
+    return (sessions || []) as StructuredStudySession[];
   },
 
   async deleteSession(sessionId: string): Promise<boolean> {
