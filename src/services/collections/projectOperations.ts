@@ -24,7 +24,7 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
 };
 
 /**
- * Fetches all projects for the current user
+ * Fetches all projects for the current user with their associated collections and personas
  */
 export const getUserProjects = async (): Promise<Project[]> => {
   try {
@@ -38,7 +38,20 @@ export const getUserProjects = async (): Promise<Project[]> => {
 
     const { data, error } = await supabase
       .from("projects")
-      .select("*")
+      .select(`
+        *,
+        project_collections (
+          collection_id,
+          collections (
+            id,
+            name,
+            description,
+            collection_personas (
+              persona_id
+            )
+          )
+        )
+      `)
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 

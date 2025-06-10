@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getUserProjects, createProject } from '@/services/collections/projectOperations';
 import { Project } from '@/services/collections/types';
-import { Loader2, Plus, Save, FolderPlus } from 'lucide-react';
+import { Loader2, Plus, Save, FolderPlus, Users, Folder } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProjectSelectionDialogProps {
@@ -23,7 +23,7 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
   onProjectSelected
 }) => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
@@ -90,9 +90,21 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
     onOpenChange(false);
   };
 
+  const getProjectStats = (project: any) => {
+    const collections = project.project_collections || [];
+    const totalPersonas = collections.reduce((total: number, pc: any) => {
+      return total + (pc.collections?.collection_personas?.length || 0);
+    }, 0);
+    
+    return {
+      collections: collections.length,
+      personas: totalPersonas
+    };
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Research Project Setup</DialogTitle>
           <DialogDescription>
@@ -154,11 +166,26 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
                         <SelectValue placeholder="Select a project" />
                       </SelectTrigger>
                       <SelectContent>
-                        {projects.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
+                        {projects.map((project) => {
+                          const stats = getProjectStats(project);
+                          return (
+                            <SelectItem key={project.id} value={project.id}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{project.name}</span>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Folder className="h-3 w-3" />
+                                    {stats.collections} collections
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    {stats.personas} personas
+                                  </span>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     
