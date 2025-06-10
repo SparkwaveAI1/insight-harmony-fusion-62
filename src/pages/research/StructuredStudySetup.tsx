@@ -29,6 +29,7 @@ const StructuredStudySetup = () => {
   const [researchFormat, setResearchFormat] = useState<ResearchFormat | null>(null);
   const [audience, setAudience] = useState<AudienceDefinition | null>(null);
   const [outputGoals, setOutputGoals] = useState<OutputGoalsData | null>(null);
+  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId);
   const [isLoading, setIsLoading] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
@@ -50,7 +51,12 @@ const StructuredStudySetup = () => {
         setCurrentStep(session.current_step);
         if (session.study_goal) setStudyGoal(session.study_goal);
         if (session.research_format) setResearchFormat(session.research_format);
-        if (session.audience_definition) setAudience(session.audience_definition);
+        if (session.audience_definition) {
+          setAudience(session.audience_definition);
+          if (session.audience_definition.selected_personas) {
+            setSelectedPersonas(session.audience_definition.selected_personas);
+          }
+        }
         if (session.output_goals) setOutputGoals(session.output_goals);
         // Extract project ID from output goals if it exists
         if (session.output_goals?.project_id) {
@@ -136,6 +142,21 @@ const StructuredStudySetup = () => {
     saveSession({ output_goals: goalsWithProject, current_step: 6 });
   };
 
+  const handlePersonasSelected = (personas: string[]) => {
+    setSelectedPersonas(personas);
+    // Update audience definition with selected personas
+    const updatedAudience = {
+      ...audience,
+      selected_personas: personas
+    };
+    setAudience(updatedAudience);
+    setCurrentStep(7);
+    saveSession({ 
+      audience_definition: updatedAudience, 
+      current_step: 7 
+    });
+  };
+
   const handleStepChange = (newStep: number) => {
     setCurrentStep(newStep);
     saveSession({ current_step: newStep });
@@ -147,7 +168,7 @@ const StructuredStudySetup = () => {
       return;
     }
 
-    if (!audience.selected_personas || audience.selected_personas.length === 0) {
+    if (!selectedPersonas || selectedPersonas.length === 0) {
       toast.error("Please select at least one persona before launching");
       return;
     }
@@ -159,11 +180,22 @@ const StructuredStudySetup = () => {
         status: 'completed'
       });
 
-      // Navigate to structured study session with the selected personas
-      const personaIds = audience.selected_personas.join(',');
+      // Navigate directly to focus group with the selected personas and project
+      const personaIds = selectedPersonas.join(',');
       const projectParam = selectedProjectId ? `&project=${selectedProjectId}` : '';
       const sessionParam = `&session=${currentSessionId}`;
-      navigate(`/research/session/structured?personas=${personaIds}${projectParam}${sessionParam}`);
+      
+      // Store session data for the focus group
+      const researchData = {
+        personas: selectedPersonas,
+        objective: studyGoal.objective,
+        projectId: selectedProjectId,
+        sessionId: currentSessionId
+      };
+      sessionStorage.setItem('quickResearchSession', JSON.stringify(researchData));
+      
+      // Navigate to focus group
+      navigate('/focus-group');
       
       toast.success("Study launched! Starting research session...");
     } catch (error) {
@@ -178,9 +210,10 @@ const StructuredStudySetup = () => {
     { number: 1, title: "Project Setup", description: "Select or create a project for this study" },
     { number: 2, title: "Study Goals", description: "Define your research goals and objectives" },
     { number: 3, title: "Research Format", description: "Select the format that matches your study" },
-    { number: 4, title: "Audience", description: "Define your target audience and select personas" },
+    { number: 4, title: "Audience", description: "Define your target audience criteria" },
     { number: 5, title: "Output Goals", description: "Define insights and deliverables" },
-    { number: 6, title: "Review + Launch", description: "Review configuration and launch" }
+    { number: 6, title: "Select Personas", description: "Choose specific personas for your study" },
+    { number: 7, title: "Review + Launch", description: "Review configuration and launch" }
   ];
 
   if (isLoading) {
@@ -342,7 +375,7 @@ const StructuredStudySetup = () => {
                     )}
 
                     {currentStep === 4 && (
-                      <DefineAudience onAudienceDefined={handleAudienceDefined} initialAudience={audience} />
+                      <DefineAudience onAudienceDefined={handleAudienceDefined} initialAudience={audience} hidePersonaSelection={true} />
                     )}
 
                     {currentStep === 5 && (
@@ -350,6 +383,15 @@ const StructuredStudySetup = () => {
                     )}
 
                     {currentStep === 6 && (
+                      <DefineAudience 
+                        onAudienceDefined={handlePersonasSelected} 
+                        initialAudience={audience}
+                        personaSelectionOnly={true}
+                        selectedPersonas={selectedPersonas}
+                      />
+                    )}
+
+                    {currentStep === 7 && (
                       <Card className="p-6">
                         <div className="text-center mb-6">
                           <Rocket className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -380,7 +422,7 @@ const StructuredStudySetup = () => {
                           {audience && (
                             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                               <h3 className="font-medium text-purple-800 mb-2">Target Audience</h3>
-                              <p className="text-purple-700 text-sm">{audience.selected_personas.length} personas selected</p>
+                              <p className="text-purple-700 text-sm">{selectedPersonas.length} personas selected</p>
                             </div>
                           )}
                           {outputGoals && (
@@ -429,15 +471,16 @@ const StructuredStudySetup = () => {
                       Previous
                     </Button>
                     
-                    {currentStep < 6 && (
+                    {currentStep < 7 && (
                       <Button
-                        onClick={() => handleStepChange(Math.min(6, currentStep + 1))}
+                        onClick={() => handleStepChange(Math.min(7, currentStep + 1))}
                         disabled={
                           (currentStep === 1 && selectedProjectId === undefined) ||
                           (currentStep === 2 && !studyGoal) ||
                           (currentStep === 3 && !researchFormat) ||
                           (currentStep === 4 && !audience) ||
-                          (currentStep === 5 && !outputGoals)
+                          (currentStep === 5 && !outputGoals) ||
+                          (currentStep === 6 && selectedPersonas.length === 0)
                         }
                       >
                         Next
