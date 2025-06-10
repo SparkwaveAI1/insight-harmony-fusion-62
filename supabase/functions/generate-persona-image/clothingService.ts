@@ -8,14 +8,14 @@ export function getPersonaClothing(occupation: string, gender: string, age: stri
   let specificClothing = "";
   if (description) {
     const clothingKeywords = {
-      "casual": "casual",
-      "formal": "formal business",
-      "creative": "creative and artistic",
-      "bohemian": "bohemian style",
-      "trendy": "trendy and fashionable",
+      "casual": "casual and comfortable",
+      "formal": "formal and polished", 
+      "creative": "creative and expressive",
+      "bohemian": "bohemian and free-spirited",
+      "trendy": "trendy and fashion-forward",
       "conservative": "conservative and traditional",
-      "athletic": "athletic and sporty",
-      "vintage": "vintage-inspired",
+      "athletic": "athletic and active",
+      "vintage": "vintage-inspired and classic",
       "minimalist": "clean and minimalist"
     };
     
@@ -26,7 +26,7 @@ export function getPersonaClothing(occupation: string, gender: string, age: stri
     });
   }
   
-  // Professional occupation-based clothing
+  // Professional occupation-based clothing with enhanced detail
   if (occupation) {
     const occupationLower = occupation.toLowerCase();
     
@@ -34,16 +34,16 @@ export function getPersonaClothing(occupation: string, gender: string, age: stri
     if (occupationLower.includes("doctor") || occupationLower.includes("physician") || 
         occupationLower.includes("surgeon") || occupationLower.includes("nurse")) {
       return isFemale ? 
-        "wearing professional medical attire - a white coat over a blouse or scrubs with a professional appearance" :
-        "wearing professional medical attire - a white coat over a dress shirt or medical scrubs";
+        "wearing a crisp white medical coat over a professional blouse in navy or light blue, with a stethoscope around their neck and subtle, professional jewelry" :
+        "wearing a clean white medical coat over a pressed dress shirt and tie, with a stethoscope visible and an air of professional competence";
     }
     
     // Legal professionals
     if (occupationLower.includes("lawyer") || occupationLower.includes("attorney") || 
         occupationLower.includes("judge")) {
       return isFemale ?
-        "wearing a sophisticated business suit or blazer with a blouse, professional and authoritative" :
-        "wearing a formal business suit with tie, professional and authoritative";
+        "wearing a sophisticated charcoal or navy business suit with a crisp white or light blue blouse, understated professional jewelry, and an authoritative yet approachable demeanor" :
+        "wearing a well-tailored dark business suit with a pressed white shirt and silk tie, polished and professional with an air of quiet authority";
     }
     
     // Corporate/Business
@@ -51,16 +51,16 @@ export function getPersonaClothing(occupation: string, gender: string, age: stri
         occupationLower.includes("consultant") || occupationLower.includes("finance") ||
         occupationLower.includes("analyst")) {
       return isFemale ?
-        "wearing modern business attire - a tailored blazer or professional dress" :
-        "wearing business formal attire - a suit or dress shirt with slacks";
+        "wearing modern business attire - a tailored blazer in navy or charcoal over a silk blouse, with tasteful accessories and a confident, professional appearance" :
+        "wearing contemporary business attire - a well-fitted suit jacket with a quality dress shirt, no tie for a modern look, appearing polished and successful";
     }
     
     // Education
     if (occupationLower.includes("teacher") || occupationLower.includes("professor") || 
         occupationLower.includes("educator")) {
       return isFemale ?
-        "wearing professional casual attire - a cardigan or blouse with modest jewelry" :
-        "wearing smart casual attire - a collared shirt or sweater, approachable and professional";
+        "wearing professional casual attire - a soft cardigan or blazer over a comfortable blouse, with reading glasses and warm, approachable styling that reflects their educational role" :
+        "wearing smart casual attire - a comfortable sweater or collared shirt with a sport coat, appearing knowledgeable and approachable with an intellectual bearing";
     }
     
     // Creative fields
@@ -68,107 +68,107 @@ export function getPersonaClothing(occupation: string, gender: string, age: stri
         occupationLower.includes("writer") || occupationLower.includes("photographer") ||
         occupationLower.includes("creative")) {
       return isFemale ?
-        "wearing creative and expressive clothing - an artistic blouse or unique accessories that reflect creativity" :
-        "wearing creative casual attire - an interesting shirt or jacket that shows artistic sensibility";
+        "wearing creative, expressive clothing - a unique blouse or artistic top with interesting textures or patterns, layered jewelry that reflects their creative spirit" :
+        "wearing creative casual attire - an interesting shirt or jacket with artistic flair, perhaps a scarf or unique accessory that shows their creative personality";
     }
     
     // Tech/Engineering
     if (occupationLower.includes("engineer") || occupationLower.includes("developer") || 
         occupationLower.includes("programmer") || occupationLower.includes("tech")) {
       return isFemale ?
-        "wearing modern casual attire - a comfortable blouse or sweater, practical yet stylish" :
-        "wearing tech casual - a polo shirt or casual button-down, comfortable and modern";
+        "wearing modern casual professional attire - a comfortable yet stylish blouse or sweater, practical but contemporary styling that reflects the tech industry culture" :
+        "wearing tech casual - a quality polo shirt or casual button-down, comfortable and modern with a relaxed but professional appearance";
     }
     
     // Service industry
     if (occupationLower.includes("retail") || occupationLower.includes("customer service") || 
         occupationLower.includes("hospitality")) {
       return isFemale ?
-        "wearing neat casual attire - a clean blouse or uniform-appropriate top" :
-        "wearing service industry attire - a polo shirt or clean casual shirt";
+        "wearing neat, professional casual attire - a clean, well-fitted blouse or polo shirt appropriate for customer interaction, appearing friendly and approachable" :
+        "wearing service industry appropriate attire - a clean polo shirt or casual dress shirt, neat and professional with a welcoming demeanor";
     }
     
     // Trades/Manual labor
     if (occupationLower.includes("construction") || occupationLower.includes("mechanic") || 
         occupationLower.includes("electrician") || occupationLower.includes("plumber")) {
       return isFemale ?
-        "wearing practical work attire - a durable shirt or uniform appropriate for manual work" :
-        "wearing work attire - a sturdy shirt or work uniform, practical and durable";
+        "wearing practical work attire - a durable, well-fitted work shirt or polo, appearing competent and professional in their trade" :
+        "wearing quality work attire - a sturdy work shirt or polo, clean and professional despite the hands-on nature of their work";
     }
     
     // Healthcare support
     if (occupationLower.includes("therapist") || occupationLower.includes("counselor") || 
         occupationLower.includes("social worker")) {
       return isFemale ?
-        "wearing approachable professional attire - a soft blouse or cardigan, warm and trustworthy" :
-        "wearing approachable casual attire - a sweater or casual shirt, warm and professional";
+        "wearing warm, approachable professional attire - a soft cardigan or blouse in calming colors, appearing trustworthy and compassionate" :
+        "wearing approachable professional attire - a comfortable sweater or casual shirt, warm and trustworthy with a caring demeanor";
     }
     
     // Food service
     if (occupationLower.includes("chef") || occupationLower.includes("cook") || 
         occupationLower.includes("restaurant")) {
       return isFemale ?
-        "wearing culinary attire - chef's coat or restaurant uniform adapted for women" :
-        "wearing chef attire - a chef's coat or professional kitchen uniform";
+        "wearing professional culinary attire - a clean chef's coat or kitchen uniform adapted for women, appearing skilled and passionate about their craft" :
+        "wearing professional kitchen attire - a clean chef's coat or quality kitchen uniform, appearing experienced and dedicated to their culinary work";
     }
     
     // Law enforcement/Security
     if (occupationLower.includes("police") || occupationLower.includes("officer") ||
         occupationLower.includes("security") || occupationLower.includes("detective")) {
       return isFemale ?
-        "wearing professional uniform or business attire appropriate for law enforcement" :
-        "wearing professional uniform or business attire appropriate for law enforcement";
+        "wearing professional uniform or business attire appropriate for law enforcement, appearing authoritative yet approachable" :
+        "wearing professional uniform or business attire appropriate for law enforcement, appearing confident and trustworthy";
     }
   }
   
-  // Age-based defaults if no specific occupation
+  // Age-based defaults if no specific occupation with enhanced detail
   if (ageNum && ageNum < 25) {
     return isFemale ?
-      "wearing trendy young adult clothing - a stylish top that reflects current fashion" :
-      "wearing modern young adult attire - a contemporary shirt or sweater";
+      "wearing contemporary young adult fashion - a stylish, on-trend top that reflects current fashion while remaining appropriate and authentic" :
+      "wearing modern young adult attire - a contemporary shirt or sweater that shows they're current with fashion trends";
   } else if (ageNum && ageNum > 60) {
     return isFemale ?
-      "wearing classic mature attire - an elegant blouse or cardigan, timeless and refined" :
-      "wearing distinguished mature attire - a quality shirt or sweater, classic and refined";
+      "wearing classic, elegant attire - a refined blouse or cardigan in quality fabrics, timeless and sophisticated with tasteful accessories" :
+      "wearing distinguished mature attire - a quality shirt or sweater in classic styling, refined and dignified with an air of experience";
   }
   
-  // Social class considerations
+  // Social class considerations with enhanced detail
   if (socialClass) {
     const classLower = socialClass.toLowerCase();
     if (classLower.includes("upper") || classLower.includes("wealthy")) {
       return isFemale ?
-        "wearing upscale attire - a high-quality blouse or designer top, sophisticated and well-tailored" :
-        "wearing upscale attire - a quality dress shirt or fine sweater, sophisticated and well-made";
+        "wearing high-quality, sophisticated attire - a beautifully tailored blouse or top in luxury fabrics, with subtle but expensive accessories that speak to refined taste" :
+        "wearing upscale, well-made attire - a quality dress shirt or fine sweater in premium materials, sophisticated and understated luxury";
     } else if (classLower.includes("working")) {
       return isFemale ?
-        "wearing practical everyday attire - a comfortable and modest blouse or shirt" :
-        "wearing practical everyday attire - a comfortable shirt or casual wear";
+        "wearing practical, comfortable everyday attire - a modest, well-maintained blouse or shirt that reflects dignity and hard work" :
+        "wearing honest, practical everyday attire - a clean, comfortable shirt that reflects their working-class values and dignity";
     }
   }
   
-  // Regional considerations
+  // Regional considerations with enhanced detail
   if (region) {
     const regionLower = region.toLowerCase();
     if (regionLower.includes("south")) {
       return isFemale ?
-        "wearing Southern-appropriate attire - a nice blouse or top suitable for warm weather" :
-        "wearing Southern-appropriate attire - a collared shirt suitable for warm climate";
+        "wearing Southern-appropriate attire - a breathable, elegant blouse in lighter fabrics suitable for warm weather, with classic Southern style" :
+        "wearing Southern gentleman attire - a quality collared shirt suitable for warm climate, classic and refined";
     } else if (regionLower.includes("north") || regionLower.includes("midwest")) {
       return isFemale ?
-        "wearing weather-appropriate attire - a blouse or sweater suitable for variable weather" :
-        "wearing weather-appropriate attire - a shirt or sweater suitable for cooler climate";
+        "wearing weather-appropriate Northern attire - a comfortable blouse or sweater in layers suitable for variable weather, practical yet stylish" :
+        "wearing Northern climate attire - a shirt or sweater appropriate for cooler weather, practical and well-made";
     }
   }
   
   // Use specific clothing style if mentioned in description
   if (specificClothing) {
     return isFemale ?
-      `wearing ${specificClothing} attire - clothing that reflects this aesthetic in women's fashion` :
-      `wearing ${specificClothing} attire - clothing that reflects this aesthetic in men's fashion`;
+      `wearing ${specificClothing} attire - clothing that authentically reflects this aesthetic in women's fashion with attention to realistic detail and fabric texture` :
+      `wearing ${specificClothing} attire - clothing that authentically reflects this aesthetic in men's fashion with realistic detail and quality materials`;
   }
   
-  // Default general clothing
+  // Default general clothing with enhanced realism
   return isFemale ?
-    "wearing casual professional attire - a nice blouse or top, approachable and well-dressed" :
-    "wearing casual professional attire - a collared shirt or sweater, approachable and well-dressed";
+    "wearing authentic casual professional attire - a well-fitted, quality blouse or top in flattering colors, appearing naturally stylish and genuine" :
+    "wearing genuine casual professional attire - a quality collared shirt or sweater that fits well and shows good taste, naturally confident and authentic";
 }
