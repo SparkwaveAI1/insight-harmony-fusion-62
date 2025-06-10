@@ -18,7 +18,8 @@ const StructuredStudySession = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   
   // Get URL parameters
   const sessionId = searchParams.get('session');
@@ -37,15 +38,16 @@ const StructuredStudySession = () => {
   } = useResearchSession();
 
   useEffect(() => {
-    const loadSessionAndStartResearch = async () => {
+    const loadSession = async () => {
       if (!sessionId) {
         console.log('No session ID provided');
-        setIsLoading(false);
+        setSessionError('No session ID provided');
+        setIsLoadingSession(false);
         return;
       }
 
       try {
-        setIsLoading(true);
+        setIsLoadingSession(true);
         console.log("Loading session with ID:", sessionId);
         
         // Load the structured study session
@@ -53,39 +55,49 @@ const StructuredStudySession = () => {
         
         if (!structuredSession) {
           console.error('No structured session found');
-          toast.error("Study session not found");
-          setIsLoading(false);
+          setSessionError('Study session not found');
+          setIsLoadingSession(false);
           return;
         }
         
         console.log("Structured session data loaded:", structuredSession);
         setSession(structuredSession);
-        
-        // Auto-start the research session if we have personas
-        if (personaIds && personaIds.length > 0) {
-          console.log('Starting research session with personas:', personaIds);
-          const success = await createSession(personaIds, projectId);
-          if (success) {
-            console.log('Research session started successfully');
-            toast.success("Research session started successfully");
-          } else {
-            toast.error("Failed to start research session");
-          }
-        } else {
-          console.warn('No personas provided for research session');
-          toast.error("No personas selected for research session");
-        }
+        setIsLoadingSession(false);
         
       } catch (error) {
         console.error("Error loading session:", error);
-        toast.error("Failed to load study session");
-      } finally {
-        setIsLoading(false);
+        setSessionError('Failed to load study session');
+        setIsLoadingSession(false);
       }
     };
 
-    loadSessionAndStartResearch();
-  }, [sessionId, personaIds, projectId, createSession]);
+    loadSession();
+  }, [sessionId]);
+
+  // Auto-start research session when session is loaded and we have personas
+  useEffect(() => {
+    const startResearchSession = async () => {
+      if (!session || !personaIds.length || researchSessionId) {
+        return; // Don't start if we already have a research session
+      }
+
+      console.log('Starting research session with personas:', personaIds);
+      try {
+        const success = await createSession(personaIds, projectId);
+        if (success) {
+          console.log('Research session started successfully');
+          toast.success("Research session started successfully");
+        } else {
+          toast.error("Failed to start research session");
+        }
+      } catch (error) {
+        console.error('Error starting research session:', error);
+        toast.error("Failed to start research session");
+      }
+    };
+
+    startResearchSession();
+  }, [session, personaIds, projectId, createSession, researchSessionId]);
 
   const handleSendMessage = async (message: string, imageFile?: File): Promise<void> => {
     await sendMessage(message, imageFile);
@@ -99,7 +111,7 @@ const StructuredStudySession = () => {
     return await createSession(selectedPersonas, selectedProjectId);
   };
 
-  if (isLoading) {
+  if (isLoadingSession) {
     return (
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
@@ -125,7 +137,7 @@ const StructuredStudySession = () => {
     );
   }
 
-  if (!session) {
+  if (sessionError || !session) {
     return (
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
