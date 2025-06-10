@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,20 +27,22 @@ export interface AudienceDefinition {
 interface DefineAudienceProps {
   onAudienceDefined: (audience: AudienceDefinition) => void;
   maxPersonas?: number;
+  initialAudience?: AudienceDefinition | null;
 }
 
 export const DefineAudience: React.FC<DefineAudienceProps> = ({ 
   onAudienceDefined, 
-  maxPersonas = 6 
+  maxPersonas = 6,
+  initialAudience
 }) => {
-  const [targetDescription, setTargetDescription] = useState('');
-  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
+  const [targetDescription, setTargetDescription] = useState(initialAudience?.target_description || '');
+  const [selectedPersonas, setSelectedPersonas] = useState<string[]>(initialAudience?.selected_personas || []);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
   const [isGeneratingCriteria, setIsGeneratingCriteria] = useState(false);
-  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(null);
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria | null>(initialAudience?.search_criteria || null);
 
   // Fetch personas
   useEffect(() => {

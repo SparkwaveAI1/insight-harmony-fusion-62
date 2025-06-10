@@ -356,6 +356,48 @@ export type Database = {
         }
         Relationships: []
       }
+      structured_study_sessions: {
+        Row: {
+          audience_definition: Json | null
+          created_at: string
+          current_step: number
+          id: string
+          output_goals: Json | null
+          research_format: Json | null
+          status: string
+          study_goal: Json | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience_definition?: Json | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          output_goals?: Json | null
+          research_format?: Json | null
+          status?: string
+          study_goal?: Json | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience_definition?: Json | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          output_goals?: Json | null
+          research_format?: Json | null
+          status?: string
+          study_goal?: Json | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_api_keys: {
         Row: {
           created_at: string | null

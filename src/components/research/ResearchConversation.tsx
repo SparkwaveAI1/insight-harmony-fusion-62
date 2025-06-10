@@ -43,7 +43,7 @@ export default function ResearchConversation({
     }
   }, [loadedPersonas, selectedPersona]);
 
-  const handleSaveConversation = async (selectedProjectId: string, title: string) => {
+  const handleSaveConversation = async (selectedProjectId: string | null) => {
     if (!sessionId || messages.length === 0) {
       toast.error("No conversation to save");
       return false;
@@ -164,8 +164,12 @@ export default function ResearchConversation({
                 </p>
               </div>
             ) : (
-              messages.map((message) => (
-                <ResearchMessage key={message.id} message={message} persona={loadedPersonas.find(p => p.persona_id === message.personaId)} />
+              messages.map((message, index) => (
+                <ResearchMessage 
+                  key={`${message.timestamp}-${index}`} 
+                  message={message} 
+                  persona={loadedPersonas.find(p => p.persona_id === message.personaId)} 
+                />
               ))
             )}
           </div>
@@ -175,7 +179,6 @@ export default function ResearchConversation({
         <div className="border-t p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <ResearchMessageInput
             onSendMessage={onSendMessage}
-            loadedPersonas={loadedPersonas}
             isLoading={isLoading}
           />
         </div>
@@ -192,10 +195,7 @@ export default function ResearchConversation({
       <ProjectSelectionDialog
         open={showSaveDialog}
         onOpenChange={setShowSaveDialog}
-        onSave={handleSaveConversation}
-        isLoading={isSaving}
-        title="Save Research Conversation"
-        description="Choose a project to save this research conversation to"
+        onProjectSelected={handleSaveConversation}
       />
     </div>
   );
