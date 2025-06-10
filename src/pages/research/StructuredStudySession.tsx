@@ -8,11 +8,10 @@ import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getStructuredStudySession } from "@/services/structuredStudy/structuredStudyService";
 import { toast } from "sonner";
-import SessionHeader from "@/components/research/structured-session/SessionHeader";
-import NoSessionFound from "@/components/research/structured-session/NoSessionFound";
-import AIResearchAssistant from "@/components/research/structured-session/AIResearchAssistant";
+import { SessionHeader } from "@/components/research/structured-session/SessionHeader";
+import { NoSessionFound } from "@/components/research/structured-session/NoSessionFound";
+import { AIResearchAssistant } from "@/components/research/structured-session/AIResearchAssistant";
 
 const StructuredStudySession = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -30,15 +29,19 @@ const StructuredStudySession = () => {
 
       try {
         console.log("Loading session with ID:", sessionId);
-        const sessionData = await getStructuredStudySession(sessionId);
-        console.log("Session data loaded:", sessionData);
+        // For now, we'll simulate loading a session
+        // TODO: Replace with actual service call when available
+        const mockSession = {
+          id: sessionId,
+          title: "Mock Study Session",
+          study_goal: { description: "Test study goal" },
+          audience_definition: { description: "Test audience" },
+          research_format: { type: "Interview" },
+          output_goals: { description: "Test output goals" }
+        };
         
-        if (sessionData) {
-          setSession(sessionData);
-        } else {
-          console.log("No session data found");
-          toast.error("Study session not found");
-        }
+        console.log("Session data loaded:", mockSession);
+        setSession(mockSession);
       } catch (error) {
         console.error("Error loading session:", error);
         toast.error("Failed to load study session");
@@ -93,7 +96,14 @@ const StructuredStudySession = () => {
                   <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <SessionHeader session={session} />
+                  <SessionHeader 
+                    projectId={null}
+                    loadedPersonasCount={0}
+                    knowledgeBaseActive={false}
+                    assistantActive={true}
+                    onToggleKnowledgeBase={() => {}}
+                    onToggleAssistant={() => {}}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
