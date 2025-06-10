@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -11,12 +12,14 @@ import { Link } from "react-router-dom";
 import { DefineStudyGoals, StudyGoal } from "@/components/research/structured/DefineStudyGoals";
 import { SelectResearchFormat, ResearchFormat } from "@/components/research/structured/SelectResearchFormat";
 import { DefineAudience, AudienceDefinition } from "@/components/research/structured/DefineAudience";
+import { DefineOutputGoals, OutputGoalsData } from "@/components/research/structured/DefineOutputGoals";
 
 const StructuredStudySetup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [studyGoal, setStudyGoal] = useState<StudyGoal | null>(null);
   const [researchFormat, setResearchFormat] = useState<ResearchFormat | null>(null);
   const [audience, setAudience] = useState<AudienceDefinition | null>(null);
+  const [outputGoals, setOutputGoals] = useState<OutputGoalsData | null>(null);
 
   const handleGoalDefined = (goal: StudyGoal) => {
     setStudyGoal(goal);
@@ -31,6 +34,11 @@ const StructuredStudySetup = () => {
   const handleAudienceDefined = (audienceDefinition: AudienceDefinition) => {
     setAudience(audienceDefinition);
     setCurrentStep(4);
+  };
+
+  const handleOutputGoalsDefined = (goals: OutputGoalsData) => {
+    setOutputGoals(goals);
+    setCurrentStep(5);
   };
 
   const steps = [
@@ -118,8 +126,12 @@ const StructuredStudySetup = () => {
                     )}
 
                     {currentStep === 4 && (
+                      <DefineOutputGoals onGoalsDefined={handleOutputGoalsDefined} />
+                    )}
+
+                    {currentStep === 5 && (
                       <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4">Output Goals</h2>
+                        <h2 className="text-xl font-semibold mb-4">Review & Launch</h2>
                         <div className="space-y-4">
                           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <h3 className="font-medium text-green-800 mb-2">Study Goal</h3>
@@ -139,18 +151,19 @@ const StructuredStudySetup = () => {
                               <p className="text-purple-600 text-xs mt-1">{audience.selected_personas.length} personas selected</p>
                             </div>
                           )}
+                          {outputGoals && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                              <h3 className="font-medium text-amber-800 mb-2">Output Goals</h3>
+                              <p className="text-amber-700 text-sm">{outputGoals.primary_goals.join(', ')}</p>
+                              <p className="text-amber-600 text-xs mt-1">
+                                {outputGoals.deliverables.length} deliverables • {outputGoals.timeline}
+                                {outputGoals.project_id && " • Associated with project"}
+                              </p>
+                            </div>
+                          )}
                           <div className="bg-muted/30 rounded-lg p-4">
-                            <p className="text-sm text-muted-foreground">Output goals definition will be implemented next</p>
+                            <p className="text-sm text-muted-foreground">Study launch functionality will be implemented next</p>
                           </div>
-                        </div>
-                      </Card>
-                    )}
-
-                    {currentStep > 4 && (
-                      <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4">{steps[currentStep - 1].title}</h2>
-                        <div className="bg-muted/30 rounded-lg p-4">
-                          <p className="text-sm text-muted-foreground">{steps[currentStep - 1].description} will be implemented next</p>
                         </div>
                       </Card>
                     )}
@@ -172,7 +185,8 @@ const StructuredStudySetup = () => {
                       disabled={
                         (currentStep === 1 && !studyGoal) ||
                         (currentStep === 2 && !researchFormat) ||
-                        (currentStep === 3 && !audience)
+                        (currentStep === 3 && !audience) ||
+                        (currentStep === 4 && !outputGoals)
                       }
                     >
                       Next
