@@ -50,8 +50,8 @@ const FocusGroup = () => {
     isLoading
   };
 
-  const handleCreateSession = async (selectedPersonas: string[]): Promise<boolean> => {
-    return await createSession(selectedPersonas);
+  const handleCreateSession = async (selectedPersonas: string[], projectId?: string | null): Promise<boolean> => {
+    return await createSession(selectedPersonas, projectId);
   };
 
   const handleSendMessage = async (message: string, imageFile?: File): Promise<void> => {

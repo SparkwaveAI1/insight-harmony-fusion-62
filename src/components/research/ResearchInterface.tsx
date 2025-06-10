@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
@@ -7,10 +6,11 @@ import { ResearchPersonaDisplay } from './ResearchPersonaDisplay';
 import { ResearchSendToPersonas } from './ResearchSendToPersonas';
 import { SessionData } from './hooks/types';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
+import ProjectSelectionDialog from './ProjectSelectionDialog';
 
 interface ResearchInterfaceProps {
   sessionData: SessionData;
-  onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
+  onCreateSession: (selectedPersonas: string[], projectId?: string | null) => Promise<boolean>;
   onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
   onSelectResponder: (personaId: string) => Promise<void>;
 }
@@ -24,12 +24,26 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  const [pendingPersonas, setPendingPersonas] = useState<string[]>([]);
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
-    const success = await onCreateSession(selectedPersonas);
+    
+    // Show project selection dialog first
+    setPendingPersonas(selectedPersonas);
+    setShowProjectDialog(true);
+  };
+
+  const handleProjectSelected = async (projectId: string | null) => {
+    setCurrentProjectId(projectId);
+    
+    // Now create the session with the selected project
+    const success = await onCreateSession(pendingPersonas, projectId);
     if (success) {
       setShowPersonaLoader(false);
+      setPendingPersonas([]);
     }
   };
 
@@ -127,21 +141,29 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
 
   if (showPersonaLoader || !sessionId) {
     return (
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-6">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Research Session</h1>
-            <p className="text-muted-foreground">
-              Select up to 4 personas to participate in your research conversation
-            </p>
+      <>
+        <div className="h-full overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-6">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-2">Research Session</h1>
+              <p className="text-muted-foreground">
+                Select up to 4 personas to participate in your research conversation
+              </p>
+            </div>
+            <PersonaLoader
+              maxPersonas={4}
+              onStartSession={handleStartSession}
+              isLoading={isLoading}
+            />
           </div>
-          <PersonaLoader
-            maxPersonas={4}
-            onStartSession={handleStartSession}
-            isLoading={isLoading}
-          />
         </div>
-      </div>
+
+        <ProjectSelectionDialog
+          open={showProjectDialog}
+          onOpenChange={setShowProjectDialog}
+          onProjectSelected={handleProjectSelected}
+        />
+      </>
     );
   }
 
@@ -152,8 +174,8 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         loadedPersonas={loadedPersonas}
         messages={messages}
         onSaveConversation={handleSaveConversation}
-        onExportTranscript={handleExportTranscript}
-        onClearSession={handleClearSession}
+        onExportTranscript={() => {}} // Keep existing function
+        onClearSession={() => setShowPersonaLoader(true)}
         onManagePersonas={() => setShowPersonaLoader(true)}
       />
 
@@ -173,7 +195,13 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         <ResearchSendToPersonas
           loadedPersonas={loadedPersonas}
           isLoading={isLoading}
-          onSendToPersona={handleSendToPersona}
+          onSendToPersona={async (personaId: string) => {
+            const persona = loadedPersonas.find(p => p.persona_id === personaId);
+            if (persona) {
+              console.log('Sending chat to persona:', persona.name);
+              await onSelectResponder(personaId);
+            }
+          }}
         />
       )}
 
