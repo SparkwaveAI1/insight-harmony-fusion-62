@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -65,7 +66,7 @@ const StructuredStudySession = () => {
 
   useEffect(() => {
     if (assistantActive && messages.length > 0) {
-      const timer = setTimeout(analyzeConversation, 2000);
+      const timer = setTimeout(() => analyzeConversation(), 2000);
       return () => clearTimeout(timer);
     }
   }, [messages.length, assistantActive]);
