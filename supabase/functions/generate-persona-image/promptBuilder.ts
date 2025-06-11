@@ -1,4 +1,5 @@
 
+
 import { getPersonaClothing } from "./clothingService.ts";
 
 export function buildImagePrompt(personaData: any): string {
@@ -64,7 +65,7 @@ export function buildImagePrompt(personaData: any): string {
   const clothing = getPersonaClothing(occupation, gender, age, socialClass, region, urbanRural, description);
   
   // Build the base prompt - using professional portrait specifications
-  let imagePrompt = `Professional studio portrait of a ${age}-year-old ${ethnicity} ${gender}`;
+  let imagePrompt = `A single professional headshot portrait of one ${age}-year-old ${ethnicity} ${gender}`;
   
   // Add body type if specified
   if (bodyType) {
@@ -90,17 +91,18 @@ export function buildImagePrompt(personaData: any): string {
   }
   
   // Add professional portrait specifications focused on realism and quality
-  imagePrompt += `. Professional headshot photography, shot with a high-end DSLR camera using an 85mm portrait lens. Studio lighting setup with key light and fill light for even, flattering illumination. Ultra-realistic skin texture with natural pores, fine lines, and authentic skin tone. Sharp focus on the eyes with beautiful catchlights. Natural facial expression showing genuine personality. Shot against a neutral, softly blurred background in warm gray or beige tones. The photograph should capture authentic human characteristics - natural skin imperfections, realistic hair texture, and genuine facial expressions. Professional photographer quality with perfect color grading and skin tone accuracy. The lighting should be soft and even, eliminating harsh shadows while maintaining natural dimensionality. Focus on creating a warm, approachable, yet professional appearance that looks like a real person photographed in a high-end portrait studio.`;
+  imagePrompt += `. Professional corporate headshot photography taken in a modern studio. Shot with a Canon 5D Mark IV using an 85mm f/1.8 portrait lens at f/2.8 for optimal sharpness. Clean studio lighting with a key light at 45 degrees and a subtle fill light to eliminate harsh shadows. The subject is positioned directly facing the camera with good posture and professional bearing. Ultra-realistic skin texture showing natural pores, subtle skin variations, and authentic human characteristics. Sharp focus on the eyes with natural catchlights. The background is a simple, solid neutral color - either warm gray, soft beige, or clean white - completely out of focus to ensure the subject stands out clearly.`;
   
   // Additional specifics for body type
   if (bodyType === "overweight" || bodyType === "slightly overweight") {
-    imagePrompt += " The person should have natural facial fullness that authentically reflects their build, photographed with flattering angles and lighting.";
+    imagePrompt += " The person should have natural facial features that authentically reflect their build, photographed with flattering professional lighting and angles.";
   }
   
-  // Add specifics about photo realism and quality
-  imagePrompt += " This must be an absolutely photorealistic image that could pass for a real photograph taken by a professional portrait photographer. The skin should show natural texture, subtle variations in tone, and realistic lighting. Avoid any artificial, overly smooth, or plastic-looking skin. The overall image should have the authentic quality of professional corporate headshots or LinkedIn profile photos.";
+  // Add critical specifications to prevent artifacts and ensure single subject
+  imagePrompt += " IMPORTANT: Generate only ONE person in the image. No reflections, no mirrors, no duplicates, no multiple faces or figures. The image should contain exactly one individual person as the sole subject. Avoid any reflective surfaces, glass, or elements that could create duplicate images. The background should be completely plain and non-reflective. Focus on creating a clean, professional single-person portrait with no visual artifacts, duplications, or confusing elements. This must be a straightforward headshot of one person only.";
   
   console.log("Generated prompt:", imagePrompt);
   
   return imagePrompt;
 }
+
