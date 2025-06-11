@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +119,16 @@ const CollectionDetail = () => {
 
   return (
     <div className="container py-6">
+      {/* Back Navigation */}
+      <div className="mb-6">
+        <Button variant="ghost" asChild className="p-0">
+          <Link to="/collections" className="flex items-center text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Collections
+          </Link>
+        </Button>
+      </div>
+
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
