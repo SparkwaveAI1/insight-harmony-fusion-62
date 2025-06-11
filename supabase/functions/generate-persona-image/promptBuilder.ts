@@ -57,37 +57,14 @@ export function buildImagePrompt(personaData: any): string {
       }
     });
     
-    // Check for emotional states
-    const emotionalKeywords = {
-      "depression": "with a slightly sad expression",
-      "depressed": "with a slightly sad expression",
-      "sad": "with a slightly sad expression",
-      "anxious": "with a slightly worried expression",
-      "anxiety": "with a slightly worried expression",
-      "tired": "looking slightly tired",
-      "exhausted": "looking slightly tired",
-      "stressed": "looking slightly stressed",
-      "happy": "with a warm smile",
-      "cheerful": "with a friendly smile",
-      "optimistic": "with a positive expression"
-    };
-    
-    Object.entries(emotionalKeywords).forEach(([keyword, state]) => {
-      if (description.toLowerCase().includes(keyword)) {
-        emotionalState = state;
-      }
-    });
-    
-    // Default to neutral expression if none specified
-    if (!emotionalState) {
-      emotionalState = "with a neutral expression";
-    }
+    // Default to confident, natural expression for professional portraits
+    emotionalState = "with a confident, natural expression and genuine smile";
   }
   
   const clothing = getPersonaClothing(occupation, gender, age, socialClass, region, urbanRural, description);
   
-  // Build the base prompt - using photo-realistic specifications
-  let imagePrompt = `A photo-realistic portrait of a ${age}-year-old ${ethnicity} ${gender}`;
+  // Build the base prompt - using professional portrait specifications
+  let imagePrompt = `Professional studio portrait of a ${age}-year-old ${ethnicity} ${gender}`;
   
   // Add body type if specified
   if (bodyType) {
@@ -112,16 +89,16 @@ export function buildImagePrompt(personaData: any): string {
     imagePrompt += `, ${emotionalState}`;
   }
   
-  // Add photo-realistic specifications
-  imagePrompt += `. A photo-realistic portrait, shot with a DSLR camera, natural lighting, ultra-detailed skin texture, shallow depth of field, clean background, 35mm lens, no artistic filters, no drawing or painting effects. This is not an illustration or 3D render — it is a real photograph. Professional headshot style with proper studio lighting, realistic skin texture, and natural facial features. The photo should be well-composed with the subject's face being the main focus, with shoulders visible.`;
+  // Add professional portrait specifications focused on realism and quality
+  imagePrompt += `. Professional headshot photography, shot with a high-end DSLR camera using an 85mm portrait lens. Studio lighting setup with key light and fill light for even, flattering illumination. Ultra-realistic skin texture with natural pores, fine lines, and authentic skin tone. Sharp focus on the eyes with beautiful catchlights. Natural facial expression showing genuine personality. Shot against a neutral, softly blurred background in warm gray or beige tones. The photograph should capture authentic human characteristics - natural skin imperfections, realistic hair texture, and genuine facial expressions. Professional photographer quality with perfect color grading and skin tone accuracy. The lighting should be soft and even, eliminating harsh shadows while maintaining natural dimensionality. Focus on creating a warm, approachable, yet professional appearance that looks like a real person photographed in a high-end portrait studio.`;
   
   // Additional specifics for body type
   if (bodyType === "overweight" || bodyType === "slightly overweight") {
-    imagePrompt += " The person should have a realistic face with appropriate fullness that suggests their weight, without exaggeration.";
+    imagePrompt += " The person should have natural facial fullness that authentically reflects their build, photographed with flattering angles and lighting.";
   }
   
-  // Add specifics about photo quality
-  imagePrompt += " The photograph should look like it was taken by a professional portrait photographer with clean, natural lighting, shallow depth of field, and accurate skin tones. The background should be simple and neutral (like light gray, soft blue, or beige) to make the subject stand out.";
+  // Add specifics about photo realism and quality
+  imagePrompt += " This must be an absolutely photorealistic image that could pass for a real photograph taken by a professional portrait photographer. The skin should show natural texture, subtle variations in tone, and realistic lighting. Avoid any artificial, overly smooth, or plastic-looking skin. The overall image should have the authentic quality of professional corporate headshots or LinkedIn profile photos.";
   
   console.log("Generated prompt:", imagePrompt);
   
