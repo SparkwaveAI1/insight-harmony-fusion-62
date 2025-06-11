@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Project, ProjectWithConversationCount } from "./types";
@@ -24,79 +23,17 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
 };
 
 /**
- * Fetches all projects for the current user (basic version for selection dialogs)
+ * Fetches all projects for the current user
  */
 export const getUserProjects = async (): Promise<Project[]> => {
   try {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error("No authenticated user found");
-      return [];
-    }
-
-    console.log("Fetching projects for user:", user.id);
-
-    // First get basic projects
-    const { data: basicProjects, error: projectsError } = await supabase
+    const { data, error } = await supabase
       .from("projects")
       .select("*")
-      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
-    if (projectsError) {
-      console.error("Error fetching basic projects:", projectsError);
-      throw projectsError;
-    }
-
-    console.log("Basic projects fetched:", basicProjects);
-
-    if (!basicProjects || basicProjects.length === 0) {
-      console.log("No projects found for user");
-      return [];
-    }
-
-    // Then try to get additional data (collections and personas) for each project
-    const projectsWithDetails = await Promise.all(
-      basicProjects.map(async (project) => {
-        try {
-          const { data: projectCollections, error: collectionsError } = await supabase
-            .from("project_collections")
-            .select(`
-              collection_id,
-              collections (
-                id,
-                name,
-                description,
-                collection_personas (
-                  persona_id
-                )
-              )
-            `)
-            .eq("project_id", project.id);
-
-          if (collectionsError) {
-            console.warn("Error fetching collections for project:", project.id, collectionsError);
-            // Return project without collection data if there's an error
-            return project;
-          }
-
-          return {
-            ...project,
-            project_collections: projectCollections || []
-          };
-        } catch (error) {
-          console.warn("Error processing project:", project.id, error);
-          // Return basic project if there's any error
-          return project;
-        }
-      })
-    );
-
-    console.log("Projects with details:", projectsWithDetails);
-    return projectsWithDetails as Project[];
-
+    if (error) throw error;
+    return data as Project[] || [];
   } catch (error) {
     console.error("Error fetching projects:", error);
     toast.error("Failed to fetch projects");

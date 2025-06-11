@@ -12,8 +12,6 @@ import PersonaList from './pages/PersonaViewer';
 import PersonaDetail from './pages/PersonaDetail';
 import PersonaCreate from './pages/persona-creation/PersonaCreationLanding';
 import PersonaEdit from './pages/PersonaDetail';
-import Collections from './pages/Collections';
-import CollectionDetail from './pages/CollectionDetail';
 import ProjectList from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import ProjectCreate from './pages/Projects';
@@ -25,8 +23,6 @@ import StructuredStudy from './pages/StructuredStudy';
 import QuickResearchSetup from './pages/research/QuickResearchSetup';
 import StructuredStudySetup from './pages/research/StructuredStudySetup';
 import StructuredStudySession from './pages/research/StructuredStudySession';
-import Interviewer from './pages/Interviewer';
-import EarnPRSNA from './pages/EarnPRSNA';
 
 const queryClient = new QueryClient();
 
@@ -44,15 +40,9 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/personas" element={<PersonaList />} />
-              <Route path="/persona-viewer" element={<PersonaList />} />
               <Route path="/personas/:id" element={<PersonaDetail />} />
-              <Route path="/persona-detail/:id" element={<PersonaDetail />} />
-              <Route path="/personas/:personaId" element={<PersonaDetail />} />
-              <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
               <Route path="/personas/create" element={<PersonaCreate />} />
               <Route path="/personas/:id/edit" element={<PersonaEdit />} />
-              <Route path="/collections" element={<Collections />} />
-              <Route path="/collections/:collectionId" element={<CollectionDetail />} />
               <Route path="/projects" element={<ProjectList />} />
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/projects/create" element={<ProjectCreate />} />
@@ -64,8 +54,6 @@ function App() {
               <Route path="/research/setup/structured" element={<StructuredStudySetup />} />
               <Route path="/research/session/structured" element={<StructuredStudySession />} />
               <Route path="/research/quick-setup" element={<QuickResearchSetup />} />
-              <Route path="/interviewer" element={<Interviewer />} />
-              <Route path="/prsna" element={<EarnPRSNA />} />
             </Routes>
           </PersonaProvider>
         </AuthProvider>

@@ -30,6 +30,7 @@ import { Link } from "react-router-dom";
 import { getUserProjectsWithCount, createProject } from "@/services/collections";
 import { ProjectWithConversationCount } from "@/services/collections/types";
 import { toast } from "sonner";
+import { SupabaseDebug } from "@/components/debug/SupabaseDebug";
 
 const Projects = () => {
   const [projects, setProjects] = useState<ProjectWithConversationCount[]>([]);
@@ -159,6 +160,9 @@ const Projects = () => {
                     </DialogContent>
                   </Dialog>
                 </div>
+
+                {/* Debug component */}
+                <SupabaseDebug />
                 
                 {isLoading ? (
                   <div className="flex items-center justify-center py-12">

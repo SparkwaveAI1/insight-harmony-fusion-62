@@ -1,117 +1,65 @@
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { SessionHeader } from "@/components/research/structured-session/SessionHeader";
 import { NoSessionFound } from "@/components/research/structured-session/NoSessionFound";
-import { structuredStudyService } from "@/services/structuredStudy/structuredStudyService";
-import ResearchInterface from "@/components/research/ResearchInterface";
-import { useResearchSession } from "@/components/research/hooks/useResearchSession";
+import { AIResearchAssistant } from "@/components/research/structured-session/AIResearchAssistant";
 
 const StructuredStudySession = () => {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [sessionError, setSessionError] = useState<string | null>(null);
-  
-  // Get URL parameters
-  const sessionId = searchParams.get('session');
-  const personaIds = searchParams.get('personas')?.split(',') || [];
-  const projectId = searchParams.get('project');
-
-  // Use the research session hook
-  const {
-    sessionId: researchSessionId,
-    loadedPersonas,
-    messages,
-    isLoading: researchLoading,
-    createSession,
-    sendMessage,
-    selectPersonaResponder
-  } = useResearchSession();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadSession = async () => {
       if (!sessionId) {
-        console.log('No session ID provided');
-        setSessionError('No session ID provided');
-        setIsLoadingSession(false);
+        setIsLoading(false);
         return;
       }
 
       try {
-        setIsLoadingSession(true);
         console.log("Loading session with ID:", sessionId);
+        // For now, we'll simulate loading a session
+        // TODO: Replace with actual service call when available
+        const mockSession = {
+          id: sessionId,
+          title: "Mock Study Session",
+          study_goal: { description: "Test study goal" },
+          audience_definition: { description: "Test audience" },
+          research_format: { type: "Interview" },
+          output_goals: { description: "Test output goals" }
+        };
         
-        // Load the structured study session
-        const structuredSession = await structuredStudyService.getSession(sessionId);
-        
-        if (!structuredSession) {
-          console.error('No structured session found');
-          setSessionError('Study session not found');
-          setIsLoadingSession(false);
-          return;
-        }
-        
-        console.log("Structured session data loaded:", structuredSession);
-        setSession(structuredSession);
-        setIsLoadingSession(false);
-        
+        console.log("Session data loaded:", mockSession);
+        setSession(mockSession);
       } catch (error) {
         console.error("Error loading session:", error);
-        setSessionError('Failed to load study session');
-        setIsLoadingSession(false);
+        toast.error("Failed to load study session");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadSession();
   }, [sessionId]);
 
-  // Auto-start research session when session is loaded and we have personas
-  useEffect(() => {
-    const startResearchSession = async () => {
-      if (!session || !personaIds.length || researchSessionId) {
-        return; // Don't start if we already have a research session
-      }
-
-      console.log('Starting research session with personas:', personaIds);
-      try {
-        const success = await createSession(personaIds, projectId);
-        if (success) {
-          console.log('Research session started successfully');
-          toast.success("Research session started successfully");
-        } else {
-          toast.error("Failed to start research session");
-        }
-      } catch (error) {
-        console.error('Error starting research session:', error);
-        toast.error("Failed to start research session");
-      }
-    };
-
-    startResearchSession();
-  }, [session, personaIds, projectId, createSession, researchSessionId]);
-
-  const handleSendMessage = async (message: string, imageFile?: File): Promise<void> => {
-    await sendMessage(message, imageFile);
+  const handleSendMessage = async (message: string) => {
+    console.log("Sending message:", message);
+    // TODO: Implement actual message sending logic
+    toast.success("Message sent to research participants");
   };
 
-  const handleSelectResponder = async (personaId: string): Promise<void> => {
-    await selectPersonaResponder(personaId);
-  };
-
-  const handleCreateSession = async (selectedPersonas: string[], selectedProjectId?: string | null): Promise<boolean> => {
-    return await createSession(selectedPersonas, selectedProjectId);
-  };
-
-  if (isLoadingSession) {
+  if (isLoading) {
     return (
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
@@ -137,34 +85,9 @@ const StructuredStudySession = () => {
     );
   }
 
-  if (sessionError || !session) {
-    return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="relative flex min-h-svh flex-col">
-              <Header />
-              <main className="flex-1 pt-24">
-                <div className="container py-6">
-                  <NoSessionFound />
-                </div>
-              </main>
-              <Footer />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
+  if (!session) {
+    return <NoSessionFound />;
   }
-
-  // Prepare session data for the research interface
-  const sessionData = {
-    sessionId: researchSessionId,
-    loadedPersonas,
-    messages,
-    isLoading: researchLoading
-  };
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -173,27 +96,73 @@ const StructuredStudySession = () => {
         <SidebarInset>
           <div className="relative flex min-h-svh flex-col">
             <Header />
-            <main className="flex-1 min-h-0">
-              <div className="container h-full flex flex-col">
-                <div className="flex items-center gap-4 mb-6 pt-24 flex-shrink-0">
+            <main className="flex-1 pt-24">
+              <div className="container py-6">
+                <div className="flex items-center gap-4 mb-6">
                   <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <div>
-                    <h1 className="text-2xl font-bold">Structured Research Session</h1>
-                    <p className="text-sm text-muted-foreground">
-                      {session.title || 'Research Session'}
-                    </p>
-                  </div>
+                  <SessionHeader 
+                    projectId={null}
+                    loadedPersonasCount={0}
+                    knowledgeBaseActive={false}
+                    assistantActive={true}
+                    onToggleKnowledgeBase={() => {}}
+                    onToggleAssistant={() => {}}
+                  />
                 </div>
 
-                <div className="flex-1 min-h-0">
-                  <ResearchInterface 
-                    sessionData={sessionData}
-                    onCreateSession={handleCreateSession}
-                    onSendMessage={handleSendMessage}
-                    onSelectResponder={handleSelectResponder}
-                  />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <AIResearchAssistant 
+                      researchInsights={[]}
+                      suggestedQuestions={[
+                        "What are your main pain points with this product?",
+                        "How does this fit into your daily routine?",
+                        "What would make this more valuable to you?"
+                      ]}
+                      messages={[]}
+                      onSendMessage={handleSendMessage}
+                      loadedPersonasCount={0}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Study Overview</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {session.study_goal && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Study Goal</h4>
+                            <p className="text-sm">{session.study_goal.description || "No description provided"}</p>
+                          </div>
+                        )}
+
+                        {session.audience_definition && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Target Audience</h4>
+                            <p className="text-sm">{session.audience_definition.description || "No description provided"}</p>
+                          </div>
+                        )}
+
+                        {session.research_format && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Research Format</h4>
+                            <p className="text-sm">{session.research_format.type || "Not specified"}</p>
+                          </div>
+                        )}
+
+                        {session.output_goals && (
+                          <div>
+                            <h4 className="font-medium text-sm text-muted-foreground mb-1">Output Goals</h4>
+                            <p className="text-sm">{session.output_goals.description || "No description provided"}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
             </main>

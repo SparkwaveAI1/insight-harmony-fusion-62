@@ -6,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getUserProjects, createProject } from '@/services/collections/projectOperations';
-import { Project } from '@/services/collections/types';
-import { Loader2, Plus, Save, FolderPlus, Users, Folder } from 'lucide-react';
+import { getUserProjects, createProject, Project } from '@/services/collections';
+import { Loader2, Plus, Save, FolderPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProjectSelectionDialogProps {
@@ -36,18 +35,10 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
   }, [open]);
 
   const loadProjects = async () => {
-    try {
-      setIsLoading(true);
-      console.log('Loading projects for dialog...');
-      const userProjects = await getUserProjects();
-      console.log('Projects loaded for dialog:', userProjects);
-      setProjects(userProjects);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      toast.error('Failed to load projects');
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+    const userProjects = await getUserProjects();
+    setProjects(userProjects);
+    setIsLoading(false);
   };
 
   const handleCreateProject = async () => {
@@ -57,36 +48,21 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
     }
 
     setIsLoading(true);
-    try {
-      console.log("Creating project:", newProjectName);
-      const project = await createProject(newProjectName, newProjectDescription || null);
-      
-      if (project) {
-        console.log("Project created successfully:", project);
-        await loadProjects();
-        setSelectedProjectId(project.id);
-        setIsCreatingProject(false);
-        setNewProjectName("");
-        setNewProjectDescription("");
-        toast.success("Project created successfully");
-      } else {
-        console.error("Project creation returned null");
-        toast.error("Failed to create project");
-      }
-    } catch (error) {
-      console.error('Error creating project:', error);
-      toast.error('Failed to create project');
-    } finally {
-      setIsLoading(false);
+    const project = await createProject(newProjectName, newProjectDescription || null);
+    
+    if (project) {
+      await loadProjects();
+      setSelectedProjectId(project.id);
+      setIsCreatingProject(false);
+      setNewProjectName("");
+      setNewProjectDescription("");
+      toast.success("Project created successfully");
     }
+    
+    setIsLoading(false);
   };
 
   const handleContinueWithProject = () => {
-    if (!selectedProjectId) {
-      toast.error("Please select a project");
-      return;
-    }
-    console.log("Selected project:", selectedProjectId);
     onProjectSelected(selectedProjectId);
     onOpenChange(false);
   };
@@ -96,21 +72,9 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
     onOpenChange(false);
   };
 
-  const getProjectStats = (project: any) => {
-    const collections = project.project_collections || [];
-    const totalPersonas = collections.reduce((total: number, pc: any) => {
-      return total + (pc.collections?.collection_personas?.length || 0);
-    }, 0);
-    
-    return {
-      collections: collections.length,
-      personas: totalPersonas
-    };
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Research Project Setup</DialogTitle>
           <DialogDescription>
@@ -157,85 +121,53 @@ const ProjectSelectionDialog: React.FC<ProjectSelectionDialogProps> = ({
           </div>
         ) : (
           <div className="space-y-4 pt-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                <span className="text-sm text-muted-foreground">Loading projects...</span>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="project">Select Project (Optional)</Label>
-                  <div className="flex gap-2">
-                    <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {projects.map((project) => {
-                          const stats = getProjectStats(project);
-                          return (
-                            <SelectItem key={project.id} value={project.id}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{project.name}</span>
-                                {stats.collections > 0 || stats.personas > 0 ? (
-                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Folder className="h-3 w-3" />
-                                      {stats.collections} collections
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Users className="h-3 w-3" />
-                                      {stats.personas} personas
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-muted-foreground">Empty project</span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      onClick={() => setIsCreatingProject(true)}
-                      title="Create new project"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  {projects.length === 0 && !isLoading && (
-                    <p className="text-xs text-muted-foreground">
-                      No projects found. Create a new project to organize your research.
-                    </p>
-                  )}
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="project">Select Project (Optional)</Label>
+              <div className="flex gap-2">
+                <Select value={selectedProjectId} onValueChange={setSelectedProjectId} disabled={isLoading}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={handleContinueWithProject}
-                    disabled={!selectedProjectId}
-                    className="w-full"
-                  >
-                    <FolderPlus className="h-4 w-4 mr-2" />
-                    Continue with Selected Project
-                  </Button>
-                  
-                  <Button
-                    onClick={handleContinueWithoutProject}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Continue without Project
-                  </Button>
-                </div>
-              </>
-            )}
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setIsCreatingProject(true)}
+                  disabled={isLoading}
+                  title="Create new project"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleContinueWithProject}
+                disabled={isLoading || !selectedProjectId}
+                className="w-full"
+              >
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Continue with Selected Project
+              </Button>
+              
+              <Button
+                onClick={handleContinueWithoutProject}
+                variant="outline"
+                disabled={isLoading}
+                className="w-full"
+              >
+                Continue without Project
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
