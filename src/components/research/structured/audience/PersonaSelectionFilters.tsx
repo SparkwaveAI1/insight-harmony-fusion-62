@@ -4,7 +4,6 @@ import { Search, Users, FolderOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collection } from '@/services/collections/types';
-import { AudienceFilters } from './types';
 
 interface PersonaSelectionFiltersProps {
   searchTerm: string;
@@ -13,8 +12,6 @@ interface PersonaSelectionFiltersProps {
   onCollectionChange: (value: string) => void;
   collections: Collection[];
   isLoadingCollections: boolean;
-  filters?: AudienceFilters;
-  onFiltersChange?: (filters: AudienceFilters) => void;
 }
 
 export const PersonaSelectionFilters: React.FC<PersonaSelectionFiltersProps> = ({
@@ -23,16 +20,14 @@ export const PersonaSelectionFilters: React.FC<PersonaSelectionFiltersProps> = (
   selectedCollection,
   onCollectionChange,
   collections,
-  isLoadingCollections,
-  filters,
-  onFiltersChange
+  isLoadingCollections
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Collections Dropdown */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Filter by Collection</label>
-        <Select value={selectedCollection} onValueChange={onCollectionChange}>
+        <Select value={selectedCollection} onValueChange={onCollectionChange} disabled={isLoadingCollections}>
           <SelectTrigger>
             <SelectValue placeholder="Select a collection" />
           </SelectTrigger>

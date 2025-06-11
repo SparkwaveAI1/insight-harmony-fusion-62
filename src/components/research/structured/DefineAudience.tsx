@@ -2,25 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, Filter, CheckCircle2 } from 'lucide-react';
+import { Users, CheckCircle2 } from 'lucide-react';
 import { PersonaGrid } from './audience/PersonaGrid';
 import { PersonaSelectionFilters } from './audience/PersonaSelectionFilters';
 import { SelectedPersonasPreview } from './audience/SelectedPersonasPreview';
 import { useAudienceData } from './audience/useAudienceData';
-import { AudienceFilters } from './audience/types';
-
-export interface AudienceDefinition {
-  target_demographics: string;
-  psychographics: string;
-  behavioral_patterns: string;
-  selection_criteria: string;
-  selected_personas?: string[];
-}
+import { AudienceDefinition } from './audience/types';
 
 interface DefineAudienceProps {
   onAudienceDefined: (audience: AudienceDefinition | string[]) => void;
@@ -38,22 +27,16 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   selectedPersonas = []
 }) => {
   const [audienceData, setAudienceData] = useState<AudienceDefinition>({
-    target_demographics: initialAudience?.target_demographics || '',
-    psychographics: initialAudience?.psychographics || '',
-    behavioral_patterns: initialAudience?.behavioral_patterns || '',
-    selection_criteria: initialAudience?.selection_criteria || '',
+    demographics: {
+      age_range: initialAudience?.demographics?.age_range || '',
+      income_level: initialAudience?.demographics?.income_level || '',
+      location: initialAudience?.demographics?.location || '',
+      occupation: initialAudience?.demographics?.occupation || '',
+    },
     selected_personas: selectedPersonas
   });
 
   const [currentSelectedPersonas, setCurrentSelectedPersonas] = useState<string[]>(selectedPersonas);
-  const [filters, setFilters] = useState<AudienceFilters>({
-    age_range: '',
-    gender: '',
-    occupation: '',
-    region: '',
-    education: ''
-  });
-
   const maxPersonas = 4;
 
   const {
@@ -80,22 +63,25 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
     });
   };
 
+  const handlePersonaRemove = (personaId: string) => {
+    setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
+  };
+
   const handleSubmit = () => {
     if (personaSelectionOnly) {
       onAudienceDefined(currentSelectedPersonas);
     } else {
-      const finalAudienceData = {
+      const updatedAudience = {
         ...audienceData,
-        selected_personas: hidePersonaSelection ? [] : currentSelectedPersonas
+        selected_personas: hidePersonaSelection ? [] : currentSelectedPersonas,
       };
-      onAudienceDefined(finalAudienceData);
+      onAudienceDefined(updatedAudience);
     }
   };
 
   const canProceed = personaSelectionOnly 
     ? currentSelectedPersonas.length > 0
-    : audienceData.target_demographics.trim() !== '' && 
-      audienceData.selection_criteria.trim() !== '';
+    : true;
 
   if (personaSelectionOnly) {
     return (
@@ -110,45 +96,14 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
         <div className="space-y-6">
           {/* Search and Filters */}
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search personas by name, occupation, or traits..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Collections" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Collections</SelectItem>
-                  {collections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id}>
-                      {collection.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <PersonaSelectionFilters 
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedCollection={selectedCollection}
-              onCollectionChange={setSelectedCollection}
-              collections={collections}
-              isLoadingCollections={isLoadingCollections}
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
-          </div>
+          <PersonaSelectionFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedCollection={selectedCollection}
+            onCollectionChange={setSelectedCollection}
+            collections={collections}
+            isLoadingCollections={isLoadingCollections}
+          />
 
           {/* Selected Personas Preview */}
           {currentSelectedPersonas.length > 0 && (
@@ -156,9 +111,7 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
               selectedPersonas={currentSelectedPersonas}
               personas={filteredPersonas}
               maxPersonas={maxPersonas}
-              onPersonaRemove={(personaId) => {
-                setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
-              }}
+              onPersonaRemove={handlePersonaRemove}
             />
           )}
 
@@ -204,120 +157,99 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="demographics">Target Demographics *</Label>
+            <Label htmlFor="demographics-age">Age Range</Label>
             <Textarea
-              id="demographics"
-              placeholder="e.g., Adults aged 25-45, urban professionals, household income $50K-$100K"
-              value={audienceData.target_demographics}
-              onChange={(e) => setAudienceData(prev => ({ ...prev, target_demographics: e.target.value }))}
-              rows={3}
+              id="demographics-age"
+              placeholder="e.g., 25-45, young adults, seniors"
+              value={audienceData.demographics.age_range || ''}
+              onChange={(e) => setAudienceData(prev => ({
+                ...prev,
+                demographics: { ...prev.demographics, age_range: e.target.value }
+              }))}
+              rows={2}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="psychographics">Psychographics</Label>
+            <Label htmlFor="demographics-income">Income Level</Label>
             <Textarea
-              id="psychographics"
-              placeholder="e.g., Health-conscious, environmentally aware, values convenience"
-              value={audienceData.psychographics}
-              onChange={(e) => setAudienceData(prev => ({ ...prev, psychographics: e.target.value }))}
-              rows={3}
+              id="demographics-income"
+              placeholder="e.g., middle-income, high-income"
+              value={audienceData.demographics.income_level || ''}
+              onChange={(e) => setAudienceData(prev => ({
+                ...prev, 
+                demographics: { ...prev.demographics, income_level: e.target.value }
+              }))}
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="demographics-location">Location</Label>
+            <Textarea
+              id="demographics-location"
+              placeholder="e.g., urban areas, suburban, rural"
+              value={audienceData.demographics.location || ''}
+              onChange={(e) => setAudienceData(prev => ({
+                ...prev,
+                demographics: { ...prev.demographics, location: e.target.value }
+              }))}
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="demographics-occupation">Occupation</Label>
+            <Textarea
+              id="demographics-occupation"
+              placeholder="e.g., professionals, students, retirees"
+              value={audienceData.demographics.occupation || ''}
+              onChange={(e) => setAudienceData(prev => ({
+                ...prev,
+                demographics: { ...prev.demographics, occupation: e.target.value }
+              }))}
+              rows={2}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="behavioral">Behavioral Patterns</Label>
-          <Textarea
-            id="behavioral"
-            placeholder="e.g., Shops online frequently, uses mobile apps for daily tasks, early technology adopters"
-            value={audienceData.behavioral_patterns}
-            onChange={(e) => setAudienceData(prev => ({ ...prev, behavioral_patterns: e.target.value }))}
-            rows={2}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="criteria">Selection Criteria *</Label>
-          <Textarea
-            id="criteria"
-            placeholder="e.g., Must have purchased similar products in the last 6 months, active on social media"
-            value={audienceData.selection_criteria}
-            onChange={(e) => setAudienceData(prev => ({ ...prev, selection_criteria: e.target.value }))}
-            rows={2}
-          />
-        </div>
-
         {!hidePersonaSelection && (
-          <>
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4">Select Study Participants</h3>
-              
-              {/* Search and Filters */}
-              <div className="space-y-4 mb-6">
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search personas by name, occupation, or traits..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="All Collections" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Collections</SelectItem>
-                      {collections.map((collection) => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          {collection.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <PersonaSelectionFilters 
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  selectedCollection={selectedCollection}
-                  onCollectionChange={setSelectedCollection}
-                  collections={collections}
-                  isLoadingCollections={isLoadingCollections}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                />
-              </div>
-
-              {/* Selected Personas Preview */}
-              {currentSelectedPersonas.length > 0 && (
-                <SelectedPersonasPreview
-                  selectedPersonas={currentSelectedPersonas}
-                  personas={filteredPersonas}
-                  maxPersonas={maxPersonas}
-                  onPersonaRemove={(personaId) => {
-                    setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
-                  }}
-                />
-              )}
-
-              {/* Persona Grid */}
-              <PersonaGrid
-                personas={filteredPersonas}
-                selectedPersonas={currentSelectedPersonas}
-                maxPersonas={maxPersonas}
-                onPersonaSelect={handlePersonaSelect}
-                isLoading={isLoadingPersonas}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Select Study Participants</h3>
+            
+            {/* Search and Filters */}
+            <div className="space-y-4 mb-6">
+              <PersonaSelectionFilters
                 searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
                 selectedCollection={selectedCollection}
+                onCollectionChange={setSelectedCollection}
+                collections={collections}
+                isLoadingCollections={isLoadingCollections}
               />
             </div>
-          </>
+
+            {/* Selected Personas Preview */}
+            {currentSelectedPersonas.length > 0 && (
+              <SelectedPersonasPreview
+                selectedPersonas={currentSelectedPersonas}
+                personas={filteredPersonas}
+                maxPersonas={maxPersonas}
+                onPersonaRemove={handlePersonaRemove}
+              />
+            )}
+
+            {/* Persona Grid */}
+            <PersonaGrid
+              personas={filteredPersonas}
+              selectedPersonas={currentSelectedPersonas}
+              maxPersonas={maxPersonas}
+              onPersonaSelect={handlePersonaSelect}
+              isLoading={isLoadingPersonas}
+              searchTerm={searchTerm}
+              selectedCollection={selectedCollection}
+            />
+          </div>
         )}
 
         <div className="text-center pt-4">
