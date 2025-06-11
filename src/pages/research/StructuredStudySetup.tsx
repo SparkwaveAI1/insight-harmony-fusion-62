@@ -117,13 +117,41 @@ const StructuredStudySetup = () => {
     }
   };
 
-  const handlePersonasSelected = (personas: string[]) => {
+  const handlePersonasSelected = async (personas: string[]) => {
     setSelectedPersonas(personas);
-    setCurrentStep(5);
-    saveSession({ 
-      audience_definition: { selected_personas: personas }, 
-      current_step: 5 
-    });
+    
+    // Auto-launch the study when personas are selected
+    if (!studyGoal || !researchFormat || !currentSessionId) {
+      toast.error("Please complete all steps before launching");
+      return;
+    }
+
+    setIsLaunching(true);
+    try {
+      await structuredStudyService.updateSession(currentSessionId, {
+        audience_definition: { selected_personas: personas },
+        status: 'completed'
+      });
+
+      // Store session data for the focus group
+      const researchData = {
+        personas: personas,
+        objective: studyGoal.objective,
+        projectId: selectedProjectId,
+        sessionId: currentSessionId
+      };
+      sessionStorage.setItem('quickResearchSession', JSON.stringify(researchData));
+      
+      // Navigate to focus group
+      navigate('/focus-group');
+      
+      toast.success("Study launched! Starting group discussion...");
+    } catch (error) {
+      console.error('Error launching study:', error);
+      toast.error("Failed to launch study");
+    } finally {
+      setIsLaunching(false);
+    }
   };
 
   const handleStepChange = (newStep: number) => {
@@ -173,8 +201,7 @@ const StructuredStudySetup = () => {
     { number: 1, title: "Project Setup", description: "Select or create a project for this study" },
     { number: 2, title: "Study Goals", description: "Define your research goals and objectives" },
     { number: 3, title: "Research Format", description: "Select the format that matches your study" },
-    { number: 4, title: "Select Personas", description: "Choose specific personas for your study" },
-    { number: 5, title: "Review + Launch", description: "Review configuration and launch" }
+    { number: 4, title: "Select Personas", description: "Choose specific personas for your study" }
   ];
 
   if (isLoading) {
@@ -340,63 +367,6 @@ const StructuredStudySetup = () => {
                         selectedPersonas={selectedPersonas}
                       />
                     )}
-
-                    {currentStep === 5 && (
-                      <Card className="p-6">
-                        <div className="text-center mb-6">
-                          <Rocket className="h-12 w-12 text-primary mx-auto mb-4" />
-                          <h2 className="text-2xl font-semibold mb-2">Ready to Launch Your Study</h2>
-                          <p className="text-muted-foreground">
-                            Review your configuration below and launch your group discussion
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-4 mb-8">
-                          {selectedProjectId && (
-                            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                              <h3 className="font-medium text-indigo-800 mb-2">Project</h3>
-                              <p className="text-indigo-700 text-sm">Associated with project</p>
-                            </div>
-                          )}
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <h3 className="font-medium text-green-800 mb-2">Study Goal</h3>
-                            <p className="text-green-700 text-sm">{studyGoal?.objective}</p>
-                          </div>
-                          {researchFormat && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                              <h3 className="font-medium text-blue-800 mb-2">Research Format</h3>
-                              <p className="text-blue-700 text-sm">{researchFormat.description}</p>
-                              <p className="text-blue-600 text-xs mt-1">{researchFormat.persona_count}</p>
-                            </div>
-                          )}
-                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                            <h3 className="font-medium text-purple-800 mb-2">Selected Personas</h3>
-                            <p className="text-purple-700 text-sm">{selectedPersonas.length} personas selected for group discussion</p>
-                          </div>
-                        </div>
-
-                        <div className="text-center">
-                          <Button 
-                            onClick={handleLaunchStudy} 
-                            disabled={isLaunching}
-                            size="lg"
-                            className="px-8"
-                          >
-                            {isLaunching ? (
-                              <>
-                                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                                Launching Study...
-                              </>
-                            ) : (
-                              <>
-                                <Users className="h-4 w-4 mr-2" />
-                                Start Group Discussion
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </Card>
-                    )}
                   </div>
 
                   {/* Navigation */}
@@ -410,14 +380,13 @@ const StructuredStudySetup = () => {
                       Previous
                     </Button>
                     
-                    {currentStep < 5 && (
+                    {currentStep < 4 && (
                       <Button
-                        onClick={() => handleStepChange(Math.min(5, currentStep + 1))}
+                        onClick={() => handleStepChange(Math.min(4, currentStep + 1))}
                         disabled={
                           (currentStep === 1 && selectedProjectId === undefined) ||
                           (currentStep === 2 && !studyGoal) ||
-                          (currentStep === 3 && !researchFormat) ||
-                          (currentStep === 4 && selectedPersonas.length === 0)
+                          (currentStep === 3 && !researchFormat)
                         }
                       >
                         Next
@@ -425,6 +394,17 @@ const StructuredStudySetup = () => {
                       </Button>
                     )}
                   </div>
+
+                  {/* Loading overlay when launching */}
+                  {isLaunching && (
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-lg font-medium">Launching Study...</p>
+                        <p className="text-sm text-muted-foreground">Starting group discussion</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </main>
@@ -445,3 +425,5 @@ const StructuredStudySetup = () => {
 };
 
 export default StructuredStudySetup;
+
+}
