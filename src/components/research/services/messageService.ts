@@ -7,8 +7,6 @@ export const saveUserMessage = async (
   sessionId: string,
   content: string
 ): Promise<void> => {
-  console.log('Saving user message to database:', content);
-  
   const { error: dbError } = await supabase
     .from('conversation_messages')
     .insert({
@@ -31,8 +29,6 @@ export const savePersonaResponse = async (
   personaId: string,
   response: string
 ): Promise<void> => {
-  console.log('Saving persona response to database:', { personaId, response: response.substring(0, 100) + '...' });
-  
   await supabase
     .from('conversation_messages')
     .insert({
@@ -103,8 +99,6 @@ export const sendResearchMessage = async (
   loadedPersonas: LoadedPersona[],
   targetPersonaId?: string
 ): Promise<{ content: string; personaId: string; personaName: string }> => {
-  console.log('Sending research message to personas:', { sessionId, content: content.substring(0, 50) + '...', targetPersonaId });
-  
   // Save user message first
   await saveUserMessage(sessionId, content);
   
@@ -121,39 +115,28 @@ export const sendResearchMessage = async (
     throw new Error('No persona found to respond');
   }
   
-  console.log('Selected responding persona:', respondingPersona.name);
-  
   // Generate response using the persona response service
-  try {
-    const { data, error } = await supabase.functions.invoke('generate-persona-response', {
-      body: {
-        persona_id: respondingPersona.persona_id,
-        persona_role: 'assistant',
-        previous_messages: [{ role: 'user', content }],
-        chat_mode: 'research',
-        conversation_context: '',
-        has_image: false
-      }
-    });
-    
-    if (error) {
-      console.error('Error generating persona response:', error);
-      throw new Error('Failed to generate persona response: ' + error.message);
-    }
-    
-    const response = data?.response || 'I understand your question, but I need a moment to think about it.';
-    console.log('Generated response:', response.substring(0, 100) + '...');
-    
-    // Save persona response
-    await savePersonaResponse(sessionId, respondingPersona.persona_id, response);
-    
-    return {
-      content: response,
+  const { data, error } = await supabase.functions.invoke('generate-persona-response', {
+    body: {
+      message: content,
       personaId: respondingPersona.persona_id,
-      personaName: respondingPersona.name
-    };
-  } catch (error) {
-    console.error('Error in sendResearchMessage:', error);
-    throw error;
+      conversationId: sessionId
+    }
+  });
+  
+  if (error) {
+    console.error('Error generating persona response:', error);
+    throw new Error('Failed to generate persona response');
   }
+  
+  const response = data.response || 'I understand your question, but I need a moment to think about it.';
+  
+  // Save persona response
+  await savePersonaResponse(sessionId, respondingPersona.persona_id, response);
+  
+  return {
+    content: response,
+    personaId: respondingPersona.persona_id,
+    personaName: respondingPersona.name
+  };
 };

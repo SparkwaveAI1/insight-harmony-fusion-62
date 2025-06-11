@@ -51,8 +51,6 @@ export const useResearchSession = () => {
       return;
     }
 
-    console.log('Sending message in research session:', content.substring(0, 50) + '...');
-
     try {
       setIsLoading(true);
       
@@ -83,7 +81,7 @@ export const useResearchSession = () => {
       
     } catch (error) {
       console.error('Failed to send message:', error);
-      toast.error('Failed to send message: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Failed to send message');
     } finally {
       setIsLoading(false);
     }
@@ -94,8 +92,6 @@ export const useResearchSession = () => {
       toast.error('No active research session or messages');
       return;
     }
-
-    console.log('Selecting persona responder:', personaId);
 
     try {
       setIsLoading(true);
@@ -122,7 +118,7 @@ export const useResearchSession = () => {
       
     } catch (error) {
       console.error('Failed to get persona response:', error);
-      toast.error('Failed to get persona response: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Failed to get persona response');
     } finally {
       setIsLoading(false);
     }

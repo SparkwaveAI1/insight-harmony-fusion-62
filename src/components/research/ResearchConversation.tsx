@@ -164,34 +164,13 @@ export default function ResearchConversation({
                 </p>
               </div>
             ) : (
-              messages.map((message, index) => {
-                // Convert LoadedPersona to the format expected by ResearchMessage
-                const persona = loadedPersonas.find(p => p.persona_id === message.personaId);
-                const personaForMessage = persona ? {
-                  ...persona,
-                  id: persona.persona_id, // Map persona_id to id for compatibility
-                  creation_date: new Date().toISOString(),
-                  created_at: new Date().toISOString(),
-                  behavioral_modulation: {},
-                  linguistic_profile: {},
-                  persona_context: {},
-                  persona_type: 'research',
-                  trait_profile: {},
-                  interview_sections: [],
-                  preinterview_tags: [],
-                  simulation_directives: {},
-                  is_public: false,
-                  profile_image_url: persona.image_url
-                } : undefined;
-
-                return (
-                  <ResearchMessage 
-                    key={`${message.timestamp}-${index}`} 
-                    message={message} 
-                    persona={personaForMessage}
-                  />
-                );
-              })
+              messages.map((message, index) => (
+                <ResearchMessage 
+                  key={`${message.timestamp}-${index}`} 
+                  message={message} 
+                  persona={loadedPersonas.find(p => p.persona_id === message.personaId)} 
+                />
+              ))
             )}
           </div>
         </ScrollArea>
