@@ -1,289 +1,212 @@
 
 import React, { useState, useEffect } from "react";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { Link } from "react-router-dom";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/sections/Footer";
+import Section from "@/components/ui-custom/Section";
+import Card from "@/components/ui-custom/Card";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
+import { getUserProjectsWithCount, createProject, deleteProject, Project, ProjectWithConversationCount } from "@/services/collections";
+import { Folder, Plus, Trash2, Calendar, MessageSquare, Construction } from "lucide-react";
+import { format } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/sections/Footer";
-import { Plus, FolderOpen, Calendar, MessageSquare, Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import { Link } from "react-router-dom";
-import { getUserProjectsWithCount, createProject } from "@/services/collections";
-import { ProjectWithConversationCount } from "@/services/collections/types";
-import { toast } from "sonner";
-import { SupabaseDebug } from "@/components/debug/SupabaseDebug";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Projects = () => {
   const [projects, setProjects] = useState<ProjectWithConversationCount[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
 
   useEffect(() => {
-    const loadProjects = async () => {
-      console.log("Loading projects...");
-      setIsLoading(true);
-      try {
-        const data = await getUserProjectsWithCount();
-        console.log("Projects loaded:", data);
-        setProjects(data);
-      } catch (error) {
-        console.error("Error loading projects:", error);
-        toast.error("Failed to load projects");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     loadProjects();
   }, []);
 
+  const loadProjects = async () => {
+    setIsLoading(true);
+    const data = await getUserProjectsWithCount();
+    setProjects(data);
+    setIsLoading(false);
+  };
+
   const handleCreateProject = async () => {
-    if (!projectName.trim()) {
-      toast.error("Project name is required");
-      return;
+    if (!newProjectName.trim()) return;
+
+    const project = await createProject(newProjectName, newProjectDescription || null);
+    if (project) {
+      setCreateDialogOpen(false);
+      setNewProjectName('');
+      setNewProjectDescription('');
+      loadProjects();
     }
-    
-    try {
-      setIsCreating(true);
-      const newProject = await createProject(projectName, projectDescription || null);
-      
-      if (newProject) {
-        const projectWithCount = { ...newProject, conversation_count: 0 };
-        setProjects(prev => [projectWithCount, ...prev]);
-        setCreateDialogOpen(false);
-        setProjectName("");
-        setProjectDescription("");
-        toast.success("Project created successfully");
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    if (confirm("Are you sure you want to delete this project? This will also delete all conversations in this project.")) {
+      const deleted = await deleteProject(id);
+      if (deleted) {
+        loadProjects();
       }
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
     } catch (error) {
-      console.error("Error creating project:", error);
-      toast.error("Failed to create project");
-    } finally {
-      setIsCreating(false);
+      return dateString;
     }
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <SidebarInset>
-          <div className="relative flex min-h-svh flex-col">
-            <Header />
-            <main className="flex-1 pt-24">
-              <div className="container py-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold font-plasmik">Projects</h1>
-                    <p className="text-muted-foreground mt-2">
-                      Organize your research conversations and studies
-                    </p>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-grow">
+        <Section className="pt-24">
+          <div className="container mx-auto px-4">
+            <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+              <Construction className="h-5 w-5 text-amber-500" />
+              <AlertTitle className="text-amber-600">Under Construction</AlertTitle>
+              <AlertDescription className="text-amber-600">
+                This page is still under development and may not function correctly. We're working on it!
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2 font-plasmik">Projects</h1>
+                <p className="text-muted-foreground">
+                  Organize your conversations into research projects
+                </p>
+              </div>
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Project
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="flex justify-center my-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : projects.length === 0 ? (
+              <Card className="p-12 text-center">
+                <div className="flex justify-center">
+                  <div className="bg-muted/50 h-16 w-16 rounded-full flex items-center justify-center mb-4">
+                    <Folder className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  
-                  <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Project
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Create New Project</DialogTitle>
-                        <DialogDescription>
-                          Create a new project to organize your research conversations.
-                        </DialogDescription>
-                      </DialogHeader>
-                      
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="name">Project Name</Label>
-                          <Input
-                            id="name"
-                            value={projectName}
-                            onChange={(e) => setProjectName(e.target.value)}
-                            placeholder="Enter project name"
-                          />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Projects help you group conversations around themes or research topics.
+                </p>
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Project
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <Link to={`/projects/${project.id}`} key={project.id} className="block group">
+                    <Card className="p-6 h-full transition-transform group-hover:scale-[1.01]">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center mr-3">
+                            <Folder className="h-5 w-5 text-primary" />
+                          </div>
+                          <h3 className="font-semibold text-lg">{project.name}</h3>
                         </div>
-                        
-                        <div className="grid gap-2">
-                          <Label htmlFor="description">
-                            Description <span className="text-muted-foreground">(optional)</span>
-                          </Label>
-                          <Textarea
-                            id="description"
-                            value={projectDescription}
-                            onChange={(e) => setProjectDescription(e.target.value)}
-                            placeholder="Enter project description"
-                            rows={4}
-                          />
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteProject(project.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground/70" />
+                        </Button>
                       </div>
                       
-                      <DialogFooter>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setCreateDialogOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={handleCreateProject}
-                          disabled={isCreating || !projectName.trim()}
-                        >
-                          {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                          Create Project
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                      {project.description && (
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                          {project.description}
+                        </p>
+                      )}
 
-                {/* Debug component */}
-                <SupabaseDebug />
-                
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : projects.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map((project) => (
-                      <Card 
-                        key={project.id} 
-                        className="hover:shadow-md transition-shadow cursor-pointer group"
-                      >
-                        <Link to={`/projects/${project.id}`} className="block">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <FolderOpen className="h-8 w-8 text-primary group-hover:text-primary/80 transition-colors" />
-                              <div className="flex flex-col items-end text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {format(new Date(project.updated_at), "MMM d")}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <CardTitle className="group-hover:text-primary transition-colors">
-                                {project.name}
-                              </CardTitle>
-                              {project.description && (
-                                <CardDescription className="mt-1 line-clamp-2">
-                                  {project.description}
-                                </CardDescription>
-                              )}
-                            </div>
-                          </CardHeader>
-                          
-                          <CardContent className="pt-0">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <MessageSquare className="h-4 w-4" />
-                              <span>
-                                {project.conversation_count} conversation{project.conversation_count !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Link>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
-                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                      Create your first project to start organizing your research conversations and studies.
-                    </p>
-                    <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Your First Project
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>Create New Project</DialogTitle>
-                          <DialogDescription>
-                            Create a new project to organize your research conversations.
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <div className="grid gap-4 py-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="name">Project Name</Label>
-                            <Input
-                              id="name"
-                              value={projectName}
-                              onChange={(e) => setProjectName(e.target.value)}
-                              placeholder="Enter project name"
-                            />
-                          </div>
-                          
-                          <div className="grid gap-2">
-                            <Label htmlFor="description">
-                              Description <span className="text-muted-foreground">(optional)</span>
-                            </Label>
-                            <Textarea
-                              id="description"
-                              value={projectDescription}
-                              onChange={(e) => setProjectDescription(e.target.value)}
-                              placeholder="Enter project description"
-                              rows={4}
-                            />
-                          </div>
+                      <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
+                        <div className="flex items-center">
+                          <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                          <span>{project.conversation_count} conversation{project.conversation_count !== 1 && 's'}</span>
                         </div>
-                        
-                        <DialogFooter>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setCreateDialogOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            onClick={handleCreateProject}
-                            disabled={isCreating || !projectName.trim()}
-                          >
-                            {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                            Create Project
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                )}
+                        <div className="flex items-center">
+                          <Calendar className="h-3.5 w-3.5 mr-1" />
+                          <span>Updated {formatDate(project.updated_at)}</span>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
               </div>
-            </main>
-            <Footer />
+            )}
           </div>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+        </Section>
+      </main>
+      
+      {/* Create Project Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+            <DialogDescription>
+              Create a new project to organize your conversations.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="project-name">Project Name</Label>
+              <Input
+                id="project-name"
+                placeholder="Enter project name"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="project-description">Description (Optional)</Label>
+              <Textarea
+                id="project-description"
+                placeholder="Enter project description"
+                value={newProjectDescription}
+                onChange={(e) => setNewProjectDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleCreateProject}
+              disabled={!newProjectName.trim()}
+            >
+              Create Project
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Footer />
+    </div>
   );
 };
 

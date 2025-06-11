@@ -1,64 +1,134 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './context/AuthContext';
-import { PersonaProvider } from './context/PersonaProvider';
-import Home from './pages/Index';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/UserProfile';
-import PersonaList from './pages/PersonaViewer';
-import PersonaDetail from './pages/PersonaDetail';
-import PersonaCreate from './pages/persona-creation/PersonaCreationLanding';
-import PersonaEdit from './pages/PersonaDetail';
-import ProjectList from './pages/Projects';
-import ProjectDetail from './pages/ProjectDetail';
-import ProjectCreate from './pages/Projects';
-import ProjectEdit from './pages/ProjectDetail';
-import FocusGroup from './pages/FocusGroup';
-import Research from './pages/Research';
-import GenerateStudy from './pages/GenerateStudy';
-import StructuredStudy from './pages/StructuredStudy';
-import QuickResearchSetup from './pages/research/QuickResearchSetup';
-import StructuredStudySetup from './pages/research/StructuredStudySetup';
-import StructuredStudySession from './pages/research/StructuredStudySession';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { PersonaProvider } from "./context/PersonaProvider";
+import { Toaster } from "sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const queryClient = new QueryClient();
+// Pages
+import Index from "./pages/Index";
+import PersonaViewer from "./pages/PersonaViewer";
+import PersonaChat from "./pages/PersonaChat";
+import PersonaDetail from "./pages/PersonaDetail";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
+import ConversationDetail from "./pages/ConversationDetail";
+import YourPersona from "./pages/YourPersona";
+import Interviewer from "./pages/Interviewer";
+import PRSNAEcosystem from "./pages/PRSNAEcosystem";
+import Collections from "./pages/Collections";
+import CollectionDetail from "./pages/CollectionDetail";
+import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
+import AIFocusGroups from "./pages/AIFocusGroups";
+import SimulatedPersona from "./pages/SimulatedPersona";
+import CustomResearch from "./pages/CustomResearch";
+import InsightConductor from "./pages/InsightConductor";
+import Research from "./pages/Research";
+import FocusGroup from "./pages/FocusGroup";
+import StructuredStudy from "./pages/StructuredStudy";
+import GenerateStudy from "./pages/GenerateStudy";
+import QuickResearchSetup from "./pages/research/QuickResearchSetup";
+import StructuredStudySetup from "./pages/research/StructuredStudySetup";
+import Auth from "./pages/Auth";
+import UserProfile from "./pages/UserProfile";
+import NotFound from "./pages/NotFound";
+import ParticipateResearch from "./pages/ParticipateResearch";
+import InterviewProcess from "./pages/InterviewProcess";
+import WhitePaper from "./pages/WhitePaper";
+import Roadmap from "./pages/Roadmap";
+import EarnPRSNA from "./pages/EarnPRSNA";
+
+// Pages - Persona Creation
+import ConsentForm from "./pages/persona-creation/ConsentForm";
+import PersonaCreationLanding from "./pages/persona-creation/PersonaCreationLanding";
+import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScreener";
+import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
+import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
+
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+
+import "./App.css";
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <AuthProvider>
           <PersonaProvider>
             <Routes>
-              <Route path="/" element={<Home />} />
+              {/* Public Routes - Accessible without login */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/sign-in" element={<Auth />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/register" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/personas" element={<PersonaList />} />
-              <Route path="/personas/:id" element={<PersonaDetail />} />
-              <Route path="/personas/create" element={<PersonaCreate />} />
-              <Route path="/personas/:id/edit" element={<PersonaEdit />} />
-              <Route path="/projects" element={<ProjectList />} />
-              <Route path="/projects/:id" element={<ProjectDetail />} />
-              <Route path="/projects/create" element={<ProjectCreate />} />
-              <Route path="/projects/:id/edit" element={<ProjectEdit />} />
-              <Route path="/focus-group" element={<FocusGroup />} />
-              <Route path="/research" element={<Research />} />
-              <Route path="/research/generate" element={<GenerateStudy />} />
-              <Route path="/research/structured" element={<StructuredStudy />} />
-              <Route path="/research/setup/structured" element={<StructuredStudySetup />} />
-              <Route path="/research/session/structured" element={<StructuredStudySession />} />
-              <Route path="/research/quick-setup" element={<QuickResearchSetup />} />
+              
+              {/* PRSNA token routes - public access */}
+              <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
+              <Route path="/prsna" element={<EarnPRSNA />} />
+              <Route path="/prsna/roadmap" element={<Roadmap />} />
+              <Route path="/prsna/whitepaper" element={<WhitePaper />} />
+              <Route path="/whitepaper" element={<WhitePaper />} />
+              
+              {/* User Profile Route */}
+              <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+              
+              {/* Protected Routes - Require authentication */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
+              <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
+              <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
+              <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+              <Route path="/your-persona" element={<ProtectedRoute><YourPersona /></ProtectedRoute>} />
+              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+              <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+              <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
+              <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+              
+              {/* IMPORTANT: Add support for both URL formats to avoid breaking existing links */}
+              <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+              <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+              
+              {/* Research section - Protected */}
+              <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
+              <Route path="/persona-ai-interviewer" element={<ProtectedRoute><PersonaAIInterviewer /></ProtectedRoute>} />
+              <Route path="/ai-focus-groups" element={<ProtectedRoute><AIFocusGroups /></ProtectedRoute>} />
+              <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
+              <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
+              <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />
+              <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
+              <Route path="/research/setup/quick" element={<ProtectedRoute><QuickResearchSetup /></ProtectedRoute>} />
+              <Route path="/research/setup/structured" element={<ProtectedRoute><StructuredStudySetup /></ProtectedRoute>} />
+              <Route path="/focus-group" element={<ProtectedRoute><FocusGroup /></ProtectedRoute>} />
+              <Route path="/structured-study" element={<ProtectedRoute><StructuredStudy /></ProtectedRoute>} />
+              <Route path="/generate-study" element={<ProtectedRoute><GenerateStudy /></ProtectedRoute>} />
+              <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
+              <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
+              
+              {/* Persona Creation Flow - Protected */}
+              <Route path="/create" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />
+              <Route path="/consent" element={<ProtectedRoute><ConsentForm /></ProtectedRoute>} />
+              <Route path="/screener" element={<ProtectedRoute><PersonaCreationScreener /></ProtectedRoute>} />
+              <Route path="/questionnaire" element={<ProtectedRoute><PersonaCreationQuestionnaire /></ProtectedRoute>} />
+              <Route path="/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
+            <Toaster position="top-right" />
           </PersonaProvider>
         </AuthProvider>
-      </QueryClientProvider>
-    </Router>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

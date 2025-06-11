@@ -1,189 +1,142 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Search, Loader2, Plus } from "lucide-react";
-import { getPersonasNotInCollection, addPersonasToCollection } from "@/services/collections";
 import { toast } from "sonner";
-
-interface Persona {
-  persona_id: string;
-  name: string;
-  metadata?: {
-    occupation?: string;
-    age?: string;
-    region?: string;
-  };
-}
+import { useAuth } from "@/context/AuthContext";
+import { Persona } from "@/services/persona/types";
+import { addPersonasToCollection, getPersonasNotInCollection } from "@/services/collections";
+import { dbPersonaToPersona } from "@/services/persona/mappers";
 
 interface AddPersonasToCollectionDialogProps {
+  collectionId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  collectionId: string;
   onPersonasAdded: () => void;
 }
 
-const AddPersonasToCollectionDialog = ({
+const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps> = ({
+  collectionId,
   open,
   onOpenChange,
-  collectionId,
-  onPersonasAdded
-}: AddPersonasToCollectionDialogProps) => {
-  const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
+  onPersonasAdded,
+}) => {
+  const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersonaIds, setSelectedPersonaIds] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (open) {
-      loadAvailablePersonas();
+    if (open && user) {
+      fetchAvailablePersonas();
     }
-  }, [open, collectionId]);
+  }, [open, user, collectionId]);
 
-  const loadAvailablePersonas = async () => {
+  const fetchAvailablePersonas = async () => {
     setIsLoading(true);
     try {
-      const personas = await getPersonasNotInCollection(collectionId);
-      // Transform the data to match our Persona interface
-      const transformedPersonas = personas.map((persona: any) => ({
-        persona_id: persona.persona_id,
-        name: persona.name,
-        metadata: typeof persona.metadata === 'object' ? persona.metadata : {}
-      }));
-      setAvailablePersonas(transformedPersonas);
+      if (!user) {
+        console.error("User not authenticated");
+        toast.error("You must be logged in to add personas to a collection.");
+        return;
+      }
+
+      const availablePersonasData = await getPersonasNotInCollection(collectionId, user.id);
+      // Transform the data using the dbPersonaToPersona mapper to ensure correct type
+      const transformedPersonas = availablePersonasData.map(dbPersonaToPersona);
+      setPersonas(transformedPersonas);
     } catch (error) {
-      console.error("Error loading available personas:", error);
-      toast.error("Failed to load available personas");
+      console.error("Error fetching personas not in collection:", error);
+      toast.error("Failed to load available personas.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredPersonas = availablePersonas.filter(persona =>
-    persona.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    persona.metadata?.occupation?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handlePersonaToggle = (personaId: string) => {
-    setSelectedPersonaIds(prev =>
-      prev.includes(personaId)
-        ? prev.filter(id => id !== personaId)
-        : [...prev, personaId]
-    );
+  const handleCheckboxChange = (personaId: string) => {
+    setSelectedPersonaIds((prevSelected) => {
+      if (prevSelected.includes(personaId)) {
+        return prevSelected.filter((id) => id !== personaId);
+      } else {
+        return [...prevSelected, personaId];
+      }
+    });
   };
 
   const handleAddPersonas = async () => {
     if (selectedPersonaIds.length === 0) {
-      toast.error("Please select at least one persona");
+      toast.info("Please select at least one persona to add");
       return;
     }
 
-    setIsAdding(true);
     try {
       const success = await addPersonasToCollection(collectionId, selectedPersonaIds);
-      
       if (success) {
-        toast.success(`Added ${selectedPersonaIds.length} persona${selectedPersonaIds.length === 1 ? '' : 's'} to collection`);
+        toast.success("Personas added to collection successfully!");
         onPersonasAdded();
-        onOpenChange(false);
-        setSelectedPersonaIds([]);
+        onOpenChange(false); // Close the dialog
+        setSelectedPersonaIds([]); // Reset selection
+      } else {
+        toast.error("Failed to add personas to collection.");
       }
     } catch (error) {
       console.error("Error adding personas to collection:", error);
-      toast.error("Failed to add personas to collection");
-    } finally {
-      setIsAdding(false);
+      toast.error("Failed to add personas to collection.");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add Personas to Collection</DialogTitle>
           <DialogDescription>
-            Select personas to add to this collection. Only personas not already in the collection are shown.
+            Choose the personas you want to add to this collection.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search personas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading personas...</span>
-            </div>
-          ) : filteredPersonas.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? "No personas found matching your search." : "All personas are already in this collection."}
-            </div>
-          ) : (
-            <ScrollArea className="h-[300px] border rounded-lg">
-              <div className="p-4 space-y-3">
-                {filteredPersonas.map((persona) => (
-                  <div key={persona.persona_id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50">
-                    <Checkbox
-                      id={persona.persona_id}
-                      checked={selectedPersonaIds.includes(persona.persona_id)}
-                      onCheckedChange={() => handlePersonaToggle(persona.persona_id)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <label 
-                        htmlFor={persona.persona_id}
-                        className="text-sm font-medium cursor-pointer"
-                      >
-                        {persona.name}
-                      </label>
-                      {persona.metadata && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {persona.metadata.occupation && (
-                            <span>{persona.metadata.occupation}</span>
-                          )}
-                          {persona.metadata.age && (
-                            <span> • Age {persona.metadata.age}</span>
-                          )}
-                          {persona.metadata.region && (
-                            <span> • {persona.metadata.region}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+        <div className="py-4">
+          <ScrollArea className="h-[300px] w-full rounded-md border">
+            {isLoading ? (
+              <div className="p-4">Loading personas...</div>
+            ) : personas.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-muted-foreground">No available personas to add</p>
+                <p className="text-sm">All your personas are already in this collection</p>
               </div>
-            </ScrollArea>
-          )}
-
-          {selectedPersonaIds.length > 0 && (
-            <div className="text-sm text-muted-foreground">
-              {selectedPersonaIds.length} persona{selectedPersonaIds.length === 1 ? '' : 's'} selected
-            </div>
-          )}
+            ) : (
+              personas.map((persona) => (
+                <div key={persona.persona_id} className="flex items-center space-x-2 p-2">
+                  <Checkbox
+                    id={persona.persona_id}
+                    checked={selectedPersonaIds.includes(persona.persona_id)}
+                    onCheckedChange={() => handleCheckboxChange(persona.persona_id)}
+                  />
+                  <label
+                    htmlFor={persona.persona_id}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {persona.name}
+                  </label>
+                </div>
+              ))
+            )}
+          </ScrollArea>
         </div>
-
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleAddPersonas}
-            disabled={isAdding || selectedPersonaIds.length === 0}
-          >
-            {isAdding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            <Plus className="h-4 w-4 mr-2" />
-            Add {selectedPersonaIds.length > 0 ? selectedPersonaIds.length : ''} Persona{selectedPersonaIds.length === 1 ? '' : 's'}
+          <Button onClick={handleAddPersonas} disabled={selectedPersonaIds.length === 0 || isLoading}>
+            Add Selected Personas
           </Button>
         </DialogFooter>
       </DialogContent>

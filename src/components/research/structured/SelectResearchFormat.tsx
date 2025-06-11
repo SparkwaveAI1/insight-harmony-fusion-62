@@ -26,18 +26,7 @@ const formatOptions = [
     useCase: 'Product feedback, early exploration',
     behavior: '4–6 personas, round-robin or freeform',
     personaCount: '4-6 personas',
-    description: 'Interactive group conversation for broad feedback and exploration',
-    available: true
-  },
-  {
-    id: 'one_on_one_deep_dive',
-    icon: User,
-    title: '1-on-1 Deep Dive',
-    useCase: 'Understand full context from one persona',
-    behavior: 'Longform chat with probing follow-ups',
-    personaCount: '1 persona',
-    description: 'In-depth exploration with detailed follow-up questions',
-    available: true
+    description: 'Interactive group conversation for broad feedback and exploration'
   },
   {
     id: 'ab_message_test',
@@ -46,8 +35,7 @@ const formatOptions = [
     useCase: 'Compare reactions to two frames or messages',
     behavior: 'Present Option A + B, get reaction split',
     personaCount: '2-4 personas',
-    description: 'Side-by-side comparison of different messaging approaches',
-    available: false
+    description: 'Side-by-side comparison of different messaging approaches'
   },
   {
     id: 'scenario_simulation',
@@ -56,8 +44,16 @@ const formatOptions = [
     useCase: 'Test real actions like signup, purchase flows',
     behavior: 'Drop in UX mockup, simulate response',
     personaCount: '2-3 personas',
-    description: 'Walk through specific user journeys and workflows',
-    available: false
+    description: 'Walk through specific user journeys and workflows'
+  },
+  {
+    id: 'one_on_one_deep_dive',
+    icon: User,
+    title: '1-on-1 Deep Dive',
+    useCase: 'Understand full context from one persona',
+    behavior: 'Longform chat with probing follow-ups',
+    personaCount: '1 persona',
+    description: 'In-depth exploration with detailed follow-up questions'
   }
 ];
 
@@ -91,23 +87,16 @@ export const SelectResearchFormat: React.FC<SelectResearchFormatProps> = ({ onFo
           <div className="grid gap-4">
             {formatOptions.map((option) => (
               <div key={option.id} className="flex items-start space-x-3">
-                <RadioGroupItem 
-                  value={option.id} 
-                  id={option.id} 
-                  className="mt-1" 
-                  disabled={!option.available}
-                />
-                <Label htmlFor={option.id} className={`flex-1 ${option.available ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
+                <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
+                <Label htmlFor={option.id} className="flex-1 cursor-pointer">
                   <Card className={`p-4 transition-colors ${
                     selectedFormat === option.id 
                       ? 'border-primary bg-primary/5' 
-                      : option.available 
-                      ? 'hover:bg-muted/30' 
-                      : 'bg-muted/20'
+                      : 'hover:bg-muted/30'
                   }`}>
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <option.icon className={`h-6 w-6 ${option.available ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <option.icon className="h-6 w-6 text-primary" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -115,11 +104,6 @@ export const SelectResearchFormat: React.FC<SelectResearchFormatProps> = ({ onFo
                           <Badge variant="outline" className="text-xs">
                             {option.personaCount}
                           </Badge>
-                          {!option.available && (
-                            <Badge variant="secondary" className="text-xs">
-                              Under Construction
-                            </Badge>
-                          )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
                           <strong>Use Case:</strong> {option.useCase}
@@ -139,7 +123,7 @@ export const SelectResearchFormat: React.FC<SelectResearchFormatProps> = ({ onFo
         <div className="mt-6">
           <Button 
             onClick={handleContinue}
-            disabled={!selectedFormat || !formatOptions.find(opt => opt.id === selectedFormat)?.available}
+            disabled={!selectedFormat}
             className="w-full"
           >
             Continue with Selected Format

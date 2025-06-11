@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -16,7 +15,6 @@ import { DefineAudience, AudienceDefinition } from "@/components/research/struct
 import { DefineOutputGoals, OutputGoalsData } from "@/components/research/structured/DefineOutputGoals";
 import { structuredStudyService } from "@/services/structuredStudy/structuredStudyService";
 import { toast } from "sonner";
-import ProjectSelectionDialog from "@/components/research/ProjectSelectionDialog";
 
 const StructuredStudySetup = () => {
   const [searchParams] = useSearchParams();
@@ -24,7 +22,6 @@ const StructuredStudySetup = () => {
   const sessionId = searchParams.get('session');
   
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [studyGoal, setStudyGoal] = useState<StudyGoal | null>(null);
   const [researchFormat, setResearchFormat] = useState<ResearchFormat | null>(null);
   const [audience, setAudience] = useState<AudienceDefinition | null>(null);
@@ -33,7 +30,6 @@ const StructuredStudySetup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
-  const [showProjectDialog, setShowProjectDialog] = useState(false);
 
   // Load existing session if sessionId is provided
   useEffect(() => {
@@ -52,10 +48,6 @@ const StructuredStudySetup = () => {
         if (session.research_format) setResearchFormat(session.research_format);
         if (session.audience_definition) setAudience(session.audience_definition);
         if (session.output_goals) setOutputGoals(session.output_goals);
-        // Extract project ID from output goals if it exists
-        if (session.output_goals?.project_id) {
-          setSelectedProjectId(session.output_goals.project_id);
-        }
         toast.success("Session loaded successfully");
       } else {
         toast.error("Session not found");
@@ -101,39 +93,28 @@ const StructuredStudySetup = () => {
     }
   };
 
-  const handleProjectSelected = (projectId: string | null) => {
-    setSelectedProjectId(projectId);
-    setCurrentStep(2);
-    saveSession({ current_step: 2 });
-  };
-
   const handleGoalDefined = (goal: StudyGoal) => {
     setStudyGoal(goal);
-    setCurrentStep(3);
-    saveSession({ study_goal: goal, current_step: 3 });
+    setCurrentStep(2);
+    saveSession({ study_goal: goal, current_step: 2 });
   };
 
   const handleFormatSelected = (format: ResearchFormat) => {
     setResearchFormat(format);
-    setCurrentStep(4);
-    saveSession({ research_format: format, current_step: 4 });
+    setCurrentStep(3);
+    saveSession({ research_format: format, current_step: 3 });
   };
 
   const handleAudienceDefined = (audienceDefinition: AudienceDefinition) => {
     setAudience(audienceDefinition);
-    setCurrentStep(5);
-    saveSession({ audience_definition: audienceDefinition, current_step: 5 });
+    setCurrentStep(4);
+    saveSession({ audience_definition: audienceDefinition, current_step: 4 });
   };
 
   const handleOutputGoalsDefined = (goals: OutputGoalsData) => {
-    // Include the selected project ID in the output goals
-    const goalsWithProject = {
-      ...goals,
-      project_id: selectedProjectId
-    };
-    setOutputGoals(goalsWithProject);
-    setCurrentStep(6);
-    saveSession({ output_goals: goalsWithProject, current_step: 6 });
+    setOutputGoals(goals);
+    setCurrentStep(5);
+    saveSession({ output_goals: goals, current_step: 5 });
   };
 
   const handleStepChange = (newStep: number) => {
@@ -147,11 +128,6 @@ const StructuredStudySetup = () => {
       return;
     }
 
-    if (!audience.selected_personas || audience.selected_personas.length === 0) {
-      toast.error("Please select at least one persona before launching");
-      return;
-    }
-
     setIsLaunching(true);
     try {
       // Mark session as completed
@@ -159,11 +135,10 @@ const StructuredStudySetup = () => {
         status: 'completed'
       });
 
-      // Navigate to structured study session with the selected personas
+      // Navigate to research page with the selected personas
       const personaIds = audience.selected_personas.join(',');
-      const projectParam = selectedProjectId ? `&project=${selectedProjectId}` : '';
-      const sessionParam = `&session=${currentSessionId}`;
-      navigate(`/research/session/structured?personas=${personaIds}${projectParam}${sessionParam}`);
+      const projectParam = outputGoals.project_id ? `&project=${outputGoals.project_id}` : '';
+      navigate(`/research?personas=${personaIds}${projectParam}`);
       
       toast.success("Study launched! Starting research session...");
     } catch (error) {
@@ -175,12 +150,11 @@ const StructuredStudySetup = () => {
   };
 
   const steps = [
-    { number: 1, title: "Project Setup", description: "Select or create a project for this study" },
-    { number: 2, title: "Study Goals", description: "Define your research goals and objectives" },
-    { number: 3, title: "Research Format", description: "Select the format that matches your study" },
-    { number: 4, title: "Audience", description: "Define your target audience and select personas" },
-    { number: 5, title: "Output Goals", description: "Define insights and deliverables" },
-    { number: 6, title: "Review + Launch", description: "Review configuration and launch" }
+    { number: 1, title: "Study Goals", description: "Define your research goals and objectives" },
+    { number: 2, title: "Research Format", description: "Select the format that matches your study" },
+    { number: 3, title: "Audience", description: "Define your target audience and select personas" },
+    { number: 4, title: "Output Goals", description: "Define insights and deliverables" },
+    { number: 5, title: "Review + Launch", description: "Review configuration and launch" }
   ];
 
   if (isLoading) {
@@ -296,60 +270,22 @@ const StructuredStudySetup = () => {
                   {/* Step Content */}
                   <div className="mb-8">
                     {currentStep === 1 && (
-                      <Card className="p-6">
-                        <div className="text-center mb-6">
-                          <h2 className="text-2xl font-semibold mb-2">Project Setup</h2>
-                          <p className="text-muted-foreground">
-                            Associate this study with a project to organize your research and findings.
-                          </p>
-                        </div>
-                        
-                        <div className="text-center">
-                          <Button 
-                            onClick={() => setShowProjectDialog(true)}
-                            size="lg"
-                            className="px-8"
-                          >
-                            {selectedProjectId ? 'Change Project' : 'Select or Create Project'}
-                          </Button>
-                          
-                          {selectedProjectId && (
-                            <div className="mt-4">
-                              <p className="text-sm text-muted-foreground">
-                                Project selected • You can continue to the next step
-                              </p>
-                            </div>
-                          )}
-                          
-                          <div className="mt-6">
-                            <Button 
-                              variant="outline"
-                              onClick={() => handleProjectSelected(null)}
-                            >
-                              Continue without Project
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    )}
-
-                    {currentStep === 2 && (
                       <DefineStudyGoals onGoalDefined={handleGoalDefined} />
                     )}
 
-                    {currentStep === 3 && (
+                    {currentStep === 2 && (
                       <SelectResearchFormat onFormatSelected={handleFormatSelected} />
                     )}
 
-                    {currentStep === 4 && (
+                    {currentStep === 3 && (
                       <DefineAudience onAudienceDefined={handleAudienceDefined} initialAudience={audience} />
                     )}
 
-                    {currentStep === 5 && (
-                      <DefineOutputGoals onGoalsDefined={handleOutputGoalsDefined} hideProjectSelection={true} />
+                    {currentStep === 4 && (
+                      <DefineOutputGoals onGoalsDefined={handleOutputGoalsDefined} />
                     )}
 
-                    {currentStep === 6 && (
+                    {currentStep === 5 && (
                       <Card className="p-6">
                         <div className="text-center mb-6">
                           <Rocket className="h-12 w-12 text-primary mx-auto mb-4" />
@@ -360,12 +296,6 @@ const StructuredStudySetup = () => {
                         </div>
                         
                         <div className="space-y-4 mb-8">
-                          {selectedProjectId && (
-                            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                              <h3 className="font-medium text-indigo-800 mb-2">Project</h3>
-                              <p className="text-indigo-700 text-sm">Associated with project</p>
-                            </div>
-                          )}
                           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <h3 className="font-medium text-green-800 mb-2">Study Goal</h3>
                             <p className="text-green-700 text-sm">{studyGoal?.objective}</p>
@@ -389,6 +319,7 @@ const StructuredStudySetup = () => {
                               <p className="text-amber-700 text-sm">{outputGoals.primary_goals.join(', ')}</p>
                               <p className="text-amber-600 text-xs mt-1">
                                 {outputGoals.deliverables.length} deliverables
+                                {outputGoals.project_id && " • Associated with project"}
                               </p>
                             </div>
                           )}
@@ -429,19 +360,35 @@ const StructuredStudySetup = () => {
                       Previous
                     </Button>
                     
-                    {currentStep < 6 && (
+                    {currentStep < 5 ? (
                       <Button
-                        onClick={() => handleStepChange(Math.min(6, currentStep + 1))}
+                        onClick={() => handleStepChange(Math.min(5, currentStep + 1))}
                         disabled={
-                          (currentStep === 1 && selectedProjectId === undefined) ||
-                          (currentStep === 2 && !studyGoal) ||
-                          (currentStep === 3 && !researchFormat) ||
-                          (currentStep === 4 && !audience) ||
-                          (currentStep === 5 && !outputGoals)
+                          (currentStep === 1 && !studyGoal) ||
+                          (currentStep === 2 && !researchFormat) ||
+                          (currentStep === 3 && !audience) ||
+                          (currentStep === 4 && !outputGoals)
                         }
                       >
                         Next
                         <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleLaunchStudy}
+                        disabled={isLaunching || !studyGoal || !researchFormat || !audience || !outputGoals}
+                      >
+                        {isLaunching ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Launching...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="h-4 w-4 mr-2" />
+                            Launch Study
+                          </>
+                        )}
                       </Button>
                     )}
                   </div>
@@ -453,13 +400,6 @@ const StructuredStudySetup = () => {
           </div>
         </SidebarInset>
       </div>
-
-      {/* Project Selection Dialog */}
-      <ProjectSelectionDialog
-        open={showProjectDialog}
-        onOpenChange={setShowProjectDialog}
-        onProjectSelected={handleProjectSelected}
-      />
     </SidebarProvider>
   );
 };
