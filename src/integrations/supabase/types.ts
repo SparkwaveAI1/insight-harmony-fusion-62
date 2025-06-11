@@ -156,6 +156,53 @@ export type Database = {
           },
         ]
       }
+      knowledge_base_documents: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          project_id: string
+          title: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          project_id: string
+          title: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          project_id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participants: {
         Row: {
           audio_url: string | null
@@ -329,6 +376,42 @@ export type Database = {
         }
         Relationships: []
       }
+      project_collections: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_collections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
@@ -351,6 +434,48 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      structured_study_sessions: {
+        Row: {
+          audience_definition: Json | null
+          created_at: string
+          current_step: number
+          id: string
+          output_goals: Json | null
+          research_format: Json | null
+          status: string
+          study_goal: Json | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience_definition?: Json | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          output_goals?: Json | null
+          research_format?: Json | null
+          status?: string
+          study_goal?: Json | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience_definition?: Json | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          output_goals?: Json | null
+          research_format?: Json | null
+          status?: string
+          study_goal?: Json | null
+          title?: string | null
           updated_at?: string
           user_id?: string
         }

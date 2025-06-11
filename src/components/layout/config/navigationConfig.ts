@@ -66,16 +66,6 @@ export const headerNavItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Personas",
-    href: "/persona-viewer",
-    icon: Users,
-  },
-  {
-    title: "Create",
-    href: "/simulated-persona",
-    icon: UserPlus,
-  },
-  {
     title: "PRSNA",
     href: "/prsna",
     icon: Coins,
