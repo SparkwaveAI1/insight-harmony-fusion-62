@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -89,12 +90,12 @@ const SaveConversationModal = ({
     setIsLoading(true);
     
     try {
-      // Create the conversation with just persona IDs
+      // Create the conversation
       const tagsArray = tags.trim() ? tags.split(",").map(tag => tag.trim()) : [];
       const conversation = await createConversation(
         selectedProjectId, 
         title,
-        personaIds,  // This should be string[], not Persona[]
+        personaIds,
         tagsArray
       );
       

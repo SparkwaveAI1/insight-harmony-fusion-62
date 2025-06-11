@@ -1,128 +1,102 @@
-
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { Persona } from '@/services/persona/types';
+import { ResearchMessage } from './types';
 import { createResearchSession } from '../services/sessionService';
-import { sendResearchMessage } from '../services/messageService';
-import { ResearchMessage, LoadedPersona } from './types';
+import { sendUserMessage } from '../services/messageService';
+import { generatePersonaResponse } from '../services/personaResponseService';
 
 export const useResearchSession = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<LoadedPersona[]>([]);
+  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [messages, setMessages] = useState<ResearchMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createSession = useCallback(async (personaIds: string[], objective?: string): Promise<boolean> => {
-    console.log('Creating research session with personas:', personaIds, 'objective:', objective);
-    
+  const createSession = useCallback(async (personaIds: string[]): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const session = await createResearchSession(personaIds);
       
-      setSessionId(session.sessionId);
-      setLoadedPersonas(session.personas);
-      setMessages([]);
+      const result = await createResearchSession(personaIds);
       
-      // If we have an objective, add it as the first user message
-      if (objective && objective.trim()) {
-        const systemMessage: ResearchMessage = {
-          role: 'user',
-          content: `Research Objective: ${objective.trim()}`,
-          timestamp: new Date(),
-          sessionId: session.sessionId
-        };
-        setMessages([systemMessage]);
+      if (result.success && result.sessionId && result.selectedPersonas) {
+        setSessionId(result.sessionId);
+        setLoadedPersonas(result.selectedPersonas);
+        setMessages([]);
+        return true;
       }
       
-      toast.success(`Research session started with ${session.personas.length} personas`);
-      console.log('Session created successfully:', session.sessionId);
-      return true;
+      return false;
     } catch (error) {
-      console.error('Failed to create research session:', error);
-      toast.error('Failed to create research session');
+      console.error('Error in createSession:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const sendMessage = useCallback(async (content: string, imageFile?: File): Promise<void> => {
-    if (!sessionId) {
-      toast.error('No active research session');
+  const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
+    if (!sessionId || !content.trim()) {
+      console.log('Cannot send message - missing sessionId or content:', { sessionId, hasContent: !!content.trim() });
       return;
     }
 
     try {
       setIsLoading(true);
       
-      // Add user message immediately
-      const userMessage: ResearchMessage = {
-        role: 'user',
-        content,
-        timestamp: new Date(),
-        sessionId
-      };
+      const userMessage = await sendUserMessage(sessionId, content, imageFile);
       
-      setMessages(prev => [...prev, userMessage]);
-      
-      // Send message and get response
-      const response = await sendResearchMessage(sessionId, content, loadedPersonas);
-      
-      // Add persona response
-      const responseMessage: ResearchMessage = {
-        role: 'assistant',
-        content: response.content,
-        timestamp: new Date(),
-        sessionId,
-        personaId: response.personaId,
-        personaName: response.personaName
-      };
-      
-      setMessages(prev => [...prev, responseMessage]);
-      
+      console.log('Adding user message to state');
+      setMessages(prev => {
+        const newMessages = [...prev, userMessage];
+        console.log('Updated messages:', newMessages.length);
+        return newMessages;
+      });
+
     } catch (error) {
-      console.error('Failed to send message:', error);
-      toast.error('Failed to send message');
+      console.error('Error sending message:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, loadedPersonas]);
+  }, [sessionId]);
 
-  const selectPersonaResponder = useCallback(async (personaId: string): Promise<void> => {
-    if (!sessionId || messages.length === 0) {
-      toast.error('No active research session or messages');
-      return;
-    }
+  const selectPersonaResponder = useCallback(async (personaId: string) => {
+    console.log('Selecting persona responder:', personaId);
+    
+    // Use current values from state, not from closure
+    setMessages(currentMessages => {
+      setLoadedPersonas(currentPersonas => {
+        setSessionId(currentSessionId => {
+          if (currentSessionId) {
+            // Handle the async response generation
+            setIsLoading(true);
+            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas)
+              .then(responseMessage => {
+                if (responseMessage) {
+                  setMessages(prev => [...prev, responseMessage]);
+                }
+              })
+              .finally(() => {
+                setIsLoading(false);
+              });
+          } else {
+            console.error('No session ID available');
+          }
+          return currentSessionId;
+        });
+        return currentPersonas;
+      });
+      return currentMessages;
+    });
+  }, []);
 
-    try {
-      setIsLoading(true);
-      
-      // Get the last user message
-      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-      if (!lastUserMessage) {
-        toast.error('No user message found to respond to');
-        return;
-      }
-      
-      const response = await sendResearchMessage(sessionId, lastUserMessage.content, loadedPersonas, personaId);
-      
-      const responseMessage: ResearchMessage = {
-        role: 'assistant',
-        content: response.content,
-        timestamp: new Date(),
-        sessionId,
-        personaId: response.personaId,
-        personaName: response.personaName
-      };
-      
-      setMessages(prev => [...prev, responseMessage]);
-      
-    } catch (error) {
-      console.error('Failed to get persona response:', error);
-      toast.error('Failed to get persona response');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [sessionId, loadedPersonas, messages]);
+  const addPersonaToSession = useCallback(async (personaId: string) => {
+    // Implementation for adding persona to existing session
+    // This would update the active_persona_ids array
+  }, [sessionId]);
+
+  const removePersonaFromSession = useCallback(async (personaId: string) => {
+    // Implementation for removing persona from session
+    // This would update the active_persona_ids array
+  }, [sessionId]);
 
   return {
     sessionId,
@@ -130,6 +104,8 @@ export const useResearchSession = () => {
     messages,
     isLoading,
     createSession,
+    addPersonaToSession,
+    removePersonaFromSession,
     sendMessage,
     selectPersonaResponder
   };

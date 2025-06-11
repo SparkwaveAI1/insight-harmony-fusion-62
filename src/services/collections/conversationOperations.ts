@@ -64,7 +64,7 @@ export const getProjectConversations = async (projectId: string): Promise<Conver
 };
 
 /**
- * Creates a new conversation with string persona IDs
+ * Creates a new conversation
  */
 export const createConversation = async (
   projectId: string,
@@ -81,14 +81,14 @@ export const createConversation = async (
       return null;
     }
     
-    // Insert the conversation with persona IDs as strings
+    // Insert the conversation
     const { data, error } = await supabase
       .from("conversations")
       .insert({ 
         project_id: projectId,
         title,
         user_id: user.id,
-        persona_ids: personaIds,  // This is now correctly typed as string[]
+        persona_ids: personaIds,
         tags
       })
       .select()

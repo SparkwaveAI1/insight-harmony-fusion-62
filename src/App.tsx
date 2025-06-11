@@ -25,13 +25,8 @@ import SimulatedPersona from "./pages/SimulatedPersona";
 import CustomResearch from "./pages/CustomResearch";
 import InsightConductor from "./pages/InsightConductor";
 import Research from "./pages/Research";
-import FocusGroup from "./pages/FocusGroup";
-import StructuredStudy from "./pages/StructuredStudy";
-import GenerateStudy from "./pages/GenerateStudy";
-import QuickResearchSetup from "./pages/research/QuickResearchSetup";
-import StructuredStudySetup from "./pages/research/StructuredStudySetup";
 import Auth from "./pages/Auth";
-import UserProfile from "./pages/UserProfile";
+import UserProfile from "./pages/UserProfile"; // New import
 import NotFound from "./pages/NotFound";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import InterviewProcess from "./pages/InterviewProcess";
@@ -106,11 +101,6 @@ function App() {
               <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
               <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />
               <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
-              <Route path="/research/setup/quick" element={<ProtectedRoute><QuickResearchSetup /></ProtectedRoute>} />
-              <Route path="/research/setup/structured" element={<ProtectedRoute><StructuredStudySetup /></ProtectedRoute>} />
-              <Route path="/focus-group" element={<ProtectedRoute><FocusGroup /></ProtectedRoute>} />
-              <Route path="/structured-study" element={<ProtectedRoute><StructuredStudy /></ProtectedRoute>} />
-              <Route path="/generate-study" element={<ProtectedRoute><GenerateStudy /></ProtectedRoute>} />
               <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
               <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
               

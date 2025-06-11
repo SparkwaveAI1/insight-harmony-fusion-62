@@ -1,16 +1,18 @@
+
 import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Users, Settings, Download, Trash2, Send, Save } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
-import ResearchConversation from './ResearchConversation';
-import { ResearchSessionHeader } from './ResearchSessionHeader';
-import { ResearchPersonaDisplay } from './ResearchPersonaDisplay';
-import { ResearchSendToPersonas } from './ResearchSendToPersonas';
+import { ResearchConversation } from './ResearchConversation';
 import { SessionData } from './hooks/types';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import ProjectSelectionDialog from './ProjectSelectionDialog';
 
 interface ResearchInterfaceProps {
   sessionData: SessionData;
-  onCreateSession: (selectedPersonas: string[], projectId?: string | null) => Promise<boolean>;
+  onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
   onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
   onSelectResponder: (personaId: string) => Promise<void>;
 }
@@ -24,26 +26,12 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showProjectDialog, setShowProjectDialog] = useState(false);
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-  const [pendingPersonas, setPendingPersonas] = useState<string[]>([]);
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
-    
-    // Show project selection dialog first
-    setPendingPersonas(selectedPersonas);
-    setShowProjectDialog(true);
-  };
-
-  const handleProjectSelected = async (projectId: string | null) => {
-    setCurrentProjectId(projectId);
-    
-    // Now create the session with the selected project
-    const success = await onCreateSession(pendingPersonas, projectId);
+    const success = await onCreateSession(selectedPersonas);
     if (success) {
       setShowPersonaLoader(false);
-      setPendingPersonas([]);
     }
   };
 
@@ -82,8 +70,8 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       
       if (message.role === 'user') {
         markdownContent += `**[${timestamp}] User:** ${message.content}\n\n`;
-      } else if (message.personaId) {
-        const persona = loadedPersonas.find(p => p.persona_id === message.personaId);
+      } else if (message.responding_persona_id) {
+        const persona = loadedPersonas.find(p => p.persona_id === message.responding_persona_id);
         const personaName = persona?.name || 'Unknown Persona';
         markdownContent += `**[${timestamp}] ${personaName}:** ${message.content}\n\n`;
       }
@@ -132,7 +120,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     return messages.map(message => ({
       role: message.role as "user" | "assistant",
       content: message.content,
-      persona_id: message.personaId
+      persona_id: message.responding_persona_id
     }));
   };
 
@@ -141,74 +129,141 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
 
   if (showPersonaLoader || !sessionId) {
     return (
-      <>
-        <div className="h-full overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-6">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Research Session</h1>
-              <p className="text-muted-foreground">
-                Select up to 4 personas to participate in your research conversation
-              </p>
-            </div>
-            <PersonaLoader
-              maxPersonas={4}
-              onStartSession={handleStartSession}
-              isLoading={isLoading}
-            />
+      <div className="h-full overflow-y-auto">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Research Session</h1>
+            <p className="text-muted-foreground">
+              Select up to 4 personas to participate in your research conversation
+            </p>
           </div>
+          <PersonaLoader
+            maxPersonas={4}
+            onStartSession={handleStartSession}
+            isLoading={isLoading}
+          />
         </div>
-
-        <ProjectSelectionDialog
-          open={showProjectDialog}
-          onOpenChange={setShowProjectDialog}
-          onProjectSelected={handleProjectSelected}
-        />
-      </>
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full max-h-full">
       {/* Session Header */}
-      <ResearchSessionHeader
-        loadedPersonas={loadedPersonas}
-        messages={messages}
-        onSaveConversation={handleSaveConversation}
-        onExportTranscript={() => {}} // Keep existing function
-        onClearSession={() => setShowPersonaLoader(true)}
-        onManagePersonas={() => setShowPersonaLoader(true)}
-      />
+      <div className="flex items-center justify-between mb-6 flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <span className="font-semibold">Research Session</span>
+            <Badge variant="secondary">{loadedPersonas.length}/4 Personas</Badge>
+            <Badge variant="outline" className="text-xs">
+              {messages.length} messages
+            </Badge>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSaveConversation}
+            disabled={messages.length === 0}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportTranscript}
+            disabled={messages.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearSession}
+            disabled={messages.length === 0}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPersonaLoader(true)}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Manage
+          </Button>
+        </div>
+      </div>
 
       {/* Research Conversation */}
       <div className="flex-1 min-h-0">
         <ResearchConversation
-          sessionId={sessionId}
           messages={messages}
           loadedPersonas={loadedPersonas}
           isLoading={isLoading}
           onSendMessage={onSendMessage}
           onSelectResponder={onSelectResponder}
-          projectId={currentProjectId}
         />
       </div>
 
       {/* Send to Persona Buttons */}
       {shouldShowSendButtons && (
-        <ResearchSendToPersonas
-          loadedPersonas={loadedPersonas}
-          isLoading={isLoading}
-          onSendToPersona={async (personaId: string) => {
-            const persona = loadedPersonas.find(p => p.persona_id === personaId);
-            if (persona) {
-              console.log('Sending chat to persona:', persona.name);
-              await onSelectResponder(personaId);
-            }
-          }}
-        />
+        <Card className="flex-shrink-0 mt-6 p-4 bg-blue-50 border-blue-200">
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm">Send to Personas</h4>
+            <p className="text-xs text-muted-foreground">
+              Send the current conversation to any of your active personas for their response
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              {loadedPersonas.map((persona) => (
+                <Button 
+                  key={persona.persona_id}
+                  onClick={() => handleSendToPersona(persona.persona_id)}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="justify-start"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Sending...' : `To ${persona.name}`}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </Card>
       )}
 
-      {/* Loaded Personas Display */}
-      <ResearchPersonaDisplay loadedPersonas={loadedPersonas} />
+      {/* Loaded Personas Display - moved to bottom */}
+      <Card className="flex-shrink-0 mt-6 p-4 bg-muted/30">
+        <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
+        <div className="flex flex-wrap gap-3">
+          {loadedPersonas.map((persona) => (
+            <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={persona.image_url} />
+                <AvatarFallback className="text-xs">
+                  {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{persona.name}</span>
+              {persona.metadata?.occupation && (
+                <Badge variant="outline" className="text-xs">
+                  {persona.metadata.occupation}
+                </Badge>
+              )}
+              <div className="w-2 h-2 bg-green-500 rounded-full" title="Active" />
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Save Conversation Modal */}
       <SaveConversationModal

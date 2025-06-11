@@ -44,12 +44,10 @@ export default function PersonaAvatar({
             src={imageUrl} 
             alt={persona.name} 
             onError={handleImageError}
-            className="object-cover w-full h-full"
+            className="object-cover"
           />
         ) : (
-          <AvatarFallback className="w-full h-full flex items-center justify-center">
-            {persona.name.charAt(0).toUpperCase()}
-          </AvatarFallback>
+          <AvatarFallback>{persona.name.charAt(0).toUpperCase()}</AvatarFallback>
         )}
       </Avatar>
       
