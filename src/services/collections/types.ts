@@ -18,6 +18,9 @@ export interface Project {
   id: string;
   name: string;
   description: string | null;
+  information: string | null;
+  research_objectives: string | null;
+  methodology: string | null;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -46,4 +49,18 @@ export interface ConversationMessage {
   content: string;
   created_at: string;
   persona_id: string | null;
+}
+
+// Knowledge Base Types
+export interface KnowledgeBaseDocument {
+  id: string;
+  title: string;
+  content: string | null;
+  file_url: string | null;
+  file_type: string | null;
+  file_size: number | null;
+  project_id: string;
+  uploaded_by: string;
+  created_at: string;
+  updated_at: string;
 }

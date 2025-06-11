@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Project, ProjectWithConversationCount } from "./types";
@@ -92,7 +93,13 @@ export const getUserProjectsWithCount = async (): Promise<ProjectWithConversatio
 /**
  * Creates a new project
  */
-export const createProject = async (name: string, description: string | null = null): Promise<Project | null> => {
+export const createProject = async (
+  name: string, 
+  description: string | null = null,
+  information: string | null = null,
+  researchObjectives: string | null = null,
+  methodology: string | null = null
+): Promise<Project | null> => {
   try {
     // Get the user's ID
     const { data: { user } } = await supabase.auth.getUser();
@@ -102,10 +109,17 @@ export const createProject = async (name: string, description: string | null = n
       return null;
     }
     
-    // Insert with the user_id
+    // Insert with the user_id and new fields
     const { data, error } = await supabase
       .from("projects")
-      .insert({ name, description, user_id: user.id })
+      .insert({ 
+        name, 
+        description, 
+        information,
+        research_objectives: researchObjectives,
+        methodology,
+        user_id: user.id 
+      })
       .select()
       .single();
 
@@ -124,7 +138,13 @@ export const createProject = async (name: string, description: string | null = n
  */
 export const updateProject = async (
   id: string,
-  updates: { name?: string; description?: string | null }
+  updates: { 
+    name?: string; 
+    description?: string | null;
+    information?: string | null;
+    research_objectives?: string | null;
+    methodology?: string | null;
+  }
 ): Promise<Project | null> => {
   try {
     const { data, error } = await supabase

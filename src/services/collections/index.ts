@@ -11,6 +11,12 @@ export * from './personaCollectionOperations';
 // Export project operations
 export * from './projectOperations';
 
+// Export project-collection operations
+export * from './projectCollectionOperations';
+
+// Export knowledge base operations
+export * from './knowledgeBaseOperations';
+
 // Export conversation operations
 export * from './conversationOperations';
 
