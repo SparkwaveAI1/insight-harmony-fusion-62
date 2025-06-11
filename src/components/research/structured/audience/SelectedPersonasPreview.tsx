@@ -10,12 +10,14 @@ interface SelectedPersonasPreviewProps {
   selectedPersonas: string[];
   personas: Persona[];
   onPersonaRemove: (personaId: string) => void;
+  maxPersonas?: number;
 }
 
 export const SelectedPersonasPreview: React.FC<SelectedPersonasPreviewProps> = ({
   selectedPersonas,
   personas,
-  onPersonaRemove
+  onPersonaRemove,
+  maxPersonas = 4
 }) => {
   const getSelectedPersonaDetails = () => {
     return selectedPersonas.map(id => personas.find(p => p.persona_id === id)).filter(Boolean) as Persona[];
@@ -29,7 +31,7 @@ export const SelectedPersonasPreview: React.FC<SelectedPersonasPreviewProps> = (
     <div className="border rounded-lg p-4 bg-muted/30">
       <h4 className="font-medium mb-3 flex items-center gap-2">
         <Users className="h-4 w-4" />
-        Selected Personas
+        Selected Personas ({selectedPersonas.length}/{maxPersonas})
       </h4>
       <div className="flex flex-wrap gap-2">
         {getSelectedPersonaDetails().map((persona) => (

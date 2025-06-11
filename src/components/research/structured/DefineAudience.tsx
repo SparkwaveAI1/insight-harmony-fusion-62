@@ -46,8 +46,6 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
   });
 
   const [currentSelectedPersonas, setCurrentSelectedPersonas] = useState<string[]>(selectedPersonas);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCollection, setSelectedCollection] = useState<string>('all');
   const [filters, setFilters] = useState<AudienceFilters>({
     age_range: '',
     gender: '',
@@ -60,16 +58,15 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
   const {
     personas,
+    filteredPersonas,
     collections,
-    isLoading,
-    loadPersonas,
-    loadCollections
+    searchTerm,
+    setSearchTerm,
+    selectedCollection,
+    setSelectedCollection,
+    isLoadingPersonas,
+    isLoadingCollections
   } = useAudienceData();
-
-  useEffect(() => {
-    loadCollections();
-    loadPersonas(searchTerm, selectedCollection, filters);
-  }, [searchTerm, selectedCollection, filters, loadPersonas, loadCollections]);
 
   const handlePersonaSelect = (personaId: string) => {
     setCurrentSelectedPersonas(prev => {
@@ -141,16 +138,25 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
               </Select>
             </div>
 
-            <PersonaSelectionFilters filters={filters} onFiltersChange={setFilters} />
+            <PersonaSelectionFilters 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedCollection={selectedCollection}
+              onCollectionChange={setSelectedCollection}
+              collections={collections}
+              isLoadingCollections={isLoadingCollections}
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
           </div>
 
           {/* Selected Personas Preview */}
           {currentSelectedPersonas.length > 0 && (
             <SelectedPersonasPreview
               selectedPersonas={currentSelectedPersonas}
-              personas={personas}
+              personas={filteredPersonas}
               maxPersonas={maxPersonas}
-              onRemovePersona={(personaId) => {
+              onPersonaRemove={(personaId) => {
                 setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
               }}
             />
@@ -158,11 +164,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
           {/* Persona Grid */}
           <PersonaGrid
-            personas={personas}
+            personas={filteredPersonas}
             selectedPersonas={currentSelectedPersonas}
             maxPersonas={maxPersonas}
             onPersonaSelect={handlePersonaSelect}
-            isLoading={isLoading}
+            isLoading={isLoadingPersonas}
             searchTerm={searchTerm}
             selectedCollection={selectedCollection}
           />
@@ -276,16 +282,25 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
                   </Select>
                 </div>
 
-                <PersonaSelectionFilters filters={filters} onFiltersChange={setFilters} />
+                <PersonaSelectionFilters 
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  selectedCollection={selectedCollection}
+                  onCollectionChange={setSelectedCollection}
+                  collections={collections}
+                  isLoadingCollections={isLoadingCollections}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                />
               </div>
 
               {/* Selected Personas Preview */}
               {currentSelectedPersonas.length > 0 && (
                 <SelectedPersonasPreview
                   selectedPersonas={currentSelectedPersonas}
-                  personas={personas}
+                  personas={filteredPersonas}
                   maxPersonas={maxPersonas}
-                  onRemovePersona={(personaId) => {
+                  onPersonaRemove={(personaId) => {
                     setCurrentSelectedPersonas(prev => prev.filter(id => id !== personaId));
                   }}
                 />
@@ -293,11 +308,11 @@ export const DefineAudience: React.FC<DefineAudienceProps> = ({
 
               {/* Persona Grid */}
               <PersonaGrid
-                personas={personas}
+                personas={filteredPersonas}
                 selectedPersonas={currentSelectedPersonas}
                 maxPersonas={maxPersonas}
                 onPersonaSelect={handlePersonaSelect}
-                isLoading={isLoading}
+                isLoading={isLoadingPersonas}
                 searchTerm={searchTerm}
                 selectedCollection={selectedCollection}
               />
