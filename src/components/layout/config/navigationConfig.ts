@@ -17,7 +17,7 @@ export const navigationMenuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Personas",
+    title: "Persona Library",
     url: "/persona-viewer",
     icon: Users,
   },
@@ -37,14 +37,14 @@ export const navigationMenuItems = [
     icon: Briefcase,
   },
   {
-    title: "Interviewer",
-    url: "/interviewer",
-    icon: Microscope,
-  },
-  {
     title: "Researcher",
     url: "/research",
     icon: FlaskConical,
+  },
+  {
+    title: "Interviewer",
+    url: "/interviewer",
+    icon: Microscope,
   },
   {
     title: "PRSNA Token",

@@ -14,8 +14,12 @@ export * from './projectOperations';
 // Export project-collection operations
 export * from './projectCollectionOperations';
 
-// Export knowledge base operations
-export * from './knowledgeBaseOperations';
+// Export knowledge base operations (excluding types to avoid duplicate exports)
+export { 
+  uploadKnowledgeBaseDocument,
+  getProjectDocuments,
+  deleteKnowledgeBaseDocument 
+} from './knowledgeBaseOperations';
 
 // Export conversation operations
 export * from './conversationOperations';
