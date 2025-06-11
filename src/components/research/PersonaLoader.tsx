@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,9 +83,55 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     }
   }, [selectedCollection, isLoadingCollections]);
 
-  const filteredPersonas = personas.filter(persona =>
-    persona.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Enhanced search function that searches across multiple demographic fields
+  const searchPersonas = (personas: Persona[], searchTerm: string): Persona[] => {
+    if (!searchTerm.trim()) return personas;
+
+    const searchLower = searchTerm.toLowerCase();
+    
+    return personas.filter(persona => {
+      // Search in name
+      if (persona.name.toLowerCase().includes(searchLower)) return true;
+      
+      // Search in demographics
+      const metadata = persona.metadata;
+      if (!metadata) return false;
+      
+      // Age search
+      if (metadata.age && metadata.age.toLowerCase().includes(searchLower)) return true;
+      
+      // Gender search
+      if (metadata.gender && metadata.gender.toLowerCase().includes(searchLower)) return true;
+      
+      // Occupation search
+      if (metadata.occupation && metadata.occupation.toLowerCase().includes(searchLower)) return true;
+      
+      // Location/Region search
+      if (metadata.region && metadata.region.toLowerCase().includes(searchLower)) return true;
+      if (metadata.location_history?.current_residence && 
+          metadata.location_history.current_residence.toLowerCase().includes(searchLower)) return true;
+      
+      // Education search
+      if (metadata.education_level && metadata.education_level.toLowerCase().includes(searchLower)) return true;
+      
+      // Income search
+      if (metadata.income_level && metadata.income_level.toLowerCase().includes(searchLower)) return true;
+      
+      // Race/Ethnicity search
+      if (metadata.race_ethnicity && metadata.race_ethnicity.toLowerCase().includes(searchLower)) return true;
+      
+      // Tags search
+      if (persona.preinterview_tags && Array.isArray(persona.preinterview_tags)) {
+        return persona.preinterview_tags.some(tag => 
+          tag.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return false;
+    });
+  };
+
+  const filteredPersonas = searchPersonas(personas, searchTerm);
 
   const handlePersonaSelect = (personaId: string) => {
     setSelectedPersonas(prev => {
@@ -150,15 +195,20 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
           </Select>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search personas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        {/* Enhanced Search */}
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, demographics, occupation, location, education..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Search across name, age, gender, occupation, location, education, income, ethnicity, and tags
+          </p>
         </div>
 
         {/* Persona List */}
@@ -172,6 +222,7 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
             {filteredPersonas.map((persona) => {
               const isSelected = selectedPersonas.includes(persona.persona_id);
               const canSelect = selectedPersonas.length < maxPersonas || isSelected;
+              const metadata = persona.metadata || {};
 
               return (
                 <Card
@@ -189,15 +240,60 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
                       }`} />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium truncate">{persona.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {persona.metadata?.age && `Age: ${persona.metadata.age} • `}
-                          {persona.metadata?.occupation || 'No description available'}
-                        </p>
-                        {persona.metadata?.location && (
-                          <Badge variant="outline" className="mt-2 text-xs">
-                            {persona.metadata.location}
-                          </Badge>
-                        )}
+                        
+                        {/* Enhanced Demographics Display */}
+                        <div className="space-y-1 mt-2">
+                          {/* Primary Demographics */}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                            {metadata.age && (
+                              <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                                Age: {metadata.age}
+                              </span>
+                            )}
+                            {metadata.gender && (
+                              <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded">
+                                {metadata.gender}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Occupation */}
+                          {metadata.occupation && (
+                            <p className="text-xs text-muted-foreground font-medium">
+                              {metadata.occupation}
+                            </p>
+                          )}
+                          
+                          {/* Secondary Demographics */}
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                            {metadata.education_level && (
+                              <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded">
+                                {metadata.education_level}
+                              </span>
+                            )}
+                            {metadata.income_level && (
+                              <span className="bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded">
+                                {metadata.income_level}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Location */}
+                          {(metadata.region || metadata.location_history?.current_residence) && (
+                            <div className="flex items-center gap-1">
+                              <Badge variant="outline" className="text-xs">
+                                {metadata.region || metadata.location_history?.current_residence}
+                              </Badge>
+                            </div>
+                          )}
+                          
+                          {/* Ethnicity */}
+                          {metadata.race_ethnicity && (
+                            <p className="text-xs text-muted-foreground">
+                              {metadata.race_ethnicity}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -209,9 +305,11 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
 
         {filteredPersonas.length === 0 && !isLoadingPersonas && (
           <div className="text-center py-8 text-muted-foreground">
-            {selectedCollection === 'all' ? 
-              'No personas found matching your search.' :
-              'No personas found in this collection.'
+            {searchTerm ? 
+              `No personas found matching "${searchTerm}".` :
+              selectedCollection === 'all' ? 
+                'No personas found.' :
+                'No personas found in this collection.'
             }
           </div>
         )}
