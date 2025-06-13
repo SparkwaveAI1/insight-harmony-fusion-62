@@ -448,6 +448,33 @@ export type Database = {
         }
         Relationships: []
       }
+      prsna_feedback: {
+        Row: {
+          created_at: string
+          feedback: string
+          id: string
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       structured_study_sessions: {
         Row: {
           audience_definition: Json | null
