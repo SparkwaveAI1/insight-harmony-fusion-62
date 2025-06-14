@@ -62,6 +62,7 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
         body: JSON.stringify({
           ...data,
           recipient: "scott@sparkwave-ai.com",
+          userEmail: user.email, // Extract user email from Supabase profile
         }),
       });
 
