@@ -5,7 +5,8 @@ import Footer from "@/components/sections/Footer";
 import HeroSection from "@/components/prsna/HeroSection";
 import EarningOptionsSection from "@/components/prsna/EarningOptionsSection";
 import RoadmapSection from "@/components/prsna/RoadmapSection";
-import FeedbackForm from "@/components/prsna/FeedbackForm";
+import FeedbackDialog from "@/components/prsna/FeedbackDialog";
+import { Button } from "@/components/ui/button";
 
 const EarnPRSNA = () => {
   return (
@@ -33,11 +34,18 @@ const EarnPRSNA = () => {
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">We Value Your Input</h2>
-              <p className="text-gray-300 text-lg">
+              <p className="text-gray-300 text-lg mb-6">
                 Help us shape the future of $PRSNA and PersonaAI by sharing your thoughts and suggestions.
               </p>
+              <FeedbackDialog 
+                triggerButton={
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                    Share Your Feedback
+                  </Button>
+                }
+                title="Share Your $PRSNA Feedback"
+              />
             </div>
-            <FeedbackForm />
           </div>
         </Section>
       </main>
