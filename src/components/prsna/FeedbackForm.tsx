@@ -12,7 +12,7 @@ import ContactSuccess from "@/components/contact/ContactSuccess";
 import { Send, Loader2 } from "lucide-react";
 
 const feedbackSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: z.string().optional(),
   email: z.string().email("Invalid email address"),
   walletAddress: z.string().optional(),
   feedback: z.string().min(10, "Feedback must be at least 10 characters long"),
@@ -88,14 +88,6 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
 
   return (
     <div className="space-y-6">
-      {!user && (
-        <div className="text-center py-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            Please sign in to share your feedback about $PRSNA and PersonaAI.
-          </p>
-        </div>
-      )}
-      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -103,7 +95,7 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Name (Optional)</FormLabel>
                 <FormControl>
                   <Input placeholder="Your name" {...field} />
                 </FormControl>
