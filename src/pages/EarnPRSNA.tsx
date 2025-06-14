@@ -9,6 +9,8 @@ import FeedbackDialog from "@/components/prsna/FeedbackDialog";
 import { Button } from "@/components/ui/button";
 
 const EarnPRSNA = () => {
+  console.log("EarnPRSNA page rendering");
+  
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Header />
@@ -37,14 +39,16 @@ const EarnPRSNA = () => {
               <p className="text-gray-300 text-lg mb-6">
                 Help us shape the future of $PRSNA and PersonaAI by sharing your thoughts and suggestions.
               </p>
-              <FeedbackDialog 
-                triggerButton={
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                    Share Your Feedback
-                  </Button>
-                }
-                title="Share Your $PRSNA Feedback"
-              />
+              <div className="flex justify-center">
+                <FeedbackDialog 
+                  triggerButton={
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Share Your Feedback
+                    </Button>
+                  }
+                  title="Share Your $PRSNA Feedback"
+                />
+              </div>
             </div>
           </div>
         </Section>
