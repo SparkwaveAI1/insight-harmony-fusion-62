@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from "@/components/layout/Header";
@@ -19,7 +18,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from '@/context/AuthContext';
 
 const ProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -27,21 +26,21 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     console.log("=== ProjectDetail Component Debug ===");
-    console.log("Project ID from URL:", id);
+    console.log("Project ID from URL:", projectId);
     console.log("Auth loading:", authLoading);
     console.log("Current user:", user?.id || "Not authenticated");
     console.log("User email:", user?.email || "No email");
     
-    if (!authLoading && id) {
+    if (!authLoading && projectId) {
       if (!user) {
         console.error("User not authenticated, cannot load project");
         setIsLoading(false);
         return;
       }
       console.log("Starting to load project data...");
-      loadProjectData(id);
+      loadProjectData(projectId);
     }
-  }, [id, user, authLoading]);
+  }, [projectId, user, authLoading]);
 
   const loadProjectData = async (projectId: string) => {
     setIsLoading(true);
