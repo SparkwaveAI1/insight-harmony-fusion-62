@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
@@ -45,8 +45,8 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  const handleSendMessage = async (inputMessage: string, file?: File | null) => {
-    if (!inputMessage.trim() && !file || !activePersona || isResponding) return;
+  const handleSendMessage = async (inputMessage: string, file: File | null = null) => {
+    if ((!inputMessage.trim() && !file) || !activePersona || isResponding) return;
 
     const userMessage: Message = {
       role: 'user',
