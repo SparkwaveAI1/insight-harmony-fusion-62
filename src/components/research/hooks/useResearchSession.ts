@@ -1,13 +1,13 @@
-
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { Message } from '@/components/persona-chat/types';
+import { ResearchMessage, ResearchSessionHookReturn } from '../types';
 import { getAllPersonas } from '@/services/persona';
 import { useResearchState } from './useResearchState';
 import { sessionService } from '../services/sessionService';
 import { personaResponseService } from '../services/personaResponseService';
 
-export const useResearchSession = () => {
+export const useResearchSession = (): ResearchSessionHookReturn => {
   const researchState = useResearchState();
 
   const createSession = useCallback(async (selectedPersonaIds: string[]): Promise<boolean> => {
@@ -50,7 +50,7 @@ export const useResearchSession = () => {
   const sendMessage = useCallback(async (message: string, imageFile?: File | null): Promise<void> => {
     if (!message.trim() || !researchState.sessionId) return;
 
-    const userMessage: Message = {
+    const userMessage: ResearchMessage = {
       role: 'user',
       content: message,
       timestamp: new Date(),
@@ -90,7 +90,7 @@ export const useResearchSession = () => {
         persona
       );
 
-      const assistantMessage: Message = {
+      const assistantMessage: ResearchMessage = {
         role: 'assistant',
         content: response,
         timestamp: new Date(),

@@ -1,12 +1,11 @@
-
 import { useState, useCallback } from 'react';
-import { Message } from '@/components/persona-chat/types';
+import { ResearchMessage } from '../types';
 import { Persona } from '@/services/persona/types';
 
 export interface ResearchState {
   sessionId: string | null;
   loadedPersonas: Persona[];
-  messages: Message[];
+  messages: ResearchMessage[];
   isLoading: boolean;
   selectedPersonaId: string | null;
 }
@@ -16,8 +15,8 @@ export interface ResearchActions {
   setLoadedPersonas: (personas: Persona[]) => void;
   addPersona: (persona: Persona) => void;
   removePersona: (personaId: string) => void;
-  addMessage: (message: Message) => void;
-  addMessages: (messages: Message[]) => void;
+  addMessage: (message: ResearchMessage) => void;
+  addMessages: (messages: ResearchMessage[]) => void;
   setIsLoading: (loading: boolean) => void;
   setSelectedPersonaId: (personaId: string | null) => void;
   clearSession: () => void;
@@ -32,7 +31,11 @@ const initialState: ResearchState = {
   selectedPersonaId: null,
 };
 
-export const useResearchState = () => {
+export interface UseResearchStateReturn extends ResearchState {
+  actions: ResearchActions;
+}
+
+export const useResearchState = (): UseResearchStateReturn => {
   const [state, setState] = useState<ResearchState>(initialState);
 
   const setSessionId = useCallback((sessionId: string | null) => {
@@ -57,14 +60,14 @@ export const useResearchState = () => {
     }));
   }, []);
 
-  const addMessage = useCallback((message: Message) => {
+  const addMessage = useCallback((message: ResearchMessage) => {
     setState(prev => ({
       ...prev,
       messages: [...prev.messages, message]
     }));
   }, []);
 
-  const addMessages = useCallback((messages: Message[]) => {
+  const addMessages = useCallback((messages: ResearchMessage[]) => {
     setState(prev => ({
       ...prev,
       messages: [...prev.messages, ...messages]

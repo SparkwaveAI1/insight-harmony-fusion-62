@@ -1,15 +1,9 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Paperclip, X, FileText, Image } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface ResearchMessageInputProps {
-  onSendMessage: (message: string, imageFile?: File | null) => void;
-  disabled?: boolean;
-  placeholder?: string;
-}
+import { ResearchMessageInputProps } from './types';
 
 export const ResearchMessageInput: React.FC<ResearchMessageInputProps> = ({
   onSendMessage,

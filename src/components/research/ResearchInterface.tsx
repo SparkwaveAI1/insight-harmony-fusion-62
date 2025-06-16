@@ -6,15 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Users, Settings, Download, Trash2, Send, Save } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
-import { SessionData } from './hooks/types';
+import { ResearchInterfaceProps } from './types';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-
-interface ResearchInterfaceProps {
-  sessionData: SessionData;
-  onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
-  onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  onSelectResponder: (personaId: string) => Promise<void>;
-}
 
 const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   sessionData,

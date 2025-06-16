@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -6,6 +5,7 @@ import { ResearchMessageInput } from './ResearchMessageInput';
 import { ResearchMessage } from './ResearchMessage';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
+import { ResearchConversationProps } from './types';
 
 interface ResearchConversationProps {
   messages: (Message & { responding_persona_id?: string })[];

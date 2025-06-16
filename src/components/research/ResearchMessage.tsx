@@ -1,15 +1,8 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Bot } from 'lucide-react';
-import { Message } from '@/components/persona-chat/types';
-import { Persona } from '@/services/persona/types';
-
-interface ResearchMessageProps {
-  message: Message & { responding_persona_id?: string };
-  persona?: Persona;
-}
+import { ResearchMessageProps } from './types';
 
 export const ResearchMessage: React.FC<ResearchMessageProps> = ({
   message,
