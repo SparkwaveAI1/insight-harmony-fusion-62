@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
@@ -11,6 +10,7 @@ import { sendMessageToPersona } from '../api/personaApiService';
 export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversation') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isResponding, setIsResponding] = useState(false);
+  const [conversationContext, setConversationContext] = useState<string>('');
   const { loadPersona, activePersona, isLoading, error } = usePersona();
 
   // Load persona on mount
@@ -44,13 +44,14 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  const handleSendMessage = async (inputMessage: string) => {
-    if (!inputMessage.trim() || !activePersona || isResponding) return;
+  const handleSendMessage = async (inputMessage: string, file?: File | null) => {
+    if (!inputMessage.trim() && !file || !activePersona || isResponding) return;
 
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
       timestamp: new Date(),
+      file: file || undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -58,12 +59,14 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
 
     try {
       console.log("Chat Mode:", chatMode);
+      console.log("File attached:", file ? `${file.name} (${file.type})` : 'None');
       
       const response = await sendMessageToPersona(
         personaId,
         inputMessage,
         messages,
-        activePersona
+        activePersona,
+        file || undefined
       );
       
       // Break long responses into multiple sequential messages
@@ -100,6 +103,7 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     isLoading,
     error,
     activePersona,
-    handleSendMessage
+    handleSendMessage,
+    setConversationContext
   };
 };

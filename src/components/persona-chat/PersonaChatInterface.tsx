@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -81,8 +80,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     }
   };
 
-  const handleSendMessageWithImage = (message: string, imageFile: File | null) => {
-    handleSendMessage(message, imageFile);
+  const handleSendMessageWithFile = (message: string, file: File | null) => {
+    handleSendMessage(message, file);
   };
 
   // Generate a default title from the conversation content
@@ -184,7 +183,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </ScrollArea>
         
         <MessageInput
-          onSendMessage={handleSendMessageWithImage}
+          onSendMessage={handleSendMessageWithFile}
           isResponding={isResponding}
         />
       </Card>
