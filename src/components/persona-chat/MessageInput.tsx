@@ -74,7 +74,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder={selectedImage ? "Add a message with your image..." : "Type your message..."}
             className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isResponding}
