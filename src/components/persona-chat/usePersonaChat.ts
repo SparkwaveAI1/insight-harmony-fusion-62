@@ -45,26 +45,14 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  const handleSendMessage = async (inputMessage: string, imageFile: File | null = null) => {
-    if ((!inputMessage.trim() && !imageFile) || !activePersona || isResponding) return;
-
-    let imageBase64: string | undefined;
-    
-    if (imageFile) {
-      try {
-        imageBase64 = await convertFileToBase64(imageFile);
-      } catch (error) {
-        console.error('Error converting image to base64:', error);
-        toast.error('Failed to process image');
-        return;
-      }
-    }
+  const handleSendMessage = async (inputMessage: string, file: File | null = null) => {
+    if ((!inputMessage.trim() && !file) || !activePersona || isResponding) return;
 
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
       timestamp: new Date(),
-      image: imageBase64,
+      file: file || undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -72,17 +60,15 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
 
     try {
       console.log("Chat Mode:", chatMode);
-      console.log("Conversation Context:", conversationContext);
+      console.log("File attached:", file ? `${file.name} (${file.type})` : 'None');
       
-      const response = await sendMessageToPersona(
+      const response = await sendMessageToPersona({
         personaId,
-        inputMessage,
-        messages,
-        activePersona,
-        chatMode,
-        conversationContext,
-        imageBase64
-      );
+        message: inputMessage,
+        messageHistory: messages,
+        persona: activePersona,
+        file: file || undefined
+      });
       
       // Break long responses into multiple sequential messages
       const messageSegments = breakIntoMultipleMessages(response);
@@ -110,15 +96,6 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
       toast.error(`Failed to get response from persona: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsResponding(false);
     }
-  };
-
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
   };
 
   return {

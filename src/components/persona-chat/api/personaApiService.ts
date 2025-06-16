@@ -2,6 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Message } from '../types';
 import { Persona } from '@/services/persona/types';
+import { FileHandlingService } from '@/services/fileHandlingService';
+import { MessageFormattingService } from '@/services/messageFormattingService';
 
 export interface SendMessageRequest {
   personaId: string;
@@ -15,35 +17,20 @@ export const sendMessageToPersona = async (request: SendMessageRequest): Promise
   try {
     const { personaId, message, messageHistory, persona, file } = request;
     
-    // Convert file to base64 if provided
+    // Process file if provided using the dedicated service
     let fileData: string | undefined;
     let fileType: string | undefined;
     let fileName: string | undefined;
     
     if (file) {
-      fileData = await convertFileToBase64(file);
-      fileType = file.type;
-      fileName = file.name;
+      const processedFile = await FileHandlingService.processFile(file);
+      fileData = processedFile.base64Data;
+      fileType = processedFile.type;
+      fileName = processedFile.name;
     }
 
-    // Format message history for the API - handle async operations properly
-    const formattedHistory = await Promise.all(messageHistory.map(async (msg) => {
-      const baseMessage = {
-        role: msg.role,
-        content: msg.content,
-      };
-
-      if (msg.file && msg.file instanceof File) {
-        return {
-          ...baseMessage,
-          file_data: await convertFileToBase64(msg.file),
-          file_type: msg.file.type,
-          file_name: msg.file.name
-        };
-      }
-
-      return baseMessage;
-    }));
+    // Format message history using the dedicated service
+    const formattedHistory = await MessageFormattingService.formatMessageHistory(messageHistory);
 
     const { data, error } = await supabase.functions.invoke('generate-persona-response', {
       body: {
@@ -71,13 +58,4 @@ export const sendMessageToPersona = async (request: SendMessageRequest): Promise
     console.error('Error in sendMessageToPersona:', error);
     throw error;
   }
-};
-
-const convertFileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
 };

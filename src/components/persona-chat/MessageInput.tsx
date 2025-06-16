@@ -3,6 +3,8 @@ import React, { useState, useRef } from 'react';
 import { Send, Paperclip, X, FileText, Image } from 'lucide-react';
 import Button from '@/components/ui-custom/Button';
 import { toast } from 'sonner';
+import { FileHandlingService } from '@/services/fileHandlingService';
+import { ValidationService } from '@/services/validationService';
 
 interface MessageInputProps {
   onSendMessage: (message: string, file?: File | null) => void;
@@ -15,7 +17,13 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSendMessage = () => {
-    if (!inputMessage.trim() && !selectedFile) return;
+    const validation = ValidationService.validateMessageInput(inputMessage, selectedFile || undefined);
+    
+    if (!validation.isValid) {
+      ValidationService.showValidationErrors(validation.errors);
+      return;
+    }
+
     onSendMessage(inputMessage, selectedFile);
     setInputMessage('');
     setSelectedFile(null);
@@ -28,29 +36,10 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
     const file = e.target.files?.[0];
     
     if (file) {
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        toast.error("File is too large. Maximum size is 50MB.");
-        return;
-      }
+      const validation = FileHandlingService.validateFile(file);
       
-      // Check file type - using the same types as knowledge base
-      const allowedTypes = [
-        'application/pdf',
-        'text/csv',
-        'text/plain',
-        'image/jpeg',
-        'image/png', 
-        'image/gif',
-        'image/webp',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/markdown'
-      ];
-      
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("File type not supported. Please use PDF, images, text files, or Office documents.");
+      if (!validation.isValid) {
+        toast.error(validation.error);
         return;
       }
       
@@ -71,14 +60,10 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
   };
 
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) {
-      return <Image className="h-4 w-4 text-green-500" />;
-    }
-    return <FileText className="h-4 w-4 text-blue-500" />;
-  };
-
-  const getAcceptedFileTypes = () => {
-    return '.pdf,.csv,.txt,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.md';
+    const iconType = FileHandlingService.getFileIcon(file);
+    return iconType === 'image' 
+      ? <Image className="h-4 w-4 text-green-500" />
+      : <FileText className="h-4 w-4 text-blue-500" />;
   };
 
   return (
@@ -90,7 +75,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
               {getFileIcon(selectedFile)}
               <span className="text-sm truncate max-w-[200px]">{selectedFile.name}</span>
               <span className="text-xs text-muted-foreground">
-                ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                ({FileHandlingService.formatFileSize(selectedFile.size)})
               </span>
             </div>
             <button 
@@ -133,7 +118,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept={getAcceptedFileTypes()}
+            accept={FileHandlingService.getAcceptedFileTypes()}
             className="hidden"
           />
           
