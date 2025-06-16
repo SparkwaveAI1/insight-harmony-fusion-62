@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Users, FileText } from 'lucide-react';
-import { getProjectById, getProjectConversations } from '@/services/collections';
+import { getProjectById } from '@/services/collections';
 import { Project, Conversation } from '@/services/collections/types';
 import ProjectInformationForm from '@/components/projects/ProjectInformationForm';
 import ProjectCollectionsManager from '@/components/projects/ProjectCollectionsManager';
@@ -31,13 +31,13 @@ const ProjectDetail = () => {
   const loadProjectData = async (projectId: string) => {
     setIsLoading(true);
     try {
-      const [projectData, conversationData] = await Promise.all([
-        getProjectById(projectId),
-        getProjectConversations(projectId)
-      ]);
+      console.log('Loading project data for ID:', projectId);
+      const projectData = await getProjectById(projectId);
+      console.log('Project data loaded:', projectData);
       
       setProject(projectData);
-      setConversations(conversationData);
+      // For now, set conversations to empty array until we implement conversation fetching
+      setConversations([]);
     } catch (error) {
       console.error('Error loading project data:', error);
     } finally {

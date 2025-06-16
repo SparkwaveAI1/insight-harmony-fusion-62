@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Project, ProjectWithConversationCount } from "./types";
+import { Project, ProjectWithConversationCount, Conversation } from "./types";
 
 /**
  * Fetches a specific project by ID
@@ -178,5 +177,25 @@ export const deleteProject = async (id: string): Promise<boolean> => {
     console.error("Error deleting project:", error);
     toast.error("Failed to delete project");
     return false;
+  }
+};
+
+/**
+ * Fetches all conversations for a specific project
+ */
+export const getProjectConversations = async (projectId: string): Promise<Conversation[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("conversations")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data as Conversation[] || [];
+  } catch (error) {
+    console.error("Error fetching project conversations:", error);
+    toast.error("Failed to fetch conversations");
+    return [];
   }
 };
