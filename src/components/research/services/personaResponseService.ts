@@ -43,25 +43,12 @@ export const generatePersonaResponse = async (
     // Create a more natural research prompt that encourages authentic responses
     const naturalResearchPrompt = generateNaturalResearchPrompt(currentMessages, persona);
 
-    // Create enhanced conversation context for research mode
-    const researchContext = `This is an authentic research conversation. You should respond naturally as ${persona.name}, not as an AI assistant. Your response length should vary naturally based on your personality, emotional state, and engagement with the topic. Don't worry about being balanced or diplomatic - respond authentically according to your actual beliefs and personality traits.
-
-Key instructions:
-- Vary your response length naturally (some responses can be short, others longer)
-- Use your authentic speaking style and personality
-- Show genuine emotional reactions based on your traits
-- Don't feel obligated to give structured, paragraph-formatted responses
-- Respond as you naturally would in a real conversation`;
-
-    // Generate initial response
+    // Generate initial response using the updated API
     let response = await sendMessageToPersona(
       personaId,
       naturalResearchPrompt,
       conversationHistory,
-      persona,
-      'research',
-      researchContext,
-      currentMessages.length > 0 ? currentMessages[currentMessages.length - 1].image : undefined
+      persona
     );
 
     console.log('Initial response generated:', response.substring(0, 100) + '...');

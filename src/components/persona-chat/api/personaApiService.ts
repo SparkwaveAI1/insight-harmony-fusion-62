@@ -22,15 +22,23 @@ export const sendMessageToPersona = async (
       fileName = file.name;
     }
 
-    // Format message history for the API
-    const formattedHistory = messageHistory.map(msg => ({
-      role: msg.role,
-      content: msg.content,
-      ...(msg.file && {
-        file_data: msg.file instanceof File ? await convertFileToBase64(msg.file) : undefined,
-        file_type: msg.file instanceof File ? msg.file.type : undefined,
-        file_name: msg.file instanceof File ? msg.file.name : undefined
-      })
+    // Format message history for the API - handle async operations properly
+    const formattedHistory = await Promise.all(messageHistory.map(async (msg) => {
+      const baseMessage = {
+        role: msg.role,
+        content: msg.content,
+      };
+
+      if (msg.file && msg.file instanceof File) {
+        return {
+          ...baseMessage,
+          file_data: await convertFileToBase64(msg.file),
+          file_type: msg.file.type,
+          file_name: msg.file.name
+        };
+      }
+
+      return baseMessage;
     }));
 
     const { data, error } = await supabase.functions.invoke('generate-persona-response', {
