@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Upload, Trash2, Plus } from 'lucide-react';
+import { FileText, Upload, Trash2, Plus, File, Image, FileSpreadsheet } from 'lucide-react';
 import { 
   uploadKnowledgeBaseDocument, 
   getProjectDocuments, 
@@ -40,6 +40,11 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     e.preventDefault();
     if (!title.trim()) {
       toast.error('Please provide a title for the document');
+      return;
+    }
+
+    if (!content.trim() && !file) {
+      toast.error('Please provide either content or upload a file');
       return;
     }
 
@@ -90,6 +95,29 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const getFileIcon = (fileType: string | null) => {
+    if (!fileType) return <FileText className="h-5 w-5 text-blue-500" />;
+    
+    if (fileType.includes('image/')) {
+      return <Image className="h-5 w-5 text-green-500" />;
+    }
+    if (fileType.includes('spreadsheet') || fileType.includes('csv') || fileType.includes('excel')) {
+      return <FileSpreadsheet className="h-5 w-5 text-green-600" />;
+    }
+    if (fileType.includes('pdf')) {
+      return <FileText className="h-5 w-5 text-red-500" />;
+    }
+    if (fileType.includes('word') || fileType.includes('document')) {
+      return <FileText className="h-5 w-5 text-blue-600" />;
+    }
+    
+    return <File className="h-5 w-5 text-gray-500" />;
+  };
+
+  const getAcceptedFileTypes = () => {
+    return '.pdf,.csv,.txt,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.md';
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -118,7 +146,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
               </div>
 
               <div>
-                <Label htmlFor="content">Content (Optional)</Label>
+                <Label htmlFor="content">Content (Optional if uploading file)</Label>
                 <Textarea
                   id="content"
                   value={content}
@@ -134,11 +162,15 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                   id="file-upload"
                   type="file"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  accept=".pdf,.doc,.docx,.txt,.md"
+                  accept={getAcceptedFileTypes()}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported: PDF, DOC, DOCX, TXT, MD files
-                </p>
+                <div className="text-xs text-gray-500 mt-1 space-y-1">
+                  <p>Supported formats:</p>
+                  <p>• Documents: PDF, DOC, DOCX, TXT, MD</p>
+                  <p>• Images: JPG, PNG, GIF, WEBP</p>
+                  <p>• Data: CSV, XLS, XLSX</p>
+                  <p>• Max size: 50MB</p>
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -159,16 +191,21 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
             {documents.map((doc) => (
               <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-blue-500" />
+                  {getFileIcon(doc.file_type)}
                   <div>
                     <h4 className="font-medium">{doc.title}</h4>
-                    <div className="text-xs text-gray-500 space-x-2">
+                    {doc.content && (
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                        {doc.content.substring(0, 100)}...
+                      </p>
+                    )}
+                    <div className="text-xs text-gray-500 space-x-2 mt-1">
                       <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                       {doc.file_size && (
                         <span>• {formatFileSize(doc.file_size)}</span>
                       )}
                       {doc.file_type && (
-                        <span>• {doc.file_type}</span>
+                        <span>• {doc.file_type.split('/')[1]?.toUpperCase()}</span>
                       )}
                     </div>
                   </div>
@@ -179,6 +216,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                       variant="ghost"
                       size="sm"
                       onClick={() => window.open(doc.file_url!, '_blank')}
+                      title="Open file"
                     >
                       <Upload className="h-4 w-4" />
                     </Button>
@@ -188,6 +226,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                     size="sm"
                     onClick={() => handleDeleteDocument(doc.id)}
                     className="text-red-500 hover:text-red-700"
+                    title="Delete document"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -196,7 +235,11 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No documents uploaded yet.</p>
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm mb-2">No documents uploaded yet.</p>
+            <p className="text-xs text-gray-400">Upload documents to build your project's knowledge base</p>
+          </div>
         )}
       </CardContent>
     </Card>
