@@ -1,18 +1,16 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
-import { Persona } from '@/services/persona/types';
 import { ChatMode } from '../ChatModeSelector';
 import { MessageFormattingService } from '@/services/messageFormattingService';
 import { sendMessageToPersona } from '../api/personaApiService';
+import { useChatState } from './useChatState';
 
 export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversation') => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isResponding, setIsResponding] = useState(false);
-  const [conversationContext, setConversationContext] = useState<string>('');
   const { loadPersona, activePersona, isLoading, error } = usePersona();
+  const chatState = useChatState();
 
   // Load persona on mount
   useEffect(() => {
@@ -29,8 +27,8 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
 
   // Add initial greeting once persona is loaded
   useEffect(() => {
-    if (activePersona && messages.length === 0) {
-      setMessages([
+    if (activePersona && chatState.messages.length === 0) {
+      const greetingMessages: Message[] = [
         {
           role: 'assistant',
           content: `Hey! I'm ${activePersona.name}.`,
@@ -41,12 +39,13 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
           content: `What's up?`,
           timestamp: new Date(Date.now() + 500),
         },
-      ]);
+      ];
+      chatState.actions.addMessages(greetingMessages);
     }
-  }, [activePersona, messages.length]);
+  }, [activePersona, chatState.messages.length, chatState.actions]);
 
-  const handleSendMessage = async (inputMessage: string, file: File | null = null) => {
-    if ((!inputMessage.trim() && !file) || !activePersona || isResponding) return;
+  const handleSendMessage = useCallback(async (inputMessage: string, file: File | null = null) => {
+    if ((!inputMessage.trim() && !file) || !activePersona || chatState.isResponding) return;
 
     const userMessage: Message = {
       role: 'user',
@@ -55,8 +54,8 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
       file: file || undefined,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setIsResponding(true);
+    chatState.actions.addMessage(userMessage);
+    chatState.actions.setIsResponding(true);
 
     try {
       console.log("Chat Mode:", chatMode);
@@ -65,7 +64,7 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
       const response = await sendMessageToPersona({
         personaId,
         message: inputMessage,
-        messageHistory: messages,
+        messageHistory: chatState.messages,
         persona: activePersona,
         file: file || undefined
       });
@@ -78,15 +77,15 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
         const segment = messageSegments[i].trim();
         if (segment) {
           setTimeout(() => {
-            setMessages(prev => [...prev, {
+            chatState.actions.addMessage({
               role: 'assistant',
               content: segment,
               timestamp: new Date(),
-            }]);
+            });
             
             // Only mark as not responding after the last message
             if (i === messageSegments.length - 1) {
-              setIsResponding(false);
+              chatState.actions.setIsResponding(false);
             }
           }, i * 1000); // Add a 1 second delay between messages
         }
@@ -94,17 +93,19 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     } catch (error) {
       console.error('Error getting response:', error);
       toast.error(`Failed to get response from persona: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setIsResponding(false);
+      chatState.actions.setIsResponding(false);
     }
-  };
+  }, [personaId, chatMode, activePersona, chatState.messages, chatState.isResponding, chatState.actions]);
 
   return {
-    messages,
-    isResponding,
+    messages: chatState.messages,
+    isResponding: chatState.isResponding,
+    conversationContext: chatState.conversationContext,
     isLoading,
     error,
     activePersona,
     handleSendMessage,
-    setConversationContext
+    setConversationContext: chatState.actions.setConversationContext,
+    chatActions: chatState.actions,
   };
 };
