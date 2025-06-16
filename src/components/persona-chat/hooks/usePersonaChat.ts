@@ -62,13 +62,13 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
       console.log("Chat Mode:", chatMode);
       console.log("File attached:", file ? `${file.name} (${file.type})` : 'None');
       
-      const response = await sendMessageToPersona(
+      const response = await sendMessageToPersona({
         personaId,
-        inputMessage,
-        messages,
-        activePersona,
-        file || undefined
-      );
+        message: inputMessage,
+        messageHistory: messages,
+        persona: activePersona,
+        file: file || undefined
+      });
       
       // Break long responses into multiple sequential messages
       const messageSegments = breakIntoMultipleMessages(response);

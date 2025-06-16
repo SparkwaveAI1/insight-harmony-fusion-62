@@ -44,12 +44,12 @@ export const generatePersonaResponse = async (
     const naturalResearchPrompt = generateNaturalResearchPrompt(currentMessages, persona);
 
     // Generate initial response using the updated API
-    let response = await sendMessageToPersona(
+    let response = await sendMessageToPersona({
       personaId,
-      naturalResearchPrompt,
-      conversationHistory,
+      message: naturalResearchPrompt,
+      messageHistory: conversationHistory,
       persona
-    );
+    });
 
     console.log('Initial response generated:', response.substring(0, 100) + '...');
 

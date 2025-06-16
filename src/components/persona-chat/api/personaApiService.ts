@@ -3,14 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { Message } from '../types';
 import { Persona } from '@/services/persona/types';
 
-export const sendMessageToPersona = async (
-  personaId: string,
-  message: string,
-  messageHistory: Message[],
-  persona: Persona,
-  file?: File
-): Promise<string> => {
+export interface SendMessageRequest {
+  personaId: string;
+  message: string;
+  messageHistory: Message[];
+  persona: Persona;
+  file?: File;
+}
+
+export const sendMessageToPersona = async (request: SendMessageRequest): Promise<string> => {
   try {
+    const { personaId, message, messageHistory, persona, file } = request;
+    
     // Convert file to base64 if provided
     let fileData: string | undefined;
     let fileType: string | undefined;
