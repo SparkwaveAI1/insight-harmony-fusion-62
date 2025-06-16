@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createProject, getUserProjects, Project } from "@/services/collections";
 import { createConversation, saveConversationMessages } from "@/services/collections/conversationOperations";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 
