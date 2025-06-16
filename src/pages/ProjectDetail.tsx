@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from "@/components/layout/Header";
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Users, FileText } from 'lucide-react';
-import { getProjectById } from '@/services/collections';
+import { getProjectById, getProjectConversations } from '@/services/collections';
 import { Project, Conversation } from '@/services/collections/types';
 import ProjectInformationForm from '@/components/projects/ProjectInformationForm';
 import ProjectCollectionsManager from '@/components/projects/ProjectCollectionsManager';
@@ -32,12 +31,15 @@ const ProjectDetail = () => {
     setIsLoading(true);
     try {
       console.log('Loading project data for ID:', projectId);
-      const projectData = await getProjectById(projectId);
+      const [projectData, conversationData] = await Promise.all([
+        getProjectById(projectId),
+        getProjectConversations(projectId)
+      ]);
       console.log('Project data loaded:', projectData);
+      console.log('Conversations loaded:', conversationData);
       
       setProject(projectData);
-      // For now, set conversations to empty array until we implement conversation fetching
-      setConversations([]);
+      setConversations(conversationData);
     } catch (error) {
       console.error('Error loading project data:', error);
     } finally {
@@ -209,6 +211,11 @@ const ProjectDetail = () => {
                                   <p className="text-xs text-gray-500">
                                     {new Date(conversation.created_at).toLocaleDateString()}
                                   </p>
+                                  {conversation.session_type && (
+                                    <Badge variant="outline" className="text-xs mt-1">
+                                      {conversation.session_type}
+                                    </Badge>
+                                  )}
                                 </div>
                                 <div className="flex gap-2">
                                   {conversation.tags.map((tag) => (

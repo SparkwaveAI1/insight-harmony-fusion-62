@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -272,6 +271,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         messages={formatMessagesForSave()}
         personaIds={loadedPersonas.map(p => p.persona_id)}
         defaultTitle={`Research Session - ${new Date().toLocaleDateString()}`}
+        sessionType="research"
         onSaved={handleConversationSaved}
       />
     </div>

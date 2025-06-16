@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createProject, getUserProjects, Project, createConversation, saveConversationMessages } from "@/services/collections";
+import { createProject, getUserProjects, Project } from "@/services/collections";
+import { createConversation, saveConversationMessages } from "@/services/collections/conversationOperations";
 import { Loader2, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ interface SaveConversationModalProps {
   messages: { role: "user" | "assistant"; content: string; persona_id?: string }[];
   personaIds: string[];
   defaultTitle?: string;
+  sessionType?: string; // Add session type to differentiate sources
   onSaved: (conversationId: string, projectId: string) => void;
 }
 
@@ -25,6 +26,7 @@ const SaveConversationModal = ({
   messages,
   personaIds,
   defaultTitle = "",
+  sessionType = "chat", // Default to chat for persona chat sessions
   onSaved
 }: SaveConversationModalProps) => {
   const [title, setTitle] = useState(defaultTitle || `Conversation ${new Date().toLocaleDateString()}`);
@@ -90,14 +92,34 @@ const SaveConversationModal = ({
     setIsLoading(true);
     
     try {
-      // Create the conversation
+      // Create the conversation with session type
       const tagsArray = tags.trim() ? tags.split(",").map(tag => tag.trim()) : [];
-      const conversation = await createConversation(
-        selectedProjectId, 
-        title,
-        personaIds,
-        tagsArray
-      );
+      
+      // Get the user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to save a conversation");
+        return;
+      }
+      
+      // Insert the conversation with session_type
+      const { data, error } = await supabase
+        .from("conversations")
+        .insert({ 
+          project_id: selectedProjectId,
+          title,
+          user_id: user.id,
+          persona_ids: personaIds,
+          tags: tagsArray,
+          session_type: sessionType
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      const conversation = data;
       
       if (conversation) {
         // Save the messages
@@ -123,7 +145,7 @@ const SaveConversationModal = ({
         <DialogHeader>
           <DialogTitle>Save Conversation</DialogTitle>
           <DialogDescription>
-            Save this conversation to review later or share with your team.
+            Save this {sessionType === 'research' ? 'research session' : 'conversation'} to review later or share with your team.
           </DialogDescription>
         </DialogHeader>
         
