@@ -5,7 +5,7 @@ import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
 import { ChatMode } from './ChatModeSelector';
-import { breakIntoMultipleMessages } from './utils/chatMessageUtils';
+import { MessageFormattingService } from '@/services/messageFormattingService';
 import { sendMessageToPersona } from './api/personaApiService';
 
 export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversation') => {
@@ -71,7 +71,7 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
       });
       
       // Break long responses into multiple sequential messages
-      const messageSegments = breakIntoMultipleMessages(response);
+      const messageSegments = MessageFormattingService.breakIntoMultipleMessages(response);
       
       // Add messages with slight delays to simulate typing
       for (let i = 0; i < messageSegments.length; i++) {
