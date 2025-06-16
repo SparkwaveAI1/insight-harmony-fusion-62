@@ -5,6 +5,7 @@ export interface Message {
   timestamp: Date;
   file?: File;
   image?: string; // base64 encoded image for backwards compatibility
+  responding_persona_id?: string; // Added for research session support
 }
 
 export interface PersonaChatContext {

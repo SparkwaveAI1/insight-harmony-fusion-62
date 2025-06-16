@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
+import { usePersonaChat } from '@/components/persona-chat/hooks/usePersonaChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
 import MobileNavigationBar from '@/components/persona-chat/MobileNavigationBar';
