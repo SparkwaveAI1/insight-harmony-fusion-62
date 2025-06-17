@@ -1,13 +1,16 @@
+
 import { useState, useCallback } from 'react';
 import { Persona } from '@/services/persona/types';
 import { ResearchMessage } from './types';
 import { createResearchSession } from '../services/sessionService';
 import { sendUserMessage } from '../services/messageService';
 import { generatePersonaResponse } from '../services/personaResponseService';
+import { KnowledgeBaseDocument } from '@/services/collections';
 
-export const useResearchSession = () => {
+export const useResearchSession = (projectId?: string) => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
+  const [projectDocuments, setProjectDocuments] = useState<KnowledgeBaseDocument[]>([]);
   const [messages, setMessages] = useState<ResearchMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -15,11 +18,12 @@ export const useResearchSession = () => {
     try {
       setIsLoading(true);
       
-      const result = await createResearchSession(personaIds);
+      const result = await createResearchSession(personaIds, projectId);
       
       if (result.success && result.sessionId && result.selectedPersonas) {
         setSessionId(result.sessionId);
         setLoadedPersonas(result.selectedPersonas);
+        setProjectDocuments(result.projectDocuments || []);
         setMessages([]);
         return true;
       }
@@ -31,7 +35,7 @@ export const useResearchSession = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [projectId]);
 
   const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
     if (!sessionId || !content.trim()) {
@@ -68,7 +72,7 @@ export const useResearchSession = () => {
           if (currentSessionId) {
             // Handle the async response generation
             setIsLoading(true);
-            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas)
+            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas, projectDocuments)
               .then(responseMessage => {
                 if (responseMessage) {
                   setMessages(prev => [...prev, responseMessage]);
@@ -86,7 +90,7 @@ export const useResearchSession = () => {
       });
       return currentMessages;
     });
-  }, []);
+  }, [projectDocuments]);
 
   const addPersonaToSession = useCallback(async (personaId: string) => {
     // Implementation for adding persona to existing session
@@ -101,6 +105,7 @@ export const useResearchSession = () => {
   return {
     sessionId,
     loadedPersonas,
+    projectDocuments,
     messages,
     isLoading,
     createSession,

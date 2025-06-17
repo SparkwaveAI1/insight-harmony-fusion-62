@@ -1,95 +1,107 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getPersonaById } from '@/services/persona';
 import { Persona } from '@/services/persona/types';
-import { getAllPersonas } from '@/services/persona';
+import { getProjectDocuments, KnowledgeBaseDocument } from '@/services/collections';
 
-export const createResearchSession = async (personaIds: string[]): Promise<{
+interface SessionCreationResult {
   success: boolean;
   sessionId?: string;
   selectedPersonas?: Persona[];
-}> => {
+  projectDocuments?: KnowledgeBaseDocument[];
+  error?: string;
+}
+
+export const createResearchSession = async (
+  personaIds: string[],
+  projectId?: string
+): Promise<SessionCreationResult> => {
   try {
-    console.log('Creating session with personas:', personaIds);
+    console.log('Creating research session with personas:', personaIds);
+    console.log('Project ID:', projectId);
     
+    if (personaIds.length === 0) {
+      toast.error('Please select at least one persona');
+      return { success: false, error: 'No personas selected' };
+    }
+
+    if (personaIds.length > 4) {
+      toast.error('Maximum 4 personas allowed per session');
+      return { success: false, error: 'Too many personas selected' };
+    }
+
     // Get the user's ID
     const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) {
-      toast.error('You must be logged in to start a research session');
-      return { success: false };
+      toast.error('You must be logged in to create a research session');
+      return { success: false, error: 'Not authenticated' };
+    }
+    
+    // Load all selected personas
+    const selectedPersonas: Persona[] = [];
+    for (const personaId of personaIds) {
+      try {
+        const persona = await getPersonaById(personaId);
+        if (persona) {
+          selectedPersonas.push(persona);
+        }
+      } catch (error) {
+        console.error(`Error loading persona ${personaId}:`, error);
+      }
     }
 
-    // Fetch fresh personas to ensure we have the latest data
-    const allPersonas = await getAllPersonas();
-    const selectedPersonas = allPersonas.filter(p => 
-      personaIds.includes(p.persona_id)
-    );
-    
-    console.log('Selected personas:', selectedPersonas);
-    
     if (selectedPersonas.length === 0) {
-      toast.error('No valid personas selected');
-      return { success: false };
+      toast.error('Failed to load any selected personas');
+      return { success: false, error: 'Failed to load personas' };
     }
 
-    // First, create or get a default research project
-    let projectId: string;
+    // Load project knowledge base documents if project ID is provided
+    let projectDocuments: KnowledgeBaseDocument[] = [];
+    if (projectId) {
+      try {
+        projectDocuments = await getProjectDocuments(projectId);
+        console.log(`Loaded ${projectDocuments.length} knowledge base documents for project`);
+      } catch (error) {
+        console.error('Error loading project documents:', error);
+        // Don't fail the session creation if documents can't be loaded
+      }
+    }
     
-    // Try to find an existing research project for this user
-    const { data: existingProjects } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('name', 'Research Sessions')
-      .limit(1);
-
-    if (existingProjects && existingProjects.length > 0) {
-      projectId = existingProjects[0].id;
-    } else {
-      // Create a new research project
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: 'Research Sessions',
-          description: 'Default project for research sessions',
-          user_id: user.id
-        })
-        .select('id')
-        .single();
-
-      if (projectError) throw projectError;
-      projectId = newProject.id;
-    }
-
-    // Create research conversation
-    const { data: conversation, error } = await supabase
+    // Create the conversation session
+    const { data, error } = await supabase
       .from('conversations')
-      .insert({
+      .insert({ 
+        user_id: user.id,
         title: `Research Session - ${new Date().toLocaleDateString()}`,
         session_type: 'research',
-        active_persona_ids: personaIds,
-        auto_mode: false,
         persona_ids: personaIds,
-        project_id: projectId,
-        user_id: user.id,
-        tags: ['research']
+        active_persona_ids: personaIds,
+        project_id: projectId || null,
+        tags: ['research', 'multi-persona']
       })
       .select()
       .single();
 
-    if (error) throw error;
-
-    console.log('Session created successfully:', conversation.id);
-    toast.success('Research session started successfully');
+    if (error) {
+      console.error('Error creating conversation:', error);
+      toast.error('Failed to create research session');
+      return { success: false, error: error.message };
+    }
     
-    return {
-      success: true,
-      sessionId: conversation.id,
-      selectedPersonas
+    console.log('Research session created successfully:', data.id);
+    toast.success(`Research session started with ${selectedPersonas.length} personas`);
+    
+    return { 
+      success: true, 
+      sessionId: data.id, 
+      selectedPersonas,
+      projectDocuments
     };
   } catch (error) {
-    console.error('Error creating research session:', error);
-    toast.error('Failed to start research session');
-    return { success: false };
+    console.error('Error in createResearchSession:', error);
+    toast.error('Failed to create research session');
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

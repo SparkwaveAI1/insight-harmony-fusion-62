@@ -1,4 +1,5 @@
 
+import { useSearchParams } from 'react-router-dom';
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import ResearchInterface from "@/components/research/ResearchInterface";
@@ -8,19 +9,24 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 
 const Research = () => {
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get('project');
+  
   const {
     sessionId,
     loadedPersonas,
+    projectDocuments,
     messages,
     isLoading,
     createSession,
     sendMessage,
     selectPersonaResponder
-  } = useResearchSession();
+  } = useResearchSession(projectId || undefined);
 
   const sessionData = {
     sessionId,
     loadedPersonas,
+    projectDocuments,
     messages,
     isLoading
   };
@@ -36,6 +42,11 @@ const Research = () => {
               <div className="container h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4 pt-24 flex-shrink-0">
                   <SidebarTrigger className="hidden md:flex" />
+                  {projectDocuments.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      📚 {projectDocuments.length} knowledge base document{projectDocuments.length !== 1 ? 's' : ''} available
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-h-0">
                   <ResearchInterface 
