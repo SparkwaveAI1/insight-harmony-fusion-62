@@ -8,6 +8,7 @@ import {
   Folder,
   FlaskConical,
   Microscope,
+  Mail,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -69,5 +70,10 @@ export const headerNavItems = [
     title: "PRSNA",
     href: "/prsna",
     icon: Coins,
+  },
+  {
+    title: "Contact",
+    href: "/contact",
+    icon: Mail,
   },
 ];
