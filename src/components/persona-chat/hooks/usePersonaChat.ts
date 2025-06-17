@@ -66,7 +66,8 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
         message: inputMessage,
         messageHistory: chatState.messages,
         persona: activePersona,
-        file: file || undefined
+        file: file || undefined,
+        chatMode
       });
       
       // Break long responses into multiple sequential messages

@@ -11,22 +11,29 @@ export interface SendMessageRequest {
   messageHistory: Message[];
   persona: Persona;
   file?: File;
+  chatMode?: string;
 }
 
 export const sendMessageToPersona = async (request: SendMessageRequest): Promise<string> => {
   try {
-    const { personaId, message, messageHistory, persona, file } = request;
+    const { personaId, message, messageHistory, persona, file, chatMode = 'conversation' } = request;
     
     // Process file if provided using the dedicated service
-    let fileData: string | undefined;
-    let fileType: string | undefined;
-    let fileName: string | undefined;
+    let hasImage = false;
     
     if (file) {
       const processedFile = await FileHandlingService.processFile(file);
-      fileData = processedFile.base64Data;
-      fileType = processedFile.type;
-      fileName = processedFile.name;
+      hasImage = true;
+      
+      // Add the file to the message history for the API call
+      const messageWithFile = {
+        role: 'user' as const,
+        content: message,
+        timestamp: new Date(),
+        image: processedFile.base64Data
+      };
+      
+      messageHistory = [...messageHistory, messageWithFile];
     }
 
     // Format message history using the dedicated service
@@ -34,13 +41,10 @@ export const sendMessageToPersona = async (request: SendMessageRequest): Promise
 
     const { data, error } = await supabase.functions.invoke('generate-persona-response', {
       body: {
-        personaId,
-        message,
-        messageHistory: formattedHistory,
-        persona,
-        file_data: fileData,
-        file_type: fileType,
-        file_name: fileName
+        persona_id: personaId,
+        previous_messages: formattedHistory,
+        chat_mode: chatMode,
+        has_image: hasImage
       }
     });
 
