@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Conversation, ConversationMessage } from "./types";
@@ -44,7 +43,7 @@ export const getConversationMessages = async (conversationId: string): Promise<C
 };
 
 /**
- * Fetches all conversations for a project
+ * Fetches all conversations for a specific project
  */
 export const getProjectConversations = async (projectId: string): Promise<Conversation[]> => {
   try {
@@ -52,13 +51,13 @@ export const getProjectConversations = async (projectId: string): Promise<Conver
       .from("conversations")
       .select("*")
       .eq("project_id", projectId)
-      .order("created_at", { ascending: false });
+      .order("updated_at", { ascending: false });
 
     if (error) throw error;
     return data as Conversation[] || [];
   } catch (error) {
     console.error("Error fetching project conversations:", error);
-    toast.error("Failed to fetch conversations");
+    toast.error("Failed to fetch project conversations");
     return [];
   }
 };

@@ -1,4 +1,3 @@
-
 // Export types
 export type * from './types';
 
@@ -26,3 +25,5 @@ export * from './conversationOperations';
 
 // For backwards compatibility
 export * from './collectionsService';
+
+export { getProjectConversations } from './conversationOperations';

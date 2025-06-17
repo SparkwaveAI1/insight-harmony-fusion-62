@@ -8,38 +8,57 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageSquare, Users, FileText } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Users, FileText, AlertCircle } from 'lucide-react';
 import { getProjectById, getProjectConversations } from '@/services/collections';
 import { Project, Conversation } from '@/services/collections/types';
 import ProjectInformationForm from '@/components/projects/ProjectInformationForm';
 import ProjectCollectionsManager from '@/components/projects/ProjectCollectionsManager';
 import ProjectKnowledgeBase from '@/components/projects/ProjectKnowledgeBase';
 import { Toaster } from "@/components/ui/toaster";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       loadProjectData(id);
+    } else {
+      setError("No project ID provided");
+      setIsLoading(false);
     }
   }, [id]);
 
   const loadProjectData = async (projectId: string) => {
     setIsLoading(true);
+    setError(null);
+    
     try {
+      console.log('Loading project data for ID:', projectId);
+      
       const [projectData, conversationData] = await Promise.all([
         getProjectById(projectId),
         getProjectConversations(projectId)
       ]);
       
-      setProject(projectData);
+      console.log('Project data loaded:', projectData);
+      console.log('Conversations loaded:', conversationData);
+      
+      if (!projectData) {
+        setError("Project not found or you don't have access to it");
+        setProject(null);
+      } else {
+        setProject(projectData);
+      }
+      
       setConversations(conversationData);
     } catch (error) {
       console.error('Error loading project data:', error);
+      setError(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +83,41 @@ const ProjectDetail = () => {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                       <p className="mt-2 text-gray-500">Loading project...</p>
                     </div>
+                  </div>
+                </div>
+              </main>
+              <Footer />
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  if (error) {
+    return (
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <SidebarInset>
+            <div className="relative flex min-h-svh flex-col">
+              <Header />
+              <main className="flex-1 min-h-0">
+                <div className="container h-full py-24">
+                  <div className="flex items-center justify-between mb-6">
+                    <SidebarTrigger className="hidden md:flex" />
+                  </div>
+                  <div className="text-center">
+                    <Alert className="max-w-md mx-auto mb-6">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                    <Link to="/projects">
+                      <Button>
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Projects
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </main>
