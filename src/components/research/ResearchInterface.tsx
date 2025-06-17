@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,19 +8,16 @@ import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { ResearchInterfaceProps } from './types';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import ConversationContext from '@/components/persona-chat/ConversationContext';
 
 const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   sessionData,
   onCreateSession,
   onSendMessage,
-  onSelectResponder,
-  projectId
+  onSelectResponder
 }) => {
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [conversationContext, setConversationContext] = useState('');
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
@@ -40,14 +36,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     // Add session metadata
     markdownContent += `**Session ID:** ${sessionId}\n`;
     markdownContent += `**Date:** ${new Date().toLocaleString()}\n`;
-    markdownContent += `**Total Messages:** ${messages.length}\n`;
-    if (projectId) {
-      markdownContent += `**Project ID:** ${projectId}\n`;
-    }
-    if (conversationContext) {
-      markdownContent += `**Context:** ${conversationContext}\n`;
-    }
-    markdownContent += '\n';
+    markdownContent += `**Total Messages:** ${messages.length}\n\n`;
     
     // Add personas section
     markdownContent += '## Active Personas\n\n';
@@ -85,10 +74,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const filename = projectId 
-      ? `research-session-project-${projectId}-${new Date().toISOString().split('T')[0]}.md`
-      : `research-session-${sessionId}-${new Date().toISOString().split('T')[0]}.md`;
-    link.download = filename;
+    link.download = `research-session-${sessionId}-${new Date().toISOString().split('T')[0]}.md`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -101,7 +87,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     console.log('Clear session functionality to be implemented');
     // For now, just reload the page or reset to persona loader
     setShowPersonaLoader(true);
-    setConversationContext('');
   };
 
   const handleSendToPersona = async (personaId: string) => {
@@ -116,8 +101,8 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     setShowSaveModal(true);
   };
 
-  const handleConversationSaved = (conversationId: string, savedProjectId: string) => {
-    console.log('Conversation saved successfully:', conversationId, 'to project:', savedProjectId);
+  const handleConversationSaved = (conversationId: string, projectId: string) => {
+    console.log('Conversation saved successfully:', conversationId, 'to project:', projectId);
     setShowSaveModal(false);
     // User can continue the conversation after saving
   };
@@ -139,12 +124,9 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       <div className="h-full overflow-y-auto">
         <div className="max-w-4xl mx-auto p-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              {projectId ? 'Project Research Session' : 'Research Session'}
-            </h1>
+            <h1 className="text-3xl font-bold mb-2">Research Session</h1>
             <p className="text-muted-foreground">
               Select up to 4 personas to participate in your research conversation
-              {projectId && ' for this project'}
             </p>
           </div>
           <PersonaLoader
@@ -164,9 +146,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            <span className="font-semibold">
-              {projectId ? 'Project Research Session' : 'Research Session'}
-            </span>
+            <span className="font-semibold">Research Session</span>
             <Badge variant="secondary">{loadedPersonas.length}/4 Personas</Badge>
             <Badge variant="outline" className="text-xs">
               {messages.length} messages
@@ -216,14 +196,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         </div>
       </div>
 
-      {/* Conversation Context */}
-      {sessionId && (
-        <ConversationContext
-          context={conversationContext}
-          onContextChange={setConversationContext}
-        />
-      )}
-
       {/* Research Conversation */}
       <div className="flex-1 min-h-0">
         <ResearchConversation
@@ -261,7 +233,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         </Card>
       )}
 
-      {/* Loaded Personas Display */}
+      {/* Loaded Personas Display - moved to bottom */}
       <Card className="flex-shrink-0 mt-6 p-4 bg-muted/30">
         <h4 className="font-medium mb-3 text-sm text-muted-foreground">Active Personas:</h4>
         <div className="flex flex-wrap gap-3">
