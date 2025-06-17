@@ -9,8 +9,9 @@ import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { ResearchInterfaceProps } from './types';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
+import ConversationContext from '@/components/persona-chat/ConversationContext';
 
-const ResearchInterface: React.FC<ResearchInterfaceProps & { projectId?: string | null }> = ({
+const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   sessionData,
   onCreateSession,
   onSendMessage,
@@ -20,6 +21,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps & { projectId?: string 
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [conversationContext, setConversationContext] = useState('');
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
@@ -41,6 +43,9 @@ const ResearchInterface: React.FC<ResearchInterfaceProps & { projectId?: string 
     markdownContent += `**Total Messages:** ${messages.length}\n`;
     if (projectId) {
       markdownContent += `**Project ID:** ${projectId}\n`;
+    }
+    if (conversationContext) {
+      markdownContent += `**Context:** ${conversationContext}\n`;
     }
     markdownContent += '\n';
     
@@ -96,6 +101,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps & { projectId?: string 
     console.log('Clear session functionality to be implemented');
     // For now, just reload the page or reset to persona loader
     setShowPersonaLoader(true);
+    setConversationContext('');
   };
 
   const handleSendToPersona = async (personaId: string) => {
@@ -209,6 +215,14 @@ const ResearchInterface: React.FC<ResearchInterfaceProps & { projectId?: string 
           </Button>
         </div>
       </div>
+
+      {/* Conversation Context */}
+      {sessionId && (
+        <ConversationContext
+          context={conversationContext}
+          onContextChange={setConversationContext}
+        />
+      )}
 
       {/* Research Conversation */}
       <div className="flex-1 min-h-0">
