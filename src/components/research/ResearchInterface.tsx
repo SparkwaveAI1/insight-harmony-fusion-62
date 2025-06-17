@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Settings, Download, Trash2, Send, Save } from 'lucide-react';
+import { Users, Download, Trash2, Send, Save } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { SessionData } from './hooks/types';
@@ -191,15 +191,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Clear
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPersonaLoader(true)}
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Manage
           </Button>
         </div>
       </div>
