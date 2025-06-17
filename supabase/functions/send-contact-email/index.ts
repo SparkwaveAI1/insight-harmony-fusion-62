@@ -122,9 +122,9 @@ serve(async (req) => {
         `;
     }
 
-    // Send email using Resend
+    // Send email using Resend with verified sender
     const emailResponse = await resend.emails.send({
-      from: "PersonaAI Contact <contact@sparkwave-ai.com>",
+      from: "PersonaAI Contact <onboarding@resend.dev>",
       to: "scott@sparkwave-ai.com",
       subject: subject,
       html: emailContent,
