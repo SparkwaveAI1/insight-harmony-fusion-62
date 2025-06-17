@@ -20,6 +20,7 @@ export const sendMessageToPersona = async (request: SendMessageRequest): Promise
     
     // Process file if provided using the dedicated service
     let hasImage = false;
+    let updatedMessageHistory = messageHistory;
     
     if (file) {
       const processedFile = await FileHandlingService.processFile(file);
@@ -33,11 +34,11 @@ export const sendMessageToPersona = async (request: SendMessageRequest): Promise
         image: processedFile.base64Data
       };
       
-      messageHistory = [...messageHistory, messageWithFile];
+      updatedMessageHistory = [...messageHistory, messageWithFile];
     }
 
     // Format message history using the dedicated service
-    const formattedHistory = await MessageFormattingService.formatMessageHistory(messageHistory);
+    const formattedHistory = await MessageFormattingService.formatMessageHistory(updatedMessageHistory);
 
     const { data, error } = await supabase.functions.invoke('generate-persona-response', {
       body: {
