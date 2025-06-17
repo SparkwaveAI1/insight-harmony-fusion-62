@@ -321,7 +321,14 @@ const ProjectDetail = () => {
                             )}
                           </div>
                         ) : (
-                          <p className="text-gray-500 text-sm">No conversations yet. Start your first research session!</p>
+                          <div className="text-center py-8">
+                            <p className="text-gray-500 text-sm mb-4">No conversations yet. Start your first research session!</p>
+                            <Link to={`/research?project=${project.id}`}>
+                              <Button>
+                                Start Research Session
+                              </Button>
+                            </Link>
+                          </div>
                         )}
                       </CardContent>
                     </Card>

@@ -35,6 +35,7 @@ export interface ResearchInterfaceProps {
   onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
   onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
   onSelectResponder: (personaId: string) => Promise<void>;
+  projectId?: string | null;
 }
 
 export interface ResearchConversationProps {
