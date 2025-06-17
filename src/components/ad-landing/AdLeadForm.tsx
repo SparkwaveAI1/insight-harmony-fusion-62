@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -22,8 +23,6 @@ const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   company: z.string().optional(),
   formType: z.string(),
-  _subject: z.string(),
-  _replyTo: z.string(),
   source: z.string().optional(),
 });
 
@@ -47,40 +46,32 @@ const AdLeadForm = ({ source = "landing-page", onSuccess, className }: AdLeadFor
       email: "",
       company: "",
       formType: "landing-page-lead",
-      _subject: `New Lead from ${source} - PersonaAI`,
-      _replyTo: "",
       source: source,
     },
   });
 
   async function onSubmit(data: FormValues) {
     setIsSubmitting(true);
-    data._replyTo = data.email; // Set reply-to address same as email
 
     try {
-      const response = await fetch("https://formspree.io/f/xwplpoyz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          recipient: "scott@sparkwave-ai.com",
-        }),
+      const { data: result, error } = await supabase.functions.invoke('send-contact-email', {
+        body: data,
       });
 
-      if (response.ok) {
-        setIsSuccess(true);
-        toast({
-          title: "Request submitted successfully",
-          description: "We'll be in touch soon!",
-        });
-        form.reset();
-        if (onSuccess) onSuccess();
-      } else {
-        throw new Error("Form submission failed");
+      if (error) {
+        console.error('Error sending lead form:', error);
+        throw error;
       }
+
+      setIsSuccess(true);
+      toast({
+        title: "Request submitted successfully",
+        description: "We'll be in touch soon!",
+      });
+      form.reset();
+      if (onSuccess) onSuccess();
     } catch (error) {
+      console.error('Lead form error:', error);
       toast({
         title: "Error sending request",
         description: "Please try again later.",
@@ -146,11 +137,6 @@ const AdLeadForm = ({ source = "landing-page", onSuccess, className }: AdLeadFor
               </FormItem>
             )}
           />
-
-          {/* Hidden fields for Formspree */}
-          <input type="hidden" name="formType" value="landing-page-lead" />
-          <input type="hidden" name="_subject" value={`New Lead from ${source} - PersonaAI`} />
-          <input type="hidden" name="source" value={source} />
 
           <Button 
             type="submit" 

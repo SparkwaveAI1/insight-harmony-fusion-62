@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import ContactSuccess from "@/components/contact/ContactSuccess";
 import { Send, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const feedbackSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -26,6 +28,7 @@ interface FeedbackFormProps {
 
 const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
@@ -48,35 +51,37 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
     try {
       const formData = {
         ...data,
-        _subject: "New $PRSNA Feedback - PersonaAI",
-        _replyTo: data.email,
         formType: "prsna-feedback",
         userEmail: user?.email || data.email,
       };
 
-      console.log("Sending to Formspree:", formData);
+      console.log("Sending to Supabase Edge Function:", formData);
 
-      const response = await fetch("https://formspree.io/f/xwplpoyz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const { data: result, error } = await supabase.functions.invoke('send-contact-email', {
+        body: formData,
       });
 
-      console.log("Formspree response:", response.status, response.ok);
-
-      if (response.ok) {
-        setShowSuccess(true);
-        form.reset();
-        if (onSuccess) onSuccess();
-      } else {
-        const errorText = await response.text();
-        console.error("Form submission failed:", errorText);
-        throw new Error("Form submission failed");
+      if (error) {
+        console.error('Error sending feedback:', error);
+        throw error;
       }
+
+      console.log("Feedback sent successfully:", result);
+      setShowSuccess(true);
+      form.reset();
+      if (onSuccess) onSuccess();
+      
+      toast({
+        title: "Feedback sent successfully",
+        description: "Thank you for your feedback about $PRSNA!",
+      });
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      toast({
+        title: "Error sending feedback",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

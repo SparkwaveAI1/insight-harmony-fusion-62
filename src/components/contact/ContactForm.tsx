@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -23,8 +24,6 @@ const formSchema = z.object({
   company: z.string().optional(),
   message: z.string().min(10, { message: "Message must be at least 10 characters" }),
   formType: z.string(),
-  _subject: z.string(),
-  _replyTo: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -46,51 +45,30 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
       company: "",
       message: "",
       formType: formType,
-      _subject: getSubjectLine(formType),
-      _replyTo: "",
     },
   });
 
-  function getSubjectLine(type: string): string {
-    switch (type) {
-      case "discovery":
-        return "New Discovery Call Request - PersonaAI";
-      case "demo":
-        return "New Demo Request - PersonaAI";
-      case "custom-persona":
-        return "Custom Persona Project Inquiry - PersonaAI";
-      default:
-        return "New Contact Form Submission - PersonaAI";
-    }
-  }
-
   async function onSubmit(data: FormValues) {
     setIsSubmitting(true);
-    data._replyTo = data.email; // Set reply-to address same as email
 
     try {
-      const response = await fetch("https://formspree.io/f/xwplpoyz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          recipient: "scott@sparkwave-ai.com",
-        }),
+      const { data: result, error } = await supabase.functions.invoke('send-contact-email', {
+        body: data,
       });
 
-      if (response.ok) {
-        toast({
-          title: "Message sent successfully",
-          description: "We'll get back to you as soon as possible.",
-        });
-        form.reset();
-        if (onSuccess) onSuccess();
-      } else {
-        throw new Error("Form submission failed");
+      if (error) {
+        console.error('Error sending contact form:', error);
+        throw error;
       }
+
+      toast({
+        title: "Message sent successfully",
+        description: "We'll get back to you as soon as possible.",
+      });
+      form.reset();
+      if (onSuccess) onSuccess();
     } catch (error) {
+      console.error('Contact form error:', error);
       toast({
         title: "Error sending message",
         description: "Please try again later.",
@@ -163,10 +141,6 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
             </FormItem>
           )}
         />
-
-        {/* Hidden fields for Formspree */}
-        <input type="hidden" name="formType" value={formType} />
-        <input type="hidden" name="_subject" value={getSubjectLine(formType)} />
 
         <Button 
           type="submit" 
