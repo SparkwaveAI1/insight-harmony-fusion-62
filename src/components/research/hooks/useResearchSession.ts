@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { Message } from '@/components/persona-chat/types';
@@ -10,7 +11,7 @@ import { personaResponseService } from '../services/personaResponseService';
 export const useResearchSession = (): ResearchSessionHookReturn => {
   const researchState = useResearchState();
 
-  const createSession = useCallback(async (selectedPersonaIds: string[]): Promise<boolean> => {
+  const createSession = useCallback(async (selectedPersonaIds: string[], projectId?: string | null): Promise<boolean> => {
     if (selectedPersonaIds.length === 0) {
       toast.error('Please select at least one persona');
       return false;
@@ -29,8 +30,8 @@ export const useResearchSession = (): ResearchSessionHookReturn => {
         throw new Error('Some selected personas could not be found');
       }
 
-      // Create session
-      const sessionId = await sessionService.createSession(selectedPersonaIds);
+      // Create session with project context
+      const sessionId = await sessionService.createSession(selectedPersonaIds, projectId);
       
       // Update state
       researchState.actions.setSessionId(sessionId);

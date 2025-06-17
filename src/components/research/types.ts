@@ -1,4 +1,3 @@
-
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
 
@@ -22,7 +21,7 @@ export interface ResearchSessionHookReturn {
   messages: ResearchMessage[];
   isLoading: boolean;
   selectedPersonaId: string | null;
-  createSession: (selectedPersonaIds: string[]) => Promise<boolean>;
+  createSession: (selectedPersonaIds: string[], projectId?: string | null) => Promise<boolean>;
   sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
   selectPersonaResponder: (personaId: string) => Promise<void>;
   clearSession: () => void;
@@ -35,6 +34,7 @@ export interface ResearchInterfaceProps {
   onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
   onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
   onSelectResponder: (personaId: string) => Promise<void>;
+  projectId?: string | null;
 }
 
 export interface ResearchConversationProps {

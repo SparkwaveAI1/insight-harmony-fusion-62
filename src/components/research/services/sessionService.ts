@@ -4,8 +4,9 @@ import { toast } from 'sonner';
 import { Persona } from '@/services/persona/types';
 import { getAllPersonas } from '@/services/persona';
 
-export const createSession = async (personaIds: string[]): Promise<string> => {
+export const createSession = async (personaIds: string[], projectId?: string | null): Promise<string> => {
   console.log('Creating session with personas:', personaIds);
+  console.log('Project ID:', projectId);
   
   // Get the user's ID
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,33 +26,35 @@ export const createSession = async (personaIds: string[]): Promise<string> => {
     throw new Error('No valid personas selected');
   }
 
-  // First, create or get a default research project
-  let projectId: string;
-  
-  // Try to find an existing research project for this user
-  const { data: existingProjects } = await supabase
-    .from('projects')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('name', 'Research Sessions')
-    .limit(1);
+  let finalProjectId = projectId;
 
-  if (existingProjects && existingProjects.length > 0) {
-    projectId = existingProjects[0].id;
-  } else {
-    // Create a new research project
-    const { data: newProject, error: projectError } = await supabase
+  // If no project ID provided, create or get the default research project
+  if (!finalProjectId) {
+    // Try to find an existing research project for this user
+    const { data: existingProjects } = await supabase
       .from('projects')
-      .insert({
-        name: 'Research Sessions',
-        description: 'Default project for research sessions',
-        user_id: user.id
-      })
       .select('id')
-      .single();
+      .eq('user_id', user.id)
+      .eq('name', 'Research Sessions')
+      .limit(1);
 
-    if (projectError) throw projectError;
-    projectId = newProject.id;
+    if (existingProjects && existingProjects.length > 0) {
+      finalProjectId = existingProjects[0].id;
+    } else {
+      // Create a new research project
+      const { data: newProject, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          name: 'Research Sessions',
+          description: 'Default project for research sessions',
+          user_id: user.id
+        })
+        .select('id')
+        .single();
+
+      if (projectError) throw projectError;
+      finalProjectId = newProject.id;
+    }
   }
 
   // Create research conversation
@@ -63,7 +66,7 @@ export const createSession = async (personaIds: string[]): Promise<string> => {
       active_persona_ids: personaIds,
       auto_mode: false,
       persona_ids: personaIds,
-      project_id: projectId,
+      project_id: finalProjectId,
       user_id: user.id,
       tags: ['research']
     })
