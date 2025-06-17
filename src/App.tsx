@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
@@ -26,7 +25,8 @@ import CustomResearch from "./pages/CustomResearch";
 import InsightConductor from "./pages/InsightConductor";
 import Research from "./pages/Research";
 import Auth from "./pages/Auth";
-import UserProfile from "./pages/UserProfile"; // New import
+import UserProfile from "./pages/UserProfile";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import InterviewProcess from "./pages/InterviewProcess";
@@ -66,6 +66,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/sign-in" element={<Auth />} />
+              <Route path="/contact" element={<Contact />} />
               
               {/* PRSNA token routes - public access */}
               <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
