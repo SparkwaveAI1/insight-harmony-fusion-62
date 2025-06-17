@@ -4,6 +4,7 @@ import Reveal from "@/components/ui-custom/Reveal";
 import RewardsIllustration from "./RewardsIllustration";
 import ContactForm from "@/components/contact/ContactForm";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Search, Users, Briefcase, TestTube, Lightbulb } from "lucide-react";
 
 const HeroSection = () => {
@@ -50,6 +51,13 @@ const HeroSection = () => {
         {/* Right side - Rewards Illustration */}
         <RewardsIllustration />
       </div>
+
+      {/* Separator */}
+      <Reveal delay={280}>
+        <div className="mb-12">
+          <Separator className="bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
+        </div>
+      </Reveal>
 
       {/* Persona Pioneer Program Section */}
       <div className="grid lg:grid-cols-2 gap-12 items-start">
