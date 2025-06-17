@@ -1,21 +1,27 @@
+
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Settings, Download, Trash2, Send, Save, ArrowLeft } from 'lucide-react';
+import { Users, Settings, Download, Trash2, Send, Save } from 'lucide-react';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
-import { ResearchInterfaceProps } from './types';
+import { SessionData } from './hooks/types';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
+
+interface ResearchInterfaceProps {
+  sessionData: SessionData;
+  onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
+  onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
+  onSelectResponder: (personaId: string) => Promise<void>;
+}
 
 const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   sessionData,
   onCreateSession,
   onSendMessage,
-  onSelectResponder,
-  projectId
+  onSelectResponder
 }) => {
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
@@ -103,9 +109,10 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     setShowSaveModal(true);
   };
 
-  const handleConversationSaved = (conversationId: string, savedProjectId: string) => {
-    console.log('Conversation saved successfully:', conversationId, 'to project:', savedProjectId);
+  const handleConversationSaved = (conversationId: string, projectId: string) => {
+    console.log('Conversation saved successfully:', conversationId, 'to project:', projectId);
     setShowSaveModal(false);
+    // User can continue the conversation after saving
   };
 
   // Convert research messages to the format expected by SaveConversationModal
@@ -124,20 +131,8 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     return (
       <div className="h-full overflow-y-auto">
         <div className="max-w-4xl mx-auto p-6">
-          {projectId && (
-            <div className="mb-4">
-              <Link to={`/projects/${projectId}`}>
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Project
-                </Button>
-              </Link>
-            </div>
-          )}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              {projectId ? 'Project Research Session' : 'Research Session'}
-            </h1>
+            <h1 className="text-3xl font-bold mb-2">Research Session</h1>
             <p className="text-muted-foreground">
               Select up to 4 personas to participate in your research conversation
             </p>
@@ -157,19 +152,9 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       {/* Session Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div className="flex items-center gap-4">
-          {projectId && (
-            <Link to={`/projects/${projectId}`}>
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Project
-              </Button>
-            </Link>
-          )}
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            <span className="font-semibold">
-              {projectId ? 'Project Research Session' : 'Research Session'}
-            </span>
+            <span className="font-semibold">Research Session</span>
             <Badge variant="secondary">{loadedPersonas.length}/4 Personas</Badge>
             <Badge variant="outline" className="text-xs">
               {messages.length} messages
@@ -287,7 +272,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         messages={formatMessagesForSave()}
         personaIds={loadedPersonas.map(p => p.persona_id)}
         defaultTitle={`Research Session - ${new Date().toLocaleDateString()}`}
-        sessionType="research"
         onSaved={handleConversationSaved}
       />
     </div>

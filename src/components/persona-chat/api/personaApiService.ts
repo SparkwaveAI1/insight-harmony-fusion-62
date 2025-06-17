@@ -1,66 +1,75 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Message } from '../types';
 import { Persona } from '@/services/persona/types';
-import { FileHandlingService } from '@/services/fileHandlingService';
-import { MessageFormattingService } from '@/services/messageFormattingService';
+import { supabase } from '@/integrations/supabase/client';
+import { ChatMode } from '../ChatModeSelector';
 
-export interface SendMessageRequest {
-  personaId: string;
-  message: string;
-  messageHistory: Message[];
-  persona: Persona;
-  file?: File;
-  chatMode?: string;
-}
+export const sendMessageToPersona = async (
+  personaId: string,
+  userMessage: string,
+  previousMessages: Message[],
+  activePersona: Persona,
+  chatMode: ChatMode = 'conversation',
+  conversationContext: string = '',
+  imageData?: string
+): Promise<string> => {
+  console.log(`Sending message to persona ${personaId} in ${chatMode} mode`);
+  
+  // Convert chat messages into a format suitable for the API
+  const formattedMessages = previousMessages.map(msg => ({
+    role: msg.role,
+    content: msg.content,
+    image: msg.image || undefined,
+  }));
 
-export const sendMessageToPersona = async (request: SendMessageRequest): Promise<string> => {
   try {
-    const { personaId, message, messageHistory, persona, file, chatMode = 'conversation' } = request;
+    // Add the new user message
+    const newUserMessage: {
+      role: 'user' | 'assistant';
+      content: string;
+      image?: string;
+    } = {
+      role: 'user',
+      content: userMessage
+    };
     
-    // Process file if provided using the dedicated service
-    let hasImage = false;
-    let updatedMessageHistory = messageHistory;
-    
-    if (file) {
-      const processedFile = await FileHandlingService.processFile(file);
-      hasImage = true;
-      
-      // Add the file to the message history for the API call
-      const messageWithFile = {
-        role: 'user' as const,
-        content: message,
-        timestamp: new Date(),
-        image: processedFile.base64Data
-      };
-      
-      updatedMessageHistory = [...messageHistory, messageWithFile];
+    // Add image data if present
+    if (imageData) {
+      newUserMessage.image = imageData;
     }
+    
+    // Make TypeScript happy by ensuring the types match
+    formattedMessages.push(newUserMessage as typeof formattedMessages[0]);
 
-    // Format message history using the dedicated service
-    const formattedHistory = await MessageFormattingService.formatMessageHistory(updatedMessageHistory);
-
-    const { data, error } = await supabase.functions.invoke('generate-persona-response', {
-      body: {
+    // Call the Supabase Edge Function
+    const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
+      },
+      body: JSON.stringify({
         persona_id: personaId,
-        previous_messages: formattedHistory,
+        persona_role: 'assistant',
+        previous_messages: formattedMessages,
         chat_mode: chatMode,
-        has_image: hasImage
-      }
+        conversation_context: conversationContext,
+        has_image: !!imageData
+      }),
     });
 
-    if (error) {
-      console.error('Supabase function error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Edge function error (${response.status}):`, errorText);
+      throw new Error(`Failed to get persona response: ${response.status}`);
     }
 
-    if (!data?.response) {
-      throw new Error('No response received from persona');
-    }
-
+    const data = await response.json();
     return data.response;
   } catch (error) {
-    console.error('Error in sendMessageToPersona:', error);
+    console.error('Error getting persona response:', error);
+    toast.error('Failed to get response from persona');
     throw error;
   }
 };

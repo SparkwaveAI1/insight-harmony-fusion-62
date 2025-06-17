@@ -40,7 +40,6 @@ export interface Conversation {
   updated_at: string;
   persona_ids: string[];
   tags: string[];
-  session_type: string | null;
 }
 
 export interface ConversationMessage {

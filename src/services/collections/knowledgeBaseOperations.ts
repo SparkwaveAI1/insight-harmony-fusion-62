@@ -39,22 +39,16 @@ export const uploadKnowledgeBaseDocument = async (
 
     // If a file is provided, upload it to storage
     if (file) {
-      // Create user-specific path: userId/projectId/timestamp-filename
-      const fileName = `${user.id}/${projectId}/${Date.now()}-${file.name}`;
-      
-      console.log('Uploading file to storage:', fileName);
-      
+      const fileName = `${projectId}/${Date.now()}-${file.name}`;
       const { data: fileData, error: uploadError } = await supabase.storage
         .from('project-documents')
         .upload(fileName, file);
 
       if (uploadError) {
         console.error('Error uploading file:', uploadError);
-        toast.error(`Failed to upload file: ${uploadError.message}`);
+        toast.error('Failed to upload file');
         return null;
       }
-
-      console.log('File uploaded successfully:', fileData);
 
       // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
@@ -64,8 +58,6 @@ export const uploadKnowledgeBaseDocument = async (
       fileUrl = publicUrl;
       fileType = file.type;
       fileSize = file.size;
-      
-      console.log('File public URL:', publicUrl);
     }
 
     // Insert the document record
@@ -83,10 +75,7 @@ export const uploadKnowledgeBaseDocument = async (
       .select()
       .single();
 
-    if (error) {
-      console.error('Error inserting document record:', error);
-      throw error;
-    }
+    if (error) throw error;
     
     toast.success('Document uploaded successfully');
     return data as KnowledgeBaseDocument;
@@ -102,20 +91,13 @@ export const uploadKnowledgeBaseDocument = async (
  */
 export const getProjectDocuments = async (projectId: string): Promise<KnowledgeBaseDocument[]> => {
   try {
-    console.log('Fetching documents for project:', projectId);
-    
     const { data, error } = await supabase
       .from('knowledge_base_documents')
       .select('*')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching documents:', error);
-      throw error;
-    }
-    
-    console.log('Fetched documents:', data?.length || 0);
+    if (error) throw error;
     return data as KnowledgeBaseDocument[] || [];
   } catch (error) {
     console.error('Error fetching project documents:', error);
@@ -129,40 +111,6 @@ export const getProjectDocuments = async (projectId: string): Promise<KnowledgeB
  */
 export const deleteKnowledgeBaseDocument = async (documentId: string): Promise<boolean> => {
   try {
-    // First get the document to find the file path
-    const { data: document, error: fetchError } = await supabase
-      .from('knowledge_base_documents')
-      .select('file_url')
-      .eq('id', documentId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching document for deletion:', fetchError);
-      throw fetchError;
-    }
-
-    // Delete the file from storage if it exists
-    if (document.file_url) {
-      // Extract the file path from the URL
-      const urlParts = document.file_url.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === 'project-documents');
-      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
-        const filePath = urlParts.slice(bucketIndex + 1).join('/');
-        
-        console.log('Deleting file from storage:', filePath);
-        
-        const { error: storageError } = await supabase.storage
-          .from('project-documents')
-          .remove([filePath]);
-
-        if (storageError) {
-          console.error('Error deleting file from storage:', storageError);
-          // Continue with database deletion even if file deletion fails
-        }
-      }
-    }
-
-    // Delete the document record
     const { error } = await supabase
       .from('knowledge_base_documents')
       .delete()

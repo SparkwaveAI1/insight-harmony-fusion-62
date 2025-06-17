@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from "@/components/layout/Header";
@@ -8,60 +9,37 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Users, FileText } from 'lucide-react';
-import { getProjectById } from '@/services/collections';
-import { getProjectConversations } from '@/services/collections/conversationOperations';
+import { getProjectById, getProjectConversations } from '@/services/collections';
 import { Project, Conversation } from '@/services/collections/types';
 import ProjectInformationForm from '@/components/projects/ProjectInformationForm';
 import ProjectCollectionsManager from '@/components/projects/ProjectCollectionsManager';
 import ProjectKnowledgeBase from '@/components/projects/ProjectKnowledgeBase';
 import { Toaster } from "@/components/ui/toaster";
-import { useAuth } from '@/context/AuthContext';
 
 const ProjectDetail = () => {
-  const { projectId } = useParams<{ projectId: string }>();
-  const { user, isLoading: authLoading } = useAuth();
+  const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("=== ProjectDetail Component Debug ===");
-    console.log("Project ID from URL:", projectId);
-    console.log("Auth loading:", authLoading);
-    console.log("Current user:", user?.id || "Not authenticated");
-    console.log("User email:", user?.email || "No email");
-    
-    if (!authLoading && projectId) {
-      if (!user) {
-        console.error("User not authenticated, cannot load project");
-        setIsLoading(false);
-        return;
-      }
-      console.log("Starting to load project data...");
-      loadProjectData(projectId);
+    if (id) {
+      loadProjectData(id);
     }
-  }, [projectId, user, authLoading]);
+  }, [id]);
 
   const loadProjectData = async (projectId: string) => {
     setIsLoading(true);
     try {
-      console.log('=== loadProjectData called ===');
-      console.log('Project ID:', projectId);
-      console.log('User ID:', user?.id);
-      
       const [projectData, conversationData] = await Promise.all([
         getProjectById(projectId),
         getProjectConversations(projectId)
       ]);
       
-      console.log('Project data result:', projectData ? 'Found' : 'Not found');
-      console.log('Conversations result:', conversationData?.length || 0, 'conversations');
-      
       setProject(projectData);
       setConversations(conversationData);
     } catch (error) {
-      console.error('=== Error in loadProjectData ===');
-      console.error('Error details:', error);
+      console.error('Error loading project data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -70,64 +48,6 @@ const ProjectDetail = () => {
   const handleProjectUpdate = (updatedProject: Project) => {
     setProject(updatedProject);
   };
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="relative flex min-h-svh flex-col">
-              <Header />
-              <main className="flex-1 min-h-0">
-                <div className="container h-full py-24">
-                  <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="mt-2 text-gray-500">Checking authentication...</p>
-                    </div>
-                  </div>
-                </div>
-              </main>
-              <Footer />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
-
-  // Show auth required if no user
-  if (!user) {
-    return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="relative flex min-h-svh flex-col">
-              <Header />
-              <main className="flex-1 min-h-0">
-                <div className="container h-full py-24">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
-                    <p className="text-gray-600 mb-6">Please log in to access this project.</p>
-                    <Link to="/sign-in">
-                      <Button>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Go to Sign In
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </main>
-              <Footer />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -168,7 +88,6 @@ const ProjectDetail = () => {
                   <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
                     <p className="text-gray-600 mb-6">The project you're looking for doesn't exist or you don't have access to it.</p>
-                    <p className="text-sm text-gray-500 mb-6">Check the browser console for detailed error information.</p>
                     <Link to="/projects">
                       <Button>
                         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -290,11 +209,6 @@ const ProjectDetail = () => {
                                   <p className="text-xs text-gray-500">
                                     {new Date(conversation.created_at).toLocaleDateString()}
                                   </p>
-                                  {conversation.session_type && (
-                                    <Badge variant="outline" className="text-xs mt-1">
-                                      {conversation.session_type}
-                                    </Badge>
-                                  )}
                                 </div>
                                 <div className="flex gap-2">
                                   {conversation.tags.map((tag) => (

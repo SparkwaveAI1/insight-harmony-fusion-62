@@ -4,7 +4,16 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResearchMessageInput } from './ResearchMessageInput';
 import { ResearchMessage } from './ResearchMessage';
-import { ResearchConversationProps } from './types';
+import { Message } from '@/components/persona-chat/types';
+import { Persona } from '@/services/persona/types';
+
+interface ResearchConversationProps {
+  messages: (Message & { responding_persona_id?: string })[];
+  loadedPersonas: Persona[];
+  isLoading: boolean;
+  onSendMessage: (message: string, imageFile?: File | null) => void;
+  onSelectResponder: (personaId: string) => void;
+}
 
 export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   messages,

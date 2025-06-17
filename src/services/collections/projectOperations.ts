@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Project, ProjectWithConversationCount } from "./types";
@@ -7,55 +8,17 @@ import { Project, ProjectWithConversationCount } from "./types";
  */
 export const getProjectById = async (id: string): Promise<Project | null> => {
   try {
-    console.log("=== getProjectById Debug Info ===");
-    console.log("Project ID requested:", id);
-    
-    // Check authentication status
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log("Current user:", user?.id || "Not authenticated");
-    console.log("Auth error:", authError);
-    
-    if (!user) {
-      console.error("No authenticated user found");
-      toast.error("Please log in to access this project");
-      return null;
-    }
-
-    console.log("Making database query for project...");
     const { data, error } = await supabase
       .from("projects")
       .select("*")
       .eq("id", id)
       .single();
 
-    console.log("Database response - data:", data);
-    console.log("Database response - error:", error);
-    
-    if (error) {
-      console.error("Database error details:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
-      
-      if (error.code === 'PGRST116') {
-        console.log("No rows returned - project not found or no access");
-        toast.error("Project not found or you don't have access to it");
-      } else {
-        toast.error(`Database error: ${error.message}`);
-      }
-      return null;
-    }
-
-    console.log("Successfully fetched project:", data?.name);
+    if (error) throw error;
     return data as Project;
   } catch (error) {
-    console.error("=== Unexpected error in getProjectById ===");
-    console.error("Error type:", typeof error);
-    console.error("Error object:", error);
-    console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-    toast.error("An unexpected error occurred while fetching the project");
+    console.error("Error fetching project:", error);
+    toast.error("Failed to fetch project");
     return null;
   }
 };
@@ -84,33 +47,15 @@ export const getUserProjects = async (): Promise<Project[]> => {
  */
 export const getUserProjectsWithCount = async (): Promise<ProjectWithConversationCount[]> => {
   try {
-    console.log("=== getUserProjectsWithCount Debug Info ===");
-    
-    // Check authentication status
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log("Current user for projects list:", user?.id || "Not authenticated");
-    
-    if (!user) {
-      console.error("No authenticated user for projects list");
-      toast.error("Please log in to view your projects");
-      return [];
-    }
-
     // First fetch the projects
     const { data: projects, error: projectsError } = await supabase
       .from("projects")
       .select("*")
       .order("updated_at", { ascending: false });
 
-    console.log("Projects query result:", { projects: projects?.length || 0, error: projectsError });
-
-    if (projectsError) {
-      console.error("Projects query error:", projectsError);
-      throw projectsError;
-    }
+    if (projectsError) throw projectsError;
     
     if (!projects || projects.length === 0) {
-      console.log("No projects found for user");
       return [];
     }
     

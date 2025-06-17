@@ -1,16 +1,17 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
-import { ChatMode } from '../ChatModeSelector';
-import { breakIntoMultipleMessages } from '../utils/chatMessageUtils';
-import { sendMessageToPersona } from '../api/personaApiService';
+import { ChatMode } from './ChatModeSelector';
+import { breakIntoMultipleMessages } from './utils/chatMessageUtils';
+import { sendMessageToPersona } from './api/personaApiService';
 
 export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversation') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isResponding, setIsResponding] = useState(false);
+  const [conversationContext, setConversationContext] = useState<string>('');
   const { loadPersona, activePersona, isLoading, error } = usePersona();
 
   // Load persona on mount
@@ -44,13 +45,26 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  const handleSendMessage = async (inputMessage: string) => {
-    if (!inputMessage.trim() || !activePersona || isResponding) return;
+  const handleSendMessage = async (inputMessage: string, imageFile: File | null = null) => {
+    if ((!inputMessage.trim() && !imageFile) || !activePersona || isResponding) return;
+
+    let imageBase64: string | undefined;
+    
+    if (imageFile) {
+      try {
+        imageBase64 = await convertFileToBase64(imageFile);
+      } catch (error) {
+        console.error('Error converting image to base64:', error);
+        toast.error('Failed to process image');
+        return;
+      }
+    }
 
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
       timestamp: new Date(),
+      image: imageBase64,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -58,12 +72,16 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
 
     try {
       console.log("Chat Mode:", chatMode);
+      console.log("Conversation Context:", conversationContext);
       
       const response = await sendMessageToPersona(
         personaId,
         inputMessage,
         messages,
-        activePersona
+        activePersona,
+        chatMode,
+        conversationContext,
+        imageBase64
       );
       
       // Break long responses into multiple sequential messages
@@ -94,12 +112,22 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   };
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   return {
     messages,
     isResponding,
     isLoading,
     error,
     activePersona,
-    handleSendMessage
+    handleSendMessage,
+    setConversationContext
   };
 };
