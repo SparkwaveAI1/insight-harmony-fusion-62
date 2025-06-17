@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
 import { Message } from '@/components/persona-chat/types';
 import { ChatMode } from '../ChatModeSelector';
-import { MessageFormattingService } from '@/services/messageFormattingService';
 import { sendMessageToPersona } from '../api/personaApiService';
 import { useChatState } from './useChatState';
 
@@ -70,27 +69,14 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
         chatMode
       });
       
-      // Break long responses into multiple sequential messages
-      const messageSegments = MessageFormattingService.breakIntoMultipleMessages(response);
+      // Add the complete response as a single message
+      chatState.actions.addMessage({
+        role: 'assistant',
+        content: response,
+        timestamp: new Date(),
+      });
       
-      // Add messages with slight delays to simulate typing
-      for (let i = 0; i < messageSegments.length; i++) {
-        const segment = messageSegments[i].trim();
-        if (segment) {
-          setTimeout(() => {
-            chatState.actions.addMessage({
-              role: 'assistant',
-              content: segment,
-              timestamp: new Date(),
-            });
-            
-            // Only mark as not responding after the last message
-            if (i === messageSegments.length - 1) {
-              chatState.actions.setIsResponding(false);
-            }
-          }, i * 1000); // Add a 1 second delay between messages
-        }
-      }
+      chatState.actions.setIsResponding(false);
     } catch (error) {
       console.error('Error getting response:', error);
       toast.error(`Failed to get response from persona: ${error instanceof Error ? error.message : 'Unknown error'}`);
