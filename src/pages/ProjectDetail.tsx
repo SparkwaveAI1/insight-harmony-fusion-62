@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from "@/components/layout/Header";
@@ -18,20 +17,26 @@ import { Toaster } from "@/components/ui/toaster";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const projectId = params.id || params.projectId;
+  
+  console.log('URL params:', params);
+  console.log('Extracted project ID:', projectId);
+  
   const [project, setProject] = useState<Project | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      loadProjectData(id);
+    if (projectId) {
+      loadProjectData(projectId);
     } else {
+      console.error('No project ID found in URL params:', params);
       setError("No project ID provided");
       setIsLoading(false);
     }
-  }, [id]);
+  }, [projectId, params]);
 
   const loadProjectData = async (projectId: string) => {
     setIsLoading(true);
@@ -110,7 +115,13 @@ const ProjectDetail = () => {
                   <div className="text-center">
                     <Alert className="max-w-md mx-auto mb-6">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
+                      <AlertDescription>
+                        {error}
+                        <br />
+                        <small className="text-gray-400">
+                          Debug info - URL params: {JSON.stringify(params)}
+                        </small>
+                      </AlertDescription>
                     </Alert>
                     <Link to="/projects">
                       <Button>
