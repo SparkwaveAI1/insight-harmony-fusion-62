@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import ContactSuccess from "@/components/contact/ContactSuccess";
 import { Send, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const feedbackSchema = z.object({
@@ -49,32 +48,34 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
     setIsSubmitting(true);
     
     try {
-      const formData = {
-        ...data,
-        formType: "prsna-feedback",
-        userEmail: user?.email || data.email,
-      };
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('walletAddress', data.walletAddress || '');
+      formData.append('feedback', data.feedback);
+      formData.append('formType', 'prsna-feedback');
 
-      console.log("Sending to Supabase Edge Function:", formData);
-
-      const { data: result, error } = await supabase.functions.invoke('send-contact-email', {
+      const response = await fetch('https://formspree.io/f/xjkrowgl', {
+        method: 'POST',
         body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
-      if (error) {
-        console.error('Error sending feedback:', error);
-        throw error;
+      if (response.ok) {
+        console.log("Feedback sent successfully");
+        setShowSuccess(true);
+        form.reset();
+        if (onSuccess) onSuccess();
+        
+        toast({
+          title: "Feedback sent successfully",
+          description: "Thank you for your feedback about $PRSNA!",
+        });
+      } else {
+        throw new Error('Failed to send feedback');
       }
-
-      console.log("Feedback sent successfully:", result);
-      setShowSuccess(true);
-      form.reset();
-      if (onSuccess) onSuccess();
-      
-      toast({
-        title: "Feedback sent successfully",
-        description: "Thank you for your feedback about $PRSNA!",
-      });
     } catch (error) {
       console.error('Error submitting feedback:', error);
       toast({

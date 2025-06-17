@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -54,22 +53,32 @@ const AdLeadForm = ({ source = "landing-page", onSuccess, className }: AdLeadFor
     setIsSubmitting(true);
 
     try {
-      const { data: result, error } = await supabase.functions.invoke('send-contact-email', {
-        body: data,
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('company', data.company || '');
+      formData.append('formType', data.formType);
+      formData.append('source', data.source || '');
+
+      const response = await fetch('https://formspree.io/f/xjkrowgl', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
-      if (error) {
-        console.error('Error sending lead form:', error);
-        throw error;
+      if (response.ok) {
+        setIsSuccess(true);
+        toast({
+          title: "Request submitted successfully",
+          description: "We'll be in touch soon!",
+        });
+        form.reset();
+        if (onSuccess) onSuccess();
+      } else {
+        throw new Error('Failed to send request');
       }
-
-      setIsSuccess(true);
-      toast({
-        title: "Request submitted successfully",
-        description: "We'll be in touch soon!",
-      });
-      form.reset();
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Lead form error:', error);
       toast({

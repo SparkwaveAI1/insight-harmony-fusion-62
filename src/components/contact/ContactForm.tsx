@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 // Define the form schema with zod
 const formSchema = z.object({
@@ -52,21 +51,31 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const { data: result, error } = await supabase.functions.invoke('send-contact-email', {
-        body: data,
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('company', data.company || '');
+      formData.append('message', data.message);
+      formData.append('formType', data.formType);
+
+      const response = await fetch('https://formspree.io/f/xjkrowgl', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
 
-      if (error) {
-        console.error('Error sending contact form:', error);
-        throw error;
+      if (response.ok) {
+        toast({
+          title: "Message sent successfully",
+          description: "We'll get back to you as soon as possible.",
+        });
+        form.reset();
+        if (onSuccess) onSuccess();
+      } else {
+        throw new Error('Failed to send message');
       }
-
-      toast({
-        title: "Message sent successfully",
-        description: "We'll get back to you as soon as possible.",
-      });
-      form.reset();
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Contact form error:', error);
       toast({
