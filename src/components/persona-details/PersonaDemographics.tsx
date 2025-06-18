@@ -73,6 +73,39 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
           </AccordionContent>
         </AccordionItem>
 
+        {/* New Relationships & Family Dynamics Section */}
+        <AccordionItem value="relationships-family" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-pink-50/40 rounded-md hover:bg-pink-50 transition-colors">
+            Relationships & Family Dynamics
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <InfoItem label="Has Children" value={metadata.relationships_family?.has_children ? "Yes" : metadata.relationships_family?.has_children === false ? "No" : undefined} />
+                <InfoItem label="Number of Children" value={metadata.relationships_family?.number_of_children} />
+                <InfoItem label="Children Ages" value={formatArrayOrString(metadata.relationships_family?.children_ages)} />
+                <InfoItem label="Stepchildren" value={metadata.relationships_family?.stepchildren ? "Yes" : metadata.relationships_family?.stepchildren === false ? "No" : undefined} />
+                <InfoItem label="Custody Arrangement" value={metadata.relationships_family?.custody_arrangement} />
+                <InfoItem label="Living Situation" value={metadata.relationships_family?.living_situation} />
+                <InfoItem label="Household Composition" value={formatArrayOrString(metadata.relationships_family?.household_composition)} />
+                <InfoItem label="Primary Caregiver Role" value={metadata.relationships_family?.primary_caregiver_responsibilities} />
+                <InfoItem label="Eldercare Responsibilities" value={metadata.relationships_family?.eldercare_responsibilities} />
+              </div>
+              <div className="space-y-2">
+                <InfoItem label="Partner/Spouse Relationship" value={metadata.relationships_family?.partner_spouse_relationship} />
+                <InfoItem label="Partner Health Status" value={metadata.relationships_family?.partner_health_status} />
+                <InfoItem label="Children Health Issues" value={metadata.relationships_family?.children_health_issues} />
+                <InfoItem label="Family Relationship Quality" value={metadata.relationships_family?.family_relationship_quality} />
+                <InfoItem label="Family Stressors" value={formatArrayOrString(metadata.relationships_family?.family_stressors)} />
+                <InfoItem label="Support System Strength" value={metadata.relationships_family?.support_system_strength} />
+                <InfoItem label="Extended Family Involvement" value={metadata.relationships_family?.extended_family_involvement} />
+                <InfoItem label="Relationship Priorities" value={metadata.relationships_family?.relationship_priorities} />
+                <InfoItem label="Co-parenting Dynamics" value={metadata.relationships_family?.co_parenting_dynamics} />
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Cognitive & Cultural */}
         <AccordionItem value="cognitive-cultural" className="border-0 mb-2">
           <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-green-50/40 rounded-md hover:bg-green-50 transition-colors">

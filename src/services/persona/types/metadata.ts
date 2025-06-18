@@ -26,6 +26,30 @@ export interface PersonaMetadata {
   migration_history?: string;
   climate_risk_zone?: string;
   
+  // Relationships & Family Dynamics
+  relationships_family?: {
+    has_children?: boolean;
+    number_of_children?: number;
+    children_ages?: number[];
+    stepchildren?: boolean;
+    custody_arrangement?: string;
+    living_situation?: string;
+    household_composition?: string[];
+    primary_caregiver_responsibilities?: string;
+    eldercare_responsibilities?: string;
+    partner_spouse_relationship?: string;
+    partner_health_status?: string;
+    children_health_issues?: string;
+    family_relationship_quality?: string;
+    family_stressors?: string[];
+    support_system_strength?: string;
+    extended_family_involvement?: string;
+    relationship_priorities?: string;
+    co_parenting_dynamics?: string;
+    family_financial_responsibilities?: string;
+    family_medical_history_impact?: string;
+  };
+  
   // Cognitive, Psychological, and Cultural
   language_proficiency?: string[];
   religious_affiliation?: string;

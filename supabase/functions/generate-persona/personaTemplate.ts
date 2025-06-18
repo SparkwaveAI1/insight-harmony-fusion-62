@@ -36,6 +36,30 @@ export const personaTemplate: PersonaTemplate = {
     migration_history: null,
     climate_risk_zone: null,
     
+    // Relationships & Family Dynamics
+    relationships_family: {
+      has_children: null,
+      number_of_children: null,
+      children_ages: [],
+      stepchildren: null,
+      custody_arrangement: null,
+      living_situation: null,
+      household_composition: [],
+      primary_caregiver_responsibilities: null,
+      eldercare_responsibilities: null,
+      partner_spouse_relationship: null,
+      partner_health_status: null,
+      children_health_issues: null,
+      family_relationship_quality: null,
+      family_stressors: [],
+      support_system_strength: null,
+      extended_family_involvement: null,
+      relationship_priorities: null,
+      co_parenting_dynamics: null,
+      family_financial_responsibilities: null,
+      family_medical_history_impact: null,
+    },
+    
     // Cognitive, Psychological, and Cultural
     language_proficiency: [],
     religious_affiliation: null,
