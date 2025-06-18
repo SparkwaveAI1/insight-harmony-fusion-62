@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageSquare, Users, FileText, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Users, FileText, AlertCircle, Play } from 'lucide-react';
 import { getProjectById, getProjectConversations } from '@/services/collections';
 import { Project, Conversation } from '@/services/collections/types';
 import ProjectInformationForm from '@/components/projects/ProjectInformationForm';
@@ -184,19 +184,29 @@ const ProjectDetail = () => {
                 </div>
 
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-8">
-                  <Link to="/projects">
-                    <Button variant="ghost" size="sm">
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back to Projects
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <Link to="/projects">
+                      <Button variant="ghost" size="sm">
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Projects
+                      </Button>
+                    </Link>
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
+                      {project.description && (
+                        <p className="text-gray-600 mt-1">{project.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Prominent Start Research Button */}
+                  <Link to={`/research?project=${project.id}`}>
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                      <Play className="h-5 w-5 mr-2" />
+                      Start Research
                     </Button>
                   </Link>
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-                    {project.description && (
-                      <p className="text-gray-600 mt-1">{project.description}</p>
-                    )}
-                  </div>
                 </div>
 
                 {/* Overview Cards */}
@@ -259,7 +269,8 @@ const ProjectDetail = () => {
                       <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Recent Conversations</CardTitle>
                         <Link to={`/research?project=${project.id}`}>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+                            <Play className="h-4 w-4 mr-2" />
                             Start Research
                           </Button>
                         </Link>
@@ -300,7 +311,15 @@ const ProjectDetail = () => {
                             )}
                           </div>
                         ) : (
-                          <p className="text-gray-500 text-sm">No conversations yet. Start your first research session!</p>
+                          <div className="text-center py-6">
+                            <p className="text-gray-500 text-sm mb-4">No conversations yet. Start your first research session!</p>
+                            <Link to={`/research?project=${project.id}`}>
+                              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                                <Play className="h-4 w-4 mr-2" />
+                                Start Research
+                              </Button>
+                            </Link>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
