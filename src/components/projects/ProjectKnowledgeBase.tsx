@@ -13,7 +13,7 @@ import {
   deleteKnowledgeBaseDocument,
   KnowledgeBaseDocument 
 } from '@/services/collections';
-import { extractTextFromFile, getExtractionRecommendation } from '@/services/collections/textExtractionService';
+import { extractDocumentText, extractImageText } from '@/services/collections/documentExtractionApi';
 import { toast } from 'sonner';
 
 interface ProjectKnowledgeBaseProps {
@@ -30,6 +30,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [extractedContent, setExtractedContent] = useState<string>('');
   const [fileRecommendation, setFileRecommendation] = useState<string | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   useEffect(() => {
     loadDocuments();
@@ -41,35 +42,113 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     setDocuments(docs);
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const extractTextFromTextFile = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        resolve(content);
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('Failed to read text file'));
+      };
+      
+      reader.readAsText(file);
+    });
+  };
+
+  const extractTextFromCSVFile = async (file: File): Promise<string> => {
+    const rawText = await extractTextFromTextFile(file);
+    
+    // Convert CSV to a more readable format
+    const lines = rawText.split('\n');
+    const headers = lines[0]?.split(',') || [];
+    
+    let formattedText = `CSV Data from ${file.name}\n\n`;
+    formattedText += `Headers: ${headers.join(', ')}\n\n`;
+    
+    // Add first few rows as sample data
+    formattedText += 'Sample Data:\n';
+    lines.slice(1, Math.min(6, lines.length)).forEach((line, index) => {
+      if (line.trim()) {
+        formattedText += `Row ${index + 1}: ${line}\n`;
+      }
+    });
+    
+    if (lines.length > 6) {
+      formattedText += `\n... and ${lines.length - 6} more rows`;
+    }
+    
+    return formattedText;
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
     setFile(selectedFile);
     setExtractedContent('');
     setFileRecommendation(null);
+    setIsExtracting(false);
 
     if (selectedFile) {
+      setIsExtracting(true);
       setUploadProgress('Analyzing and extracting content from file...');
       
-      // Try to extract text content
-      const extractedText = await extractTextFromFile(selectedFile);
-      
-      if (extractedText) {
-        setExtractedContent(extractedText);
-        // Auto-populate content if it's empty
-        if (!content.trim()) {
-          setContent(extractedText);
-        }
-        toast.success('Content successfully extracted from file!');
-      } else {
-        // Show recommendation for manual content entry
-        const recommendation = getExtractionRecommendation(selectedFile.type);
-        setFileRecommendation(recommendation);
-        if (recommendation) {
+      try {
+        let extractedText: string | null = null;
+
+        // Handle different file types
+        if (selectedFile.type === 'text/plain' || selectedFile.type === 'text/markdown') {
+          extractedText = await extractTextFromTextFile(selectedFile);
+        } else if (selectedFile.type === 'text/csv') {
+          extractedText = await extractTextFromCSVFile(selectedFile);
+        } else if (selectedFile.type === 'application/pdf') {
+          // Use the document extraction API for PDFs
+          const base64 = await fileToBase64(selectedFile);
+          extractedText = await extractDocumentText(base64, selectedFile.type, selectedFile.name);
+        } else if (selectedFile.type.startsWith('image/')) {
+          // Use the image extraction API for images
+          const base64 = await fileToBase64(selectedFile);
+          extractedText = await extractImageText(base64, selectedFile.name);
+        } else if (selectedFile.type.includes('word') || selectedFile.type.includes('document')) {
+          // For Word docs, show recommendation for manual content entry
+          setFileRecommendation('For Word documents, please copy and paste the key content into the Content field to make it available to research participants.');
+          toast.warning('Automatic extraction not available - please add content manually');
+        } else {
+          // For other file types, show generic recommendation
+          setFileRecommendation('Automatic text extraction is not available for this file type. Please add content manually in the Content field.');
           toast.warning('Automatic extraction not available - please add content manually');
         }
+
+        if (extractedText) {
+          setExtractedContent(extractedText);
+          // Auto-populate content if it's empty
+          if (!content.trim()) {
+            setContent(extractedText);
+          }
+          toast.success('Content successfully extracted from file!');
+        }
+      } catch (error) {
+        console.error('Error extracting text from file:', error);
+        toast.error('Failed to extract content from file');
+        setFileRecommendation('Unable to extract content automatically. Please add content manually in the Content field.');
+      } finally {
+        setIsExtracting(false);
+        setUploadProgress('');
       }
-      
-      setUploadProgress('');
     }
   };
 
@@ -156,6 +235,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     setUploadProgress('');
     setExtractedContent('');
     setFileRecommendation(null);
+    setIsExtracting(false);
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -212,11 +292,19 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                   type="file"
                   onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.tiff"
+                  disabled={isExtracting || isLoading}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Supported: PDF, DOC, DOCX, TXT, MD, CSV, XLSX, and image files (max 5MB)
                 </p>
               </div>
+
+              {isExtracting && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>Extracting content from file...</AlertDescription>
+                </Alert>
+              )}
 
               {fileRecommendation && (
                 <Alert>
@@ -238,13 +326,14 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                   placeholder={extractedContent ? "Content extracted from your file (you can edit it)" : "Document content that research participants can access..."}
                   rows={6}
                   className={content.trim() ? 'border-green-300' : ''}
+                  disabled={isExtracting}
                 />
                 {file && content.trim() && (
                   <p className="text-xs text-green-600 mt-1">
                     ✅ Content extracted and available to research participants
                   </p>
                 )}
-                {file && !content.trim() && !extractedContent && (
+                {file && !content.trim() && !extractedContent && !isExtracting && (
                   <p className="text-xs text-amber-600 mt-1">
                     ⚠️ No content extracted - research participants will only see file metadata
                   </p>
@@ -259,7 +348,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
               )}
 
               <div className="flex gap-2">
-                <Button type="submit" disabled={isLoading} className="flex-1">
+                <Button type="submit" disabled={isLoading || isExtracting} className="flex-1">
                   {isLoading ? 'Uploading...' : 'Add Document'}
                 </Button>
                 <Button 
@@ -269,7 +358,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                     setIsDialogOpen(false);
                     resetForm();
                   }}
-                  disabled={isLoading}
+                  disabled={isLoading || isExtracting}
                 >
                   Cancel
                 </Button>
