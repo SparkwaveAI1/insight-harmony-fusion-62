@@ -133,25 +133,23 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {!isCustomPersona && (
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Your name" 
-                    {...field} 
-                    className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name {isCustomPersona && "(Optional)"}</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Your name" 
+                  {...field} 
+                  className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <FormField
           control={form.control}
