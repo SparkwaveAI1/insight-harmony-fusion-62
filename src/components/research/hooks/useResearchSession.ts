@@ -17,7 +17,7 @@ export interface UseResearchSessionReturn {
   isLoading: boolean;
   createSession: (personaIds: string[], projectId?: string) => Promise<boolean>;
   sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  selectPersonaResponder: (personaId: string) => Promise<void>;
+  sendToPersona: (personaId: string) => Promise<void>;
 }
 
 export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
@@ -26,7 +26,6 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
   const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
   const [messages, setMessages] = useState<(Message & { responding_persona_id?: string })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPersonaResponder, setSelectedPersonaResponder] = useState<string | null>(null);
 
   // Load project documents when projectId changes
   useEffect(() => {
@@ -96,11 +95,6 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setLoadedPersonas(mappedPersonas);
       setMessages([]);
-      
-      // Set first persona as default responder
-      if (mappedPersonas.length > 0) {
-        setSelectedPersonaResponder(mappedPersonas[0].persona_id);
-      }
 
       toast.success('Research session started successfully');
       return true;
@@ -113,16 +107,17 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
+  // Add user message to chat without sending to personas yet
   const sendMessage = async (message: string, imageFile?: File | null): Promise<void> => {
-    if (!sessionId || !selectedPersonaResponder) {
-      toast.error('No active session or selected persona');
+    if (!sessionId) {
+      toast.error('No active session');
       return;
     }
 
     try {
       setIsLoading(true);
 
-      // Process the message and file using the same logic as persona chat
+      // Process the message and file
       const { content, imageData, extractedText } = await processMessageWithFile(message, imageFile);
 
       // Add user message to UI immediately
@@ -135,14 +130,13 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Store message in database using existing conversation_messages table
+      // Store message in database
       const { error } = await supabase
         .from('conversation_messages')
         .insert({
           conversation_id: sessionId,
           role: 'user',
           content: content,
-          persona_id: selectedPersonaResponder,
           file_attachments: imageData || extractedText ? [{
             type: imageData ? 'image' : 'document',
             data: imageData,
@@ -155,8 +149,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         throw error;
       }
 
-      // Get persona response using the same API as persona chat
-      await getPersonaResponse(content, selectedPersonaResponder, imageData);
+      console.log('User message added to chat, waiting for persona selection');
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -166,15 +159,32 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
-  const getPersonaResponse = async (userMessage: string, personaId: string, imageData?: string) => {
+  // Send current conversation to selected persona
+  const sendToPersona = async (personaId: string): Promise<void> => {
+    if (!sessionId) {
+      toast.error('No active session');
+      return;
+    }
+
     try {
+      setIsLoading(true);
+
       // Find the persona
       const activePersona = loadedPersonas.find(p => p.persona_id === personaId);
       if (!activePersona) {
         throw new Error('Persona not found');
       }
 
-      // Format previous messages for the API (same format as persona chat)
+      console.log('Sending conversation to persona:', activePersona.name);
+
+      // Get the last user message
+      const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+      if (!lastUserMessage) {
+        toast.error('No user message to send to persona');
+        return;
+      }
+
+      // Format previous messages for the API
       const previousMessages = messages.map(msg => ({
         role: msg.role,
         content: msg.content,
@@ -188,15 +198,15 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
           ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
         : '';
 
-      // Use the same persona API service as regular chat
+      // Get persona response using the unified conversation engine
       const response = await sendMessageToPersona(
         personaId,
-        userMessage,
+        lastUserMessage.content,
         previousMessages,
         activePersona,
         'research', // Use research mode
         knowledgeBaseContext, // Pass the knowledge base context
-        imageData
+        lastUserMessage.image
       );
       
       // Add persona response to messages
@@ -209,7 +219,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setMessages(prev => [...prev, personaMessage]);
 
-      // Store persona response in database using existing conversation_messages table
+      // Store persona response in database
       await supabase
         .from('conversation_messages')
         .insert({
@@ -220,15 +230,15 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
           responding_persona_id: personaId
         });
 
+      console.log('Persona response generated and added to conversation');
+
     } catch (error) {
       console.error('Error getting persona response:', error);
       toast.error('Failed to get persona response');
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const selectPersonaResponder = useCallback(async (personaId: string): Promise<void> => {
-    setSelectedPersonaResponder(personaId);
-  }, []);
 
   return {
     sessionId,
@@ -238,6 +248,6 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     isLoading,
     createSession,
     sendMessage,
-    selectPersonaResponder
+    sendToPersona
   };
 };

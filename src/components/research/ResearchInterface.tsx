@@ -13,14 +13,14 @@ interface ResearchInterfaceProps {
   sessionData: SessionData;
   onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
   onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  onSelectResponder: (personaId: string) => Promise<void>;
+  onSendToPersona: (personaId: string) => Promise<void>;
 }
 
 const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   sessionData,
   onCreateSession,
   onSendMessage,
-  onSelectResponder
+  onSendToPersona
 }) => {
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
@@ -36,14 +36,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
 
   const handleExportTranscript = () => {
     exportTranscript(messages, loadedPersonas, sessionId);
-  };
-
-  const handleSendToPersona = async (personaId: string) => {
-    const persona = loadedPersonas.find(p => p.persona_id === personaId);
-    if (persona) {
-      console.log('Sending chat to persona:', persona.name);
-      await onSelectResponder(personaId);
-    }
   };
 
   const handleSaveConversation = () => {
@@ -65,7 +57,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     }));
   };
 
-  // Show buttons when there are active personas and messages exist
+  // Show send to persona buttons when there are active personas and messages exist
   const shouldShowSendButtons = loadedPersonas.length > 0 && messages.length > 0;
 
   if (showPersonaLoader || !sessionId) {
@@ -105,7 +97,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           loadedPersonas={loadedPersonas}
           isLoading={isLoading}
           onSendMessage={onSendMessage}
-          onSelectResponder={onSelectResponder}
         />
       </div>
 
@@ -114,7 +105,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
         <SendToPersonaSection
           loadedPersonas={loadedPersonas}
           isLoading={isLoading}
-          onSendToPersona={handleSendToPersona}
+          onSendToPersona={onSendToPersona}
         />
       )}
 

@@ -20,7 +20,7 @@ const Research = () => {
     isLoading,
     createSession,
     sendMessage,
-    selectPersonaResponder
+    sendToPersona
   } = useResearchSession(projectId || undefined);
 
   const sessionData = {
@@ -53,7 +53,7 @@ const Research = () => {
                     sessionData={sessionData}
                     onCreateSession={createSession}
                     onSendMessage={sendMessage}
-                    onSelectResponder={selectPersonaResponder}
+                    onSendToPersona={sendToPersona}
                   />
                 </div>
               </div>

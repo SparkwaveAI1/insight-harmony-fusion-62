@@ -12,15 +12,13 @@ interface ResearchConversationProps {
   loadedPersonas: Persona[];
   isLoading: boolean;
   onSendMessage: (message: string, imageFile?: File | null) => void;
-  onSelectResponder: (personaId: string) => void;
 }
 
 export const ResearchConversation: React.FC<ResearchConversationProps> = ({
   messages,
   loadedPersonas,
   isLoading,
-  onSendMessage,
-  onSelectResponder
+  onSendMessage
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -43,6 +41,7 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
                     <div className="text-center py-12 text-muted-foreground">
                       <h3 className="text-xl font-medium mb-3">Research Session Active</h3>
                       <p className="text-base">Start your conversation by sending a message below.</p>
+                      <p className="text-sm mt-2">Your message will be added to the chat, then use "Send to Personas" to get responses.</p>
                     </div>
                   )}
                   
