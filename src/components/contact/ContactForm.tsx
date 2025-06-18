@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create dynamic schema based on form type
 const createFormSchema = (formType: string) => {
@@ -74,18 +75,19 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
       console.log("Sending form data to Supabase Edge Function...");
       console.log("Payload:", payload);
       
-      const response = await fetch('/api/send-contact-form', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      const { data: result, error } = await supabase.functions.invoke('send-contact-form', {
+        body: payload,
       });
 
-      console.log("Supabase response status:", response.status);
+      console.log("Supabase function result:", result);
+      console.log("Supabase function error:", error);
 
-      if (response.ok) {
-        const result = await response.json();
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Failed to send message: ${error.message}`);
+      }
+
+      if (result) {
         console.log("Form submitted successfully:", result);
         toast({
           title: "Message sent successfully",
@@ -93,10 +95,6 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
         });
         form.reset();
         if (onSuccess) onSuccess();
-      } else {
-        const errorData = await response.json();
-        console.error("Supabase error response:", errorData);
-        throw new Error(`Failed to send message: ${response.status}`);
       }
     } catch (error) {
       console.error('Contact form error:', error);
