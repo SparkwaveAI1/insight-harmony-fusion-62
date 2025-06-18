@@ -14,10 +14,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const feedbackSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  twitterId: z.string().optional(),
   email: z.string().email("Invalid email address"),
   walletAddress: z.string().optional(),
-  twitterId: z.string().optional(),
   feedback: z.string().min(10, "Feedback must be at least 10 characters long"),
 });
 
@@ -38,10 +37,9 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
-      name: "",
+      twitterId: "",
       email: user?.email || "",
       walletAddress: "",
-      twitterId: "",
       feedback: "",
     },
   });
@@ -52,7 +50,7 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
     
     try {
       const payload = {
-        name: data.name,
+        name: data.twitterId || "Anonymous",
         email: data.email,
         company: "",
         walletAddress: data.walletAddress || "",
@@ -117,12 +115,15 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="name"
+            name="twitterId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>X (Twitter) ID (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your name" {...field} />
+                  <Input 
+                    placeholder="@yourtwitterhandle" 
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -152,23 +153,6 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
                 <FormControl>
                   <Input 
                     placeholder="0x..." 
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="twitterId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>X (Twitter) ID (Optional)</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="@yourtwitterhandle" 
                     {...field}
                   />
                 </FormControl>
