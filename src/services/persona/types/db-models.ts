@@ -18,4 +18,6 @@ export interface DbPersona {
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
+  profile_image_url?: string;
+  enhanced_metadata_version?: number;
 }
