@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,9 +22,7 @@ const createFormSchema = (formType: string) => {
   const isCustomPersona = formType === "custom-persona";
   
   return z.object({
-    name: isCustomPersona 
-      ? z.string().optional()
-      : z.string().min(2, { message: "Name must be at least 2 characters" }).optional(),
+    name: z.string().optional(),
     email: z.string().email({ message: "Invalid email address" }).optional(),
     company: z.string().optional(),
     walletAddress: z.string().optional(),
@@ -57,45 +56,37 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
     },
   });
 
-  // Add debugging for form state
-  console.log("Form errors:", form.formState.errors);
-  console.log("Form is valid:", form.formState.isValid);
-  console.log("Form values:", form.watch());
-
   async function onSubmit(data: FormValues) {
     console.log("=== FORM SUBMISSION STARTED ===");
     console.log("Form submission started with data:", data);
-    console.log("Form validation state:", form.formState);
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-      if (data.name) formData.append('name', data.name);
-      if (data.email) formData.append('email', data.email);
-      formData.append('company', data.company || '');
-      if (data.walletAddress) formData.append('walletAddress', data.walletAddress);
-      formData.append('message', data.message);
-      formData.append('formType', data.formType);
+      const payload = {
+        name: data.name,
+        email: data.email,
+        company: data.company,
+        walletAddress: data.walletAddress,
+        message: data.message,
+        formType: data.formType,
+      };
 
-      console.log("Sending form data to Formspree...");
-      console.log("FormData contents:");
-      for (let [key, value] of (formData as any).entries()) {
-        console.log(key, value);
-      }
+      console.log("Sending form data to Supabase Edge Function...");
+      console.log("Payload:", payload);
       
-      const response = await fetch('https://formspree.io/f/xjkrowgl', {
+      const response = await fetch('/api/send-contact-form', {
         method: 'POST',
-        body: formData,
         headers: {
-          'Accept': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
-      console.log("Formspree response status:", response.status);
-      console.log("Formspree response:", response);
+      console.log("Supabase response status:", response.status);
 
       if (response.ok) {
-        console.log("Form submitted successfully");
+        const result = await response.json();
+        console.log("Form submitted successfully:", result);
         toast({
           title: "Message sent successfully",
           description: "We'll get back to you as soon as possible.",
@@ -103,8 +94,8 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
         form.reset();
         if (onSuccess) onSuccess();
       } else {
-        const errorData = await response.text();
-        console.error("Formspree error response:", errorData);
+        const errorData = await response.json();
+        console.error("Supabase error response:", errorData);
         throw new Error(`Failed to send message: ${response.status}`);
       }
     } catch (error) {
@@ -121,14 +112,6 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
 
   const isCustomPersona = formType === "custom-persona";
 
-  // Add click handler debugging
-  const handleSubmitClick = () => {
-    console.log("=== SUBMIT BUTTON CLICKED ===");
-    console.log("Form is submitting:", isSubmitting);
-    console.log("Form state:", form.formState);
-    console.log("Current form values:", form.getValues());
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -137,7 +120,7 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name {isCustomPersona && "(Optional)"}</FormLabel>
+              <FormLabel>Full Name (Optional)</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Your name" 
@@ -234,7 +217,6 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
           type="submit" 
           className="w-full" 
           disabled={isSubmitting}
-          onClick={handleSubmitClick}
         >
           {isSubmitting ? (
             <>

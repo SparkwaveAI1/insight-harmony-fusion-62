@@ -1,17 +1,21 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
 
-// CORS headers to allow requests from any origin
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface ContactFormData {
-  name: string;
+  name?: string;
   email: string;
   company?: string;
   message: string;
+  formType: string;
+  walletAddress?: string;
 }
 
 serve(async (req) => {
@@ -21,60 +25,97 @@ serve(async (req) => {
   }
 
   try {
-    // Parse the request body
     const formData: ContactFormData = await req.json();
-    const { name, email, company, message } = formData;
+    const { name, email, company, message, formType, walletAddress } = formData;
     
     // Validate required fields
-    if (!name || !email || !message) {
+    if (!email || !message) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "Email and message are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Construct email content
-    const emailContent = `
-      <h2>New Custom Persona Commission Request</h2>
-      <p><strong>Name:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Company:</strong> ${company || "Not provided"}</p>
-      <p><strong>Requirements:</strong></p>
-      <p>${message}</p>
-    `;
+    // Create email content based on form type
+    let subject = "";
+    let emailContent = "";
 
-    // Send email using Fetch API to a service like Resend
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Custom Persona Commission <contact@sparkwave-ai.com>",
-        to: "scott@sparkwave-ai.com",
-        subject: `New Custom Persona Commission Request from ${name}`,
-        html: emailContent,
-        reply_to: email,
-      }),
+    switch (formType) {
+      case "custom-persona":
+        subject = `Custom Persona Project Inquiry${name ? ` from ${name}` : ""}`;
+        emailContent = `
+          <h2>Custom Persona Project Inquiry</h2>
+          ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
+          ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
+          ${walletAddress ? `<p><strong>Wallet Address:</strong> ${walletAddress}</p>` : ""}
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `;
+        break;
+
+      case "discovery":
+        subject = `Discovery Call Request${name ? ` from ${name}` : ""}`;
+        emailContent = `
+          <h2>Discovery Call Request</h2>
+          ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
+          ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `;
+        break;
+
+      case "demo":
+        subject = `Demo Request${name ? ` from ${name}` : ""}`;
+        emailContent = `
+          <h2>Demo Request</h2>
+          ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
+          ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `;
+        break;
+
+      default:
+        subject = `Contact Form Submission${name ? ` from ${name}` : ""}`;
+        emailContent = `
+          <h2>Contact Form Submission</h2>
+          ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
+          ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
+          <p><strong>Form Type:</strong> ${formType}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `;
+    }
+
+    // Send email using Resend
+    const emailResponse = await resend.emails.send({
+      from: "PersonaAI Contact <onboarding@resend.dev>",
+      to: "scott@sparkwave-ai.com",
+      subject: subject,
+      html: emailContent,
+      reply_to: email,
     });
 
-    if (!emailResponse.ok) {
-      const errorData = await emailResponse.json();
-      console.error("Failed to send email:", errorData);
+    if (emailResponse.error) {
+      console.error("Failed to send email:", emailResponse.error);
       throw new Error("Failed to send email");
     }
 
-    // Return success response
+    console.log("Email sent successfully:", emailResponse.data);
+
     return new Response(
-      JSON.stringify({ success: true, message: "Contact form submitted successfully" }),
+      JSON.stringify({ success: true, message: "Email sent successfully", id: emailResponse.data?.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error processing contact form:", error);
     
     return new Response(
-      JSON.stringify({ error: "Failed to process contact form" }),
+      JSON.stringify({ error: "Failed to process contact form submission" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
