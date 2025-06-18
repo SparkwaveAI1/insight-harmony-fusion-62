@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +17,7 @@ const feedbackSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   walletAddress: z.string().optional(),
+  twitterId: z.string().optional(),
   feedback: z.string().min(10, "Feedback must be at least 10 characters long"),
 });
 
@@ -39,6 +41,7 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
       name: "",
       email: user?.email || "",
       walletAddress: "",
+      twitterId: "",
       feedback: "",
     },
   });
@@ -53,6 +56,7 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
         email: data.email,
         company: "",
         walletAddress: data.walletAddress || "",
+        twitterId: data.twitterId || "",
         message: data.feedback,
         formType: "prsna-feedback",
       };
@@ -148,6 +152,23 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
                 <FormControl>
                   <Input 
                     placeholder="0x..." 
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="twitterId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>X (Twitter) ID (Optional)</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="@yourtwitterhandle" 
                     {...field}
                   />
                 </FormControl>
