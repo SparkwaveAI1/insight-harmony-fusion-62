@@ -74,7 +74,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   };
 
   const handleSendMessageWithImage = (message: string, imageFile: File | null) => {
-    handleSendMessage(message, imageFile);
+    handleSendMessage(message);
   };
 
   // Generate a default title from the conversation content
