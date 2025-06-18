@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getPersonaById } from '@/services/persona';
+import { getPersonaByPersonaId } from '@/services/persona';
 import { Persona } from '@/services/persona/types';
 import { getProjectDocuments, KnowledgeBaseDocument } from '@/services/collections';
 
@@ -39,13 +39,17 @@ export const createResearchSession = async (
       return { success: false, error: 'Not authenticated' };
     }
     
-    // Load all selected personas
+    // Load all selected personas using getPersonaByPersonaId for short IDs
     const selectedPersonas: Persona[] = [];
     for (const personaId of personaIds) {
       try {
-        const persona = await getPersonaById(personaId);
+        console.log(`Loading persona with ID: ${personaId}`);
+        const persona = await getPersonaByPersonaId(personaId);
         if (persona) {
           selectedPersonas.push(persona);
+          console.log(`Successfully loaded persona: ${persona.name}`);
+        } else {
+          console.warn(`Persona with ID ${personaId} not found`);
         }
       } catch (error) {
         console.error(`Error loading persona ${personaId}:`, error);
@@ -56,6 +60,8 @@ export const createResearchSession = async (
       toast.error('Failed to load any selected personas');
       return { success: false, error: 'Failed to load personas' };
     }
+
+    console.log(`Successfully loaded ${selectedPersonas.length} personas`);
 
     // Load project knowledge base documents if project ID is provided
     let projectDocuments: KnowledgeBaseDocument[] = [];
