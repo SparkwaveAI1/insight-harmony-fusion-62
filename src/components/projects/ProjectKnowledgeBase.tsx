@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Upload, Trash2, Plus } from 'lucide-react';
+import { FileText, Upload, Trash2, Plus, Download, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   uploadKnowledgeBaseDocument, 
   getProjectDocuments, 
@@ -26,25 +27,39 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
 
   useEffect(() => {
     loadDocuments();
   }, [projectId]);
 
   const loadDocuments = async () => {
+    console.log('Loading documents for project:', projectId);
     const docs = await getProjectDocuments(projectId);
     setDocuments(docs);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!title.trim()) {
       toast.error('Please provide a title for the document');
       return;
     }
 
+    if (!content.trim() && !file) {
+      toast.error('Please provide either content or upload a file');
+      return;
+    }
+
     setIsLoading(true);
+    setUploadProgress('Preparing upload...');
+    
     try {
+      if (file) {
+        setUploadProgress('Uploading file...');
+      }
+      
       const document = await uploadKnowledgeBaseDocument(
         projectId,
         title.trim(),
@@ -53,20 +68,23 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
       );
 
       if (document) {
+        setUploadProgress('Refreshing document list...');
         await loadDocuments();
         setIsDialogOpen(false);
         resetForm();
+        setUploadProgress('');
       }
     } catch (error) {
       console.error('Error uploading document:', error);
       toast.error('Failed to upload document');
+      setUploadProgress('');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteDocument = async (documentId: string) => {
-    if (window.confirm('Are you sure you want to delete this document?')) {
+  const handleDeleteDocument = async (documentId: string, documentTitle: string) => {
+    if (window.confirm(`Are you sure you want to delete "${documentTitle}"? This action cannot be undone.`)) {
       const success = await deleteKnowledgeBaseDocument(documentId);
       if (success) {
         await loadDocuments();
@@ -74,10 +92,26 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     }
   };
 
+  const handleDownloadFile = (fileUrl: string, fileName: string) => {
+    try {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file');
+    }
+  };
+
   const resetForm = () => {
     setTitle('');
     setContent('');
     setFile(null);
+    setUploadProgress('');
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -88,6 +122,16 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileTypeIcon = (fileType: string | null) => {
+    if (!fileType) return <FileText className="h-5 w-5 text-blue-500" />;
+    
+    if (fileType.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />;
+    if (fileType.includes('word') || fileType.includes('document')) return <FileText className="h-5 w-5 text-blue-600" />;
+    if (fileType.includes('text')) return <FileText className="h-5 w-5 text-gray-500" />;
+    
+    return <FileText className="h-5 w-5 text-blue-500" />;
   };
 
   return (
@@ -107,7 +151,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
                   value={title}
@@ -134,18 +178,33 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                   id="file-upload"
                   type="file"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  accept=".pdf,.doc,.docx,.txt,.md"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Supported: PDF, DOC, DOCX, TXT, MD files
+                  Supported: PDF, DOC, DOCX, TXT, MD, CSV, XLSX files (max 10MB)
                 </p>
               </div>
+
+              {uploadProgress && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{uploadProgress}</AlertDescription>
+                </Alert>
+              )}
 
               <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? 'Uploading...' : 'Add Document'}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    resetForm();
+                  }}
+                  disabled={isLoading}
+                >
                   Cancel
                 </Button>
               </div>
@@ -157,20 +216,31 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
         {documents.length > 0 ? (
           <div className="space-y-3">
             {documents.map((doc) => (
-              <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  <div>
+              <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                <div className="flex items-center gap-3 flex-1">
+                  {getFileTypeIcon(doc.file_type)}
+                  <div className="flex-1">
                     <h4 className="font-medium">{doc.title}</h4>
-                    <div className="text-xs text-gray-500 space-x-2">
+                    <div className="text-xs text-gray-500 space-x-2 flex flex-wrap">
                       <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                       {doc.file_size && (
-                        <span>• {formatFileSize(doc.file_size)}</span>
+                        <>
+                          <span>•</span>
+                          <span>{formatFileSize(doc.file_size)}</span>
+                        </>
                       )}
                       {doc.file_type && (
-                        <span>• {doc.file_type}</span>
+                        <>
+                          <span>•</span>
+                          <span>{doc.file_type.split('/')[1]?.toUpperCase()}</span>
+                        </>
                       )}
                     </div>
+                    {doc.content && (
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                        {doc.content.substring(0, 100)}...
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -178,16 +248,18 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => window.open(doc.file_url!, '_blank')}
+                      onClick={() => handleDownloadFile(doc.file_url!, doc.title)}
+                      title="Download file"
                     >
-                      <Upload className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                     </Button>
                   )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteDocument(doc.id)}
+                    onClick={() => handleDeleteDocument(doc.id, doc.title)}
                     className="text-red-500 hover:text-red-700"
+                    title="Delete document"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -196,7 +268,13 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No documents uploaded yet.</p>
+          <div className="text-center py-8">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500 text-sm mb-2">No documents uploaded yet.</p>
+            <p className="text-xs text-gray-400">
+              Upload documents to create a knowledge base for this project.
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>
