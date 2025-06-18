@@ -30,7 +30,8 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
     persona_id: dbPersona.persona_id,
     name: dbPersona.name,
     has_emotional_triggers: !!dbPersona.emotional_triggers,
-    enhanced_metadata_version: dbPersona.enhanced_metadata_version
+    enhanced_metadata_version: dbPersona.enhanced_metadata_version,
+    trait_profile_keys: dbPersona.trait_profile ? Object.keys(dbPersona.trait_profile as any) : []
   });
   
   return dbPersona;
@@ -39,6 +40,25 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
 export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
   console.log("Converting DB persona to app format:", dbPersona.persona_id);
   
+  // Handle trait profile data more carefully
+  let traitProfile = dbPersona.trait_profile as unknown as Record<string, any>;
+  
+  // If trait_profile is malformed or empty, provide a default structure
+  if (!traitProfile || typeof traitProfile !== 'object' || 
+      (traitProfile._type === "undefined" && traitProfile.value === "undefined")) {
+    console.warn("Trait profile data is malformed, using default structure");
+    traitProfile = {
+      big_five: {},
+      moral_foundations: {},
+      world_values: {},
+      political_compass: {},
+      cultural_dimensions: {},
+      social_identity: {},
+      behavioral_economics: {},
+      extended_traits: {}
+    };
+  }
+  
   return {
     id: dbPersona.id,
     persona_id: dbPersona.persona_id,
@@ -46,7 +66,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
     creation_date: dbPersona.creation_date,
     prompt: dbPersona.prompt || "",
     metadata: dbPersona.metadata as unknown as PersonaMetadata,
-    trait_profile: dbPersona.trait_profile as unknown as Record<string, any>,
+    trait_profile: traitProfile,
     behavioral_modulation: dbPersona.behavioral_modulation as unknown as Record<string, any>,
     linguistic_profile: dbPersona.linguistic_profile as unknown as Record<string, any>,
     preinterview_tags: dbPersona.preinterview_tags as unknown as string[],
