@@ -1,74 +1,107 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ResearchMessage } from '../hooks/types';
+import { extractTextFromFile } from '@/services/collections/textExtractionService';
 
-export const saveUserMessage = async (
-  sessionId: string,
-  content: string,
-  imageBase64?: string
-): Promise<void> => {
-  const messageData: any = {
-    conversation_id: sessionId,
-    role: 'user',
-    content,
-    persona_id: null,
-    responding_persona_id: null
-  };
+export interface ResearchMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  responding_persona_id?: string;
+  image?: string;
+  extracted_text?: string;
+}
 
-  // Add image data if present
-  if (imageBase64) {
-    messageData.file_attachments = [{ type: 'image', data: imageBase64 }];
+export const processMessageWithFile = async (
+  message: string,
+  file: File | null
+): Promise<{ content: string; imageData?: string; extractedText?: string }> => {
+  if (!file) {
+    return { content: message };
   }
 
-  const { error: dbError } = await supabase
-    .from('conversation_messages')
-    .insert(messageData);
+  // Handle images - convert to base64 for vision processing
+  if (file.type.startsWith('image/')) {
+    try {
+      const base64 = await fileToBase64(file);
+      return {
+        content: message || `I've shared an image (${file.name}) for you to look at.`,
+        imageData: `data:${file.type};base64,${base64}`
+      };
+    } catch (error) {
+      console.error('Error processing image:', error);
+      return { content: message };
+    }
+  }
 
-  if (dbError) {
-    console.error('Error saving message to database:', dbError);
-  } else {
-    console.log('Message saved to database successfully');
+  // Handle documents - extract text content
+  try {
+    const extractedText = await extractTextFromFile(file);
+    
+    if (extractedText) {
+      const enhancedMessage = message 
+        ? `${message}\n\n--- Content from ${file.name} ---\n${extractedText}`
+        : `I've shared a document (${file.name}) with the following content:\n\n${extractedText}`;
+      
+      return {
+        content: enhancedMessage,
+        extractedText
+      };
+    } else {
+      // If extraction failed, just mention the file was uploaded
+      const fallbackMessage = message 
+        ? `${message}\n\n(Note: I tried to share ${file.name} but the content couldn't be extracted)`
+        : `I uploaded ${file.name} but the content couldn't be extracted automatically.`;
+      
+      return { content: fallbackMessage };
+    }
+  } catch (error) {
+    console.error('Error extracting text from file:', error);
+    const errorMessage = message 
+      ? `${message}\n\n(Note: I tried to share ${file.name} but there was an error processing it)`
+      : `I uploaded ${file.name} but there was an error processing it.`;
+    
+    return { content: errorMessage };
   }
 };
 
-export const convertFileToBase64 = (file: File): Promise<string> => {
+const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
   });
 };
 
-export const createUserMessage = async (
-  content: string,
-  imageFile?: File | null
-): Promise<ResearchMessage> => {
-  return {
-    role: 'user',
-    content,
-    timestamp: new Date(),
-    image: imageFile ? await convertFileToBase64(imageFile) : undefined
-  };
-};
-
-export const sendUserMessage = async (
+export const sendResearchMessage = async (
   sessionId: string,
-  content: string,
-  imageFile?: File | null
-): Promise<ResearchMessage> => {
-  if (!sessionId || !content.trim()) {
-    throw new Error('Missing sessionId or content');
+  message: string,
+  personaId: string,
+  imageData?: string,
+  extractedText?: string
+): Promise<void> => {
+  try {
+    // Store the message in the database
+    const { error } = await supabase
+      .from('research_messages')
+      .insert({
+        session_id: sessionId,
+        role: 'user',
+        content: message,
+        persona_id: personaId,
+        image_data: imageData,
+        extracted_text: extractedText
+      });
+
+    if (error) {
+      console.error('Error storing research message:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in sendResearchMessage:', error);
+    throw error;
   }
-
-  console.log('Sending message:', content);
-
-  // Create user message
-  const userMessage = await createUserMessage(content, imageFile);
-
-  // Save user message to database with image data if present
-  const imageBase64 = imageFile ? await convertFileToBase64(imageFile) : undefined;
-  await saveUserMessage(sessionId, content, imageBase64);
-
-  return userMessage;
 };

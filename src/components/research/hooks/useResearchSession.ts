@@ -1,106 +1,198 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
-import { ResearchMessage } from './types';
-import { createResearchSession } from '../services/sessionService';
-import { sendUserMessage } from '../services/messageService';
-import { generatePersonaResponse } from '../services/personaResponseService';
-import { KnowledgeBaseDocument } from '@/services/collections';
+import { getProjectById, getProjectDocuments } from '@/services/collections';
+import { processMessageWithFile, sendResearchMessage, ResearchMessage } from '../services/messageService';
 
-export const useResearchSession = (projectId?: string) => {
+export interface UseResearchSessionReturn {
+  sessionId: string | null;
+  loadedPersonas: Persona[];
+  projectDocuments: any[];
+  messages: (ResearchMessage & { responding_persona_id?: string })[];
+  isLoading: boolean;
+  createSession: (personaIds: string[], projectId?: string) => Promise<void>;
+  sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
+  selectPersonaResponder: (personaId: string) => void;
+}
+
+export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
-  const [projectDocuments, setProjectDocuments] = useState<KnowledgeBaseDocument[]>([]);
-  const [messages, setMessages] = useState<ResearchMessage[]>([]);
+  const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
+  const [messages, setMessages] = useState<(ResearchMessage & { responding_persona_id?: string })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPersonaResponder, setSelectedPersonaResponder] = useState<string | null>(null);
 
-  const createSession = useCallback(async (personaIds: string[]): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      
-      const result = await createResearchSession(personaIds, projectId);
-      
-      if (result.success && result.sessionId && result.selectedPersonas) {
-        setSessionId(result.sessionId);
-        setLoadedPersonas(result.selectedPersonas);
-        setProjectDocuments(result.projectDocuments || []);
-        setMessages([]);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error in createSession:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
+  // Load project documents when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      loadProjectDocuments();
     }
   }, [projectId]);
 
-  const sendMessage = useCallback(async (content: string, imageFile?: File | null) => {
-    if (!sessionId || !content.trim()) {
-      console.log('Cannot send message - missing sessionId or content:', { sessionId, hasContent: !!content.trim() });
+  const loadProjectDocuments = async () => {
+    if (!projectId) return;
+    
+    try {
+      const docs = await getProjectDocuments(projectId);
+      setProjectDocuments(docs);
+    } catch (error) {
+      console.error('Error loading project documents:', error);
+    }
+  };
+
+  const createSession = async (personaIds: string[], selectedProjectId?: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Use provided projectId or the one from props
+      const useProjectId = selectedProjectId || projectId;
+      
+      // Create research session
+      const { data: session, error: sessionError } = await supabase
+        .from('research_sessions')
+        .insert({
+          project_id: useProjectId,
+          persona_ids: personaIds,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      setSessionId(session.id);
+
+      // Load personas
+      const { data: personas, error: personasError } = await supabase
+        .from('personas')
+        .select('*')
+        .in('persona_id', personaIds);
+
+      if (personasError) throw personasError;
+
+      setLoadedPersonas(personas || []);
+      setMessages([]);
+      
+      // Set first persona as default responder
+      if (personas && personas.length > 0) {
+        setSelectedPersonaResponder(personas[0].persona_id);
+      }
+
+      toast.success('Research session started successfully');
+    } catch (error) {
+      console.error('Error creating research session:', error);
+      toast.error('Failed to create research session');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async (message: string, imageFile?: File | null) => {
+    if (!sessionId || !selectedPersonaResponder) {
+      toast.error('No active session or selected persona');
       return;
     }
 
     try {
       setIsLoading(true);
-      
-      const userMessage = await sendUserMessage(sessionId, content, imageFile);
-      
-      console.log('Adding user message to state');
-      setMessages(prev => {
-        const newMessages = [...prev, userMessage];
-        console.log('Updated messages:', newMessages.length);
-        return newMessages;
-      });
+
+      // Process the message and file
+      const { content, imageData, extractedText } = await processMessageWithFile(message, imageFile);
+
+      // Add user message to UI immediately
+      const userMessage: ResearchMessage = {
+        role: 'user',
+        content: content,
+        timestamp: new Date(),
+        ...(imageData && { image: imageData }),
+        ...(extractedText && { extracted_text: extractedText })
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
+      // Store message in database
+      await sendResearchMessage(sessionId, content, selectedPersonaResponder, imageData, extractedText);
+
+      // Get persona response
+      await getPersonaResponse(content, selectedPersonaResponder, imageData);
 
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  };
 
-  const selectPersonaResponder = useCallback(async (personaId: string) => {
-    console.log('Selecting persona responder:', personaId);
-    
-    // Use current values from state, not from closure
-    setMessages(currentMessages => {
-      setLoadedPersonas(currentPersonas => {
-        setSessionId(currentSessionId => {
-          if (currentSessionId) {
-            // Handle the async response generation
-            setIsLoading(true);
-            generatePersonaResponse(personaId, currentSessionId, currentMessages, currentPersonas, projectDocuments)
-              .then(responseMessage => {
-                if (responseMessage) {
-                  setMessages(prev => [...prev, responseMessage]);
-                }
-              })
-              .finally(() => {
-                setIsLoading(false);
-              });
-          } else {
-            console.error('No session ID available');
-          }
-          return currentSessionId;
-        });
-        return currentPersonas;
+  const getPersonaResponse = async (userMessage: string, personaId: string, imageData?: string) => {
+    try {
+      // Format previous messages for the API
+      const previousMessages = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        image: msg.image
+      }));
+
+      // Call the persona response API
+      const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
+        },
+        body: JSON.stringify({
+          persona_id: personaId,
+          persona_role: 'assistant',
+          previous_messages: [...previousMessages, {
+            role: 'user',
+            content: userMessage,
+            ...(imageData && { image: imageData })
+          }],
+          chat_mode: 'research',
+          conversation_context: projectDocuments.length > 0 ? 
+            `Available knowledge base documents: ${projectDocuments.map(d => d.title).join(', ')}` : '',
+          has_image: !!imageData
+        })
       });
-      return currentMessages;
-    });
-  }, [projectDocuments]);
 
-  const addPersonaToSession = useCallback(async (personaId: string) => {
-    // Implementation for adding persona to existing session
-    // This would update the active_persona_ids array
-  }, [sessionId]);
+      if (!response.ok) {
+        throw new Error(`Failed to get persona response: ${response.status}`);
+      }
 
-  const removePersonaFromSession = useCallback(async (personaId: string) => {
-    // Implementation for removing persona from session
-    // This would update the active_persona_ids array
-  }, [sessionId]);
+      const data = await response.json();
+      
+      // Add persona response to messages
+      const personaMessage: ResearchMessage & { responding_persona_id: string } = {
+        role: 'assistant',
+        content: data.response,
+        timestamp: new Date(),
+        responding_persona_id: personaId
+      };
+
+      setMessages(prev => [...prev, personaMessage]);
+
+      // Store persona response in database
+      await supabase
+        .from('research_messages')
+        .insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: data.response,
+          persona_id: personaId
+        });
+
+    } catch (error) {
+      console.error('Error getting persona response:', error);
+      toast.error('Failed to get persona response');
+    }
+  };
+
+  const selectPersonaResponder = useCallback((personaId: string) => {
+    setSelectedPersonaResponder(personaId);
+  }, []);
 
   return {
     sessionId,
@@ -109,8 +201,6 @@ export const useResearchSession = (projectId?: string) => {
     messages,
     isLoading,
     createSession,
-    addPersonaToSession,
-    removePersonaFromSession,
     sendMessage,
     selectPersonaResponder
   };
