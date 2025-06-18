@@ -7,6 +7,9 @@ export const personaTemplate: PersonaTemplate = {
   name: '',
   creation_date: '',
   metadata: {
+    // Enhanced metadata version marker
+    enhanced_metadata_version: 2,
+    
     // Core Demographics
     age: null,
     gender: null,

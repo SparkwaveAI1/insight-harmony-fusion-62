@@ -255,28 +255,34 @@ export type Database = {
         Row: {
           created_at: string | null
           file_path: string
+          generation_prompt: string | null
           id: string
           is_current: boolean | null
           original_url: string | null
           persona_id: string
+          physical_attributes: Json | null
           storage_url: string
         }
         Insert: {
           created_at?: string | null
           file_path: string
+          generation_prompt?: string | null
           id?: string
           is_current?: boolean | null
           original_url?: string | null
           persona_id: string
+          physical_attributes?: Json | null
           storage_url: string
         }
         Update: {
           created_at?: string | null
           file_path?: string
+          generation_prompt?: string | null
           id?: string
           is_current?: boolean | null
           original_url?: string | null
           persona_id?: string
+          physical_attributes?: Json | null
           storage_url?: string
         }
         Relationships: [
@@ -295,6 +301,7 @@ export type Database = {
           created_at: string | null
           creation_date: string
           emotional_triggers: Json | null
+          enhanced_metadata_version: number | null
           id: string
           interview_sections: Json
           is_public: boolean | null
@@ -314,6 +321,7 @@ export type Database = {
           created_at?: string | null
           creation_date: string
           emotional_triggers?: Json | null
+          enhanced_metadata_version?: number | null
           id?: string
           interview_sections: Json
           is_public?: boolean | null
@@ -333,6 +341,7 @@ export type Database = {
           created_at?: string | null
           creation_date?: string
           emotional_triggers?: Json | null
+          enhanced_metadata_version?: number | null
           id?: string
           interview_sections?: Json
           is_public?: boolean | null

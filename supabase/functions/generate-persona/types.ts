@@ -1,229 +1,257 @@
-// Types for persona generation
 
-export interface EmotionalTrigger {
-  keywords: string[];
-  emotion_type: string;
-  intensity_multiplier: number;
-  description: string;
+export interface PersonaMetadata {
+  // Core Demographics
+  age?: string;
+  gender?: string;
+  race_ethnicity?: string;
+  sexual_orientation?: string;
+  education_level?: string;
+  occupation?: string;
+  employment_type?: string;
+  income_level?: string;
+  social_class_identity?: string;
+  marital_status?: string;
+  parenting_role?: string;
+  relationship_history?: string;
+  military_service?: string;
+  
+  // Location, Environment & Migration
+  region?: string;
+  urban_rural_context?: string;
+  location_history?: {
+    grew_up_in?: string;
+    current_residence?: string;
+    places_lived?: string[];
+  };
+  migration_history?: string;
+  climate_risk_zone?: string;
+  
+  // Cognitive, Psychological, and Cultural
+  language_proficiency?: string[];
+  religious_affiliation?: string;
+  religious_practice_level?: string;
+  cultural_background?: string;
+  cultural_affiliation?: string[];
+  political_affiliation?: string;
+  political_sophistication?: string;
+  tech_familiarity?: string;
+  learning_modality?: string;
+  trust_in_institutions?: string;
+  trauma_exposure?: string;
+  
+  // Financial and Time Resource Profile
+  financial_pressure?: string;
+  credit_access?: string;
+  debt_load?: string;
+  time_abundance?: string;
+  
+  // Digital Ecosystem & Signaling Behavior
+  media_ecosystem?: string[];
+  aesthetic_subculture?: string;
+  
+  // Health-Related Attributes - Enhanced
+  physical_health_status?: string;
+  mental_health_status?: string;
+  health_prioritization?: string;
+  healthcare_access?: string;
+  chronic_conditions?: string[];
+  medications?: string[];
+  mental_health_history?: string;
+  therapy_counseling_experience?: string;
+  health_insurance_status?: string;
+  fitness_activity_level?: string;
+  dietary_restrictions?: string[];
+  sleep_patterns?: string;
+  stress_management?: string;
+  substance_use?: string;
+  health_family_history?: string;
+  disability_accommodations?: string;
+  
+  // Physical Description
+  height?: string;
+  build_body_type?: string;
+  hair_color?: string;
+  hair_style?: string;
+  eye_color?: string;
+  skin_tone?: string;
+  distinctive_features?: string[];
+  style_fashion_sense?: string;
+  grooming_habits?: string;
+  physical_mannerisms?: string[];
+  posture_bearing?: string;
+  voice_speech_patterns?: string;
+  
+  // Knowledge Domains - Expanded
+  knowledge_domains?: {
+    // 1-5 ratings for each domain (1=minimal, 5=expert)
+    finance_basics?: number;
+    crypto_blockchain?: number;
+    world_politics?: number;
+    national_politics?: number;
+    pop_culture?: number;
+    basic_technology?: number;
+    deep_technology?: number;
+    health_medicine?: number;
+    advanced_medical?: number;
+    science_concepts?: number;
+    sports?: number;
+    news_literacy?: number;
+    environmental_issues?: number;
+    cultural_history?: number;
+    law_legal?: number;
+    religion_spirituality?: number;
+    art_literature?: number;
+    gaming?: number;
+    food_cooking?: number;
+    travel_geography?: number;
+    parenting_childcare?: number;
+    home_improvement?: number;
+    business_entrepreneurship?: number;
+    psychology_social_science?: number;
+    economics?: number;
+  };
+  
+  // Legacy fields for backward compatibility
+  relationship_status?: string;
+  children_or_caregiver?: string;
+  disabilities_or_conditions?: string;
+  family_medical_history?: string;
+  
+  [key: string]: any;
 }
 
-export interface EmotionalTriggersProfile {
-  positive_triggers: EmotionalTrigger[];
-  negative_triggers: EmotionalTrigger[];
+export interface TraitProfile {
+  // A. Big Five Personality Traits (OCEAN)
+  big_five: {
+    openness: number | null;
+    conscientiousness: number | null;
+    extraversion: number | null;
+    agreeableness: number | null;
+    neuroticism: number | null;
+  };
+  
+  // B. Moral Foundations Theory
+  moral_foundations: {
+    care: number | null;
+    fairness: number | null;
+    loyalty: number | null;
+    authority: number | null;
+    sanctity: number | null;
+    liberty: number | null;
+  };
+  
+  // C. Enhanced World Values Survey
+  world_values: {
+    traditional_vs_secular: number | null;
+    survival_vs_self_expression: number | null;
+    materialist_vs_postmaterialist: number | null;
+  };
+  
+  // D. Enhanced Political Compass with Behavioral Modeling
+  political_compass: {
+    economic: number | null;
+    authoritarian_libertarian: number | null;
+    cultural_conservative_progressive: number | null;
+    political_salience: number | null;
+    group_fusion_level: number | null;
+    outgroup_threat_sensitivity: number | null;
+    commons_orientation: number | null;
+    political_motivations: {
+      material_interest: number | null;
+      moral_vision: number | null;
+      cultural_preservation: number | null;
+      status_reordering: number | null;
+    };
+  };
+  
+  // E. Behavioral Economics Traits
+  behavioral_economics: {
+    present_bias: number | null;
+    loss_aversion: number | null;
+    overconfidence: number | null;
+    risk_sensitivity: number | null;
+    scarcity_sensitivity: number | null;
+  };
+
+  // F. Cultural Dimensions (Hofstede's Framework)
+  cultural_dimensions: {
+    power_distance: number | null;
+    individualism_vs_collectivism: number | null;
+    masculinity_vs_femininity: number | null;
+    uncertainty_avoidance: number | null;
+    long_term_orientation: number | null;
+    indulgence_vs_restraint: number | null;
+  };
+
+  // G. Social Identity and Group Dynamics
+  social_identity: {
+    identity_strength: number | null;
+    identity_complexity: number | null;
+    ingroup_bias_tendency: number | null;
+    outgroup_bias_tendency: number | null;
+    social_dominance_orientation: number | null;
+    system_justification: number | null;
+    intergroup_contact_comfort: number | null;
+    cultural_intelligence: number | null;
+  };
+  
+  // Extended Traits
+  extended_traits: {
+    truth_orientation: number | null;
+    moral_consistency: number | null;
+    self_awareness: number | null;
+    empathy: number | null;
+    self_efficacy: number | null;
+    manipulativeness: number | null;
+    impulse_control: number | null;
+    shadow_trait_activation: number | null;
+    attention_pattern: number | null;
+    cognitive_load_resilience: number | null;
+    institutional_trust: number | null;
+    conformity_tendency: number | null;
+    conflict_avoidance: number | null;
+    cognitive_flexibility: number | null;
+    need_for_cognitive_closure: number | null;
+    // Enhanced emotional traits
+    emotional_intensity: number | null;
+    emotional_regulation: number | null;
+    trigger_sensitivity: number | null;
+  };
+  
+  // Dynamic State Modifiers
+  dynamic_state: {
+    current_stress_level: number | null;
+    emotional_stability_context: number | null;
+    motivation_orientation: number | null;
+    trust_volatility: number | null;
+    trigger_threshold: number | null;
+  };
+}
+
+export interface InterviewSection {
+  section_title: string;
+  questions: {
+    question: string;
+    response: string;
+  }[];
 }
 
 export interface PersonaTemplate {
   persona_id: string;
   name: string;
   creation_date: string;
-  metadata: {
-    age: number | null;
-    gender: string | null;
-    race_ethnicity: string | null;
-    sexual_orientation: string | null;
-    education_level: string | null;
-    occupation: string | null;
-    employment_type: string | null;
-    income_level: string | null;
-    social_class_identity: string | null;
-    marital_status: string | null;
-    parenting_role: string | null;
-    relationship_history: string | null;
-    military_service: string | null;
-    region: string | null;
-    urban_rural_context: string | null;
-    location_history: {
-      grew_up_in: string | null;
-      current_residence: string | null;
-      places_lived: string[];
-    };
-    migration_history: string | null;
-    climate_risk_zone: string | null;
-    language_proficiency: string[];
-    religious_affiliation: string | null;
-    religious_practice_level: string | null;
-    cultural_background: string | null;
-    cultural_affiliation: string[];
-    political_affiliation: string | null;
-    political_sophistication: string | null;
-    tech_familiarity: string | null;
-    learning_modality: string | null;
-    trust_in_institutions: string | null;
-    trauma_exposure: string | null;
-    financial_pressure: string | null;
-    credit_access: string | null;
-    debt_load: string | null;
-    time_abundance: string | null;
-    media_ecosystem: string[];
-    aesthetic_subculture: string | null;
-    physical_health_status: string | null;
-    mental_health_status: string | null;
-    health_prioritization: string | null;
-    healthcare_access: string | null;
-    knowledge_domains: {
-      finance_basics: number | null;
-      crypto_blockchain: number | null;
-      world_politics: number | null;
-      national_politics: number | null;
-      pop_culture: number | null;
-      basic_technology: number | null;
-      deep_technology: number | null;
-      health_medicine: number | null;
-      advanced_medical: number | null;
-      science_concepts: number | null;
-      sports: number | null;
-      news_literacy: number | null;
-      environmental_issues: number | null;
-      cultural_history: number | null;
-      law_legal: number | null;
-      religion_spirituality: number | null;
-      art_literature: number | null;
-      gaming: number | null;
-      food_cooking: number | null;
-      travel_geography: number | null;
-      parenting_childcare: number | null;
-      home_improvement: number | null;
-      business_entrepreneurship: number | null;
-      psychology_social_science: number | null;
-      economics: number | null;
-    };
+  metadata: PersonaMetadata;
+  trait_profile: TraitProfile;
+  behavioral_modulation: any;
+  linguistic_profile: any;
+  emotional_triggers: {
+    positive_triggers: string[];
+    negative_triggers: string[];
   };
-  trait_profile: {
-    big_five: {
-      openness: number | null;
-      conscientiousness: number | null;
-      extraversion: number | null;
-      agreeableness: number | null;
-      neuroticism: number | null;
-    };
-    moral_foundations: {
-      care: number | null;
-      fairness: number | null;
-      loyalty: number | null;
-      authority: number | null;
-      sanctity: number | null;
-      liberty: number | null;
-    };
-    world_values: {
-      traditional_vs_secular: number | null;
-      survival_vs_self_expression: number | null;
-      materialist_vs_postmaterialist: number | null;
-    };
-    political_compass: {
-      economic: number | null;
-      authoritarian_libertarian: number | null;
-      cultural_conservative_progressive: number | null;
-      political_salience: number | null;
-      group_fusion_level: number | null;
-      outgroup_threat_sensitivity: number | null;
-      commons_orientation: number | null;
-      political_motivations: {
-        material_interest: number | null;
-        moral_vision: number | null;
-        cultural_preservation: number | null;
-        status_reordering: number | null;
-      };
-    };
-    behavioral_economics: {
-      present_bias: number | null;
-      loss_aversion: number | null;
-      overconfidence: number | null;
-      risk_sensitivity: number | null;
-      scarcity_sensitivity: number | null;
-    };
-    cultural_dimensions: {
-      power_distance: number | null;
-      individualism_vs_collectivism: number | null;
-      masculinity_vs_femininity: number | null;
-      uncertainty_avoidance: number | null;
-      long_term_orientation: number | null;
-      indulgence_vs_restraint: number | null;
-    };
-    social_identity: {
-      identity_strength: number | null;
-      identity_complexity: number | null;
-      ingroup_bias_tendency: number | null;
-      outgroup_bias_tendency: number | null;
-      social_dominance_orientation: number | null;
-      system_justification: number | null;
-      intergroup_contact_comfort: number | null;
-      cultural_intelligence: number | null;
-    };
-    extended_traits: {
-      truth_orientation: number | null;
-      moral_consistency: number | null;
-      self_awareness: number | null;
-      empathy: number | null;
-      self_efficacy: number | null;
-      manipulativeness: number | null;
-      impulse_control: number | null;
-      shadow_trait_activation: number | null;
-      attention_pattern: string | null;
-      cognitive_load_resilience: number | null;
-      institutional_trust: number | null;
-      conformity_tendency: number | null;
-      conflict_avoidance: number | null;
-      cognitive_flexibility: number | null;
-      need_for_cognitive_closure: number | null;
-      emotional_intensity: number | null;
-      emotional_regulation: number | null;
-      trigger_sensitivity: number | null;
-    };
-    dynamic_state: {
-      current_stress_level: number | null;
-      emotional_stability_context: string | null;
-      motivation_orientation: string | null;
-      trust_volatility: number | null;
-      trigger_threshold: number | null;
-    };
-  };
-  behavioral_modulation: {
-    cognitive_load_pattern: string | null;
-    attention_regulation: string | null;
-    emotional_reactivity: string | null;
-    stress_behavior: string | null;
-    fatigue_pattern: string | null;
-    physical_health_consideration: string | null;
-    trust_behavior_under_strain: string | null;
-    coping_mechanisms: string | null;
-  };
-  linguistic_profile: {
-    default_output_length: string;
-    speech_register: string;
-    regional_influence: string | null;
-    professional_or_educational_influence: string | null;
-    cultural_speech_patterns: string | null;
-    generational_or_peer_influence: string | null;
-    speaking_style: {
-      uses_neutral_fillers: boolean;
-      sentence_revisions: boolean;
-      topic_length_variability: boolean;
-      contradiction_tolerance: boolean;
-      trust_modulated_tone: boolean;
-      mirroring_tendency: boolean;
-    };
-    sample_phrasing: string[];
-  };
-  emotional_triggers: EmotionalTriggersProfile;
   preinterview_tags: string[];
-  simulation_directives: {
-    encourage_contradiction: boolean;
-    emotional_asymmetry: boolean;
-    stress_behavior_expected: boolean;
-    inconsistency_is_valid: boolean;
-    response_length_variability: boolean;
-  };
-}
-
-export interface InterviewQuestion {
-  question: string;
-  response?: string;
-}
-
-export interface InterviewSection {
-  section: string;
-  notes: string;
-  questions: (string | InterviewQuestion)[];
+  simulation_directives: any;
+  interview_sections: InterviewSection[];
+  prompt?: string;
 }
 
 export interface RequestData {
@@ -233,6 +261,6 @@ export interface RequestData {
 
 export interface PersonaResponse {
   success: boolean;
-  persona?: any;
+  persona?: PersonaTemplate;
   error?: string;
 }

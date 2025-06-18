@@ -29,7 +29,7 @@ serve(async (req) => {
       throw new Error("Valid prompt is required");
     }
 
-    console.log("Generating persona from prompt:", prompt);
+    console.log("Generating persona with enhanced health and physical attributes from prompt:", prompt);
     if (userId) {
       console.log("Creating for user:", userId);
     }
@@ -40,6 +40,9 @@ serve(async (req) => {
     // Add creation date and unique ID
     personaTraits.creation_date = new Date().toISOString().split('T')[0];
     personaTraits.persona_id = crypto.randomUUID().substring(0, 8);
+    
+    // Ensure enhanced metadata version is set
+    personaTraits.metadata.enhanced_metadata_version = 2;
     
     // Add interview sections with placeholder for responses
     const interviewSectionsWithEmptyResponses = interviewSections.map(section => ({
@@ -68,13 +71,13 @@ serve(async (req) => {
         console.error("Unexpected format for interview responses:", interviewResponsesResult);
       }
       
-      console.log("Updated persona with interview responses");
+      console.log("Updated persona with interview responses including health and physical context");
     }
 
     // Store the original prompt
     personaTraits.prompt = prompt;
 
-    console.log("Returning generated persona");
+    console.log("Returning generated persona with enhanced metadata");
     return new Response(
       JSON.stringify({
         success: true,
