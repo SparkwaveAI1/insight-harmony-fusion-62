@@ -19,6 +19,8 @@ const Projects = () => {
   const [projects, setProjects] = useState<ProjectWithConversationCount[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<ProjectWithConversationCount | null>(null);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
 
@@ -45,13 +47,27 @@ const Projects = () => {
     }
   };
 
-  const handleDeleteProject = async (id: string) => {
-    if (confirm("Are you sure you want to delete this project? This will also delete all conversations in this project.")) {
-      const deleted = await deleteProject(id);
-      if (deleted) {
-        loadProjects();
-      }
+  const handleDeleteClick = (e: React.MouseEvent, project: ProjectWithConversationCount) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setProjectToDelete(project);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
+
+    const deleted = await deleteProject(projectToDelete.id);
+    if (deleted) {
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+      loadProjects();
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -112,47 +128,47 @@ const Projects = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
-                  <Link to={`/projects/${project.id}`} key={project.id} className="block group">
-                    <Card className="p-6 h-full transition-transform group-hover:scale-[1.01]">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center mr-3">
-                            <Folder className="h-5 w-5 text-primary" />
+                  <div key={project.id} className="group relative">
+                    <Link to={`/projects/${project.id}`} className="block">
+                      <Card className="p-6 h-full transition-transform group-hover:scale-[1.01]">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center mr-3">
+                              <Folder className="h-5 w-5 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-lg">{project.name}</h3>
                           </div>
-                          <h3 className="font-semibold text-lg">{project.name}</h3>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDeleteProject(project.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground/70" />
-                        </Button>
-                      </div>
-                      
-                      {project.description && (
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                          {project.description}
-                        </p>
-                      )}
+                        
+                        {project.description && (
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                            {project.description}
+                          </p>
+                        )}
 
-                      <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
-                        <div className="flex items-center">
-                          <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                          <span>{project.conversation_count} conversation{project.conversation_count !== 1 && 's'}</span>
+                        <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
+                          <div className="flex items-center">
+                            <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                            <span>{project.conversation_count} conversation{project.conversation_count !== 1 && 's'}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Calendar className="h-3.5 w-3.5 mr-1" />
+                            <span>Updated {formatDate(project.updated_at)}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-3.5 w-3.5 mr-1" />
-                          <span>Updated {formatDate(project.updated_at)}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
+                      </Card>
+                    </Link>
+                    
+                    {/* Delete Button - positioned absolutely */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={(e) => handleDeleteClick(e, project)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 ))}
               </div>
             )}
@@ -200,6 +216,28 @@ const Projects = () => {
               disabled={!newProjectName.trim()}
             >
               Create Project
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{projectToDelete?.name}"? This will also delete all conversations in this project. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDelete}>Cancel</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDelete}
+            >
+              Delete Project
             </Button>
           </DialogFooter>
         </DialogContent>
