@@ -17,17 +17,21 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2 } from "lucide-react";
 
-// Define the form schema with zod
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }).optional(),
-  email: z.string().email({ message: "Invalid email address" }).optional(),
-  company: z.string().optional(),
-  walletAddress: z.string().optional(),
-  message: z.string().min(10, { message: "Message must be at least 10 characters" }),
-  formType: z.string(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+// Create dynamic schema based on form type
+const createFormSchema = (formType: string) => {
+  const isCustomPersona = formType === "custom-persona";
+  
+  return z.object({
+    name: isCustomPersona 
+      ? z.string().optional()
+      : z.string().min(2, { message: "Name must be at least 2 characters" }).optional(),
+    email: z.string().email({ message: "Invalid email address" }).optional(),
+    company: z.string().optional(),
+    walletAddress: z.string().optional(),
+    message: z.string().min(10, { message: "Message must be at least 10 characters" }),
+    formType: z.string(),
+  });
+};
 
 interface ContactFormProps {
   formType: "discovery" | "demo" | "contact" | "custom-persona";
@@ -37,6 +41,10 @@ interface ContactFormProps {
 const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Create schema based on form type
+  const formSchema = createFormSchema(formType);
+  type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
