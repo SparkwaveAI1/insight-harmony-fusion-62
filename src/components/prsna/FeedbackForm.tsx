@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import ContactSuccess from "@/components/contact/ContactSuccess";
 import { Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const feedbackSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -48,33 +48,40 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
     setIsSubmitting(true);
     
     try {
-      const formData = new FormData();
-      formData.append('name', data.name);
-      formData.append('email', data.email);
-      formData.append('walletAddress', data.walletAddress || '');
-      formData.append('feedback', data.feedback);
-      formData.append('formType', 'prsna-feedback');
+      const payload = {
+        name: data.name,
+        email: data.email,
+        company: "",
+        walletAddress: data.walletAddress || "",
+        message: data.feedback,
+        formType: "prsna-feedback",
+      };
 
-      const response = await fetch('https://formspree.io/f/xjkrowgl', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
+      console.log("Sending feedback to Supabase Edge Function...");
+      console.log("Payload:", payload);
+      
+      const { data: result, error } = await supabase.functions.invoke('send-contact-form', {
+        body: payload,
       });
 
-      if (response.ok) {
-        console.log("Feedback sent successfully");
+      console.log("Supabase function result:", result);
+      console.log("Supabase function error:", error);
+
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Failed to send feedback: ${error.message}`);
+      }
+
+      if (result) {
+        console.log("Feedback sent successfully:", result);
         setShowSuccess(true);
         form.reset();
         if (onSuccess) onSuccess();
         
         toast({
           title: "Feedback sent successfully",
-          description: "Thank you for your feedback about $PRSNA!",
+          description: "Thank you for your feedback about $PRSNA and PersonaAI!",
         });
-      } else {
-        throw new Error('Failed to send feedback');
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);
