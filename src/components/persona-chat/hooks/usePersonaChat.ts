@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { usePersona } from '@/hooks/usePersona';
@@ -44,13 +43,15 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
     }
   }, [activePersona, messages.length]);
 
-  const handleSendMessage = async (inputMessage: string) => {
-    if (!inputMessage.trim() || !activePersona || isResponding) return;
+  const handleSendMessage = async (inputMessage: string, imageData?: string) => {
+    if (!inputMessage.trim() && !imageData) return;
+    if (!activePersona || isResponding) return;
 
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
       timestamp: new Date(),
+      ...(imageData && { image: imageData })
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -58,12 +59,16 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
 
     try {
       console.log("Chat Mode:", chatMode);
+      console.log("Sending message with image:", !!imageData);
       
       const response = await sendMessageToPersona(
         personaId,
         inputMessage,
         messages,
-        activePersona
+        activePersona,
+        chatMode,
+        '',
+        imageData
       );
       
       // Break long responses into multiple sequential messages

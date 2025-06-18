@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -73,8 +72,23 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     }
   };
 
-  const handleSendMessageWithImage = (message: string, imageFile: File | null) => {
-    handleSendMessage(message);
+  const handleSendMessageWithImage = async (message: string, imageFile: File | null) => {
+    if (!message.trim() && !imageFile) return;
+    
+    let imageData: string | undefined;
+    
+    if (imageFile) {
+      // Convert image to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(imageFile);
+      });
+      imageData = await base64Promise;
+    }
+    
+    // Call the hook's handleSendMessage with the image data
+    await handleSendMessage(message, imageData);
   };
 
   // Generate a default title from the conversation content
