@@ -51,6 +51,7 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
   });
 
   async function onSubmit(data: FormValues) {
+    console.log("Form submission started with data:", data);
     setIsSubmitting(true);
 
     try {
@@ -62,6 +63,8 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
       formData.append('message', data.message);
       formData.append('formType', data.formType);
 
+      console.log("Sending form data to Formspree...");
+      
       const response = await fetch('https://formspree.io/f/xjkrowgl', {
         method: 'POST',
         body: formData,
@@ -70,7 +73,11 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
         }
       });
 
+      console.log("Formspree response status:", response.status);
+      console.log("Formspree response:", response);
+
       if (response.ok) {
+        console.log("Form submitted successfully");
         toast({
           title: "Message sent successfully",
           description: "We'll get back to you as soon as possible.",
@@ -78,7 +85,9 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
         form.reset();
         if (onSuccess) onSuccess();
       } else {
-        throw new Error('Failed to send message');
+        const errorData = await response.text();
+        console.error("Formspree error response:", errorData);
+        throw new Error(`Failed to send message: ${response.status}`);
       }
     } catch (error) {
       console.error('Contact form error:', error);
