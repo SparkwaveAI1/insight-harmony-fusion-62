@@ -75,36 +75,3 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
-
-export const sendResearchMessage = async (
-  conversationId: string,
-  message: string,
-  personaId: string,
-  imageData?: string,
-  extractedText?: string
-): Promise<void> => {
-  try {
-    // Store the message in the existing conversation_messages table
-    const { error } = await supabase
-      .from('conversation_messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'user',
-        content: message,
-        persona_id: personaId,
-        file_attachments: imageData || extractedText ? [{
-          type: imageData ? 'image' : 'document',
-          data: imageData,
-          extracted_text: extractedText
-        }] : []
-      });
-
-    if (error) {
-      console.error('Error storing research message:', error);
-      throw error;
-    }
-  } catch (error) {
-    console.error('Error in sendResearchMessage:', error);
-    throw error;
-  }
-};
