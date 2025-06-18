@@ -27,7 +27,7 @@ interface ContactFormProps {
   onSuccess?: () => void;
 }
 
-const ContactForm = ({ formType = "general", onSuccess }: ContactFormProps) => {
+const ContactForm = ({ formType = "custom-persona", onSuccess }: ContactFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
