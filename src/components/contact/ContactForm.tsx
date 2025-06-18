@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -118,10 +117,10 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name (Optional)</FormLabel>
+              <FormLabel>{isCustomPersona ? "X (Twitter) ID (Optional)" : "Full Name (Optional)"}</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="Your name" 
+                  placeholder={isCustomPersona ? "Your X handle" : "Your name"} 
                   {...field} 
                   className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                 />
