@@ -29,7 +29,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     isLoading,
     error,
     activePersona,
-    handleSendMessage
+    handleSendMessage,
+    setConversationContext: updateConversationContext
   } = usePersonaChat(personaId, chatMode);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -67,28 +68,15 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
   const handleContextChange = (newContext: string) => {
     setConversationContext(newContext);
+    updateConversationContext(newContext);
     if (newContext) {
       toast.success("Conversation context updated");
     }
   };
 
   const handleSendMessageWithImage = async (message: string, imageFile: File | null) => {
-    if (!message.trim() && !imageFile) return;
-    
-    let imageData: string | undefined;
-    
-    if (imageFile) {
-      // Convert image to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(imageFile);
-      });
-      imageData = await base64Promise;
-    }
-    
-    // Call the hook's handleSendMessage with the image data
-    await handleSendMessage(message, imageData);
+    // Call the hook's handleSendMessage directly with the File object
+    await handleSendMessage(message, imageFile);
   };
 
   // Generate a default title from the conversation content
