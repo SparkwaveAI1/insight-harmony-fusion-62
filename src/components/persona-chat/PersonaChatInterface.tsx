@@ -12,7 +12,7 @@ import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import { usePersonaChat } from '@/components/persona-chat/usePersonaChat';
+import { usePersonaChat } from '@/components/persona-chat/hooks/usePersonaChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
 import { toast } from 'sonner';
@@ -30,8 +30,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     isLoading,
     error,
     activePersona,
-    handleSendMessage,
-    setConversationContext: updateContextInChat
+    handleSendMessage
   } = usePersonaChat(personaId, chatMode);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -39,13 +38,6 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const navigate = useNavigate();
-
-  // Update context in usePersonaChat hook when it changes
-  useEffect(() => {
-    if (updateContextInChat) {
-      updateContextInChat(conversationContext);
-    }
-  }, [conversationContext, updateContextInChat]);
 
   if (isLoading) {
     return (
