@@ -109,36 +109,48 @@ export function buildImagePrompt(personaData: any): string {
     return settings[Math.floor(Math.random() * settings.length)];
   }
   
-  // Build age-specific appearance with health considerations
+  // Build age-specific appearance with health considerations - ENHANCED FOR ACCURACY
   function getAgeHealthAppearance(): string {
     const ageNum = parseInt(age.toString().replace(/[^0-9]/g, ''));
     let appearance = "";
     
-    // Base age appearance
+    // Very specific age-based appearance with emphasis on youthfulness
     if (ageNum >= 18 && ageNum <= 25) {
-      appearance = "youthful face with smooth, clear skin and bright eyes";
+      appearance = "very youthful face with smooth, unblemished skin, bright clear eyes, and fresh complexion showing no signs of aging";
     } else if (ageNum >= 26 && ageNum <= 35) {
-      appearance = "young adult appearance with healthy, vibrant skin and confident bearing";
+      appearance = "young adult with healthy, smooth skin showing minimal aging, bright eyes, and a fresh, energetic appearance. NO wrinkles, NO lines around eyes, NO bags under eyes, NO age spots";
     } else if (ageNum >= 36 && ageNum <= 45) {
-      appearance = "mature adult with some natural aging signs but still energetic appearance";
+      appearance = "mature adult with healthy skin showing only very subtle signs of aging, clear complexion with minimal fine lines";
     } else if (ageNum >= 46 && ageNum <= 55) {
-      appearance = "middle-aged with distinguished features and life experience showing";
+      appearance = "middle-aged with natural aging signs including some fine lines and mature features";
     } else if (ageNum > 55) {
-      appearance = "mature person with wisdom lines and dignified presence";
+      appearance = "mature person with natural aging, wrinkles, and distinguished features";
     }
     
-    // Modify based on health and fitness
+    // Modify based on health and fitness - emphasize youthful glow for younger ages
     if (fitnessActivityLevel?.toLowerCase().includes("high")) {
-      appearance += ", with a fit, healthy glow and good posture";
+      if (ageNum <= 35) {
+        appearance += ", with an exceptionally healthy, youthful glow and excellent skin tone";
+      } else {
+        appearance += ", with a fit, healthy glow and good posture";
+      }
     } else if (fitnessActivityLevel?.toLowerCase().includes("low")) {
       appearance += ", with a more sedentary lifestyle reflected in their bearing";
     }
     
-    // Modify based on stress and sleep
+    // Modify based on stress and sleep - critical for age accuracy
     if (stressManagement?.toLowerCase().includes("poor") || sleepPatterns?.toLowerCase().includes("poor")) {
-      appearance += ", showing some signs of tiredness or stress";
+      if (ageNum <= 35) {
+        appearance += ", showing very subtle signs of tiredness but maintaining youthful features";
+      } else {
+        appearance += ", showing some signs of tiredness or stress";
+      }
     } else if (stressManagement?.toLowerCase().includes("good") && sleepPatterns?.toLowerCase().includes("good")) {
-      appearance += ", with a well-rested, relaxed appearance";
+      if (ageNum <= 35) {
+        appearance += ", with a well-rested, radiant, and exceptionally youthful appearance";
+      } else {
+        appearance += ", with a well-rested, relaxed appearance";
+      }
     }
     
     return appearance;
@@ -212,25 +224,25 @@ export function buildImagePrompt(personaData: any): string {
   const setting = getSettingFromTraits();
   imagePrompt += `. The photo is taken in ${setting} with natural lighting`;
   
-  // Add realism specifications
-  imagePrompt += `. The image shows real skin texture with natural pores, subtle imperfections, and authentic human characteristics. It feels like a genuine photo taken with a DSLR camera - not retouched, not posed, not artificial. The lighting is natural and flattering but not perfect studio lighting. This is a real person in a real moment`;
+  // Add realism specifications with strong age accuracy emphasis
+  imagePrompt += `. The image shows real skin texture with natural pores and authentic human characteristics appropriate for their exact age. It feels like a genuine photo taken with a DSLR camera - candid, natural, and unretouched. The lighting is natural and flattering but not perfect studio lighting. This is a real person in a real moment`;
   
-  // Add age-specific skin realism
+  // Add age-specific skin realism with STRONG specifications to prevent aging
   const ageNum = parseInt(age.toString().replace(/[^0-9]/g, ''));
   if (ageNum >= 18 && ageNum <= 25) {
-    imagePrompt += ". The skin appears naturally youthful with the subtle imperfections typical of someone in their early twenties";
+    imagePrompt += ". The skin appears naturally youthful with clear, smooth texture typical of someone in their early twenties. NO wrinkles, NO fine lines, NO age spots, completely smooth skin";
   } else if (ageNum >= 26 && ageNum <= 35) {
-    imagePrompt += ". The skin shows the healthy maturity of someone in their thirties with very subtle aging signs";
+    imagePrompt += ". The skin shows the healthy appearance of someone in their thirties with very minimal aging signs. Specifically: smooth skin around the eyes with NO crow's feet, NO bags under the eyes, NO pronounced wrinkles, NO deep lines. The person should look distinctly younger than 40 years old";
   } else if (ageNum >= 36 && ageNum <= 45) {
-    imagePrompt += ". The skin displays natural aging appropriate for someone in their forties with some fine lines and mature characteristics";
+    imagePrompt += ". The skin displays natural aging appropriate for someone in their forties with some fine lines but still maintaining a relatively youthful appearance";
   } else if (ageNum >= 46 && ageNum <= 55) {
-    imagePrompt += ". The skin shows the dignified aging of someone in their fifties with visible but natural signs of maturity";
+    imagePrompt += ". The skin shows the natural aging of someone in their fifties with visible but natural signs of maturity";
   } else if (ageNum > 55) {
-    imagePrompt += ". The skin displays the wisdom and experience of age with natural wrinkles and mature features";
+    imagePrompt += ". The skin displays the natural aging and experience of advanced age with wrinkles and mature features";
   }
   
-  // Critical specifications for single subject
-  imagePrompt += ". CRITICAL: This must be exactly ONE person only. No duplicates, no reflections, no multiple faces, no mirrors, no confusing elements. Generate a single individual human being as the sole subject of this realistic photograph. The background should be simple and non-reflective. This is a straightforward, authentic photo of one real person";
+  // Critical specifications for single subject and age accuracy
+  imagePrompt += ". CRITICAL REQUIREMENTS: 1) This must be exactly ONE person only. No duplicates, no reflections, no multiple faces. 2) The person must look their stated age - if they are 34 years old, they should NOT look older than 35-36 maximum. Pay special attention to eye area, skin smoothness, and facial structure to ensure age accuracy. 3) Generate a single individual human being as the sole subject of this realistic photograph. The background should be simple and non-reflective";
   
   console.log("Generated realistic persona photo prompt:", imagePrompt);
   
