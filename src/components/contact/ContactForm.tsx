@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const contactSchema = z.object({
   twitterId: z.string().optional(),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   company: z.string().optional(),
   message: z.string().min(10, "Message must be at least 10 characters long"),
 });
@@ -50,7 +50,7 @@ const ContactForm = ({ formType = "general", onSuccess }: ContactFormProps) => {
     try {
       const payload = {
         name: data.twitterId || "Anonymous",
-        email: data.email,
+        email: data.email || "",
         company: data.company || "",
         message: data.message,
         formType,
@@ -126,7 +126,7 @@ const ContactForm = ({ formType = "general", onSuccess }: ContactFormProps) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email Address</FormLabel>
+                <FormLabel>Email Address (Optional)</FormLabel>
                 <FormControl>
                   <Input type="email" placeholder="your.email@example.com" {...field} />
                 </FormControl>
