@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -180,6 +181,13 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         image: msg.image
       }));
 
+      // Create knowledge base context from project documents
+      const knowledgeBaseContext = projectDocuments.length > 0 
+        ? `KNOWLEDGE BASE AVAILABLE - You have access to the following documents: ${projectDocuments.map(doc => `"${doc.title}"`).join(', ')}. Key information from these documents:\n\n${projectDocuments.map(doc => 
+            doc.content ? `${doc.title}:\n${doc.content.substring(0, 500)}${doc.content.length > 500 ? '...' : ''}` : `${doc.title}: [Document uploaded but content not extracted]`
+          ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
+        : '';
+
       // Use the same persona API service as regular chat
       const response = await sendMessageToPersona(
         personaId,
@@ -187,8 +195,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         previousMessages,
         activePersona,
         'research', // Use research mode
-        projectDocuments.length > 0 ? 
-          `Available knowledge base documents: ${projectDocuments.map(d => d.title).join(', ')}` : '',
+        knowledgeBaseContext, // Pass the knowledge base context
         imageData
       );
       
