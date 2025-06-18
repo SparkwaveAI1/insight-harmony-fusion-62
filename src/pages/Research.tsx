@@ -43,8 +43,8 @@ const Research = () => {
                 <div className="flex items-center justify-between mb-4 pt-24 flex-shrink-0">
                   <SidebarTrigger className="hidden md:flex" />
                   {projectDocuments.length > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      📚 {projectDocuments.length} knowledge base document{projectDocuments.length !== 1 ? 's' : ''} available
+                    <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-md border border-green-200">
+                      ✅ {projectDocuments.length} knowledge base document{projectDocuments.length !== 1 ? 's' : ''} available to research participants
                     </div>
                   )}
                 </div>

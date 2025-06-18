@@ -5,7 +5,6 @@ import { Persona } from '@/services/persona/types';
 import { ResearchMessage } from '../hooks/types';
 import { KnowledgeBaseDocument } from '@/services/collections';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
-import { createKnowledgeBoundaries, getChatModeInstructions } from '@/components/persona-chat/utils/personaInstructionsUtils';
 
 export const generatePersonaResponse = async (
   personaId: string,
@@ -26,22 +25,24 @@ export const generatePersonaResponse = async (
       return null;
     }
 
-    // Create knowledge base context if documents are available
+    // Create comprehensive knowledge base context with full document contents
     let conversationContext = '';
     if (projectDocuments.length > 0) {
       conversationContext = `
 PROJECT KNOWLEDGE BASE CONTEXT:
-You have access to the following project documents and should reference them when relevant:
+You have access to the following project documents. Use this information to inform your responses:
 
 ${projectDocuments.map(doc => `
 DOCUMENT: ${doc.title}
-${doc.content ? `CONTENT: ${doc.content.substring(0, 1000)}${doc.content.length > 1000 ? '...' : ''}` : ''}
+${doc.content ? `CONTENT: ${doc.content}` : ''}
 ${doc.file_type ? `FILE TYPE: ${doc.file_type}` : ''}
 ---
 `).join('\n')}
 
-When answering questions, you can reference information from these documents if it's relevant to your expertise and the conversation. Always mention which document you're referencing when you use information from the knowledge base.
+IMPORTANT: Reference these documents when relevant to the conversation. When you use information from the documents, mention which document you're referencing. These documents contain the full context for this research project.
 `;
+
+      console.log('Created knowledge base context with', projectDocuments.length, 'documents');
     }
 
     // Convert research messages to persona chat format
@@ -57,16 +58,16 @@ When answering questions, you can reference information from these documents if 
     const userMessage = lastMessage?.role === 'user' ? lastMessage.content : '';
     const imageData = lastMessage?.image;
 
-    console.log('Using unified conversation engine for research response');
+    console.log('Using unified conversation engine for research response with knowledge base context');
 
-    // Use the single conversation engine from Persona Chat
+    // Use the single conversation engine from Persona Chat with project documents
     const response = await sendMessageToPersona(
       personaId,
       userMessage,
       chatMessages,
       persona,
       'research', // Use research mode
-      conversationContext, // Include knowledge base context
+      conversationContext, // Include full knowledge base context
       imageData
     );
 
@@ -90,7 +91,7 @@ When answering questions, you can reference information from these documents if 
       return null;
     }
 
-    console.log('Response saved successfully');
+    console.log('Response saved successfully with knowledge base context');
 
     // Return the message in the expected format
     return {

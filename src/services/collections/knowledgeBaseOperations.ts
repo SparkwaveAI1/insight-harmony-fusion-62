@@ -15,6 +15,9 @@ export interface KnowledgeBaseDocument {
   updated_at: string;
 }
 
+// 5MB file size limit
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
 /**
  * Upload a document to the project knowledge base
  */
@@ -32,6 +35,13 @@ export const uploadKnowledgeBaseDocument = async (
     
     if (!user) {
       toast.error("You must be logged in to upload documents");
+      return null;
+    }
+
+    // Check file size if a file is provided
+    if (file && file.size > MAX_FILE_SIZE) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`File size (${fileSizeMB}MB) exceeds the 5MB limit. Please choose a smaller file.`);
       return null;
     }
 
