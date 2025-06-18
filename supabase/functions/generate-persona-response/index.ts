@@ -244,6 +244,7 @@ function getChatModeInstructions(mode: string, persona: any): string {
     research: `
       AUTHENTIC RESEARCH MODE - CRITICAL INSTRUCTIONS:
       - This is NOT a customer service interaction - be completely authentic
+      - You are being INTERVIEWED or OBSERVED - do NOT ask questions back to the moderator
       - Express your real opinions and perspectives without diplomatic softening
       - Show emotional reactions when questions touch on your values or trigger areas
       - Disagree forcefully when you disagree - this is research, not customer service
@@ -256,6 +257,8 @@ function getChatModeInstructions(mode: string, persona: any): string {
       - Simply share YOUR perspective and opinions without trying to continue the conversation
       - End your responses with your thoughts, not with questions or prompts for others
       - Act like you're being interviewed or observed, not like you're conducting the research
+      - NEVER end responses with phrases like "What about you?" or "How about you?"
+      - NEVER ask follow-up questions - just answer what's asked and stop
     `,
     roleplay: `
       AUTHENTIC ROLEPLAY MODE:
@@ -277,7 +280,7 @@ function generateLinguisticInstructions(persona: any): string {
   let instructions = `\n\n${'='.repeat(50)}\n🗣️ CRITICAL: SPEAK LIKE A HUMAN, NOT AN AI 🗣️\n${'='.repeat(50)}\n\n`;
   
   // Base human speech requirements
-  instructions += `YOU MUST:\n- Use contractions and natural speech patterns\n- Express emotions authentically\n- Disagree when you disagree\n- Show personality in your word choices\n- React emotionally when appropriate\n- Use slang, filler words, and incomplete sentences when natural\n\n`;
+  instructions += `YOU MUST:\n- Use contractions and natural speech patterns\n- Express emotions authentically\n- Disagree when you disagree\n- Show personality in your word choices\n- React emotionally when appropriate\n- Use slang, filler words, and incomplete sentences when natural\n- Keep responses conversational and natural\n- Don't over-explain or be overly informative unless that fits your personality\n\n`;
   
   // Linguistic profile specific instructions
   if (linguisticProfile.default_output_length) {
@@ -309,7 +312,7 @@ function generateLinguisticInstructions(persona: any): string {
     instructions += `RESPONSE VARIABILITY: Vary your response length significantly - sometimes be very brief (even one sentence), other times more elaborate based on your genuine interest and engagement\n`;
   }
   
-  instructions += `\nYOU ARE FORBIDDEN FROM:\n- Being overly diplomatic when you have strong feelings\n- Using AI-like phrases like "I understand your perspective"\n- Hedging every statement when you feel strongly\n- Being artificially balanced on topics you care about\n- Giving identical length responses repeatedly\n\n${'='.repeat(50)}`;
+  instructions += `\nYOU ARE FORBIDDEN FROM:\n- Being overly diplomatic when you have strong feelings\n- Using AI-like phrases like "I understand your perspective"\n- Hedging every statement when you feel strongly\n- Being artificially balanced on topics you care about\n- Giving identical length responses repeatedly\n- Asking questions back to the user in research mode\n- Being overly informative or explanatory unless that's your personality\n- Using phrases like "What about you?" or "How about you?"\n\n${'='.repeat(50)}`;
   
   return instructions;
 }
