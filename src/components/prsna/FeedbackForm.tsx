@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const feedbackSchema = z.object({
-  twitterId: z.string().optional(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   walletAddress: z.string().optional(),
   feedback: z.string().min(10, "Feedback must be at least 10 characters long"),
@@ -37,7 +36,7 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
-      twitterId: "",
+      name: "",
       email: user?.email || "",
       walletAddress: "",
       feedback: "",
@@ -50,11 +49,10 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
     
     try {
       const payload = {
-        name: data.twitterId || "Anonymous",
+        name: data.name,
         email: data.email,
         company: "",
         walletAddress: data.walletAddress || "",
-        twitterId: data.twitterId || "",
         message: data.feedback,
         formType: "prsna-feedback",
       };
@@ -115,15 +113,12 @@ const FeedbackForm = ({ onSuccess }: FeedbackFormProps) => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="twitterId"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>X (Twitter) ID (Optional)</FormLabel>
+                <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="@yourtwitterhandle" 
-                    {...field}
-                  />
+                  <Input placeholder="Your name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -11,12 +11,11 @@ const corsHeaders = {
 
 interface ContactFormData {
   name?: string;
-  email?: string;
+  email: string;
   company?: string;
   message: string;
   formType: string;
   walletAddress?: string;
-  twitterId?: string;
 }
 
 serve(async (req) => {
@@ -27,12 +26,12 @@ serve(async (req) => {
 
   try {
     const formData: ContactFormData = await req.json();
-    const { name, email, company, message, formType, walletAddress, twitterId } = formData;
+    const { name, email, company, message, formType, walletAddress } = formData;
     
-    // Validate required fields - only message is required now
-    if (!message) {
+    // Validate required fields
+    if (!email || !message) {
       return new Response(
-        JSON.stringify({ error: "Message is required" }),
+        JSON.stringify({ error: "Email and message are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -47,8 +46,7 @@ serve(async (req) => {
         emailContent = `
           <h2>Custom Persona Project Inquiry</h2>
           ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
-          ${twitterId ? `<p><strong>X (Twitter) ID:</strong> ${twitterId}</p>` : ""}
-          ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
           ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
           ${walletAddress ? `<p><strong>Wallet Address:</strong> ${walletAddress}</p>` : ""}
           <p><strong>Message:</strong></p>
@@ -61,8 +59,7 @@ serve(async (req) => {
         emailContent = `
           <h2>Discovery Call Request</h2>
           ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
-          ${twitterId ? `<p><strong>X (Twitter) ID:</strong> ${twitterId}</p>` : ""}
-          ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
           ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
           <p><strong>Message:</strong></p>
           <p>${message.replace(/\n/g, '<br>')}</p>
@@ -74,33 +71,19 @@ serve(async (req) => {
         emailContent = `
           <h2>Demo Request</h2>
           ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
-          ${twitterId ? `<p><strong>X (Twitter) ID:</strong> ${twitterId}</p>` : ""}
-          ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
           ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
           <p><strong>Message:</strong></p>
           <p>${message.replace(/\n/g, '<br>')}</p>
         `;
         break;
 
-      case "prsna-feedback":
-        subject = `$PRSNA Feedback${name ? ` from ${name}` : ""}`;
-        emailContent = `
-          <h2>$PRSNA and PersonaAI Feedback</h2>
-          ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
-          ${twitterId ? `<p><strong>X (Twitter) ID:</strong> ${twitterId}</p>` : ""}
-          ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
-          ${walletAddress ? `<p><strong>Wallet Address:</strong> ${walletAddress}</p>` : ""}
-          <p><strong>Feedback:</strong></p>
-          <p>${message.replace(/\n/g, '<br>')}</p>
-        `;
-        break;
-
       default:
-        subject = `Pioneer Program Application${name || twitterId ? ` from ${name || twitterId}` : ""}`;
+        subject = `Contact Form Submission${name ? ` from ${name}` : ""}`;
         emailContent = `
-          <h2>Pioneer Program Application</h2>
-          ${twitterId ? `<p><strong>X (Twitter) ID:</strong> ${twitterId}</p>` : ""}
-          ${email ? `<p><strong>Email:</strong> ${email}</p>` : ""}
+          <h2>Contact Form Submission</h2>
+          ${name ? `<p><strong>Name:</strong> ${name}</p>` : ""}
+          <p><strong>Email:</strong> ${email}</p>
           ${company ? `<p><strong>Company:</strong> ${company}</p>` : ""}
           <p><strong>Form Type:</strong> ${formType}</p>
           <p><strong>Message:</strong></p>
@@ -114,7 +97,7 @@ serve(async (req) => {
       to: "scott@sparkwave-ai.com",
       subject: subject,
       html: emailContent,
-      reply_to: email || undefined,
+      reply_to: email,
     });
 
     if (emailResponse.error) {
