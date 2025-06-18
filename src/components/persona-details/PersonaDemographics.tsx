@@ -83,7 +83,7 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
               <div className="space-y-2">
                 <InfoItem label="Has Children" value={metadata.relationships_family?.has_children ? "Yes" : metadata.relationships_family?.has_children === false ? "No" : undefined} />
                 <InfoItem label="Number of Children" value={metadata.relationships_family?.number_of_children} />
-                <InfoItem label="Children Ages" value={formatArrayOrString(metadata.relationships_family?.children_ages)} />
+                <InfoItem label="Children Ages" value={formatNumberArray(metadata.relationships_family?.children_ages)} />
                 <InfoItem label="Stepchildren" value={metadata.relationships_family?.stepchildren ? "Yes" : metadata.relationships_family?.stepchildren === false ? "No" : undefined} />
                 <InfoItem label="Custody Arrangement" value={metadata.relationships_family?.custody_arrangement} />
                 <InfoItem label="Living Situation" value={metadata.relationships_family?.living_situation} />
@@ -249,6 +249,13 @@ const formatArrayOrString = (value: string[] | string | undefined): string => {
   }
   
   return value;
+};
+
+// Helper function specifically for number arrays (like children ages)
+const formatNumberArray = (value: number[] | undefined): string => {
+  if (!value || !Array.isArray(value) || value.length === 0) return '';
+  
+  return value.map(num => num.toString()).join(', ');
 };
 
 export default PersonaDemographics;
