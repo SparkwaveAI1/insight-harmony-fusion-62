@@ -26,9 +26,9 @@ export const generatePersonaResponse = async (
     }
 
     // Create knowledge base context if documents are available
-    let knowledgeBaseContext = '';
+    let conversationContext = '';
     if (projectDocuments.length > 0) {
-      knowledgeBaseContext = `
+      conversationContext = `
 PROJECT KNOWLEDGE BASE CONTEXT:
 You have access to the following project documents and should reference them when relevant:
 
@@ -43,94 +43,77 @@ When answering questions, you can reference information from these documents if 
 `;
     }
 
-    // Format conversation for API
-    const formattedHistory = conversationHistory.map(msg => {
-      if (msg.role === 'user') {
-        return `user: ${msg.content}`;
-      } else if (msg.responding_persona_id) {
-        const respondingPersona = allPersonas.find(p => p.persona_id === msg.responding_persona_id);
-        const name = respondingPersona?.name || 'Unknown';
-        return `${name}: ${msg.content}`;
+    // Format previous messages for the conversation engine
+    const previousMessages = conversationHistory.map(msg => {
+      const baseMessage: any = {
+        role: msg.role,
+        content: msg.content
+      };
+      
+      // Add image if present
+      if (msg.image) {
+        baseMessage.image = msg.image;
       }
-      return `assistant: ${msg.content}`;
-    }).join('\n');
+      
+      // Add persona name for assistant messages
+      if (msg.role === 'assistant' && msg.responding_persona_id) {
+        const respondingPersona = allPersonas.find(p => p.persona_id === msg.responding_persona_id);
+        if (respondingPersona) {
+          baseMessage.name = respondingPersona.name;
+        }
+      }
+      
+      return baseMessage;
+    });
 
-    console.log('Conversation history being sent:', formattedHistory.substring(0, 200) + '...');
+    console.log('Formatted conversation history:', previousMessages.length, 'messages');
     console.log('Sending message to persona', personaId, 'in research mode');
 
     // Generate knowledge boundaries and instructions
     const knowledgeBoundaries = createKnowledgeBoundaries(persona);
-    const chatModeInstructions = getChatModeInstructions('research');
+    const personalityInstructions = `
+RESEARCH SESSION CONTEXT:
+- You are participating in a research session with multiple personas
+- Other participants may have different perspectives and expertise
+- Express your authentic views and opinions without being diplomatic
+- Disagree when you genuinely disagree - this is research, not customer service
+- Share detailed insights when you're engaged with a topic
+- React authentically based on your personality and values
+- DO NOT ask questions back to other participants or the moderator
+- Simply share YOUR perspective and end your responses with your thoughts
+`;
 
-    // Call the edge function with knowledge base context
-    const response = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/generate-persona-response', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
-      },
-      body: JSON.stringify({
+    // Check if the last message has an image
+    const lastMessage = conversationHistory[conversationHistory.length - 1];
+    const hasImage = lastMessage?.image ? true : false;
+
+    // Call the generate-persona-response edge function with full conversation engine
+    const response = await supabase.functions.invoke('generate-persona-response', {
+      body: {
         persona_id: personaId,
-        message: conversationHistory[conversationHistory.length - 1]?.content || '',
-        conversation_history: formattedHistory,
-        mode: 'research',
+        persona_role: 'research_participant',
+        previous_messages: previousMessages,
         knowledge_boundaries: knowledgeBoundaries,
-        chat_mode_instructions: chatModeInstructions,
-        knowledge_base_context: knowledgeBaseContext
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Persona response error (${response.status}):`, errorText);
-      throw new Error(`Failed to get persona response: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Initial response generated:', data.response.substring(0, 100) + '...');
-
-    // Validate the response for authenticity
-    console.log('Validating persona response for human speech authenticity:', persona.name);
-    
-    const validationResponse = await fetch('https://wgerdrdsuusnrdnwwelt.functions.supabase.co/validate-persona-response', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
-      },
-      body: JSON.stringify({
-        persona_id: personaId,
-        response: data.response,
-        conversation_context: formattedHistory
-      }),
-    });
-
-    let finalResponse = data.response;
-    let validationScores = null;
-
-    if (validationResponse.ok) {
-      const validationData = await validationResponse.json();
-      console.log('Validation scores:', validationData.scores);
-      validationScores = validationData.scores;
-      
-      console.log('Human speech patterns score:', validationData.scores.humanSpeechPatterns);
-      console.log('Validation feedback:', validationData.feedback);
-      
-      // Use improved response if validation suggests it and score is low
-      if (validationData.shouldRegenerate && validationData.scores.overall < 0.6 && validationData.improvedResponse) {
-        console.log('Using improved response due to low authenticity score');
-        console.warn(`Low authenticity score for ${persona.name}: ${validationData.feedback}`);
-        finalResponse = validationData.improvedResponse;
+        personality_instructions: personalityInstructions,
+        chat_mode: 'research',
+        conversation_context: conversationContext,
+        has_image: hasImage
       }
-      
-      console.log('Overall authenticity score:', validationData.scores.overall);
+    });
+
+    if (response.error) {
+      console.error('Edge function error:', response.error);
+      throw new Error(`Failed to get persona response: ${response.error.message}`);
     }
+
+    const { response: generatedResponse } = response.data;
+    console.log('Generated response:', generatedResponse.substring(0, 100) + '...');
 
     // Save the response message to database
     const messageData = {
       conversation_id: sessionId,
       role: 'assistant' as const,
-      content: finalResponse,
+      content: generatedResponse,
       responding_persona_id: personaId
     };
 
@@ -146,12 +129,12 @@ When answering questions, you can reference information from these documents if 
       return null;
     }
 
-    console.log('Response saved successfully with validation scores');
+    console.log('Response saved successfully');
 
     // Return the message in the expected format
     return {
       role: 'assistant',
-      content: finalResponse,
+      content: generatedResponse,
       timestamp: new Date(savedMessage.created_at),
       responding_persona_id: personaId
     };

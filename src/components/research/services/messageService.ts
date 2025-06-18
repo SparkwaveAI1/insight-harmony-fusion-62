@@ -1,21 +1,28 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Message } from '@/components/persona-chat/types';
 import { ResearchMessage } from '../hooks/types';
 
 export const saveUserMessage = async (
   sessionId: string,
-  content: string
+  content: string,
+  imageBase64?: string
 ): Promise<void> => {
+  const messageData: any = {
+    conversation_id: sessionId,
+    role: 'user',
+    content,
+    persona_id: null,
+    responding_persona_id: null
+  };
+
+  // Add image data if present
+  if (imageBase64) {
+    messageData.file_attachments = [{ type: 'image', data: imageBase64 }];
+  }
+
   const { error: dbError } = await supabase
     .from('conversation_messages')
-    .insert({
-      conversation_id: sessionId,
-      role: 'user',
-      content,
-      persona_id: null,
-      responding_persona_id: null
-    });
+    .insert(messageData);
 
   if (dbError) {
     console.error('Error saving message to database:', dbError);
@@ -87,8 +94,9 @@ export const sendUserMessage = async (
   // Create user message
   const userMessage = await createUserMessage(content, imageFile);
 
-  // Save user message to database
-  await saveUserMessage(sessionId, content);
+  // Save user message to database with image data if present
+  const imageBase64 = imageFile ? await convertFileToBase64(imageFile) : undefined;
+  await saveUserMessage(sessionId, content, imageBase64);
 
   return userMessage;
 };
