@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
     const linguisticInstructions = generateLinguisticInstructions(persona);
     systemMessage += linguisticInstructions;
     
-    // Add image handling instructions if the user shared an image
+    // Add image handling instructions if the user shared an image (and it's actually an image)
     if (has_image) {
       systemMessage += `\n\n${'='.repeat(40)}\n📷 IMAGE ANALYSIS 📷\n${'='.repeat(40)}\n\nAnalyze this image from YOUR authentic perspective as ${persona.name}.\nReact naturally based on your personality, background, and values.\nDon't be an objective image describer - be yourself looking at this image.\n${'='.repeat(40)}`;
     }
@@ -152,22 +152,35 @@ Deno.serve(async (req: Request) => {
       // Transform messages for OpenAI API format
       const transformedMessages = recentMessages.map(msg => {
         if (msg.image) {
-          // Format the message to include both image and text content
-          return {
-            role: msg.role,
-            content: [
-              {
-                type: "text",
-                text: msg.content || "Here's an image for you to look at:"
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: msg.image
+          // Check if the image data is actually an image by checking if it starts with valid image data URL
+          const isValidImage = msg.image.startsWith('data:image/') || 
+                              msg.image.match(/^data:image\/(jpeg|jpg|png|gif|webp|bmp|tiff);base64,/i);
+          
+          if (isValidImage) {
+            // Format the message to include both image and text content
+            return {
+              role: msg.role,
+              content: [
+                {
+                  type: "text",
+                  text: msg.content || "Here's an image for you to look at:"
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: msg.image
+                  }
                 }
-              }
-            ]
-          };
+              ]
+            };
+          } else {
+            // If it's not a valid image, treat it as a text message only
+            console.log('Skipping invalid image data in message - treating as text only');
+            return {
+              role: msg.role,
+              content: msg.content || "Document uploaded (content not viewable as image)"
+            };
+          }
         } else {
           // Regular text message
           return {
