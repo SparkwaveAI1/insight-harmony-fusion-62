@@ -30,15 +30,15 @@ const PersonaEmotionalTriggers = ({ emotionalTriggers }: PersonaEmotionalTrigger
                   <div key={index} className="border rounded-lg p-4 bg-green-50/50">
                     <div className="flex items-center justify-between mb-2">
                       <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                        {trigger.emotion_type}
+                        {trigger.emotion_type || 'Unknown'}
                       </Badge>
                       <span className="text-sm font-medium text-green-700">
-                        Intensity: {trigger.intensity_multiplier}/10
+                        Intensity: {trigger.intensity_multiplier || 0}/10
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2">{trigger.description}</p>
+                    <p className="text-sm text-gray-700 mb-2">{trigger.description || 'No description available'}</p>
                     <div className="flex flex-wrap gap-1">
-                      {trigger.keywords.map((keyword, keyIndex) => (
+                      {(trigger.keywords || []).map((keyword, keyIndex) => (
                         <Badge key={keyIndex} variant="secondary" className="text-xs">
                           {keyword}
                         </Badge>
@@ -63,15 +63,15 @@ const PersonaEmotionalTriggers = ({ emotionalTriggers }: PersonaEmotionalTrigger
                   <div key={index} className="border rounded-lg p-4 bg-red-50/50">
                     <div className="flex items-center justify-between mb-2">
                       <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                        {trigger.emotion_type}
+                        {trigger.emotion_type || 'Unknown'}
                       </Badge>
                       <span className="text-sm font-medium text-red-700">
-                        Intensity: {trigger.intensity_multiplier}/10
+                        Intensity: {trigger.intensity_multiplier || 0}/10
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2">{trigger.description}</p>
+                    <p className="text-sm text-gray-700 mb-2">{trigger.description || 'No description available'}</p>
                     <div className="flex flex-wrap gap-1">
-                      {trigger.keywords.map((keyword, keyIndex) => (
+                      {(trigger.keywords || []).map((keyword, keyIndex) => (
                         <Badge key={keyIndex} variant="secondary" className="text-xs">
                           {keyword}
                         </Badge>
