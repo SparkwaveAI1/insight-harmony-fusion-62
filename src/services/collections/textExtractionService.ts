@@ -2,7 +2,7 @@
 import { toast } from 'sonner';
 
 /**
- * Extract text content from uploaded files
+ * Extract text content from uploaded files using OpenAI's processing capabilities
  */
 export const extractTextFromFile = async (file: File): Promise<string | null> => {
   try {
@@ -18,9 +18,11 @@ export const extractTextFromFile = async (file: File): Promise<string | null> =>
     }
     
     if (file.type === 'application/pdf') {
-      // For PDFs, we'll show a message that manual content entry is recommended
-      console.log('PDF file detected - recommend manual content entry');
-      return null;
+      return await extractTextFromPDF(file);
+    }
+    
+    if (file.type.startsWith('image/')) {
+      return await extractTextFromImage(file);
     }
     
     if (file.type.includes('word') || file.type.includes('document')) {
@@ -88,13 +90,85 @@ const extractTextFromCSVFile = async (file: File): Promise<string> => {
 };
 
 /**
+ * Extract text from PDF files using OpenAI
+ */
+const extractTextFromPDF = async (file: File): Promise<string | null> => {
+  try {
+    const base64 = await fileToBase64(file);
+    
+    const response = await fetch('/api/extract-document-text', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fileData: base64,
+        fileType: file.type,
+        fileName: file.name
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract text from PDF');
+    }
+
+    const result = await response.json();
+    return result.extractedText || null;
+  } catch (error) {
+    console.error('Error extracting text from PDF:', error);
+    return null;
+  }
+};
+
+/**
+ * Extract text from images using OpenAI Vision
+ */
+const extractTextFromImage = async (file: File): Promise<string | null> => {
+  try {
+    const base64 = await fileToBase64(file);
+    
+    const response = await fetch('/api/extract-image-text', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imageData: base64,
+        fileName: file.name
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to extract text from image');
+    }
+
+    const result = await response.json();
+    return result.extractedText || null;
+  } catch (error) {
+    console.error('Error extracting text from image:', error);
+    return null;
+  }
+};
+
+/**
+ * Convert file to base64
+ */
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+/**
  * Get recommendations for file types that can't be auto-extracted
  */
 export const getExtractionRecommendation = (fileType: string): string | null => {
-  if (fileType === 'application/pdf') {
-    return 'For PDF files, please copy and paste the key content into the Content field to make it available to research participants.';
-  }
-  
   if (fileType.includes('word') || fileType.includes('document')) {
     return 'For Word documents, please copy and paste the key content into the Content field to make it available to research participants.';
   }

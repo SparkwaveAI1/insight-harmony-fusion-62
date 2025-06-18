@@ -48,7 +48,7 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     setFileRecommendation(null);
 
     if (selectedFile) {
-      setUploadProgress('Analyzing file...');
+      setUploadProgress('Analyzing and extracting content from file...');
       
       // Try to extract text content
       const extractedText = await extractTextFromFile(selectedFile);
@@ -59,11 +59,14 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
         if (!content.trim()) {
           setContent(extractedText);
         }
-        toast.success('Text content extracted from file!');
+        toast.success('Content successfully extracted from file!');
       } else {
         // Show recommendation for manual content entry
         const recommendation = getExtractionRecommendation(selectedFile.type);
         setFileRecommendation(recommendation);
+        if (recommendation) {
+          toast.warning('Automatic extraction not available - please add content manually');
+        }
       }
       
       setUploadProgress('');
@@ -208,10 +211,10 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                   id="file-upload"
                   type="file"
                   onChange={handleFileChange}
-                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.bmp,.tiff"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Supported: PDF, DOC, DOCX, TXT, MD, CSV, XLSX files (max 5MB)
+                  Supported: PDF, DOC, DOCX, TXT, MD, CSV, XLSX, and image files (max 5MB)
                 </p>
               </div>
 
@@ -226,24 +229,24 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
 
               <div>
                 <Label htmlFor="content">
-                  Content {file ? '(Optional - will be available to research participants)' : '*'}
+                  Content {file ? '(Will be available to research participants)' : '*'}
                 </Label>
                 <Textarea
                   id="content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Document content that research participants can access..."
+                  placeholder={extractedContent ? "Content extracted from your file (you can edit it)" : "Document content that research participants can access..."}
                   rows={6}
                   className={content.trim() ? 'border-green-300' : ''}
                 />
-                {file && !content.trim() && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    ⚠️ No content provided - research participants will only see file metadata
-                  </p>
-                )}
                 {file && content.trim() && (
                   <p className="text-xs text-green-600 mt-1">
-                    ✅ Content available to research participants
+                    ✅ Content extracted and available to research participants
+                  </p>
+                )}
+                {file && !content.trim() && !extractedContent && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ No content extracted - research participants will only see file metadata
                   </p>
                 )}
               </div>
