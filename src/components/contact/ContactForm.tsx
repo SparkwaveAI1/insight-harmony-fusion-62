@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -104,7 +105,11 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your name" {...field} />
+                  <Input 
+                    placeholder="Your name" 
+                    {...field} 
+                    className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,7 +124,12 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
             <FormItem>
               <FormLabel>Email Address {isCustomPersona && "(Optional)"}</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="your.email@example.com" {...field} />
+                <Input 
+                  type="email" 
+                  placeholder="your.email@example.com" 
+                  {...field} 
+                  className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -134,7 +144,11 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
               <FormItem>
                 <FormLabel>ETH Wallet (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="0x..." {...field} />
+                  <Input 
+                    placeholder="0x..." 
+                    {...field} 
+                    className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -150,7 +164,11 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
               <FormItem>
                 <FormLabel>Company (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your organization" {...field} />
+                  <Input 
+                    placeholder="Your organization" 
+                    {...field} 
+                    className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -165,13 +183,13 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
             <FormItem>
               <FormLabel>Your Message</FormLabel>
               <FormControl>
-                <textarea
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                <Textarea
                   rows={5}
                   placeholder={isCustomPersona 
                     ? "Tell us about your experience with PersonaAI, building and using personas" 
                     : "How can we help you?"}
                   {...field}
+                  className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                 />
               </FormControl>
               <FormMessage />
