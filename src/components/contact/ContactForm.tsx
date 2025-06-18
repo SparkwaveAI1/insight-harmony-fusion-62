@@ -18,9 +18,10 @@ import { Send, Loader2 } from "lucide-react";
 
 // Define the form schema with zod
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Invalid email address" }),
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }).optional(),
+  email: z.string().email({ message: "Invalid email address" }).optional(),
   company: z.string().optional(),
+  walletAddress: z.string().optional(),
   message: z.string().min(10, { message: "Message must be at least 10 characters" }),
   formType: z.string(),
 });
@@ -42,6 +43,7 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
       name: "",
       email: "",
       company: "",
+      walletAddress: "",
       message: "",
       formType: formType,
     },
@@ -52,9 +54,10 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
 
     try {
       const formData = new FormData();
-      formData.append('name', data.name);
-      formData.append('email', data.email);
+      if (data.name) formData.append('name', data.name);
+      if (data.email) formData.append('email', data.email);
       formData.append('company', data.company || '');
+      if (data.walletAddress) formData.append('walletAddress', data.walletAddress);
       formData.append('message', data.message);
       formData.append('formType', data.formType);
 
@@ -88,28 +91,33 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
     }
   }
 
+  const isCustomPersona = formType === "custom-persona";
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Your name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!isCustomPersona && (
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email Address</FormLabel>
+              <FormLabel>Email Address {isCustomPersona && "(Optional)"}</FormLabel>
               <FormControl>
                 <Input type="email" placeholder="your.email@example.com" {...field} />
               </FormControl>
@@ -117,19 +125,39 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="company"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Company (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="Your organization" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
+        {isCustomPersona && (
+          <FormField
+            control={form.control}
+            name="walletAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ETH Wallet (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="0x..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        {!isCustomPersona && (
+          <FormField
+            control={form.control}
+            name="company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Your organization" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <FormField
           control={form.control}
           name="message"
@@ -140,8 +168,8 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
                 <textarea
                   className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   rows={5}
-                  placeholder={formType === "custom-persona" 
-                    ? "Describe your target audience and research needs" 
+                  placeholder={isCustomPersona 
+                    ? "Tell us about your experience with PersonaAI, building and using personas" 
                     : "How can we help you?"}
                   {...field}
                 />
