@@ -131,7 +131,7 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
           </AccordionContent>
         </AccordionItem>
 
-        {/* Health */}
+        {/* Enhanced Health-Related Attributes */}
         <AccordionItem value="health" className="border-0 mb-2">
           <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-red-50/20 rounded-md hover:bg-red-50 transition-colors">
             Health-Related Attributes
@@ -139,14 +139,53 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
           <AccordionContent className="pt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <InfoItem label="Physical Health" value={metadata.physical_health_status} />
-                <InfoItem label="Mental Health" value={metadata.mental_health_status} />
-              </div>
-              <div className="space-y-2">
+                <InfoItem label="Physical Health Status" value={metadata.physical_health_status} />
+                <InfoItem label="Mental Health Status" value={metadata.mental_health_status} />
                 <InfoItem label="Health Prioritization" value={metadata.health_prioritization} />
                 <InfoItem label="Healthcare Access" value={metadata.healthcare_access} />
-                <InfoItem label="Medical History" value={metadata.family_medical_history} />
-                <InfoItem label="Conditions" value={metadata.disabilities_or_conditions} />
+                <InfoItem label="Health Insurance" value={metadata.health_insurance_status} />
+                <InfoItem label="Chronic Conditions" value={formatArrayOrString(metadata.chronic_conditions)} />
+                <InfoItem label="Medications" value={formatArrayOrString(metadata.medications)} />
+                <InfoItem label="Mental Health History" value={metadata.mental_health_history} />
+                <InfoItem label="Therapy Experience" value={metadata.therapy_counseling_experience} />
+              </div>
+              <div className="space-y-2">
+                <InfoItem label="Fitness Level" value={metadata.fitness_activity_level} />
+                <InfoItem label="Dietary Restrictions" value={formatArrayOrString(metadata.dietary_restrictions)} />
+                <InfoItem label="Sleep Patterns" value={metadata.sleep_patterns} />
+                <InfoItem label="Stress Management" value={metadata.stress_management} />
+                <InfoItem label="Substance Use" value={metadata.substance_use} />
+                <InfoItem label="Family Health History" value={metadata.health_family_history} />
+                <InfoItem label="Disability Accommodations" value={metadata.disability_accommodations} />
+                <InfoItem label="Legacy Medical History" value={metadata.family_medical_history} />
+                <InfoItem label="Legacy Conditions" value={metadata.disabilities_or_conditions} />
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* New Physical Description Section */}
+        <AccordionItem value="physical-description" className="border-0 mb-2">
+          <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-indigo-50/30 rounded-md hover:bg-indigo-50 transition-colors">
+            Physical Description
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <InfoItem label="Height" value={metadata.height} />
+                <InfoItem label="Build/Body Type" value={metadata.build_body_type} />
+                <InfoItem label="Hair Color" value={metadata.hair_color} />
+                <InfoItem label="Hair Style" value={metadata.hair_style} />
+                <InfoItem label="Eye Color" value={metadata.eye_color} />
+                <InfoItem label="Skin Tone" value={metadata.skin_tone} />
+                <InfoItem label="Distinctive Features" value={formatArrayOrString(metadata.distinctive_features)} />
+              </div>
+              <div className="space-y-2">
+                <InfoItem label="Style/Fashion Sense" value={metadata.style_fashion_sense} />
+                <InfoItem label="Grooming Habits" value={metadata.grooming_habits} />
+                <InfoItem label="Physical Mannerisms" value={formatArrayOrString(metadata.physical_mannerisms)} />
+                <InfoItem label="Posture/Bearing" value={metadata.posture_bearing} />
+                <InfoItem label="Voice/Speech Patterns" value={metadata.voice_speech_patterns} />
               </div>
             </div>
           </AccordionContent>

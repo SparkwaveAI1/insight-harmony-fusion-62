@@ -56,11 +56,37 @@ export const personaTemplate: PersonaTemplate = {
     media_ecosystem: [],
     aesthetic_subculture: null,
     
-    // Health-Related Attributes
+    // Enhanced Health-Related Attributes
     physical_health_status: null,
     mental_health_status: null,
     health_prioritization: null,
     healthcare_access: null,
+    chronic_conditions: [],
+    medications: [],
+    mental_health_history: null,
+    therapy_counseling_experience: null,
+    health_insurance_status: null,
+    fitness_activity_level: null,
+    dietary_restrictions: [],
+    sleep_patterns: null,
+    stress_management: null,
+    substance_use: null,
+    health_family_history: null,
+    disability_accommodations: null,
+    
+    // Physical Description
+    height: null,
+    build_body_type: null,
+    hair_color: null,
+    hair_style: null,
+    eye_color: null,
+    skin_tone: null,
+    distinctive_features: [],
+    style_fashion_sense: null,
+    grooming_habits: null,
+    physical_mannerisms: [],
+    posture_bearing: null,
+    voice_speech_patterns: null,
     
     // Knowledge Domains - Added
     knowledge_domains: {

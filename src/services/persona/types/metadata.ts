@@ -49,11 +49,37 @@ export interface PersonaMetadata {
   media_ecosystem?: string[];
   aesthetic_subculture?: string;
   
-  // Health-Related Attributes
+  // Health-Related Attributes - Enhanced
   physical_health_status?: string;
   mental_health_status?: string;
   health_prioritization?: string;
   healthcare_access?: string;
+  chronic_conditions?: string[];
+  medications?: string[];
+  mental_health_history?: string;
+  therapy_counseling_experience?: string;
+  health_insurance_status?: string;
+  fitness_activity_level?: string;
+  dietary_restrictions?: string[];
+  sleep_patterns?: string;
+  stress_management?: string;
+  substance_use?: string;
+  health_family_history?: string;
+  disability_accommodations?: string;
+  
+  // Physical Description
+  height?: string;
+  build_body_type?: string;
+  hair_color?: string;
+  hair_style?: string;
+  eye_color?: string;
+  skin_tone?: string;
+  distinctive_features?: string[];
+  style_fashion_sense?: string;
+  grooming_habits?: string;
+  physical_mannerisms?: string[];
+  posture_bearing?: string;
+  voice_speech_patterns?: string;
   
   // Knowledge Domains - Expanded
   knowledge_domains?: {
