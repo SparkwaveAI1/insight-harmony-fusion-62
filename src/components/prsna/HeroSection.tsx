@@ -139,11 +139,31 @@ const HeroSection = () => {
               </p>
             </div>
           </Reveal>
+
+          <Reveal delay={500}>
+            <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-400/30 rounded-lg p-6 mt-6">
+              <h3 className="text-2xl font-bold mb-4 text-pink-400">
+                📢 Spread the Word. Get Rewarded.
+              </h3>
+              <p className="text-gray-300 mb-4">
+                If you're active on Twitter, Farcaster, or other platforms, we're also rewarding:
+              </p>
+              <ul className="space-y-2 text-gray-300 mb-4">
+                <li>• Threads that explain the Persona Pioneer Program</li>
+                <li>• Walkthroughs of your experiments</li>
+                <li>• Use case examples or research highlights</li>
+                <li>• Tweets that spark curiosity about $PRSNA and AI-based research</li>
+              </ul>
+              <p className="text-gray-300 text-sm font-medium">
+                The more signal you bring to the network, the more you'll be recognized.
+              </p>
+            </div>
+          </Reveal>
         </div>
 
         {/* Right side - Contact Form */}
         <div>
-          <Reveal delay={500}>
+          <Reveal delay={550}>
             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
               <h3 className="text-xl font-bold mb-4 text-center">Join the Pioneer Program</h3>
               <ContactForm 
