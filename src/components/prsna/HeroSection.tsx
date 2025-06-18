@@ -125,7 +125,7 @@ const HeroSection = () => {
           <Reveal delay={450}>
             <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 border border-blue-400/30 rounded-lg p-6">
               <h3 className="text-2xl font-bold mb-4 text-yellow-400">
-                🪙 $4,000,000 $PRSNA Rewards Pool
+                🪙 4,000,000 $PRSNA Rewards Pool
               </h3>
               <p className="text-gray-300 mb-4">Rewards will be distributed based on:</p>
               <ul className="space-y-2 text-gray-300 mb-6">
