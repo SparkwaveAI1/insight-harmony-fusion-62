@@ -1,8 +1,8 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
+import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectById, getProjectDocuments } from '@/services/collections';
 import { processMessageWithFile, ResearchMessage } from '../services/messageService';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
@@ -54,14 +54,12 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       
       if (!useProjectId) {
         throw new Error('Project ID is required');
-        return false;
       }
 
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User must be authenticated');
-        return false;
       }
 
       // Create conversation session using existing conversations table
@@ -82,7 +80,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setSessionId(session.id);
 
-      // Load personas using the persona service to get proper types
+      // Load personas using the existing database query
       const { data: personasData, error: personasError } = await supabase
         .from('personas')
         .select('*')
@@ -90,26 +88,10 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       if (personasError) throw personasError;
 
-      // Convert database personas to proper Persona type
-      const mappedPersonas: Persona[] = (personasData || []).map(p => ({
-        persona_id: p.persona_id,
-        name: p.name,
-        metadata: (p.metadata as any) || {},
-        trait_profile: (p.trait_profile as any) || {},
-        linguistic_profile: (p.linguistic_profile as any) || {},
-        behavioral_modulation: (p.behavioral_modulation as any) || {},
-        simulation_directives: (p.simulation_directives as any) || {},
-        interview_sections: (p.interview_sections as any) || {},
-        preinterview_tags: (p.preinterview_tags as any) || {},
-        emotional_triggers: (p.emotional_triggers as any) || {},
-        creation_date: p.creation_date,
-        prompt: p.prompt || '',
-        profile_image_url: p.profile_image_url || '',
-        is_public: p.is_public || false,
-        user_id: p.user_id || '',
-        persona_context: '',
-        persona_type: 'standard'
-      }));
+      // Use the existing dbPersonaToPersona mapper to ensure proper type conversion
+      const mappedPersonas: Persona[] = (personasData || []).map(dbPersona => 
+        dbPersonaToPersona(dbPersona)
+      );
 
       setLoadedPersonas(mappedPersonas);
       setMessages([]);
