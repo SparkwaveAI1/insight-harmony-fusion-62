@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Upload, Trash2, Plus, Download, AlertCircle } from 'lucide-react';
+import { FileText, Upload, Trash2, Plus, Download, AlertCircle, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   uploadKnowledgeBaseDocument, 
@@ -14,6 +13,7 @@ import {
   deleteKnowledgeBaseDocument,
   KnowledgeBaseDocument 
 } from '@/services/collections';
+import { extractTextFromFile, getExtractionRecommendation } from '@/services/collections/textExtractionService';
 import { toast } from 'sonner';
 
 interface ProjectKnowledgeBaseProps {
@@ -28,6 +28,8 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [extractedContent, setExtractedContent] = useState<string>('');
+  const [fileRecommendation, setFileRecommendation] = useState<string | null>(null);
 
   useEffect(() => {
     loadDocuments();
@@ -37,6 +39,35 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     console.log('Loading documents for project:', projectId);
     const docs = await getProjectDocuments(projectId);
     setDocuments(docs);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+    setExtractedContent('');
+    setFileRecommendation(null);
+
+    if (selectedFile) {
+      setUploadProgress('Analyzing file...');
+      
+      // Try to extract text content
+      const extractedText = await extractTextFromFile(selectedFile);
+      
+      if (extractedText) {
+        setExtractedContent(extractedText);
+        // Auto-populate content if it's empty
+        if (!content.trim()) {
+          setContent(extractedText);
+        }
+        toast.success('Text content extracted from file!');
+      } else {
+        // Show recommendation for manual content entry
+        const recommendation = getExtractionRecommendation(selectedFile.type);
+        setFileRecommendation(recommendation);
+      }
+      
+      setUploadProgress('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,6 +81,14 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     if (!content.trim() && !file) {
       toast.error('Please provide either content or upload a file');
       return;
+    }
+
+    // Warn if file is uploaded but no content is provided
+    if (file && !content.trim()) {
+      const proceed = window.confirm(
+        'You have uploaded a file but no content has been extracted or entered. Research participants will only see the file title and metadata, not the actual content. Do you want to proceed anyway?'
+      );
+      if (!proceed) return;
     }
 
     setIsLoading(true);
@@ -112,6 +151,8 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
     setContent('');
     setFile(null);
     setUploadProgress('');
+    setExtractedContent('');
+    setFileRecommendation(null);
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -162,27 +203,49 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
               </div>
 
               <div>
-                <Label htmlFor="content">Content (Optional)</Label>
-                <Textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Document content or notes..."
-                  rows={4}
-                />
-              </div>
-
-              <div>
                 <Label htmlFor="file-upload">File (Optional)</Label>
                 <Input
                   id="file-upload"
                   type="file"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Supported: PDF, DOC, DOCX, TXT, MD, CSV, XLSX files (max 10MB)
+                  Supported: PDF, DOC, DOCX, TXT, MD, CSV, XLSX files (max 5MB)
                 </p>
+              </div>
+
+              {fileRecommendation && (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    {fileRecommendation}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div>
+                <Label htmlFor="content">
+                  Content {file ? '(Optional - will be available to research participants)' : '*'}
+                </Label>
+                <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Document content that research participants can access..."
+                  rows={6}
+                  className={content.trim() ? 'border-green-300' : ''}
+                />
+                {file && !content.trim() && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ No content provided - research participants will only see file metadata
+                  </p>
+                )}
+                {file && content.trim() && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✅ Content available to research participants
+                  </p>
+                )}
               </div>
 
               {uploadProgress && (
@@ -220,7 +283,18 @@ const ProjectKnowledgeBase: React.FC<ProjectKnowledgeBaseProps> = ({ projectId }
                 <div className="flex items-center gap-3 flex-1">
                   {getFileTypeIcon(doc.file_type)}
                   <div className="flex-1">
-                    <h4 className="font-medium">{doc.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{doc.title}</h4>
+                      {doc.content ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">
+                          Content Available
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-700">
+                          Metadata Only
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500 space-x-2 flex flex-wrap">
                       <span>{new Date(doc.created_at).toLocaleDateString()}</span>
                       {doc.file_size && (
