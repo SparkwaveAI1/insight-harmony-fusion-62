@@ -50,13 +50,26 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       // Use provided projectId or the one from props
       const useProjectId = selectedProjectId || projectId;
       
-      // Create research session
+      if (!useProjectId) {
+        throw new Error('Project ID is required');
+      }
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User must be authenticated');
+      }
+
+      // Create conversation session using existing conversations table
       const { data: session, error: sessionError } = await supabase
-        .from('research_sessions')
+        .from('conversations')
         .insert({
           project_id: useProjectId,
           persona_ids: personaIds,
-          status: 'active'
+          title: `Research Session - ${new Date().toLocaleDateString()}`,
+          user_id: user.id,
+          session_type: 'research',
+          active_persona_ids: personaIds
         })
         .select()
         .single();
@@ -65,20 +78,27 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setSessionId(session.id);
 
-      // Load personas
-      const { data: personas, error: personasError } = await supabase
+      // Load personas with proper type mapping
+      const { data: personasData, error: personasError } = await supabase
         .from('personas')
         .select('*')
         .in('persona_id', personaIds);
 
       if (personasError) throw personasError;
 
-      setLoadedPersonas(personas || []);
+      // Map database personas to Persona type
+      const mappedPersonas: Persona[] = (personasData || []).map(p => ({
+        ...p,
+        persona_context: '', // Add default value
+        persona_type: 'standard' // Add default value
+      }));
+
+      setLoadedPersonas(mappedPersonas);
       setMessages([]);
       
       // Set first persona as default responder
-      if (personas && personas.length > 0) {
-        setSelectedPersonaResponder(personas[0].persona_id);
+      if (mappedPersonas.length > 0) {
+        setSelectedPersonaResponder(mappedPersonas[0].persona_id);
       }
 
       toast.success('Research session started successfully');
@@ -113,7 +133,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setMessages(prev => [...prev, userMessage]);
 
-      // Store message in database
+      // Store message in database using existing conversation_messages table
       await sendResearchMessage(sessionId, content, selectedPersonaResponder, imageData, extractedText);
 
       // Get persona response
@@ -174,14 +194,15 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       setMessages(prev => [...prev, personaMessage]);
 
-      // Store persona response in database
+      // Store persona response in database using existing conversation_messages table
       await supabase
-        .from('research_messages')
+        .from('conversation_messages')
         .insert({
-          session_id: sessionId,
+          conversation_id: sessionId,
           role: 'assistant',
           content: data.response,
-          persona_id: personaId
+          persona_id: personaId,
+          responding_persona_id: personaId
         });
 
     } catch (error) {

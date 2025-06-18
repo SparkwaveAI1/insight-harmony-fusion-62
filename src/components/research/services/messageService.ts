@@ -77,23 +77,26 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 export const sendResearchMessage = async (
-  sessionId: string,
+  conversationId: string,
   message: string,
   personaId: string,
   imageData?: string,
   extractedText?: string
 ): Promise<void> => {
   try {
-    // Store the message in the database
+    // Store the message in the existing conversation_messages table
     const { error } = await supabase
-      .from('research_messages')
+      .from('conversation_messages')
       .insert({
-        session_id: sessionId,
+        conversation_id: conversationId,
         role: 'user',
         content: message,
         persona_id: personaId,
-        image_data: imageData,
-        extracted_text: extractedText
+        file_attachments: imageData || extractedText ? [{
+          type: imageData ? 'image' : 'document',
+          data: imageData,
+          extracted_text: extractedText
+        }] : []
       });
 
     if (error) {
