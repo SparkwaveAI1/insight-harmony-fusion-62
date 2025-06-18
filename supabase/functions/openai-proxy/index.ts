@@ -1,154 +1,125 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { corsHeaders } from '../_shared/cors.ts';
+import { createAuthenticPersonaInstructions } from './personaInstructions.ts';
 
-// Constants
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
-const RATE_LIMIT_REQUESTS = 60; // Number of requests allowed per time window
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute window
-
-// Rate limiting storage
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-// CORS headers
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Initialize Supabase client with service role key for admin privileges
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Extract JWT token from Authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('Missing or invalid authorization header');
+    const { 
+      persona_id, 
+      user_message, 
+      previous_messages = [], 
+      persona_data,
+      mode = 'conversation',
+      conversation_context = '',
+      image_data,
+      temperature = 0.9,
+      top_p = 0.95,
+      frequency_penalty = 0.3,
+      presence_penalty = 0.4
+    } = await req.json();
+
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
     }
-    
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify the JWT token and get user information
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      console.error("Authentication error:", authError);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+
+    if (!persona_data) {
+      throw new Error('Persona data is required');
     }
-    
-    const userId = user.id;
-    
-    // Apply rate limiting
-    const now = Date.now();
-    const userRateLimit = rateLimitMap.get(userId) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW_MS };
-    
-    // Reset counter if the time window has passed
-    if (now > userRateLimit.resetTime) {
-      userRateLimit.count = 0;
-      userRateLimit.resetTime = now + RATE_LIMIT_WINDOW_MS;
-    }
-    
-    // Check if rate limit is exceeded
-    if (userRateLimit.count >= RATE_LIMIT_REQUESTS) {
-      const retryAfterSeconds = Math.ceil((userRateLimit.resetTime - now) / 1000);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Rate limit exceeded', 
-          message: `Too many requests. Try again in ${retryAfterSeconds} seconds.` 
-        }),
-        { 
-          status: 429, 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json',
-            'Retry-After': `${retryAfterSeconds}`
-          } 
-        }
-      );
-    }
-    
-    // Parse request data
-    const { endpoint, payload } = await req.json();
-    
-    if (!endpoint || !payload) {
-      throw new Error('Missing required parameters: endpoint and payload');
-    }
-    
-    // Validate endpoint (only allow specific OpenAI endpoints)
-    const allowedEndpoints = [
-      'chat/completions',
-      'audio/transcriptions',
-      'audio/speech'
+
+    console.log('Processing request for persona:', persona_id, 'Mode:', mode);
+
+    // Create authentic system message that discourages formulaic responses
+    const systemMessage = createAuthenticPersonaInstructions(persona_data, mode, conversation_context);
+
+    // Build messages array
+    const messages = [
+      { role: 'system', content: systemMessage }
     ];
-    
-    if (!allowedEndpoints.some(e => endpoint.includes(e))) {
-      throw new Error(`Endpoint not allowed: ${endpoint}`);
+
+    // Add previous messages
+    for (const msg of previous_messages) {
+      messages.push({
+        role: msg.role,
+        content: msg.content,
+        ...(msg.image && { image: msg.image })
+      });
     }
-    
-    // Construct the full OpenAI API URL
-    const openaiUrl = `https://api.openai.com/v1/${endpoint}`;
-    
-    // Forward the request to OpenAI
-    const response = await fetch(openaiUrl, {
+
+    // Add current user message
+    const userMessageContent = image_data 
+      ? [
+          { type: 'text', text: user_message },
+          { type: 'image_url', image_url: { url: image_data } }
+        ]
+      : user_message;
+
+    messages.push({
+      role: 'user',
+      content: userMessageContent
+    });
+
+    console.log('Calling OpenAI with enhanced authenticity parameters...');
+
+    // Call OpenAI with enhanced parameters for authenticity
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: messages,
+        temperature: temperature, // Higher temperature for more creativity
+        top_p: top_p, // More diverse token selection
+        frequency_penalty: frequency_penalty, // Reduce repetitive phrases
+        presence_penalty: presence_penalty, // Encourage new topics
+        max_tokens: 1000
+      }),
     });
-    
-    // Increment rate limit counter and store it
-    userRateLimit.count++;
-    rateLimitMap.set(userId, userRateLimit);
-    
-    // Log the request for monitoring
-    console.log(`User ${userId} made request to ${endpoint}. Rate limit: ${userRateLimit.count}/${RATE_LIMIT_REQUESTS}`);
-    
-    // Handle error responses from OpenAI
+
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`OpenAI API error (${response.status}):`, errorData);
-      
-      return new Response(
-        JSON.stringify({ 
-          error: `OpenAI API error: ${response.status}`,
-          details: errorData
-        }),
-        { 
-          status: response.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
-    
-    // Return successful response
+
     const data = await response.json();
+    const aiResponse = data.choices[0].message.content;
+
+    console.log('Generated authentic response for persona:', persona_id);
+
     return new Response(
-      JSON.stringify(data),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
-  } catch (error) {
-    console.error('Error in openai-proxy function:', error);
-    
-    return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ response: aiResponse }),
       { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
+
+  } catch (error) {
+    console.error('Error in openai-proxy:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     );
   }
