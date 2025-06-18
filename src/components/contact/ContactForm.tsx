@@ -50,8 +50,15 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
     },
   });
 
+  // Add debugging for form state
+  console.log("Form errors:", form.formState.errors);
+  console.log("Form is valid:", form.formState.isValid);
+  console.log("Form values:", form.watch());
+
   async function onSubmit(data: FormValues) {
+    console.log("=== FORM SUBMISSION STARTED ===");
     console.log("Form submission started with data:", data);
+    console.log("Form validation state:", form.formState);
     setIsSubmitting(true);
 
     try {
@@ -64,6 +71,10 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
       formData.append('formType', data.formType);
 
       console.log("Sending form data to Formspree...");
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
       
       const response = await fetch('https://formspree.io/f/xjkrowgl', {
         method: 'POST',
@@ -102,6 +113,14 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
   }
 
   const isCustomPersona = formType === "custom-persona";
+
+  // Add click handler debugging
+  const handleSubmitClick = () => {
+    console.log("=== SUBMIT BUTTON CLICKED ===");
+    console.log("Form is submitting:", isSubmitting);
+    console.log("Form state:", form.formState);
+    console.log("Current form values:", form.getValues());
+  };
 
   return (
     <Form {...form}>
@@ -210,6 +229,7 @@ const ContactForm = ({ formType, onSuccess }: ContactFormProps) => {
           type="submit" 
           className="w-full" 
           disabled={isSubmitting}
+          onClick={handleSubmitClick}
         >
           {isSubmitting ? (
             <>
