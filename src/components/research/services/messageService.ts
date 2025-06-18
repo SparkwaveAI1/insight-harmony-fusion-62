@@ -31,22 +31,6 @@ export const saveUserMessage = async (
   }
 };
 
-export const savePersonaResponse = async (
-  sessionId: string,
-  personaId: string,
-  response: string
-): Promise<void> => {
-  await supabase
-    .from('conversation_messages')
-    .insert({
-      conversation_id: sessionId,
-      role: 'assistant',
-      content: response,
-      persona_id: personaId,
-      responding_persona_id: personaId
-    });
-};
-
 export const convertFileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -65,18 +49,6 @@ export const createUserMessage = async (
     content,
     timestamp: new Date(),
     image: imageFile ? await convertFileToBase64(imageFile) : undefined
-  };
-};
-
-export const createPersonaMessage = (
-  content: string,
-  personaId: string
-): ResearchMessage => {
-  return {
-    role: 'assistant',
-    content,
-    timestamp: new Date(),
-    responding_persona_id: personaId
   };
 };
 

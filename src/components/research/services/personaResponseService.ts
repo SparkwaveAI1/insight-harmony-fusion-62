@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Persona } from '@/services/persona/types';
 import { ResearchMessage } from '../hooks/types';
 import { KnowledgeBaseDocument } from '@/services/collections';
+import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 import { createKnowledgeBoundaries, getChatModeInstructions } from '@/components/persona-chat/utils/personaInstructionsUtils';
 
 export const generatePersonaResponse = async (
@@ -43,77 +44,37 @@ When answering questions, you can reference information from these documents if 
 `;
     }
 
-    // Format previous messages for the conversation engine
-    const previousMessages = conversationHistory.map(msg => {
-      const baseMessage: any = {
-        role: msg.role,
-        content: msg.content
-      };
-      
-      // Add image if present
-      if (msg.image) {
-        baseMessage.image = msg.image;
-      }
-      
-      // Add persona name for assistant messages
-      if (msg.role === 'assistant' && msg.responding_persona_id) {
-        const respondingPersona = allPersonas.find(p => p.persona_id === msg.responding_persona_id);
-        if (respondingPersona) {
-          baseMessage.name = respondingPersona.name;
-        }
-      }
-      
-      return baseMessage;
-    });
+    // Convert research messages to persona chat format
+    const chatMessages = conversationHistory.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+      timestamp: msg.timestamp,
+      image: msg.image
+    }));
 
-    console.log('Formatted conversation history:', previousMessages.length, 'messages');
-    console.log('Sending message to persona', personaId, 'in research mode');
-
-    // Generate knowledge boundaries and instructions
-    const knowledgeBoundaries = createKnowledgeBoundaries(persona);
-    const personalityInstructions = `
-RESEARCH SESSION CONTEXT:
-- You are participating in a research session with multiple personas
-- Other participants may have different perspectives and expertise
-- Express your authentic views and opinions without being diplomatic
-- Disagree when you genuinely disagree - this is research, not customer service
-- Share detailed insights when you're engaged with a topic
-- React authentically based on your personality and values
-- DO NOT ask questions back to other participants or the moderator
-- Simply share YOUR perspective and end your responses with your thoughts
-`;
-
-    // Check if the last message has an image
+    // Get the last message to extract user input and image
     const lastMessage = conversationHistory[conversationHistory.length - 1];
-    const hasImage = lastMessage?.image ? true : false;
+    const userMessage = lastMessage?.role === 'user' ? lastMessage.content : '';
+    const imageData = lastMessage?.image;
 
-    // Call the generate-persona-response edge function with full conversation engine
-    const response = await supabase.functions.invoke('generate-persona-response', {
-      body: {
-        persona_id: personaId,
-        persona_role: 'research_participant',
-        previous_messages: previousMessages,
-        knowledge_boundaries: knowledgeBoundaries,
-        personality_instructions: personalityInstructions,
-        chat_mode: 'research',
-        conversation_context: conversationContext,
-        has_image: hasImage
-      }
-    });
+    console.log('Using unified conversation engine for research response');
 
-    if (response.error) {
-      console.error('Edge function error:', response.error);
-      throw new Error(`Failed to get persona response: ${response.error.message}`);
-    }
-
-    const { response: generatedResponse } = response.data;
-    console.log('Generated response:', generatedResponse.substring(0, 100) + '...');
+    // Use the single conversation engine from Persona Chat
+    const response = await sendMessageToPersona(
+      personaId,
+      userMessage,
+      chatMessages,
+      persona,
+      'research', // Use research mode
+      conversationContext, // Include knowledge base context
+      imageData
+    );
 
     // Save the response message to database
     const messageData = {
       conversation_id: sessionId,
       role: 'assistant' as const,
-      content: generatedResponse,
+      content: response,
       responding_persona_id: personaId
     };
 
@@ -134,7 +95,7 @@ RESEARCH SESSION CONTEXT:
     // Return the message in the expected format
     return {
       role: 'assistant',
-      content: generatedResponse,
+      content: response,
       timestamp: new Date(savedMessage.created_at),
       responding_persona_id: personaId
     };
