@@ -11,6 +11,16 @@ interface PersonaContentProps {
   persona: Persona;
 }
 
+interface InterviewResponse {
+  question: string;
+  answer: string;
+}
+
+interface InterviewSection {
+  section_title: string;
+  responses: InterviewResponse[];
+}
+
 const PersonaContent = ({ persona }: PersonaContentProps) => {
   console.log("=== PERSONA CONTENT COMPONENT DEBUG ===");
   console.log("Full persona object:", persona);
@@ -47,11 +57,37 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
   }
 
   // Fix interview sections type compatibility
-  const processedInterviewSections = Array.isArray(persona.interview_sections) 
-    ? persona.interview_sections.map(section => ({
-        section_title: section.section_title,
-        responses: section.responses || []
-      }))
+  const processedInterviewSections: InterviewSection[] = Array.isArray(persona.interview_sections) 
+    ? persona.interview_sections.map(section => {
+        // Handle both old and new interview section formats
+        if (typeof section === 'object' && section !== null) {
+          if ('section_title' in section && 'responses' in section) {
+            // New format with proper structure
+            return {
+              section_title: section.section_title,
+              responses: Array.isArray(section.responses) 
+                ? section.responses.map(response => {
+                    if (typeof response === 'string') {
+                      return { question: "Response", answer: response };
+                    }
+                    return response;
+                  })
+                : []
+            };
+          }
+        }
+        
+        // Fallback for any unexpected format
+        return {
+          section_title: "Interview Section",
+          responses: [
+            {
+              question: "Tell me about yourself",
+              answer: String(section)
+            }
+          ]
+        };
+      })
     : [];
 
   return (
