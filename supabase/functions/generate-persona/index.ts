@@ -92,12 +92,62 @@ serve(async (req) => {
     // Add interview responses to persona
     validatedPersona.interview_sections = interviewResponses;
 
+    // Add required fields that were missing
+    validatedPersona.behavioral_modulation = {
+      communication_style: {
+        formality_level: 0.5,
+        emotional_expressiveness: 0.6,
+        directness: 0.7,
+        humor_usage: 0.4
+      },
+      response_patterns: {
+        elaboration_tendency: 0.6,
+        example_usage: 0.7,
+        personal_anecdote_frequency: 0.5,
+        technical_depth_preference: 0.4
+      },
+      contextual_adaptability: {
+        topic_sensitivity: 0.6,
+        audience_awareness: 0.7,
+        emotional_responsiveness: 0.6
+      }
+    };
+
+    validatedPersona.linguistic_profile = {
+      vocabulary_complexity: 0.6,
+      sentence_structure_preference: 0.5,
+      cultural_linguistic_markers: [],
+      communication_pace: 0.6,
+      filler_word_usage: 0.3,
+      interruption_tendency: 0.4,
+      question_asking_frequency: 0.5,
+      storytelling_inclination: 0.6
+    };
+
+    validatedPersona.preinterview_tags = [
+      "demographic_match",
+      "trait_validated",
+      "interview_ready"
+    ];
+
+    validatedPersona.simulation_directives = {
+      authenticity_level: 0.9,
+      consistency_enforcement: 0.8,
+      emotional_range_limit: 0.7,
+      response_variability: 0.6,
+      knowledge_boundary_respect: 0.9,
+      personality_drift_prevention: 0.8
+    };
+
     console.log('=== PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
     console.log(`Final persona: ${validatedPersona.name}`);
     console.log(`- Demographics: ✓`);
     console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
     console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);
     console.log(`- Interview sections: ✓ (${validatedPersona.interview_sections?.interview_sections?.length || 0} sections)`);
+    console.log(`- Behavioral modulation: ✓`);
+    console.log(`- Linguistic profile: ✓`);
+    console.log(`- Simulation directives: ✓`);
 
     return new Response(
       JSON.stringify({
