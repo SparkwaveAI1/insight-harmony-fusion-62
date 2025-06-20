@@ -1,6 +1,13 @@
 
 import { PersonaTemplate } from "./types.ts";
-import { generatePersonaDemographics, generatePersonaTraits, generateInterviewResponses } from "./openaiService.ts";
+import { 
+  generatePersonaDemographics, 
+  generatePersonaHealthAndPhysical,
+  generatePersonaRelationshipsAndFamily,
+  generatePersonaKnowledgeDomains,
+  generatePersonaTraits, 
+  generateInterviewResponses 
+} from "./openaiService.ts";
 import { validateAndCleanTraits } from "./traitValidator.ts";
 import { 
   validateUserPrompt, 
@@ -15,7 +22,7 @@ import { withRetry } from "./retryService.ts";
 import { validateTraitRealism, validateDemographicStructure } from "./validationHelpers.ts";
 
 export async function generateBasePersona(prompt: string): Promise<PersonaTemplate> {
-  console.log('=== GENERATING BASE PERSONA ===');
+  console.log('=== STEP 1: GENERATING BASE DEMOGRAPHICS ===');
   
   const basePersona = await wrapWithErrorHandling(
     () => withRetry(
@@ -27,9 +34,9 @@ export async function generateBasePersona(prompt: string): Promise<PersonaTempla
     { prompt: prompt.substring(0, 100) + '...' }
   );
 
-  console.log(`Generated base persona "${basePersona.name}"`);
+  console.log(`✅ Generated base persona "${basePersona.name}"`);
   
-  // CRITICAL: Validate demographic structure
+  // Validate demographic structure
   const demographicValidation = validateDemographicStructure(basePersona.metadata);
   if (!demographicValidation.isValid) {
     console.error('❌ Demographic validation failed:', demographicValidation.errors);
@@ -44,8 +51,59 @@ export async function generateBasePersona(prompt: string): Promise<PersonaTempla
   return basePersona;
 }
 
+export async function enhancePersonaMetadata(basePersona: PersonaTemplate, prompt: string): Promise<PersonaTemplate> {
+  console.log('=== STEP 2: ENHANCING METADATA ===');
+  
+  // Generate health and physical attributes
+  console.log('Generating health and physical attributes...');
+  const healthPhysical = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generatePersonaHealthAndPhysical(basePersona, prompt),
+      { maxRetries: 1 },
+      'Health/Physical Generation'
+    ),
+    'health_physical',
+    { personaName: basePersona.name }
+  );
+  
+  // Generate relationships and family data
+  console.log('Generating relationships and family data...');
+  const relationshipsFamily = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generatePersonaRelationshipsAndFamily(basePersona, prompt),
+      { maxRetries: 1 },
+      'Relationships/Family Generation'
+    ),
+    'relationships_family',
+    { personaName: basePersona.name }
+  );
+  
+  // Generate knowledge domains
+  console.log('Generating knowledge domains...');
+  const knowledgeDomains = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generatePersonaKnowledgeDomains(basePersona, prompt),
+      { maxRetries: 1 },
+      'Knowledge Domains Generation'
+    ),
+    'knowledge_domains',
+    { personaName: basePersona.name }
+  );
+  
+  // Merge all metadata
+  Object.assign(basePersona.metadata, {
+    ...healthPhysical.health_attributes,
+    ...healthPhysical.physical_description,
+    ...relationshipsFamily.relationships_family,
+    ...knowledgeDomains.knowledge_domains
+  });
+  
+  console.log('✅ Enhanced metadata with health, physical, family, and knowledge data');
+  return basePersona;
+}
+
 export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, prompt: string): Promise<any> {
-  console.log('=== GENERATING TRAIT PROFILE ===');
+  console.log('=== STEP 3: GENERATING TRAIT PROFILE ===');
   
   let comprehensiveProfile;
   let attemptCount = 0;
@@ -66,7 +124,7 @@ export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, 
         { personaName: basePersona.name, attempt: attemptCount }
       );
 
-      // CRITICAL: Validate trait realism before proceeding
+      // Validate trait realism
       const traitValidation = validateTraitRealism(comprehensiveProfile.trait_profile);
       
       if (!traitValidation.isValid) {
@@ -87,12 +145,12 @@ export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, 
         }
         
         console.warn(`⚠️ Retrying trait generation (attempt ${attemptCount + 1}/${maxTraitAttempts})`);
-        continue; // Retry trait generation
+        continue;
       }
       
       console.log(`✅ Trait validation passed on attempt ${attemptCount}`);
       console.log(`Default ratio: ${Math.round(traitValidation.defaultRatio * 100)}% (threshold: ≤30%)`);
-      break; // Success - exit retry loop
+      break;
       
     } catch (error) {
       console.error(`Trait generation attempt ${attemptCount} failed:`, error.message);
@@ -110,30 +168,29 @@ export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, 
 
   console.log('✅ Generated and validated realistic trait profile');
   
-  // Validate trait values before proceeding
+  // Validate trait values
   const traitValidation = validateTraitValues(comprehensiveProfile.trait_profile);
   if (!traitValidation.isValid) {
     console.error('Final trait validation failed:', traitValidation.errors);
-    // Continue but log the issues - the enhanced validation above should have caught this
   }
   
   return { comprehensiveProfile, attemptCount };
 }
 
 export async function generatePersonaInterview(basePersona: PersonaTemplate): Promise<any[]> {
-  console.log('=== GENERATING INTERVIEW RESPONSES ===');
+  console.log('=== STEP 4: GENERATING INTERVIEW RESPONSES ===');
   
   try {
     const interviewResponses = await wrapWithErrorHandling(
       () => withRetry(
         () => generateInterviewResponses(basePersona),
-        { maxRetries: 1 }, // Fewer retries for interview as it's optional
+        { maxRetries: 1 },
         'Interview Generation'
       ),
       'interview',
       { personaName: basePersona.name }
     );
-    console.log(`Generated ${interviewResponses.length} interview sections`);
+    console.log(`✅ Generated ${interviewResponses.length} interview sections`);
     return interviewResponses;
   } catch (error) {
     console.warn('Interview generation failed, using minimal fallback:', error.message);
@@ -152,7 +209,7 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
 }
 
 export function finalizePersona(basePersona: PersonaTemplate, comprehensiveProfile: any, interviewResponses: any[]): PersonaTemplate {
-  console.log('=== FINALIZING PERSONA ===');
+  console.log('=== STEP 5: FINALIZING PERSONA ===');
   
   // Merge the comprehensive profile into the base persona
   Object.assign(basePersona, {
@@ -166,7 +223,7 @@ export function finalizePersona(basePersona: PersonaTemplate, comprehensiveProfi
   
   basePersona.interview_sections = interviewResponses;
 
-  // CRITICAL: Final validation before saving
+  // Final validation before saving
   const finalValidation = validateGeneratedPersona(basePersona);
   if (!finalValidation.isValid) {
     console.error('Final persona validation failed:', finalValidation.errors);
@@ -178,7 +235,7 @@ export function finalizePersona(basePersona: PersonaTemplate, comprehensiveProfi
     );
   }
 
-  // Clean and validate traits one final time
+  // Clean and validate traits
   const validatedPersona = validateAndCleanTraits(basePersona);
   
   // Ensure all required fields have proper defaults
@@ -207,5 +264,6 @@ export function finalizePersona(basePersona: PersonaTemplate, comprehensiveProfi
     positive_triggers: [], negative_triggers: []
   };
 
+  console.log('✅ Persona finalized and validated');
   return validatedPersona;
 }
