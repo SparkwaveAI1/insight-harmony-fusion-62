@@ -66,13 +66,13 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
             return {
               section_title: String(section.section_title || "Interview Section"),
               responses: Array.isArray(section.responses) 
-                ? section.responses.map(response => {
+                ? section.responses.map((response: any) => {
                     if (typeof response === 'string') {
                       return { question: "Response", answer: response };
                     }
                     return {
-                      question: String(response.question || "Question"),
-                      answer: String(response.answer || "")
+                      question: String(response?.question || "Question"),
+                      answer: String(response?.answer || "")
                     };
                   })
                 : []

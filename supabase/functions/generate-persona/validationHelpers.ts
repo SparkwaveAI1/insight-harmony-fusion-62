@@ -56,15 +56,48 @@ export function validateDemographicStructure(metadata: any): { isValid: boolean;
     return { isValid: false, errors: ["Metadata is missing or invalid"] };
   }
 
-  // Check for required demographic fields according to our PersonaMetadata interface
-  const requiredFields = ['age', 'gender', 'education_level', 'occupation', 'location'];
-  const missingFields = requiredFields.filter(field => !metadata[field]);
+  // Check for the nested structure that OpenAI generates
+  const requiredSections = [
+    'core_demographics',
+    'location_info', 
+    'professional_life',
+    'socioeconomic_status',
+    'relationship_status',
+    'lifestyle_health'
+  ];
   
-  if (missingFields.length > 0) {
-    console.warn(`Missing required demographic fields: ${missingFields.join(', ')}`);
+  const missingSections = requiredSections.filter(section => !metadata[section]);
+  
+  if (missingSections.length > 0) {
+    console.warn(`Missing demographic sections: ${missingSections.join(', ')}`);
     return { 
       isValid: false, 
-      errors: [`Missing required demographic fields: ${missingFields.join(', ')}`] 
+      errors: [`Missing demographic sections: ${missingSections.join(', ')}`] 
+    };
+  }
+  
+  // Validate core demographic fields within the nested structure
+  const coreDemo = metadata.core_demographics;
+  if (!coreDemo?.age || !coreDemo?.gender) {
+    return { 
+      isValid: false, 
+      errors: ["Missing core demographic fields: age or gender"] 
+    };
+  }
+  
+  const professionalLife = metadata.professional_life;
+  if (!professionalLife?.occupation || !professionalLife?.education_level) {
+    return { 
+      isValid: false, 
+      errors: ["Missing professional fields: occupation or education_level"] 
+    };
+  }
+  
+  const locationInfo = metadata.location_info;
+  if (!locationInfo?.current_location) {
+    return { 
+      isValid: false, 
+      errors: ["Missing location information"] 
     };
   }
   
