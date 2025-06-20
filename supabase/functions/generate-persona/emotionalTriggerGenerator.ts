@@ -1,4 +1,3 @@
-
 import { PersonaTemplate } from "./types.ts";
 
 // Comprehensive emotional trigger database
@@ -173,32 +172,58 @@ const TRAIT_TRIGGER_PATTERNS = {
 };
 
 export function generateEmotionalTriggers(persona: PersonaTemplate, userPrompt: string): any {
+  console.log('Generating emotional triggers for persona:', persona.name);
+  
   const triggers = {
     positive_triggers: [] as any[],
     negative_triggers: [] as any[]
   };
   
-  // Analyze user prompt for specific emotional contexts
-  const promptTriggers = analyzePromptForTriggers(userPrompt);
-  triggers.positive_triggers.push(...promptTriggers.positive);
-  triggers.negative_triggers.push(...promptTriggers.negative);
-  
-  // Generate trait-based triggers
-  const traitTriggers = generateTraitBasedTriggers(persona);
-  triggers.positive_triggers.push(...traitTriggers.positive);
-  triggers.negative_triggers.push(...traitTriggers.negative);
-  
-  // Generate demographic-based triggers
-  const demoTriggers = generateDemographicTriggers(persona);
-  triggers.positive_triggers.push(...demoTriggers.positive);
-  triggers.negative_triggers.push(...demoTriggers.negative);
-  
-  // Generate background-based triggers
-  const backgroundTriggers = generateBackgroundTriggers(persona);
-  triggers.positive_triggers.push(...backgroundTriggers.positive);
-  triggers.negative_triggers.push(...backgroundTriggers.negative);
-  
-  return triggers;
+  try {
+    // Analyze user prompt for specific emotional contexts
+    const promptTriggers = analyzePromptForTriggers(userPrompt);
+    triggers.positive_triggers.push(...promptTriggers.positive);
+    triggers.negative_triggers.push(...promptTriggers.negative);
+    
+    // Generate trait-based triggers
+    const traitTriggers = generateTraitBasedTriggers(persona);
+    triggers.positive_triggers.push(...traitTriggers.positive);
+    triggers.negative_triggers.push(...traitTriggers.negative);
+    
+    // Generate demographic-based triggers
+    const demoTriggers = generateDemographicTriggers(persona);
+    triggers.positive_triggers.push(...demoTriggers.positive);
+    triggers.negative_triggers.push(...demoTriggers.negative);
+    
+    // Generate background-based triggers
+    const backgroundTriggers = generateBackgroundTriggers(persona);
+    triggers.positive_triggers.push(...backgroundTriggers.positive);
+    triggers.negative_triggers.push(...backgroundTriggers.negative);
+    
+    // Ensure we have at least some basic triggers
+    if (triggers.positive_triggers.length === 0) {
+      triggers.positive_triggers.push(createTrigger("curiosity", ["interesting", "tell me more"], 4, "Shows interest in learning"));
+    }
+    
+    if (triggers.negative_triggers.length === 0) {
+      triggers.negative_triggers.push(createTrigger("frustration", ["waste", "pointless"], 5, "Gets frustrated with inefficiency"));
+    }
+    
+    console.log(`Generated ${triggers.positive_triggers.length} positive and ${triggers.negative_triggers.length} negative triggers`);
+    return triggers;
+    
+  } catch (error) {
+    console.error('Error generating emotional triggers:', error);
+    // Return basic fallback triggers
+    return {
+      positive_triggers: [
+        createTrigger("curiosity", ["interesting", "tell me more"], 4, "Shows interest in learning")
+      ],
+      negative_triggers: [
+        createTrigger("frustration", ["waste", "pointless"], 5, "Gets frustrated with inefficiency")
+      ]
+    };
+  }
 }
 
 function analyzePromptForTriggers(prompt: string): { positive: any[], negative: any[] } {
