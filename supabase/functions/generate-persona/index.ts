@@ -21,6 +21,52 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Enhanced trait validation to catch default values
+function validateTraitRealism(traitProfile: any): { isValid: boolean; errors: string[]; defaultRatio: number } {
+  console.log("=== VALIDATING TRAIT REALISM ===");
+  
+  if (!traitProfile || typeof traitProfile !== 'object') {
+    return { isValid: false, errors: ["Trait profile is missing or invalid"], defaultRatio: 1.0 };
+  }
+
+  const allValues: number[] = [];
+  
+  // Extract all numeric values from trait profile
+  const extractValues = (obj: any) => {
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'number') {
+        allValues.push(value);
+      } else if (typeof value === 'object' && value !== null) {
+        extractValues(value);
+      }
+    }
+  };
+  
+  extractValues(traitProfile);
+  
+  if (allValues.length === 0) {
+    return { isValid: false, errors: ["No numeric trait values found"], defaultRatio: 1.0 };
+  }
+  
+  // Count values that are exactly 0.5 (defaults)
+  const exactHalfCount = allValues.filter(val => val === 0.5).length;
+  const defaultRatio = exactHalfCount / allValues.length;
+  
+  console.log(`Trait validation: ${allValues.length} total values, ${exactHalfCount} are 0.5 (${Math.round(defaultRatio * 100)}% defaults)`);
+  
+  // If more than 30% are exactly 0.5, it's likely a failed generation
+  if (defaultRatio > 0.3) {
+    return { 
+      isValid: false, 
+      errors: [`Too many default values: ${Math.round(defaultRatio * 100)}% are 0.5`], 
+      defaultRatio 
+    };
+  }
+  
+  console.log("✅ Trait profile has realistic variation");
+  return { isValid: true, errors: [], defaultRatio };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -85,24 +131,75 @@ serve(async (req) => {
     // Add user_id to persona
     basePersona.user_id = user.id;
     
-    // STEP 2: Generate comprehensive trait profile with validation
-    const comprehensiveProfile = await wrapWithErrorHandling(
-      () => withRetry(
-        () => generatePersonaTraits(basePersona, prompt),
-        { maxRetries: 2 },
-        'Traits Generation'
-      ),
-      'traits',
-      { personaName: basePersona.name }
-    );
+    // STEP 2: Generate comprehensive trait profile with enhanced validation and retry
+    let comprehensiveProfile;
+    let attemptCount = 0;
+    const maxTraitAttempts = 3;
+    
+    do {
+      attemptCount++;
+      console.log(`=== TRAIT GENERATION ATTEMPT ${attemptCount}/${maxTraitAttempts} ===`);
+      
+      try {
+        comprehensiveProfile = await wrapWithErrorHandling(
+          () => withRetry(
+            () => generatePersonaTraits(basePersona, prompt),
+            { maxRetries: 1 },
+            'Traits Generation'
+          ),
+          'traits',
+          { personaName: basePersona.name, attempt: attemptCount }
+        );
 
-    console.log('Step 2 Complete: Generated comprehensive profile');
+        // CRITICAL: Validate trait realism before proceeding
+        const traitValidation = validateTraitRealism(comprehensiveProfile.trait_profile);
+        
+        if (!traitValidation.isValid) {
+          console.error(`❌ Trait validation failed on attempt ${attemptCount}:`, traitValidation.errors);
+          console.error(`Default ratio: ${Math.round(traitValidation.defaultRatio * 100)}%`);
+          
+          if (attemptCount >= maxTraitAttempts) {
+            throw new PersonaGenerationError(
+              'traits',
+              `Failed to generate realistic traits after ${maxTraitAttempts} attempts. Last error: ${traitValidation.errors.join(', ')}`,
+              undefined,
+              { 
+                personaName: basePersona.name, 
+                finalDefaultRatio: traitValidation.defaultRatio,
+                attempts: attemptCount 
+              }
+            );
+          }
+          
+          console.warn(`⚠️ Retrying trait generation (attempt ${attemptCount + 1}/${maxTraitAttempts})`);
+          continue; // Retry trait generation
+        }
+        
+        console.log(`✅ Trait validation passed on attempt ${attemptCount}`);
+        console.log(`Default ratio: ${Math.round(traitValidation.defaultRatio * 100)}% (threshold: ≤30%)`);
+        break; // Success - exit retry loop
+        
+      } catch (error) {
+        console.error(`Trait generation attempt ${attemptCount} failed:`, error.message);
+        
+        if (attemptCount >= maxTraitAttempts) {
+          throw new PersonaGenerationError(
+            'traits',
+            `All trait generation attempts failed. Last error: ${error.message}`,
+            error,
+            { personaName: basePersona.name, attempts: attemptCount }
+          );
+        }
+      }
+    } while (attemptCount < maxTraitAttempts);
+
+    console.log('Step 2 Complete: Generated and validated realistic trait profile');
     
     // Validate trait values before proceeding
     const traitValidation = validateTraitValues(comprehensiveProfile.trait_profile);
     if (!traitValidation.isValid) {
-      console.error('Trait validation failed:', traitValidation.errors);
-      // Still proceed but log the issues
+      console.error('Final trait validation failed:', traitValidation.errors);
+      // Continue but log the issues - the enhanced validation above should have caught this
     }
     
     // Merge the comprehensive profile into the base persona
@@ -145,7 +242,7 @@ serve(async (req) => {
 
     basePersona.interview_sections = interviewResponses;
 
-    // CRITICAL: Validate complete persona before saving
+    // CRITICAL: Final validation before saving
     const finalValidation = validateGeneratedPersona(basePersona);
     if (!finalValidation.isValid) {
       console.error('Final persona validation failed:', finalValidation.errors);
@@ -197,7 +294,11 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         persona: validatedPersona,
-        warnings: finalValidation.warnings
+        warnings: finalValidation.warnings,
+        metadata: {
+          traitGenerationAttempts: attemptCount,
+          hasRealisticTraits: true
+        }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

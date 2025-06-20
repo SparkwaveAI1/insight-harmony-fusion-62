@@ -121,154 +121,166 @@ Background: ${basePersona.metadata.background}
 
 Original prompt: "${userPrompt}"
 
-CRITICAL: Respond with ONLY valid JSON containing ALL categories below. Generate authentic values based on the persona's background:
+CRITICAL INSTRUCTIONS:
+1. You MUST create REALISTIC, VARIED trait values - DO NOT use 0.5 as default
+2. Base ALL trait values on the persona's background, age, occupation, and personality
+3. Create meaningful variation - avoid clustering around 0.5
+4. Make traits internally consistent and realistic for this specific person
+5. Respond with ONLY valid JSON containing ALL categories below
+
+TRAIT VALUE GUIDELINES:
+- Values must be between 0.0 and 1.0
+- Avoid using 0.5 unless it genuinely represents a balanced middle ground
+- Create realistic psychological profiles with meaningful variation
+- Consider how age, background, and occupation would shape personality
 
 {
   "trait_profile": {
     "big_five": {
-      "openness": 0.7,
-      "conscientiousness": 0.6,
-      "extraversion": 0.8,
-      "agreeableness": 0.7,
-      "neuroticism": 0.4
+      "openness": [realistic value based on background - avoid 0.5],
+      "conscientiousness": [realistic value based on occupation/background],
+      "extraversion": [realistic value based on personality description],
+      "agreeableness": [realistic value based on background/values],
+      "neuroticism": [realistic value based on life circumstances]
     },
     "moral_foundations": {
-      "care": 0.7,
-      "fairness": 0.8,
-      "loyalty": 0.6,
-      "authority": 0.5,
-      "sanctity": 0.4,
-      "liberty": 0.7
+      "care": [realistic value based on personality/background],
+      "fairness": [realistic value based on values/occupation],
+      "loyalty": [realistic value based on background/relationships],
+      "authority": [realistic value based on background/age],
+      "sanctity": [realistic value based on background/values],
+      "liberty": [realistic value based on personality/political views]
     },
     "world_values": {
-      "traditional_vs_secular": 0.6,
-      "survival_vs_self_expression": 0.7,
-      "materialist_vs_postmaterialist": 0.5
+      "traditional_vs_secular": [realistic value based on age/background/location],
+      "survival_vs_self_expression": [realistic value based on income/education],
+      "materialist_vs_postmaterialist": [realistic value based on background/values]
     },
     "political_compass": {
-      "economic": 0.5,
-      "authoritarian_libertarian": 0.6,
-      "cultural_conservative_progressive": 0.7,
-      "political_salience": 0.4,
-      "group_fusion_level": 0.5,
-      "outgroup_threat_sensitivity": 0.3,
-      "commons_orientation": 0.7,
+      "economic": [realistic value based on occupation/background],
+      "authoritarian_libertarian": [realistic value based on personality/values],
+      "cultural_conservative_progressive": [realistic value based on age/location/background],
+      "political_salience": [realistic value - how much they care about politics],
+      "group_fusion_level": [realistic value based on personality],
+      "outgroup_threat_sensitivity": [realistic value based on background],
+      "commons_orientation": [realistic value based on values],
       "political_motivations": {
-        "material_interest": 0.4,
-        "moral_vision": 0.7,
-        "cultural_preservation": 0.5,
-        "status_reordering": 0.3
+        "material_interest": [realistic value based on income/occupation],
+        "moral_vision": [realistic value based on personality],
+        "cultural_preservation": [realistic value based on age/background],
+        "status_reordering": [realistic value based on background/values]
       }
     },
     "cultural_dimensions": {
-      "power_distance": 0.4,
-      "individualism_vs_collectivism": 0.8,
-      "masculinity_vs_femininity": 0.6,
-      "uncertainty_avoidance": 0.5,
-      "long_term_orientation": 0.7,
-      "indulgence_vs_restraint": 0.6
+      "power_distance": [realistic value based on background/occupation],
+      "individualism_vs_collectivism": [realistic value based on culture/background],
+      "masculinity_vs_femininity": [realistic value based on personality/background],
+      "uncertainty_avoidance": [realistic value based on personality],
+      "long_term_orientation": [realistic value based on age/background],
+      "indulgence_vs_restraint": [realistic value based on personality/culture]
     },
     "social_identity": {
-      "identity_strength": 0.7,
-      "identity_complexity": 0.6,
-      "ingroup_bias_tendency": 0.4,
-      "outgroup_bias_tendency": 0.3,
-      "social_dominance_orientation": 0.2,
-      "system_justification": 0.5,
-      "intergroup_contact_comfort": 0.8,
-      "cultural_intelligence": 0.7
+      "identity_strength": [realistic value based on personality/background],
+      "identity_complexity": [realistic value based on education/experiences],
+      "ingroup_bias_tendency": [realistic value based on background],
+      "outgroup_bias_tendency": [realistic value based on background/experiences],
+      "social_dominance_orientation": [realistic value based on personality/occupation],
+      "system_justification": [realistic value based on background/success],
+      "intergroup_contact_comfort": [realistic value based on background/location],
+      "cultural_intelligence": [realistic value based on experiences/education]
     },
     "behavioral_economics": {
-      "present_bias": 0.4,
-      "loss_aversion": 0.6,
-      "overconfidence": 0.5,
-      "risk_sensitivity": 0.7,
-      "scarcity_sensitivity": 0.5
+      "present_bias": [realistic value based on age/personality],
+      "loss_aversion": [realistic value based on experiences/background],
+      "overconfidence": [realistic value based on personality/success],
+      "risk_sensitivity": [realistic value based on occupation/background],
+      "scarcity_sensitivity": [realistic value based on income/background]
     },
     "extended_traits": {
-      "truth_orientation": 0.8,
-      "moral_consistency": 0.7,
-      "self_awareness": 0.6,
-      "empathy": 0.7,
-      "self_efficacy": 0.6,
-      "manipulativeness": 0.2,
-      "impulse_control": 0.7,
-      "shadow_trait_activation": 0.3,
-      "attention_pattern": 0.6,
-      "cognitive_load_resilience": 0.7,
-      "institutional_trust": 0.5,
-      "conformity_tendency": 0.4,
-      "conflict_avoidance": 0.5,
-      "cognitive_flexibility": 0.7,
-      "need_for_cognitive_closure": 0.4,
-      "emotional_intensity": 0.6,
-      "emotional_regulation": 0.7,
-      "trigger_sensitivity": 0.5
+      "truth_orientation": [realistic value based on personality/occupation],
+      "moral_consistency": [realistic value based on personality/values],
+      "self_awareness": [realistic value based on education/experiences],
+      "empathy": [realistic value based on personality/background],
+      "self_efficacy": [realistic value based on success/experiences],
+      "manipulativeness": [realistic value based on personality/occupation],
+      "impulse_control": [realistic value based on personality/background],
+      "shadow_trait_activation": [realistic value based on stress/personality],
+      "attention_pattern": [realistic value based on occupation/personality],
+      "cognitive_load_resilience": [realistic value based on education/experience],
+      "institutional_trust": [realistic value based on background/experiences],
+      "conformity_tendency": [realistic value based on personality/background],
+      "conflict_avoidance": [realistic value based on personality],
+      "cognitive_flexibility": [realistic value based on education/experiences],
+      "need_for_cognitive_closure": [realistic value based on personality],
+      "emotional_intensity": [realistic value based on personality],
+      "emotional_regulation": [realistic value based on age/experiences],
+      "trigger_sensitivity": [realistic value based on background/experiences]
     }
   },
   "behavioral_modulation": {
     "communication_style": {
-      "formality_level": 0.5,
-      "emotional_expressiveness": 0.6,
-      "directness": 0.7,
-      "humor_usage": 0.4
+      "formality_level": [realistic value based on occupation/background],
+      "emotional_expressiveness": [realistic value based on personality],
+      "directness": [realistic value based on personality/culture],
+      "humor_usage": [realistic value based on personality]
     },
     "response_patterns": {
-      "elaboration_tendency": 0.6,
-      "example_usage": 0.7,
-      "personal_anecdote_frequency": 0.5,
-      "technical_depth_preference": 0.4
+      "elaboration_tendency": [realistic value based on education/personality],
+      "example_usage": [realistic value based on communication style],
+      "personal_anecdote_frequency": [realistic value based on personality],
+      "technical_depth_preference": [realistic value based on education/occupation]
     },
     "contextual_adaptability": {
-      "topic_sensitivity": 0.6,
-      "audience_awareness": 0.7,
-      "emotional_responsiveness": 0.6
+      "topic_sensitivity": [realistic value based on personality/background],
+      "audience_awareness": [realistic value based on social skills],
+      "emotional_responsiveness": [realistic value based on empathy/personality]
     }
   },
   "linguistic_profile": {
-    "vocabulary_complexity": 0.6,
-    "sentence_structure_preference": 0.5,
-    "cultural_linguistic_markers": [],
-    "communication_pace": 0.6,
-    "filler_word_usage": 0.3,
-    "interruption_tendency": 0.4,
-    "question_asking_frequency": 0.5,
-    "storytelling_inclination": 0.6
+    "vocabulary_complexity": [realistic value based on education],
+    "sentence_structure_preference": [realistic value based on education/communication style],
+    "cultural_linguistic_markers": [array of relevant cultural/regional markers],
+    "communication_pace": [realistic value based on personality],
+    "filler_word_usage": [realistic value based on communication style],
+    "interruption_tendency": [realistic value based on personality/culture],
+    "question_asking_frequency": [realistic value based on curiosity/personality],
+    "storytelling_inclination": [realistic value based on personality/culture]
   },
   "emotional_triggers": {
     "positive_triggers": [
       {
-        "keywords": ["success", "achievement", "recognition"],
-        "emotion_type": "pride",
-        "intensity_multiplier": 7,
-        "description": "Gets energized by personal accomplishments and recognition"
+        "keywords": [relevant positive trigger words based on background/values],
+        "emotion_type": "appropriate positive emotion",
+        "intensity_multiplier": [realistic 1-10 value],
+        "description": "realistic description of what energizes them"
       }
     ],
     "negative_triggers": [
       {
-        "keywords": ["unfair", "injustice", "discrimination"],
-        "emotion_type": "anger",
-        "intensity_multiplier": 8,
-        "description": "Strongly reacts to perceived unfairness or injustice"
+        "keywords": [relevant negative trigger words based on background/fears],
+        "emotion_type": "appropriate negative emotion",
+        "intensity_multiplier": [realistic 1-10 value],
+        "description": "realistic description of what frustrates/angers them"
       }
     ]
   },
   "simulation_directives": {
-    "authenticity_level": 0.9,
-    "consistency_enforcement": 0.8,
-    "emotional_range_limit": 0.7,
-    "response_variability": 0.6,
-    "knowledge_boundary_respect": 0.9,
-    "personality_drift_prevention": 0.8
+    "authenticity_level": [realistic value around 0.8-0.9],
+    "consistency_enforcement": [realistic value around 0.7-0.9],
+    "emotional_range_limit": [realistic value based on personality],
+    "response_variability": [realistic value based on personality],
+    "knowledge_boundary_respect": [realistic value around 0.8-0.9],
+    "personality_drift_prevention": [realistic value around 0.7-0.9]
   },
   "preinterview_tags": [
     "demographic_match",
     "trait_validated", 
-    "behavioral_profiled"
+    "behavioral_profiled",
+    "realistic_variation"
   ]
 }
 
-All trait values must be between 0.0 and 1.0. Make all values authentic and consistent with the persona's background, occupation, and personality. Generate meaningful emotional triggers based on their traits.`;
+REMEMBER: Create a psychologically realistic person with meaningful trait variation. Avoid default 0.5 values unless genuinely appropriate.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -286,7 +298,7 @@ All trait values must be between 0.0 and 1.0. Make all values authentic and cons
           }
         ],
         max_tokens: 4000,
-        temperature: 0.7,
+        temperature: 0.8, // Increased temperature for more variation
       }),
     });
 
@@ -302,6 +314,16 @@ All trait values must be between 0.0 and 1.0. Make all values authentic and cons
     
     const fullProfile = parseOpenAIResponse(content, 'Trait Profile Generation');
     console.log(`Generated comprehensive profile with ${Object.keys(fullProfile).length} sections`);
+    
+    // Log some sample trait values to verify they're not all defaults
+    if (fullProfile.trait_profile?.big_five) {
+      console.log('Generated Big Five sample:', {
+        openness: fullProfile.trait_profile.big_five.openness,
+        conscientiousness: fullProfile.trait_profile.big_five.conscientiousness,
+        extraversion: fullProfile.trait_profile.big_five.extraversion
+      });
+    }
+    
     return fullProfile;
     
   } catch (error) {
