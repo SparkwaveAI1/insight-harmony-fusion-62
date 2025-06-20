@@ -1,4 +1,3 @@
-
 import { Persona } from "@/services/persona/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaDemographics from "./PersonaDemographics";
