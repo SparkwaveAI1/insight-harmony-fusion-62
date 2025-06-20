@@ -1,3 +1,4 @@
+
 import { generateChatResponse } from "../_shared/openai.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -479,7 +480,13 @@ Generate realistic, varied values that create a unique personality profile based
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  // CRITICAL FIX: Increase max_tokens to handle the much larger comprehensive trait profile
+  const response = await generateChatResponse(messages, OPENAI_API_KEY, {
+    model: 'gpt-4.1-2025-04-14',
+    temperature: 0.8,
+    max_tokens: 3000  // Increased from default ~1000 to 3000 for comprehensive trait profile
+  });
+  
   const content = response.choices[0].message.content;
   
   try {
