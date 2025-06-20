@@ -14,6 +14,7 @@ import {
   generateBasePersona,
   enhancePersonaMetadata, 
   generatePersonaTraitProfile, 
+  generatePersonaBehavioralLinguistic,
   generatePersonaInterview, 
   finalizePersona 
 } from "./personaGenerator.ts";
@@ -40,43 +41,49 @@ serve(async (req) => {
       console.warn('Prompt validation warnings:', promptValidation.warnings);
     }
 
-    console.log('=== STARTING STAGED PERSONA GENERATION ===');
+    console.log('=== STARTING 10-STAGE PERSONA GENERATION ===');
     console.log(`User: ${user.id}`);
     console.log(`Prompt length: ${prompt.length} characters`);
     
-    // STAGE 1: Generate base demographics
-    console.log('🔄 Working on demographics...');
+    // STAGE 1: Generate core demographics
+    console.log('🔄 Stage 1: Working on core demographics...');
     const basePersona = await generateBasePersona(prompt);
-    console.log(`✅ Stage 1 Complete: Generated base demographics for "${basePersona.name}"`);
+    console.log(`✅ Stage 1 Complete: Generated core demographics for "${basePersona.name}"`);
     
     // Validate persona_id uniqueness and add user_id
     basePersona.persona_id = await validatePersonaUniqueness(supabase, basePersona);
     basePersona.user_id = user.id;
     
-    // STAGE 2: Enhance metadata with health, physical, family, knowledge
-    console.log('🔄 Working on detailed attributes...');
+    // STAGES 2-7: Enhance metadata with comprehensive attributes
+    console.log('🔄 Stages 2-7: Working on comprehensive metadata...');
     const enhancedPersona = await enhancePersonaMetadata(basePersona, prompt);
-    console.log('✅ Stage 2 Complete: Enhanced metadata with comprehensive attributes');
+    console.log('✅ Stages 2-7 Complete: Enhanced with location, family, health, physical, knowledge, and cultural data');
     
-    // STAGE 3: Generate comprehensive trait profile
-    console.log('🔄 Working on traits...');
-    const { comprehensiveProfile, attemptCount } = await generatePersonaTraitProfile(enhancedPersona, prompt);
-    console.log('✅ Stage 3 Complete: Generated and validated realistic trait profile');
+    // STAGE 8: Generate comprehensive trait profile
+    console.log('🔄 Stage 8: Working on trait profile...');
+    const { traitData, attemptCount } = await generatePersonaTraitProfile(enhancedPersona, prompt);
+    console.log('✅ Stage 8 Complete: Generated and validated realistic trait profile');
     
-    // STAGE 4: Generate interview responses
-    console.log('🔄 Working on interview responses...');
+    // STAGE 9: Generate behavioral and linguistic profiles
+    console.log('🔄 Stage 9: Working on behavioral & linguistic profiles...');
+    const behavioralLinguistic = await generatePersonaBehavioralLinguistic(enhancedPersona, prompt);
+    console.log('✅ Stage 9 Complete: Generated behavioral and linguistic profiles');
+
+    // STAGE 10: Generate interview responses
+    console.log('🔄 Stage 10: Working on interview responses...');
     const interviewResponses = await generatePersonaInterview(enhancedPersona);
-    console.log(`✅ Stage 4 Complete: Generated ${interviewResponses.length} interview sections`);
+    console.log(`✅ Stage 10 Complete: Generated ${interviewResponses.length} interview sections`);
 
-    // STAGE 5: Finalize and validate the complete persona
+    // FINALIZATION: Validate and assemble the complete persona
     console.log('🔄 Finalizing persona...');
-    const validatedPersona = finalizePersona(enhancedPersona, comprehensiveProfile, interviewResponses);
+    const validatedPersona = finalizePersona(enhancedPersona, traitData, behavioralLinguistic, interviewResponses);
 
-    console.log('=== STAGED PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
+    console.log('=== 10-STAGE PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
     console.log(`Final persona: ${validatedPersona.name} for user: ${user.id}`);
-    console.log(`- Demographics: ✓ (${Object.keys(validatedPersona.metadata).length} fields)`);
+    console.log(`- Core demographics: ✓ (${Object.keys(validatedPersona.metadata).length} fields)`);
     console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
     console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);
+    console.log(`- Behavioral profiles: ✓`);
     console.log(`- Interview sections: ✓ (${validatedPersona.interview_sections?.length || 0} sections)`);
 
     return new Response(
@@ -88,7 +95,7 @@ serve(async (req) => {
           traitGenerationAttempts: attemptCount,
           hasRealisticTraits: true,
           demographicFieldsGenerated: Object.keys(validatedPersona.metadata).length,
-          generationStages: 5
+          generationStages: 10
         }
       }),
       { 

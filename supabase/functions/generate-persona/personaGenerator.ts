@@ -1,12 +1,16 @@
 
 import { PersonaTemplate } from "./types.ts";
 import { 
-  generatePersonaDemographics, 
-  generatePersonaHealthAndPhysical,
-  generatePersonaRelationshipsAndFamily,
-  generatePersonaKnowledgeDomains,
-  generatePersonaTraits, 
-  generateInterviewResponses 
+  generateCoreDemographics,
+  generateLocationContext,
+  generateFamilyRelationships,
+  generateHealthAttributes,
+  generatePhysicalDescription,
+  generateKnowledgeDomains,
+  generatePsychologicalCultural,
+  generateTraitProfile,
+  generateBehavioralLinguistic,
+  generateInterviewResponses
 } from "./openaiService.ts";
 import { validateAndCleanTraits } from "./traitValidator.ts";
 import { 
@@ -22,13 +26,13 @@ import { withRetry } from "./retryService.ts";
 import { validateTraitRealism, validateDemographicStructure } from "./validationHelpers.ts";
 
 export async function generateBasePersona(prompt: string): Promise<PersonaTemplate> {
-  console.log('=== STEP 1: GENERATING BASE DEMOGRAPHICS ===');
+  console.log('=== STAGE 1: GENERATING CORE DEMOGRAPHICS ===');
   
   const basePersona = await wrapWithErrorHandling(
     () => withRetry(
-      () => generatePersonaDemographics(prompt),
+      () => generateCoreDemographics(prompt),
       { maxRetries: 2 },
-      'Demographics Generation'
+      'Core Demographics Generation'
     ),
     'demographics',
     { prompt: prompt.substring(0, 100) + '...' }
@@ -52,37 +56,61 @@ export async function generateBasePersona(prompt: string): Promise<PersonaTempla
 }
 
 export async function enhancePersonaMetadata(basePersona: PersonaTemplate, prompt: string): Promise<PersonaTemplate> {
-  console.log('=== STEP 2: ENHANCING METADATA ===');
+  console.log('=== STAGE 2-7: ENHANCING METADATA ===');
   
-  // Generate health and physical attributes
-  console.log('Generating health and physical attributes...');
-  const healthPhysical = await wrapWithErrorHandling(
+  // Stage 2: Location & Context
+  console.log('Generating location & context...');
+  const locationContext = await wrapWithErrorHandling(
     () => withRetry(
-      () => generatePersonaHealthAndPhysical(basePersona, prompt),
+      () => generateLocationContext(basePersona, prompt),
       { maxRetries: 1 },
-      'Health/Physical Generation'
+      'Location Context Generation'
     ),
-    'health_physical',
+    'location_context',
     { personaName: basePersona.name }
   );
   
-  // Generate relationships and family data
-  console.log('Generating relationships and family data...');
-  const relationshipsFamily = await wrapWithErrorHandling(
+  // Stage 3: Family & Relationships
+  console.log('Generating family & relationships...');
+  const familyRelationships = await wrapWithErrorHandling(
     () => withRetry(
-      () => generatePersonaRelationshipsAndFamily(basePersona, prompt),
+      () => generateFamilyRelationships(basePersona, prompt),
       { maxRetries: 1 },
-      'Relationships/Family Generation'
+      'Family Relationships Generation'
     ),
-    'relationships_family',
+    'family_relationships',
     { personaName: basePersona.name }
   );
   
-  // Generate knowledge domains
+  // Stage 4: Health Attributes
+  console.log('Generating health attributes...');
+  const healthAttributes = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generateHealthAttributes(basePersona, prompt),
+      { maxRetries: 1 },
+      'Health Attributes Generation'
+    ),
+    'health_attributes',
+    { personaName: basePersona.name }
+  );
+  
+  // Stage 5: Physical Description
+  console.log('Generating physical description...');
+  const physicalDescription = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generatePhysicalDescription(basePersona, prompt),
+      { maxRetries: 1 },
+      'Physical Description Generation'
+    ),
+    'physical_description',
+    { personaName: basePersona.name }
+  );
+  
+  // Stage 6: Knowledge Domains
   console.log('Generating knowledge domains...');
   const knowledgeDomains = await wrapWithErrorHandling(
     () => withRetry(
-      () => generatePersonaKnowledgeDomains(basePersona, prompt),
+      () => generateKnowledgeDomains(basePersona, prompt),
       { maxRetries: 1 },
       'Knowledge Domains Generation'
     ),
@@ -90,22 +118,36 @@ export async function enhancePersonaMetadata(basePersona: PersonaTemplate, promp
     { personaName: basePersona.name }
   );
   
+  // Stage 7: Psychological & Cultural
+  console.log('Generating psychological & cultural data...');
+  const psychologicalCultural = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generatePsychologicalCultural(basePersona, prompt),
+      { maxRetries: 1 },
+      'Psychological Cultural Generation'
+    ),
+    'psychological_cultural',
+    { personaName: basePersona.name }
+  );
+  
   // Merge all metadata
   Object.assign(basePersona.metadata, {
-    ...healthPhysical.health_attributes,
-    ...healthPhysical.physical_description,
-    ...relationshipsFamily.relationships_family,
-    ...knowledgeDomains.knowledge_domains
+    ...locationContext.location_context,
+    ...familyRelationships.relationships_family,
+    ...healthAttributes.health_attributes,
+    ...physicalDescription.physical_description,
+    ...knowledgeDomains.knowledge_domains,
+    ...psychologicalCultural.psychological_cultural
   });
   
-  console.log('✅ Enhanced metadata with health, physical, family, and knowledge data');
+  console.log('✅ Enhanced metadata with all comprehensive attributes');
   return basePersona;
 }
 
 export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, prompt: string): Promise<any> {
-  console.log('=== STEP 3: GENERATING TRAIT PROFILE ===');
+  console.log('=== STAGE 8: GENERATING TRAIT PROFILE ===');
   
-  let comprehensiveProfile;
+  let traitData;
   let attemptCount = 0;
   const maxTraitAttempts = 3;
   
@@ -114,18 +156,18 @@ export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, 
     console.log(`=== TRAIT GENERATION ATTEMPT ${attemptCount}/${maxTraitAttempts} ===`);
     
     try {
-      comprehensiveProfile = await wrapWithErrorHandling(
+      traitData = await wrapWithErrorHandling(
         () => withRetry(
-          () => generatePersonaTraits(basePersona, prompt),
+          () => generateTraitProfile(basePersona, prompt),
           { maxRetries: 1 },
-          'Traits Generation'
+          'Trait Profile Generation'
         ),
         'traits',
         { personaName: basePersona.name, attempt: attemptCount }
       );
 
       // Validate trait realism
-      const traitValidation = validateTraitRealism(comprehensiveProfile.trait_profile);
+      const traitValidation = validateTraitRealism(traitData.trait_profile);
       
       if (!traitValidation.isValid) {
         console.error(`❌ Trait validation failed on attempt ${attemptCount}:`, traitValidation.errors);
@@ -169,16 +211,33 @@ export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, 
   console.log('✅ Generated and validated realistic trait profile');
   
   // Validate trait values
-  const traitValidation = validateTraitValues(comprehensiveProfile.trait_profile);
+  const traitValidation = validateTraitValues(traitData.trait_profile);
   if (!traitValidation.isValid) {
     console.error('Final trait validation failed:', traitValidation.errors);
   }
   
-  return { comprehensiveProfile, attemptCount };
+  return { traitData, attemptCount };
+}
+
+export async function generatePersonaBehavioralLinguistic(basePersona: PersonaTemplate, prompt: string): Promise<any> {
+  console.log('=== STAGE 9: GENERATING BEHAVIORAL & LINGUISTIC PROFILES ===');
+  
+  const behavioralLinguistic = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generateBehavioralLinguistic(basePersona, prompt),
+      { maxRetries: 1 },
+      'Behavioral Linguistic Generation'
+    ),
+    'behavioral_linguistic',
+    { personaName: basePersona.name }
+  );
+  
+  console.log('✅ Generated behavioral and linguistic profiles');
+  return behavioralLinguistic;
 }
 
 export async function generatePersonaInterview(basePersona: PersonaTemplate): Promise<any[]> {
-  console.log('=== STEP 4: GENERATING INTERVIEW RESPONSES ===');
+  console.log('=== STAGE 10: GENERATING INTERVIEW RESPONSES ===');
   
   try {
     const interviewResponses = await wrapWithErrorHandling(
@@ -208,17 +267,22 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
   }
 }
 
-export function finalizePersona(basePersona: PersonaTemplate, comprehensiveProfile: any, interviewResponses: any[]): PersonaTemplate {
-  console.log('=== STEP 5: FINALIZING PERSONA ===');
+export function finalizePersona(
+  basePersona: PersonaTemplate, 
+  traitData: any, 
+  behavioralLinguistic: any, 
+  interviewResponses: any[]
+): PersonaTemplate {
+  console.log('=== FINALIZING PERSONA ===');
   
-  // Merge the comprehensive profile into the base persona
+  // Merge all components into the base persona
   Object.assign(basePersona, {
-    trait_profile: comprehensiveProfile.trait_profile,
-    behavioral_modulation: comprehensiveProfile.behavioral_modulation,
-    linguistic_profile: comprehensiveProfile.linguistic_profile,
-    emotional_triggers: comprehensiveProfile.emotional_triggers,
-    simulation_directives: comprehensiveProfile.simulation_directives,
-    preinterview_tags: comprehensiveProfile.preinterview_tags
+    trait_profile: traitData.trait_profile,
+    emotional_triggers: traitData.emotional_triggers,
+    behavioral_modulation: behavioralLinguistic.behavioral_modulation,
+    linguistic_profile: behavioralLinguistic.linguistic_profile,
+    simulation_directives: behavioralLinguistic.simulation_directives,
+    preinterview_tags: behavioralLinguistic.preinterview_tags
   });
   
   basePersona.interview_sections = interviewResponses;
