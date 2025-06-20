@@ -20,6 +20,18 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
   console.log("Trait profile type:", typeof persona.trait_profile);
   console.log("Trait profile content:", persona.trait_profile);
   
+  // Debug metadata display issues
+  console.log("=== DEMOGRAPHICS DEBUG ===");
+  console.log("Metadata exists:", !!persona.metadata);
+  console.log("Metadata type:", typeof persona.metadata);
+  console.log("Metadata content:", persona.metadata);
+  
+  // Debug emotional triggers display issues
+  console.log("=== EMOTIONAL TRIGGERS DEBUG ===");
+  console.log("Emotional triggers exists:", !!persona.emotional_triggers);
+  console.log("Emotional triggers type:", typeof persona.emotional_triggers);
+  console.log("Emotional triggers content:", persona.emotional_triggers);
+  
   if (persona.trait_profile) {
     console.log("=== TRAIT PROFILE BREAKDOWN ===");
     console.log("big_five:", persona.trait_profile.big_five);
@@ -33,6 +45,11 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
   } else {
     console.error("❌ CRITICAL: No trait_profile in persona object!");
   }
+
+  // Process interview sections to ensure proper format
+  const processedInterviewSections = Array.isArray(persona.interview_sections) 
+    ? persona.interview_sections 
+    : persona.interview_sections?.interview_sections || [];
 
   return (
     <div className="mt-8">
@@ -73,17 +90,17 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
 
         <TabsContent value="interview" className="space-y-6">
           <InterviewResponses 
-            sections={persona.interview_sections || []} 
+            sections={processedInterviewSections} 
             personaName={persona.name}
           />
         </TabsContent>
 
         <TabsContent value="triggers" className="space-y-6">
-          <PersonaEmotionalTriggers triggers={persona.emotional_triggers} />
+          <PersonaEmotionalTriggers emotionalTriggers={persona.emotional_triggers} />
         </TabsContent>
 
         <TabsContent value="insights" className="space-y-6">
-          <PersonaKeyInsights persona={persona} />
+          <PersonaKeyInsights />
         </TabsContent>
       </Tabs>
     </div>

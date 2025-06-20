@@ -1,4 +1,3 @@
-
 import { PersonaMetadata } from "@/services/persona/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -7,11 +6,31 @@ interface PersonaDemographicsProps {
 }
 
 const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
+  console.log("=== PERSONA DEMOGRAPHICS COMPONENT DEBUG ===");
+  console.log("Received metadata:", metadata);
+  console.log("Metadata type:", typeof metadata);
+  
+  if (!metadata) {
+    console.error("❌ No metadata provided to PersonaDemographics component");
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold text-red-600">
+          Error: No demographic data available
+        </h2>
+        <p className="text-muted-foreground">The metadata is missing or undefined.</p>
+      </div>
+    );
+  }
+
+  const metadataKeys = Object.keys(metadata);
+  console.log("Available metadata keys:", metadataKeys);
+  console.log("Metadata entries count:", metadataKeys.length);
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800 flex items-center">
         <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
-        Demographics Profile
+        Demographics Profile ({metadataKeys.length} fields)
       </h2>
       
       <Accordion type="multiple" defaultValue={["core-demographics"]}>
@@ -224,13 +243,26 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      
+      {/* Debug Info */}
+      <details className="mt-4 p-2 bg-gray-50 rounded text-xs">
+        <summary className="cursor-pointer font-mono">Debug: Raw Metadata</summary>
+        <pre className="mt-2 overflow-auto max-h-40">
+          {JSON.stringify(metadata, null, 2)}
+        </pre>
+      </details>
     </div>
   );
 };
 
 // Helper component for displaying info items
 const InfoItem = ({ label, value }: { label: string, value: any }) => {
-  if (!value || (Array.isArray(value) && value.length === 0)) return null;
+  console.log(`InfoItem: ${label} = ${value} (type: ${typeof value})`);
+  
+  if (!value || (Array.isArray(value) && value.length === 0)) {
+    console.log(`Skipping empty InfoItem: ${label}`);
+    return null;
+  }
   
   return (
     <div className="flex">
