@@ -1,4 +1,3 @@
-
 import { ChatMode } from '../ChatModeSelector';
 import { Persona } from '@/services/persona/types';
 
@@ -10,13 +9,13 @@ export const createAuthenticPersonaInstructions = (persona: Persona, mode: ChatM
   const personaAge = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
   const birthYear = currentYear - personaAge;
   
-  // Parse personality traits
+  // Parse personality traits - now they are numbers, not strings
   const bigFive = persona.trait_profile?.big_five || {};
-  const openness = parseFloat(bigFive.openness || '0.5');
-  const conscientiousness = parseFloat(bigFive.conscientiousness || '0.5');
-  const extraversion = parseFloat(bigFive.extraversion || '0.5');
-  const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
-  const neuroticism = parseFloat(bigFive.neuroticism || '0.5');
+  const openness = typeof bigFive.openness === 'number' ? bigFive.openness : 0.5;
+  const conscientiousness = typeof bigFive.conscientiousness === 'number' ? bigFive.conscientiousness : 0.5;
+  const extraversion = typeof bigFive.extraversion === 'number' ? bigFive.extraversion : 0.5;
+  const agreeableness = typeof bigFive.agreeableness === 'number' ? bigFive.agreeableness : 0.5;
+  const neuroticism = typeof bigFive.neuroticism === 'number' ? bigFive.neuroticism : 0.5;
 
   // Get occupation and background
   const occupation = persona.metadata?.occupation || '';

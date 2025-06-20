@@ -1,4 +1,3 @@
-
 import { ChatMode } from '../ChatModeSelector';
 import { Persona } from '@/services/persona/types';
 
@@ -12,14 +11,13 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
   const personaAge = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
   const birthYear = currentYear - personaAge;
   
-  // Parse self_awareness as a number (default to 0.5 if parsing fails)
-  const selfAwareness = persona.trait_profile?.extended_traits?.self_awareness 
-    ? parseFloat(persona.trait_profile.extended_traits.self_awareness as string) 
+  // Parse self_awareness and overconfidence as numbers (they are now numbers, not strings)
+  const selfAwareness = typeof persona.trait_profile?.extended_traits?.self_awareness === 'number'
+    ? persona.trait_profile.extended_traits.self_awareness
     : 0.5;
     
-  // Parse overconfidence as a number (default to 0.5 if parsing fails)
-  const overconfidence = persona.trait_profile?.behavioral_economics?.overconfidence
-    ? parseFloat(persona.trait_profile.behavioral_economics.overconfidence as string)
+  const overconfidence = typeof persona.trait_profile?.behavioral_economics?.overconfidence === 'number'
+    ? persona.trait_profile.behavioral_economics.overconfidence
     : 0.5;
   
   const expertise = persona.metadata?.occupation || "your stated field";
