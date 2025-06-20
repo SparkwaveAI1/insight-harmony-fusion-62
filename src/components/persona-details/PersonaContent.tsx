@@ -1,95 +1,91 @@
 
-import React from "react";
-import Card from "@/components/ui-custom/Card";
-import PersonaKeyInsights from "./PersonaKeyInsights";
+import { Persona } from "@/services/persona/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaDemographics from "./PersonaDemographics";
 import PersonaTraits from "./PersonaTraits";
-import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
 import InterviewResponses from "./InterviewResponses";
-import PersonaPromptSection from "./PersonaPromptSection";
-import { Persona } from "@/services/persona";
+import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
+import PersonaKeyInsights from "./PersonaKeyInsights";
 
 interface PersonaContentProps {
   persona: Persona;
 }
 
 const PersonaContent = ({ persona }: PersonaContentProps) => {
-  // Enhanced metadata to include persona_id for proper identification in the PersonaKeyInsights component
-  const getEnhancedMetadata = () => {
-    return {
-      ...persona.metadata,
-      persona_id: persona.persona_id,
-      name: persona.name
-    };
-  };
-
-  const getInterviewSections = () => {
-    if (!persona?.interview_sections) return [];
-    
-    // Get the raw sections data
-    let rawSections = [];
-    
-    if (Array.isArray(persona.interview_sections)) {
-      rawSections = persona.interview_sections;
-    } else if ('interview_sections' in persona.interview_sections) {
-      rawSections = persona.interview_sections.interview_sections || [];
-    }
-    
-    // Map the raw sections to the format expected by the InterviewResponses component
-    return rawSections.map(section => {
-      // Create a responses array from questions and responses
-      const responses = [];
-      
-      // Try to extract responses from the section
-      if (section.questions && Array.isArray(section.questions)) {
-        section.questions.forEach((q, idx) => {
-          // Handle different question formats
-          if (typeof q === 'string' && section.responses && section.responses[idx]) {
-            responses.push({
-              question: q,
-              answer: section.responses[idx]
-            });
-          } else if (typeof q === 'object' && q.question) {
-            responses.push({
-              question: q.question,
-              answer: q.response || 'No response recorded'
-            });
-          }
-        });
-      }
-      
-      return {
-        section_title: section.section || 'Interview Section',
-        responses: responses
-      };
-    });
-  };
+  console.log("=== PERSONA CONTENT COMPONENT DEBUG ===");
+  console.log("Full persona object:", persona);
+  console.log("Persona name:", persona.name);
+  console.log("Persona ID:", persona.persona_id);
+  console.log("Trait profile exists:", !!persona.trait_profile);
+  console.log("Trait profile type:", typeof persona.trait_profile);
+  console.log("Trait profile content:", persona.trait_profile);
+  
+  if (persona.trait_profile) {
+    console.log("=== TRAIT PROFILE BREAKDOWN ===");
+    console.log("big_five:", persona.trait_profile.big_five);
+    console.log("moral_foundations:", persona.trait_profile.moral_foundations);
+    console.log("world_values:", persona.trait_profile.world_values);
+    console.log("political_compass:", persona.trait_profile.political_compass);
+    console.log("cultural_dimensions:", persona.trait_profile.cultural_dimensions);
+    console.log("social_identity:", persona.trait_profile.social_identity);
+    console.log("behavioral_economics:", persona.trait_profile.behavioral_economics);
+    console.log("extended_traits:", persona.trait_profile.extended_traits);
+  } else {
+    console.error("❌ CRITICAL: No trait_profile in persona object!");
+  }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <Card className="p-6 shadow-md bg-white border-gray-100">
-        <div className="bg-[#F8F9FA] p-6 rounded-lg mb-6">
-          <PersonaKeyInsights metadata={getEnhancedMetadata()} />
-        </div>
-        
-        <div className="bg-[#F5F5F7] p-6 rounded-lg mb-6">
+    <div className="mt-8">
+      <Tabs defaultValue="demographics" className="w-full">
+        <TabsList className="grid grid-cols-5 w-full mb-8">
+          <TabsTrigger value="demographics">Demographics</TabsTrigger>
+          <TabsTrigger value="traits">
+            Traits
+            {!persona.trait_profile && <span className="text-red-500 ml-1">❌</span>}
+          </TabsTrigger>
+          <TabsTrigger value="interview">Interview</TabsTrigger>
+          <TabsTrigger value="triggers">Triggers</TabsTrigger>
+          <TabsTrigger value="insights">Insights</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="demographics" className="space-y-6">
           <PersonaDemographics metadata={persona.metadata} />
-        </div>
-      </Card>
-      
-      <Card className="p-6 shadow-md bg-white border-gray-100">
-        <PersonaTraits traitProfile={persona.trait_profile} />
-      </Card>
-      
-      {persona.emotional_triggers && (
-        <Card className="p-6 shadow-md bg-white border-gray-100">
-          <PersonaEmotionalTriggers emotionalTriggers={persona.emotional_triggers} />
-        </Card>
-      )}
-      
-      <InterviewResponses sections={getInterviewSections()} />
-      
-      <PersonaPromptSection prompt={persona.prompt} />
+        </TabsContent>
+
+        <TabsContent value="traits" className="space-y-6">
+          {persona.trait_profile ? (
+            <PersonaTraits traitProfile={persona.trait_profile} />
+          ) : (
+            <div className="text-center p-8 bg-red-50 border border-red-200 rounded-lg">
+              <h3 className="text-xl font-semibold text-red-600 mb-2">❌ No Trait Profile</h3>
+              <p className="text-red-600">
+                This persona is missing trait profile data. This indicates a generation failure.
+              </p>
+              <details className="mt-4 text-left">
+                <summary className="cursor-pointer font-mono text-sm">Debug: Full Persona Object</summary>
+                <pre className="mt-2 text-xs overflow-auto max-h-40 bg-white p-2 rounded border">
+                  {JSON.stringify(persona, null, 2)}
+                </pre>
+              </details>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="interview" className="space-y-6">
+          <InterviewResponses 
+            sections={persona.interview_sections || []} 
+            personaName={persona.name}
+          />
+        </TabsContent>
+
+        <TabsContent value="triggers" className="space-y-6">
+          <PersonaEmotionalTriggers triggers={persona.emotional_triggers} />
+        </TabsContent>
+
+        <TabsContent value="insights" className="space-y-6">
+          <PersonaKeyInsights persona={persona} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

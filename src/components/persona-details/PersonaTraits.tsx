@@ -7,78 +7,121 @@ interface PersonaTraitsProps {
 }
 
 const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
+  console.log("=== PERSONA TRAITS COMPONENT DEBUG ===");
+  console.log("Received traitProfile:", traitProfile);
+  console.log("TraitProfile type:", typeof traitProfile);
+  
+  if (!traitProfile) {
+    console.error("❌ No trait profile provided to PersonaTraits component");
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold text-red-600">
+          Error: No trait profile data available
+        </h2>
+        <p className="text-muted-foreground">The trait profile is missing or undefined.</p>
+      </div>
+    );
+  }
+
+  const traitCategories = Object.keys(traitProfile);
+  console.log("Available trait categories:", traitCategories);
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800 flex items-center">
         <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-        Traits Profile
+        Traits Profile ({traitCategories.length} categories)
       </h2>
       
       <Accordion type="multiple" defaultValue={["big-five", "moral-foundations"]}>
         {/* Big Five */}
-        <TraitCategory 
-          value="big-five"
-          title="Big Five Personality Traits"
-          traits={traitProfile.big_five}
-          highlightColor="bg-green-50"
-        />
+        {traitProfile.big_five && (
+          <TraitCategory 
+            value="big-five"
+            title="Big Five Personality Traits"
+            traits={traitProfile.big_five}
+            highlightColor="bg-green-50"
+          />
+        )}
         
         {/* Moral Foundations */}
-        <TraitCategory 
-          value="moral-foundations"
-          title="Moral Foundations"
-          traits={traitProfile.moral_foundations}
-          highlightColor="bg-blue-50"
-        />
+        {traitProfile.moral_foundations && (
+          <TraitCategory 
+            value="moral-foundations"
+            title="Moral Foundations"
+            traits={traitProfile.moral_foundations}
+            highlightColor="bg-blue-50"
+          />
+        )}
         
         {/* World Values */}
-        <TraitCategory 
-          value="world-values"
-          title="World Values"
-          traits={traitProfile.world_values}
-          highlightColor="bg-amber-50"
-        />
+        {traitProfile.world_values && (
+          <TraitCategory 
+            value="world-values"
+            title="World Values"
+            traits={traitProfile.world_values}
+            highlightColor="bg-amber-50"
+          />
+        )}
         
         {/* Political Compass */}
-        <TraitCategory 
-          value="political-compass"
-          title="Political Compass"
-          traits={traitProfile.political_compass}
-          highlightColor="bg-purple-50"
-        />
+        {traitProfile.political_compass && (
+          <TraitCategory 
+            value="political-compass"
+            title="Political Compass"
+            traits={traitProfile.political_compass}
+            highlightColor="bg-purple-50"
+          />
+        )}
         
         {/* Cultural Dimensions */}
-        <TraitCategory 
-          value="cultural-dimensions"
-          title="Cultural Dimensions (Hofstede)"
-          traits={traitProfile.cultural_dimensions}
-          highlightColor="bg-orange-50"
-        />
+        {traitProfile.cultural_dimensions && (
+          <TraitCategory 
+            value="cultural-dimensions"
+            title="Cultural Dimensions (Hofstede)"
+            traits={traitProfile.cultural_dimensions}
+            highlightColor="bg-orange-50"
+          />
+        )}
         
         {/* Social Identity */}
-        <TraitCategory 
-          value="social-identity"
-          title="Social Identity & Group Dynamics"
-          traits={traitProfile.social_identity}
-          highlightColor="bg-teal-50"
-        />
+        {traitProfile.social_identity && (
+          <TraitCategory 
+            value="social-identity"
+            title="Social Identity & Group Dynamics"
+            traits={traitProfile.social_identity}
+            highlightColor="bg-teal-50"
+          />
+        )}
         
         {/* Behavioral Economics */}
-        <TraitCategory 
-          value="behavioral-economics"
-          title="Behavioral Economics"
-          traits={traitProfile.behavioral_economics}
-          highlightColor="bg-blue-50"
-        />
+        {traitProfile.behavioral_economics && (
+          <TraitCategory 
+            value="behavioral-economics"
+            title="Behavioral Economics"
+            traits={traitProfile.behavioral_economics}
+            highlightColor="bg-blue-50"
+          />
+        )}
         
         {/* Extended Traits */}
-        <TraitCategory 
-          value="extended-traits"
-          title="Extended Traits"
-          traits={traitProfile.extended_traits}
-          highlightColor="bg-gray-50"
-        />
+        {traitProfile.extended_traits && (
+          <TraitCategory 
+            value="extended-traits"
+            title="Extended Traits"
+            traits={traitProfile.extended_traits}
+            highlightColor="bg-gray-50"
+          />
+        )}
       </Accordion>
+      
+      {/* Debug Info */}
+      <details className="mt-4 p-2 bg-gray-50 rounded text-xs">
+        <summary className="cursor-pointer font-mono">Debug: Raw Trait Data</summary>
+        <pre className="mt-2 overflow-auto max-h-40">
+          {JSON.stringify(traitProfile, null, 2)}
+        </pre>
+      </details>
     </div>
   );
 };
@@ -91,18 +134,38 @@ interface TraitCategoryProps {
 }
 
 const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryProps) => {
-  if (!traits) return null;
+  console.log(`=== TRAIT CATEGORY: ${title} ===`);
+  console.log("Traits data:", traits);
+  
+  if (!traits) {
+    console.warn(`❌ No traits data for category: ${title}`);
+    return (
+      <AccordionItem value={value} className="border-0 mb-2">
+        <AccordionTrigger className={`text-lg font-semibold py-2 px-3 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
+          {title} - No Data
+        </AccordionTrigger>
+        <AccordionContent className="pt-4">
+          <p className="text-sm text-red-500 italic">No traits data available for this category</p>
+        </AccordionContent>
+      </AccordionItem>
+    );
+  }
+  
+  const traitEntries = Object.entries(traits);
+  console.log(`${title} has ${traitEntries.length} trait entries:`, traitEntries.map(([k, v]) => `${k}=${v}`));
   
   // Handle nested objects like political_motivations
   const renderTraitValue = (key: string, value: any): React.ReactNode => {
     if (typeof value === 'object' && value !== null) {
       return (
-        <div key={key} className="ml-4 border-l-2 border-gray-200 pl-2">
+        <div key={key} className="ml-4 border-l-2 border-gray-200 pl-2 mb-2">
           <div className="font-medium capitalize mb-1">{key.replace(/_/g, ' ')}</div>
           {Object.entries(value).map(([subKey, subValue]) => (
             <div key={subKey} className="flex justify-between items-center py-1 text-sm">
               <span className="capitalize text-gray-600">{subKey.replace(/_/g, ' ')}</span>
-              <span className="font-medium">{String(subValue)}</span>
+              <span className="font-medium">
+                {typeof subValue === 'number' ? subValue.toFixed(2) : String(subValue)}
+              </span>
             </div>
           ))}
         </div>
@@ -110,9 +173,11 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
     }
     
     return (
-      <div key={key} className="flex justify-between items-center py-1 border-b border-muted last:border-0">
-        <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-        <span className="font-medium">{String(value)}</span>
+      <div key={key} className="flex justify-between items-center py-2 border-b border-muted last:border-0">
+        <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
+        <span className="font-semibold text-primary">
+          {typeof value === 'number' ? value.toFixed(2) : String(value)}
+        </span>
       </div>
     );
   };
@@ -120,13 +185,13 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
   return (
     <AccordionItem value={value} className="border-0 mb-2">
       <AccordionTrigger className={`text-lg font-semibold py-2 px-3 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
-        {title}
+        {title} ({traitEntries.length} traits)
       </AccordionTrigger>
       <AccordionContent className="pt-4">
-        <div className="grid gap-2">
-          {Object.entries(traits).length > 0 ? (
-            Object.entries(traits).map(([trait, value]) => 
-              value && renderTraitValue(trait, value)
+        <div className="grid gap-1">
+          {traitEntries.length > 0 ? (
+            traitEntries.map(([trait, value]) => 
+              value !== undefined && value !== null && renderTraitValue(trait, value)
             )
           ) : (
             <p className="text-sm text-muted-foreground italic">No traits available</p>
