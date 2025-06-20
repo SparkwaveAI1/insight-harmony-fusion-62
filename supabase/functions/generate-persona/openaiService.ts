@@ -12,81 +12,31 @@ export async function generatePersonaDemographics(prompt: string): Promise<any> 
   const messages = [
     {
       role: "system",
-      content: `You are an expert in creating realistic personas with comprehensive demographic profiles. Generate detailed demographics for a persona based on the user's prompt.
+      content: `Generate a realistic persona based on the user's description. Return ONLY valid JSON with NO markdown formatting.
 
-CRITICAL: Return ONLY valid JSON with this EXACT flat structure - no markdown, no explanations:
-
+Required structure:
 {
   "name": "First Last",
   "persona_id": "unique-id-123",
   "creation_date": "2024-01-01",
   "metadata": {
     "age": "25",
-    "gender": "Non-binary", 
+    "gender": "Non-binary",
     "race_ethnicity": "Mixed heritage",
-    "sexual_orientation": "Pansexual",
-    "education_level": "Bachelor's Degree",
+    "education_level": "Bachelor's Degree", 
     "occupation": "Software Developer",
-    "employment_type": "Full-time",
-    "income_level": "$60,000-$80,000",
-    "social_class_identity": "Middle class",
-    "marital_status": "Single",
-    "parenting_role": "No children",
-    "relationship_history": "Previous long-term relationship",
-    "military_service": "None",
     "region": "Austin, Texas",
     "urban_rural_context": "Urban",
-    "migration_history": "Moved from Dallas",
-    "climate_risk_zone": "Moderate heat risk",
     "language_proficiency": ["English", "Spanish"],
-    "religious_affiliation": "Agnostic",
-    "religious_practice_level": "Non-practicing",
-    "cultural_background": "Mexican-American",
-    "cultural_affiliation": ["Hispanic", "Tech culture"],
     "political_affiliation": "Progressive",
-    "political_sophistication": "Moderate",
-    "tech_familiarity": "Expert",
-    "learning_modality": "Visual learner",
-    "trust_in_institutions": "Moderate skepticism",
-    "trauma_exposure": "None reported",
-    "financial_pressure": "Low",
-    "credit_access": "Good credit",
-    "debt_load": "Student loans only",
-    "time_abundance": "Moderate availability",
-    "media_ecosystem": ["Reddit", "Twitter", "Tech blogs"],
-    "aesthetic_subculture": "Minimalist",
+    "income_level": "$60,000-$80,000",
+    "marital_status": "Single",
     "physical_health_status": "Good",
-    "mental_health_status": "Stable",
-    "health_prioritization": "High",
-    "healthcare_access": "Employer insurance",
-    "chronic_conditions": [],
-    "medications": [],
-    "mental_health_history": "Therapy for anxiety",
-    "therapy_counseling_experience": "Yes, positive",
-    "health_insurance_status": "Insured",
-    "fitness_activity_level": "Moderately active",
-    "dietary_restrictions": ["Vegetarian"],
-    "sleep_patterns": "Night owl",
-    "stress_management": "Exercise and meditation",
-    "substance_use": "Occasional alcohol",
-    "health_family_history": "No major issues",
-    "disability_accommodations": "None needed",
-    "height": "5'7\"",
-    "build_body_type": "Average build",
-    "hair_color": "Dark brown",
-    "hair_style": "Short and styled",
-    "eye_color": "Brown",
-    "skin_tone": "Medium",
-    "distinctive_features": ["Glasses", "Small tattoo"],
-    "style_fashion_sense": "Casual professional",
-    "grooming_habits": "Well-maintained",
-    "physical_mannerisms": ["Gestures when talking"],
-    "posture_bearing": "Confident",
-    "voice_speech_patterns": "Clear, measured speech"
+    "tech_familiarity": "Expert"
   }
 }
 
-Generate realistic, varied demographics that avoid stereotypes. Use this flat structure and fill all relevant fields with authentic, specific details that create a distinctive persona.`
+Fill ALL metadata fields with realistic values. Use diverse, non-stereotypical demographics.`
     },
     {
       role: "user",
@@ -96,6 +46,9 @@ Generate realistic, varied demographics that avoid stereotypes. Use this flat st
 
   const response = await generateChatResponse(messages, OPENAI_API_KEY);
   const content = response.choices[0].message.content;
+  
+  console.log('Raw OpenAI response length:', content.length);
+  console.log('Raw OpenAI response preview:', content.substring(0, 200));
   
   try {
     return JSON.parse(content);
