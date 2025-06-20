@@ -1,15 +1,31 @@
-
 import { PersonaGenerationError } from "./errorHandler.ts";
 
-// Enhanced trait validation to catch default values
+// Enhanced trait validation to handle all 9 trait categories
 export function validateTraitRealism(traitProfile: any): { isValid: boolean; errors: string[]; defaultRatio: number } {
-  console.log("=== VALIDATING TRAIT REALISM ===");
+  console.log("=== VALIDATING COMPLETE TRAIT PROFILE REALISM ===");
   
   if (!traitProfile || typeof traitProfile !== 'object') {
     return { isValid: false, errors: ["Trait profile is missing or invalid"], defaultRatio: 1.0 };
   }
 
   const allValues: number[] = [];
+  const expectedCategories = [
+    'big_five',
+    'moral_foundations', 
+    'world_values',
+    'political_compass',
+    'behavioral_economics',
+    'cultural_dimensions',
+    'social_identity',
+    'extended_traits',
+    'dynamic_state'
+  ];
+  
+  // Check for all expected trait categories
+  const missingCategories = expectedCategories.filter(category => !traitProfile[category]);
+  if (missingCategories.length > 0) {
+    console.warn(`Missing trait categories: ${missingCategories.join(', ')}`);
+  }
   
   // Extract all numeric values from trait profile
   const extractValues = (obj: any) => {
@@ -33,6 +49,8 @@ export function validateTraitRealism(traitProfile: any): { isValid: boolean; err
   const defaultRatio = exactHalfCount / allValues.length;
   
   console.log(`Trait validation: ${allValues.length} total values, ${exactHalfCount} are 0.5 (${Math.round(defaultRatio * 100)}% defaults)`);
+  console.log(`Found categories: ${Object.keys(traitProfile).join(', ')}`);
+  console.log(`Expected categories: ${expectedCategories.join(', ')}`);
   
   // If more than 30% are exactly 0.5, it's likely a failed generation
   if (defaultRatio > 0.3) {
@@ -43,7 +61,16 @@ export function validateTraitRealism(traitProfile: any): { isValid: boolean; err
     };
   }
   
-  console.log("✅ Trait profile has realistic variation");
+  // Check minimum number of trait values (should have 70+ traits across 9 categories)
+  if (allValues.length < 50) {
+    return {
+      isValid: false,
+      errors: [`Insufficient trait coverage: only ${allValues.length} traits generated`],
+      defaultRatio
+    };
+  }
+  
+  console.log("✅ Trait profile has realistic variation and comprehensive coverage");
   return { isValid: true, errors: [], defaultRatio };
 }
 
@@ -82,39 +109,50 @@ export function validateCompleteMetadata(metadata: any): { isValid: boolean; err
 
   const errors: string[] = [];
   
-  // Check core demographics
+  // Check core demographics (Stage 1)
   const requiredCoreFields = ['age', 'gender', 'education_level', 'occupation'];
   const missingCoreFields = requiredCoreFields.filter(field => !metadata[field]);
   if (missingCoreFields.length > 0) {
     errors.push(`Missing core fields: ${missingCoreFields.join(', ')}`);
   }
   
-  // Check location information (should exist after Stage 2)
+  // Check location information (Stage 2)
   const hasLocationInfo = metadata.region || metadata.urban_rural_context || metadata.location_history;
   if (!hasLocationInfo) {
     errors.push("Missing location information");
   }
   
-  // Check family relationships (should exist after Stage 3)
+  // Check family relationships (Stage 3)
   if (!metadata.relationships_family || typeof metadata.relationships_family !== 'object') {
     errors.push("Missing family relationships data");
   }
   
-  // Check health attributes (should exist after Stage 4)
+  // Check health attributes (Stage 4)
   const hasHealthInfo = metadata.physical_health_status || metadata.mental_health_status;
   if (!hasHealthInfo) {
     errors.push("Missing health information");
   }
   
-  // Check physical description (should exist after Stage 5)
+  // Check physical description (Stage 5)
   const hasPhysicalInfo = metadata.height || metadata.build_body_type;
   if (!hasPhysicalInfo) {
     errors.push("Missing physical description");
   }
   
-  // Check knowledge domains (should exist after Stage 6)
+  // Check knowledge domains (Stage 6)
   if (!metadata.knowledge_domains || typeof metadata.knowledge_domains !== 'object') {
     errors.push("Missing knowledge domains");
+  } else {
+    const knowledgeCount = Object.keys(metadata.knowledge_domains).length;
+    if (knowledgeCount < 20) {
+      errors.push(`Insufficient knowledge domains: only ${knowledgeCount} domains`);
+    }
+  }
+  
+  // Check psychological/cultural data (Stage 7)
+  const hasPsychCultural = metadata.political_affiliation || metadata.tech_familiarity || metadata.media_ecosystem;
+  if (!hasPsychCultural) {
+    errors.push("Missing psychological/cultural information");
   }
   
   console.log(`Complete metadata validation: ${errors.length === 0 ? '✅ PASSED' : '❌ FAILED'}`);

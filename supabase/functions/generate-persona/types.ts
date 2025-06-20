@@ -1,47 +1,52 @@
 export interface PersonaMetadata {
-  // Core Demographics
-  age?: string;
-  gender?: string;
+  // Core Demographics (Stage 1)
+  age: string;
+  gender: string;
+  education_level: string;
+  occupation: string;
+  employment_type: string;
+  income_level: string;
+  marital_status: string;
   race_ethnicity?: string;
   sexual_orientation?: string;
-  education_level?: string;
-  occupation?: string;
-  employment_type?: string;
-  income_level?: string;
   social_class_identity?: string;
-  marital_status?: string;
   parenting_role?: string;
   relationship_history?: string;
   military_service?: string;
   
-  // Location, Environment & Migration
-  region?: string;
-  urban_rural_context?: string;
-  location_history?: {
-    grew_up_in?: string;
-    current_residence?: string;
-    places_lived?: string[];
+  // Location & Context (Stage 2)
+  region: string;
+  urban_rural_context: string;
+  location_history: {
+    grew_up_in: string;
+    current_residence: string;
+    places_lived: string[];
   };
   migration_history?: string;
   climate_risk_zone?: string;
+  language_proficiency: string[];
+  religious_affiliation?: string;
+  religious_practice_level?: string;
+  cultural_background?: string;
+  cultural_affiliation: string[];
   
-  // Relationships & Family Dynamics
-  relationships_family?: {
-    has_children?: boolean;
-    number_of_children?: number;
-    children_ages?: number[];
+  // Family & Relationships (Stage 3)
+  relationships_family: {
+    has_children: boolean;
+    number_of_children: number;
+    children_ages: number[];
     stepchildren?: boolean;
     custody_arrangement?: string;
-    living_situation?: string;
-    household_composition?: string[];
+    living_situation: string;
+    household_composition: string[];
     primary_caregiver_responsibilities?: string;
     eldercare_responsibilities?: string;
     partner_spouse_relationship?: string;
     partner_health_status?: string;
     children_health_issues?: string;
-    family_relationship_quality?: string;
+    family_relationship_quality: string;
     family_stressors?: string[];
-    support_system_strength?: string;
+    support_system_strength: string;
     extended_family_involvement?: string;
     relationship_priorities?: string;
     co_parenting_dynamics?: string;
@@ -49,90 +54,80 @@ export interface PersonaMetadata {
     family_medical_history_impact?: string;
   };
   
-  // Cognitive, Psychological, and Cultural
-  language_proficiency?: string[];
-  religious_affiliation?: string;
-  religious_practice_level?: string;
-  cultural_background?: string;
-  cultural_affiliation?: string[];
-  political_affiliation?: string;
-  political_sophistication?: string;
-  tech_familiarity?: string;
-  learning_modality?: string;
-  trust_in_institutions?: string;
-  trauma_exposure?: string;
-  
-  // Financial and Time Resource Profile
-  financial_pressure?: string;
-  credit_access?: string;
-  debt_load?: string;
-  time_abundance?: string;
-  
-  // Digital Ecosystem & Signaling Behavior
-  media_ecosystem?: string[];
-  aesthetic_subculture?: string;
-  
-  // Health-Related Attributes - Enhanced
-  physical_health_status?: string;
-  mental_health_status?: string;
-  health_prioritization?: string;
-  healthcare_access?: string;
-  chronic_conditions?: string[];
-  medications?: string[];
+  // Health Attributes (Stage 4)
+  physical_health_status: string;
+  mental_health_status: string;
+  health_prioritization: string;
+  healthcare_access: string;
+  chronic_conditions: string[];
+  medications: string[];
   mental_health_history?: string;
   therapy_counseling_experience?: string;
   health_insurance_status?: string;
-  fitness_activity_level?: string;
-  dietary_restrictions?: string[];
+  fitness_activity_level: string;
+  dietary_restrictions: string[];
   sleep_patterns?: string;
   stress_management?: string;
   substance_use?: string;
   health_family_history?: string;
   disability_accommodations?: string;
   
-  // Physical Description
-  height?: string;
-  build_body_type?: string;
-  hair_color?: string;
-  hair_style?: string;
-  eye_color?: string;
-  skin_tone?: string;
+  // Physical Description (Stage 5)
+  height: string;
+  build_body_type: string;
+  hair_color: string;
+  hair_style: string;
+  eye_color: string;
+  skin_tone: string;
   distinctive_features?: string[];
-  style_fashion_sense?: string;
+  style_fashion_sense: string;
   grooming_habits?: string;
   physical_mannerisms?: string[];
   posture_bearing?: string;
   voice_speech_patterns?: string;
   
-  // Knowledge Domains - Expanded
-  knowledge_domains?: {
-    // 1-5 ratings for each domain (1=minimal, 5=expert)
-    finance_basics?: number;
-    crypto_blockchain?: number;
-    world_politics?: number;
-    national_politics?: number;
-    pop_culture?: number;
-    basic_technology?: number;
-    deep_technology?: number;
-    health_medicine?: number;
-    advanced_medical?: number;
-    science_concepts?: number;
-    sports?: number;
-    news_literacy?: number;
-    environmental_issues?: number;
-    cultural_history?: number;
-    law_legal?: number;
-    religion_spirituality?: number;
-    art_literature?: number;
-    gaming?: number;
-    food_cooking?: number;
-    travel_geography?: number;
-    parenting_childcare?: number;
-    home_improvement?: number;
-    business_entrepreneurship?: number;
-    psychology_social_science?: number;
-    economics?: number;
+  // Knowledge Domains (Stage 6)
+  knowledge_domains: {
+    finance_basics: number;
+    crypto_blockchain: number;
+    world_politics: number;
+    national_politics: number;
+    pop_culture: number;
+    basic_technology: number;
+    deep_technology: number;
+    health_medicine: number;
+    advanced_medical: number;
+    science_concepts: number;
+    sports: number;
+    news_literacy: number;
+    environmental_issues: number;
+    cultural_history: number;
+    law_legal: number;
+    religion_spirituality: number;
+    art_literature: number;
+    gaming: number;
+    food_cooking: number;
+    travel_geography: number;
+    parenting_childcare: number;
+    home_improvement: number;
+    business_entrepreneurship: number;
+    psychology_social_science: number;
+    economics: number;
   };
+  
+  // Psychological & Cultural (Stage 7)
+  political_affiliation: string;
+  political_sophistication: string;
+  tech_familiarity: string;
+  learning_modality: string;
+  trust_in_institutions: string;
+  trauma_exposure?: string;
+  financial_pressure: string;
+  credit_access?: string;
+  debt_load?: string;
+  time_abundance?: string;
+  media_ecosystem: string[];
+  aesthetic_subculture: string;
   
   // Legacy fields for backward compatibility
   relationship_status?: string;
@@ -144,7 +139,7 @@ export interface PersonaMetadata {
 }
 
 export interface TraitProfile {
-  // A. Big Five Personality Traits (OCEAN)
+  // Big Five Personality Traits (5 traits)
   big_five: {
     openness: number;
     conscientiousness: number;
@@ -153,7 +148,7 @@ export interface TraitProfile {
     neuroticism: number;
   };
   
-  // B. Moral Foundations Theory
+  // Moral Foundations Theory (6 traits)
   moral_foundations: {
     care: number;
     fairness: number;
@@ -163,14 +158,14 @@ export interface TraitProfile {
     liberty: number;
   };
   
-  // C. Enhanced World Values Survey
+  // World Values Survey (3 traits)
   world_values: {
     traditional_vs_secular: number;
     survival_vs_self_expression: number;
     materialist_vs_postmaterialist: number;
   };
   
-  // D. Enhanced Political Compass with Behavioral Modeling
+  // Political Compass with Behavioral Modeling (7+ traits)
   political_compass: {
     economic: number;
     authoritarian_libertarian: number;
@@ -187,7 +182,7 @@ export interface TraitProfile {
     };
   };
   
-  // E. Behavioral Economics Traits
+  // Behavioral Economics Traits (5 traits)
   behavioral_economics: {
     present_bias: number;
     loss_aversion: number;
@@ -196,7 +191,7 @@ export interface TraitProfile {
     scarcity_sensitivity: number;
   };
 
-  // F. Cultural Dimensions (Hofstede's Framework)
+  // Cultural Dimensions (6 traits)
   cultural_dimensions: {
     power_distance: number;
     individualism_vs_collectivism: number;
@@ -206,7 +201,7 @@ export interface TraitProfile {
     indulgence_vs_restraint: number;
   };
 
-  // G. Social Identity and Group Dynamics
+  // Social Identity and Group Dynamics (8 traits)
   social_identity: {
     identity_strength: number;
     identity_complexity: number;
@@ -218,7 +213,7 @@ export interface TraitProfile {
     cultural_intelligence: number;
   };
   
-  // Extended Traits
+  // Extended Traits (18 traits)
   extended_traits: {
     truth_orientation: number;
     moral_consistency: number;
@@ -235,13 +230,12 @@ export interface TraitProfile {
     conflict_avoidance: number;
     cognitive_flexibility: number;
     need_for_cognitive_closure: number;
-    // Enhanced emotional traits
     emotional_intensity: number;
     emotional_regulation: number;
     trigger_sensitivity: number;
   };
   
-  // Dynamic State Modifiers
+  // Dynamic State Modifiers (5 traits)
   dynamic_state: {
     current_stress_level: number;
     emotional_stability_context: number;

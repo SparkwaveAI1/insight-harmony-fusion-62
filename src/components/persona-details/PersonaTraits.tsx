@@ -24,16 +24,24 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
   }
 
   const traitCategories = Object.keys(traitProfile);
+  const expectedCategories = [
+    'big_five', 'moral_foundations', 'world_values', 'political_compass',
+    'behavioral_economics', 'cultural_dimensions', 'social_identity', 
+    'extended_traits', 'dynamic_state'
+  ];
+  const foundCategories = expectedCategories.filter(cat => traitProfile[cat]);
+  
   console.log("Available trait categories:", traitCategories);
+  console.log("Expected categories found:", foundCategories);
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800 flex items-center">
         <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-        Traits Profile ({traitCategories.length} categories)
+        Comprehensive Traits Profile ({foundCategories.length}/9 categories)
       </h2>
       
-      <Accordion type="multiple" defaultValue={["big-five", "moral-foundations"]}>
+      <Accordion type="multiple" defaultValue={["big-five", "moral-foundations", "political-compass"]}>
         {/* Big Five */}
         {traitProfile.big_five && (
           <TraitCategory 
@@ -41,6 +49,7 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
             title="Big Five Personality Traits"
             traits={traitProfile.big_five}
             highlightColor="bg-green-50"
+            description="Core personality dimensions (OCEAN model)"
           />
         )}
         
@@ -51,6 +60,7 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
             title="Moral Foundations"
             traits={traitProfile.moral_foundations}
             highlightColor="bg-blue-50"
+            description="Moral reasoning patterns and priorities"
           />
         )}
         
@@ -58,9 +68,10 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
         {traitProfile.world_values && (
           <TraitCategory 
             value="world-values"
-            title="World Values"
+            title="World Values Survey"
             traits={traitProfile.world_values}
             highlightColor="bg-amber-50"
+            description="Cultural value orientations and priorities"
           />
         )}
         
@@ -68,9 +79,21 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
         {traitProfile.political_compass && (
           <TraitCategory 
             value="political-compass"
-            title="Political Compass"
+            title="Political & Social Orientation"
             traits={traitProfile.political_compass}
             highlightColor="bg-purple-50"
+            description="Political attitudes and group dynamics"
+          />
+        )}
+        
+        {/* Behavioral Economics */}
+        {traitProfile.behavioral_economics && (
+          <TraitCategory 
+            value="behavioral-economics"
+            title="Behavioral Economics"
+            traits={traitProfile.behavioral_economics}
+            highlightColor="bg-emerald-50"
+            description="Decision-making patterns and biases"
           />
         )}
         
@@ -81,6 +104,7 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
             title="Cultural Dimensions (Hofstede)"
             traits={traitProfile.cultural_dimensions}
             highlightColor="bg-orange-50"
+            description="Cultural value orientations and behaviors"
           />
         )}
         
@@ -91,16 +115,7 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
             title="Social Identity & Group Dynamics"
             traits={traitProfile.social_identity}
             highlightColor="bg-teal-50"
-          />
-        )}
-        
-        {/* Behavioral Economics */}
-        {traitProfile.behavioral_economics && (
-          <TraitCategory 
-            value="behavioral-economics"
-            title="Behavioral Economics"
-            traits={traitProfile.behavioral_economics}
-            highlightColor="bg-blue-50"
+            description="Group membership and social behavior patterns"
           />
         )}
         
@@ -108,12 +123,37 @@ const PersonaTraits = ({ traitProfile }: PersonaTraitsProps) => {
         {traitProfile.extended_traits && (
           <TraitCategory 
             value="extended-traits"
-            title="Extended Traits"
+            title="Extended Psychological Traits"
             traits={traitProfile.extended_traits}
             highlightColor="bg-gray-50"
+            description="Additional personality and cognitive traits"
+          />
+        )}
+        
+        {/* Dynamic State */}
+        {traitProfile.dynamic_state && (
+          <TraitCategory 
+            value="dynamic-state"
+            title="Dynamic State Modifiers"
+            traits={traitProfile.dynamic_state}
+            highlightColor="bg-rose-50"
+            description="Current psychological and emotional state"
           />
         )}
       </Accordion>
+      
+      {/* Category Coverage Summary */}
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold mb-2">Trait Coverage Summary</h3>
+        <div className="text-sm text-gray-600">
+          <p>Generated {foundCategories.length} of 9 expected trait categories</p>
+          {foundCategories.length < 9 && (
+            <p className="text-amber-600 mt-1">
+              Missing: {expectedCategories.filter(cat => !traitProfile[cat]).join(', ')}
+            </p>
+          )}
+        </div>
+      </div>
       
       {/* Debug Info */}
       <details className="mt-4 p-2 bg-gray-50 rounded text-xs">
@@ -131,9 +171,10 @@ interface TraitCategoryProps {
   title: string;
   traits?: Record<string, any>;
   highlightColor: string;
+  description?: string;
 }
 
-const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryProps) => {
+const TraitCategory = ({ value, title, traits, highlightColor, description }: TraitCategoryProps) => {
   console.log(`=== TRAIT CATEGORY: ${title} ===`);
   console.log("Traits data:", traits);
   
@@ -173,9 +214,9 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
     }
     
     return (
-      <div key={key} className="flex justify-between items-center py-2 border-b border-muted last:border-0">
-        <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
-        <span className="font-semibold text-primary">
+      <div key={key} className="flex justify-between items-center py-2 border-b border-gray-100">
+        <span className="capitalize text-gray-700">{key.replace(/_/g, ' ')}</span>
+        <span className="font-medium text-gray-900">
           {typeof value === 'number' ? value.toFixed(2) : String(value)}
         </span>
       </div>
@@ -184,18 +225,20 @@ const TraitCategory = ({ value, title, traits, highlightColor }: TraitCategoryPr
   
   return (
     <AccordionItem value={value} className="border-0 mb-2">
-      <AccordionTrigger className={`text-lg font-semibold py-2 px-3 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
-        {title} ({traitEntries.length} traits)
-      </AccordionTrigger>
-      <AccordionContent className="pt-4">
-        <div className="grid gap-1">
-          {traitEntries.length > 0 ? (
-            traitEntries.map(([trait, value]) => 
-              value !== undefined && value !== null && renderTraitValue(trait, value)
-            )
-          ) : (
-            <p className="text-sm text-muted-foreground italic">No traits available</p>
+      <AccordionTrigger className={`text-lg font-semibold py-3 px-4 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
+        <div className="text-left">
+          <div>{title}</div>
+          {description && (
+            <div className="text-sm font-normal text-gray-600 mt-1">{description}</div>
           )}
+          <div className="text-sm font-normal text-gray-500 mt-1">
+            {traitEntries.length} traits
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="pt-4 px-4">
+        <div className="space-y-1">
+          {traitEntries.map(([key, value]) => renderTraitValue(key, value))}
         </div>
       </AccordionContent>
     </AccordionItem>

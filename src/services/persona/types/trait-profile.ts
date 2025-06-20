@@ -1,4 +1,3 @@
-
 export interface EmotionalTrigger {
   keywords: string[];
   emotion_type: string;
@@ -35,109 +34,106 @@ export interface TraitProfile {
   
   // A. Big Five Personality Traits (OCEAN)
   big_five?: {
-    openness?: string | null;
-    conscientiousness?: string | null;
-    extraversion?: string | null;
-    agreeableness?: string | null;
-    neuroticism?: string | null;
+    openness?: number | null;
+    conscientiousness?: number | null;
+    extraversion?: number | null;
+    agreeableness?: number | null;
+    neuroticism?: number | null;
   };
   
   // B. Moral Foundations Theory
   moral_foundations?: {
-    care?: string | null;
-    fairness?: string | null;
-    loyalty?: string | null;
-    authority?: string | null;
-    sanctity?: string | null;
-    liberty?: string | null;
+    care?: number | null;
+    fairness?: number | null;
+    loyalty?: number | null;
+    authority?: number | null;
+    sanctity?: number | null;
+    liberty?: number | null;
   };
   
   // C. Enhanced World Values Survey
   world_values?: {
-    traditional_vs_secular?: string | null;
-    survival_vs_self_expression?: string | null;
-    materialist_vs_postmaterialist?: string | null; // NEW: Third dimension
+    traditional_vs_secular?: number | null;
+    survival_vs_self_expression?: number | null;
+    materialist_vs_postmaterialist?: number | null;
   };
   
   // D. Enhanced Political Compass with Behavioral Modeling
   political_compass?: {
-    economic?: string | null;
-    authoritarian_libertarian?: string | null;
-    cultural_conservative_progressive?: string | null; // NEW: Separate cultural axis
-    // Political Behavior Architecture
-    political_salience?: string | null; // NEW: How central politics is to identity (0-100)
-    group_fusion_level?: string | null; // NEW: Identity fusion with political group
-    outgroup_threat_sensitivity?: string | null; // NEW: Threat perception from opposing views
-    commons_orientation?: string | null; // NEW: Views on shared responsibility/public goods
-    // Political Motivations
+    economic?: number | null;
+    authoritarian_libertarian?: number | null;
+    cultural_conservative_progressive?: number | null;
+    political_salience?: number | null;
+    group_fusion_level?: number | null;
+    outgroup_threat_sensitivity?: number | null;
+    commons_orientation?: number | null;
     political_motivations?: {
-      material_interest?: string | null; // Economic benefit/harm focus
-      moral_vision?: string | null; // Justice/fairness focus
-      cultural_preservation?: string | null; // Heritage/tradition focus
-      status_reordering?: string | null; // Hierarchy change desires
+      material_interest?: number | null;
+      moral_vision?: number | null;
+      cultural_preservation?: number | null;
+      status_reordering?: number | null;
     };
   };
   
   // E. Behavioral Economics Traits
   behavioral_economics?: {
-    present_bias?: string | null;
-    loss_aversion?: string | null;
-    overconfidence?: string | null;
-    risk_sensitivity?: string | null;
-    scarcity_sensitivity?: string | null;
+    present_bias?: number | null;
+    loss_aversion?: number | null;
+    overconfidence?: number | null;
+    risk_sensitivity?: number | null;
+    scarcity_sensitivity?: number | null;
   };
 
   // F. Cultural Dimensions (Hofstede's Framework)
   cultural_dimensions?: {
-    power_distance?: string | null; // Acceptance of power inequality (0-1)
-    individualism_vs_collectivism?: string | null; // Individual vs group focus (0-1, 0=collectivist, 1=individualist)
-    masculinity_vs_femininity?: string | null; // Competition vs cooperation focus (0-1, 0=feminine, 1=masculine)
-    uncertainty_avoidance?: string | null; // Tolerance for ambiguity and uncertainty (0-1)
-    long_term_orientation?: string | null; // Future vs tradition focus (0-1, 0=short-term, 1=long-term)
-    indulgence_vs_restraint?: string | null; // Gratification control (0-1, 0=restraint, 1=indulgence)
+    power_distance?: number | null;
+    individualism_vs_collectivism?: number | null;
+    masculinity_vs_femininity?: number | null;
+    uncertainty_avoidance?: number | null;
+    long_term_orientation?: number | null;
+    indulgence_vs_restraint?: number | null;
   };
 
   // G. Social Identity and Group Dynamics
   social_identity?: {
-    identity_strength?: string | null; // How strongly they identify with groups (0-1)
-    identity_complexity?: string | null; // Number and diversity of social identities (0-1)
-    ingroup_bias_tendency?: string | null; // Favoritism toward own groups (0-1)
-    outgroup_bias_tendency?: string | null; // Prejudice toward other groups (0-1)
-    social_dominance_orientation?: string | null; // Support for group hierarchies (0-1)
-    system_justification?: string | null; // Tendency to defend status quo (0-1)
-    intergroup_contact_comfort?: string | null; // Ease with diverse groups (0-1)
-    cultural_intelligence?: string | null; // Ability to navigate cultural differences (0-1)
+    identity_strength?: number | null;
+    identity_complexity?: number | null;
+    ingroup_bias_tendency?: number | null;
+    outgroup_bias_tendency?: number | null;
+    social_dominance_orientation?: number | null;
+    system_justification?: number | null;
+    intergroup_contact_comfort?: number | null;
+    cultural_intelligence?: number | null;
   };
   
   // 2. Extended Traits
   extended_traits?: {
-    truth_orientation?: string | null;
-    moral_consistency?: string | null;
-    self_awareness?: string | null;
-    empathy?: string | null;
-    self_efficacy?: string | null;
-    manipulativeness?: string | null;
-    impulse_control?: string | null;
-    shadow_trait_activation?: string | null;
-    attention_pattern?: string | null;
-    cognitive_load_resilience?: string | null;
-    institutional_trust?: string | null;
-    conformity_tendency?: string | null;
-    conflict_avoidance?: string | null;
-    cognitive_flexibility?: string | null;
-    need_for_cognitive_closure?: string | null;
-    // Enhanced emotional traits
-    emotional_intensity?: string | null;
-    emotional_regulation?: string | null;
-    trigger_sensitivity?: string | null;
+    truth_orientation?: number | null;
+    moral_consistency?: number | null;
+    self_awareness?: number | null;
+    empathy?: number | null;
+    self_efficacy?: number | null;
+    manipulativeness?: number | null;
+    impulse_control?: number | null;
+    shadow_trait_activation?: number | null;
+    attention_pattern?: number | null;
+    cognitive_load_resilience?: number | null;
+    institutional_trust?: number | null;
+    conformity_tendency?: number | null;
+    conflict_avoidance?: number | null;
+    cognitive_flexibility?: number | null;
+    need_for_cognitive_closure?: number | null;
+    emotional_intensity?: number | null;
+    emotional_regulation?: number | null;
+    trigger_sensitivity?: number | null;
   };
   
   // 3. Dynamic State Modifiers
   dynamic_state?: {
-    current_stress_level?: string | null;
-    emotional_stability_context?: string | null;
-    motivation_orientation?: string | null;
-    trust_volatility?: string | null;
-    trigger_threshold?: string | null;
+    current_stress_level?: number | null;
+    emotional_stability_context?: number | null;
+    motivation_orientation?: number | null;
+    trust_volatility?: number | null;
+    trigger_threshold?: number | null;
   };
 }
