@@ -4,6 +4,7 @@ import { savePersona } from "./operations/savePersona";
 import { Persona } from "./types";
 import { toast } from "sonner";
 import { logTraitValidation } from "./traitValidation";
+import { validatePersonaCompleteness, logPersonaValidation } from "./validation/personaValidation";
 
 export const generatePersona = async (prompt: string): Promise<Persona | null> => {
   try {
@@ -18,7 +19,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     // Get the current user ID
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) {
-      console.error("Error getting user:", userError);
+      console.error("❌ Error getting user:", userError);
       toast.error("Authentication error - please try logging in again", { id: "persona-generation" });
       return null;
     }
@@ -27,7 +28,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     console.log("Current user ID:", userId);
 
     if (!userId) {
-      console.error("No authenticated user found");
+      console.error("❌ No authenticated user found");
       toast.error("You must be logged in to create personas", { id: "persona-generation" });
       return null;
     }
@@ -53,6 +54,22 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
 
     console.log("✅ Successfully generated persona:", data.persona.name);
     console.log("Generated persona ID:", data.persona.persona_id);
+    
+    // CRITICAL: Validate persona completeness before saving
+    console.log("=== VALIDATING PERSONA COMPLETENESS ===");
+    const validationResult = validatePersonaCompleteness(data.persona);
+    logPersonaValidation(data.persona, validationResult);
+    
+    if (!validationResult.isValid) {
+      console.error("❌ PERSONA FAILED VALIDATION");
+      const errorMsg = `Persona generation incomplete: ${validationResult.errors.join(', ')}`;
+      toast.error(errorMsg, { id: "persona-generation", duration: 8000 });
+      
+      // Still attempt to save but warn user of issues
+      toast.warning("Saving incomplete persona - please regenerate for better results", { 
+        duration: 5000 
+      });
+    }
     
     // Validate the enhanced traits
     console.log("=== VALIDATING ENHANCED TRAITS ===");
@@ -94,8 +111,19 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
         console.log("✅ Persona saved to database successfully with ID:", savedPersona.persona_id);
         console.log("✅ Saved persona user_id:", savedPersona.user_id);
         console.log("✅ Saved persona name:", savedPersona.name);
-        toast.success(`"${savedPersona.name}" created successfully!`, { id: "persona-generation" });
-        console.log("=== PERSONA GENERATION COMPLETED SUCCESSFULLY ===");
+        
+        // Final validation of saved persona
+        const finalValidation = validatePersonaCompleteness(savedPersona);
+        if (finalValidation.isValid) {
+          toast.success(`"${savedPersona.name}" created successfully!`, { id: "persona-generation" });
+        } else {
+          toast.warning(`"${savedPersona.name}" created but may be incomplete. Check details page.`, { 
+            id: "persona-generation",
+            duration: 6000
+          });
+        }
+        
+        console.log("=== PERSONA GENERATION COMPLETED ===");
         return savedPersona;
       } else {
         console.error("❌ Failed to save persona to database - savePersona returned null");
@@ -119,7 +147,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
       stack: error.stack,
       cause: error.cause
     });
-    toast.error(`An unexpected error occurred: ${error.message || "Unknown error"}`);
+    toast.error(`An unexpected error occurred: ${error.message || "Unknown error"}`, { id: "persona-generation" });
     return null;
   }
 };

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
+import { validatePersonaCompleteness, logPersonaValidation } from "@/services/persona/validation/personaValidation";
 
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
@@ -23,6 +24,19 @@ export function usePersonaDetail() {
       if (data) {
         console.log("Persona data loaded:", data);
         console.log("Profile image URL:", data.profile_image_url);
+        
+        // Validate the loaded persona
+        console.log("=== VALIDATING LOADED PERSONA ===");
+        const validationResult = validatePersonaCompleteness(data);
+        logPersonaValidation(data, validationResult);
+        
+        if (!validationResult.isValid) {
+          toast.warning(
+            `This persona appears to be incomplete: ${validationResult.errors.join(', ')}`,
+            { duration: 8000 }
+          );
+        }
+        
         setPersona(data);
       } else {
         console.error("Persona not found with ID:", id);
