@@ -1,4 +1,3 @@
-
 import { PersonaTemplate } from "./types.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -29,82 +28,184 @@ function parseOpenAIResponse(content: string, stepName: string): any {
 }
 
 // STEP 1: Generate basic demographics and persona info
-export async function generatePersonaDemographics(userPrompt: string): Promise<PersonaTemplate> {
-  console.log(`Generating demographics from prompt: ${userPrompt}`);
+export async function generatePersonaDemographics(prompt: string): Promise<any> {
+  console.log(`Generating demographics from prompt: "${prompt}"`);
   
-  const prompt = `You are an expert persona creator. Generate basic demographics and metadata for a persona based on this description: "${userPrompt}"
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-2025-04-14",
+    messages: [
+      {
+        role: "system",
+        content: `You are an expert persona researcher. Generate comprehensive demographic data for a realistic persona based on the user's prompt.
 
-CRITICAL INSTRUCTIONS:
-1. You must respond with ONLY valid JSON - no markdown, no explanations, no extra text
-2. Focus ONLY on demographics, basic info, and metadata - NO trait profiles yet
-3. Make the persona feel like a real person with authentic details
+CRITICAL: You MUST generate demographics using our complete PersonaMetadata structure, not a simplified version.
 
-Generate a persona with these fields ONLY:
+Return a JSON object with this exact structure:
 {
-  "persona_id": "unique_id",
-  "name": "Full Name",
-  "creation_date": "2025-06-20",
+  "persona_id": "generate unique ID like psc-YYYYMMDD-XXX",
+  "name": "realistic full name",
+  "creation_date": "current date",
+  "user_id": "will be set by system",
   "metadata": {
-    "enhanced_metadata_version": 2,
-    "age": 30,
-    "gender": "male/female/other",
-    "location": "City, State/Country",
-    "occupation": "Job Title",
-    "education_level": "Education Level",
-    "marital_status": "Status",
-    "children": 0,
-    "income_bracket": "income level",
-    "housing": "housing situation",
-    "health": {
-      "physical_activity_level": 0.7,
-      "chronic_conditions": [],
-      "mental_health_status": "good",
-      "sleep_quality": 0.8
+    // Core Demographics - ALL REQUIRED
+    "age": "specific age as string",
+    "gender": "male/female/non-binary/other",
+    "race_ethnicity": "specific ethnicity",
+    "sexual_orientation": "heterosexual/homosexual/bisexual/other",
+    "education_level": "high school/some college/bachelor's/master's/phd/other",
+    "occupation": "specific job title",
+    "employment_type": "full-time/part-time/self-employed/unemployed/retired/student",
+    "income_level": "low/lower-middle/middle/upper-middle/high",
+    "social_class_identity": "working class/middle class/upper class",
+    "marital_status": "single/married/divorced/widowed/domestic partnership",
+    "parenting_role": "no children/parent/stepparent/guardian/other",
+    "relationship_history": "brief description",
+    "military_service": "none/veteran/active duty/reserves",
+    
+    // Location & Environment
+    "region": "specific region/state",
+    "urban_rural_context": "urban/suburban/rural",
+    "location_history": {
+      "grew_up_in": "location",
+      "current_residence": "current location", 
+      "places_lived": ["list of places"]
     },
-    "background": "Brief background story",
-    "personality_summary": "Brief personality overview"
+    "migration_history": "native/immigrant/second generation/other",
+    "climate_risk_zone": "low/moderate/high",
+    
+    // Relationships & Family Dynamics
+    "relationships_family": {
+      "has_children": true/false,
+      "number_of_children": number or null,
+      "children_ages": [array of ages] or null,
+      "stepchildren": true/false/null,
+      "custody_arrangement": "description or null",
+      "living_situation": "alone/with partner/with family/roommates/other",
+      "household_composition": ["list of household members"],
+      "primary_caregiver_responsibilities": "description or null",
+      "eldercare_responsibilities": "description or null",
+      "partner_spouse_relationship": "description or null",
+      "partner_health_status": "description or null",
+      "children_health_issues": "description or null",
+      "family_relationship_quality": "excellent/good/fair/poor/complicated",
+      "family_stressors": ["list of stressors"],
+      "support_system_strength": "strong/moderate/weak/isolated",
+      "extended_family_involvement": "high/moderate/low/none",
+      "relationship_priorities": "description",
+      "co_parenting_dynamics": "description or null"
+    },
+    
+    // Cognitive, Psychological, and Cultural
+    "language_proficiency": ["list of languages"],
+    "religious_affiliation": "specific religion or none",
+    "religious_practice_level": "devout/moderate/occasional/non-practicing/atheist",
+    "cultural_background": "description",
+    "cultural_affiliation": ["list of cultural groups"],
+    "political_affiliation": "conservative/liberal/moderate/independent/other",
+    "political_sophistication": "high/moderate/low",
+    "tech_familiarity": "expert/proficient/basic/limited",
+    "learning_modality": "visual/auditory/kinesthetic/reading",
+    "trust_in_institutions": "high/moderate/low/very low",
+    "trauma_exposure": "none/minimal/moderate/significant",
+    
+    // Financial and Time Resource Profile
+    "financial_pressure": "none/low/moderate/high/severe",
+    "credit_access": "excellent/good/fair/poor/none",
+    "debt_load": "none/low/moderate/high/overwhelming",
+    "time_abundance": "abundant/sufficient/limited/scarce",
+    
+    // Digital Ecosystem & Signaling Behavior
+    "media_ecosystem": ["list of media sources"],
+    "aesthetic_subculture": "description or none",
+    
+    // Health-Related Attributes
+    "physical_health_status": "excellent/good/fair/poor",
+    "mental_health_status": "excellent/good/fair/poor/struggling",
+    "health_prioritization": "high/moderate/low",
+    "healthcare_access": "excellent/good/limited/poor",
+    "chronic_conditions": ["list or empty"],
+    "medications": ["list or empty"],
+    "mental_health_history": "description or none",
+    "therapy_counseling_experience": "extensive/some/none",
+    "health_insurance_status": "comprehensive/basic/limited/uninsured",
+    "fitness_activity_level": "very active/active/moderate/sedentary",
+    "dietary_restrictions": ["list or empty"],
+    "sleep_patterns": "excellent/good/fair/poor/disordered",
+    "stress_management": "excellent/good/fair/poor",
+    "substance_use": "none/occasional/regular/concerning",
+    "health_family_history": "description",
+    "disability_accommodations": "description or none",
+    
+    // Physical Description
+    "height": "height description",
+    "build_body_type": "description",
+    "hair_color": "color",
+    "hair_style": "style description",
+    "eye_color": "color", 
+    "skin_tone": "description",
+    "distinctive_features": ["list or empty"],
+    "style_fashion_sense": "description",
+    "grooming_habits": "description",
+    "physical_mannerisms": ["list or empty"],
+    "posture_bearing": "description",
+    "voice_speech_patterns": "description",
+    
+    // Knowledge Domains (1-5 scale: 1=minimal, 5=expert)
+    "knowledge_domains": {
+      "finance_basics": 1-5,
+      "crypto_blockchain": 1-5,
+      "world_politics": 1-5,
+      "national_politics": 1-5,
+      "pop_culture": 1-5,
+      "basic_technology": 1-5,
+      "deep_technology": 1-5,
+      "health_medicine": 1-5,
+      "advanced_medical": 1-5,
+      "science_concepts": 1-5,
+      "sports": 1-5,
+      "news_literacy": 1-5,
+      "environmental_issues": 1-5,
+      "cultural_history": 1-5,
+      "law_legal": 1-5,
+      "religion_spirituality": 1-5,
+      "art_literature": 1-5,
+      "gaming": 1-5,
+      "food_cooking": 1-5,
+      "travel_geography": 1-5,
+      "parenting_childcare": 1-5,
+      "home_improvement": 1-5,
+      "business_entrepreneurship": 1-5,
+      "psychology_social_science": 1-5,
+      "economics": 1-5
+    }
   }
 }
 
-Return ONLY the JSON object:`;
+Make this persona realistic and internally consistent. Base ALL demographics on the prompt provided. Ensure every required field has a realistic value - no nulls for required fields.`
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
+    temperature: 0.8,
+    max_tokens: 4000
+  });
+
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No content returned from OpenAI');
+  }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          {
-            role: 'system',
-            content: prompt
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.8,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`OpenAI API error in demographics: ${response.status} ${response.statusText}`);
-      console.error('Error details:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0].message.content.trim();
-    
-    const persona = parseOpenAIResponse(content, 'Demographics Generation');
-    console.log(`Generated demographics for: ${persona.name}`);
-    return persona;
-    
+    const parsed = JSON.parse(content);
+    console.log('Demographics Generation: Successfully parsed JSON response');
+    console.log(`Generated demographics for: ${parsed.name}`);
+    return parsed;
   } catch (error) {
-    console.error('Error generating demographics:', error);
-    throw new Error(`Demographics generation failed: ${error.message}`);
+    console.error('Failed to parse OpenAI response as JSON:', error);
+    console.error('Raw response:', content);
+    throw new Error(`Invalid JSON response from OpenAI: ${error.message}`);
   }
 }
 
