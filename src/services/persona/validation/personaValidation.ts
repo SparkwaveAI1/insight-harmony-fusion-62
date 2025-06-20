@@ -1,3 +1,4 @@
+
 export interface PersonaValidationResult {
   isValid: boolean;
   errors: string[];
@@ -23,8 +24,8 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   console.log("Has real traits:", hasRealTraits);
   
   if (!hasRealTraits) {
-    errors.push("Persona has default trait values - generation may have failed");
-    console.error("❌ TRAIT VALIDATION FAILED - All values appear to be defaults");
+    errors.push("Persona has default trait values - generation failed completely");
+    console.error("❌ CRITICAL: ALL TRAITS ARE DEFAULT VALUES - GENERATION FAILED");
     logDetailedTraitAnalysis(persona.trait_profile);
   }
   
@@ -66,42 +67,55 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
 
 function checkForRealTraits(traitProfile: any): boolean {
   if (!traitProfile || typeof traitProfile !== 'object') {
-    console.error("Trait profile is missing or invalid:", traitProfile);
+    console.error("❌ Trait profile is missing or invalid:", traitProfile);
     return false;
   }
   
   console.log("=== ANALYZING TRAIT PROFILE FOR DEFAULTS ===");
   
-  // Check if all values are default 0.5 (indicating failed generation)
   const checkCategory = (category: any, categoryName: string): boolean => {
     if (!category || typeof category !== 'object') {
-      console.warn(`Category ${categoryName} is missing or invalid:`, category);
+      console.warn(`❌ Category ${categoryName} is missing or invalid:`, category);
       return false;
     }
     
-    const values = Object.values(category);
-    const numericValues = values.filter(v => typeof v === 'number');
+    const allValues = [];
+    const extractValues = (obj: any, path: string = '') => {
+      for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === 'number') {
+          allValues.push({ path: path ? `${path}.${key}` : key, value });
+        } else if (typeof value === 'object' && value !== null) {
+          extractValues(value, path ? `${path}.${key}` : key);
+        }
+      }
+    };
     
-    console.log(`${categoryName} - Total values: ${values.length}, Numeric: ${numericValues.length}`);
+    extractValues(category);
     
-    if (numericValues.length === 0) {
-      console.warn(`${categoryName} has no numeric values`);
+    if (allValues.length === 0) {
+      console.warn(`❌ ${categoryName} has no numeric values`);
       return false;
     }
     
-    // Count exact 0.5 values
-    const exactHalfCount = numericValues.filter(v => v === 0.5).length;
-    const defaultRatio = exactHalfCount / numericValues.length;
+    // Count exact 0.5 values (defaults)
+    const exactHalfCount = allValues.filter(item => item.value === 0.5).length;
+    const defaultRatio = exactHalfCount / allValues.length;
     
-    console.log(`${categoryName} - Values at 0.5: ${exactHalfCount}/${numericValues.length} (${Math.round(defaultRatio * 100)}%)`);
+    console.log(`${categoryName} analysis:`);
+    console.log(`  - Total numeric values: ${allValues.length}`);
+    console.log(`  - Values exactly 0.5: ${exactHalfCount}`);
+    console.log(`  - Default ratio: ${Math.round(defaultRatio * 100)}%`);
     
-    // Log some actual values for debugging
-    const sampleValues = Object.entries(category).slice(0, 3);
-    console.log(`${categoryName} sample values:`, sampleValues);
+    // Log sample values for debugging
+    console.log(`  - Sample values:`, allValues.slice(0, 3).map(item => `${item.path}=${item.value}`));
     
-    // If more than 80% of values are exactly 0.5, likely default values
-    const hasRealValues = defaultRatio < 0.8;
-    console.log(`${categoryName} has real values: ${hasRealValues}`);
+    // If more than 50% of values are exactly 0.5, it's likely all defaults
+    const hasRealValues = defaultRatio <= 0.5;
+    console.log(`  - Has real values: ${hasRealValues} (threshold: ≤50% defaults)`);
+    
+    if (!hasRealValues) {
+      console.error(`❌ ${categoryName} FAILED - ${Math.round(defaultRatio * 100)}% are default 0.5 values`);
+    }
     
     return hasRealValues;
   };
@@ -110,16 +124,21 @@ function checkForRealTraits(traitProfile: any): boolean {
   let validCategories = 0;
   
   for (const cat of categories) {
-    if (checkCategory(traitProfile[cat], cat)) {
+    if (traitProfile[cat] && checkCategory(traitProfile[cat], cat)) {
       validCategories++;
     }
   }
   
-  console.log(`Valid categories: ${validCategories}/${categories.length}`);
+  console.log(`✅ Valid categories: ${validCategories}/${categories.length}`);
   
-  // Require at least 2 categories to have real values
-  const hasRealTraits = validCategories >= 2;
-  console.log(`Overall has real traits: ${hasRealTraits}`);
+  // Require at least 3 out of 4 core categories to have real values
+  const hasRealTraits = validCategories >= 3;
+  console.log(`✅ Overall has real traits: ${hasRealTraits} (need ≥3 valid categories)`);
+  
+  if (!hasRealTraits) {
+    console.error("❌ CRITICAL FAILURE: Not enough trait categories have real values");
+    console.error("❌ This indicates the OpenAI generation completely failed");
+  }
   
   return hasRealTraits;
 }
