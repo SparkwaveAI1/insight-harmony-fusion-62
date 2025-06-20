@@ -47,7 +47,7 @@ export function validateTraitRealism(traitProfile: any): { isValid: boolean; err
   return { isValid: true, errors: [], defaultRatio };
 }
 
-// Enhanced demographic validation to ensure proper structure according to our PersonaMetadata interface
+// Updated demographic validation that aligns with our 10-stage process
 export function validateDemographicStructure(metadata: any): { isValid: boolean; errors: string[] } {
   console.log("=== VALIDATING DEMOGRAPHIC STRUCTURE ===");
   console.log("Received metadata:", metadata);
@@ -56,30 +56,73 @@ export function validateDemographicStructure(metadata: any): { isValid: boolean;
     return { isValid: false, errors: ["Metadata is missing or invalid"] };
   }
 
-  // Check for required core demographic fields according to our flat PersonaMetadata structure
-  const requiredFields = ['age', 'gender', 'education_level', 'occupation'];
-  const missingFields = requiredFields.filter(field => !metadata[field]);
+  // Check for required core demographic fields (Stage 1 only)
+  const requiredCoreFields = ['age', 'gender', 'education_level', 'occupation'];
+  const missingCoreFields = requiredCoreFields.filter(field => !metadata[field]);
   
-  if (missingFields.length > 0) {
-    console.warn(`Missing required demographic fields: ${missingFields.join(', ')}`);
+  if (missingCoreFields.length > 0) {
+    console.warn(`Missing required core demographic fields: ${missingCoreFields.join(', ')}`);
     return { 
       isValid: false, 
-      errors: [`Missing required demographic fields: ${missingFields.join(', ')}`] 
+      errors: [`Missing required core demographic fields: ${missingCoreFields.join(', ')}`] 
     };
   }
   
-  // Check for location information (can be in various fields)
+  console.log("✅ Core demographic structure validation passed");
+  return { isValid: true, errors: [] };
+}
+
+// New function to validate complete metadata after all stages
+export function validateCompleteMetadata(metadata: any): { isValid: boolean; errors: string[] } {
+  console.log("=== VALIDATING COMPLETE METADATA ===");
+  
+  if (!metadata || typeof metadata !== 'object') {
+    return { isValid: false, errors: ["Metadata is missing or invalid"] };
+  }
+
+  const errors: string[] = [];
+  
+  // Check core demographics
+  const requiredCoreFields = ['age', 'gender', 'education_level', 'occupation'];
+  const missingCoreFields = requiredCoreFields.filter(field => !metadata[field]);
+  if (missingCoreFields.length > 0) {
+    errors.push(`Missing core fields: ${missingCoreFields.join(', ')}`);
+  }
+  
+  // Check location information (should exist after Stage 2)
   const hasLocationInfo = metadata.region || metadata.urban_rural_context || metadata.location_history;
   if (!hasLocationInfo) {
-    console.warn("Missing location information");
-    return { 
-      isValid: false, 
-      errors: ["Missing location information"] 
-    };
+    errors.push("Missing location information");
   }
   
-  console.log("✅ Demographic structure validation passed");
-  return { isValid: true, errors: [] };
+  // Check family relationships (should exist after Stage 3)
+  if (!metadata.relationships_family || typeof metadata.relationships_family !== 'object') {
+    errors.push("Missing family relationships data");
+  }
+  
+  // Check health attributes (should exist after Stage 4)
+  const hasHealthInfo = metadata.physical_health_status || metadata.mental_health_status;
+  if (!hasHealthInfo) {
+    errors.push("Missing health information");
+  }
+  
+  // Check physical description (should exist after Stage 5)
+  const hasPhysicalInfo = metadata.height || metadata.build_body_type;
+  if (!hasPhysicalInfo) {
+    errors.push("Missing physical description");
+  }
+  
+  // Check knowledge domains (should exist after Stage 6)
+  if (!metadata.knowledge_domains || typeof metadata.knowledge_domains !== 'object') {
+    errors.push("Missing knowledge domains");
+  }
+  
+  console.log(`Complete metadata validation: ${errors.length === 0 ? '✅ PASSED' : '❌ FAILED'}`);
+  if (errors.length > 0) {
+    console.error("Validation errors:", errors);
+  }
+  
+  return { isValid: errors.length === 0, errors };
 }
 
 export async function validatePersonaUniqueness(supabase: any, persona: any): Promise<string> {

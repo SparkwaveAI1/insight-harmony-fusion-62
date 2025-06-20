@@ -23,7 +23,12 @@ import {
   wrapWithErrorHandling 
 } from "./errorHandler.ts";
 import { withRetry } from "./retryService.ts";
-import { validateTraitRealism, validateDemographicStructure } from "./validationHelpers.ts";
+import { 
+  validateTraitRealism, 
+  validateDemographicStructure, 
+  validateCompleteMetadata,
+  validatePersonaUniqueness 
+} from "./validationHelpers.ts";
 
 export async function generateBasePersona(prompt: string): Promise<PersonaTemplate> {
   console.log('=== STAGE 1: GENERATING CORE DEMOGRAPHICS ===');
@@ -40,13 +45,13 @@ export async function generateBasePersona(prompt: string): Promise<PersonaTempla
 
   console.log(`✅ Generated base persona "${basePersona.name}"`);
   
-  // Validate demographic structure
+  // Validate ONLY core demographic structure (Stage 1 fields)
   const demographicValidation = validateDemographicStructure(basePersona.metadata);
   if (!demographicValidation.isValid) {
-    console.error('❌ Demographic validation failed:', demographicValidation.errors);
+    console.error('❌ Core demographic validation failed:', demographicValidation.errors);
     throw new PersonaGenerationError(
       'demographics',
-      `Demographics validation failed: ${demographicValidation.errors.join(', ')}`,
+      `Core demographics validation failed: ${demographicValidation.errors.join(', ')}`,
       undefined,
       { personaName: basePersona.name, errors: demographicValidation.errors }
     );
@@ -139,6 +144,13 @@ export async function enhancePersonaMetadata(basePersona: PersonaTemplate, promp
     ...knowledgeDomains.knowledge_domains,
     ...psychologicalCultural.psychological_cultural
   });
+  
+  // Now validate complete metadata after all stages
+  const completeValidation = validateCompleteMetadata(basePersona.metadata);
+  if (!completeValidation.isValid) {
+    console.warn('⚠️ Complete metadata validation failed:', completeValidation.errors);
+    // Don't throw error, just warn - we can continue with incomplete data
+  }
   
   console.log('✅ Enhanced metadata with all comprehensive attributes');
   return basePersona;
