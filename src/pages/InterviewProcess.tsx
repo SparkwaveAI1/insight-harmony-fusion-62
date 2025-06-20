@@ -11,7 +11,6 @@ import Reveal from "@/components/ui-custom/Reveal";
 import ApiKeyManager from "@/components/ApiKeyManager";
 import OpenAITester from "@/components/OpenAITester";
 import { useInterviewSession, InterviewState, Message } from "@/hooks/useInterviewSession";
-import { generateResponse } from "@/services/ai/openaiService";
 import { getApiKey } from "@/services/utils/apiKeyUtils";
 import { Switch } from "@/components/ui/switch";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
@@ -59,6 +58,7 @@ const InterviewProcess = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+
   const testAudioRecorder = useAudioRecorder({
     debug: true,
     onComplete: (blob) => {
@@ -228,111 +228,33 @@ const InterviewProcess = () => {
     setIsLoading(true);
     
     try {
-      await generateAiSummary(transcript);
+      console.log('Interview functionality is currently disabled');
+      toast({
+        title: "Interview Disabled",
+        description: "Interview functionality is currently not available.",
+        variant: "default"
+      });
     } catch (error) {
-      console.error("Error generating summary:", error);
+      console.error("Error:", error);
       toast({
         title: "Error",
-        description: "Failed to generate summary. Please check your API key or try again.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
-  }
-
-  const generateAiSummary = async (interviewMessages: Message[]) => {
-    if (!apiKey) {
-      setShowApiKeyInput(true);
-      setIsLoading(false);
-      return;
-    }
-
-    const userResponses = interviewMessages.filter(m => m.role === "user").map(m => m.content);
-    const aiQuestions = interviewMessages.filter(m => m.role === "ai").map(m => m.content);
-    
-    const prompt = `
-    You are an expert qualitative researcher analyzing an interview.
-    
-    Interview questions:
-    ${aiQuestions.map((q, i) => `${i+1}. ${q}`).join('\n')}
-    
-    Responses:
-    ${userResponses.map((r, i) => `Response ${i+1}: ${r}`).join('\n')}
-    
-    Based on this interview, generate a detailed qualitative analysis including:
-    1. Key insights and themes
-    2. Needs, pain points, and motivations
-    3. Recommendations based on the responses
-    4. A brief persona description that summarizes who this person is and what they care about
-    
-    Format your analysis with markdown headings and bullet points for easy reading.
-    `;
-
-    try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert qualitative researcher who analyzes interview responses to generate insights."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1500
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Failed to connect to OpenAI");
-      }
-
-      const data = await response.json();
-      const generatedSummary = data.choices[0].message.content;
-      
-      setSummary(generatedSummary);
-      setIsLoading(false);
-      toast({
-        title: "Success",
-        description: "AI summary generated successfully",
-      });
-    } catch (error) {
-      console.error("Error calling OpenAI API:", error);
-      const basicSummary = `Based on your responses, we've identified the following key points:\n\n` +
-        `- You've shared ${userResponses.length} responses that help us understand your perspective\n` +
-        `- We can now build a persona based on this information\n\n` +
-        `Note: This is a basic summary as there was an issue connecting to the AI service. Please check your API key or try again later.`;
-      
-      setSummary(basicSummary);
-      
-      toast({
-        title: "Limited Functionality",
-        description: "Using basic summary due to API connection issues",
+        description: "Interview functionality is currently disabled.",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
+  }
+
+  const generateAiSummary = async (interviewMessages: Message[]) => {
+    console.log('Interview functionality is currently disabled');
   };
 
   const handleApiKeyUpdate = (newApiKey: string | null) => {
     if (newApiKey) {
-      console.log("API key updated, starting interview");
+      console.log("API key updated");
       setApiKey(newApiKey);
       setShowApiKeyInput(false);
-      setTimeout(() => {
-        startInterview();
-      }, 100);
     } else {
       console.log("API key cleared");
     }
@@ -439,355 +361,19 @@ const InterviewProcess = () => {
       
       <main className="flex-grow bg-[#1a1a1a] flex flex-col">
         <div className="container max-w-4xl mx-auto px-4 py-12 pt-24 flex-grow flex flex-col items-center justify-center">
-          {showApiKeyInput ? (
-            <div className="bg-card p-6 rounded-lg border w-full max-w-md">
-              <h3 className="font-medium mb-4 text-xl">OpenAI API Key Required</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                To use the AI interviewer, please provide your OpenAI API key. This key is required for processing audio and generating questions.
-              </p>
-              <ApiKeyManager onApiKeyUpdate={handleApiKeyUpdate} />
-              
-              <div className="mt-6 space-y-4 pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="voice-toggle" className="cursor-pointer flex items-center">
-                    {useVoice ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
-                    {useVoice ? "Voice enabled" : "Voice disabled"}
-                  </label>
-                  <Switch 
-                    id="voice-toggle" 
-                    checked={useVoice} 
-                    onCheckedChange={toggleVoice} 
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <label htmlFor="headphones-toggle" className="cursor-pointer flex items-center">
-                    <Headphones className="h-4 w-4 mr-2" />
-                    Using headphones
-                  </label>
-                  <Switch 
-                    id="headphones-toggle" 
-                    checked={useHeadphones} 
-                    onCheckedChange={setUseHeadphones} 
-                  />
-                </div>
-                
-                {!useHeadphones && (
-                  <div className="text-sm text-amber-500 pl-6">
-                    Using headphones is recommended to prevent echo.
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <label htmlFor="silence-detection-toggle" className="cursor-pointer flex items-center">
-                    <Mic className="h-4 w-4 mr-2" />
-                    Auto-stop on silence
-                  </label>
-                  <Switch 
-                    id="silence-detection-toggle" 
-                    checked={silenceDetectionEnabled} 
-                    onCheckedChange={toggleSilenceDetection} 
-                  />
-                </div>
-                
-                {silenceDetectionEnabled && (
-                  <div className="space-y-3 pl-6 mt-2">
-                    <div>
-                      <label className="text-sm text-muted-foreground">
-                        Silence threshold: {silenceThreshold}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="5" 
-                        max="30" 
-                        value={silenceThreshold} 
-                        onChange={e => setSilenceThreshold(Number(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground">
-                        Silence timeout: {silenceTimeout/1000}s
-                      </label>
-                      <input 
-                        type="range" 
-                        min="1500" 
-                        max="5000" 
-                        step="500"
-                        value={silenceTimeout} 
-                        onChange={e => setSilenceTimeout(Number(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                    
-                    {!useHeadphones && (
-                      <div>
-                        <label className="text-sm text-muted-foreground">
-                          Mic activation delay: {recordingDelay}ms
-                        </label>
-                        <input 
-                          type="range" 
-                          min="300" 
-                          max="1500" 
-                          step="100"
-                          value={recordingDelay} 
-                          onChange={e => setRecordingDelay(Number(e.target.value))}
-                          className="w-full"
-                        />
-                        <div className="text-xs text-amber-400 mt-1">
-                          Increase delay if you're experiencing echo
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-6 pt-4 border-t">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full ${getMicStatusColor()} mr-2`}></div>
-                    <span className="text-sm">{getMicStatusText()}</span>
-                  </div>
-                  <Button onClick={testMicrophone} size="sm" variant={testAudioRecorder.isRecording ? "destructive" : "outline"}>
-                    {testAudioRecorder.isRecording ? (
-                      <>
-                        <MicOff className="h-4 w-4 mr-2" />
-                        Stop Test
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="h-4 w-4 mr-2" />
-                        Test Mic
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                {testAudioRecorder.isRecording && (
-                  <canvas 
-                    ref={audioVisualizer}
-                    width="300"
-                    height="60"
-                    className="w-full h-[60px] bg-black/20 rounded-md mb-2"
-                  ></canvas>
-                )}
-                
-                {testAudioRecorder.error && (
-                  <div className="text-red-500 text-sm mt-2">
-                    Error: {testAudioRecorder.error.message}
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-6 pt-4 border-t">
-                <h4 className="font-medium mb-4">Troubleshoot API Connection</h4>
-                <OpenAITester />
-              </div>
-            </div>
-          ) : isLoading ? (
-            <div className="text-center space-y-6">
-              <Reveal>
-                <h2 className="text-2xl font-bold text-white">Interview Complete</h2>
-              </Reveal>
-              <Reveal delay={100}>
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-              </Reveal>
-              <Reveal delay={200}>
-                <p className="text-white/80">Analyzing your responses...</p>
-              </Reveal>
-            </div>
-          ) : isCompleted && summary ? (
-            <div className="w-full space-y-6">
-              <div className="bg-card p-6 rounded-lg border">
-                <h3 className="font-medium mb-2 text-xl">Interview Summary</h3>
-                <div className="bg-muted/30 p-4 rounded-lg whitespace-pre-wrap prose max-w-none dark:prose-invert">
-                  <div dangerouslySetInnerHTML={{ __html: summary.replace(/\n/g, '<br/>') }} />
-                </div>
-                <div className="mt-8 space-y-4">
-                  <Button className="w-full">Save Persona</Button>
-                  <Link to="/persona-ai-interviewer">
-                    <Button variant="outline" className="w-full">
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back to Interviewer
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center max-w-xl w-full mb-12 mt-8">
-                <div className="relative mb-10">
-                  <Avatar className={`w-64 h-64 rounded-full ${interviewState === InterviewState.SPEAKING ? 'animate-pulse' : ''}`}>
-                    <AvatarImage
-                      src="/lovable-uploads/0082cb4d-cc17-46da-8c05-508924cdc668.png"
-                      alt="AI Avatar"
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary text-4xl">AI</AvatarFallback>
-                  </Avatar>
-                  
-                  {useVoice && (
-                    <div className="absolute bottom-4 right-4 bg-black/60 p-2 rounded-full">
-                      <Volume2 className="h-5 w-5 text-white" />
-                    </div>
-                  )}
-                  
-                  <div className={`absolute inset-0 rounded-full ring-4 ring-primary shadow-[0_0_15px_rgba(59,130,246,0.6)] transition-opacity duration-500 ${
-                    interviewState === InterviewState.SPEAKING ? 'opacity-100' : 'opacity-0'
-                  }`}></div>
-                  
-                  {interviewState === InterviewState.LISTENING && (
-                    <div className="absolute top-0 right-0">
-                      <Badge variant={testAudioRecorder.microphoneAccess ? "default" : "destructive"}>
-                        {testAudioRecorder.microphoneAccess ? (
-                          <Mic className="h-3 w-3 mr-1 animate-pulse text-green-300" />
-                        ) : (
-                          <MicOff className="h-3 w-3 mr-1 text-red-300" />
-                        )}
-                        {testAudioRecorder.microphoneAccess ? "Mic Active" : "Mic Issue"}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-                
-                <Reveal animation="fade-in-up">
-                  <div className="bg-black/30 p-6 rounded-xl backdrop-blur-sm border border-white/10 max-w-2xl">
-                    <h2 className="text-2xl text-center text-white font-medium mb-2 max-w-[600px] mx-auto">
-                      {currentQuestionText}
-                    </h2>
-                    
-                    <div className="text-center mt-4 text-white/70 text-sm">
-                      {interviewState === InterviewState.SPEAKING && (
-                        <div className="flex items-center justify-center">
-                          <Play className="h-4 w-4 mr-2 text-primary animate-pulse" />
-                          <span>AI is speaking...</span>
-                        </div>
-                      )}
-                      
-                      {interviewState === InterviewState.LISTENING && (
-                        <div className="flex items-center justify-center">
-                          <Mic className="h-4 w-4 mr-2 text-red-400 animate-pulse" />
-                          <span>Listening to your response...</span>
-                          {silenceDetectionEnabled && (
-                            <span className="ml-1 text-xs text-white/50">
-                              (Will auto-advance after {silenceTimeout/1000}s of silence)
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
-                      {interviewState === InterviewState.PROCESSING && (
-                        <div className="flex items-center justify-center">
-                          <div className="w-4 h-4 rounded-full border-2 border-white/70 border-t-transparent animate-spin mr-2"></div>
-                          <span>Processing...</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Reveal>
-                
-                {showDebugging && (
-                  <div className="mt-6 bg-black/50 p-4 rounded-lg border border-white/10 w-full">
-                    <h3 className="text-white font-medium mb-2">Debug Info</h3>
-                    <div className="text-xs text-white/70 space-y-1 font-mono">
-                      <div>State: {InterviewState[interviewState]}</div>
-                      <div>Mic Access: {testAudioRecorder.microphoneAccess ? "Granted" : "Not Granted"}</div>
-                      <div>Recording: {isRecording ? "Yes" : "No"}</div>
-                      <div>Messages: {messages.length}</div>
-                      <div>Current Q: {currentQuestion + 1} of {INTERVIEW_QUESTIONS.length}</div>
-                      <div>API Key: {apiKey ? "Set" : "Not Set"}</div>
-                      <div>Voice: {useVoice ? "Enabled" : "Disabled"}</div>
-                      <div>Silence Detection: {silenceDetectionEnabled ? `Enabled (${silenceThreshold}%, ${silenceTimeout/1000}s)` : "Disabled"}</div>
-                      {testAudioRecorder.error && (
-                        <div className="text-red-400">Error: {testAudioRecorder.error.message}</div>
-                      )}
-                    </div>
-                    <div className="mt-2 flex space-x-2">
-                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={testMicrophone}>
-                        {testAudioRecorder.isRecording ? "Stop Test" : "Test Mic"}
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={testAudioRecorder.checkMicrophoneStatus}>
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        Check Mic
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="w-full fixed bottom-0 left-0 bg-black/60 backdrop-blur-md p-4 border-t border-white/10">
-                <div className="container mx-auto max-w-4xl flex items-center justify-between">
-                  <Button 
-                    variant="outline" 
-                    className="border-white/20 bg-transparent text-white hover:bg-white/10"
-                    onClick={handleExit}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Exit
-                  </Button>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="outline" 
-                      className="border-white/20 bg-transparent text-white hover:bg-white/10"
-                      onClick={replayQuestion}
-                      disabled={interviewState !== InterviewState.LISTENING}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Replay
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="border-white/20 bg-transparent text-white hover:bg-white/10"
-                      onClick={skipQuestion}
-                      disabled={!canSkip || interviewState !== InterviewState.LISTENING}
-                    >
-                      <SkipForward className="h-4 w-4 mr-2" />
-                      Skip
-                    </Button>
-                    
-                    <div className="flex items-center ml-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white/80 hover:text-white"
-                        onClick={toggleVoice}
-                        disabled={interviewState !== InterviewState.IDLE}
-                      >
-                        {useVoice ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white/80 hover:text-white"
-                        onClick={() => setUseHeadphones(!useHeadphones)}
-                        title={useHeadphones ? "Using headphones" : "Not using headphones"}
-                      >
-                        <Headphones className={`h-4 w-4 ${useHeadphones ? "text-green-400" : "text-white/60"}`} />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-white/80 hover:text-white"
-                        onClick={toggleDebugging}
-                      >
-                        <span className="text-xs font-mono">{showDebugging ? "Hide Debug" : "Debug"}</span>
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="text-white/80 font-mono">
-                    {formatTime(elapsedTime)} / 60:00
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+          <div className="bg-card p-6 rounded-lg border w-full max-w-md text-center">
+            <h3 className="font-medium mb-4 text-xl">Interview Feature Temporarily Disabled</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              The interview functionality is currently being updated and is not available. 
+              Please check back later or use the persona creation tools instead.
+            </p>
+            <Link to="/persona-ai-interviewer">
+              <Button className="w-full">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Interviewer
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
       
