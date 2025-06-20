@@ -1,3 +1,4 @@
+
 import { Persona } from "@/services/persona/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaDemographics from "./PersonaDemographics";
@@ -99,7 +100,7 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
         </TabsContent>
 
         <TabsContent value="insights" className="space-y-6">
-          <PersonaKeyInsights />
+          <PersonaKeyInsights metadata={persona} />
         </TabsContent>
       </Tabs>
     </div>

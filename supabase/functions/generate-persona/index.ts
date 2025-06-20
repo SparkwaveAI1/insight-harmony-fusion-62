@@ -67,6 +67,31 @@ function validateTraitRealism(traitProfile: any): { isValid: boolean; errors: st
   return { isValid: true, errors: [], defaultRatio };
 }
 
+// Enhanced demographic validation to ensure proper structure
+function validateDemographicStructure(metadata: any): { isValid: boolean; errors: string[] } {
+  console.log("=== VALIDATING DEMOGRAPHIC STRUCTURE ===");
+  console.log("Received metadata:", metadata);
+  
+  if (!metadata || typeof metadata !== 'object') {
+    return { isValid: false, errors: ["Metadata is missing or invalid"] };
+  }
+
+  // Check for required demographic fields according to our PersonaMetadata interface
+  const requiredFields = ['age', 'gender', 'education_level', 'occupation', 'location'];
+  const missingFields = requiredFields.filter(field => !metadata[field]);
+  
+  if (missingFields.length > 0) {
+    console.warn(`Missing required demographic fields: ${missingFields.join(', ')}`);
+    return { 
+      isValid: false, 
+      errors: [`Missing required demographic fields: ${missingFields.join(', ')}`] 
+    };
+  }
+  
+  console.log("✅ Demographic structure validation passed");
+  return { isValid: true, errors: [] };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -103,7 +128,7 @@ serve(async (req) => {
     console.log(`User: ${user.id}`);
     console.log(`Prompt length: ${prompt.length} characters`);
     
-    // STEP 1: Generate demographics with retry logic
+    // STEP 1: Generate demographics with retry logic and enhanced validation
     const basePersona = await wrapWithErrorHandling(
       () => withRetry(
         () => generatePersonaDemographics(prompt),
@@ -115,6 +140,18 @@ serve(async (req) => {
     );
 
     console.log(`Step 1 Complete: Generated base persona "${basePersona.name}"`);
+    
+    // CRITICAL: Validate demographic structure
+    const demographicValidation = validateDemographicStructure(basePersona.metadata);
+    if (!demographicValidation.isValid) {
+      console.error('❌ Demographic validation failed:', demographicValidation.errors);
+      throw new PersonaGenerationError(
+        'demographics',
+        `Demographics validation failed: ${demographicValidation.errors.join(', ')}`,
+        undefined,
+        { personaName: basePersona.name, errors: demographicValidation.errors }
+      );
+    }
     
     // Validate persona_id uniqueness
     const { data: existingPersona } = await supabase
@@ -285,7 +322,7 @@ serve(async (req) => {
 
     console.log('=== PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
     console.log(`Final persona: ${validatedPersona.name} for user: ${user.id}`);
-    console.log(`- Demographics: ✓`);
+    console.log(`- Demographics: ✓ (${Object.keys(validatedPersona.metadata).length} fields)`);
     console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
     console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);
     console.log(`- Interview sections: ✓ (${validatedPersona.interview_sections?.length || 0} sections)`);
@@ -297,7 +334,8 @@ serve(async (req) => {
         warnings: finalValidation.warnings,
         metadata: {
           traitGenerationAttempts: attemptCount,
-          hasRealisticTraits: true
+          hasRealisticTraits: true,
+          demographicFieldsGenerated: Object.keys(validatedPersona.metadata).length
         }
       }),
       { 
