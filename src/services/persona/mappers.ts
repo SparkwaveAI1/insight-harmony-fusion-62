@@ -2,7 +2,31 @@ import { DbPersona, Persona, PersonaMetadata, InterviewSection } from "./types";
 import { Json } from "@/integrations/supabase/types";
 
 export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'created_at'> {
+  console.log("=== CONVERTING PERSONA TO DB FORMAT ===");
   console.log("Converting persona to DB format:", persona.persona_id);
+  console.log("Persona name:", persona.name);
+  
+  // Log trait profile before conversion
+  if (persona.trait_profile) {
+    console.log("Trait profile categories:", Object.keys(persona.trait_profile));
+    
+    // Sample some values to check for defaults
+    const bigFive = persona.trait_profile.big_five;
+    if (bigFive) {
+      console.log("Big Five sample values:", {
+        openness: bigFive.openness,
+        conscientiousness: bigFive.conscientiousness,
+        extraversion: bigFive.extraversion
+      });
+    }
+    
+    const worldValues = persona.trait_profile.world_values;
+    if (worldValues) {
+      console.log("World Values sample:", worldValues);
+    }
+  } else {
+    console.error("❌ PERSONA HAS NO TRAIT PROFILE");
+  }
   
   // Ensure emotional_triggers has the correct structure for database storage
   let emotionalTriggers = persona.emotional_triggers;
@@ -47,11 +71,15 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
     trait_profile_keys: dbPersona.trait_profile ? Object.keys(dbPersona.trait_profile as any) : []
   });
   
+  console.log("=== END PERSONA TO DB CONVERSION ===");
+  
   return dbPersona;
 }
 
 export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
+  console.log("=== CONVERTING DB PERSONA TO APP FORMAT ===");
   console.log("Converting DB persona to app format:", dbPersona.persona_id);
+  console.log("DB persona name:", dbPersona.name);
   
   // Handle emotional triggers with proper fallback structure
   let emotionalTriggers;
@@ -82,6 +110,10 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
   // Handle trait profile data more carefully with comprehensive validation
   let traitProfile = dbPersona.trait_profile as unknown as Record<string, any>;
   
+  console.log("=== ANALYZING DB TRAIT PROFILE ===");
+  console.log("Raw trait profile type:", typeof traitProfile);
+  console.log("Raw trait profile keys:", traitProfile ? Object.keys(traitProfile) : "none");
+  
   // Check for various forms of malformed trait data
   if (!traitProfile || 
       typeof traitProfile !== 'object' || 
@@ -89,12 +121,34 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
       traitProfile.value === "undefined" ||
       Object.keys(traitProfile).length === 0) {
     
-    console.warn("Trait profile data is malformed or empty, creating comprehensive default structure");
+    console.warn("❌ TRAIT PROFILE DATA IS MALFORMED OR EMPTY");
+    console.warn("Creating comprehensive default structure");
     traitProfile = createDefaultTraitProfile();
   } else {
+    console.log("✅ Trait profile exists, validating structure...");
+    
+    // Log some sample values before validation
+    if (traitProfile.big_five) {
+      console.log("DB Big Five sample:", {
+        openness: traitProfile.big_five.openness,
+        conscientiousness: traitProfile.big_five.conscientiousness
+      });
+    }
+    
     // Validate existing trait profile structure
     traitProfile = validateTraitProfile(traitProfile);
   }
+  
+  console.log("=== FINAL TRAIT PROFILE CHECK ===");
+  if (traitProfile.big_five) {
+    console.log("Final Big Five values:", {
+      openness: traitProfile.big_five.openness,
+      conscientiousness: traitProfile.big_five.conscientiousness,
+      extraversion: traitProfile.big_five.extraversion
+    });
+  }
+  
+  console.log("=== END DB TO PERSONA CONVERSION ===");
   
   return {
     id: dbPersona.id,
@@ -124,6 +178,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
 }
 
 function createDefaultTraitProfile() {
+  console.log("⚠️ CREATING DEFAULT TRAIT PROFILE - THIS INDICATES A PROBLEM");
   return {
     big_five: {
       openness: 0.5,
@@ -209,6 +264,7 @@ function createDefaultTraitProfile() {
 }
 
 function validateTraitProfile(traitProfile: Record<string, any>) {
+  console.log("=== VALIDATING TRAIT PROFILE ===");
   const defaultProfile = createDefaultTraitProfile();
   
   // Ensure all main categories exist and have proper values
@@ -222,12 +278,14 @@ function validateTraitProfile(traitProfile: Record<string, any>) {
         if (typeof defaultValue === 'object') {
           // Handle nested objects like political_motivations
           if (!traitProfile[category][trait] || typeof traitProfile[category][trait] !== 'object') {
+            console.warn(`Missing nested trait object: ${category}.${trait}, using defaults`);
             traitProfile[category][trait] = defaultValue;
           } else {
             for (const [nestedTrait, nestedDefault] of Object.entries(defaultValue)) {
               if (typeof traitProfile[category][trait][nestedTrait] !== 'number' ||
                   traitProfile[category][trait][nestedTrait] < 0 ||
                   traitProfile[category][trait][nestedTrait] > 1) {
+                console.warn(`Invalid nested trait value for ${category}.${trait}.${nestedTrait}, using default`);
                 traitProfile[category][trait][nestedTrait] = nestedDefault;
               }
             }
@@ -245,5 +303,6 @@ function validateTraitProfile(traitProfile: Record<string, any>) {
     }
   }
   
+  console.log("=== END TRAIT PROFILE VALIDATION ===");
   return traitProfile;
 }
