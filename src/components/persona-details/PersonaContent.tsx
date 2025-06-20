@@ -46,10 +46,13 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
     console.error("❌ CRITICAL: No trait_profile in persona object!");
   }
 
-  // Process interview sections to ensure proper format
+  // Fix interview sections type compatibility
   const processedInterviewSections = Array.isArray(persona.interview_sections) 
-    ? persona.interview_sections 
-    : persona.interview_sections?.interview_sections || [];
+    ? persona.interview_sections.map(section => ({
+        section_title: section.section_title,
+        responses: section.responses || []
+      }))
+    : [];
 
   return (
     <div className="mt-8">
