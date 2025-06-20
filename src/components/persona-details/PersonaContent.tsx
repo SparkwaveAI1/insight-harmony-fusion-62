@@ -62,15 +62,18 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
         // Handle both old and new interview section formats
         if (typeof section === 'object' && section !== null) {
           if ('section_title' in section && 'responses' in section) {
-            // New format with proper structure
+            // New format with proper structure - ensure section_title is a string
             return {
-              section_title: section.section_title,
+              section_title: String(section.section_title || "Interview Section"),
               responses: Array.isArray(section.responses) 
                 ? section.responses.map(response => {
                     if (typeof response === 'string') {
                       return { question: "Response", answer: response };
                     }
-                    return response;
+                    return {
+                      question: String(response.question || "Question"),
+                      answer: String(response.answer || "")
+                    };
                   })
                 : []
             };
@@ -128,10 +131,7 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
         </TabsContent>
 
         <TabsContent value="interview" className="space-y-6">
-          <InterviewResponses 
-            sections={processedInterviewSections} 
-            personaName={persona.name}
-          />
+          <InterviewResponses sections={processedInterviewSections} />
         </TabsContent>
 
         <TabsContent value="triggers" className="space-y-6">
