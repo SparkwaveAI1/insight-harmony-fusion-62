@@ -4,6 +4,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders } from "../_shared/cors.ts";
 import { generatePersonaDemographics, generatePersonaTraits, generateInterviewResponses } from "./openaiService.ts";
 import { validateAndCleanTraits } from "./traitValidator.ts";
+import { 
+  validateUserPrompt, 
+  validateGeneratedPersona, 
+  validateTraitValues 
+} from "./validationService.ts";
+import { 
+  handleGenerationError, 
+  PersonaGenerationError, 
+  wrapWithErrorHandling 
+} from "./errorHandler.ts";
+import { withRetry } from "./retryService.ts";
 
 // Initialize Supabase client for user validation
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -19,13 +30,7 @@ serve(async (req) => {
     // Security validation: Verify user authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      throw new PersonaGenerationError('authentication', 'Authentication required');
     }
 
     // Verify the JWT token and get user
@@ -33,33 +38,36 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid authentication token' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+      throw new PersonaGenerationError('authentication', 'Invalid authentication token');
     }
 
     const { prompt } = await req.json();
 
-    if (!prompt) {
-      return new Response(
-        JSON.stringify({ error: 'Prompt is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
+    // Validate user input
+    const promptValidation = validateUserPrompt(prompt);
+    if (!promptValidation.isValid) {
+      throw new PersonaGenerationError('validation', promptValidation.errors.join(', '));
     }
 
-    console.log('=== STARTING 3-STEP PERSONA GENERATION ===');
+    if (promptValidation.warnings.length > 0) {
+      console.warn('Prompt validation warnings:', promptValidation.warnings);
+    }
+
+    console.log('=== STARTING ENHANCED PERSONA GENERATION ===');
     console.log(`User: ${user.id}`);
-    console.log('Step 1: Generating demographics and basic info');
+    console.log(`Prompt length: ${prompt.length} characters`);
     
-    // STEP 1: Generate demographics and basic persona info
-    const basePersona = await generatePersonaDemographics(prompt);
+    // STEP 1: Generate demographics with retry logic
+    const basePersona = await wrapWithErrorHandling(
+      () => withRetry(
+        () => generatePersonaDemographics(prompt),
+        { maxRetries: 2 },
+        'Demographics Generation'
+      ),
+      'demographics',
+      { prompt: prompt.substring(0, 100) + '...' }
+    );
+
     console.log(`Step 1 Complete: Generated base persona "${basePersona.name}"`);
     
     // Validate persona_id uniqueness
@@ -70,7 +78,6 @@ serve(async (req) => {
       .single();
 
     if (existingPersona) {
-      // Generate a new unique ID if collision detected
       basePersona.persona_id = `${basePersona.persona_id}-${Math.random().toString(36).substr(2, 4)}`;
       console.log(`Persona ID collision detected, using: ${basePersona.persona_id}`);
     }
@@ -78,30 +85,51 @@ serve(async (req) => {
     // Add user_id to persona
     basePersona.user_id = user.id;
     
-    console.log('Step 2: Generating comprehensive trait and behavioral profile');
-    
-    // STEP 2: Generate comprehensive trait profile, behavioral modulation, emotional triggers, etc.
-    const comprehensiveProfile = await generatePersonaTraits(basePersona, prompt);
+    // STEP 2: Generate comprehensive trait profile with validation
+    const comprehensiveProfile = await wrapWithErrorHandling(
+      () => withRetry(
+        () => generatePersonaTraits(basePersona, prompt),
+        { maxRetries: 2 },
+        'Traits Generation'
+      ),
+      'traits',
+      { personaName: basePersona.name }
+    );
+
     console.log('Step 2 Complete: Generated comprehensive profile');
     
+    // Validate trait values before proceeding
+    const traitValidation = validateTraitValues(comprehensiveProfile.trait_profile);
+    if (!traitValidation.isValid) {
+      console.error('Trait validation failed:', traitValidation.errors);
+      // Still proceed but log the issues
+    }
+    
     // Merge the comprehensive profile into the base persona
-    basePersona.trait_profile = comprehensiveProfile.trait_profile;
-    basePersona.behavioral_modulation = comprehensiveProfile.behavioral_modulation;
-    basePersona.linguistic_profile = comprehensiveProfile.linguistic_profile;
-    basePersona.emotional_triggers = comprehensiveProfile.emotional_triggers;
-    basePersona.simulation_directives = comprehensiveProfile.simulation_directives;
-    basePersona.preinterview_tags = comprehensiveProfile.preinterview_tags;
+    Object.assign(basePersona, {
+      trait_profile: comprehensiveProfile.trait_profile,
+      behavioral_modulation: comprehensiveProfile.behavioral_modulation,
+      linguistic_profile: comprehensiveProfile.linguistic_profile,
+      emotional_triggers: comprehensiveProfile.emotional_triggers,
+      simulation_directives: comprehensiveProfile.simulation_directives,
+      preinterview_tags: comprehensiveProfile.preinterview_tags
+    });
     
-    console.log('Step 3: Generating interview responses');
-    
-    // STEP 3: Generate interview responses with proper error handling
+    // STEP 3: Generate interview responses with enhanced error handling
     let interviewResponses;
     try {
-      interviewResponses = await generateInterviewResponses(basePersona);
+      interviewResponses = await wrapWithErrorHandling(
+        () => withRetry(
+          () => generateInterviewResponses(basePersona),
+          { maxRetries: 1 }, // Fewer retries for interview as it's optional
+          'Interview Generation'
+        ),
+        'interview',
+        { personaName: basePersona.name }
+      );
       console.log(`Step 3 Complete: Generated ${interviewResponses.length} interview sections`);
     } catch (error) {
-      console.error('Failed to generate interview responses:', error);
-      // Create a minimal fallback interview section
+      console.warn('Interview generation failed, using minimal fallback:', error.message);
       interviewResponses = [
         {
           section_title: "Personal Background",
@@ -115,74 +143,48 @@ serve(async (req) => {
       ];
     }
 
-    // Add interview responses to persona
     basePersona.interview_sections = interviewResponses;
 
-    // CRITICAL: Validate and clean traits AFTER all generation is complete
+    // CRITICAL: Validate complete persona before saving
+    const finalValidation = validateGeneratedPersona(basePersona);
+    if (!finalValidation.isValid) {
+      console.error('Final persona validation failed:', finalValidation.errors);
+      throw new PersonaGenerationError(
+        'validation', 
+        `Generated persona is incomplete: ${finalValidation.errors.join(', ')}`,
+        undefined,
+        { personaName: basePersona.name, errors: finalValidation.errors }
+      );
+    }
+
+    // Clean and validate traits one final time
     const validatedPersona = validateAndCleanTraits(basePersona);
     
-    // Ensure required fields are present with proper defaults if missing
-    if (!validatedPersona.behavioral_modulation) {
-      validatedPersona.behavioral_modulation = {
-        communication_style: {
-          formality_level: 0.5,
-          emotional_expressiveness: 0.6,
-          directness: 0.7,
-          humor_usage: 0.4
-        },
-        response_patterns: {
-          elaboration_tendency: 0.6,
-          example_usage: 0.7,
-          personal_anecdote_frequency: 0.5,
-          technical_depth_preference: 0.4
-        },
-        contextual_adaptability: {
-          topic_sensitivity: 0.6,
-          audience_awareness: 0.7,
-          emotional_responsiveness: 0.6
-        }
-      };
-    }
+    // Ensure all required fields have proper defaults
+    validatedPersona.behavioral_modulation = validatedPersona.behavioral_modulation || {
+      communication_style: { formality_level: 0.5, emotional_expressiveness: 0.6, directness: 0.7, humor_usage: 0.4 },
+      response_patterns: { elaboration_tendency: 0.6, example_usage: 0.7, personal_anecdote_frequency: 0.5, technical_depth_preference: 0.4 },
+      contextual_adaptability: { topic_sensitivity: 0.6, audience_awareness: 0.7, emotional_responsiveness: 0.6 }
+    };
 
-    if (!validatedPersona.linguistic_profile) {
-      validatedPersona.linguistic_profile = {
-        vocabulary_complexity: 0.6,
-        sentence_structure_preference: 0.5,
-        cultural_linguistic_markers: [],
-        communication_pace: 0.6,
-        filler_word_usage: 0.3,
-        interruption_tendency: 0.4,
-        question_asking_frequency: 0.5,
-        storytelling_inclination: 0.6
-      };
-    }
+    validatedPersona.linguistic_profile = validatedPersona.linguistic_profile || {
+      vocabulary_complexity: 0.6, sentence_structure_preference: 0.5, cultural_linguistic_markers: [],
+      communication_pace: 0.6, filler_word_usage: 0.3, interruption_tendency: 0.4,
+      question_asking_frequency: 0.5, storytelling_inclination: 0.6
+    };
 
-    if (!validatedPersona.simulation_directives) {
-      validatedPersona.simulation_directives = {
-        authenticity_level: 0.9,
-        consistency_enforcement: 0.8,
-        emotional_range_limit: 0.7,
-        response_variability: 0.6,
-        knowledge_boundary_respect: 0.9,
-        personality_drift_prevention: 0.8
-      };
-    }
+    validatedPersona.simulation_directives = validatedPersona.simulation_directives || {
+      authenticity_level: 0.9, consistency_enforcement: 0.8, emotional_range_limit: 0.7,
+      response_variability: 0.6, knowledge_boundary_respect: 0.9, personality_drift_prevention: 0.8
+    };
 
-    if (!validatedPersona.preinterview_tags) {
-      validatedPersona.preinterview_tags = [
-        "demographic_match",
-        "trait_validated", 
-        "behavioral_profiled"
-      ];
-    }
+    validatedPersona.preinterview_tags = validatedPersona.preinterview_tags || [
+      "demographic_match", "trait_validated", "behavioral_profiled"
+    ];
 
-    // Ensure emotional triggers has proper structure
-    if (!validatedPersona.emotional_triggers) {
-      validatedPersona.emotional_triggers = {
-        positive_triggers: [],
-        negative_triggers: []
-      };
-    }
+    validatedPersona.emotional_triggers = validatedPersona.emotional_triggers || {
+      positive_triggers: [], negative_triggers: []
+    };
 
     console.log('=== PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
     console.log(`Final persona: ${validatedPersona.name} for user: ${user.id}`);
@@ -190,14 +192,12 @@ serve(async (req) => {
     console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
     console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);
     console.log(`- Interview sections: ✓ (${validatedPersona.interview_sections?.length || 0} sections)`);
-    console.log(`- Behavioral modulation: ✓`);
-    console.log(`- Linguistic profile: ✓`);
-    console.log(`- Simulation directives: ✓`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        persona: validatedPersona
+        persona: validatedPersona,
+        warnings: finalValidation.warnings
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -205,18 +205,19 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in 3-step persona generation:', error);
+    if (error instanceof PersonaGenerationError) {
+      return handleGenerationError({
+        step: error.step,
+        error: error.originalError || error,
+        context: error.context
+      });
+    }
     
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: 'Failed to generate persona',
-        details: error.message 
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
+    console.error('Unexpected error in persona generation:', error);
+    return handleGenerationError({
+      step: 'unknown',
+      error: error as Error,
+      context: { unexpected: true }
+    });
   }
 });
