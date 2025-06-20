@@ -43,33 +43,97 @@ serve(async (req) => {
     basePersona.simulation_directives = comprehensiveProfile.simulation_directives;
     basePersona.preinterview_tags = comprehensiveProfile.preinterview_tags;
     
-    // Validate and clean the trait profile
-    const validatedPersona = validateAndCleanTraits(basePersona);
-    
     console.log('Step 3: Generating interview responses');
     
-    // STEP 3: Generate interview responses
+    // STEP 3: Generate interview responses with proper error handling
     let interviewResponses;
     try {
-      interviewResponses = await generateInterviewResponses(validatedPersona);
+      interviewResponses = await generateInterviewResponses(basePersona);
       console.log(`Step 3 Complete: Generated ${interviewResponses.length} interview sections`);
     } catch (error) {
       console.error('Failed to generate interview responses:', error);
+      // Create a minimal fallback interview section
       interviewResponses = [
         {
           section_title: "Personal Background",
           responses: [
             {
               question: "Tell me about yourself",
-              answer: `I'm ${validatedPersona.name}, and I'd be happy to share more about my background and experiences.`
+              answer: `Hi, I'm ${basePersona.name}. ${basePersona.metadata.background || 'I\'d be happy to share more about my experiences and perspective.'}`
             }
           ]
         }
       ];
     }
 
-    // Add interview responses to persona (as flat array, not nested object)
-    validatedPersona.interview_sections = interviewResponses;
+    // Add interview responses to persona
+    basePersona.interview_sections = interviewResponses;
+
+    // CRITICAL FIX: Validate and clean traits AFTER all generation is complete
+    const validatedPersona = validateAndCleanTraits(basePersona);
+    
+    // Ensure required fields are present with proper defaults if missing
+    if (!validatedPersona.behavioral_modulation) {
+      validatedPersona.behavioral_modulation = {
+        communication_style: {
+          formality_level: 0.5,
+          emotional_expressiveness: 0.6,
+          directness: 0.7,
+          humor_usage: 0.4
+        },
+        response_patterns: {
+          elaboration_tendency: 0.6,
+          example_usage: 0.7,
+          personal_anecdote_frequency: 0.5,
+          technical_depth_preference: 0.4
+        },
+        contextual_adaptability: {
+          topic_sensitivity: 0.6,
+          audience_awareness: 0.7,
+          emotional_responsiveness: 0.6
+        }
+      };
+    }
+
+    if (!validatedPersona.linguistic_profile) {
+      validatedPersona.linguistic_profile = {
+        vocabulary_complexity: 0.6,
+        sentence_structure_preference: 0.5,
+        cultural_linguistic_markers: [],
+        communication_pace: 0.6,
+        filler_word_usage: 0.3,
+        interruption_tendency: 0.4,
+        question_asking_frequency: 0.5,
+        storytelling_inclination: 0.6
+      };
+    }
+
+    if (!validatedPersona.simulation_directives) {
+      validatedPersona.simulation_directives = {
+        authenticity_level: 0.9,
+        consistency_enforcement: 0.8,
+        emotional_range_limit: 0.7,
+        response_variability: 0.6,
+        knowledge_boundary_respect: 0.9,
+        personality_drift_prevention: 0.8
+      };
+    }
+
+    if (!validatedPersona.preinterview_tags) {
+      validatedPersona.preinterview_tags = [
+        "demographic_match",
+        "trait_validated", 
+        "behavioral_profiled"
+      ];
+    }
+
+    // Ensure emotional triggers has proper structure
+    if (!validatedPersona.emotional_triggers) {
+      validatedPersona.emotional_triggers = {
+        positive_triggers: [],
+        negative_triggers: []
+      };
+    }
 
     console.log('=== PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
     console.log(`Final persona: ${validatedPersona.name}`);

@@ -7,6 +7,27 @@ if (!OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY is required');
 }
 
+// Centralized JSON parsing with consistent error handling
+function parseOpenAIResponse(content: string, stepName: string): any {
+  try {
+    // Clean the response of markdown formatting
+    let cleanedContent = content.trim();
+    if (cleanedContent.startsWith('```json')) {
+      cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedContent.startsWith('```')) {
+      cleanedContent = cleanedContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    const parsed = JSON.parse(cleanedContent);
+    console.log(`${stepName}: Successfully parsed JSON response`);
+    return parsed;
+  } catch (error) {
+    console.error(`${stepName}: JSON parsing failed`, error);
+    console.error(`${stepName}: Raw content:`, content);
+    throw new Error(`Failed to parse ${stepName} response: ${error.message}`);
+  }
+}
+
 // STEP 1: Generate basic demographics and persona info
 export async function generatePersonaDemographics(userPrompt: string): Promise<PersonaTemplate> {
   console.log(`Generating demographics from prompt: ${userPrompt}`);
@@ -68,27 +89,22 @@ Return ONLY the JSON object:`;
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI API error in demographics: ${response.status} ${response.statusText}`);
+      console.error('Error details:', errorText);
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
     
-    // Clean the response
-    let cleanedContent = content;
-    if (cleanedContent.startsWith('```json')) {
-      cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedContent.startsWith('```')) {
-      cleanedContent = cleanedContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    const persona = JSON.parse(cleanedContent);
+    const persona = parseOpenAIResponse(content, 'Demographics Generation');
     console.log(`Generated demographics for: ${persona.name}`);
     return persona;
     
   } catch (error) {
     console.error('Error generating demographics:', error);
-    throw error;
+    throw new Error(`Demographics generation failed: ${error.message}`);
   }
 }
 
@@ -275,26 +291,22 @@ All trait values must be between 0.0 and 1.0. Make all values authentic and cons
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`OpenAI API error in trait generation: ${response.status} ${response.statusText}`);
+      console.error('Error details:', errorText);
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    let content = data.choices[0].message.content.trim();
+    const content = data.choices[0].message.content.trim();
     
-    // Clean the response
-    if (content.startsWith('```json')) {
-      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (content.startsWith('```')) {
-      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    const fullProfile = JSON.parse(content);
+    const fullProfile = parseOpenAIResponse(content, 'Trait Profile Generation');
     console.log(`Generated comprehensive profile with ${Object.keys(fullProfile).length} sections`);
     return fullProfile;
     
   } catch (error) {
     console.error('Error generating comprehensive profile:', error);
-    throw error;
+    throw new Error(`Trait profile generation failed: ${error.message}`);
   }
 }
 
@@ -347,36 +359,18 @@ Create 8-10 interview sections covering: background, daily life, decision making
 
     if (!response.ok) {
       console.error(`OpenAI API error for interview: ${response.status} ${response.statusText}`);
-      return [];
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    let content = data.choices[0].message.content.trim();
+    const content = data.choices[0].message.content.trim();
     
-    // Clean the response
-    if (content.startsWith('```json')) {
-      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (content.startsWith('```')) {
-      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    const interviewSections = JSON.parse(content);
+    const interviewSections = parseOpenAIResponse(content, 'Interview Generation');
     console.log(`Generated ${interviewSections.length} interview sections`);
     return interviewSections;
     
   } catch (error) {
     console.error('Error generating interview responses:', error);
-    // Return fallback structure
-    return [
-      {
-        section_title: "Personal Background",
-        responses: [
-          {
-            question: "Tell me about yourself",
-            answer: `I'm ${persona.name}, and I'd be happy to share more about my background and experiences.`
-          }
-        ]
-      }
-    ];
+    throw new Error(`Interview generation failed: ${error.message}`);
   }
 }
