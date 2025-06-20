@@ -1,8 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders } from "../_shared/cors.ts";
 import { generatePersonaDemographics, generatePersonaTraits, generateInterviewResponses } from "./openaiService.ts";
 import { validateAndCleanTraits } from "./traitValidator.ts";
+
+// Initialize Supabase client for user validation
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -10,6 +16,32 @@ serve(async (req) => {
   }
 
   try {
+    // Security validation: Verify user authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Verify the JWT token and get user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const { prompt } = await req.json();
 
     if (!prompt) {
@@ -23,11 +55,28 @@ serve(async (req) => {
     }
 
     console.log('=== STARTING 3-STEP PERSONA GENERATION ===');
+    console.log(`User: ${user.id}`);
     console.log('Step 1: Generating demographics and basic info');
     
     // STEP 1: Generate demographics and basic persona info
     const basePersona = await generatePersonaDemographics(prompt);
     console.log(`Step 1 Complete: Generated base persona "${basePersona.name}"`);
+    
+    // Validate persona_id uniqueness
+    const { data: existingPersona } = await supabase
+      .from('personas')
+      .select('persona_id')
+      .eq('persona_id', basePersona.persona_id)
+      .single();
+
+    if (existingPersona) {
+      // Generate a new unique ID if collision detected
+      basePersona.persona_id = `${basePersona.persona_id}-${Math.random().toString(36).substr(2, 4)}`;
+      console.log(`Persona ID collision detected, using: ${basePersona.persona_id}`);
+    }
+
+    // Add user_id to persona
+    basePersona.user_id = user.id;
     
     console.log('Step 2: Generating comprehensive trait and behavioral profile');
     
@@ -69,7 +118,7 @@ serve(async (req) => {
     // Add interview responses to persona
     basePersona.interview_sections = interviewResponses;
 
-    // CRITICAL FIX: Validate and clean traits AFTER all generation is complete
+    // CRITICAL: Validate and clean traits AFTER all generation is complete
     const validatedPersona = validateAndCleanTraits(basePersona);
     
     // Ensure required fields are present with proper defaults if missing
@@ -136,7 +185,7 @@ serve(async (req) => {
     }
 
     console.log('=== PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
-    console.log(`Final persona: ${validatedPersona.name}`);
+    console.log(`Final persona: ${validatedPersona.name} for user: ${user.id}`);
     console.log(`- Demographics: ✓`);
     console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
     console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);

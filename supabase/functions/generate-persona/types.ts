@@ -1,4 +1,3 @@
-
 export interface PersonaMetadata {
   // Core Demographics
   age?: string;
@@ -147,135 +146,190 @@ export interface PersonaMetadata {
 export interface TraitProfile {
   // A. Big Five Personality Traits (OCEAN)
   big_five: {
-    openness: number | null;
-    conscientiousness: number | null;
-    extraversion: number | null;
-    agreeableness: number | null;
-    neuroticism: number | null;
+    openness: number;
+    conscientiousness: number;
+    extraversion: number;
+    agreeableness: number;
+    neuroticism: number;
   };
   
   // B. Moral Foundations Theory
   moral_foundations: {
-    care: number | null;
-    fairness: number | null;
-    loyalty: number | null;
-    authority: number | null;
-    sanctity: number | null;
-    liberty: number | null;
+    care: number;
+    fairness: number;
+    loyalty: number;
+    authority: number;
+    sanctity: number;
+    liberty: number;
   };
   
   // C. Enhanced World Values Survey
   world_values: {
-    traditional_vs_secular: number | null;
-    survival_vs_self_expression: number | null;
-    materialist_vs_postmaterialist: number | null;
+    traditional_vs_secular: number;
+    survival_vs_self_expression: number;
+    materialist_vs_postmaterialist: number;
   };
   
   // D. Enhanced Political Compass with Behavioral Modeling
   political_compass: {
-    economic: number | null;
-    authoritarian_libertarian: number | null;
-    cultural_conservative_progressive: number | null;
-    political_salience: number | null;
-    group_fusion_level: number | null;
-    outgroup_threat_sensitivity: number | null;
-    commons_orientation: number | null;
+    economic: number;
+    authoritarian_libertarian: number;
+    cultural_conservative_progressive: number;
+    political_salience: number;
+    group_fusion_level: number;
+    outgroup_threat_sensitivity: number;
+    commons_orientation: number;
     political_motivations: {
-      material_interest: number | null;
-      moral_vision: number | null;
-      cultural_preservation: number | null;
-      status_reordering: number | null;
+      material_interest: number;
+      moral_vision: number;
+      cultural_preservation: number;
+      status_reordering: number;
     };
   };
   
   // E. Behavioral Economics Traits
   behavioral_economics: {
-    present_bias: number | null;
-    loss_aversion: number | null;
-    overconfidence: number | null;
-    risk_sensitivity: number | null;
-    scarcity_sensitivity: number | null;
+    present_bias: number;
+    loss_aversion: number;
+    overconfidence: number;
+    risk_sensitivity: number;
+    scarcity_sensitivity: number;
   };
 
   // F. Cultural Dimensions (Hofstede's Framework)
   cultural_dimensions: {
-    power_distance: number | null;
-    individualism_vs_collectivism: number | null;
-    masculinity_vs_femininity: number | null;
-    uncertainty_avoidance: number | null;
-    long_term_orientation: number | null;
-    indulgence_vs_restraint: number | null;
+    power_distance: number;
+    individualism_vs_collectivism: number;
+    masculinity_vs_femininity: number;
+    uncertainty_avoidance: number;
+    long_term_orientation: number;
+    indulgence_vs_restraint: number;
   };
 
   // G. Social Identity and Group Dynamics
   social_identity: {
-    identity_strength: number | null;
-    identity_complexity: number | null;
-    ingroup_bias_tendency: number | null;
-    outgroup_bias_tendency: number | null;
-    social_dominance_orientation: number | null;
-    system_justification: number | null;
-    intergroup_contact_comfort: number | null;
-    cultural_intelligence: number | null;
+    identity_strength: number;
+    identity_complexity: number;
+    ingroup_bias_tendency: number;
+    outgroup_bias_tendency: number;
+    social_dominance_orientation: number;
+    system_justification: number;
+    intergroup_contact_comfort: number;
+    cultural_intelligence: number;
   };
   
   // Extended Traits
   extended_traits: {
-    truth_orientation: number | null;
-    moral_consistency: number | null;
-    self_awareness: number | null;
-    empathy: number | null;
-    self_efficacy: number | null;
-    manipulativeness: number | null;
-    impulse_control: number | null;
-    shadow_trait_activation: number | null;
-    attention_pattern: number | null;
-    cognitive_load_resilience: number | null;
-    institutional_trust: number | null;
-    conformity_tendency: number | null;
-    conflict_avoidance: number | null;
-    cognitive_flexibility: number | null;
-    need_for_cognitive_closure: number | null;
+    truth_orientation: number;
+    moral_consistency: number;
+    self_awareness: number;
+    empathy: number;
+    self_efficacy: number;
+    manipulativeness: number;
+    impulse_control: number;
+    shadow_trait_activation: number;
+    attention_pattern: number;
+    cognitive_load_resilience: number;
+    institutional_trust: number;
+    conformity_tendency: number;
+    conflict_avoidance: number;
+    cognitive_flexibility: number;
+    need_for_cognitive_closure: number;
     // Enhanced emotional traits
-    emotional_intensity: number | null;
-    emotional_regulation: number | null;
-    trigger_sensitivity: number | null;
+    emotional_intensity: number;
+    emotional_regulation: number;
+    trigger_sensitivity: number;
   };
   
   // Dynamic State Modifiers
   dynamic_state: {
-    current_stress_level: number | null;
-    emotional_stability_context: number | null;
-    motivation_orientation: number | null;
-    trust_volatility: number | null;
-    trigger_threshold: number | null;
+    current_stress_level: number;
+    emotional_stability_context: number;
+    motivation_orientation: number;
+    trust_volatility: number;
+    trigger_threshold: number;
   };
+}
+
+export interface BehavioralModulation {
+  communication_style: {
+    formality_level: number;
+    emotional_expressiveness: number;
+    directness: number;
+    humor_usage: number;
+  };
+  response_patterns: {
+    elaboration_tendency: number;
+    example_usage: number;
+    personal_anecdote_frequency: number;
+    technical_depth_preference: number;
+  };
+  contextual_adaptability: {
+    topic_sensitivity: number;
+    audience_awareness: number;
+    emotional_responsiveness: number;
+  };
+}
+
+export interface LinguisticProfile {
+  vocabulary_complexity: number;
+  sentence_structure_preference: number;
+  cultural_linguistic_markers: string[];
+  communication_pace: number;
+  filler_word_usage: number;
+  interruption_tendency: number;
+  question_asking_frequency: number;
+  storytelling_inclination: number;
+}
+
+export interface EmotionalTriggers {
+  positive_triggers: Array<{
+    keywords: string[];
+    emotion_type: string;
+    intensity_multiplier: number;
+    description: string;
+  }>;
+  negative_triggers: Array<{
+    keywords: string[];
+    emotion_type: string;
+    intensity_multiplier: number;
+    description: string;
+  }>;
+}
+
+export interface SimulationDirectives {
+  authenticity_level: number;
+  consistency_enforcement: number;
+  emotional_range_limit: number;
+  response_variability: number;
+  knowledge_boundary_respect: number;
+  personality_drift_prevention: number;
 }
 
 export interface InterviewSection {
   section_title: string;
-  questions: {
+  responses: {
     question: string;
-    response: string;
+    answer: string;
   }[];
 }
 
+// Updated PersonaTemplate to match database constraints
 export interface PersonaTemplate {
   persona_id: string;
   name: string;
   creation_date: string;
   metadata: PersonaMetadata;
   trait_profile: TraitProfile;
-  behavioral_modulation: any;
-  linguistic_profile: any;
-  emotional_triggers: {
-    positive_triggers: string[];
-    negative_triggers: string[];
-  };
+  behavioral_modulation: BehavioralModulation;
+  linguistic_profile: LinguisticProfile;
+  emotional_triggers: EmotionalTriggers;
   preinterview_tags: string[];
-  simulation_directives: any;
+  simulation_directives: SimulationDirectives;
   interview_sections: InterviewSection[];
   prompt?: string;
+  user_id?: string;
+  enhanced_metadata_version?: number;
 }
 
 export interface RequestData {
