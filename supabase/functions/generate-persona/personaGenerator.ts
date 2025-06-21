@@ -1,4 +1,3 @@
-
 import { PersonaTemplate } from "./types.ts";
 import { 
   generateCoreDemographics,
@@ -135,21 +134,75 @@ export async function enhancePersonaMetadata(basePersona: PersonaTemplate, promp
     { personaName: basePersona.name }
   );
   
-  // Merge all metadata
-  Object.assign(basePersona.metadata, {
-    ...locationContext.location_context,
-    ...familyRelationships.relationships_family,
-    ...healthAttributes.health_attributes,
-    ...physicalDescription.physical_description,
-    ...knowledgeDomains.knowledge_domains,
-    ...psychologicalCultural.psychological_cultural
-  });
+  // IMPROVED: Robust data merging with validation and fallbacks
+  console.log('=== MERGING METADATA WITH VALIDATION ===');
+  
+  // Helper function to safely merge data
+  function safelyMergeData(source: any, expectedKey: string, fallback: any = {}) {
+    if (!source) {
+      console.warn(`⚠️ Source data is null/undefined for ${expectedKey}`);
+      return fallback;
+    }
+    
+    // If the data is nested under the expected key, extract it
+    if (source[expectedKey] && typeof source[expectedKey] === 'object') {
+      console.log(`✅ Found nested data for ${expectedKey}`);
+      return source[expectedKey];
+    }
+    
+    // If the data is at the root level, use it directly
+    if (typeof source === 'object' && Object.keys(source).length > 0) {
+      console.log(`✅ Using root-level data for ${expectedKey}`);
+      return source;
+    }
+    
+    console.warn(`⚠️ No valid data found for ${expectedKey}, using fallback`);
+    return fallback;
+  }
+  
+  // Merge location context
+  const locationData = safelyMergeData(locationContext, 'location_context');
+  Object.assign(basePersona.metadata, locationData);
+  console.log(`Merged location data: ${Object.keys(locationData).length} fields`);
+  
+  // Merge family relationships with robust handling
+  const familyData = safelyMergeData(familyRelationships, 'relationships_family');
+  Object.assign(basePersona.metadata, familyData);
+  console.log(`Merged family data: ${Object.keys(familyData).length} fields`);
+  
+  // Merge health attributes
+  const healthData = safelyMergeData(healthAttributes, 'health_attributes');
+  Object.assign(basePersona.metadata, healthData);
+  console.log(`Merged health data: ${Object.keys(healthData).length} fields`);
+  
+  // Merge physical description
+  const physicalData = safelyMergeData(physicalDescription, 'physical_description');
+  Object.assign(basePersona.metadata, physicalData);
+  console.log(`Merged physical data: ${Object.keys(physicalData).length} fields`);
+  
+  // Merge knowledge domains
+  const knowledgeData = safelyMergeData(knowledgeDomains, 'knowledge_domains');
+  Object.assign(basePersona.metadata, knowledgeData);
+  console.log(`Merged knowledge data: ${Object.keys(knowledgeData).length} fields`);
+  
+  // Merge psychological & cultural
+  const psychData = safelyMergeData(psychologicalCultural, 'psychological_cultural');
+  Object.assign(basePersona.metadata, psychData);
+  console.log(`Merged psychological data: ${Object.keys(psychData).length} fields`);
+  
+  // Log final metadata state for debugging
+  console.log(`=== FINAL METADATA SUMMARY ===`);
+  console.log(`Total metadata fields: ${Object.keys(basePersona.metadata).length}`);
+  console.log(`Has family relationships: ${!!basePersona.metadata.has_children}`);
+  console.log(`Has knowledge domains: ${!!basePersona.metadata.knowledge_domains}`);
   
   // Now validate complete metadata after all stages
   const completeValidation = validateCompleteMetadata(basePersona.metadata);
   if (!completeValidation.isValid) {
     console.warn('⚠️ Complete metadata validation failed:', completeValidation.errors);
     // Don't throw error, just warn - we can continue with incomplete data
+  } else {
+    console.log('✅ Complete metadata validation passed');
   }
   
   console.log('✅ Enhanced metadata with all comprehensive attributes');
