@@ -1,7 +1,7 @@
 
 import { PersonaTemplate } from "../types.ts";
 import { generateTraitProfile } from "../openaiService.ts";
-import { validateTraitRealism, validateTraitValues } from "../validationHelpers.ts";
+import { validateTraitRealism } from "../validationHelpers.ts";
 import { PersonaGenerationError, wrapWithErrorHandling } from "../errorHandler.ts";
 import { withRetry } from "../retryService.ts";
 
@@ -70,12 +70,6 @@ export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, 
   } while (attemptCount < maxTraitAttempts);
 
   console.log('✅ Generated and validated realistic trait profile');
-  
-  // Validate trait values
-  const traitValidation = validateTraitValues(traitData.trait_profile);
-  if (!traitValidation.isValid) {
-    console.error('Final trait validation failed:', traitValidation.errors);
-  }
   
   return { traitData, attemptCount };
 }
