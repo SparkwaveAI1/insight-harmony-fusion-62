@@ -480,11 +480,10 @@ Generate realistic, varied values that create a unique personality profile based
     }
   ];
 
-  // CRITICAL FIX: Increase max_tokens to handle the much larger comprehensive trait profile
   const response = await generateChatResponse(messages, OPENAI_API_KEY, {
     model: 'gpt-4.1-2025-04-14',
     temperature: 0.8,
-    max_tokens: 3000  // Increased from default ~1000 to 3000 for comprehensive trait profile
+    max_tokens: 3000
   });
   
   const content = response.choices[0].message.content;
@@ -569,23 +568,16 @@ REQUIRED STRUCTURE:
   }
 }
 
-// Stage 10: Enhanced Interview Responses using detailed structure
+// Stage 10: Interview Responses - Simplified approach without external dependency
 export async function generateInterviewResponses(basePersona: any): Promise<any[]> {
-  console.log(`Generating detailed interview responses for: ${basePersona.name}`);
-  
-  // Create a summary of key sections for context
-  const interviewSectionSummary = INTERVIEW_SECTIONS.slice(0, 6).map(section => ({
-    title: section.section,
-    focus: section.notes,
-    sampleQuestions: section.questions.slice(0, 3)
-  }));
+  console.log(`Generating interview responses for: ${basePersona.name}`);
   
   const messages = [
     {
       role: "system",
-      content: `Generate comprehensive interview responses for the persona based on detailed interview sections. Return ONLY valid JSON array.
+      content: `Generate comprehensive interview responses for the persona based on their background and traits. Return ONLY valid JSON array.
 
-You will generate responses for key interview sections that cover the persona's background, values, daily life, and perspectives. Each section should have 2-3 thoughtful responses that reflect the persona's personality traits and background.
+Create responses for 6 key interview sections that cover the persona's background, values, daily life, and perspectives. Each section should have 2-3 thoughtful responses that reflect the persona's personality traits and background.
 
 REQUIRED STRUCTURE:
 [
@@ -613,13 +605,13 @@ REQUIRED STRUCTURE:
   }
 ]
 
-Generate responses for these key sections: Introduction & Tone Calibration, Daily Life & Rhythms, Values & Decision Making, Relationships & Social Life, Future Outlook & Goals, and Personal Reflection.
+Generate responses for these sections: Introduction & Tone Calibration, Daily Life & Rhythms, Values & Decision Making, Relationships & Social Life, Future Outlook & Goals, and Personal Reflection.
 
 Make responses authentic, conversational, and reflect the persona's specific traits, background, and personality profile.`
     },
     {
       role: "user", 
-      content: `Generate detailed interview responses for: ${basePersona.name}
+      content: `Generate interview responses for: ${basePersona.name}
       
 Background: ${JSON.stringify(basePersona.metadata, null, 2)}
 
@@ -633,21 +625,20 @@ Create responses that sound like this person talking naturally, reflecting their
     }
   ];
 
-  // CRITICAL FIX: Increase max_tokens significantly for detailed interview responses
   const response = await generateChatResponse(messages, OPENAI_API_KEY, {
     model: 'gpt-4.1-2025-04-14',
     temperature: 0.8,
-    max_tokens: 2500  // Increased from default ~1000 to 2500 for detailed interviews
+    max_tokens: 2500
   });
   
   const content = response.choices[0].message.content;
   
   try {
     const parsedResponse = JSON.parse(content);
-    console.log(`✅ Generated ${parsedResponse.length} detailed interview sections`);
+    console.log(`✅ Generated ${parsedResponse.length} interview sections`);
     return parsedResponse;
   } catch (error) {
-    console.error('Failed to parse detailed interview JSON, using structured fallback:', content);
+    console.error('Failed to parse interview JSON, using enhanced fallback:', content);
     
     // Enhanced fallback that creates multiple sections instead of just one
     return [
@@ -656,7 +647,7 @@ Create responses that sound like this person talking naturally, reflecting their
         responses: [
           {
             question: "Tell me about yourself",
-            answer: `Hi, I'm ${basePersona.name}. ${basePersona.metadata.background || 'I work in ' + (basePersona.metadata.occupation || 'my field') + ' and I\'m passionate about what I do.'}`
+            answer: `Hi, I'm ${basePersona.name}. ${basePersona.metadata.age ? 'I\'m ' + basePersona.metadata.age + ' years old and ' : ''}${basePersona.metadata.occupation ? 'work as a ' + basePersona.metadata.occupation : 'focused on my career development'}. ${basePersona.metadata.location_history?.current_residence ? 'I currently live in ' + basePersona.metadata.location_history.current_residence + '.' : ''}`
           },
           {
             question: "What drives you day to day?",
