@@ -7,7 +7,6 @@ import {
   Coins,
   Folder,
   FlaskConical,
-  Microscope,
   Mail,
 } from "lucide-react";
 
@@ -41,11 +40,6 @@ export const navigationMenuItems = [
     title: "Researcher",
     url: "/research",
     icon: FlaskConical,
-  },
-  {
-    title: "Interviewer",
-    url: "/interviewer",
-    icon: Microscope,
   },
   {
     title: "PRSNA Token",
