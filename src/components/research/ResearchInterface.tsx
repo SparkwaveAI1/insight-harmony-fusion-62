@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { ResearchHeader } from './ResearchHeader';
@@ -25,6 +26,10 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [searchParams] = useSearchParams();
+  
+  // Check if this is a project-connected session
+  const hasProject = searchParams.get('project') !== null;
 
   const handleStartSession = async (selectedPersonas: string[]) => {
     console.log('Starting session with personas:', selectedPersonas);
@@ -69,6 +74,14 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
             <p className="text-muted-foreground">
               Select up to 4 personas to participate in your research conversation
             </p>
+            {!hasProject && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-sm text-amber-800">
+                  <strong>No Project Connected:</strong> This session can be exported but not saved. 
+                  To save conversations, start a research session with a project.
+                </p>
+              </div>
+            )}
           </div>
           <PersonaLoader
             maxPersonas={4}
@@ -86,8 +99,9 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       <ResearchHeader
         loadedPersonas={loadedPersonas}
         messages={messages}
-        onSaveConversation={handleSaveConversation}
+        onSaveConversation={hasProject ? handleSaveConversation : undefined}
         onExportTranscript={handleExportTranscript}
+        hasProject={hasProject}
       />
 
       {/* Research Conversation */}
@@ -112,15 +126,17 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       {/* Loaded Personas Display */}
       <ActivePersonasDisplay loadedPersonas={loadedPersonas} />
 
-      {/* Save Conversation Modal */}
-      <SaveConversationModal
-        open={showSaveModal}
-        onOpenChange={setShowSaveModal}
-        messages={formatMessagesForSave()}
-        personaIds={loadedPersonas.map(p => p.persona_id)}
-        defaultTitle={`Research Session - ${new Date().toLocaleDateString()}`}
-        onSaved={handleConversationSaved}
-      />
+      {/* Save Conversation Modal - Only show if has project */}
+      {hasProject && (
+        <SaveConversationModal
+          open={showSaveModal}
+          onOpenChange={setShowSaveModal}
+          messages={formatMessagesForSave()}
+          personaIds={loadedPersonas.map(p => p.persona_id)}
+          defaultTitle={`Research Session - ${new Date().toLocaleDateString()}`}
+          onSaved={handleConversationSaved}
+        />
+      )}
     </div>
   );
 };
