@@ -6,17 +6,56 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import { Character } from '../types/characterTypes';
+import { Character } from '../types/characterTraitTypes';
+import { useCharacters } from '../hooks/useCharacters';
 
 const CharacterLibrary = () => {
-  const [characters] = useState<Character[]>([]); // Will connect to service later
+  const { data: characters = [], isLoading, error } = useCharacters();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredCharacters = characters.filter((character) =>
     character.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    character.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    (character.metadata?.description && 
+     character.metadata.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Section>
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading characters...</p>
+              </div>
+            </div>
+          </Section>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Section>
+            <Card className="text-center py-12">
+              <h2 className="text-xl font-semibold mb-2 text-red-600">Error Loading Characters</h2>
+              <p className="text-muted-foreground mb-4">
+                {error instanceof Error ? error.message : 'An unexpected error occurred'}
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </Card>
+          </Section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,15 +115,17 @@ const CharacterLibrary = () => {
             <Card className="text-center py-12">
               <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">
-                {searchQuery ? 'No Characters Found' : 'No Characters Yet'}
+                {searchQuery ? 'No Characters Found' : characters.length === 0 ? 'No Characters Yet' : 'No Matching Characters'}
               </h2>
               <p className="text-muted-foreground mb-6">
                 {searchQuery 
                   ? 'Try adjusting your search terms'
-                  : 'Create your first character to get started'
+                  : characters.length === 0 
+                    ? 'Create your first character to get started'
+                    : 'No characters match your current search'
                 }
               </p>
-              {!searchQuery && (
+              {!searchQuery && characters.length === 0 && (
                 <Button asChild>
                   <Link to="/characters/create">
                     <Plus className="h-4 w-4 mr-2" />
@@ -96,27 +137,39 @@ const CharacterLibrary = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCharacters.map((character) => (
-                <Card key={character.id} className="p-6 hover:shadow-md transition-shadow">
+                <Card key={character.character_id} className="p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-lg font-semibold">{character.name}</h3>
+                    <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                      {character.character_type}
+                    </span>
                   </div>
                   
-                  {character.description && (
+                  {character.metadata?.description && (
                     <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                      {character.description}
+                      {character.metadata.description}
                     </p>
                   )}
                   
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                    <span>Created {new Date(character.created_at).toLocaleDateString()}</span>
+                    <span>Created {new Date(character.created_at || character.creation_date).toLocaleDateString()}</span>
+                    {character.is_public && (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                        Public
+                      </span>
+                    )}
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1">
-                      View Details
+                    <Button size="sm" className="flex-1" asChild>
+                      <Link to={`/characters/${character.character_id}`}>
+                        View Details
+                      </Link>
                     </Button>
-                    <Button size="sm" variant="outline">
-                      Edit
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to={`/characters/${character.character_id}/edit`}>
+                        Edit
+                      </Link>
                     </Button>
                   </div>
                 </Card>

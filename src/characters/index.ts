@@ -11,7 +11,8 @@ export { default as HistoricalCharacterHeader } from './components/HistoricalCha
 export * from './types/characterTraitTypes';
 export * from './schemas/historicalCharacterSchema';
 
-// Export character services
+// Export character services and hooks
 export * from './services/characterService';
 export * from './services/characterGenerator';
 export * from './hooks/useCharacter';
+export * from './hooks/useCharacters';
