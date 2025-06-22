@@ -28,9 +28,7 @@ const historicalCharacterSchema = z.object({
   appearance: z.string().optional(),
   
   // Historical specific fields
-  historical_period: z.string().optional(),
   occupation: z.string().optional(),
-  major_achievements: z.string().optional(),
   historical_context: z.string().optional(),
 });
 
@@ -51,9 +49,7 @@ const HistoricalCharacterCreate = () => {
       backstory: '',
       personality_traits: '',
       appearance: '',
-      historical_period: '',
       occupation: '',
-      major_achievements: '',
       historical_context: '',
     },
   });
@@ -143,7 +139,7 @@ const HistoricalCharacterCreate = () => {
                           <FormItem>
                             <FormLabel>Age *</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 56 at death" {...field} />
+                              <Input placeholder="e.g., 56" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -171,44 +167,12 @@ const HistoricalCharacterCreate = () => {
                   <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="historical_period"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Historical Period</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., American Revolutionary Era" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
                       name="occupation"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Primary Occupation</FormLabel>
                           <FormControl>
                             <Input placeholder="e.g., President, Military General" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="major_achievements"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Major Achievements</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="List the character's major historical achievements and contributions"
-                              className="min-h-[100px]"
-                              {...field}
-                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
