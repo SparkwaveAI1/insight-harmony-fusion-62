@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import HistoricalCharacterHeader from '../components/HistoricalCharacterHeader';
 import HistoricalCharacterForm from '../components/HistoricalCharacterForm';
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
+import { generateCharacterFromFormData } from '../services/characterGenerator';
+import { saveCharacter } from '../services/characterService';
+import { supabase } from '@/integrations/supabase/client';
 
 const HistoricalCharacterCreate = () => {
   const navigate = useNavigate();
@@ -19,17 +22,27 @@ const HistoricalCharacterCreate = () => {
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement historical character creation service
-      console.log('Creating historical character:', data);
+      console.log('Creating historical character with trait architecture:', data);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error('You must be logged in to create characters');
+      }
       
+      // Generate character with full trait architecture
+      const character = await generateCharacterFromFormData(data);
+      character.user_id = user.id;
+      
+      // Save character to database
+      const savedCharacter = await saveCharacter(character);
+      
+      console.log('✅ Historical character created with trait architecture:', savedCharacter);
       toast.success('Historical character created successfully!');
       navigate('/characters');
     } catch (error) {
       console.error('Error creating historical character:', error);
-      toast.error('Failed to create historical character');
+      toast.error(error instanceof Error ? error.message : 'Failed to create historical character');
     } finally {
       setIsSubmitting(false);
     }

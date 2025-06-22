@@ -6,5 +6,13 @@ export { default as HistoricalCharacterCreate } from './pages/HistoricalCharacte
 export { default as FictionalCharacterCreate } from './pages/FictionalCharacterCreate';
 export { default as HistoricalCharacterForm } from './components/HistoricalCharacterForm';
 export { default as HistoricalCharacterHeader } from './components/HistoricalCharacterHeader';
+
+// Export character trait types
 export * from './types/characterTypes';
+export * from './types/characterTraitTypes';
 export * from './schemas/historicalCharacterSchema';
+
+// Export character services
+export * from './services/characterService';
+export * from './services/characterGenerator';
+export * from './hooks/useCharacter';
