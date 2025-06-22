@@ -17,18 +17,12 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { FlaskConical, Folder, Download } from 'lucide-react';
-import { getUserProjects } from '@/services/collections';
+import { getUserProjects, Project } from '@/services/collections';
 import { useAuth } from '@/context/AuthContext';
 
 interface ResearchModeSelectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface Project {
-  id: string;
-  title: string;
-  description?: string;
 }
 
 const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({
@@ -57,7 +51,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({
       
       setIsLoading(true);
       try {
-        const userProjects = await getUserProjects(user.id);
+        const userProjects = await getUserProjects();
         setProjects(userProjects);
         
         // If user has a saved choice and it's still valid, pre-select it
@@ -129,7 +123,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       <div>
-                        <div className="font-medium">{project.title}</div>
+                        <div className="font-medium">{project.name}</div>
                         {project.description && (
                           <div className="text-xs text-muted-foreground">
                             {project.description.length > 50 
