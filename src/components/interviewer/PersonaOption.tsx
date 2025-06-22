@@ -44,7 +44,7 @@ const PersonaOption = () => {
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Button>
         <p className="text-sm text-center text-amber-600 font-medium">
-          Interviewer scheduled to go live mid-May 2025
+          Under Construction
         </p>
       </div>
     </Card>
