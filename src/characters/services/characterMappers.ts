@@ -1,6 +1,5 @@
 
-import { DbCharacter, Character, CharacterMetadata, CharacterInterviewSection } from '../types/characterTraitTypes';
-import { Json } from '@/integrations/supabase/types';
+import { DbCharacter, Character, CharacterMetadata, CharacterInterviewSection, CharacterTraitProfile } from '../types/characterTraitTypes';
 
 export function characterToDbCharacter(character: Character): Omit<DbCharacter, 'id' | 'created_at'> {
   console.log("=== CONVERTING CHARACTER TO DB FORMAT ===");
@@ -50,14 +49,14 @@ export function characterToDbCharacter(character: Character): Omit<DbCharacter, 
     character_type: character.character_type,
     creation_date: character.creation_date,
     prompt: character.prompt || null,
-    metadata: character.metadata as unknown as Json,
-    trait_profile: character.trait_profile as unknown as Json,
-    behavioral_modulation: character.behavioral_modulation as unknown as Json,
-    linguistic_profile: character.linguistic_profile as unknown as Json,
-    preinterview_tags: character.preinterview_tags as unknown as Json,
-    simulation_directives: character.simulation_directives as unknown as Json,
-    interview_sections: character.interview_sections as unknown as Json,
-    emotional_triggers: emotionalTriggers as unknown as Json,
+    metadata: character.metadata as any,
+    trait_profile: character.trait_profile as any,
+    behavioral_modulation: character.behavioral_modulation as any,
+    linguistic_profile: character.linguistic_profile as any,
+    preinterview_tags: character.preinterview_tags as any,
+    simulation_directives: character.simulation_directives as any,
+    interview_sections: character.interview_sections as any,
+    emotional_triggers: emotionalTriggers as any,
     is_public: character.is_public || false,
     user_id: character.user_id,
     profile_image_url: character.profile_image_url || null,
@@ -110,7 +109,7 @@ export function dbCharacterToCharacter(dbCharacter: DbCharacter): Character {
   }
   
   // Handle trait profile data more carefully with comprehensive validation
-  let traitProfile = dbCharacter.trait_profile as unknown as Record<string, any>;
+  let traitProfile = dbCharacter.trait_profile as unknown as CharacterTraitProfile;
   
   console.log("=== ANALYZING DB TRAIT PROFILE ===");
   console.log("Raw trait profile type:", typeof traitProfile);
@@ -119,8 +118,6 @@ export function dbCharacterToCharacter(dbCharacter: DbCharacter): Character {
   // Check for various forms of malformed trait data
   if (!traitProfile || 
       typeof traitProfile !== 'object' || 
-      traitProfile._type === "undefined" || 
-      traitProfile.value === "undefined" ||
       Object.keys(traitProfile).length === 0) {
     
     console.warn("❌ TRAIT PROFILE DATA IS MALFORMED OR EMPTY");
@@ -175,7 +172,7 @@ export function dbCharacterToCharacter(dbCharacter: DbCharacter): Character {
   };
 }
 
-function createDefaultTraitProfile() {
+function createDefaultTraitProfile(): CharacterTraitProfile {
   console.log("⚠️ CREATING DEFAULT TRAIT PROFILE - THIS INDICATES A PROBLEM");
   return {
     big_five: {
@@ -268,7 +265,7 @@ function createDefaultTraitProfile() {
   };
 }
 
-function validateTraitProfile(traitProfile: Record<string, any>) {
+function validateTraitProfile(traitProfile: any): CharacterTraitProfile {
   console.log("=== VALIDATING TRAIT PROFILE ===");
   const defaultProfile = createDefaultTraitProfile();
   

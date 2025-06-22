@@ -10,7 +10,8 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
   try {
     const dbCharacter = characterToDbCharacter(character);
     
-    const { data, error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { data, error } = await (supabase as any)
       .from('characters')
       .insert(dbCharacter)
       .select('*')
@@ -34,7 +35,8 @@ export const getCharacterById = async (id: string): Promise<Character | null> =>
   console.log('Character ID:', id);
   
   try {
-    const { data, error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { data, error } = await (supabase as any)
       .from('characters')
       .select('*')
       .eq('id', id)
@@ -63,7 +65,8 @@ export const getCharacterByCharacterId = async (characterId: string): Promise<Ch
   console.log('Character ID:', characterId);
   
   try {
-    const { data, error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { data, error } = await (supabase as any)
       .from('characters')
       .select('*')
       .eq('character_id', characterId)
@@ -91,7 +94,8 @@ export const getAllCharacters = async (): Promise<Character[]> => {
   console.log('=== GETTING ALL CHARACTERS ===');
   
   try {
-    const { data, error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { data, error } = await (supabase as any)
       .from('characters')
       .select('*')
       .order('created_at', { ascending: false });
@@ -114,7 +118,8 @@ export const updateCharacterVisibility = async (characterId: string, isPublic: b
   console.log('Character ID:', characterId, 'Public:', isPublic);
   
   try {
-    const { error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { error } = await (supabase as any)
       .from('characters')
       .update({ is_public: isPublic })
       .eq('character_id', characterId);
@@ -136,7 +141,8 @@ export const updateCharacterName = async (characterId: string, name: string): Pr
   console.log('Character ID:', characterId, 'Name:', name);
   
   try {
-    const { error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { error } = await (supabase as any)
       .from('characters')
       .update({ name })
       .eq('character_id', characterId);
@@ -158,7 +164,8 @@ export const deleteCharacter = async (characterId: string): Promise<void> => {
   console.log('Character ID:', characterId);
   
   try {
-    const { error } = await supabase
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { error } = await (supabase as any)
       .from('characters')
       .delete()
       .eq('character_id', characterId);

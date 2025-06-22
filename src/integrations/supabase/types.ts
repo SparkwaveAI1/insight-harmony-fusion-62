@@ -9,6 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      character_images: {
+        Row: {
+          character_id: string
+          created_at: string | null
+          file_path: string
+          generation_prompt: string | null
+          id: string
+          is_current: boolean | null
+          original_url: string | null
+          physical_attributes: Json | null
+          storage_url: string
+        }
+        Insert: {
+          character_id: string
+          created_at?: string | null
+          file_path: string
+          generation_prompt?: string | null
+          id?: string
+          is_current?: boolean | null
+          original_url?: string | null
+          physical_attributes?: Json | null
+          storage_url: string
+        }
+        Update: {
+          character_id?: string
+          created_at?: string | null
+          file_path?: string
+          generation_prompt?: string | null
+          id?: string
+          is_current?: boolean | null
+          original_url?: string | null
+          physical_attributes?: Json | null
+          storage_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_images_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["character_id"]
+          },
+        ]
+      }
+      characters: {
+        Row: {
+          behavioral_modulation: Json
+          character_id: string
+          character_type: string
+          created_at: string
+          creation_date: string
+          emotional_triggers: Json | null
+          enhanced_metadata_version: number | null
+          id: string
+          interview_sections: Json
+          is_public: boolean | null
+          linguistic_profile: Json
+          metadata: Json
+          name: string
+          preinterview_tags: Json
+          profile_image_url: string | null
+          prompt: string | null
+          simulation_directives: Json
+          trait_profile: Json
+          user_id: string | null
+        }
+        Insert: {
+          behavioral_modulation?: Json
+          character_id: string
+          character_type: string
+          created_at?: string
+          creation_date: string
+          emotional_triggers?: Json | null
+          enhanced_metadata_version?: number | null
+          id?: string
+          interview_sections?: Json
+          is_public?: boolean | null
+          linguistic_profile?: Json
+          metadata?: Json
+          name: string
+          preinterview_tags?: Json
+          profile_image_url?: string | null
+          prompt?: string | null
+          simulation_directives?: Json
+          trait_profile?: Json
+          user_id?: string | null
+        }
+        Update: {
+          behavioral_modulation?: Json
+          character_id?: string
+          character_type?: string
+          created_at?: string
+          creation_date?: string
+          emotional_triggers?: Json | null
+          enhanced_metadata_version?: number | null
+          id?: string
+          interview_sections?: Json
+          is_public?: boolean | null
+          linguistic_profile?: Json
+          metadata?: Json
+          name?: string
+          preinterview_tags?: Json
+          profile_image_url?: string | null
+          prompt?: string | null
+          simulation_directives?: Json
+          trait_profile?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       collection_personas: {
         Row: {
           added_at: string

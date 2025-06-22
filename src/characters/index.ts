@@ -7,8 +7,7 @@ export { default as FictionalCharacterCreate } from './pages/FictionalCharacterC
 export { default as HistoricalCharacterForm } from './components/HistoricalCharacterForm';
 export { default as HistoricalCharacterHeader } from './components/HistoricalCharacterHeader';
 
-// Export character trait types
-export * from './types/characterTypes';
+// Export character trait types (renamed to avoid conflicts)
 export * from './types/characterTraitTypes';
 export * from './schemas/historicalCharacterSchema';
 
