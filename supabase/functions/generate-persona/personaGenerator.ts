@@ -249,86 +249,33 @@ export async function generatePersonaBehavioralLinguistic(basePersona: PersonaTe
 }
 
 export async function generatePersonaInterview(basePersona: PersonaTemplate): Promise<any[]> {
-  console.log('=== STAGE 10: GENERATING ENHANCED INTERVIEW RESPONSES ===');
+  console.log('=== STAGE 10: GENERATING INTERVIEW RESPONSES ===');
   
   try {
-    console.log('Attempting detailed interview generation...');
     const interviewResponses = await wrapWithErrorHandling(
       () => withRetry(
         () => generateInterviewResponses(basePersona),
-        { maxRetries: 2 }, // Increased retries for interview generation
-        'Enhanced Interview Generation'
+        { maxRetries: 1 },
+        'Interview Generation'
       ),
       'interview',
       { personaName: basePersona.name }
     );
-    
-    // Validate interview quality
-    if (interviewResponses && Array.isArray(interviewResponses) && interviewResponses.length >= 2) {
-      console.log(`✅ Generated ${interviewResponses.length} detailed interview sections`);
-      
-      // Log section details for verification
-      const sectionTitles = interviewResponses.map(section => section.section_title);
-      console.log('Interview sections generated:', sectionTitles);
-      
-      // Count total responses for quality check
-      const totalResponses = interviewResponses.reduce((total, section) => 
-        total + (section.responses ? section.responses.length : 0), 0
-      );
-      console.log(`Total interview responses: ${totalResponses}`);
-      
-      if (totalResponses >= 4) {
-        console.log('✅ Interview quality check passed - sufficient detailed responses');
-        return interviewResponses;
-      } else {
-        console.warn('⚠️ Interview responses below quality threshold, but proceeding');
-        return interviewResponses;
-      }
-    } else {
-      console.warn('⚠️ Interview generation returned insufficient data, using enhanced fallback');
-      throw new Error('Insufficient interview data generated');
-    }
-    
+    console.log(`✅ Generated ${interviewResponses.length} interview sections`);
+    return interviewResponses;
   } catch (error) {
-    console.warn('Enhanced interview generation failed, using comprehensive fallback:', error.message);
-    
-    // Comprehensive fallback with multiple sections based on persona data
-    const fallbackInterview = [
+    console.warn('Interview generation failed, using minimal fallback:', error.message);
+    return [
       {
         section_title: "Personal Background",
         responses: [
           {
             question: "Tell me about yourself",
-            answer: `Hi, I'm ${basePersona.name}. I'm ${basePersona.metadata.age ? basePersona.metadata.age + ' years old and ' : ''}${basePersona.metadata.occupation ? 'work as a ' + basePersona.metadata.occupation : 'focused on my career development'}. ${basePersona.metadata.location_history?.current_residence ? 'I currently live in ' + basePersona.metadata.location_history.current_residence + '.' : ''}`
-          },
-          {
-            question: "What's important to you in life?",
-            answer: `${basePersona.metadata.education_level ? 'My ' + basePersona.metadata.education_level + ' has shaped my perspective, and ' : ''}I believe in continuous growth and meaningful relationships. ${basePersona.metadata.marital_status === 'Single' ? 'I\'m currently single and focusing on personal development.' : basePersona.metadata.marital_status ? 'My relationship status as ' + basePersona.metadata.marital_status.toLowerCase() + ' is an important part of my life.' : ''}`
-          }
-        ]
-      },
-      {
-        section_title: "Daily Life & Work",
-        responses: [
-          {
-            question: "What does a typical day look like for you?",
-            answer: `${basePersona.metadata.employment_type === 'Full-time' ? 'I work full-time' : basePersona.metadata.employment_type ? 'I work ' + basePersona.metadata.employment_type.toLowerCase() : 'My work schedule varies'}, ${basePersona.metadata.occupation ? 'and being a ' + basePersona.metadata.occupation + ' keeps me engaged' : 'which keeps me busy'}. ${basePersona.metadata.fitness_activity_level ? 'I try to stay ' + basePersona.metadata.fitness_activity_level.toLowerCase() + ' with regular exercise.' : 'I balance work with personal interests.'}`
-          }
-        ]
-      },
-      {
-        section_title: "Values & Perspectives",
-        responses: [
-          {
-            question: "How do you approach decision-making?",
-            answer: `${basePersona.metadata.political_affiliation ? 'My ' + basePersona.metadata.political_affiliation.toLowerCase() + ' values influence how I see the world, ' : ''}and I try to make decisions based on both logic and empathy. ${basePersona.metadata.religious_affiliation && basePersona.metadata.religious_affiliation !== 'None' ? 'My ' + basePersona.metadata.religious_affiliation + ' background also plays a role in my moral framework.' : 'I rely on my personal moral framework to guide me.'}`
+            answer: `Hi, I'm ${basePersona.name}. ${basePersona.metadata.background || 'I\'d be happy to share more about my experiences and perspective.'}`
           }
         ]
       }
     ];
-
-    console.log(`✅ Created comprehensive fallback interview with ${fallbackInterview.length} sections`);
-    return fallbackInterview;
   }
 }
 

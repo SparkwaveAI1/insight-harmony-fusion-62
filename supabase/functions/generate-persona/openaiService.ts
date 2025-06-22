@@ -1,5 +1,5 @@
+
 import { generateChatResponse } from "../_shared/openai.ts";
-import { INTERVIEW_SECTIONS } from "./interviewData.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
@@ -480,10 +480,11 @@ Generate realistic, varied values that create a unique personality profile based
     }
   ];
 
+  // CRITICAL FIX: Increase max_tokens to handle the much larger comprehensive trait profile
   const response = await generateChatResponse(messages, OPENAI_API_KEY, {
     model: 'gpt-4.1-2025-04-14',
     temperature: 0.8,
-    max_tokens: 3000
+    max_tokens: 3000  // Increased from default ~1000 to 3000 for comprehensive trait profile
   });
   
   const content = response.choices[0].message.content;
@@ -568,102 +569,42 @@ REQUIRED STRUCTURE:
   }
 }
 
-// Stage 10: Interview Responses - Simplified approach without external dependency
+// Stage 10: Interview Responses
 export async function generateInterviewResponses(basePersona: any): Promise<any[]> {
   console.log(`Generating interview responses for: ${basePersona.name}`);
   
   const messages = [
     {
       role: "system",
-      content: `Generate comprehensive interview responses for the persona based on their background and traits. Return ONLY valid JSON array.
+      content: `Generate interview responses for the persona. Return ONLY valid JSON array with this structure:
 
-Create responses for 6 key interview sections that cover the persona's background, values, daily life, and perspectives. Each section should have 2-3 thoughtful responses that reflect the persona's personality traits and background.
-
-REQUIRED STRUCTURE:
 [
   {
-    "section_title": "Introduction & Tone Calibration", 
+    "section_title": "Personal Background",
     "responses": [
       {
-        "question": "What's something you've been thinking about lately?",
-        "answer": "Detailed, authentic response reflecting persona's traits..."
-      },
-      {
-        "question": "What's something that recently made you pause or think twice?", 
-        "answer": "Another thoughtful response..."
-      }
-    ]
-  },
-  {
-    "section_title": "Daily Life & Rhythms",
-    "responses": [
-      {
-        "question": "Walk me through a typical morning for you",
-        "answer": "Detailed response about daily routine..."
+        "question": "Tell me about yourself",
+        "answer": "I'm a software developer based in Austin..."
       }
     ]
   }
 ]
 
-Generate responses for these sections: Introduction & Tone Calibration, Daily Life & Rhythms, Values & Decision Making, Relationships & Social Life, Future Outlook & Goals, and Personal Reflection.
-
-Make responses authentic, conversational, and reflect the persona's specific traits, background, and personality profile.`
+Generate 3-4 sections covering background, values, daily life, and future goals.`
     },
     {
       role: "user", 
-      content: `Generate interview responses for: ${basePersona.name}
-      
-Background: ${JSON.stringify(basePersona.metadata, null, 2)}
-
-Key trait insights: ${basePersona.trait_profile ? JSON.stringify({
-  openness: basePersona.trait_profile.big_five?.openness,
-  conscientiousness: basePersona.trait_profile.big_five?.conscientiousness,
-  extraversion: basePersona.trait_profile.big_five?.extraversion
-}, null, 2) : 'Traits being generated'}
-
-Create responses that sound like this person talking naturally, reflecting their specific personality and background.`
+      content: `Generate interview for: ${basePersona.name}, ${basePersona.metadata?.occupation || 'Professional'}`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY, {
-    model: 'gpt-4.1-2025-04-14',
-    temperature: 0.8,
-    max_tokens: 2500
-  });
-  
+  const response = await generateChatResponse(messages, OPENAI_API_KEY);
   const content = response.choices[0].message.content;
   
   try {
-    const parsedResponse = JSON.parse(content);
-    console.log(`✅ Generated ${parsedResponse.length} interview sections`);
-    return parsedResponse;
+    return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse interview JSON, using enhanced fallback:', content);
-    
-    // Enhanced fallback that creates multiple sections instead of just one
-    return [
-      {
-        section_title: "Personal Background",
-        responses: [
-          {
-            question: "Tell me about yourself",
-            answer: `Hi, I'm ${basePersona.name}. ${basePersona.metadata.age ? 'I\'m ' + basePersona.metadata.age + ' years old and ' : ''}${basePersona.metadata.occupation ? 'work as a ' + basePersona.metadata.occupation : 'focused on my career development'}. ${basePersona.metadata.location_history?.current_residence ? 'I currently live in ' + basePersona.metadata.location_history.current_residence + '.' : ''}`
-          },
-          {
-            question: "What drives you day to day?",
-            answer: `${basePersona.metadata.occupation ? 'My work as a ' + basePersona.metadata.occupation + ' keeps me engaged, ' : ''}and I find motivation in continuous learning and growth.`
-          }
-        ]
-      },
-      {
-        section_title: "Values & Perspectives", 
-        responses: [
-          {
-            question: "What matters most to you?",
-            answer: `I value authenticity and meaningful connections. ${basePersona.metadata.education_level ? 'My ' + basePersona.metadata.education_level + ' background' : 'My experiences'} have shaped how I approach problems and relationships.`
-          }
-        ]
-      }
-    ];
+    console.error('Failed to parse interview JSON:', content);
+    throw new Error('Invalid JSON response from OpenAI for interview');
   }
 }
