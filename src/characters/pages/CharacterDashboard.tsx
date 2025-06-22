@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Users, Plus, Library } from 'lucide-react';
+import { Users, Plus, Library, Clock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -15,8 +15,10 @@ const CharacterDashboard = () => {
 
   // Update active section based on current route
   useEffect(() => {
-    if (location.pathname === '/characters/create') {
-      setActiveSection('create');
+    if (location.pathname === '/characters/create/historical') {
+      setActiveSection('create-historical');
+    } else if (location.pathname === '/characters/create/fictional') {
+      setActiveSection('create-fictional');
     } else {
       setActiveSection('library');
     }
@@ -24,10 +26,16 @@ const CharacterDashboard = () => {
 
   const menuItems = [
     {
-      id: 'create',
-      title: 'Create Character',
-      icon: Plus,
-      href: '/characters/create'
+      id: 'create-historical',
+      title: 'Create Historical Character',
+      icon: Clock,
+      href: '/characters/create/historical'
+    },
+    {
+      id: 'create-fictional',
+      title: 'Create Fictional Character',
+      icon: Sparkles,
+      href: '/characters/create/fictional'
     },
     {
       id: 'library',
@@ -82,26 +90,54 @@ const CharacterDashboard = () => {
                     <p className="text-muted-foreground">Manage your custom characters</p>
                   </div>
                 </div>
-                
-                <Button asChild>
-                  <Link to="/characters/create">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Character
-                  </Link>
-                </Button>
               </div>
 
-              {/* Empty state for now */}
+              {/* Character Creation Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <Card className="p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Clock className="h-8 w-8 text-primary" />
+                    <h3 className="text-xl font-semibold">Historical Characters</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Create characters based on real historical figures with detailed biographical information.
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link to="/characters/create/historical">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Create Historical Character
+                    </Link>
+                  </Button>
+                </Card>
+
+                <Card className="p-6 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                    <h3 className="text-xl font-semibold">Fictional Characters</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Design original fictional characters with custom traits and creative backgrounds.
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link to="/characters/create/fictional">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Create Fictional Character
+                    </Link>
+                  </Button>
+                </Card>
+              </div>
+
+              {/* Library Preview */}
               <Card className="text-center py-12">
-                <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-semibold mb-2">No Characters Yet</h2>
+                <Library className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Character Library</h2>
                 <p className="text-muted-foreground mb-6">
-                  Create your first character to get started
+                  View and manage all your created characters
                 </p>
                 <Button asChild>
-                  <Link to="/characters/create">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Character
+                  <Link to="/characters">
+                    <Library className="h-4 w-4 mr-2" />
+                    View Character Library
                   </Link>
                 </Button>
               </Card>
