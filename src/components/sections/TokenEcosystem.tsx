@@ -1,4 +1,5 @@
-import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins, Coins, Zap, LineChart, ExternalLink, Twitter, MessageCircle } from "lucide-react";
+
+import { ArrowRight, Rocket, Lightbulb, Lock, TrendingUp, HandCoins, Coins, Zap, LineChart, ExternalLink, Twitter, MessageCircle, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import Section from "../ui-custom/Section";
 import Button from "../ui-custom/Button";
@@ -115,7 +116,7 @@ const TokenEcosystem = () => {
                 </ul>
                 
                 <h3 className="text-2xl font-bold mb-6 text-left">🔐 Coming Soon</h3>
-                <ul className="space-y-4 text-left">
+                <ul className="space-y-4 mb-8 text-left">
                   <li className="flex items-start">
                     <span className="text-blue-400 text-xl font-bold mr-2">🔄</span>
                     <div>
@@ -145,6 +146,24 @@ const TokenEcosystem = () => {
                     </div>
                   </li>
                 </ul>
+
+                {/* New Character Dashboard Button */}
+                <div className="mt-8 pt-6 border-t border-gray-700">
+                  <div className="text-center">
+                    <h4 className="text-lg font-semibold mb-4">✨ New: Custom Characters</h4>
+                    <p className="text-gray-300 mb-4">Create and manage your own custom characters for storytelling and creative projects.</p>
+                    <Link to="/characters">
+                      <Button 
+                        variant="outline" 
+                        className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Manage Characters
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </Reveal>

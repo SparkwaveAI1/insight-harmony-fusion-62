@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
@@ -40,6 +41,9 @@ import PersonaCreationLanding from "./pages/persona-creation/PersonaCreationLand
 import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScreener";
 import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
 import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
+
+// Character pages
+import { CharacterDashboard } from "./characters";
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
@@ -93,6 +97,9 @@ function App() {
               {/* IMPORTANT: Add support for both URL formats to avoid breaking existing links */}
               <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
               <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+              
+              {/* Character routes - Protected */}
+              <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
               
               {/* Research section - Protected */}
               <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
