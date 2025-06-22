@@ -44,6 +44,7 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 
 // Character pages
 import { CharacterDashboard } from "./characters";
+import CharacterCreate from "./characters/pages/CharacterCreate";
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
@@ -100,6 +101,7 @@ function App() {
               
               {/* Character routes - Protected */}
               <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
+              <Route path="/characters/create" element={<ProtectedRoute><CharacterCreate /></ProtectedRoute>} />
               
               {/* Research section - Protected */}
               <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />

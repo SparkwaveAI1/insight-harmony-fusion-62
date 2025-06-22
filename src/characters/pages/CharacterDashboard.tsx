@@ -1,15 +1,26 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Users, Plus, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { cn } from '@/lib/utils';
+import CharacterLibrary from './CharacterLibrary';
 
 const CharacterDashboard = () => {
   const [characters] = useState([]); // Will connect to service later
   const [activeSection, setActiveSection] = useState('library');
+  const location = useLocation();
+
+  // Update active section based on current route
+  useEffect(() => {
+    if (location.pathname === '/characters/create') {
+      setActiveSection('create');
+    } else {
+      setActiveSection('library');
+    }
+  }, [location.pathname]);
 
   const menuItems = [
     {
@@ -57,41 +68,46 @@ const CharacterDashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1">
-        <div className="container mx-auto px-4 py-8">
-          <Section>
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3">
-                <Users className="h-8 w-8 text-primary" />
-                <div>
-                  <h1 className="text-3xl font-bold">Character Dashboard</h1>
-                  <p className="text-muted-foreground">Manage your custom characters</p>
+        {/* Show Character Library when on main characters route */}
+        {location.pathname === '/characters' ? (
+          <CharacterLibrary />
+        ) : (
+          <div className="container mx-auto px-4 py-8">
+            <Section>
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <Users className="h-8 w-8 text-primary" />
+                  <div>
+                    <h1 className="text-3xl font-bold">Character Dashboard</h1>
+                    <p className="text-muted-foreground">Manage your custom characters</p>
+                  </div>
                 </div>
+                
+                <Button asChild>
+                  <Link to="/characters/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Character
+                  </Link>
+                </Button>
               </div>
-              
-              <Button asChild>
-                <Link to="/characters/create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Character
-                </Link>
-              </Button>
-            </div>
 
-            {/* Empty state for now */}
-            <Card className="text-center py-12">
-              <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold mb-2">No Characters Yet</h2>
-              <p className="text-muted-foreground mb-6">
-                Create your first character to get started
-              </p>
-              <Button asChild>
-                <Link to="/characters/create">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Character
-                </Link>
-              </Button>
-            </Card>
-          </Section>
-        </div>
+              {/* Empty state for now */}
+              <Card className="text-center py-12">
+                <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-xl font-semibold mb-2">No Characters Yet</h2>
+                <p className="text-muted-foreground mb-6">
+                  Create your first character to get started
+                </p>
+                <Button asChild>
+                  <Link to="/characters/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Character
+                  </Link>
+                </Button>
+              </Card>
+            </Section>
+          </div>
+        )}
       </div>
     </div>
   );
