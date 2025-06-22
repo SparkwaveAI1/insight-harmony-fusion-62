@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
@@ -42,7 +43,7 @@ import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreati
 import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
 
 // Character pages
-import { CharacterDashboard } from "./characters";
+import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
 import HistoricalCharacterCreate from "./characters/pages/HistoricalCharacterCreate";
 import FictionalCharacterCreate from "./characters/pages/FictionalCharacterCreate";
 
@@ -101,6 +102,8 @@ function App() {
               
               {/* Character routes - Protected */}
               <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
+              <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
+              <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
               <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
               <Route path="/characters/create/fictional" element={<ProtectedRoute><FictionalCharacterCreate /></ProtectedRoute>} />
               
