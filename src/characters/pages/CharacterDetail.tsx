@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Eye, EyeOff } from 'lucide-react';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
+import CharacterTraits from '../components/CharacterTraits';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -141,6 +143,13 @@ const CharacterDetail = () => {
                   <p className="text-muted-foreground whitespace-pre-wrap">
                     {activeCharacter.prompt}
                   </p>
+                </Card>
+              )}
+
+              {/* Character Traits */}
+              {activeCharacter.trait_profile && (
+                <Card className="p-6">
+                  <CharacterTraits traitProfile={activeCharacter.trait_profile} />
                 </Card>
               )}
             </div>
