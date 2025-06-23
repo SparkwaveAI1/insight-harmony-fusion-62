@@ -1,4 +1,3 @@
-
 import { DbCharacter, Character, CharacterMetadata, CharacterInterviewSection, CharacterTraitProfile } from '../types/characterTraitTypes';
 
 export function characterToDbCharacter(character: Character): Omit<DbCharacter, 'id' | 'created_at'> {
@@ -108,23 +107,19 @@ export function dbCharacterToCharacter(dbCharacter: DbCharacter): Character {
     };
   }
   
-  // Handle trait profile data more carefully with comprehensive validation
+  // Handle trait profile data with corrected validation
   let traitProfile = dbCharacter.trait_profile as unknown as CharacterTraitProfile;
   
   console.log("=== ANALYZING DB TRAIT PROFILE ===");
   console.log("Raw trait profile type:", typeof traitProfile);
   console.log("Raw trait profile keys:", traitProfile ? Object.keys(traitProfile) : "none");
   
-  // Check for various forms of malformed trait data
-  if (!traitProfile || 
-      typeof traitProfile !== 'object' || 
-      Object.keys(traitProfile).length === 0) {
-    
-    console.warn("❌ TRAIT PROFILE DATA IS MALFORMED OR EMPTY");
-    console.warn("Creating comprehensive default structure");
+  // Fixed validation - only create defaults if truly missing or empty
+  if (!traitProfile || typeof traitProfile !== 'object') {
+    console.warn("❌ TRAIT PROFILE IS MISSING OR NOT AN OBJECT");
     traitProfile = createDefaultTraitProfile();
   } else {
-    console.log("✅ Trait profile exists, validating structure...");
+    console.log("✅ Trait profile exists, performing gentle validation...");
     
     // Log some sample values before validation
     if (traitProfile.big_five) {
@@ -134,8 +129,8 @@ export function dbCharacterToCharacter(dbCharacter: DbCharacter): Character {
       });
     }
     
-    // Validate existing trait profile structure
-    traitProfile = validateTraitProfile(traitProfile);
+    // Gentle validation - only fill in missing parts, don't replace existing values
+    traitProfile = gentlyValidateTraitProfile(traitProfile);
   }
   
   console.log("=== FINAL TRAIT PROFILE CHECK ===");
@@ -265,46 +260,48 @@ function createDefaultTraitProfile(): CharacterTraitProfile {
   };
 }
 
-function validateTraitProfile(traitProfile: any): CharacterTraitProfile {
-  console.log("=== VALIDATING TRAIT PROFILE ===");
+function gentlyValidateTraitProfile(traitProfile: any): CharacterTraitProfile {
+  console.log("=== GENTLY VALIDATING TRAIT PROFILE ===");
   const defaultProfile = createDefaultTraitProfile();
   
-  // Ensure all main categories exist and have proper values
+  // Create a copy to avoid modifying the original
+  const validatedProfile = { ...traitProfile };
+  
+  // Ensure all main categories exist
   for (const [category, defaultValues] of Object.entries(defaultProfile)) {
-    if (!traitProfile[category] || typeof traitProfile[category] !== 'object') {
-      console.warn(`Missing trait category: ${category}, using defaults`);
-      traitProfile[category] = defaultValues;
+    if (!validatedProfile[category] || typeof validatedProfile[category] !== 'object') {
+      console.warn(`Missing trait category: ${category}, adding defaults`);
+      validatedProfile[category] = defaultValues;
     } else {
-      // Validate individual traits within each category
+      // For existing categories, only fill in missing traits
       for (const [trait, defaultValue] of Object.entries(defaultValues as any)) {
         if (typeof defaultValue === 'object') {
           // Handle nested objects like political_motivations
-          if (!traitProfile[category][trait] || typeof traitProfile[category][trait] !== 'object') {
-            console.warn(`Missing nested trait object: ${category}.${trait}, using defaults`);
-            traitProfile[category][trait] = defaultValue;
+          if (!validatedProfile[category][trait] || typeof validatedProfile[category][trait] !== 'object') {
+            console.warn(`Missing nested trait object: ${category}.${trait}, adding defaults`);
+            validatedProfile[category][trait] = defaultValue;
           } else {
+            // Fill in missing nested traits only
             for (const [nestedTrait, nestedDefault] of Object.entries(defaultValue)) {
-              if (typeof traitProfile[category][trait][nestedTrait] !== 'number' ||
-                  traitProfile[category][trait][nestedTrait] < 0 ||
-                  traitProfile[category][trait][nestedTrait] > 1) {
-                console.warn(`Invalid nested trait value for ${category}.${trait}.${nestedTrait}, using default`);
-                traitProfile[category][trait][nestedTrait] = nestedDefault;
+              if (typeof validatedProfile[category][trait][nestedTrait] !== 'number') {
+                console.warn(`Missing nested trait: ${category}.${trait}.${nestedTrait}, using default`);
+                validatedProfile[category][trait][nestedTrait] = nestedDefault;
               }
+              // Keep existing values if they're valid numbers, even if outside 0-1 range
             }
           }
         } else {
-          // Handle regular numeric traits
-          if (typeof traitProfile[category][trait] !== 'number' ||
-              traitProfile[category][trait] < 0 ||
-              traitProfile[category][trait] > 1) {
-            console.warn(`Invalid trait value for ${category}.${trait}, using default`);
-            traitProfile[category][trait] = defaultValue;
+          // For regular traits, only add if missing
+          if (typeof validatedProfile[category][trait] !== 'number') {
+            console.warn(`Missing trait: ${category}.${trait}, using default`);
+            validatedProfile[category][trait] = defaultValue;
           }
+          // Keep existing numeric values even if they're outside 0-1 range
         }
       }
     }
   }
   
-  console.log("=== END TRAIT PROFILE VALIDATION ===");
-  return traitProfile;
+  console.log("=== END GENTLE TRAIT PROFILE VALIDATION ===");
+  return validatedProfile;
 }
