@@ -21,22 +21,27 @@ export function buildValidationPrompt(
   const region = metadata.region || 'Unknown';
   const maritalStatus = metadata.marital_status || 'Unknown';
   
-  // Better children parsing - check multiple possible fields
+  // FIXED: Better children parsing - prioritize number_of_children first
   let childrenInfo = 'Unknown';
-  if (metadata.children_count !== undefined) {
-    childrenInfo = metadata.children_count.toString();
+  if (metadata.number_of_children !== undefined && metadata.number_of_children !== null) {
+    childrenInfo = metadata.number_of_children.toString();
+  } else if (metadata.children_ages && Array.isArray(metadata.children_ages)) {
+    childrenInfo = metadata.children_ages.length.toString();
   } else if (metadata.relationships_family?.number_of_children !== undefined) {
     childrenInfo = metadata.relationships_family.number_of_children.toString();
-  } else if (metadata.relationships_family?.children_ages !== undefined) {
+  } else if (metadata.relationships_family?.children_ages && Array.isArray(metadata.relationships_family.children_ages)) {
     childrenInfo = metadata.relationships_family.children_ages.length.toString();
-  } else if (metadata.has_children !== undefined) {
-    childrenInfo = metadata.has_children;
+  } else if (metadata.has_children === true) {
+    childrenInfo = "children (number unknown)";
+  } else if (metadata.has_children === false) {
+    childrenInfo = "0";
   }
 
   console.log('DEBUGGING PERSONA METADATA FOR VALIDATION:');
   console.log('Full metadata:', JSON.stringify(metadata, null, 2));
   console.log('Children info extracted:', childrenInfo);
-  console.log('relationships_family:', metadata.relationships_family);
+  console.log('number_of_children field:', metadata.number_of_children);
+  console.log('children_ages field:', metadata.children_ages);
 
   return `You are a comprehensive persona response validator. Your job is to ensure responses EXACTLY match the persona's specific demographic facts, personality traits, and behavioral patterns.
 
