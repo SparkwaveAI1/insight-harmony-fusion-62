@@ -1,3 +1,4 @@
+
 import { PersonaTraits } from './types.ts';
 
 export function buildValidationPrompt(
@@ -13,13 +14,29 @@ export function buildValidationPrompt(
   const knowledgeDomains = metadata.knowledge_domains || {};
   const emotionalTriggers = persona.emotional_triggers || {};
 
-  // Extract specific demographic facts
+  // Extract specific demographic facts with better parsing
   const age = metadata.age || 'Unknown';
   const occupation = metadata.occupation || 'Unknown';
   const education = metadata.education_level || 'Unknown';
   const region = metadata.region || 'Unknown';
   const maritalStatus = metadata.marital_status || 'Unknown';
-  const childrenInfo = metadata.children_count || metadata.has_children || 'Unknown';
+  
+  // Better children parsing - check multiple possible fields
+  let childrenInfo = 'Unknown';
+  if (metadata.children_count !== undefined) {
+    childrenInfo = metadata.children_count.toString();
+  } else if (metadata.relationships_family?.number_of_children !== undefined) {
+    childrenInfo = metadata.relationships_family.number_of_children.toString();
+  } else if (metadata.relationships_family?.children_ages !== undefined) {
+    childrenInfo = metadata.relationships_family.children_ages.length.toString();
+  } else if (metadata.has_children !== undefined) {
+    childrenInfo = metadata.has_children;
+  }
+
+  console.log('DEBUGGING PERSONA METADATA FOR VALIDATION:');
+  console.log('Full metadata:', JSON.stringify(metadata, null, 2));
+  console.log('Children info extracted:', childrenInfo);
+  console.log('relationships_family:', metadata.relationships_family);
 
   return `You are a comprehensive persona response validator. Your job is to ensure responses EXACTLY match the persona's specific demographic facts, personality traits, and behavioral patterns.
 
@@ -30,7 +47,9 @@ Occupation: ${occupation}
 Education: ${education}
 Region: ${region}
 Marital Status: ${maritalStatus}
-Children: ${childrenInfo}
+Children: ${childrenInfo} children
+
+CRITICAL: If the persona mentions having children, they must say EXACTLY ${childrenInfo} children. Any other number is a CRITICAL ERROR.
 
 === PERSONALITY TRAITS (MUST INFLUENCE RESPONSE) ===
 Big Five Scores (0.0-1.0):
@@ -67,10 +86,10 @@ VALIDATION REQUIREMENTS:
 
 1. DEMOGRAPHIC_ACCURACY (0.0-1.0):
    - Are ALL demographic facts mentioned correctly?
+   - CRITICAL: If children are mentioned, must be EXACTLY ${childrenInfo} children
    - Is the marital status accurate if referenced?
-   - Is the number of children correct if mentioned?
    - Is occupation/education level appropriate if referenced?
-   - PENALIZE HEAVILY for any factual inaccuracies
+   - SCORE 0.0 if ANY demographic fact is wrong
 
 2. TRAIT_ALIGNMENT (0.0-1.0):
    - Does the response reflect the specific Big Five scores?
@@ -101,7 +120,8 @@ VALIDATION REQUIREMENTS:
    - All demographic references are accurate
 
 CRITICAL FAILURES (Automatic Regeneration Required):
-- Any incorrect demographic facts (age, children, marital status, etc.)
+- ANY incorrect demographic facts (age, children, marital status, etc.)
+- Mentions wrong number of children (must be exactly ${childrenInfo})
 - Response doesn't match personality trait levels
 - Claims expertise outside knowledge domains
 - Contradicts established persona information
@@ -136,44 +156,4 @@ function getTraitDescription(trait: string, value: number | undefined): string {
   };
   
   return descriptions[trait as keyof typeof descriptions] || '';
-}
-
-function analyzeRepetitivePatterns(assistantLines: string[], persona: any): string[] {
-  const patterns: string[] = [];
-  const location = persona.metadata?.region || '';
-  const occupation = persona.metadata?.occupation || '';
-  
-  let locationMentions = 0;
-  let occupationMentions = 0;
-  let asPersonPhrases = 0;
-  
-  for (const line of assistantLines) {
-    const content = line.toLowerCase();
-    
-    if (location && content.includes(location.toLowerCase())) {
-      locationMentions++;
-    }
-    
-    if (occupation && content.includes(occupation.toLowerCase())) {
-      occupationMentions++;
-    }
-    
-    if (content.includes('as someone who') || content.includes('as a ') || content.includes('being a ')) {
-      asPersonPhrases++;
-    }
-  }
-  
-  if (locationMentions > 2) {
-    patterns.push(`Mentions location (${location}) ${locationMentions} times - overly repetitive`);
-  }
-  
-  if (occupationMentions > 2) {
-    patterns.push(`References occupation (${occupation}) ${occupationMentions} times - too frequent`);
-  }
-  
-  if (asPersonPhrases > 3) {
-    patterns.push(`Uses "as someone who/as a" phrases ${asPersonPhrases} times - unnatural repetition`);
-  }
-  
-  return patterns;
 }

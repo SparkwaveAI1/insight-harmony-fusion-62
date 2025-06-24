@@ -16,6 +16,7 @@ export async function sendMessageToPersona(
   maxRetries: number = 3
 ): Promise<string> {
   console.log('Sending message to persona with validation:', { personaId, mode, messageLength: userMessage.length });
+  console.log('Persona metadata for validation:', persona.metadata);
 
   let attempts = 0;
   let lastResponse = '';
@@ -50,12 +51,13 @@ export async function sendMessageToPersona(
 
       console.log(`Validation attempt ${attempts}:`, {
         overall: validation.scores.overall,
+        demographicAccuracy: validation.scores.demographicAccuracy,
         shouldRegenerate: validation.shouldRegenerate,
         specificErrors: validation.specificErrors
       });
 
-      // If validation passes (score > 0.7), return the response
-      if (!validation.shouldRegenerate && validation.scores.overall > 0.7) {
+      // If validation passes (score > 0.7 AND demographic accuracy > 0.7), return the response
+      if (!validation.shouldRegenerate && validation.scores.overall > 0.7 && validation.scores.demographicAccuracy > 0.7) {
         console.log('Response passed validation, returning to user');
         return response;
       }
@@ -65,9 +67,10 @@ export async function sendMessageToPersona(
 Response: "${response}"
 Issues: ${validation.feedback}
 Specific Errors: ${validation.specificErrors.join(', ')}
-Scores: ${JSON.stringify(validation.scores)}
+Demographic Accuracy Score: ${validation.scores.demographicAccuracy}
+Overall Score: ${validation.scores.overall}
 
-CORRECTION NEEDED: Generate a new response that addresses these specific issues while staying true to the persona's exact demographic facts and personality traits.`;
+CORRECTION NEEDED: Generate a new response that addresses these specific issues while staying true to the persona's exact demographic facts and personality traits. Pay special attention to demographic accuracy - all facts must be exactly correct.`;
 
       console.log('Response failed validation, retrying...', validation.feedback);
 
