@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders } from '../_shared/cors.ts';
-import { createUnifiedPersonaInstructions } from '../_shared/unifiedPersonaInstructions.ts';
+import { createAuthenticPersonaInstructions } from './personaInstructions.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -39,15 +39,10 @@ serve(async (req) => {
 
     console.log('Processing request for persona:', persona_id, 'Mode:', mode);
 
-    // Create unified system message with enhanced authenticity
-    const systemMessage = createUnifiedPersonaInstructions(persona_data, {
-      mode: mode,
-      conversationContext: conversation_context,
-      includeKnowledgeBoundaries: true,
-      enhancedAuthenticity: true
-    });
+    // Create authentic system message that discourages formulaic responses
+    const systemMessage = createAuthenticPersonaInstructions(persona_data, mode, conversation_context);
 
-    console.log('Generated unified persona instructions for:', persona_data.name);
+    console.log('Generated authentic persona instructions for:', persona_data.name);
 
     // Build messages array
     const messages = [
@@ -76,7 +71,7 @@ serve(async (req) => {
       content: userMessageContent
     });
 
-    console.log('Calling OpenAI with unified authenticity parameters...');
+    console.log('Calling OpenAI with enhanced authenticity parameters...');
 
     // Call OpenAI with enhanced parameters for authenticity
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -105,7 +100,7 @@ serve(async (req) => {
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log('Generated unified authentic response for persona:', persona_id);
+    console.log('Generated authentic response for persona:', persona_id);
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
