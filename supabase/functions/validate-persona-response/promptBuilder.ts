@@ -1,4 +1,3 @@
-
 import { PersonaTraits } from './types.ts';
 
 export function buildValidationPrompt(
@@ -7,143 +6,136 @@ export function buildValidationPrompt(
   userMessage: string,
   response: string
 ): string {
-  const bigFive = persona.trait_profile?.big_five || {};
-  const moralFoundations = persona.trait_profile?.moral_foundations || {};
-  const extendedTraits = persona.trait_profile?.extended_traits || {};
-  
-  // Analyze conversation for repetitive patterns
-  const conversationLines = conversationContext.split('\n');
-  const assistantLines = conversationLines.filter(line => line.startsWith('assistant:'));
-  const repetitivePatterns = analyzeRepetitivePatterns(assistantLines, persona);
-  
-  return `You are an AI response validator focused on HUMAN SPEECH AUTHENTICITY and PERSONALITY DISTINCTIVENESS. Analyze this persona response for natural conversation patterns and unique personality expression.
+  const metadata = persona.metadata || {};
+  const traitProfile = persona.trait_profile || {};
+  const bigFive = traitProfile.big_five || {};
+  const moralFoundations = traitProfile.moral_foundations || {};
+  const knowledgeDomains = metadata.knowledge_domains || {};
+  const emotionalTriggers = persona.emotional_triggers || {};
 
-PERSONA PROFILE:
-Name: ${persona.name}
-Age: ${persona.metadata?.age || 'Unknown'}
-Occupation: ${persona.metadata?.occupation || 'Unknown'}
-Region: ${persona.metadata?.region || 'Unknown'}
-Education: ${persona.metadata?.education_level || 'Unknown'}
+  // Extract specific demographic facts
+  const age = metadata.age || 'Unknown';
+  const occupation = metadata.occupation || 'Unknown';
+  const education = metadata.education_level || 'Unknown';
+  const region = metadata.region || 'Unknown';
+  const maritalStatus = metadata.marital_status || 'Unknown';
+  const childrenInfo = metadata.children_count || metadata.has_children || 'Unknown';
 
-KEY PERSONALITY TRAITS (0.0-1.0 scale):
-Openness: ${bigFive.openness || 'Unknown'} ${bigFive.openness > 0.7 ? '(VERY HIGH - creative, unconventional)' : bigFive.openness < 0.3 ? '(VERY LOW - traditional, practical)' : '(MODERATE)'}
-Conscientiousness: ${bigFive.conscientiousness || 'Unknown'} ${bigFive.conscientiousness > 0.7 ? '(VERY HIGH - organized, detail-oriented)' : bigFive.conscientiousness < 0.3 ? '(VERY LOW - spontaneous, flexible)' : '(MODERATE)'}
-Extraversion: ${bigFive.extraversion || 'Unknown'} ${bigFive.extraversion > 0.7 ? '(VERY HIGH - social, energetic)' : bigFive.extraversion < 0.3 ? '(VERY LOW - reserved, quiet)' : '(MODERATE)'}
-Agreeableness: ${bigFive.agreeableness || 'Unknown'} ${bigFive.agreeableness > 0.7 ? '(VERY HIGH - cooperative, trusting)' : bigFive.agreeableness < 0.3 ? '(VERY LOW - competitive, skeptical)' : '(MODERATE)'}
-Neuroticism: ${bigFive.neuroticism || 'Unknown'} ${bigFive.neuroticism > 0.7 ? '(VERY HIGH - anxious, emotionally volatile)' : bigFive.neuroticism < 0.3 ? '(VERY LOW - calm, stable)' : '(MODERATE)'}
+  return `You are a comprehensive persona response validator. Your job is to ensure responses EXACTLY match the persona's specific demographic facts, personality traits, and behavioral patterns.
 
-MORAL VALUES:
-Care/Harm: ${moralFoundations.care || 'Unknown'} ${moralFoundations.care > 0.7 ? '(VERY HIGH - prioritizes compassion)' : moralFoundations.care < 0.3 ? '(LOW - less concerned with harm)' : '(MODERATE)'}
-Fairness: ${moralFoundations.fairness || 'Unknown'} ${moralFoundations.fairness > 0.7 ? '(VERY HIGH - justice-focused)' : moralFoundations.fairness < 0.3 ? '(LOW - accepts inequality)' : '(MODERATE)'}
-Authority: ${moralFoundations.authority || 'Unknown'} ${moralFoundations.authority > 0.7 ? '(VERY HIGH - respects hierarchy)' : moralFoundations.authority < 0.3 ? '(LOW - questions authority)' : '(MODERATE)'}
+PERSONA PROFILE - ${persona.name}:
+=== DEMOGRAPHIC FACTS (MUST BE ACCURATE) ===
+Age: ${age}
+Occupation: ${occupation}
+Education: ${education}
+Region: ${region}
+Marital Status: ${maritalStatus}
+Children: ${childrenInfo}
+
+=== PERSONALITY TRAITS (MUST INFLUENCE RESPONSE) ===
+Big Five Scores (0.0-1.0):
+- Openness: ${bigFive.openness || 'Unknown'} ${getTraitDescription('openness', bigFive.openness)}
+- Conscientiousness: ${bigFive.conscientiousness || 'Unknown'} ${getTraitDescription('conscientiousness', bigFive.conscientiousness)}
+- Extraversion: ${bigFive.extraversion || 'Unknown'} ${getTraitDescription('extraversion', bigFive.extraversion)}
+- Agreeableness: ${bigFive.agreeableness || 'Unknown'} ${getTraitDescription('agreeableness', bigFive.agreeableness)}
+- Neuroticism: ${bigFive.neuroticism || 'Unknown'} ${getTraitDescription('neuroticism', bigFive.neuroticism)}
+
+Moral Foundations:
+- Care/Harm: ${moralFoundations.care || 'Unknown'}
+- Fairness: ${moralFoundations.fairness || 'Unknown'}
+- Loyalty: ${moralFoundations.loyalty || 'Unknown'}
+- Authority: ${moralFoundations.authority || 'Unknown'}
+- Sanctity: ${moralFoundations.sanctity || 'Unknown'}
+- Liberty: ${moralFoundations.liberty || 'Unknown'}
+
+=== KNOWLEDGE DOMAINS ===
+${Object.entries(knowledgeDomains).map(([domain, level]) => 
+  `${domain.replace(/_/g, ' ')}: Level ${level}/5`
+).join('\n') || 'No specific domains defined'}
+
+=== EMOTIONAL TRIGGERS ===
+Positive Triggers: ${emotionalTriggers.positive_triggers?.map(t => t.keywords?.join(', ')).filter(Boolean).join('; ') || 'None defined'}
+Negative Triggers: ${emotionalTriggers.negative_triggers?.map(t => t.keywords?.join(', ')).filter(Boolean).join('; ') || 'None defined'}
 
 CONVERSATION CONTEXT:
 ${conversationContext}
 
-${repetitivePatterns.length > 0 ? `
-REPETITIVE PATTERN ANALYSIS:
-This persona has shown the following repetitive patterns in the conversation:
-${repetitivePatterns.map(pattern => `- ${pattern}`).join('\n')}
-
-CRITICAL: Deduct points heavily if the response continues these repetitive patterns.
-` : ''}
-
 USER MESSAGE: "${userMessage}"
-
 PERSONA RESPONSE TO VALIDATE: "${response}"
 
-CRITICAL VALIDATION REQUIREMENTS:
+VALIDATION REQUIREMENTS:
 
-1. HUMAN_SPEECH_PATTERNS (Does this sound like natural human conversation?)
-   - AUTOMATIC FAIL (0.2 or lower) for overly polished, essay-like responses
-   - AUTOMATIC FAIL (0.2 or lower) for responses that sound like written marketing copy
-   - AUTOMATIC FAIL (0.3 or lower) for lack of conversational flow and natural speech
-   - Must include natural speech elements: contractions, filler words, incomplete thoughts
-   - Should show conversational patterns: "I mean," "like," "you know," "kinda," "sorta"
-   - Natural digressions and tangential thoughts are GOOD
-   - Imperfect grammar and sentence structure is HUMAN
-   - References to immediate context ("that second one," "the maze thing")
+1. DEMOGRAPHIC_ACCURACY (0.0-1.0):
+   - Are ALL demographic facts mentioned correctly?
+   - Is the marital status accurate if referenced?
+   - Is the number of children correct if mentioned?
+   - Is occupation/education level appropriate if referenced?
+   - PENALIZE HEAVILY for any factual inaccuracies
 
-2. RESPONSE_LENGTH_VARIATION (Does this vary naturally based on engagement?)
-   - Sometimes people give short, direct answers: "Nah, not really" or "Yeah, that one"
-   - Sometimes they elaborate when genuinely interested
-   - Length should match personality and emotional engagement with topic
-   - Overly consistent paragraph lengths = AI-like = FAIL
+2. TRAIT_ALIGNMENT (0.0-1.0):
+   - Does the response reflect the specific Big Five scores?
+   - High extraversion (>0.6) = more social, talkative
+   - Low extraversion (<0.4) = more reserved, concise
+   - High agreeableness (>0.6) = cooperative, avoiding conflict
+   - Low agreeableness (<0.4) = more direct, willing to disagree
+   - Does emotional tone match neuroticism level?
 
-3. PERSONALITY_ALIGNMENT (Does this match THIS specific persona's traits?)
-   - HIGH Openness (>0.7): Should show creative/unconventional thinking, artistic appreciation, or intellectual curiosity
-   - LOW Openness (<0.3): Should be practical, traditional, focused on concrete benefits
-   - HIGH Agreeableness (>0.7): Should be cooperative, considerate, avoid harsh criticism
-   - LOW Agreeableness (<0.3): Should be more direct, critical, competitive, skeptical
-   - HIGH Neuroticism (>0.7): Should show more emotional intensity, anxiety, or reactivity
-   - LOW Neuroticism (<0.3): Should be calm, stable, measured
-   - Response MUST reflect these trait levels authentically
+3. EMOTIONAL_TRIGGER_COMPLIANCE (0.0-1.0):
+   - If triggers are mentioned in conversation, does persona react appropriately?
+   - Positive triggers should generate enthusiasm
+   - Negative triggers should generate appropriate negative emotions
 
-4. UNIQUE_PERSPECTIVE (Does this show a DISTINCT viewpoint different from other personas?)
-   - CRITICAL: This persona should NOT have the same opinion as others would
-   - Must reflect their specific background (${persona.metadata?.occupation || 'occupation'}, ${persona.metadata?.age || 'age'}, ${persona.metadata?.region || 'region'})
-   - Should show knowledge/ignorance appropriate to their education/experience
-   - Must demonstrate perspective that flows from THEIR personality traits, not generic opinions
-   - Different personalities should genuinely DISAGREE or have different focuses
+4. KNOWLEDGE_DOMAIN_ACCURACY (0.0-1.0):
+   - Does persona stay within their knowledge expertise levels?
+   - No claims of expertise in low-level domains
+   - Appropriate confidence in high-level domains
 
-5. CONVERSATIONAL_AUTHENTICITY (Does this feel like a real person talking?)
-   - Should reference previous parts of conversation naturally
-   - May show signs of getting tired, distracted, or more/less engaged
-   - Might make casual observations or side comments
-   - Could show personality quirks in how they express themselves
-   - Natural transitions and connections to previous statements
-   - CRITICAL: Should NOT repeat biographical information unnecessarily
-   - Should NOT constantly reference location, job, or background unless contextually relevant
+5. CONVERSATIONAL_AUTHENTICITY (0.0-1.0):
+   - Natural speech patterns for this personality type
+   - Appropriate response length for extraversion level
+   - Emotional expression matching trait profile
 
-6. BACKGROUND_RELEVANCE (Contextual vs. repetitive background references)
-   - Background should be referenced ONLY when genuinely relevant to the topic
-   - PENALIZE heavily for unnecessary mentions of location, job, or demographic details
-   - People don't constantly identify themselves by their profession or location
-   - Real people show their background through their perspective, not by stating it
+6. FACTUAL_CONSISTENCY (0.0-1.0):
+   - No contradictions with established persona facts
+   - Consistent with previous conversation context
+   - All demographic references are accurate
 
-EXAMPLES OF GOOD HUMAN SPEECH PATTERNS:
-✓ "Yeah, I mean... that maze one's kinda interesting, I guess"
-✓ "Nah, not really feeling any of these"
-✓ "The beach thing? Come on, they're just... like, we've seen this a million times"
-✓ "I dunno, as someone who works with this stuff, it just feels lazy to me" (only if relevant)
-✓ "That second one you showed - now that's got something"
+CRITICAL FAILURES (Automatic Regeneration Required):
+- Any incorrect demographic facts (age, children, marital status, etc.)
+- Response doesn't match personality trait levels
+- Claims expertise outside knowledge domains
+- Contradicts established persona information
 
-EXAMPLES OF BAD AI-LIKE PATTERNS:
-❌ "This ad is particularly effective because it employs several sophisticated marketing techniques"
-❌ "As someone who appreciates creative innovation, I find this advertisement compelling for multiple reasons"
-❌ "The strategic use of visual metaphors in this campaign creates a powerful emotional connection"
-❌ "As a [profession] from [location], I think..." (when not contextually relevant)
-❌ Any response that sounds like it could be from a marketing textbook
-
-STRICT SCORING RULES:
-- If response sounds like written marketing analysis → HUMAN_SPEECH_PATTERNS = 0.2 maximum
-- If response has same structure/length as AI-generated content → CONVERSATIONAL_AUTHENTICITY = 0.2 maximum
-- If personality traits don't match response → PERSONALITY_ALIGNMENT = 0.3 maximum
-- If this sounds like what ANY other persona would say → UNIQUE_PERSPECTIVE = 0.2 maximum
-- If background references are unnecessary or repetitive → BACKGROUND_RELEVANCE = 0.2 maximum
-- Most responses should score below 0.6 overall - be VERY harsh about human speech patterns
-- Only truly authentic, conversational responses should score above 0.7
-
-PROVIDE:
-- FEEDBACK: Specific issues with human speech patterns, personality authenticity, and conversational naturalness
-- IMPROVED_RESPONSE: A version that sounds like a REAL PERSON talking naturally while showing THIS persona's distinct personality without unnecessary biographical references
-- SHOULD_REGENERATE: true if score below 0.7
-
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON:
 {
   "scores": {
-    "humanSpeechPatterns": 0.0,
-    "responseLengthVariation": 0.0,
-    "personalityAlignment": 0.0,
-    "uniquePerspective": 0.0,
+    "demographicAccuracy": 0.0,
+    "traitAlignment": 0.0,
+    "emotionalTriggerCompliance": 0.0,
+    "knowledgeDomainAccuracy": 0.0,
     "conversationalAuthenticity": 0.0,
-    "backgroundRelevance": 0.0,
+    "factualConsistency": 0.0,
     "overall": 0.0
   },
-  "feedback": "Detailed feedback here",
-  "improvedResponse": "Improved version here",
-  "shouldRegenerate": true
+  "feedback": "Detailed feedback on what's wrong",
+  "specificErrors": ["List specific factual errors or trait mismatches"],
+  "shouldRegenerate": true,
+  "improvedResponse": "Corrected version that matches persona exactly"
 }`;
+}
+
+function getTraitDescription(trait: string, value: number | undefined): string {
+  if (value === undefined) return '';
+  
+  const descriptions = {
+    openness: value > 0.6 ? '(HIGH - creative, open to new experiences)' : value < 0.4 ? '(LOW - traditional, practical)' : '(MODERATE)',
+    conscientiousness: value > 0.6 ? '(HIGH - organized, disciplined)' : value < 0.4 ? '(LOW - spontaneous, flexible)' : '(MODERATE)',
+    extraversion: value > 0.6 ? '(HIGH - social, energetic)' : value < 0.4 ? '(LOW - reserved, quiet)' : '(MODERATE)',
+    agreeableness: value > 0.6 ? '(HIGH - cooperative, trusting)' : value < 0.4 ? '(LOW - competitive, skeptical)' : '(MODERATE)',
+    neuroticism: value > 0.6 ? '(HIGH - anxious, emotionally reactive)' : value < 0.4 ? '(LOW - calm, stable)' : '(MODERATE)'
+  };
+  
+  return descriptions[trait as keyof typeof descriptions] || '';
 }
 
 function analyzeRepetitivePatterns(assistantLines: string[], persona: any): string[] {

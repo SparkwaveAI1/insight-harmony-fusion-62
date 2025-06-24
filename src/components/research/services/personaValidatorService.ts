@@ -4,19 +4,20 @@ import { Persona } from '@/services/persona/types';
 
 export interface ValidationScore {
   overall: number;
-  humanSpeechPatterns: number;
-  responseLengthVariation: number;
-  personalityAlignment: number;
-  uniquePerspective: number;
+  demographicAccuracy: number;
+  traitAlignment: number;
+  emotionalTriggerCompliance: number;
+  knowledgeDomainAccuracy: number;
   conversationalAuthenticity: number;
-  backgroundRelevance: number;
+  factualConsistency: number;
 }
 
 export interface ValidationResult {
   scores: ValidationScore;
   feedback: string;
-  improvedResponse?: string;
+  specificErrors: string[];
   shouldRegenerate: boolean;
+  improvedResponse?: string;
 }
 
 export const validatePersonaResponse = async (
@@ -25,7 +26,7 @@ export const validatePersonaResponse = async (
   conversationContext: string,
   userMessage: string
 ): Promise<ValidationResult> => {
-  console.log('Validating persona response for human speech authenticity:', persona.name);
+  console.log('Validating persona response for accuracy and trait compliance:', persona.name);
   
   try {
     // Call validation edge function
@@ -45,43 +46,47 @@ export const validatePersonaResponse = async (
 
     if (!validationResponse.ok) {
       console.error('Validation service error:', validationResponse.status);
-      // Return default passing scores if validator fails
+      // Return permissive scores if validator fails
       return {
         scores: {
-          overall: 0.7,
-          humanSpeechPatterns: 0.7,
-          responseLengthVariation: 0.7,
-          personalityAlignment: 0.7,
-          uniquePerspective: 0.7,
-          conversationalAuthenticity: 0.7,
-          backgroundRelevance: 0.7
+          overall: 0.8,
+          demographicAccuracy: 0.8,
+          traitAlignment: 0.8,
+          emotionalTriggerCompliance: 0.8,
+          knowledgeDomainAccuracy: 0.8,
+          conversationalAuthenticity: 0.8,
+          factualConsistency: 0.8
         },
         feedback: 'Validation service unavailable - using original response',
+        specificErrors: [],
         shouldRegenerate: false
       };
     }
 
     const result = await validationResponse.json();
-    console.log('Validation scores:', result.scores);
-    console.log('Human speech patterns score:', result.scores.humanSpeechPatterns);
-    console.log('Validation feedback:', result.feedback);
+    console.log('Comprehensive validation scores:', result.scores);
+    console.log('Demographic accuracy:', result.scores.demographicAccuracy);
+    console.log('Trait alignment:', result.scores.traitAlignment);
+    console.log('Specific errors found:', result.specificErrors);
+    console.log('Should regenerate:', result.shouldRegenerate);
     
     return result;
   } catch (error) {
     console.error('Error validating persona response:', error);
     
-    // Return default passing scores on error
+    // Return permissive scores on error
     return {
       scores: {
-        overall: 0.7,
-        humanSpeechPatterns: 0.7,
-        responseLengthVariation: 0.7,
-        personalityAlignment: 0.7,
-        uniquePerspective: 0.7,
-        conversationalAuthenticity: 0.7,
-        backgroundRelevance: 0.7
+        overall: 0.8,
+        demographicAccuracy: 0.8,
+        traitAlignment: 0.8,
+        emotionalTriggerCompliance: 0.8,
+        knowledgeDomainAccuracy: 0.8,
+        conversationalAuthenticity: 0.8,
+        factualConsistency: 0.8
       },
       feedback: 'Validation failed - using original response',
+      specificErrors: [],
       shouldRegenerate: false
     };
   }
@@ -89,20 +94,20 @@ export const validatePersonaResponse = async (
 
 export const calculateOverallScore = (scores: ValidationScore): number => {
   const weights = {
-    humanSpeechPatterns: 0.35,
-    personalityAlignment: 0.25,
-    conversationalAuthenticity: 0.20,
-    uniquePerspective: 0.15,
-    responseLengthVariation: 0.03,
-    backgroundRelevance: 0.02
+    demographicAccuracy: 0.30,
+    traitAlignment: 0.25,
+    factualConsistency: 0.20,
+    conversationalAuthenticity: 0.15,
+    knowledgeDomainAccuracy: 0.05,
+    emotionalTriggerCompliance: 0.05
   };
   
   return (
-    scores.humanSpeechPatterns * weights.humanSpeechPatterns +
-    scores.personalityAlignment * weights.personalityAlignment +
+    scores.demographicAccuracy * weights.demographicAccuracy +
+    scores.traitAlignment * weights.traitAlignment +
+    scores.factualConsistency * weights.factualConsistency +
     scores.conversationalAuthenticity * weights.conversationalAuthenticity +
-    scores.uniquePerspective * weights.uniquePerspective +
-    scores.responseLengthVariation * weights.responseLengthVariation +
-    scores.backgroundRelevance * weights.backgroundRelevance
+    scores.knowledgeDomainAccuracy * weights.knowledgeDomainAccuracy +
+    scores.emotionalTriggerCompliance * weights.emotionalTriggerCompliance
   );
 };

@@ -3,27 +3,28 @@ import { ValidationScores } from './types.ts';
 
 export function calculateOverallScore(scores: ValidationScores): number {
   return (
-    scores.humanSpeechPatterns * 0.35 +
-    scores.personalityAlignment * 0.25 +
-    scores.conversationalAuthenticity * 0.20 +
-    scores.uniquePerspective * 0.15 +
-    scores.responseLengthVariation * 0.03 +
-    scores.backgroundRelevance * 0.02
+    scores.demographicAccuracy * 0.30 +        // Most important - factual accuracy
+    scores.traitAlignment * 0.25 +             // Personality trait compliance
+    scores.factualConsistency * 0.20 +         // Internal consistency
+    scores.conversationalAuthenticity * 0.15 + // Natural conversation
+    scores.knowledgeDomainAccuracy * 0.05 +    // Knowledge boundaries
+    scores.emotionalTriggerCompliance * 0.05   // Emotional reactions
   );
 }
 
 export function createDefaultValidationResult(): any {
   return {
     scores: {
-      humanSpeechPatterns: 0.2,
-      responseLengthVariation: 0.3,
-      personalityAlignment: 0.2,
-      uniquePerspective: 0.2,
-      conversationalAuthenticity: 0.2,
-      backgroundRelevance: 0.3,
-      overall: 0.22
+      demographicAccuracy: 0.1,
+      traitAlignment: 0.1,
+      emotionalTriggerCompliance: 0.1,
+      knowledgeDomainAccuracy: 0.1,
+      conversationalAuthenticity: 0.1,
+      factualConsistency: 0.1,
+      overall: 0.1
     },
-    feedback: 'Validation parsing failed - likely overly polished response that lacks natural human speech patterns',
+    feedback: 'Validation parsing failed - response likely contains factual errors or trait mismatches',
+    specificErrors: ['Failed to parse validation response'],
     shouldRegenerate: true
   };
 }
@@ -35,6 +36,11 @@ export function parseValidationResponse(rawResponse: string): any {
     
     // Calculate overall score with proper weighting
     validationResult.scores.overall = calculateOverallScore(validationResult.scores);
+    
+    // Ensure we have specificErrors array
+    if (!validationResult.specificErrors) {
+      validationResult.specificErrors = [];
+    }
     
     return validationResult;
   } catch (parseError) {

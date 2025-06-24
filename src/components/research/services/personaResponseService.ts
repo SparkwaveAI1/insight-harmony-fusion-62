@@ -13,7 +13,7 @@ export const generatePersonaResponse = async (
   allPersonas: Persona[],
   projectDocuments: KnowledgeBaseDocument[] = []
 ): Promise<ResearchMessage | null> => {
-  console.log('Generating response for persona:', personaId);
+  console.log('Generating validated response for persona:', personaId);
   console.log('Current conversation messages:', conversationHistory.length);
   console.log('Available project documents:', projectDocuments.length);
   
@@ -58,9 +58,10 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
     const userMessage = lastMessage?.role === 'user' ? lastMessage.content : '';
     const imageData = lastMessage?.image;
 
-    console.log('Using unified conversation engine for research response with knowledge base context');
+    console.log('Using validated conversation engine for research response with knowledge base context');
 
-    // Use the single conversation engine from Persona Chat with project documents
+    // Use the validated conversation engine from Persona Chat with project documents
+    // This will now automatically validate responses and regenerate if needed
     const response = await sendMessageToPersona(
       personaId,
       userMessage,
@@ -68,7 +69,8 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
       persona,
       'research', // Use research mode
       conversationContext, // Include full knowledge base context
-      imageData
+      imageData,
+      3 // Allow up to 3 validation attempts
     );
 
     // Save the response message to database
@@ -91,7 +93,7 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
       return null;
     }
 
-    console.log('Response saved successfully with knowledge base context');
+    console.log('Validated response saved successfully with knowledge base context');
 
     // Return the message in the expected format
     return {
@@ -102,7 +104,7 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
     };
 
   } catch (error) {
-    console.error('Error generating persona response:', error);
+    console.error('Error generating validated persona response:', error);
     toast.error('Failed to generate persona response');
     return null;
   }
