@@ -80,6 +80,24 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
+  // Get description with proper fallback
+  const getDescription = () => {
+    // First try metadata description
+    if (persona.metadata?.description && persona.metadata.description.trim()) {
+      return persona.metadata.description;
+    }
+    
+    // Then try prompt as fallback
+    if (persona.prompt && persona.prompt.trim()) {
+      return persona.prompt;
+    }
+    
+    // Default fallback
+    return "No description available";
+  };
+
+  const description = getDescription();
+
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
@@ -166,10 +184,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       <CardContent onClick={handleViewDetails} className="cursor-pointer pt-0 pb-4">
         {/* Description */}
         <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-          {persona.prompt ? 
-            (persona.prompt.length > 120 ? `${persona.prompt.substring(0, 120)}...` : persona.prompt) :
-            "No description available"
-          }
+          {description.length > 120 ? `${description.substring(0, 120)}...` : description}
         </p>
         
         {/* Metadata Grid */}
