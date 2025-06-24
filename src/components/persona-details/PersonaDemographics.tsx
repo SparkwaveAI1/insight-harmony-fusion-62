@@ -11,11 +11,15 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
   console.log("=== DEMOGRAPHICS COMPONENT DEBUG ===");
   console.log("Full metadata:", metadata);
   console.log("relationships_family:", metadata?.relationships_family);
-  console.log("children data:", {
-    has_children: metadata?.relationships_family?.has_children,
-    number_of_children: metadata?.relationships_family?.number_of_children,
-    children_ages: metadata?.relationships_family?.children_ages
-  });
+  
+  // Extract children data from multiple possible locations
+  let childrenData = {
+    has_children: metadata?.has_children || metadata?.relationships_family?.has_children,
+    number_of_children: metadata?.number_of_children || metadata?.relationships_family?.number_of_children,
+    children_ages: metadata?.children_ages || metadata?.relationships_family?.children_ages
+  };
+  
+  console.log("Extracted children data:", childrenData);
 
   const renderSection = (title: string, data: any) => {
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
@@ -55,6 +59,37 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
     );
   };
 
+  // Create family relationships data by combining various fields
+  const familyRelationshipsData = {
+    has_children: childrenData.has_children ? 'Yes' : 'No',
+    number_of_children: childrenData.number_of_children,
+    children_ages: childrenData.children_ages,
+    stepchildren: metadata?.stepchildren ? 'Yes' : 'No',
+    custody_arrangement: metadata?.custody_arrangement || metadata?.relationships_family?.custody_arrangement,
+    living_situation: metadata?.living_situation || metadata?.relationships_family?.living_situation,
+    household_composition: metadata?.household_composition || metadata?.relationships_family?.household_composition,
+    primary_caregiver_responsibilities: metadata?.relationships_family?.primary_caregiver_responsibilities,
+    eldercare_responsibilities: metadata?.relationships_family?.eldercare_responsibilities,
+    partner_spouse_relationship: metadata?.relationships_family?.partner_spouse_relationship,
+    partner_health_status: metadata?.relationships_family?.partner_health_status,
+    children_health_issues: metadata?.children_health_issues || metadata?.relationships_family?.children_health_issues,
+    family_relationship_quality: metadata?.relationships_family?.family_relationship_quality,
+    family_stressors: metadata?.family_stressors || metadata?.relationships_family?.family_stressors,
+    support_system_strength: metadata?.support_system_strength || metadata?.relationships_family?.support_system_strength,
+    extended_family_involvement: metadata?.relationships_family?.extended_family_involvement,
+    relationship_priorities: metadata?.relationship_priorities || metadata?.relationships_family?.relationship_priorities,
+    co_parenting_dynamics: metadata?.co_parenting_dynamics || metadata?.relationships_family?.co_parenting_dynamics,
+    family_financial_responsibilities: metadata?.relationships_family?.family_financial_responsibilities,
+    family_medical_history_impact: metadata?.relationships_family?.family_medical_history_impact
+  };
+
+  // Filter out null/undefined values
+  const cleanedFamilyData = Object.fromEntries(
+    Object.entries(familyRelationshipsData).filter(([_, value]) => 
+      value !== null && value !== undefined && value !== ''
+    )
+  );
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-6">Demographics & Background</h2>
@@ -86,29 +121,8 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         climate_risk_zone: metadata?.climate_risk_zone
       })}
 
-      {/* Relationships & Family Dynamics - This is the key section */}
-      {metadata?.relationships_family && renderSection("Relationships & Family Dynamics", {
-        has_children: metadata.relationships_family.has_children ? 'Yes' : 'No',
-        number_of_children: metadata.relationships_family.number_of_children,
-        children_ages: metadata.relationships_family.children_ages,
-        stepchildren: metadata.relationships_family.stepchildren ? 'Yes' : 'No',
-        custody_arrangement: metadata.relationships_family.custody_arrangement,
-        living_situation: metadata.relationships_family.living_situation,
-        household_composition: metadata.relationships_family.household_composition,
-        primary_caregiver_responsibilities: metadata.relationships_family.primary_caregiver_responsibilities,
-        eldercare_responsibilities: metadata.relationships_family.eldercare_responsibilities,
-        partner_spouse_relationship: metadata.relationships_family.partner_spouse_relationship,
-        partner_health_status: metadata.relationships_family.partner_health_status,
-        children_health_issues: metadata.relationships_family.children_health_issues,
-        family_relationship_quality: metadata.relationships_family.family_relationship_quality,
-        family_stressors: metadata.relationships_family.family_stressors,
-        support_system_strength: metadata.relationships_family.support_system_strength,
-        extended_family_involvement: metadata.relationships_family.extended_family_involvement,
-        relationship_priorities: metadata.relationships_family.relationship_priorities,
-        co_parenting_dynamics: metadata.relationships_family.co_parenting_dynamics,
-        family_financial_responsibilities: metadata.relationships_family.family_financial_responsibilities,
-        family_medical_history_impact: metadata.relationships_family.family_medical_history_impact
-      })}
+      {/* Relationships & Family Dynamics - Using cleaned data */}
+      {Object.keys(cleanedFamilyData).length > 0 && renderSection("Relationships & Family Dynamics", cleanedFamilyData)}
 
       {/* Cultural & Psychological */}
       {renderSection("Cultural & Psychological", {
@@ -188,12 +202,17 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
       {/* Debug Section - Remove this in production */}
       <Card className="border-red-200 bg-red-50">
         <CardHeader>
-          <CardTitle className="text-red-600">Debug: Raw Relationships Data</CardTitle>
+          <CardTitle className="text-red-600">Debug: Children Data Sources</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="text-xs overflow-auto max-h-40 bg-white p-2 rounded border">
-            {JSON.stringify(metadata?.relationships_family, null, 2)}
-          </pre>
+          <div className="space-y-2 text-xs">
+            <div><strong>metadata.has_children:</strong> {JSON.stringify(metadata?.has_children)}</div>
+            <div><strong>metadata.number_of_children:</strong> {JSON.stringify(metadata?.number_of_children)}</div>
+            <div><strong>metadata.children_ages:</strong> {JSON.stringify(metadata?.children_ages)}</div>
+            <div><strong>metadata.relationships_family:</strong> {JSON.stringify(metadata?.relationships_family, null, 2)}</div>
+            <div><strong>Extracted children data:</strong> {JSON.stringify(childrenData, null, 2)}</div>
+            <div><strong>Family section data count:</strong> {Object.keys(cleanedFamilyData).length}</div>
+          </div>
         </CardContent>
       </Card>
     </div>
