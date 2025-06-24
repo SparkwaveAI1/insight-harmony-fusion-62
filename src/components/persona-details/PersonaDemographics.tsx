@@ -1,363 +1,203 @@
+
+import React from "react";
 import { PersonaMetadata } from "@/services/persona/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PersonaDemographicsProps {
   metadata: PersonaMetadata;
 }
 
 const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
-  console.log("=== PERSONA DEMOGRAPHICS COMPONENT DEBUG ===");
-  console.log("Received metadata:", metadata);
-  console.log("Metadata type:", typeof metadata);
-  
-  if (!metadata) {
-    console.error("❌ No metadata provided to PersonaDemographics component");
+  console.log("=== DEMOGRAPHICS COMPONENT DEBUG ===");
+  console.log("Full metadata:", metadata);
+  console.log("relationships_family:", metadata?.relationships_family);
+  console.log("children data:", {
+    has_children: metadata?.relationships_family?.has_children,
+    number_of_children: metadata?.relationships_family?.number_of_children,
+    children_ages: metadata?.relationships_family?.children_ages
+  });
+
+  const renderSection = (title: string, data: any) => {
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+      return null;
+    }
+
     return (
-      <div className="space-y-6">
-        <h2 className="text-xl font-bold text-red-600">
-          Error: No demographic data available
-        </h2>
-        <p className="text-muted-foreground">The metadata is missing or undefined.</p>
-      </div>
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {typeof data === 'object' ? (
+              Object.entries(data).map(([key, value]) => {
+                if (value === null || value === undefined) return null;
+                
+                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                return (
+                  <div key={key} className="space-y-1">
+                    <dt className="text-sm font-medium text-gray-600">{displayKey}</dt>
+                    <dd className="text-sm text-gray-900">
+                      {Array.isArray(value) ? value.join(', ') : String(value)}
+                    </dd>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="space-y-1">
+                <dd className="text-sm text-gray-900">{String(data)}</dd>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     );
-  }
-
-  const metadataKeys = Object.keys(metadata);
-  console.log("Available metadata keys:", metadataKeys);
-  console.log("Metadata entries count:", metadataKeys.length);
-
-  // Check if this is the simplified metadata structure
-  const isSimplifiedMetadata = metadata.hasOwnProperty('background') || metadata.hasOwnProperty('personality_summary');
+  };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-800 flex items-center">
-        <span className="inline-block w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
-        Demographics Profile ({metadataKeys.length} fields)
-      </h2>
+      <h2 className="text-2xl font-bold mb-6">Demographics & Background</h2>
       
-      {isSimplifiedMetadata ? (
-        // Render simplified metadata structure
-        <Accordion type="multiple" defaultValue={["basic-info"]}>
-          <AccordionItem value="basic-info" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-blue-50/50 rounded-md hover:bg-blue-50 transition-colors">
-              Basic Information
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Age" value={metadata.age} />
-                  <InfoItem label="Gender" value={metadata.gender} />
-                  <InfoItem label="Education Level" value={metadata.education_level} />
-                  <InfoItem label="Occupation" value={metadata.occupation} />
-                  <InfoItem label="Marital Status" value={metadata.marital_status} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Location" value={metadata.location} />
-                  <InfoItem label="Housing" value={metadata.housing} />
-                  <InfoItem label="Income Bracket" value={metadata.income_bracket} />
-                  <InfoItem label="Children" value={metadata.children} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      {/* Core Demographics */}
+      {renderSection("Core Demographics", {
+        age: metadata?.age,
+        gender: metadata?.gender,
+        race_ethnicity: metadata?.race_ethnicity,
+        sexual_orientation: metadata?.sexual_orientation,
+        education_level: metadata?.education_level,
+        occupation: metadata?.occupation,
+        employment_type: metadata?.employment_type,
+        income_level: metadata?.income_level,
+        social_class_identity: metadata?.social_class_identity,
+        marital_status: metadata?.marital_status,
+        parenting_role: metadata?.parenting_role,
+        military_service: metadata?.military_service
+      })}
 
-          {metadata.background && (
-            <AccordionItem value="background" className="border-0 mb-2">
-              <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-green-50/40 rounded-md hover:bg-green-50 transition-colors">
-                Background
-              </AccordionTrigger>
-              <AccordionContent className="pt-4">
-                <p className="text-sm leading-relaxed">{metadata.background}</p>
-              </AccordionContent>
-            </AccordionItem>
-          )}
+      {/* Location & Environment */}
+      {renderSection("Location & Environment", {
+        region: metadata?.region,
+        urban_rural_context: metadata?.urban_rural_context,
+        grew_up_in: metadata?.location_history?.grew_up_in,
+        current_residence: metadata?.location_history?.current_residence,
+        places_lived: metadata?.location_history?.places_lived,
+        migration_history: metadata?.migration_history,
+        climate_risk_zone: metadata?.climate_risk_zone
+      })}
 
-          {metadata.personality_summary && (
-            <AccordionItem value="personality" className="border-0 mb-2">
-              <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-purple-50/30 rounded-md hover:bg-purple-50 transition-colors">
-                Personality Summary
-              </AccordionTrigger>
-              <AccordionContent className="pt-4">
-                <p className="text-sm leading-relaxed">{metadata.personality_summary}</p>
-              </AccordionContent>
-            </AccordionItem>
-          )}
+      {/* Relationships & Family Dynamics - This is the key section */}
+      {metadata?.relationships_family && renderSection("Relationships & Family Dynamics", {
+        has_children: metadata.relationships_family.has_children ? 'Yes' : 'No',
+        number_of_children: metadata.relationships_family.number_of_children,
+        children_ages: metadata.relationships_family.children_ages,
+        stepchildren: metadata.relationships_family.stepchildren ? 'Yes' : 'No',
+        custody_arrangement: metadata.relationships_family.custody_arrangement,
+        living_situation: metadata.relationships_family.living_situation,
+        household_composition: metadata.relationships_family.household_composition,
+        primary_caregiver_responsibilities: metadata.relationships_family.primary_caregiver_responsibilities,
+        eldercare_responsibilities: metadata.relationships_family.eldercare_responsibilities,
+        partner_spouse_relationship: metadata.relationships_family.partner_spouse_relationship,
+        partner_health_status: metadata.relationships_family.partner_health_status,
+        children_health_issues: metadata.relationships_family.children_health_issues,
+        family_relationship_quality: metadata.relationships_family.family_relationship_quality,
+        family_stressors: metadata.relationships_family.family_stressors,
+        support_system_strength: metadata.relationships_family.support_system_strength,
+        extended_family_involvement: metadata.relationships_family.extended_family_involvement,
+        relationship_priorities: metadata.relationships_family.relationship_priorities,
+        co_parenting_dynamics: metadata.relationships_family.co_parenting_dynamics,
+        family_financial_responsibilities: metadata.relationships_family.family_financial_responsibilities,
+        family_medical_history_impact: metadata.relationships_family.family_medical_history_impact
+      })}
 
-          {metadata.health && (
-            <AccordionItem value="health-info" className="border-0 mb-2">
-              <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-red-50/20 rounded-md hover:bg-red-50 transition-colors">
-                Health Information
-              </AccordionTrigger>
-              <AccordionContent className="pt-4">
-                <div className="space-y-2">
-                  <InfoItem label="Sleep Quality" value={metadata.health?.sleep_quality} />
-                  <InfoItem label="Mental Health Status" value={metadata.health?.mental_health_status} />
-                  <InfoItem label="Physical Activity Level" value={metadata.health?.physical_activity_level} />
-                  <InfoItem label="Chronic Conditions" value={formatArrayOrString(metadata.health?.chronic_conditions)} />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )}
-        </Accordion>
-      ) : (
-        // Render full metadata structure
-        <Accordion type="multiple" defaultValue={["core-demographics"]}>
-          {/* Core Demographics */}
-          <AccordionItem value="core-demographics" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-blue-50/50 rounded-md hover:bg-blue-50 transition-colors">
-              Core Demographics
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Age" value={metadata.age} />
-                  <InfoItem label="Gender" value={metadata.gender} />
-                  <InfoItem label="Race/Ethnicity" value={metadata.race_ethnicity} />
-                  <InfoItem label="Sexual Orientation" value={metadata.sexual_orientation} />
-                  <InfoItem label="Education" value={metadata.education_level} />
-                  <InfoItem label="Occupation" value={metadata.occupation} />
-                  <InfoItem label="Employment Type" value={metadata.employment_type} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Income Level" value={metadata.income_level} />
-                  <InfoItem label="Social Class" value={metadata.social_class_identity} />
-                  <InfoItem label="Marital Status" value={metadata.marital_status || metadata.relationship_status} />
-                  <InfoItem label="Parenting Role" value={metadata.parenting_role || metadata.children_or_caregiver} />
-                  <InfoItem label="Relationship History" value={metadata.relationship_history} />
-                  <InfoItem label="Military Service" value={metadata.military_service} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      {/* Cultural & Psychological */}
+      {renderSection("Cultural & Psychological", {
+        language_proficiency: metadata?.language_proficiency,
+        religious_affiliation: metadata?.religious_affiliation,
+        religious_practice_level: metadata?.religious_practice_level,
+        cultural_background: metadata?.cultural_background,
+        cultural_affiliation: metadata?.cultural_affiliation,
+        political_affiliation: metadata?.political_affiliation,
+        political_sophistication: metadata?.political_sophistication,
+        tech_familiarity: metadata?.tech_familiarity,
+        learning_modality: metadata?.learning_modality,
+        trust_in_institutions: metadata?.trust_in_institutions,
+        trauma_exposure: metadata?.trauma_exposure
+      })}
 
-          {/* Location & Environment */}
-          <AccordionItem value="location-environment" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-blue-50/30 rounded-md hover:bg-blue-50 transition-colors">
-              Location, Environment & Migration
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Region" value={metadata.region} />
-                  <InfoItem label="Urban/Rural Context" value={metadata.urban_rural_context} />
-                  <InfoItem label="Climate Risk Zone" value={metadata.climate_risk_zone} />
-                  <InfoItem label="Migration History" value={metadata.migration_history} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Grew Up In" value={metadata.location_history?.grew_up_in} />
-                  <InfoItem label="Current Residence" value={metadata.location_history?.current_residence} />
-                  {metadata.location_history?.places_lived && (
-                    <div className="flex">
-                      <span className="font-medium w-32">Places Lived:</span>
-                      <span>{Array.isArray(metadata.location_history.places_lived) 
-                        ? metadata.location_history.places_lived.join(", ") 
-                        : metadata.location_history.places_lived}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      {/* Financial & Resources */}
+      {renderSection("Financial & Resources", {
+        financial_pressure: metadata?.financial_pressure,
+        credit_access: metadata?.credit_access,
+        debt_load: metadata?.debt_load,
+        time_abundance: metadata?.time_abundance
+      })}
 
-          {/* New Relationships & Family Dynamics Section */}
-          <AccordionItem value="relationships-family" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-pink-50/40 rounded-md hover:bg-pink-50 transition-colors">
-              Relationships & Family Dynamics
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Has Children" value={metadata.relationships_family?.has_children ? "Yes" : metadata.relationships_family?.has_children === false ? "No" : undefined} />
-                  <InfoItem label="Number of Children" value={metadata.relationships_family?.number_of_children} />
-                  <InfoItem label="Children Ages" value={formatNumberArray(metadata.relationships_family?.children_ages)} />
-                  <InfoItem label="Stepchildren" value={metadata.relationships_family?.stepchildren ? "Yes" : metadata.relationships_family?.stepchildren === false ? "No" : undefined} />
-                  <InfoItem label="Custody Arrangement" value={metadata.relationships_family?.custody_arrangement} />
-                  <InfoItem label="Living Situation" value={metadata.relationships_family?.living_situation} />
-                  <InfoItem label="Household Composition" value={formatArrayOrString(metadata.relationships_family?.household_composition)} />
-                  <InfoItem label="Primary Caregiver Role" value={metadata.relationships_family?.primary_caregiver_responsibilities} />
-                  <InfoItem label="Eldercare Responsibilities" value={metadata.relationships_family?.eldercare_responsibilities} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Partner/Spouse Relationship" value={metadata.relationships_family?.partner_spouse_relationship} />
-                  <InfoItem label="Partner Health Status" value={metadata.relationships_family?.partner_health_status} />
-                  <InfoItem label="Children Health Issues" value={metadata.relationships_family?.children_health_issues} />
-                  <InfoItem label="Family Relationship Quality" value={metadata.relationships_family?.family_relationship_quality} />
-                  <InfoItem label="Family Stressors" value={formatArrayOrString(metadata.relationships_family?.family_stressors)} />
-                  <InfoItem label="Support System Strength" value={metadata.relationships_family?.support_system_strength} />
-                  <InfoItem label="Extended Family Involvement" value={metadata.relationships_family?.extended_family_involvement} />
-                  <InfoItem label="Relationship Priorities" value={metadata.relationships_family?.relationship_priorities} />
-                  <InfoItem label="Co-parenting Dynamics" value={metadata.relationships_family?.co_parenting_dynamics} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      {/* Health Profile */}
+      {renderSection("Health Profile", {
+        physical_health_status: metadata?.physical_health_status,
+        mental_health_status: metadata?.mental_health_status,
+        health_prioritization: metadata?.health_prioritization,
+        healthcare_access: metadata?.healthcare_access,
+        chronic_conditions: metadata?.chronic_conditions,
+        medications: metadata?.medications,
+        mental_health_history: metadata?.mental_health_history,
+        therapy_counseling_experience: metadata?.therapy_counseling_experience,
+        health_insurance_status: metadata?.health_insurance_status,
+        fitness_activity_level: metadata?.fitness_activity_level,
+        dietary_restrictions: metadata?.dietary_restrictions,
+        sleep_patterns: metadata?.sleep_patterns,
+        stress_management: metadata?.stress_management,
+        substance_use: metadata?.substance_use,
+        health_family_history: metadata?.health_family_history,
+        disability_accommodations: metadata?.disability_accommodations
+      })}
 
-          {/* Cognitive & Cultural */}
-          <AccordionItem value="cognitive-cultural" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-green-50/40 rounded-md hover:bg-green-50 transition-colors">
-              Cognitive, Psychological, and Cultural
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Languages" value={formatArrayOrString(metadata.language_proficiency)} />
-                  <InfoItem label="Religion" value={metadata.religious_affiliation} />
-                  <InfoItem label="Practice Level" value={metadata.religious_practice_level} />
-                  <InfoItem label="Cultural Background" value={metadata.cultural_background} />
-                  <InfoItem label="Cultural Affiliations" value={formatArrayOrString(metadata.cultural_affiliation)} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Political Affiliation" value={metadata.political_affiliation} />
-                  <InfoItem label="Political Sophistication" value={metadata.political_sophistication} />
-                  <InfoItem label="Tech Familiarity" value={metadata.tech_familiarity} />
-                  <InfoItem label="Learning Modality" value={metadata.learning_modality} />
-                  <InfoItem label="Trust in Institutions" value={metadata.trust_in_institutions} />
-                  <InfoItem label="Trauma Exposure" value={metadata.trauma_exposure} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+      {/* Physical Description */}
+      {renderSection("Physical Description", {
+        height: metadata?.height,
+        build_body_type: metadata?.build_body_type,
+        hair_color: metadata?.hair_color,
+        hair_style: metadata?.hair_style,
+        eye_color: metadata?.eye_color,
+        skin_tone: metadata?.skin_tone,
+        distinctive_features: metadata?.distinctive_features,
+        style_fashion_sense: metadata?.style_fashion_sense,
+        grooming_habits: metadata?.grooming_habits,
+        physical_mannerisms: metadata?.physical_mannerisms,
+        posture_bearing: metadata?.posture_bearing,
+        voice_speech_patterns: metadata?.voice_speech_patterns
+      })}
 
-          {/* Financial & Resource */}
-          <AccordionItem value="financial-resource" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-amber-50/30 rounded-md hover:bg-amber-50 transition-colors">
-              Financial and Time Resource Profile
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Financial Pressure" value={metadata.financial_pressure} />
-                  <InfoItem label="Credit Access" value={metadata.credit_access} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Debt Load" value={metadata.debt_load} />
-                  <InfoItem label="Time Abundance" value={metadata.time_abundance} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Digital & Signaling */}
-          <AccordionItem value="digital-signaling" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-purple-50/30 rounded-md hover:bg-purple-50 transition-colors">
-              Digital Ecosystem & Signaling Behavior
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="space-y-2">
-                <InfoItem label="Media Ecosystem" value={formatArrayOrString(metadata.media_ecosystem)} />
-                <InfoItem label="Aesthetic Subculture" value={metadata.aesthetic_subculture} />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Enhanced Health-Related Attributes */}
-          <AccordionItem value="health" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-red-50/20 rounded-md hover:bg-red-50 transition-colors">
-              Health-Related Attributes
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Physical Health Status" value={metadata.physical_health_status} />
-                  <InfoItem label="Mental Health Status" value={metadata.mental_health_status} />
-                  <InfoItem label="Health Prioritization" value={metadata.health_prioritization} />
-                  <InfoItem label="Healthcare Access" value={metadata.healthcare_access} />
-                  <InfoItem label="Health Insurance" value={metadata.health_insurance_status} />
-                  <InfoItem label="Chronic Conditions" value={formatArrayOrString(metadata.chronic_conditions)} />
-                  <InfoItem label="Medications" value={formatArrayOrString(metadata.medications)} />
-                  <InfoItem label="Mental Health History" value={metadata.mental_health_history} />
-                  <InfoItem label="Therapy Experience" value={metadata.therapy_counseling_experience} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Fitness Level" value={metadata.fitness_activity_level} />
-                  <InfoItem label="Dietary Restrictions" value={formatArrayOrString(metadata.dietary_restrictions)} />
-                  <InfoItem label="Sleep Patterns" value={metadata.sleep_patterns} />
-                  <InfoItem label="Stress Management" value={metadata.stress_management} />
-                  <InfoItem label="Substance Use" value={metadata.substance_use} />
-                  <InfoItem label="Family Health History" value={metadata.health_family_history} />
-                  <InfoItem label="Disability Accommodations" value={metadata.disability_accommodations} />
-                  <InfoItem label="Legacy Medical History" value={metadata.family_medical_history} />
-                  <InfoItem label="Legacy Conditions" value={metadata.disabilities_or_conditions} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* New Physical Description Section */}
-          <AccordionItem value="physical-description" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-indigo-50/30 rounded-md hover:bg-indigo-50 transition-colors">
-              Physical Description
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <InfoItem label="Height" value={metadata.height} />
-                  <InfoItem label="Build/Body Type" value={metadata.build_body_type} />
-                  <InfoItem label="Hair Color" value={metadata.hair_color} />
-                  <InfoItem label="Hair Style" value={metadata.hair_style} />
-                  <InfoItem label="Eye Color" value={metadata.eye_color} />
-                  <InfoItem label="Skin Tone" value={metadata.skin_tone} />
-                  <InfoItem label="Distinctive Features" value={formatArrayOrString(metadata.distinctive_features)} />
-                </div>
-                <div className="space-y-2">
-                  <InfoItem label="Style/Fashion Sense" value={metadata.style_fashion_sense} />
-                  <InfoItem label="Grooming Habits" value={metadata.grooming_habits} />
-                  <InfoItem label="Physical Mannerisms" value={formatArrayOrString(metadata.physical_mannerisms)} />
-                  <InfoItem label="Posture/Bearing" value={metadata.posture_bearing} />
-                  <InfoItem label="Voice/Speech Patterns" value={metadata.voice_speech_patterns} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+      {/* Knowledge Domains */}
+      {metadata?.knowledge_domains && renderSection("Knowledge Domains", 
+        Object.entries(metadata.knowledge_domains).reduce((acc, [key, value]) => {
+          if (value !== null && value !== undefined) {
+            acc[key.replace(/_/g, ' ')] = `Level ${value}/5`;
+          }
+          return acc;
+        }, {} as Record<string, string>)
       )}
-      
-      {/* Debug Info */}
-      <details className="mt-4 p-2 bg-gray-50 rounded text-xs">
-        <summary className="cursor-pointer font-mono">Debug: Raw Metadata</summary>
-        <pre className="mt-2 overflow-auto max-h-40">
-          {JSON.stringify(metadata, null, 2)}
-        </pre>
-      </details>
+
+      {/* Digital & Media */}
+      {renderSection("Digital & Media", {
+        media_ecosystem: metadata?.media_ecosystem,
+        aesthetic_subculture: metadata?.aesthetic_subculture
+      })}
+
+      {/* Debug Section - Remove this in production */}
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="text-red-600">Debug: Raw Relationships Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <pre className="text-xs overflow-auto max-h-40 bg-white p-2 rounded border">
+            {JSON.stringify(metadata?.relationships_family, null, 2)}
+          </pre>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-// Helper component for displaying info items
-const InfoItem = ({ label, value }: { label: string, value: any }) => {
-  console.log(`InfoItem: ${label} = ${value} (type: ${typeof value})`);
-  
-  if (!value || (Array.isArray(value) && value.length === 0)) {
-    console.log(`Skipping empty InfoItem: ${label}`);
-    return null;
-  }
-  
-  return (
-    <div className="flex">
-      <span className="font-medium w-32">{label}:</span>
-      <span>{value}</span>
-    </div>
-  );
-};
-
-// Helper function to format array or string values
-const formatArrayOrString = (value: string[] | string | undefined): string => {
-  if (!value) return '';
-  
-  if (Array.isArray(value)) {
-    return value.join(', ');
-  }
-  
-  return value;
-};
-
-// Helper function specifically for number arrays (like children ages)
-const formatNumberArray = (value: number[] | undefined): string => {
-  if (!value || !Array.isArray(value) || value.length === 0) return '';
-  
-  return value.map(num => num.toString()).join(', ');
 };
 
 export default PersonaDemographics;
