@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Globe, Lock } from "lucide-react";
+import { Globe, Lock, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { Persona } from "@/services/persona/types";
 import { deletePersona } from "@/services/persona";
+import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaAvatar from "./PersonaAvatar";
 import PersonaNameEditor from "./PersonaNameEditor";
@@ -66,6 +68,16 @@ export default function PersonaDetailHeader({
       toast.error("An error occurred while generating the profile image");
     } finally {
       setIsGeneratingImage(false);
+    }
+  };
+
+  const handleDownloadJSON = () => {
+    try {
+      downloadPersonaAsJSON(persona);
+      toast.success("Persona data downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading persona data:", error);
+      toast.error("Failed to download persona data");
     }
   };
 
@@ -143,6 +155,16 @@ export default function PersonaDetailHeader({
           personaId={persona.persona_id}
           onChatClick={handleChatClick}
         />
+        
+        {/* Download JSON Button */}
+        <Button
+          variant="outline"
+          onClick={handleDownloadJSON}
+          className="w-full"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download JSON
+        </Button>
       </div>
     </div>
   );
