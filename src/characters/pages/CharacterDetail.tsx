@@ -18,7 +18,13 @@ const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: character, isLoading, error } = useCharacter(characterId);
+  const { activeCharacter: character, isLoading, error, loadCharacter } = useCharacter();
+
+  useEffect(() => {
+    if (characterId) {
+      loadCharacter(characterId);
+    }
+  }, [characterId, loadCharacter]);
 
   const handleDeleteCharacter = async (): Promise<void> => {
     if (!characterId || !user) return Promise.resolve();
@@ -153,7 +159,7 @@ const CharacterDetail = () => {
           </div>
 
           {/* Character Traits */}
-          <CharacterTraits character={character} />
+          <CharacterTraits traitProfile={character.trait_profile} />
 
           {/* Delete Button */}
           {isOwner && (
