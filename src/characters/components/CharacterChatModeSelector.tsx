@@ -33,7 +33,7 @@ const CharacterChatModeSelector: React.FC<CharacterChatModeSelectorProps> = ({ s
               <span className="font-medium">Casual Conversation</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Natural back-and-forth dialogue
+              Natural back-and-forth dialogue across time
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@ const CharacterChatModeSelector: React.FC<CharacterChatModeSelectorProps> = ({ s
               <span className="font-medium">Research Mode</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Interview style conversation
+              Interview about their historical life and times
             </p>
           </div>
         </div>
@@ -81,7 +81,7 @@ const CharacterChatModeSelector: React.FC<CharacterChatModeSelectorProps> = ({ s
               <span className="font-medium">Role-Play</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Scenario-based conversation. Describe in chat: "Scenario: ..."
+              Scenario-based conversation in their time period
             </p>
           </div>
         </div>
