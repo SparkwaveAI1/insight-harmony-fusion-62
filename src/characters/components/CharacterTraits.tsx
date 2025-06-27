@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CharacterTraitProfile } from '../types/characterTraitTypes';
@@ -28,7 +27,7 @@ const CharacterTraits = ({ traitProfile }: CharacterTraitsProps) => {
   const expectedCategories = [
     'big_five', 'moral_foundations', 'world_values', 'political_compass',
     'behavioral_economics', 'cultural_dimensions', 'social_identity', 
-    'extended_traits', 'dynamic_state'
+    'extended_traits', 'dynamic_state', 'physical_appearance', 'physical_health'
   ];
   const foundCategories = expectedCategories.filter(cat => traitProfile[cat]);
   
@@ -39,10 +38,32 @@ const CharacterTraits = ({ traitProfile }: CharacterTraitsProps) => {
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800 flex items-center">
         <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-        Character Traits Profile ({foundCategories.length}/9 categories)
+        Character Traits Profile ({foundCategories.length}/11 categories)
       </h2>
       
       <Accordion type="multiple" defaultValue={["big-five", "moral-foundations", "political-compass"]}>
+        {/* Physical Appearance */}
+        {traitProfile.physical_appearance && (
+          <TraitCategory 
+            value="physical-appearance"
+            title="Physical Appearance & Clothing"
+            traits={traitProfile.physical_appearance}
+            highlightColor="bg-pink-50"
+            description="Detailed physical characteristics and clothing traits"
+          />
+        )}
+        
+        {/* Physical Health */}
+        {traitProfile.physical_health && (
+          <TraitCategory 
+            value="physical-health"
+            title="Physical Health & Disabilities"
+            traits={traitProfile.physical_health}
+            highlightColor="bg-red-50"
+            description="Health status, disabilities, and physical conditions"
+          />
+        )}
+        
         {/* Big Five */}
         {traitProfile.big_five && (
           <TraitCategory 
@@ -147,8 +168,8 @@ const CharacterTraits = ({ traitProfile }: CharacterTraitsProps) => {
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-semibold mb-2">Trait Coverage Summary</h3>
         <div className="text-sm text-gray-600">
-          <p>Generated {foundCategories.length} of 9 expected trait categories</p>
-          {foundCategories.length < 9 && (
+          <p>Generated {foundCategories.length} of 11 expected trait categories</p>
+          {foundCategories.length < 11 && (
             <p className="text-amber-600 mt-1">
               Missing: {expectedCategories.filter(cat => !traitProfile[cat]).join(', ')}
             </p>

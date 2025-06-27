@@ -1,4 +1,3 @@
-
 // Character trait types - replicated from persona trait architecture
 export interface CharacterTraitProfile {
   // Big Five Personality Traits (5 traits)
@@ -73,6 +72,41 @@ export interface CharacterTraitProfile {
     system_justification: number;
     intergroup_contact_comfort: number;
     cultural_intelligence: number;
+  };
+
+  // Physical Appearance Traits (12 traits)
+  physical_appearance: {
+    height_relative_to_average: number; // -2 to +2 (very short to very tall)
+    build_muscularity: number; // 0-1 (frail to very muscular)
+    build_weight: number; // -2 to +2 (underweight to overweight)
+    facial_symmetry: number; // 0-1 (asymmetric to highly symmetric)
+    skin_quality: number; // 0-1 (heavily weathered/scarred to pristine)
+    grooming_attention: number; // 0-1 (unkempt to meticulously groomed)
+    clothing_quality: number; // 0-1 (tattered/patched to fine quality)
+    clothing_cleanliness: number; // 0-1 (dirty/stained to pristine)
+    clothing_appropriateness: number; // 0-1 (mismatched/odd to perfectly appropriate)
+    posture_bearing: number; // 0-1 (slouched/poor to upright/commanding)
+    distinctive_features_count: number; // 0-3 (no distinctive features to highly distinctive)
+    overall_attractiveness: number; // 0-1 (below average to above average)
+  };
+
+  // Physical Health and Disabilities (15 traits)
+  physical_health: {
+    overall_health_status: number; // 0-1 (very poor to excellent health)
+    mobility_level: number; // 0-1 (severely limited to fully mobile)
+    sensory_vision: number; // 0-1 (blind to perfect vision)
+    sensory_hearing: number; // 0-1 (deaf to perfect hearing)
+    cognitive_function: number; // 0-1 (severe impairment to sharp)
+    chronic_pain_level: number; // 0-1 (severe chronic pain to none)
+    infectious_disease_resistance: number; // 0-1 (highly susceptible to very resistant)
+    nutritional_status: number; // 0-1 (malnourished to well-nourished)
+    dental_health: number; // 0-1 (severe dental problems to excellent teeth)
+    respiratory_health: number; // 0-1 (severe breathing issues to excellent)
+    cardiovascular_health: number; // 0-1 (severe heart problems to excellent)
+    musculoskeletal_integrity: number; // 0-1 (multiple injuries/deformities to perfect)
+    skin_condition: number; // 0-1 (severe skin conditions to healthy skin)
+    mental_health_status: number; // 0-1 (severe mental illness to excellent mental health)
+    life_expectancy_relative: number; // 0-1 (well below average to well above average)
   };
   
   // Extended Traits (18 traits)

@@ -1,67 +1,233 @@
-
-import { Character } from '../types/characterTraitTypes';
+import { Character } from '../types/characterTypes';
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
-import { supabase } from '@/integrations/supabase/client';
+import { CharacterTraitProfile } from '../types/characterTraitTypes';
+import { v4 as uuidv4 } from 'uuid';
+import { calculateHistoricalHealthTraits, calculatePhysicalAppearanceTraits, HistoricalHealthContext } from './historicalDisabilityCalculator';
+
+const generateRandomTraits = () => ({
+  openness: Math.random(),
+  conscientiousness: Math.random(),
+  extraversion: Math.random(),
+  agreeableness: Math.random(),
+  neuroticism: Math.random(),
+});
+
+const generateRandomMoralFoundations = () => ({
+  care: Math.random(),
+  fairness: Math.random(),
+  loyalty: Math.random(),
+  authority: Math.random(),
+  sanctity: Math.random(),
+  liberty: Math.random(),
+});
+
+const generateRandomWorldValues = () => ({
+  traditional_vs_secular: Math.random(),
+  survival_vs_self_expression: Math.random(),
+  materialist_vs_postmaterialist: Math.random(),
+});
+
+const generateRandomPoliticalCompass = () => ({
+  economic: Math.random(),
+  authoritarian_libertarian: Math.random(),
+  cultural_conservative_progressive: Math.random(),
+  political_salience: Math.random(),
+  group_fusion_level: Math.random(),
+  outgroup_threat_sensitivity: Math.random(),
+  commons_orientation: Math.random(),
+  political_motivations: {
+    material_interest: Math.random(),
+    moral_vision: Math.random(),
+    cultural_preservation: Math.random(),
+    status_reordering: Math.random(),
+  },
+});
+
+const generateRandomBehavioralEconomics = () => ({
+  present_bias: Math.random(),
+  loss_aversion: Math.random(),
+  overconfidence: Math.random(),
+  risk_sensitivity: Math.random(),
+  scarcity_sensitivity: Math.random(),
+});
+
+const generateRandomCulturalDimensions = () => ({
+  power_distance: Math.random(),
+  individualism_vs_collectivism: Math.random(),
+  masculinity_vs_femininity: Math.random(),
+  uncertainty_avoidance: Math.random(),
+  long_term_orientation: Math.random(),
+  indulgence_vs_restraint: Math.random(),
+});
+
+const generateRandomSocialIdentity = () => ({
+  identity_strength: Math.random(),
+  identity_complexity: Math.random(),
+  ingroup_bias_tendency: Math.random(),
+  outgroup_bias_tendency: Math.random(),
+  social_dominance_orientation: Math.random(),
+  system_justification: Math.random(),
+  intergroup_contact_comfort: Math.random(),
+  cultural_intelligence: Math.random(),
+});
+
+const generateRandomExtendedTraits = () => ({
+  truth_orientation: Math.random(),
+  moral_consistency: Math.random(),
+  self_awareness: Math.random(),
+  empathy: Math.random(),
+  self_efficacy: Math.random(),
+  manipulativeness: Math.random(),
+  impulse_control: Math.random(),
+  shadow_trait_activation: Math.random(),
+  attention_pattern: Math.random(),
+  cognitive_load_resilience: Math.random(),
+  institutional_trust: Math.random(),
+  conformity_tendency: Math.random(),
+  conflict_avoidance: Math.random(),
+  cognitive_flexibility: Math.random(),
+  need_for_cognitive_closure: Math.random(),
+  emotional_intensity: Math.random(),
+  emotional_regulation: Math.random(),
+  trigger_sensitivity: Math.random(),
+});
+
+const generateRandomDynamicState = () => ({
+  current_stress_level: Math.random(),
+  emotional_stability_context: Math.random(),
+  motivation_orientation: Math.random(),
+  trust_volatility: Math.random(),
+  trigger_threshold: Math.random(),
+});
 
 export const generateCharacterFromFormData = async (formData: HistoricalCharacterFormData): Promise<Character> => {
-  console.log('=== GENERATING CHARACTER FROM FORM DATA USING PERSONA SYSTEM ===');
-  console.log('Form data:', formData);
+  const characterId = uuidv4();
+  const now = new Date().toISOString();
 
-  // Create a detailed prompt for the persona generation system
-  const prompt = `Create a historical character: ${formData.name}, born ${formData.date_of_birth}, age ${formData.age}, from ${formData.location}. 
-  
-  Occupation: ${formData.occupation || 'Historical figure'}
-  
-  Background: ${formData.backstory || 'A notable figure from their historical period'}
-  
-  Personality traits: ${formData.personality_traits || 'Shaped by the times and circumstances of their era'}
-  
-  Historical context: ${formData.historical_context || 'Lived during a significant period in history'}
-  
-  Please generate comprehensive demographics, realistic personality traits, and detailed metadata appropriate for this historical character.`;
-
-  // Use the existing persona generation system
-  const { data, error } = await supabase.functions.invoke('generate-persona', {
-    body: { prompt }
-  });
-
-  if (error) {
-    console.error("❌ Error calling generate-persona function:", error);
-    throw new Error(`Failed to generate character: ${error.message}`);
-  }
-
-  if (!data.success || !data.persona) {
-    console.error("❌ Character generation failed:", data.error || "Unknown error");
-    throw new Error(`Failed to generate character: ${data.error || "Unknown error"}`);
-  }
-
-  console.log("✅ Successfully generated character using persona system:", data.persona.name);
-
-  // Convert the persona to a character format
-  const generatedPersona = data.persona;
-  
-  const character: Character = {
-    id: '', // Will be set by database
-    character_id: generatedPersona.persona_id, // Use the generated persona ID
-    name: generatedPersona.name,
-    character_type: 'historical',
-    creation_date: generatedPersona.creation_date,
-    created_at: new Date().toISOString(),
-    metadata: generatedPersona.metadata,
-    trait_profile: generatedPersona.trait_profile,
-    behavioral_modulation: generatedPersona.behavioral_modulation,
-    linguistic_profile: generatedPersona.linguistic_profile,
-    emotional_triggers: generatedPersona.emotional_triggers,
-    preinterview_tags: generatedPersona.preinterview_tags || ['historical', 'generated'],
-    simulation_directives: generatedPersona.simulation_directives,
-    interview_sections: generatedPersona.interview_sections,
-    prompt: prompt,
-    user_id: undefined, // Will be set by the calling code
-    is_public: false,
-    profile_image_url: null,
-    enhanced_metadata_version: generatedPersona.enhanced_metadata_version || 2
+  // Create historical health context
+  const healthContext: HistoricalHealthContext = {
+    historicalPeriod: '1700s',
+    region: formData.location,
+    age: parseInt(formData.age) || 30,
+    gender: 'Male', // This should come from form data when available
+    socialClass: 'middle class', // This should be derived from occupation/context
+    occupation: formData.occupation || 'common person'
   };
 
-  console.log('✅ Character converted from persona successfully');
+  // Calculate historical health traits
+  const physicalHealthTraits = calculateHistoricalHealthTraits(healthContext);
+  
+  // Calculate appearance traits based on health and context
+  const physicalAppearanceTraits = calculatePhysicalAppearanceTraits(healthContext, physicalHealthTraits);
+
+  const traitProfile: CharacterTraitProfile = {
+    // New trait categories
+    physical_appearance: physicalAppearanceTraits,
+    physical_health: physicalHealthTraits,
+    
+    big_five: {
+      openness: Math.random(),
+      conscientiousness: Math.random(),
+      extraversion: Math.random(),
+      agreeableness: Math.random(),
+      neuroticism: Math.random(),
+    },
+    moral_foundations: {
+      care: Math.random(),
+      fairness: Math.random(),
+      loyalty: Math.random(),
+      authority: Math.random(),
+      sanctity: Math.random(),
+      liberty: Math.random(),
+    },
+    world_values: {
+      traditional_vs_secular: Math.random(),
+      survival_vs_self_expression: Math.random(),
+      materialist_vs_postmaterialist: Math.random(),
+    },
+    political_compass: {
+      economic: Math.random(),
+      authoritarian_libertarian: Math.random(),
+      cultural_conservative_progressive: Math.random(),
+      political_salience: Math.random(),
+      group_fusion_level: Math.random(),
+      outgroup_threat_sensitivity: Math.random(),
+      commons_orientation: Math.random(),
+      political_motivations: {
+        material_interest: Math.random(),
+        moral_vision: Math.random(),
+        cultural_preservation: Math.random(),
+        status_reordering: Math.random(),
+      },
+    },
+    behavioral_economics: {
+      present_bias: Math.random(),
+      loss_aversion: Math.random(),
+      overconfidence: Math.random(),
+      risk_sensitivity: Math.random(),
+      scarcity_sensitivity: Math.random(),
+    },
+    cultural_dimensions: {
+      power_distance: Math.random(),
+      individualism_vs_collectivism: Math.random(),
+      masculinity_vs_femininity: Math.random(),
+      uncertainty_avoidance: Math.random(),
+      long_term_orientation: Math.random(),
+      indulgence_vs_restraint: Math.random(),
+    },
+    social_identity: {
+      identity_strength: Math.random(),
+      identity_complexity: Math.random(),
+      ingroup_bias_tendency: Math.random(),
+      outgroup_bias_tendency: Math.random(),
+      social_dominance_orientation: Math.random(),
+      system_justification: Math.random(),
+      intergroup_contact_comfort: Math.random(),
+      cultural_intelligence: Math.random(),
+    },
+    extended_traits: {
+      truth_orientation: Math.random(),
+      moral_consistency: Math.random(),
+      self_awareness: Math.random(),
+      empathy: Math.random(),
+      self_efficacy: Math.random(),
+      manipulativeness: Math.random(),
+      impulse_control: Math.random(),
+      shadow_trait_activation: Math.random(),
+      attention_pattern: Math.random(),
+      cognitive_load_resilience: Math.random(),
+      institutional_trust: Math.random(),
+      conformity_tendency: Math.random(),
+      conflict_avoidance: Math.random(),
+      cognitive_flexibility: Math.random(),
+      need_for_cognitive_closure: Math.random(),
+      emotional_intensity: Math.random(),
+      emotional_regulation: Math.random(),
+      trigger_sensitivity: Math.random(),
+    },
+    dynamic_state: {
+      current_stress_level: Math.random(),
+      emotional_stability_context: Math.random(),
+      motivation_orientation: Math.random(),
+      trust_volatility: Math.random(),
+      trigger_threshold: Math.random(),
+    },
+  };
+
+  const character: Character = {
+    id: uuidv4(),
+    character_id: characterId,
+    name: formData.name,
+    description: formData.description,
+    backstory: formData.backstory,
+    personality_traits: [formData.personality_traits || 'Neutral'],
+    appearance: formData.appearance,
+    created_at: now,
+    updated_at: now,
+    user_id: '', // This will be set in the component
+  };
+  
+  console.log("Generated character trait profile:", traitProfile);
+
   return character;
 };
