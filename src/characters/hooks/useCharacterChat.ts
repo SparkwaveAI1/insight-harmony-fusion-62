@@ -73,13 +73,10 @@ export const useCharacterChat = (characterId: string, chatMode: ChatMode) => {
     setIsResponding(true);
 
     try {
-      // Call the character response function
-      const { data, error } = await supabase.functions.invoke('generate-persona-response', {
+      // Call the character-specific response function
+      const { data, error } = await supabase.functions.invoke('generate-character-response', {
         body: {
-          persona: {
-            ...activeCharacter,
-            persona_id: activeCharacter.character_id // Map character_id to persona_id for the function
-          },
+          character: activeCharacter,
           message: messageContent,
           conversationContext,
           chatMode,
