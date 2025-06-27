@@ -1,3 +1,4 @@
+
 function getPhysicalDescription(characterData: any): string {
   const metadata = characterData.metadata || {};
   
@@ -8,11 +9,11 @@ function getPhysicalDescription(characterData: any): string {
   const height = metadata?.height || 'average height';
   const build = metadata?.build_body_type || 'average build';
   const hairColor = metadata?.hair_color || 'brown';
-  const hairStyle = metadata?.hair_style || 'period-appropriate style';
+  const hairStyle = metadata?.hair_style || 'practical unstyled';
   const eyeColor = metadata?.eye_color || 'brown';
   const skinTone = metadata?.skin_tone || 'natural complexion';
   
-  // Build consolidated description
+  // Build consolidated description with more authentic hair styling
   let description = `${age}-year-old ${gender}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone}`;
   
   return description;
@@ -31,13 +32,13 @@ function getHistoricalClothing(characterData: any): string {
                     region.toLowerCase().includes('tn') ||
                     region.toLowerCase().includes('tennessee');
   
-  let clothingQuality = 'middle-class';
+  let clothingQuality = 'well-worn middle-class';
   if (socialClass.toLowerCase().includes('upper')) {
-    clothingQuality = 'high-quality upper-class';
+    clothingQuality = 'fine but lived-in upper-class';
   } else if (socialClass.toLowerCase().includes('lower')) {
-    clothingQuality = 'practical working-class';
+    clothingQuality = 'practical worn working-class';
   } else {
-    clothingQuality = 'high-quality middle-class';
+    clothingQuality = 'well-worn middle-class';
   }
   
   if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
@@ -60,7 +61,7 @@ export function buildCharacterImagePrompt(characterData: any): string {
   // Build the prompt with the requested structure
   const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
   
-  const prompt = `Full-body portrait Hyper-realistic art style, ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}, natural lighting, neutral background, authentic period appearance`;
+  const prompt = `Full-body portrait Hyper-realistic art style, ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}, natural lighting, neutral background, authentic period appearance, lived-in realistic condition`;
   
   console.log("Generated simplified character portrait prompt:", prompt);
   return prompt;
