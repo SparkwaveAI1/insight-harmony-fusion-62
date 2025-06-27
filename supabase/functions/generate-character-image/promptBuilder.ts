@@ -82,25 +82,25 @@ function getHistoricalBackground(metadata: any): string {
   
   if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
     if (isFrontier) {
-      backgroundDescription = 'rustic colonial Virginia frontier cabin interior with rough-hewn log walls, simple wooden furniture, fireplace with stone hearth, hanging tools and utensils, dim candlelight or oil lamp lighting, authentic 1700s frontier atmosphere';
+      backgroundDescription = 'rustic colonial Virginia frontier setting with rough-hewn log structures, natural woodland environment, wooden tools and period implements visible, authentic 1700s frontier atmosphere with natural lighting';
     } else if (occupation.toLowerCase().includes('noble') || region.toLowerCase().includes('europe')) {
-      backgroundDescription = '18th century European manor interior with paneled walls, fine furniture, oil paintings, elegant period décor';
+      backgroundDescription = '18th century European manor grounds with stone architecture, manicured gardens, period furnishings visible, elegant historical setting';
     } else {
-      backgroundDescription = '18th century middle-class home interior with modest wooden furniture, simple decorations, period-appropriate domestic setting';
+      backgroundDescription = '18th century middle-class home exterior or courtyard with modest wooden architecture, simple period decorations, authentic historical environment';
     }
   } else if (historicalPeriod.includes('1600') || historicalPeriod.includes('17th')) {
-    backgroundDescription = '17th century interior setting with period-appropriate furnishings and décor';
+    backgroundDescription = '17th century outdoor setting with period-appropriate architecture and natural environment';
   } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
-    backgroundDescription = '19th century interior setting reflecting the period and social class';
+    backgroundDescription = '19th century outdoor setting reflecting the period and social class with appropriate architecture';
   } else {
-    backgroundDescription = `period-appropriate interior setting from ${historicalPeriod} reflecting the social and regional context`;
+    backgroundDescription = `period-appropriate outdoor setting from ${historicalPeriod} reflecting the social and regional context with natural lighting`;
   }
   
   return backgroundDescription;
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Generating single realistic portrait from character data");
+  console.log("Generating full body HDR photograph from character data");
   
   const metadata = characterData.metadata || {};
   
@@ -116,31 +116,34 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const clothingDetails = getHistoricalClothing(metadata);
   const backgroundDetails = getHistoricalBackground(metadata);
   
-  // Build comprehensive single portrait prompt
-  let prompt = `Single realistic portrait of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
+  // Build comprehensive full body HDR prompt
+  let prompt = `An HDR photograph of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
   
   // Physical appearance with realism
-  prompt += `, ${appearanceDetails}`;
+  prompt += ` with ${appearanceDetails}`;
   
   // Clothing and period details with wear
   prompt += `, wearing ${clothingDetails}`;
   
   // Historical background setting
-  prompt += `, ${backgroundDetails}`;
+  prompt += `, in ${backgroundDetails}`;
   
-  // Portrait composition - emphasize single portrait
-  prompt += `, single person only, head and shoulders portrait, three-quarter view`;
+  // Full body composition and HDR specifications
+  prompt += `, full body shot, standing pose, complete figure from head to feet visible`;
+  prompt += `, focusing on capturing a wide range of light and detail`;
+  prompt += `, using studio lighting conditions to enhance the lifelike quality and create a vibrant, detailed image`;
   
-  // Photography and quality specifications with realism emphasis
-  prompt += `, professional historical portrait photography, museum quality documentation style`;
-  prompt += `, photorealistic, ultra-realistic skin texture, natural period lighting, authentic historical atmosphere`;
-  prompt += `, high detail, historically accurate, weathered and lived-in appearance`;
-  prompt += `, single subject composition, no duplicates, no headless bodies`;
-  prompt += `, 4K resolution, documentary photography style, authentic historical portraiture`;
+  // Photography and quality specifications with HDR emphasis
+  prompt += `, HDR photography, professional historical documentation style`;
+  prompt += `, photorealistic, ultra-realistic skin texture, enhanced dynamic range lighting`;
+  prompt += `, authentic historical atmosphere with vibrant colors and rich detail`;
+  prompt += `, high contrast, detailed shadows and highlights, museum quality documentation`;
+  prompt += `, single subject composition, no duplicates, complete body visible`;
+  prompt += `, 4K resolution, HDR documentary photography style, authentic historical portraiture`;
   
   // Explicit instructions to avoid AI artifacts
-  prompt += `, avoid: multiple subjects, headless bodies, perfect skin, artificial lighting, modern elements`;
+  prompt += `, avoid: cropped body parts, partial figures, multiple subjects, headless bodies, perfect skin, artificial lighting, modern elements`;
   
-  console.log("Generated realistic character portrait prompt:", prompt);
+  console.log("Generated full body HDR character photograph prompt:", prompt);
   return prompt;
 }
