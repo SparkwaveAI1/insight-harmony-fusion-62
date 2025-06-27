@@ -22,34 +22,37 @@ function getPhysicalDescription(characterData: any): string {
   
   // Age and basic description
   description.push(`${age}-year-old ${gender}`);
-  description.push(`${height}, ${build}`);
-  description.push(`${hairColor} ${hairStyle} hair, ${eyeColor} eyes`);
-  description.push(`${skinTone} with natural skin texture`);
+  description.push(`${height} and ${build}`);
+  description.push(`${hairColor} hair in ${hairStyle}`);
+  description.push(`${eyeColor} eyes`);
   
-  // Add trait-based details if available
+  // Add skin and aging details
+  let skinDescription = skinTone;
   if (physicalTraits.skin_quality !== undefined) {
     const skinQuality = physicalTraits.skin_quality;
     if (skinQuality > 0.7) {
-      description.push('clear, healthy skin');
+      skinDescription += ' with clear, healthy skin';
     } else if (skinQuality > 0.4) {
-      description.push('weathered skin with natural aging');
+      skinDescription += ' with weathered skin and natural aging';
     } else {
-      description.push('rough, sun-damaged skin');
+      skinDescription += ' with rough, sun-damaged skin and visible aging';
     }
+  } else {
+    skinDescription += ' with weathered skin and natural aging';
   }
   
   if (physicalTraits.build_muscularity !== undefined) {
     const muscularity = physicalTraits.build_muscularity;
     if (muscularity > 0.7) {
-      description.push('well-developed muscle tone');
-    } else if (muscularity < 0.3) {
-      description.push('soft muscle definition');
+      skinDescription += ' and muscle tone';
+    } else if (muscularity > 0.4) {
+      skinDescription += ' and moderate muscle tone';
     }
+  } else {
+    skinDescription += ' and muscle tone';
   }
   
-  if (healthTraits.dental_health !== undefined && healthTraits.dental_health < 0.4) {
-    description.push('period-appropriate dental condition');
-  }
+  description.push(skinDescription);
   
   return description.join(', ');
 }
@@ -57,30 +60,34 @@ function getPhysicalDescription(characterData: any): string {
 function getHistoricalClothing(characterData: any): string {
   const metadata = characterData.metadata || {};
   const historicalPeriod = metadata?.historical_period || '1700s';
-  const occupation = metadata?.occupation || 'common person';
   const socialClass = metadata?.social_class || 'middle class';
   const region = metadata?.region || 'European';
   
   const isFrontier = region.toLowerCase().includes('virginia') || 
                     region.toLowerCase().includes('frontier') || 
                     region.toLowerCase().includes('colony') ||
-                    region.toLowerCase().includes('america');
+                    region.toLowerCase().includes('america') ||
+                    region.toLowerCase().includes('tn') ||
+                    region.toLowerCase().includes('tennessee');
   
-  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    if (isFrontier) {
-      return 'practical 18th century frontier clothing: linen shirt, wool vest, leather breeches, sturdy boots';
-    } else if (socialClass.toLowerCase().includes('upper')) {
-      return 'elegant 18th century noble attire with fine fabrics';
-    } else {
-      return '18th century middle-class clothing with quality materials';
-    }
+  let clothingQuality = 'middle-class';
+  if (socialClass.toLowerCase().includes('upper')) {
+    clothingQuality = 'high-quality upper-class';
+  } else if (socialClass.toLowerCase().includes('lower')) {
+    clothingQuality = 'practical working-class';
+  } else {
+    clothingQuality = 'high-quality middle-class';
   }
   
-  return `period-appropriate ${historicalPeriod} clothing reflecting ${socialClass} status`;
+  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
+    return `${clothingQuality} 1700s clothing`;
+  }
+  
+  return `${clothingQuality} ${historicalPeriod} clothing`;
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Building new hyper-realistic character portrait prompt");
+  console.log("Building character portrait prompt with new structure");
   
   const name = characterData.name || 'Historical Character';
   const historicalPeriod = characterData.metadata?.historical_period || '1700s';
@@ -90,14 +97,14 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const physicalDescription = getPhysicalDescription(characterData);
   const clothingDescription = getHistoricalClothing(characterData);
   
-  // Build the new prompt
-  let prompt = `Full body portrait of ${name} from ${historicalPeriod} in ${region}. `;
-  prompt += `Physical appearance: ${physicalDescription}. `;
-  prompt += `Clothing: ${clothingDescription}. `;
-  prompt += `Hyper-realistic art style with attention to detail, conveying emotion and depth, `;
-  prompt += `natural skin texture, authentic aging and natural imperfections. `;
-  prompt += `Professional portrait composition with natural lighting and neutral background.`;
+  // Build the prompt in the new structure
+  const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
   
-  console.log("Generated hyper-realistic portrait prompt:", prompt);
+  const prompt = `Full-body photorealistic portrait of ${name}, a ${physicalDescription} in ${century} ${region}.
+Wearing ${clothingDescription}.
+Neutral background, natural lighting.
+Realistic skin texture, visible imperfections, period-accurate expression and emotion.`;
+  
+  console.log("Generated character portrait prompt:", prompt);
   return prompt;
 }
