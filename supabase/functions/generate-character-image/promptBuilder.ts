@@ -1,233 +1,191 @@
-function getCharacterAppearance(metadata: any): string {
+
+function synthesizePhysicalAppearance(traitProfile: any, metadata: any): string {
   const age = parseInt(metadata?.age) || 30;
   const gender = metadata?.gender || 'person';
-  const physicalAttributes = metadata?.physical_attributes || {};
   
-  // Age-based appearance with frontier realism
-  let ageAppearance = '';
-  if (age < 25) {
-    ageAppearance = 'youthful but weathered face, sun-worn skin, calloused hands from hard work';
-  } else if (age < 35) {
-    ageAppearance = 'young adult with weathered features, sun-damaged skin, work-hardened appearance';
-  } else if (age < 45) {
-    ageAppearance = 'mature adult with deeply weathered face, sun-leathered skin, scars from frontier life';
-  } else if (age < 55) {
-    ageAppearance = 'middle-aged with deeply lined face, sun-beaten skin, graying hair, worn hands';
-  } else if (age < 65) {
-    ageAppearance = 'mature appearance with deeply weathered features, sun-damaged skin, significant graying';
-  } else {
-    ageAppearance = 'elderly with deeply lined, sun-weathered face, calloused hands, silver-gray hair';
-  }
-  
-  // Physical characteristics with frontier realism
-  const height = physicalAttributes.height || 'average height';
-  const build = physicalAttributes.build || 'lean and muscular from hard labor';
-  const hairColor = physicalAttributes.hair_color || 'brown';
-  const hairStyle = physicalAttributes.hair_style || 'practical, roughly cut';
-  const eyeColor = physicalAttributes.eye_color || 'brown';
-  const skinTone = physicalAttributes.skin_tone || 'sun-weathered and tanned';
-  
-  return `${ageAppearance}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin with natural sun exposure and weathering`;
-}
-
-function getEnhancedPhysicalAppearance(traitProfile: any, metadata: any): string {
+  // If no trait profile, use basic appearance
   if (!traitProfile?.physical_appearance) {
-    return getCharacterAppearance(metadata);
+    return getBasicCharacterAppearance(metadata);
   }
   
-  const traits = traitProfile.physical_appearance;
-  const health = traitProfile.physical_health || {};
-  const age = parseInt(metadata?.age) || 30;
-  const gender = metadata?.gender || 'person';
+  const physicalTraits = traitProfile.physical_appearance;
+  const healthTraits = traitProfile.physical_health || {};
+  const personality = traitProfile.big_five || {};
   
-  // Build comprehensive physical description
-  let appearance = [];
+  let description = [];
   
-  // Facial features based on traits
-  const facialSymmetry = traits.facial_symmetry || 0.5;
-  const skinQuality = Math.min(traits.skin_quality || 0.5, health.skin_condition || 0.5);
-  const overallAttractiveness = traits.overall_attractiveness || 0.5;
+  // Age and overall condition
+  const overallHealth = healthTraits.overall_health_status || 0.5;
+  const skinCondition = Math.min(physicalTraits.skin_quality || 0.5, healthTraits.skin_condition || 0.5);
   
-  if (facialSymmetry > 0.7) {
-    appearance.push('symmetrical, well-proportioned facial features');
-  } else if (facialSymmetry < 0.3) {
-    appearance.push('asymmetrical facial features with character');
+  // Synthesize age appearance with health
+  if (age < 25) {
+    if (overallHealth > 0.7) {
+      description.push(`youthful ${age}-year-old with healthy, clear complexion`);
+    } else {
+      description.push(`young ${age}-year-old with weathered features beyond their years`);
+    }
+  } else if (age < 40) {
+    if (overallHealth > 0.6) {
+      description.push(`${age}-year-old adult with natural aging and healthy skin tone`);
+    } else {
+      description.push(`${age}-year-old with prematurely aged features and worn appearance`);
+    }
+  } else if (age < 55) {
+    description.push(`middle-aged ${age}-year-old with mature features and life experience visible in their face`);
   } else {
-    appearance.push('naturally asymmetrical facial features');
+    description.push(`older ${age}-year-old with dignified aging and character lines`);
   }
   
-  // Skin condition reflecting health and work
-  if (skinQuality > 0.8) {
-    appearance.push('remarkably clear, healthy skin despite outdoor life');
-  } else if (skinQuality > 0.6) {
-    appearance.push('sun-weathered but healthy skin with natural aging');
-  } else if (skinQuality > 0.4) {
-    appearance.push('heavily weathered skin showing signs of hard outdoor work');
+  // Synthesize skin appearance realistically
+  if (skinCondition > 0.8) {
+    description.push('remarkably clear, healthy skin with natural glow');
+  } else if (skinCondition > 0.6) {
+    description.push('healthy skin with normal aging and natural texture');
+  } else if (skinCondition > 0.4) {
+    description.push('weathered skin showing signs of outdoor life and natural aging');
+  } else if (skinCondition > 0.2) {
+    description.push('rough, sun-damaged skin with visible wear from hard living');
   } else {
-    appearance.push('rough, scarred skin marked by harsh frontier conditions');
+    description.push('heavily weathered, scarred skin marked by harsh conditions');
   }
   
-  // Build and posture
-  const buildWeight = traits.build_weight || 0;
-  const muscularity = traits.build_muscularity || 0.5;
-  const posture = traits.posture_bearing || 0.5;
+  // Body type and build
+  const buildWeight = physicalTraits.build_weight || 0;
+  const muscularity = physicalTraits.build_muscularity || 0.5;
   
-  let buildDesc = '';
-  if (buildWeight < -1) buildDesc = 'very thin, gaunt frame';
-  else if (buildWeight < -0.5) buildDesc = 'lean, wiry build';
-  else if (buildWeight < 0.5) buildDesc = 'average build';
-  else if (buildWeight < 1) buildDesc = 'stocky, solid frame';
-  else buildDesc = 'heavy-set, robust build';
+  if (buildWeight < -1) {
+    description.push('very thin, gaunt frame');
+  } else if (buildWeight < -0.5) {
+    description.push('lean, wiry build');
+  } else if (buildWeight < 0.5) {
+    description.push('average, proportionate build');
+  } else if (buildWeight < 1) {
+    description.push('stocky, solid frame');
+  } else {
+    description.push('heavy-set, robust build');
+  }
   
-  if (muscularity > 0.7) buildDesc += ' with well-developed muscles from physical labor';
-  else if (muscularity > 0.4) buildDesc += ' with moderate muscle tone';
-  else buildDesc += ' with little muscle definition';
+  if (muscularity > 0.7) {
+    description.push('with well-developed muscle tone from physical work');
+  } else if (muscularity < 0.3) {
+    description.push('with soft, minimal muscle definition');
+  }
   
-  appearance.push(buildDesc);
+  // Facial features
+  const facialSymmetry = physicalTraits.facial_symmetry || 0.5;
+  const attractiveness = physicalTraits.overall_attractiveness || 0.5;
   
-  // Posture and bearing
+  if (facialSymmetry > 0.7 && attractiveness > 0.7) {
+    description.push('symmetrical, naturally attractive facial features');
+  } else if (facialSymmetry > 0.6) {
+    description.push('well-proportioned facial features');
+  } else if (facialSymmetry < 0.4) {
+    description.push('asymmetrical facial features with distinctive character');
+  } else {
+    description.push('naturally irregular facial features');
+  }
+  
+  // Expression and bearing from personality
+  const extraversion = personality.extraversion || 0.5;
+  const neuroticism = personality.neuroticism || 0.5;
+  const posture = physicalTraits.posture_bearing || 0.5;
+  
+  if (extraversion > 0.7) {
+    description.push('warm, engaging expression');
+  } else if (extraversion < 0.3) {
+    description.push('reserved, thoughtful expression');
+  }
+  
+  if (neuroticism > 0.7) {
+    description.push('with visible tension and worry lines');
+  } else if (neuroticism < 0.3) {
+    description.push('with calm, relaxed demeanor');
+  }
+  
   if (posture > 0.7) {
-    appearance.push('upright, confident bearing and posture');
-  } else if (posture > 0.4) {
-    appearance.push('average posture with natural stance');
-  } else {
-    appearance.push('slouched posture, weary bearing');
+    description.push('upright, confident bearing');
+  } else if (posture < 0.4) {
+    description.push('slouched, weary posture');
   }
   
-  // Dental health (significant for realism)
-  const dentalHealth = health.dental_health || 0.5;
+  // Specific health conditions affecting appearance
+  const dentalHealth = healthTraits.dental_health || 0.5;
+  const vision = healthTraits.sensory_vision || 1.0;
+  
   if (dentalHealth < 0.3) {
-    appearance.push('poor dental condition with missing or damaged teeth');
-  } else if (dentalHealth < 0.6) {
-    appearance.push('moderate dental wear typical of the era');
-  } else {
-    appearance.push('surprisingly good teeth for the time period');
+    description.push('poor dental condition typical of the historical period');
   }
   
-  // Vision issues affecting appearance
-  const vision = health.sensory_vision || 1.0;
   if (vision < 0.5) {
-    appearance.push('squinting eyes, signs of vision difficulties');
-  } else if (vision < 0.8) {
-    appearance.push('slightly strained expression from minor vision issues');
+    description.push('squinting eyes suggesting vision difficulties');
   }
   
-  // Overall attractiveness influence
-  if (overallAttractiveness > 0.7) {
-    appearance.push('naturally attractive features despite hard living');
-  } else if (overallAttractiveness < 0.3) {
-    appearance.push('weathered, rough features shaped by harsh frontier life');
-  }
-  
-  return appearance.join(', ');
+  return description.join(', ');
 }
 
-function getEnhancedClothing(traitProfile: any, metadata: any): string {
+function synthesizeClothingAppearance(traitProfile: any, metadata: any): string {
   const basicClothing = getHistoricalClothing(metadata);
   
   if (!traitProfile?.physical_appearance) {
     return basicClothing;
   }
   
-  const traits = traitProfile.physical_appearance;
+  const physicalTraits = traitProfile.physical_appearance;
   const personality = traitProfile.big_five || {};
-  
-  const clothingQuality = traits.clothing_quality || 0.5;
-  const clothingCleanliness = traits.clothing_cleanliness || 0.5;
-  const clothingAppropriateness = traits.clothing_appropriateness || 0.5;
-  const groomingAttention = traits.grooming_attention || 0.5;
-  const conscientiousness = personality.conscientiousness || 0.5;
   
   let clothingDesc = [basicClothing];
   
-  // Quality modifiers
-  if (clothingQuality > 0.8) {
-    clothingDesc.push('made from fine, well-crafted materials');
-  } else if (clothingQuality > 0.6) {
-    clothingDesc.push('good quality fabrics with careful construction');
-  } else if (clothingQuality > 0.4) {
-    clothingDesc.push('modest quality materials, practical construction');
-  } else if (clothingQuality > 0.2) {
-    clothingDesc.push('rough, coarse fabrics with basic construction');
+  // Synthesize clothing condition
+  const quality = physicalTraits.clothing_quality || 0.5;
+  const cleanliness = physicalTraits.clothing_cleanliness || 0.5;
+  const appropriateness = physicalTraits.clothing_appropriateness || 0.5;
+  const conscientiousness = personality.conscientiousness || 0.5;
+  
+  if (quality > 0.7 && cleanliness > 0.7) {
+    clothingDesc.push('well-made, clean garments showing care and attention');
+  } else if (quality > 0.5 && cleanliness > 0.5) {
+    clothingDesc.push('decent quality clothing in reasonable condition');
+  } else if (quality < 0.3 || cleanliness < 0.3) {
+    clothingDesc.push('worn, patched clothing showing signs of poverty or neglect');
   } else {
-    clothingDesc.push('poor quality materials, heavily patched and mended');
+    clothingDesc.push('modest clothing with normal wear from daily use');
   }
   
-  // Cleanliness and care
-  if (clothingCleanliness > 0.8 && conscientiousness > 0.6) {
-    clothingDesc.push('remarkably clean and well-maintained despite frontier conditions');
-  } else if (clothingCleanliness > 0.6) {
-    clothingDesc.push('reasonably clean with signs of regular care');
-  } else if (clothingCleanliness > 0.4) {
-    clothingDesc.push('showing normal wear and frontier dirt');
-  } else if (clothingCleanliness > 0.2) {
-    clothingDesc.push('heavily stained and worn from hard outdoor work');
-  } else {
-    clothingDesc.push('dirty, unkempt clothing reflecting neglect or extreme hardship');
-  }
-  
-  // Appropriateness and styling
-  if (clothingAppropriateness > 0.8) {
-    clothingDesc.push('perfectly suited to their role and social position');
-  } else if (clothingAppropriateness < 0.3) {
-    clothingDesc.push('ill-fitting or mismatched garments suggesting poverty or eccentricity');
-  }
-  
-  // Grooming attention
-  if (groomingAttention > 0.8) {
-    clothingDesc.push('with meticulous attention to personal presentation');
-  } else if (groomingAttention < 0.3) {
-    clothingDesc.push('with little attention to personal grooming or appearance');
+  if (conscientiousness > 0.7) {
+    clothingDesc.push('with meticulous attention to proper dress');
+  } else if (conscientiousness < 0.3) {
+    clothingDesc.push('with little attention to appearance or grooming');
   }
   
   return clothingDesc.join(', ');
 }
 
-function getPersonalityInfluencedExpression(traitProfile: any): string {
-  if (!traitProfile?.big_five) return '';
+function getBasicCharacterAppearance(metadata: any): string {
+  const age = parseInt(metadata?.age) || 30;
+  const gender = metadata?.gender || 'person';
+  const physicalAttributes = metadata?.physical_attributes || {};
   
-  const personality = traitProfile.big_five;
-  const extended = traitProfile.extended_traits || {};
-  
-  let expressions = [];
-  
-  // Extraversion affects facial expression and demeanor
-  if (personality.extraversion > 0.7) {
-    expressions.push('warm, engaging expression with natural confidence');
-  } else if (personality.extraversion < 0.3) {
-    expressions.push('reserved, introspective expression with quiet demeanor');
+  // Age-based appearance
+  let ageAppearance;
+  if (age < 25) {
+    ageAppearance = `youthful ${age}-year-old with clear, healthy skin`;
+  } else if (age < 40) {
+    ageAppearance = `${age}-year-old adult with natural aging and healthy complexion`;
+  } else if (age < 55) {
+    ageAppearance = `middle-aged ${age}-year-old with mature features and natural aging`;
+  } else {
+    ageAppearance = `older ${age}-year-old with dignified aging and character lines`;
   }
   
-  // Neuroticism affects tension and worry lines
-  if (personality.neuroticism > 0.7) {
-    expressions.push('worry lines and tension visible in facial features');
-  } else if (personality.neuroticism < 0.3) {
-    expressions.push('calm, relaxed facial expression showing inner peace');
-  }
+  const height = physicalAttributes.height || 'average height';
+  const build = physicalAttributes.build || 'average build';
+  const hairColor = physicalAttributes.hair_color || 'brown';
+  const hairStyle = physicalAttributes.hair_style || 'period-appropriate style';
+  const eyeColor = physicalAttributes.eye_color || 'brown';
+  const skinTone = physicalAttributes.skin_tone || 'natural complexion';
   
-  // Conscientiousness affects overall presentation
-  if (personality.conscientiousness > 0.7) {
-    expressions.push('neat, orderly appearance reflecting disciplined nature');
-  } else if (personality.conscientiousness < 0.3) {
-    expressions.push('somewhat disheveled appearance suggesting casual attitude');
-  }
-  
-  // Agreeableness affects warmth in expression
-  if (personality.agreeableness > 0.7) {
-    expressions.push('kind, approachable expression with gentle features');
-  } else if (personality.agreeableness < 0.3) {
-    expressions.push('stern, somewhat harsh expression with hardened features');
-  }
-  
-  // Emotional intensity affects overall presence
-  const emotionalIntensity = extended.emotional_intensity || 0.5;
-  if (emotionalIntensity > 0.7) {
-    expressions.push('intense, passionate expression with animated features');
-  } else if (emotionalIntensity < 0.3) {
-    expressions.push('subdued, controlled expression with restrained features');
-  }
-  
-  return expressions.length > 0 ? ', ' + expressions.join(', ') : '';
+  return `${ageAppearance}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} with natural skin texture`;
 }
 
 function getHistoricalClothing(metadata: any): string {
@@ -236,96 +194,61 @@ function getHistoricalClothing(metadata: any): string {
   const socialClass = metadata?.social_class || 'middle class';
   const region = metadata?.region || 'European';
   
-  let clothingDescription = '';
-  
-  // Check if this is frontier/colonial America
   const isFrontier = region.toLowerCase().includes('virginia') || 
                     region.toLowerCase().includes('frontier') || 
                     region.toLowerCase().includes('colony') ||
                     region.toLowerCase().includes('america');
   
-  // Period-based clothing with frontier realism
   if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
     if (isFrontier) {
-      clothingDescription = 'practical frontier clothing: worn linen shirt, leather or wool vest, rough-hewn breeches, sturdy boots, clothing showing wear from hard frontier life, patched and mended garments, earth-stained from outdoor work';
+      return 'practical 18th century frontier clothing: linen shirt, wool vest, leather breeches, sturdy boots';
     } else if (occupation.toLowerCase().includes('noble') || socialClass.toLowerCase().includes('upper')) {
-      clothingDescription = 'fine 18th century noble attire with rich fabrics, ornate details, but showing some wear from daily use';
+      return 'elegant 18th century noble attire with fine fabrics and quality construction';
     } else if (occupation.toLowerCase().includes('merchant') || socialClass.toLowerCase().includes('middle')) {
-      clothingDescription = '18th century middle-class clothing with quality but practical fabrics, modest decoration, showing normal wear';
+      return '18th century middle-class clothing with quality materials and modest decoration';
     } else {
-      clothingDescription = 'simple 18th century working-class clothing, practical and modest, showing wear from daily labor';
+      return 'simple 18th century working-class clothing, practical and functional';
     }
   } else if (historicalPeriod.includes('1600') || historicalPeriod.includes('17th')) {
-    clothingDescription = '17th century period clothing appropriate for their social station, showing realistic wear';
+    return '17th century period clothing appropriate for their social station';
   } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
-    clothingDescription = '19th century period clothing with appropriate social class styling, showing normal use';
+    return '19th century period clothing with appropriate social class styling';
   } else {
-    clothingDescription = `period-appropriate clothing from ${historicalPeriod} reflecting ${socialClass} status, showing realistic wear and use`;
+    return `period-appropriate clothing from ${historicalPeriod} reflecting ${socialClass} status`;
   }
-  
-  return clothingDescription;
 }
 
 function getHistoricalBackground(metadata: any): string {
-  const historicalPeriod = metadata?.historical_period || '1700s';
-  const region = metadata?.region || 'European';
-  const occupation = metadata?.occupation || 'common person';
-  
-  // Use neutral portrait backgrounds for professional historical documentation
-  return 'neutral studio portrait background with soft gradient lighting, professional historical documentation setting with subtle environmental context, museum-quality portrait backdrop';
+  return 'neutral portrait background with soft natural lighting, professional historical documentation setting';
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Generating enhanced colorized historical portrait from character data with trait integration");
+  console.log("Generating enhanced historical portrait from character data");
   
   const metadata = characterData.metadata || {};
   const traitProfile = characterData.trait_profile || {};
   
-  // Basic information
   const name = characterData.name || 'Historical Character';
-  const age = metadata.age || '30';
-  const gender = metadata.gender || 'person';
   const historicalPeriod = metadata.historical_period || '1700s';
   const region = metadata.region || 'Europe';
   
-  // Get enhanced appearance details using trait data
-  const appearanceDetails = getEnhancedPhysicalAppearance(traitProfile, metadata);
-  const clothingDetails = getEnhancedClothing(traitProfile, metadata);
-  const backgroundDetails = getHistoricalBackground(metadata);
-  const personalityExpression = getPersonalityInfluencedExpression(traitProfile);
+  // Synthesize comprehensive physical appearance
+  const physicalDescription = synthesizePhysicalAppearance(traitProfile, metadata);
+  const clothingDescription = synthesizeClothingAppearance(traitProfile, metadata);
+  const backgroundDescription = getHistoricalBackground(metadata);
   
-  // Build comprehensive colorized historical portrait prompt with trait integration
-  let prompt = `A professional colorized historical portrait photograph of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
+  // Build streamlined prompt focused on realistic appearance
+  let prompt = `Professional colorized historical portrait of ${name} from ${historicalPeriod} in ${region}. `;
+  prompt += `Physical appearance: ${physicalDescription}. `;
+  prompt += `Clothing: ${clothingDescription}. `;
+  prompt += `Setting: ${backgroundDescription}. `;
   
-  // Enhanced physical appearance with trait-based realism
-  prompt += ` with ${appearanceDetails}`;
+  // Technical specifications for realism
+  prompt += `Style: High-quality colorized vintage photograph with natural lighting, authentic skin texture, `;
+  prompt += `realistic human proportions, professional portrait composition, museum-quality historical documentation. `;
+  prompt += `Focus on natural, realistic skin with appropriate texture, pores, and natural imperfections. `;
+  prompt += `Avoid: artificial smooth skin, over-processed appearance, modern lighting, cropped body parts, multiple subjects.`;
   
-  // Personality-influenced expression and demeanor
-  prompt += personalityExpression;
-  
-  // Enhanced clothing with trait-based authenticity
-  prompt += `, wearing ${clothingDetails}`;
-  
-  // Professional portrait composition and lighting
-  prompt += `, positioned against ${backgroundDetails}`;
-  prompt += `, full body standing portrait, complete figure from head to feet clearly visible in natural dignified pose`;
-  prompt += `, professional historical portrait photography in the style of colorized vintage photographs`;
-  prompt += `, soft natural lighting with gentle shadows, museum-quality historical documentation`;
-  prompt += `, authentic period-accurate representation with realistic human features and natural aging`;
-  
-  // Enhanced realism and quality specifications
-  prompt += `, photorealistic with natural skin texture and subtle weathering appropriate to age and lifestyle`;
-  prompt += `, rich but natural color palette, professional portrait composition with proper framing`;
-  prompt += `, authentic human proportions with individual character traits clearly visible`;
-  prompt += `, high detail showing personality and life experience through facial expression and bearing`;
-  
-  // Professional portrait specifications
-  prompt += `, masterpiece quality colorized historical portrait, sharp focus with natural depth of field`;
-  prompt += `, 4K resolution, single subject, complete body visible, professional portrait lighting`;
-  
-  // Critical exclusions for authentic historical portrait style
-  prompt += `, avoid: harsh lighting, modern studio effects, over-weathered appearance, cropped limbs, multiple subjects, artificial poses, contemporary elements, idealized perfection, incomplete bodies, poor composition`;
-  
-  console.log("Generated enhanced colorized historical portrait prompt:", prompt);
+  console.log("Generated streamlined portrait prompt:", prompt);
   return prompt;
 }
