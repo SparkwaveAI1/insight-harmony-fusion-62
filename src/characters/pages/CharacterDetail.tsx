@@ -7,6 +7,8 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
 import CharacterTraits from '../components/CharacterTraits';
+import CharacterAvatar from '../components/CharacterAvatar';
+import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -18,6 +20,13 @@ const CharacterDetail = () => {
       loadCharacter(characterId);
     }
   }, [characterId]);
+
+  const handleImageGenerated = async (imageUrl: string) => {
+    // Reload character to get updated image URL
+    if (characterId) {
+      await loadCharacter(characterId);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -163,16 +172,21 @@ const CharacterDetail = () => {
             {/* Side Panel */}
             <div className="space-y-6">
               {/* Character Image */}
-              {activeCharacter.profile_image_url && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Character Image</h3>
-                  <img
-                    src={activeCharacter.profile_image_url}
-                    alt={activeCharacter.name}
-                    className="w-full rounded-lg"
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Character Image</h3>
+                <div className="flex flex-col items-center space-y-4">
+                  <CharacterAvatar 
+                    character={activeCharacter} 
+                    size="xl" 
+                    className="border-4 border-primary/20"
                   />
-                </Card>
-              )}
+                  <GenerateCharacterImageButton
+                    character={activeCharacter}
+                    onImageGenerated={handleImageGenerated}
+                    className="w-full"
+                  />
+                </div>
+              </Card>
 
               {/* Quick Stats */}
               <Card className="p-6">

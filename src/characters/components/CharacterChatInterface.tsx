@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, Save, Languages, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -19,6 +18,7 @@ import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
 import { ChatMode } from '../types/chatTypes';
 import { toast } from 'sonner';
+import CharacterAvatar from './CharacterAvatar';
 
 interface CharacterChatInterfaceProps {
   characterId: string;
@@ -156,15 +156,11 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
         
         {/* Character badge with Universal Translator indicator */}
         <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-muted">
-          <Avatar className="w-12 h-12 rounded-full border-2 border-primary/20">
-            {activeCharacter.profile_image_url ? (
-              <AvatarImage src={activeCharacter.profile_image_url} alt={activeCharacter.name} />
-            ) : (
-              <AvatarFallback className="bg-primary/20 text-primary font-bold text-lg">
-                {activeCharacter.name.charAt(0)}
-              </AvatarFallback>
-            )}
-          </Avatar>
+          <CharacterAvatar 
+            character={activeCharacter} 
+            size="md" 
+            className="border-2 border-primary/20"
+          />
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <p className="font-medium">{activeCharacter.name}</p>

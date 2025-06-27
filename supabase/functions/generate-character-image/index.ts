@@ -1,0 +1,76 @@
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
+import { buildCharacterImagePrompt } from "./promptBuilder.ts";
+import { generateImageWithOpenAI } from "./openaiService.ts";
+import { uploadImageToStorage, updateCharacterWithImageUrl } from "./imageUploadService.ts";
+
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured in environment variables");
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Supabase configuration is missing");
+    }
+
+    const { characterData } = await req.json();
+    
+    if (!characterData || typeof characterData !== "object") {
+      throw new Error("Invalid characterData provided");
+    }
+
+    // Build the image prompt
+    const imagePrompt = buildCharacterImagePrompt(characterData);
+    
+    // Generate image with OpenAI
+    const base64Image = await generateImageWithOpenAI(imagePrompt, OPENAI_API_KEY);
+    
+    // Upload image to Supabase storage
+    const publicUrl = await uploadImageToStorage(
+      base64Image, 
+      characterData.character_id, 
+      SUPABASE_URL, 
+      SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    // Update the character record with the new image URL
+    await updateCharacterWithImageUrl(
+      characterData.character_id, 
+      publicUrl, 
+      SUPABASE_URL, 
+      SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    return new Response(
+      JSON.stringify({
+        success: true,
+        image_url: publicUrl,
+        prompt: imagePrompt
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Error generating character image:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || "Failed to generate character image",
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
+    );
+  }
+});
