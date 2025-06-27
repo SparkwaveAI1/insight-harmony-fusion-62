@@ -79,32 +79,6 @@ function getHistoricalClothing(characterData: any): string {
   return `period-appropriate ${historicalPeriod} clothing reflecting ${socialClass} status`;
 }
 
-function getHistoricalBackground(characterData: any): string {
-  const metadata = characterData.metadata || {};
-  const historicalPeriod = metadata?.historical_period || '1700s';
-  const region = metadata?.region || 'European';
-  const occupation = metadata?.occupation || '';
-  
-  const isFrontier = region.toLowerCase().includes('virginia') || 
-                    region.toLowerCase().includes('frontier') || 
-                    region.toLowerCase().includes('colony') ||
-                    region.toLowerCase().includes('america');
-  
-  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    if (isFrontier) {
-      if (occupation.toLowerCase().includes('farm') || occupation.toLowerCase().includes('land')) {
-        return 'rustic colonial farmstead with wooden buildings and cleared fields';
-      } else {
-        return 'frontier settlement with log cabins and forest in the background';
-      }
-    } else {
-      return 'elegant 18th century interior with period furnishings';
-    }
-  }
-  
-  return `authentic ${historicalPeriod} setting appropriate to the time period`;
-}
-
 export function buildCharacterImagePrompt(characterData: any): string {
   console.log("Building new hyper-realistic character portrait prompt");
   
@@ -112,19 +86,17 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const historicalPeriod = characterData.metadata?.historical_period || '1700s';
   const region = characterData.metadata?.region || 'Europe';
   
-  // Get physical description, clothing, and background
+  // Get physical description and clothing
   const physicalDescription = getPhysicalDescription(characterData);
   const clothingDescription = getHistoricalClothing(characterData);
-  const backgroundDescription = getHistoricalBackground(characterData);
   
-  // Build the new prompt with more body visibility and historical background
-  let prompt = `Three-quarter body portrait of ${name} from ${historicalPeriod} in ${region}. `;
+  // Build the new prompt
+  let prompt = `Full body portrait of ${name} from ${historicalPeriod} in ${region}. `;
   prompt += `Physical appearance: ${physicalDescription}. `;
   prompt += `Clothing: ${clothingDescription}. `;
-  prompt += `Background: ${backgroundDescription}. `;
   prompt += `Hyper-realistic art style with attention to detail, conveying emotion and depth, `;
   prompt += `natural skin texture, authentic aging and natural imperfections. `;
-  prompt += `Professional portrait composition with natural lighting, showing from waist up or more of the body.`;
+  prompt += `Professional portrait composition with natural lighting and neutral background.`;
   
   console.log("Generated hyper-realistic portrait prompt:", prompt);
   return prompt;
