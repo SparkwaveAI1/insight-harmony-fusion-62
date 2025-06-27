@@ -67,6 +67,38 @@ function getHistoricalClothing(metadata: any): string {
   return clothingDescription;
 }
 
+function getHistoricalBackground(metadata: any): string {
+  const historicalPeriod = metadata?.historical_period || '1700s';
+  const region = metadata?.region || 'European';
+  const occupation = metadata?.occupation || 'common person';
+  
+  // Check if this is frontier/colonial America
+  const isFrontier = region.toLowerCase().includes('virginia') || 
+                    region.toLowerCase().includes('frontier') || 
+                    region.toLowerCase().includes('colony') ||
+                    region.toLowerCase().includes('america');
+  
+  let backgroundDescription = '';
+  
+  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
+    if (isFrontier) {
+      backgroundDescription = 'rustic colonial Virginia frontier cabin interior with rough-hewn log walls, simple wooden furniture, fireplace with stone hearth, hanging tools and utensils, dim candlelight or oil lamp lighting, authentic 1700s frontier atmosphere';
+    } else if (occupation.toLowerCase().includes('noble') || region.toLowerCase().includes('europe')) {
+      backgroundDescription = '18th century European manor interior with paneled walls, fine furniture, oil paintings, elegant period décor';
+    } else {
+      backgroundDescription = '18th century middle-class home interior with modest wooden furniture, simple decorations, period-appropriate domestic setting';
+    }
+  } else if (historicalPeriod.includes('1600') || historicalPeriod.includes('17th')) {
+    backgroundDescription = '17th century interior setting with period-appropriate furnishings and décor';
+  } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
+    backgroundDescription = '19th century interior setting reflecting the period and social class';
+  } else {
+    backgroundDescription = `period-appropriate interior setting from ${historicalPeriod} reflecting the social and regional context`;
+  }
+  
+  return backgroundDescription;
+}
+
 export function buildCharacterImagePrompt(characterData: any): string {
   console.log("Generating single realistic portrait from character data");
   
@@ -79,9 +111,10 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const historicalPeriod = metadata.historical_period || '1700s';
   const region = metadata.region || 'Europe';
   
-  // Get detailed appearance and clothing
+  // Get detailed appearance, clothing, and background
   const appearanceDetails = getCharacterAppearance(metadata);
   const clothingDetails = getHistoricalClothing(metadata);
+  const backgroundDetails = getHistoricalBackground(metadata);
   
   // Build comprehensive single portrait prompt
   let prompt = `Single realistic portrait of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
@@ -92,13 +125,15 @@ export function buildCharacterImagePrompt(characterData: any): string {
   // Clothing and period details with wear
   prompt += `, wearing ${clothingDetails}`;
   
-  // Setting and composition - emphasize single portrait
-  prompt += `, photographed in a historically accurate ${historicalPeriod} interior setting`;
+  // Historical background setting
+  prompt += `, ${backgroundDetails}`;
+  
+  // Portrait composition - emphasize single portrait
   prompt += `, single person only, head and shoulders portrait, three-quarter view`;
   
   // Photography and quality specifications with realism emphasis
   prompt += `, professional historical portrait photography, museum quality documentation style`;
-  prompt += `, photorealistic, ultra-realistic skin texture, natural lighting, authentic period atmosphere`;
+  prompt += `, photorealistic, ultra-realistic skin texture, natural period lighting, authentic historical atmosphere`;
   prompt += `, high detail, historically accurate, weathered and lived-in appearance`;
   prompt += `, single subject composition, no duplicates, no headless bodies`;
   prompt += `, 4K resolution, documentary photography style, authentic historical portraiture`;
