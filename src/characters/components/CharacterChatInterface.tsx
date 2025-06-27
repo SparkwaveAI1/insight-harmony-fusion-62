@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { MessageCircle, Menu, LayoutDashboard, Save, Languages, Info } from 'lucide-react';
+import { MessageCircle, Menu, Save, Languages, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -129,10 +129,9 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
             {activeCharacter?.name || 'Chat'}
           </h3>
           
-          <Link to="/dashboard">
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <LayoutDashboard className="h-5 w-5" />
-              <span className="sr-only">Dashboard</span>
+          <Link to="/characters">
+            <Button variant="outline" size="sm" className="text-xs px-2">
+              Character Dashboard
             </Button>
           </Link>
         </div>
