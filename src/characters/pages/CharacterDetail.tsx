@@ -7,7 +7,6 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
 import CharacterTraits from '../components/CharacterTraits';
-import CharacterCloneForm from '../components/CharacterCloneForm';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -174,15 +173,6 @@ const CharacterDetail = () => {
                   />
                 </Card>
               )}
-
-              {/* Clone & Customize */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Create Variations</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Generate a customized version of this character with different traits and characteristics.
-                </p>
-                <CharacterCloneForm character={activeCharacter} />
-              </Card>
 
               {/* Quick Stats */}
               <Card className="p-6">
