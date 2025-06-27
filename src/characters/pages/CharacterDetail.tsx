@@ -175,11 +175,21 @@ const CharacterDetail = () => {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Character Image</h3>
                 <div className="flex flex-col items-center space-y-4">
-                  <CharacterAvatar 
-                    character={activeCharacter} 
-                    size="xl" 
-                    className="border-4 border-primary/20"
-                  />
+                  {activeCharacter.profile_image_url ? (
+                    <div className="w-full max-w-sm">
+                      <img 
+                        src={activeCharacter.profile_image_url} 
+                        alt={`${activeCharacter.name} portrait`}
+                        className="w-full h-auto rounded-lg border-4 border-primary/20 shadow-lg"
+                      />
+                    </div>
+                  ) : (
+                    <CharacterAvatar 
+                      character={activeCharacter} 
+                      size="xl" 
+                      className="border-4 border-primary/20"
+                    />
+                  )}
                   <GenerateCharacterImageButton
                     character={activeCharacter}
                     onImageGenerated={handleImageGenerated}
