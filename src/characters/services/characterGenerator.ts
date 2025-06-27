@@ -226,6 +226,7 @@ export const generateCharacterFromFormData = async (formData: HistoricalCharacte
     metadata: {
       age: formData.age,
       gender: 'Male',
+      education_level: 'basic', // Added required field
       occupation: formData.occupation || '',
       region: formData.location,
       historical_period: '1700s',
