@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Edit, Eye, EyeOff, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -93,6 +93,12 @@ const CharacterDetail = () => {
                     Private
                   </>
                 )}
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to={`/characters/${activeCharacter.character_id}/chat`}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Chat
+                </Link>
               </Button>
               <Button asChild>
                 <Link to={`/characters/${activeCharacter.character_id}/edit`}>

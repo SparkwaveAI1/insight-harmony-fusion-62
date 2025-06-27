@@ -46,6 +46,7 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
 import HistoricalCharacterCreate from "./characters/pages/HistoricalCharacterCreate";
 import FictionalCharacterCreate from "./characters/pages/FictionalCharacterCreate";
+import CharacterChat from "./characters/pages/CharacterChat";
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
@@ -104,6 +105,7 @@ function App() {
               <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
               <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
               <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
+              <Route path="/characters/:characterId/chat" element={<ProtectedRoute><CharacterChat /></ProtectedRoute>} />
               <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
               <Route path="/characters/create/fictional" element={<ProtectedRoute><FictionalCharacterCreate /></ProtectedRoute>} />
               
