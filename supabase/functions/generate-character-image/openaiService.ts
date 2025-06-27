@@ -1,7 +1,6 @@
 
-
 export async function generateImageWithOpenAI(prompt: string, apiKey: string): Promise<string> {
-  console.log("Calling OpenAI API for character image generation with DALL-E 3...");
+  console.log("Calling OpenAI API for character image generation with base64 format...");
   
   const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -33,8 +32,7 @@ export async function generateImageWithOpenAI(prompt: string, apiKey: string): P
   }
   
   const base64Image = imageData.data[0].b64_json;
-  console.log("Successfully received base64 image from OpenAI using DALL-E 3");
+  console.log("Successfully received base64 image from OpenAI");
   
   return base64Image;
 }
-

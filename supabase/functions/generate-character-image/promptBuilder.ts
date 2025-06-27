@@ -79,13 +79,11 @@ function getHistoricalClothing(characterData: any): string {
     clothingQuality = 'high-quality middle-class';
   }
   
-  // Get a specific year from the period for more precise clothing
-  let clothingYear = '1792';
   if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    clothingYear = '1792';
+    return `${clothingQuality} 1700s clothing`;
   }
   
-  return `${clothingQuality} clothing from ${clothingYear}`;
+  return `${clothingQuality} ${historicalPeriod} clothing`;
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
@@ -99,13 +97,13 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const physicalDescription = getPhysicalDescription(characterData);
   const clothingDescription = getHistoricalClothing(characterData);
   
-  // Build the prompt in the new hyper-realistic style structure
+  // Build the prompt in the new structure
   const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
   
-  const prompt = `Hyper-realistic art style with attention to detail, conveying emotion and depth: Full-body portrait of ${name}, a ${physicalDescription} in ${century} ${region}.
+  const prompt = `Full-body photorealistic portrait of ${name}, a ${physicalDescription} in ${century} ${region}.
 Wearing ${clothingDescription}.
 Neutral background, natural lighting.
-Natural skin texture, authentic aging and natural imperfections. Hyper-realistic art style.`;
+Realistic skin texture, visible imperfections, period-accurate expression and emotion.`;
   
   console.log("Generated character portrait prompt:", prompt);
   return prompt;
