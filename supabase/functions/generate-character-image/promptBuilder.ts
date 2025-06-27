@@ -1,7 +1,6 @@
 
 function getPhysicalDescription(characterData: any): string {
   const metadata = characterData.metadata || {};
-  const traitProfile = characterData.trait_profile || {};
   
   const age = parseInt(metadata?.age) || 30;
   const gender = metadata?.gender || 'person';
@@ -14,47 +13,10 @@ function getPhysicalDescription(characterData: any): string {
   const eyeColor = metadata?.eye_color || 'brown';
   const skinTone = metadata?.skin_tone || 'natural complexion';
   
-  // Physical appearance traits if available
-  const physicalTraits = traitProfile.physical_appearance || {};
-  const healthTraits = traitProfile.physical_health || {};
+  // Build consolidated description
+  let description = `${age}-year-old ${gender}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone}`;
   
-  let description = [];
-  
-  // Age and basic description
-  description.push(`${age}-year-old ${gender}`);
-  description.push(`${height} and ${build}`);
-  description.push(`${hairColor} hair in ${hairStyle}`);
-  description.push(`${eyeColor} eyes`);
-  
-  // Add skin and aging details
-  let skinDescription = skinTone;
-  if (physicalTraits.skin_quality !== undefined) {
-    const skinQuality = physicalTraits.skin_quality;
-    if (skinQuality > 0.7) {
-      skinDescription += ' with clear, healthy skin';
-    } else if (skinQuality > 0.4) {
-      skinDescription += ' with weathered skin and natural aging';
-    } else {
-      skinDescription += ' with rough, sun-damaged skin and visible aging';
-    }
-  } else {
-    skinDescription += ' with weathered skin and natural aging';
-  }
-  
-  if (physicalTraits.build_muscularity !== undefined) {
-    const muscularity = physicalTraits.build_muscularity;
-    if (muscularity > 0.7) {
-      skinDescription += ' and muscle tone';
-    } else if (muscularity > 0.4) {
-      skinDescription += ' and moderate muscle tone';
-    }
-  } else {
-    skinDescription += ' and muscle tone';
-  }
-  
-  description.push(skinDescription);
-  
-  return description.join(', ');
+  return description;
 }
 
 function getHistoricalClothing(characterData: any): string {
@@ -87,9 +49,8 @@ function getHistoricalClothing(characterData: any): string {
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Building character portrait prompt with new structure");
+  console.log("Building character portrait prompt with simplified structure");
   
-  const name = characterData.name || 'Historical Character';
   const historicalPeriod = characterData.metadata?.historical_period || '1700s';
   const region = characterData.metadata?.region || 'Europe';
   
@@ -97,14 +58,11 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const physicalDescription = getPhysicalDescription(characterData);
   const clothingDescription = getHistoricalClothing(characterData);
   
-  // Build the prompt in the new structure
+  // Build the prompt with the requested structure
   const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
   
-  const prompt = `Full-body photorealistic portrait of ${name}, a ${physicalDescription} in ${century} ${region}.
-Wearing ${clothingDescription}.
-Neutral background, natural lighting.
-Realistic skin texture, visible imperfections, period-accurate expression and emotion.`;
+  const prompt = `Full-body portrait Hyper-realistic art style, ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}, natural lighting, neutral background`;
   
-  console.log("Generated character portrait prompt:", prompt);
+  console.log("Generated simplified character portrait prompt:", prompt);
   return prompt;
 }
