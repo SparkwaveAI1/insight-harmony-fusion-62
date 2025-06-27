@@ -4,31 +4,31 @@ function getCharacterAppearance(metadata: any): string {
   const gender = metadata?.gender || 'person';
   const physicalAttributes = metadata?.physical_attributes || {};
   
-  // Age-based appearance
+  // Age-based appearance with frontier realism
   let ageAppearance = '';
   if (age < 25) {
-    ageAppearance = 'youthful appearance, clear skin, energetic posture';
+    ageAppearance = 'youthful but weathered face, sun-worn skin, calloused hands from hard work';
   } else if (age < 35) {
-    ageAppearance = 'young adult appearance, confident bearing';
+    ageAppearance = 'young adult with weathered features, sun-damaged skin, work-hardened appearance';
   } else if (age < 45) {
-    ageAppearance = 'mature adult appearance, established presence';
+    ageAppearance = 'mature adult with deeply weathered face, sun-leathered skin, scars from frontier life';
   } else if (age < 55) {
-    ageAppearance = 'middle-aged appearance, distinguished look';
+    ageAppearance = 'middle-aged with deeply lined face, sun-beaten skin, graying hair, worn hands';
   } else if (age < 65) {
-    ageAppearance = 'mature appearance, some signs of aging';
+    ageAppearance = 'mature appearance with deeply weathered features, sun-damaged skin, significant graying';
   } else {
-    ageAppearance = 'older adult appearance, wisdom in features, possible gray hair';
+    ageAppearance = 'elderly with deeply lined, sun-weathered face, calloused hands, silver-gray hair';
   }
   
-  // Physical characteristics
+  // Physical characteristics with frontier realism
   const height = physicalAttributes.height || 'average height';
-  const build = physicalAttributes.build || 'average build';
+  const build = physicalAttributes.build || 'lean and muscular from hard labor';
   const hairColor = physicalAttributes.hair_color || 'brown';
-  const hairStyle = physicalAttributes.hair_style || 'period-appropriate';
+  const hairStyle = physicalAttributes.hair_style || 'practical, roughly cut';
   const eyeColor = physicalAttributes.eye_color || 'brown';
-  const skinTone = physicalAttributes.skin_tone || 'medium';
+  const skinTone = physicalAttributes.skin_tone || 'sun-weathered and tanned';
   
-  return `${ageAppearance}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin tone`;
+  return `${ageAppearance}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin with natural sun exposure and weathering`;
 }
 
 function getHistoricalClothing(metadata: any): string {
@@ -39,28 +39,36 @@ function getHistoricalClothing(metadata: any): string {
   
   let clothingDescription = '';
   
-  // Period-based clothing
+  // Check if this is frontier/colonial America
+  const isFrontier = region.toLowerCase().includes('virginia') || 
+                    region.toLowerCase().includes('frontier') || 
+                    region.toLowerCase().includes('colony') ||
+                    region.toLowerCase().includes('america');
+  
+  // Period-based clothing with frontier realism
   if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    if (occupation.toLowerCase().includes('noble') || socialClass.toLowerCase().includes('upper')) {
-      clothingDescription = 'elaborate 18th century noble attire with fine fabrics, ornate details, powdered wig';
+    if (isFrontier) {
+      clothingDescription = 'practical frontier clothing: worn linen shirt, leather or wool vest, rough-hewn breeches, sturdy boots, clothing showing wear from hard frontier life, patched and mended garments, earth-stained from outdoor work';
+    } else if (occupation.toLowerCase().includes('noble') || socialClass.toLowerCase().includes('upper')) {
+      clothingDescription = 'fine 18th century noble attire with rich fabrics, ornate details, but showing some wear from daily use';
     } else if (occupation.toLowerCase().includes('merchant') || socialClass.toLowerCase().includes('middle')) {
-      clothingDescription = '18th century middle-class clothing with quality fabrics, modest decoration';
+      clothingDescription = '18th century middle-class clothing with quality but practical fabrics, modest decoration, showing normal wear';
     } else {
-      clothingDescription = 'simple 18th century working-class clothing, practical and modest';
+      clothingDescription = 'simple 18th century working-class clothing, practical and modest, showing wear from daily labor';
     }
   } else if (historicalPeriod.includes('1600') || historicalPeriod.includes('17th')) {
-    clothingDescription = '17th century period clothing appropriate for their social station';
+    clothingDescription = '17th century period clothing appropriate for their social station, showing realistic wear';
   } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
-    clothingDescription = '19th century period clothing with appropriate social class styling';
+    clothingDescription = '19th century period clothing with appropriate social class styling, showing normal use';
   } else {
-    clothingDescription = `period-appropriate clothing from ${historicalPeriod} reflecting ${socialClass} status`;
+    clothingDescription = `period-appropriate clothing from ${historicalPeriod} reflecting ${socialClass} status, showing realistic wear and use`;
   }
   
-  return `${clothingDescription}, authentic historical styling for ${region} region`;
+  return clothingDescription;
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Generating whole-body character image prompt from character data");
+  console.log("Generating single realistic portrait from character data");
   
   const metadata = characterData.metadata || {};
   
@@ -75,25 +83,29 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const appearanceDetails = getCharacterAppearance(metadata);
   const clothingDetails = getHistoricalClothing(metadata);
   
-  // Build comprehensive whole-body prompt
-  let prompt = `Full-body portrait of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod}`;
+  // Build comprehensive single portrait prompt
+  let prompt = `Single realistic portrait of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
   
-  // Physical appearance
+  // Physical appearance with realism
   prompt += `, ${appearanceDetails}`;
   
-  // Clothing and period details  
+  // Clothing and period details with wear
   prompt += `, wearing ${clothingDetails}`;
   
-  // Setting and composition
-  prompt += `, standing in a historically accurate ${historicalPeriod} setting`;
-  prompt += `, full body visible from head to toe, three-quarter view pose`;
+  // Setting and composition - emphasize single portrait
+  prompt += `, photographed in a historically accurate ${historicalPeriod} interior setting`;
+  prompt += `, single person only, head and shoulders portrait, three-quarter view`;
   
-  // Photography and quality specifications
-  prompt += `, professional portrait photography, museum quality, historically accurate`;
-  prompt += `, realistic, photorealistic, detailed period clothing, authentic historical atmosphere`;
-  prompt += `, studio lighting with period-appropriate background, crisp details`;
-  prompt += `, 4K resolution, historical documentary style, full-body composition`;
+  // Photography and quality specifications with realism emphasis
+  prompt += `, professional historical portrait photography, museum quality documentation style`;
+  prompt += `, photorealistic, ultra-realistic skin texture, natural lighting, authentic period atmosphere`;
+  prompt += `, high detail, historically accurate, weathered and lived-in appearance`;
+  prompt += `, single subject composition, no duplicates, no headless bodies`;
+  prompt += `, 4K resolution, documentary photography style, authentic historical portraiture`;
   
-  console.log("Generated character image prompt:", prompt);
+  // Explicit instructions to avoid AI artifacts
+  prompt += `, avoid: multiple subjects, headless bodies, perfect skin, artificial lighting, modern elements`;
+  
+  console.log("Generated realistic character portrait prompt:", prompt);
   return prompt;
 }
