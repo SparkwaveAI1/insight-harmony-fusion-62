@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Plus, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,28 +8,17 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { Character } from '../types/characterTraitTypes';
 import { useCharacters } from '../hooks/useCharacters';
-import CharacterActionButtons from '../components/CharacterActionButtons';
 
 const CharacterLibrary = () => {
-  const { data: characters = [], isLoading, error, refetch } = useCharacters();
+  const { data: characters = [], isLoading, error } = useCharacters();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const navigate = useNavigate();
 
   const filteredCharacters = characters.filter((character) =>
     character.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (character.metadata?.description && 
      character.metadata.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-
-  const handleChatClick = (characterId: string) => {
-    navigate(`/characters/${characterId}/chat`);
-  };
-
-  // Auto-refresh when component mounts or when navigating back
-  React.useEffect(() => {
-    refetch();
-  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -57,7 +47,7 @@ const CharacterLibrary = () => {
               <p className="text-muted-foreground mb-4">
                 {error instanceof Error ? error.message : 'An unexpected error occurred'}
               </p>
-              <Button onClick={() => refetch()}>
+              <Button onClick={() => window.location.reload()}>
                 Try Again
               </Button>
             </Card>
@@ -170,25 +160,17 @@ const CharacterLibrary = () => {
                     )}
                   </div>
                   
-                  <div className="space-y-2">
-                    <CharacterActionButtons 
-                      characterId={character.character_id}
-                      character={character}
-                      onChatClick={handleChatClick}
-                    />
-                    
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1" asChild>
-                        <Link to={`/characters/${character.character_id}`}>
-                          View Details
-                        </Link>
-                      </Button>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link to={`/characters/${character.character_id}/edit`}>
-                          Edit
-                        </Link>
-                      </Button>
-                    </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1" asChild>
+                      <Link to={`/characters/${character.character_id}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to={`/characters/${character.character_id}/edit`}>
+                        Edit
+                      </Link>
+                    </Button>
                   </div>
                 </Card>
               ))}
