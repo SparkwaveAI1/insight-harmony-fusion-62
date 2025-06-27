@@ -1,6 +1,6 @@
 
 export async function generateImageWithOpenAI(prompt: string, apiKey: string): Promise<string> {
-  console.log("Calling OpenAI API for character image generation with base64 format...");
+  console.log("Calling OpenAI API for character image generation with gpt-image-1 model...");
   
   const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -9,13 +9,12 @@ export async function generateImageWithOpenAI(prompt: string, apiKey: string): P
       "Authorization": `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt: prompt,
       n: 1,
       size: "1024x1024",
-      response_format: "b64_json",
-      quality: "hd",
-      style: "natural"
+      quality: "high",
+      output_format: "png"
     })
   });
   
@@ -32,7 +31,7 @@ export async function generateImageWithOpenAI(prompt: string, apiKey: string): P
   }
   
   const base64Image = imageData.data[0].b64_json;
-  console.log("Successfully received base64 image from OpenAI");
+  console.log("Successfully received base64 image from OpenAI using gpt-image-1");
   
   return base64Image;
 }
