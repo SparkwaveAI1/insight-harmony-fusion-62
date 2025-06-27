@@ -1,4 +1,3 @@
-
 function getPhysicalDescription(characterData: any): string {
   const metadata = characterData.metadata || {};
   
@@ -61,7 +60,7 @@ export function buildCharacterImagePrompt(characterData: any): string {
   // Build the prompt with the requested structure
   const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
   
-  const prompt = `Full-body portrait Hyper-realistic art style, ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}, natural lighting, neutral background`;
+  const prompt = `Full-body portrait Hyper-realistic art style, ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}, natural lighting, neutral background, authentic period appearance`;
   
   console.log("Generated simplified character portrait prompt:", prompt);
   return prompt;
