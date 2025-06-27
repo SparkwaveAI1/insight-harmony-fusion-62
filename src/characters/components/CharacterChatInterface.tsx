@@ -10,11 +10,12 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
-import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
+import CharacterChatModeSelector from './CharacterChatModeSelector';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
 import { useCharacterChat } from '../hooks/useCharacterChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
+import { ChatMode } from '../types/chatTypes';
 import { toast } from 'sonner';
 
 interface CharacterChatInterfaceProps {
@@ -157,7 +158,7 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
       />
 
       {/* Chat Mode Selector */}
-      <ChatModeSelector selectedMode={chatMode} onChange={setChatMode} />
+      <CharacterChatModeSelector selectedMode={chatMode} onChange={setChatMode} />
       
       {/* Card with scroll area and message input */}
       <Card className="h-[600px] flex flex-col">

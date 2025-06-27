@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Character } from '../types/characterTraitTypes';
 import { getCharacterById, getCharacterByCharacterId } from '../services/characterService';
-import { Message, ChatMode } from '@/components/persona-chat/types';
+import { Message, ChatMode } from '../types/chatTypes';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
