@@ -170,6 +170,39 @@ export function dbCharacterToCharacter(dbCharacter: DbCharacter): Character {
 function createDefaultTraitProfile(): CharacterTraitProfile {
   console.log("⚠️ CREATING DEFAULT TRAIT PROFILE - THIS INDICATES A PROBLEM");
   return {
+    // Physical Appearance Traits (12 traits)
+    physical_appearance: {
+      height_relative_to_average: 0,
+      build_muscularity: 0.5,
+      build_weight: 0,
+      facial_symmetry: 0.7,
+      skin_quality: 0.5,
+      grooming_attention: 0.5,
+      clothing_quality: 0.5,
+      clothing_cleanliness: 0.5,
+      clothing_appropriateness: 0.7,
+      posture_bearing: 0.5,
+      distinctive_features_count: 1,
+      overall_attractiveness: 0.5,
+    },
+    // Physical Health Traits (15 traits)
+    physical_health: {
+      overall_health_status: 0.5,
+      mobility_level: 0.8,
+      sensory_vision: 0.8,
+      sensory_hearing: 0.8,
+      cognitive_function: 0.7,
+      chronic_pain_level: 0.2,
+      infectious_disease_resistance: 0.5,
+      nutritional_status: 0.6,
+      dental_health: 0.4,
+      respiratory_health: 0.6,
+      cardiovascular_health: 0.6,
+      musculoskeletal_integrity: 0.7,
+      skin_condition: 0.5,
+      mental_health_status: 0.6,
+      life_expectancy_relative: 0.5,
+    },
     big_five: {
       openness: 0.5,
       conscientiousness: 0.5,

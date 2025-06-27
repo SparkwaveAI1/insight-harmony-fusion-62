@@ -1,4 +1,5 @@
-import { Character } from '../types/characterTypes';
+
+import { Character } from '../types/characterTraitTypes';
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { CharacterTraitProfile } from '../types/characterTraitTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -218,13 +219,32 @@ export const generateCharacterFromFormData = async (formData: HistoricalCharacte
     id: uuidv4(),
     character_id: characterId,
     name: formData.name,
-    description: formData.description,
-    backstory: formData.backstory,
-    personality_traits: [formData.personality_traits || 'Neutral'],
-    appearance: formData.appearance,
+    character_type: 'historical',
+    creation_date: now,
     created_at: now,
-    updated_at: now,
-    user_id: '', // This will be set in the component
+    prompt: formData.description || '',
+    metadata: {
+      age: formData.age,
+      gender: 'Male',
+      occupation: formData.occupation || '',
+      region: formData.location,
+      historical_period: '1700s',
+      social_class: 'middle class'
+    },
+    trait_profile: traitProfile,
+    behavioral_modulation: {},
+    linguistic_profile: {},
+    emotional_triggers: {
+      positive_triggers: [],
+      negative_triggers: []
+    },
+    preinterview_tags: [],
+    simulation_directives: {},
+    interview_sections: [],
+    is_public: false,
+    user_id: '',
+    profile_image_url: null,
+    enhanced_metadata_version: 2,
   };
   
   console.log("Generated character trait profile:", traitProfile);
