@@ -121,8 +121,24 @@ const CharacterDetail = () => {
             </div>
           </div>
 
-          {/* Character Header */}
-          <CharacterHeader character={character} />
+          {/* Character Header - This is actually a navigation component, not character display */}
+          <CharacterHeader />
+
+          {/* Character Info Display */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">{character.name}</h1>
+            <p className="text-muted-foreground mb-4">{character.prompt}</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                {character.character_type}
+              </span>
+              {character.metadata?.occupation && (
+                <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm">
+                  {character.metadata.occupation}
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col md:flex-row gap-4 mb-8">
