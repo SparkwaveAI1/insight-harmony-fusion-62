@@ -271,35 +271,12 @@ function getHistoricalBackground(metadata: any): string {
   const region = metadata?.region || 'European';
   const occupation = metadata?.occupation || 'common person';
   
-  // Check if this is frontier/colonial America
-  const isFrontier = region.toLowerCase().includes('virginia') || 
-                    region.toLowerCase().includes('frontier') || 
-                    region.toLowerCase().includes('colony') ||
-                    region.toLowerCase().includes('america');
-  
-  let backgroundDescription = '';
-  
-  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    if (isFrontier) {
-      backgroundDescription = 'rustic colonial Virginia frontier setting with rough-hewn log structures, natural woodland environment, wooden tools and period implements visible, authentic 1700s frontier atmosphere with natural lighting';
-    } else if (occupation.toLowerCase().includes('noble') || region.toLowerCase().includes('europe')) {
-      backgroundDescription = '18th century European manor grounds with stone architecture, manicured gardens, period furnishings visible, elegant historical setting';
-    } else {
-      backgroundDescription = '18th century middle-class home exterior or courtyard with modest wooden architecture, simple period decorations, authentic historical environment';
-    }
-  } else if (historicalPeriod.includes('1600') || historicalPeriod.includes('17th')) {
-    backgroundDescription = '17th century outdoor setting with period-appropriate architecture and natural environment';
-  } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
-    backgroundDescription = '19th century outdoor setting reflecting the period and social class with appropriate architecture';
-  } else {
-    backgroundDescription = `period-appropriate outdoor setting from ${historicalPeriod} reflecting the social and regional context with natural lighting`;
-  }
-  
-  return backgroundDescription;
+  // Use neutral portrait backgrounds for professional historical documentation
+  return 'neutral studio portrait background with soft gradient lighting, professional historical documentation setting with subtle environmental context, museum-quality portrait backdrop';
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Generating enhanced full body HDR photograph from character data with trait integration");
+  console.log("Generating enhanced colorized historical portrait from character data with trait integration");
   
   const metadata = characterData.metadata || {};
   const traitProfile = characterData.trait_profile || {};
@@ -317,8 +294,8 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const backgroundDetails = getHistoricalBackground(metadata);
   const personalityExpression = getPersonalityInfluencedExpression(traitProfile);
   
-  // Build comprehensive full body HDR prompt with trait integration
-  let prompt = `A professional HDR photograph of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
+  // Build comprehensive colorized historical portrait prompt with trait integration
+  let prompt = `A professional colorized historical portrait photograph of ${name}, a ${age}-year-old ${gender} from ${historicalPeriod} in ${region}`;
   
   // Enhanced physical appearance with trait-based realism
   prompt += ` with ${appearanceDetails}`;
@@ -329,26 +306,26 @@ export function buildCharacterImagePrompt(characterData: any): string {
   // Enhanced clothing with trait-based authenticity
   prompt += `, wearing ${clothingDetails}`;
   
-  // Historical background setting
-  prompt += `, positioned in ${backgroundDetails}`;
-  
-  // Full body composition and HDR specifications
-  prompt += `, full body portrait, complete figure from head to feet clearly visible, standing in natural pose`;
-  prompt += `, professional historical documentation photography with enhanced dynamic range`;
-  prompt += `, authentic period-accurate representation with realistic human imperfections and character`;
+  // Professional portrait composition and lighting
+  prompt += `, positioned against ${backgroundDetails}`;
+  prompt += `, full body standing portrait, complete figure from head to feet clearly visible in natural dignified pose`;
+  prompt += `, professional historical portrait photography in the style of colorized vintage photographs`;
+  prompt += `, soft natural lighting with gentle shadows, museum-quality historical documentation`;
+  prompt += `, authentic period-accurate representation with realistic human features and natural aging`;
   
   // Enhanced realism and quality specifications
-  prompt += `, photorealistic with natural skin texture and authentic aging, vibrant but natural colors`;
-  prompt += `, museum-quality historical documentation, professional lighting revealing character and personality`;
-  prompt += `, authentic human features with realistic proportions and natural asymmetries`;
-  prompt += `, high detail showing individual character traits and life experience`;
+  prompt += `, photorealistic with natural skin texture and subtle weathering appropriate to age and lifestyle`;
+  prompt += `, rich but natural color palette, professional portrait composition with proper framing`;
+  prompt += `, authentic human proportions with individual character traits clearly visible`;
+  prompt += `, high detail showing personality and life experience through facial expression and bearing`;
   
-  // Explicit composition and quality requirements
-  prompt += `, 4K resolution, single subject, complete body visible, no cropping of limbs or torso`;
+  // Professional portrait specifications
+  prompt += `, masterpiece quality colorized historical portrait, sharp focus with natural depth of field`;
+  prompt += `, 4K resolution, single subject, complete body visible, professional portrait lighting`;
   
-  // Critical exclusions for realism and completeness
-  prompt += `, avoid: cropped body parts, partial figures, multiple subjects, perfect unmarked skin, artificial poses, modern elements, idealized features, incomplete bodies, torso-only shots`;
+  // Critical exclusions for authentic historical portrait style
+  prompt += `, avoid: harsh lighting, modern studio effects, over-weathered appearance, cropped limbs, multiple subjects, artificial poses, contemporary elements, idealized perfection, incomplete bodies, poor composition`;
   
-  console.log("Generated enhanced trait-based character photograph prompt:", prompt);
+  console.log("Generated enhanced colorized historical portrait prompt:", prompt);
   return prompt;
 }
