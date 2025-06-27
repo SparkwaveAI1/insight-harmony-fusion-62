@@ -1,4 +1,5 @@
 
+
 function getPhysicalDescription(characterData: any): string {
   const metadata = characterData.metadata || {};
   
@@ -49,7 +50,7 @@ function getHistoricalClothing(characterData: any): string {
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Building character portrait prompt with simplified structure");
+  console.log("Building character portrait prompt with new template");
   
   const historicalPeriod = characterData.metadata?.historical_period || '1700s';
   const region = characterData.metadata?.region || 'Europe';
@@ -58,11 +59,12 @@ export function buildCharacterImagePrompt(characterData: any): string {
   const physicalDescription = getPhysicalDescription(characterData);
   const clothingDescription = getHistoricalClothing(characterData);
   
-  // Build the prompt with the requested structure
+  // Build the prompt with the new template
   const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
   
-  const prompt = `Full-body portrait Hyper-realistic art style, ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}, natural lighting, neutral background, authentic period appearance, lived-in realistic condition`;
+  const prompt = `Full-body portrait. Hyper-realistic art style, conveying historical accuracy. ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}`;
   
-  console.log("Generated simplified character portrait prompt:", prompt);
+  console.log("Generated character portrait prompt with new template:", prompt);
   return prompt;
 }
+
