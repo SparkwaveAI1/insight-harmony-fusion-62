@@ -44,7 +44,7 @@ const ConversationContext: React.FC<ConversationContextProps> = ({
           <Textarea 
             value={draftContext} 
             onChange={(e) => setDraftContext(e.target.value)} 
-            placeholder="Set a context for this conversation (e.g., 'We're in a job interview', 'We're discussing climate policy', etc.)"
+            placeholder="Set the scene for your conversation (e.g., 'You're at a tavern discussing trade routes', 'A village market day where you're selling wares', 'Evening by the fireplace sharing tales of your travels', 'A guild meeting about craft techniques')"
             className="min-h-[80px] text-sm"
           />
           <div className="flex justify-end">
