@@ -66,7 +66,7 @@ const CharacterHeader = () => {
     >
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center">
+          <Link to="/characters" className="flex items-center">
             <Logo 
               size="md" 
               className="text-foreground"
