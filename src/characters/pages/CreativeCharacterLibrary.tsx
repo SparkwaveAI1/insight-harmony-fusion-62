@@ -14,8 +14,8 @@ const CreativeCharacterLibrary = () => {
   // Filter characters that were created through Creative Genesis (source field or specific markers)
   const creativeCharacters = characters?.filter(character => 
     character.metadata?.source === 'creative-genesis' || 
-    character.backstory?.includes('Creative Character Genesis') ||
-    character.description?.includes('Creative Character Genesis')
+    character.prompt?.includes('Creative Character Genesis') ||
+    character.prompt?.includes('Character Context:')
   ) || [];
 
   if (isLoading) {
@@ -64,9 +64,9 @@ const CreativeCharacterLibrary = () => {
                   {/* Character Avatar/Icon */}
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-                      {character.image_url ? (
+                      {character.profile_image_url ? (
                         <img 
-                          src={character.image_url} 
+                          src={character.profile_image_url} 
                           alt={character.name}
                           className="w-full h-full rounded-full object-cover"
                         />
@@ -78,7 +78,7 @@ const CreativeCharacterLibrary = () => {
                       <h3 className="font-semibold text-lg">{character.name}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        {character.date_of_birth || 'Unknown Era'}
+                        {character.historical_period || character.metadata?.era || 'Unknown Era'}
                       </div>
                     </div>
                   </div>
@@ -86,13 +86,13 @@ const CreativeCharacterLibrary = () => {
                   {/* Character Details */}
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground line-clamp-3">
-                      {character.description}
+                      {character.prompt || character.metadata?.description || 'No description available'}
                     </p>
                     
-                    {character.location && (
+                    {(character.region || character.metadata?.location) && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <span>📍</span>
-                        <span>{character.location}</span>
+                        <span>{character.region || character.metadata?.location}</span>
                       </div>
                     )}
                   </div>
@@ -103,9 +103,9 @@ const CreativeCharacterLibrary = () => {
                       <Sparkles className="h-3 w-3 mr-1" />
                       Creative Genesis
                     </Badge>
-                    {character.occupation && (
+                    {(character.metadata?.occupation || character.social_class) && (
                       <Badge variant="outline" className="text-xs">
-                        {character.occupation}
+                        {character.metadata?.occupation || character.social_class}
                       </Badge>
                     )}
                   </div>
