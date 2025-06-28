@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
@@ -182,7 +181,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormItem>
                       <FormLabel>Height</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., tall, average, 5'8\", 175cm" {...field} />
+                        <Input placeholder="e.g., tall, average, 5 feet 8 inches, 175cm" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
