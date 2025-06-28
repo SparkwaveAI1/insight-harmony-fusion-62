@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { BarChart3, Users, MessageSquare, Sparkles, Clock } from "lucide-react";
+import { BarChart3, Users, MessageSquare, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Card from "@/components/ui-custom/Card";
 import Section from "@/components/ui-custom/Section";
@@ -44,10 +44,10 @@ const DashboardContent = () => {
           <Card className="p-6 hover:shadow-md transition-shadow">
             <Link to="/characters-home">
               <div className="text-center">
-                <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+                <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Characters</h3>
                 <p className="text-muted-foreground mb-4">
-                  Create and manage AI characters
+                  Create and manage historical characters
                 </p>
               </div>
             </Link>
@@ -63,12 +63,6 @@ const DashboardContent = () => {
               <Link to="/characters/create/historical">
                 <Clock className="h-4 w-4 mr-2" />
                 Create Historical Character
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/characters/create/creative">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Create Creative Character
               </Link>
             </Button>
           </div>

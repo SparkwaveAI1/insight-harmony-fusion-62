@@ -16,11 +16,13 @@ import CharacterEdit from './characters/pages/CharacterEdit';
 import CharacterChat from './characters/pages/CharacterChat';
 import CharactersHome from './characters/pages/CharactersHome';
 import HistoricalCharacterCreate from './characters/pages/HistoricalCharacterCreate';
-import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
 import HistoricalCharactersDashboard from './characters/pages/HistoricalCharactersDashboard';
-import CreativeCharactersDashboard from './characters/pages/CreativeCharactersDashboard';
 import Collections from './pages/Collections';
 import Projects from './pages/Projects';
+
+// Temporarily remove Creative Characters routes until backend is set up
+// import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
+// import CreativeCharactersDashboard from './characters/pages/CreativeCharactersDashboard';
 
 function App() {
   return (
@@ -41,16 +43,18 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="*" element={<PageNotFound />} />
           
-          {/* Character routes */}
+          {/* Character routes - only Historical for now */}
           <Route path="/characters" element={<CharacterLibrary />} />
           <Route path="/characters-home" element={<CharactersHome />} />
           <Route path="/characters/historical" element={<HistoricalCharactersDashboard />} />
-          <Route path="/characters/creative" element={<CreativeCharactersDashboard />} />
           <Route path="/characters/create/historical" element={<HistoricalCharacterCreate />} />
-          <Route path="/characters/create/creative" element={<CreativeCharacterCreate />} />
           <Route path="/characters/:characterId" element={<CharacterDetail />} />
           <Route path="/characters/:characterId/edit" element={<CharacterEdit />} />
           <Route path="/characters/:characterId/chat" element={<CharacterChat />} />
+          
+          {/* Temporarily disabled Creative Characters routes */}
+          {/* <Route path="/characters/creative" element={<CreativeCharactersDashboard />} />
+          <Route path="/characters/create/creative" element={<CreativeCharacterCreate />} /> */}
         </Routes>
       </div>
     </Router>

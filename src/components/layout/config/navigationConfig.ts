@@ -8,7 +8,7 @@ import {
   Folder,
   FlaskConical,
   Mail,
-  Brain,
+  Clock,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -30,7 +30,7 @@ export const navigationMenuItems = [
   {
     title: "Characters",
     url: "/characters-home",
-    icon: Brain,
+    icon: Clock,
   },
   {
     title: "Collections",
@@ -69,7 +69,7 @@ export const headerNavItems = [
   {
     title: "Characters",
     href: "/characters-home",
-    icon: Brain,
+    icon: Clock,
   },
   {
     title: "PRSNA",

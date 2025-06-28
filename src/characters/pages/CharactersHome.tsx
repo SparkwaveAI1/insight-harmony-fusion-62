@@ -18,7 +18,7 @@ const CharactersHome = () => {
               Character Creation & Management
             </h1>
             <p className="text-muted-foreground text-lg md:text-xl mb-8">
-              Design, manage, and chat with historical and creative characters
+              Design, manage, and chat with historical characters
             </p>
           </div>
         </div>
@@ -28,13 +28,13 @@ const CharactersHome = () => {
         {/* Character Dashboards Section */}
         <Section>
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Character Dashboards</h2>
+            <h2 className="text-3xl font-bold mb-4">Character Dashboard</h2>
             <p className="text-lg text-muted-foreground">
-              Manage your characters by type
+              Manage your historical characters
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+          <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto mb-12">
             {/* Historical Characters Dashboard */}
             <div 
               className="cursor-pointer" 
@@ -55,24 +55,16 @@ const CharactersHome = () => {
               </Card>
             </div>
 
-            {/* Creative Characters Dashboard */}
-            <div 
-              className="cursor-pointer"
-              onClick={() => navigate('/characters/creative')}
-            >
-              <Card className="p-8 hover:shadow-lg transition-shadow">
-                <div className="text-center">
-                  <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-3">Creative Characters</h3>
-                  <p className="text-muted-foreground mb-6">
-                    View and manage all your creative characters. Original characters from any 
-                    genre, species, or universe for fantasy, sci-fi, and imaginative storytelling.
-                  </p>
-                  <Button className="w-full">
-                    View Creative Dashboard
-                  </Button>
-                </div>
-              </Card>
+            {/* Creative Characters - Coming Soon */}
+            <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
+              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-bold mb-3 text-muted-foreground">Creative Characters</h3>
+              <p className="text-muted-foreground mb-6">
+                Coming soon! Create original characters from any genre, species, or universe.
+              </p>
+              <Button disabled variant="outline" className="w-full">
+                Coming Soon
+              </Button>
             </div>
           </div>
 
@@ -87,10 +79,6 @@ const CharactersHome = () => {
               <Button onClick={() => navigate('/characters/create/historical')}>
                 <Clock className="h-4 w-4 mr-2" />
                 Create Historical Character
-              </Button>
-              <Button onClick={() => navigate('/characters/create/creative')}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Create Creative Character
               </Button>
               <Button variant="outline" onClick={() => navigate('/characters')}>
                 <Library className="h-4 w-4 mr-2" />
