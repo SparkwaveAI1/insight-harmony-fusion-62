@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Sparkles } from 'lucide-react';
+import { Clock, Sparkles, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -18,73 +18,85 @@ const CharactersHome = () => {
               Character Creation & Management
             </h1>
             <p className="text-muted-foreground text-lg md:text-xl mb-8">
-              Design, manage, and chat with historical and fictional characters
+              Design, manage, and chat with historical and creative characters
             </p>
           </div>
         </div>
       </Section>
       
       <div className="container mx-auto px-4 py-8">
-        {/* Character Types Section */}
+        {/* Character Dashboards Section */}
         <Section>
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Choose Your Character Type</h2>
+            <h2 className="text-3xl font-bold mb-4">Character Dashboards</h2>
             <p className="text-lg text-muted-foreground">
-              Create different types of characters for various purposes
+              Manage your characters by type
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-            {/* Historical Characters */}
+            {/* Historical Characters Dashboard */}
             <div 
               className="cursor-pointer" 
-              onClick={() => navigate('/characters/create/historical')}
+              onClick={() => navigate('/characters/historical')}
             >
               <Card className="p-8 hover:shadow-lg transition-shadow">
                 <div className="text-center">
                   <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
                   <h3 className="text-xl font-bold mb-3">Historical Characters</h3>
                   <p className="text-muted-foreground mb-6">
-                    Create characters based on real historical figures with accurate cultural context, 
-                    period-appropriate traits, and historical authenticity.
+                    View and manage all your historical characters in one place. Based on real 
+                    historical figures with authentic cultural context and period-appropriate traits.
                   </p>
                   <Button className="w-full">
-                    Create Historical Character
+                    View Historical Dashboard
                   </Button>
                 </div>
               </Card>
             </div>
 
-            {/* Creative Characters */}
+            {/* Creative Characters Dashboard */}
             <div 
               className="cursor-pointer"
-              onClick={() => navigate('/characters/create/creative')}
+              onClick={() => navigate('/characters/creative')}
             >
               <Card className="p-8 hover:shadow-lg transition-shadow">
                 <div className="text-center">
                   <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
                   <h3 className="text-xl font-bold mb-3">Creative Characters</h3>
                   <p className="text-muted-foreground mb-6">
-                    Design original characters from any genre, species, or universe. Perfect for 
-                    fantasy, sci-fi, and imaginative storytelling.
+                    View and manage all your creative characters. Original characters from any 
+                    genre, species, or universe for fantasy, sci-fi, and imaginative storytelling.
                   </p>
                   <Button className="w-full">
-                    Create Creative Character
+                    View Creative Dashboard
                   </Button>
                 </div>
               </Card>
             </div>
           </div>
 
-          {/* Character Library Section */}
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4">Explore Your Character Library</h2>
+          {/* Quick Actions Section */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Quick Actions</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              View, manage, and interact with all your created characters
+              Create new characters or browse your complete library
             </p>
-            <Button onClick={() => navigate('/characters')}>
-              Go to Character Library
-            </Button>
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button onClick={() => navigate('/characters/create/historical')}>
+                <Clock className="h-4 w-4 mr-2" />
+                Create Historical Character
+              </Button>
+              <Button onClick={() => navigate('/characters/create/creative')}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Create Creative Character
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/characters')}>
+                <Library className="h-4 w-4 mr-2" />
+                Browse All Characters
+              </Button>
+            </div>
           </div>
         </Section>
       </div>

@@ -16,8 +16,9 @@ import CharacterEdit from './characters/pages/CharacterEdit';
 import CharacterChat from './characters/pages/CharacterChat';
 import CharactersHome from './characters/pages/CharactersHome';
 import HistoricalCharacterCreate from './characters/pages/HistoricalCharacterCreate';
-import FictionalCharacterCreate from './characters/pages/FictionalCharacterCreate';
 import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
+import HistoricalCharactersDashboard from './characters/pages/HistoricalCharactersDashboard';
+import CreativeCharactersDashboard from './characters/pages/CreativeCharactersDashboard';
 import Collections from './pages/Collections';
 import Projects from './pages/Projects';
 
@@ -43,6 +44,8 @@ function App() {
           {/* Character routes */}
           <Route path="/characters" element={<CharacterLibrary />} />
           <Route path="/characters-home" element={<CharactersHome />} />
+          <Route path="/characters/historical" element={<HistoricalCharactersDashboard />} />
+          <Route path="/characters/creative" element={<CreativeCharactersDashboard />} />
           <Route path="/characters/create/historical" element={<HistoricalCharacterCreate />} />
           <Route path="/characters/create/creative" element={<CreativeCharacterCreate />} />
           <Route path="/characters/:characterId" element={<CharacterDetail />} />
