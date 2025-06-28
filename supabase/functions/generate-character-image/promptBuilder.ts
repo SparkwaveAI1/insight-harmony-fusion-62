@@ -1,115 +1,120 @@
 
-function getPhysicalDescription(characterData: any): string {
-  // Use the new direct fields first, fall back to metadata for backwards compatibility
+function getAgeHealthAppearance(characterData: any): string {
+  // Use new direct fields first, fall back to metadata for backwards compatibility
   const age = characterData.age || parseInt(characterData.metadata?.age) || 30;
-  const gender = characterData.gender || characterData.metadata?.gender || 'person';
+  const healthStatus = characterData.metadata?.physical_health_status || 'average';
+  const fitnessLevel = characterData.metadata?.fitness_activity_level || 0.5;
   
-  // Physical attributes from new direct fields or metadata
-  const physicalAppearance = characterData.physical_appearance || {};
-  const height = physicalAppearance.height || characterData.metadata?.height || 'average height';
-  const build = physicalAppearance.build_body_type || characterData.metadata?.build_body_type || 'average build';
-  const hairColor = physicalAppearance.hair_color || characterData.metadata?.hair_color || 'brown';
-  const hairStyle = physicalAppearance.hair_style || characterData.metadata?.hair_style || 'practical unstyled';
-  const eyeColor = physicalAppearance.eye_color || characterData.metadata?.eye_color || 'brown';
-  const skinTone = physicalAppearance.skin_tone || characterData.metadata?.skin_tone || 'natural complexion';
-  const ethnicity = physicalAppearance.ethnicity || characterData.metadata?.ethnicity || characterData.ethnicity;
-  
-  // Handle specific historical figures with known appearances
-  if (characterData.name && characterData.name.toLowerCase().includes('toussaint')) {
-    return `${age}-year-old Black ${gender}, ${height}, ${build}, short dark hair, dark eyes, dark complexion, of African descent`;
+  // Convert numeric fitness level to descriptive string
+  let fitnessDescription = 'average fitness';
+  if (typeof fitnessLevel === 'number') {
+    if (fitnessLevel >= 0.8) fitnessDescription = 'very fit and athletic';
+    else if (fitnessLevel >= 0.6) fitnessDescription = 'fit and active';
+    else if (fitnessLevel >= 0.4) fitnessDescription = 'moderate fitness';
+    else if (fitnessLevel >= 0.2) fitnessDescription = 'low fitness';
+    else fitnessDescription = 'sedentary lifestyle';
+  } else if (typeof fitnessLevel === 'string') {
+    // Handle string values if they exist
+    fitnessDescription = fitnessLevel.toLowerCase();
   }
   
-  // Build consolidated description with ethnicity consideration
-  let description = `${age}-year-old ${gender}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone}`;
-  
-  // Add ethnicity information if available
-  if (ethnicity && ethnicity !== 'Not specified') {
-    if (ethnicity.toLowerCase().includes('african') || ethnicity.toLowerCase().includes('black')) {
-      description = description.replace('natural complexion', 'dark complexion');
-      description += ', of African descent';
-    } else if (ethnicity.toLowerCase().includes('european') || ethnicity.toLowerCase().includes('white')) {
-      description += ', of European descent';
-    } else if (ethnicity.toLowerCase().includes('indigenous') || ethnicity.toLowerCase().includes('native')) {
-      description += ', of Indigenous descent';
-    } else if (ethnicity.toLowerCase().includes('asian')) {
-      description += ', of Asian descent';
-    } else if (ethnicity.toLowerCase().includes('middle eastern')) {
-      description += ', of Middle Eastern descent';
-    } else if (ethnicity.toLowerCase().includes('mixed') || ethnicity.toLowerCase().includes('multiracial')) {
-      description += ', of mixed heritage';
-    }
-  }
-  
-  return description;
-}
-
-function getHistoricalClothing(characterData: any): string {
-  // Use new direct fields first, fall back to metadata
-  const historicalPeriod = characterData.historical_period || characterData.metadata?.historical_period || '1700s';
-  const socialClass = characterData.social_class || characterData.metadata?.social_class || 'middle class';
-  const region = characterData.region || characterData.metadata?.region || 'European';
-  const occupation = characterData.occupation || characterData.metadata?.occupation;
-  
-  const isCaribbean = region.toLowerCase().includes('haiti') || 
-                     region.toLowerCase().includes('caribbean') || 
-                     region.toLowerCase().includes('santo domingo');
-  
-  const isFrontier = region.toLowerCase().includes('virginia') || 
-                    region.toLowerCase().includes('frontier') || 
-                    region.toLowerCase().includes('colony') ||
-                    region.toLowerCase().includes('america') ||
-                    region.toLowerCase().includes('tn') ||
-                    region.toLowerCase().includes('tennessee');
-  
-  // Handle specific historical figures
-  if (characterData.name && characterData.name.toLowerCase().includes('toussaint')) {
-    return 'military uniform of a Haitian revolutionary general, 18th-century colonial military dress with tropical adaptations';
-  }
-  
-  let clothingQuality = 'well-worn middle-class';
-  if (socialClass.toLowerCase().includes('upper')) {
-    clothingQuality = 'fine but lived-in upper-class';
-  } else if (socialClass.toLowerCase().includes('lower')) {
-    clothingQuality = 'practical worn working-class';
+  let ageAppearance = '';
+  if (age < 25) {
+    ageAppearance = 'youthful appearance, clear skin, energetic posture';
+  } else if (age < 35) {
+    ageAppearance = 'young adult appearance, confident bearing';
+  } else if (age < 45) {
+    ageAppearance = 'mature adult appearance, established presence';
+  } else if (age < 55) {
+    ageAppearance = 'middle-aged appearance, distinguished look';
+  } else if (age < 65) {
+    ageAppearance = 'mature appearance, some signs of aging';
   } else {
-    clothingQuality = 'well-worn middle-class';
+    ageAppearance = 'older adult appearance, wisdom in features, possible gray hair';
   }
   
-  // Handle military occupations
-  if (occupation && (occupation.toLowerCase().includes('military') || 
-                    occupation.toLowerCase().includes('general') || 
-                    occupation.toLowerCase().includes('soldier'))) {
-    return `${clothingQuality} military uniform appropriate for ${historicalPeriod}`;
-  }
+  // Combine age and fitness for overall health appearance
+  const healthAppearance = healthStatus === 'excellent' ? 'vibrant and healthy' :
+                           healthStatus === 'good' ? 'healthy and well-maintained' :
+                           healthStatus === 'poor' ? 'showing signs of health challenges' :
+                           'average health appearance';
   
-  // Regional clothing adaptations
-  if (isCaribbean) {
-    return `${clothingQuality} ${historicalPeriod} clothing adapted for tropical climate`;
-  }
-  
-  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    return `${clothingQuality} 1700s clothing`;
-  }
-  
-  return `${clothingQuality} ${historicalPeriod} clothing`;
+  return `${ageAppearance}, ${fitnessDescription}, ${healthAppearance}`;
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Building character portrait prompt with enhanced template");
+  console.log("Generating enhanced realistic character image prompt from character data");
   
-  // Use new direct fields first, fall back to metadata
+  // Use new direct fields first, fall back to metadata for backwards compatibility
+  const age = characterData.age || parseInt(characterData.metadata?.age) || 30;
+  const gender = characterData.gender || characterData.metadata?.gender || 'person';
+  const ethnicity = characterData.ethnicity || characterData.metadata?.ethnicity || characterData.physical_appearance?.ethnicity || 'diverse';
+  const region = characterData.region || characterData.metadata?.region || 'general';
+  
+  // Physical characteristics from physical_appearance or metadata
+  const physicalAppearance = characterData.physical_appearance || {};
+  const height = physicalAppearance.height_build || characterData.metadata?.height || 'average height';
+  const bodyType = physicalAppearance.height_build || characterData.metadata?.build_body_type || 'average build';
+  const hairColor = physicalAppearance.hair || characterData.metadata?.hair_color || 'brown';
+  const hairStyle = physicalAppearance.hair || characterData.metadata?.hair_style || 'medium length';
+  const eyeColor = physicalAppearance.eye_color || characterData.metadata?.eye_color || 'brown';
+  const skinTone = physicalAppearance.skin_tone || characterData.metadata?.skin_tone || 'medium';
+  
+  // Clothing and style
+  const socialClass = characterData.social_class || characterData.metadata?.social_class || 'middle class';
+  const occupation = characterData.occupation || characterData.metadata?.occupation || 'professional';
   const historicalPeriod = characterData.historical_period || characterData.metadata?.historical_period || '1700s';
-  const region = characterData.region || characterData.metadata?.region || 'Europe';
   
-  // Get physical description and clothing
-  const physicalDescription = getPhysicalDescription(characterData);
-  const clothingDescription = getHistoricalClothing(characterData);
+  // Enhanced appearance details
+  const ageHealthAppearance = getAgeHealthAppearance(characterData);
   
-  // Build the prompt with enhanced accuracy
-  const century = historicalPeriod.includes('1700') || historicalPeriod.includes('18th') ? '18th-century' : `${historicalPeriod}`;
+  // Build comprehensive prompt
+  let prompt = `Professional portrait of a ${age}-year-old ${gender}`;
   
-  const prompt = `Historical portrait painting style. Accurate historical representation. ${physicalDescription}, wearing ${clothingDescription}, ${century} ${region}. Professional historical accuracy, dignified pose, period-appropriate lighting and composition.`;
+  if (ethnicity && ethnicity !== 'diverse' && ethnicity !== 'not specified') {
+    prompt += ` of ${ethnicity} ethnicity`;
+  }
   
-  console.log("Generated enhanced character portrait prompt:", prompt);
+  // Physical features
+  prompt += `, ${ageHealthAppearance}`;
+  prompt += `, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin tone`;
+  prompt += `, ${bodyType}, ${height}`;
+  
+  // Historical context and clothing
+  let clothingStyle = 'period-appropriate attire';
+  if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
+    clothingStyle = '18th-century clothing';
+  } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
+    clothingStyle = '19th-century attire';
+  } else if (historicalPeriod.includes('medieval')) {
+    clothingStyle = 'medieval clothing';
+  }
+  
+  // Adjust clothing by social class
+  if (socialClass.toLowerCase().includes('upper')) {
+    clothingStyle = `fine ${clothingStyle}`;
+  } else if (socialClass.toLowerCase().includes('lower')) {
+    clothingStyle = `working-class ${clothingStyle}`;
+  }
+  
+  prompt += `, dressed in ${clothingStyle} appropriate for a ${occupation}`;
+  
+  // Regional influence
+  if (region && region !== 'general') {
+    prompt += `, ${region} regional style`;
+  }
+  
+  // Photography style - professional portrait quality
+  prompt += `, professional lighting, clean background, high quality portrait photography`;
+  prompt += `, realistic, photorealistic, detailed facial features, natural expression`;
+  prompt += `, shot with professional camera, studio lighting, crisp details`;
+  
+  // Historical accuracy
+  prompt += `, historically accurate ${historicalPeriod} portrait style`;
+  
+  // Final quality modifiers
+  prompt += `, 4K resolution, professional headshot style, historical portrait quality`;
+  
+  console.log("Generated enhanced character image prompt:", prompt);
   return prompt;
 }
