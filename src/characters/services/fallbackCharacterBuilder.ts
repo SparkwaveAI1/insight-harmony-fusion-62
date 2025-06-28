@@ -16,33 +16,77 @@ export function buildFallbackCharacter(
 ): Character {
   const fallbackTraits = generateFallbackTraits(formData);
   
-  // Create a mock AI-generated traits object with the fallback traits
-  // This allows us to use the same intelligent assignment logic as the main builder
+  // Create a comprehensive mock AI-generated traits object that mimics what the persona system receives
+  // This ensures we use the same intelligent assignment logic as the main builder
   const mockAiGeneratedTraits = {
+    // Core personality traits from fallback generator
     ...fallbackTraits,
-    // Add demographic fields that would normally come from AI generation
-    gender: formData.gender || null, // Let the metadata builder handle probability assignment
-    ethnicity: formData.ethnicity || null,
-    race_ethnicity: formData.ethnicity || null,
-    occupation: formData.occupation || null,
-    social_class: formData.social_class || null,
-    social_class_identity: formData.social_class || null,
-    region: formData.region || null,
-    personality_traits: formData.personality_traits || null,
-    backstory: formData.backstory || null,
-    historical_context: formData.historical_context || null,
+    
+    // Demographic fields that would normally come from AI generation or user input
+    // Set to null so buildCharacterMetadata can handle intelligent assignment
+    gender: null, // Will be assigned based on prompt analysis or probability
+    ethnicity: null,
+    race_ethnicity: null,
+    cultural_background: null,
+    occupation: null,
+    social_class: null,
+    social_class_identity: null,
+    region: null,
+    marital_status: null,
+    education_level: null,
+    
+    // Physical appearance fields
+    physical_appearance: {
+      height_build: null,
+      hair: null,
+      eye_color: null,
+      skin_tone: null,
+      ethnicity: null,
+    },
+    height: null,
+    build_body_type: null,
+    hair_color: null,
+    hair_style: null,
+    eye_color: null,
+    skin_tone: null,
+    
+    // Relationship and family dynamics
+    relationships_family: null, // Will be assigned based on age and marital status
+    
+    // Health and background
+    physical_health_status: null,
+    mental_health_status: null,
+    fitness_activity_level: null,
+    religious_affiliation: null,
+    religious_practice_level: null,
+    language_proficiency: null,
+    
+    // Context fields from form data (these take precedence)
+    personality_traits: formData.personality_traits,
+    backstory: formData.backstory,
+    historical_context: formData.historical_context,
+    
+    // Location data from form
+    location: formData.location,
+    birthplace: formData.location,
+    location_history: {
+      grew_up_in: formData.location,
+      current_residence: formData.location,
+      places_lived: [formData.location]
+    }
   };
   
-  // Use the same intelligent assignment as the main builder
+  // Use the same intelligent assignment logic as the main builder
+  // This will handle AI-generated -> user-specified -> probability-based assignment
   const metadata = buildCharacterMetadata(formData, mockAiGeneratedTraits);
   
   const trait_profile = {
     ...fallbackTraits,
     physical_appearance: {
-      height_build: 'average height and build',
-      hair: 'brown hair',
-      eye_color: 'brown eyes',
-      skin_tone: 'natural complexion',
+      height_build: metadata.height + ' and ' + metadata.build_body_type,
+      hair: metadata.hair_color + ' hair',
+      eye_color: metadata.eye_color,
+      skin_tone: metadata.skin_tone,
       ethnicity: metadata.race_ethnicity,
     },
   };
@@ -72,10 +116,10 @@ export function buildFallbackCharacter(
     social_class: metadata.social_class_identity,
     region: metadata.region,
     physical_appearance: {
-      height_build: 'average height and build',
-      hair: 'brown hair',
-      eye_color: 'brown eyes',
-      skin_tone: 'natural complexion',
+      height_build: metadata.height + ' and ' + metadata.build_body_type,
+      hair: metadata.hair_color + ' hair',
+      eye_color: metadata.eye_color,
+      skin_tone: metadata.skin_tone,
       ethnicity: metadata.race_ethnicity,
     },
   };

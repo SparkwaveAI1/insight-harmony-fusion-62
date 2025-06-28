@@ -1,9 +1,10 @@
+
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
 import { v4 as uuidv4 } from 'uuid';
 
-// Probability-based trait assignment functions
+// Probability-based trait assignment functions - same as persona system
 function assignGenderByProbability(): string {
   const rand = Math.random();
   if (rand < 0.51) return 'female';
@@ -127,18 +128,73 @@ function assignRelationshipAndFamilyDynamics(age: number, maritalStatus: string)
   };
 }
 
+// Comprehensive trait assignment using the same logic as persona system
+function assignTraitsFromMultipleSources(
+  aiTraits: any, 
+  userTraits: any, 
+  probabilityFn: () => any,
+  fieldMappings: string[] = []
+) {
+  // Check AI traits first (multiple possible field names)
+  for (const field of fieldMappings) {
+    if (aiTraits[field]) return aiTraits[field];
+  }
+  
+  // Then check user traits
+  if (userTraits) return userTraits;
+  
+  // Finally use probability-based assignment
+  return probabilityFn();
+}
+
 export function buildCharacterMetadata(formData: HistoricalCharacterFormData, aiGeneratedTraits: any) {
   const age = parseInt(formData.age) || 30;
   
-  // Use AI-generated traits first, then user-specified traits, then probability-based assignment
-  // This ensures consistency with the user's prompt and specified traits
-  const gender = aiGeneratedTraits.gender || formData.gender || assignGenderByProbability();
-  const ethnicity = aiGeneratedTraits.ethnicity || aiGeneratedTraits.race_ethnicity || formData.ethnicity || assignEthnicityByProbability();
-  const occupation = aiGeneratedTraits.occupation || formData.occupation || assignOccupationByProbability();
-  const socialClass = aiGeneratedTraits.social_class || aiGeneratedTraits.social_class_identity || formData.social_class || assignSocialClassByProbability();
-  const maritalStatus = aiGeneratedTraits.marital_status || assignMaritalStatusByProbability(age);
-  const relationshipDynamics = aiGeneratedTraits.relationships_family || assignRelationshipAndFamilyDynamics(age, maritalStatus);
-  const region = aiGeneratedTraits.region || formData.region || formData.location || 'Rural England';
+  // Use the same intelligent assignment as personas - AI first, then user, then probability
+  const gender = assignTraitsFromMultipleSources(
+    aiGeneratedTraits, 
+    formData.gender, 
+    assignGenderByProbability,
+    ['gender']
+  );
+  
+  const ethnicity = assignTraitsFromMultipleSources(
+    aiGeneratedTraits, 
+    formData.ethnicity, 
+    assignEthnicityByProbability,
+    ['ethnicity', 'race_ethnicity', 'cultural_background']
+  );
+  
+  const occupation = assignTraitsFromMultipleSources(
+    aiGeneratedTraits, 
+    formData.occupation, 
+    assignOccupationByProbability,
+    ['occupation']
+  );
+  
+  const socialClass = assignTraitsFromMultipleSources(
+    aiGeneratedTraits, 
+    formData.social_class, 
+    assignSocialClassByProbability,
+    ['social_class', 'social_class_identity']
+  );
+  
+  const maritalStatus = assignTraitsFromMultipleSources(
+    aiGeneratedTraits, 
+    null, 
+    () => assignMaritalStatusByProbability(age),
+    ['marital_status']
+  );
+  
+  const relationshipDynamics = aiGeneratedTraits.relationships_family || 
+    assignRelationshipAndFamilyDynamics(age, maritalStatus);
+  
+  const region = assignTraitsFromMultipleSources(
+    aiGeneratedTraits, 
+    formData.region || formData.location, 
+    () => 'Rural England',
+    ['region', 'location']
+  );
 
   return {
     // Core user inputs
@@ -148,7 +204,7 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     location: formData.location,
     description: formData.description,
     
-    // Core Demographics - intelligently assigned
+    // Core Demographics - intelligently assigned using same logic as personas
     gender: gender,
     race_ethnicity: ethnicity,
     occupation: occupation,
@@ -157,7 +213,7 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     marital_status: maritalStatus,
     education_level: aiGeneratedTraits.education_level || 'basic education',
     
-    // Location & Environment
+    // Location & Environment - same as persona system
     urban_rural_context: aiGeneratedTraits.urban_rural_context || 'rural',
     location_history: {
       grew_up_in: aiGeneratedTraits.birthplace || aiGeneratedTraits.location_history?.grew_up_in || formData.location,
@@ -165,15 +221,15 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
       places_lived: [formData.location]
     },
     
-    // Relationships & Family - fully assigned based on AI or probability
+    // Relationships & Family - fully assigned based on AI or probability (same as personas)
     relationships_family: relationshipDynamics,
     
-    // Health Profile
+    // Health Profile - same defaults as persona system
     physical_health_status: aiGeneratedTraits.physical_health_status || 'average',
     mental_health_status: aiGeneratedTraits.mental_health_status || 'stable',
     fitness_activity_level: aiGeneratedTraits.fitness_activity_level || 'moderate',
     
-    // Physical Description
+    // Physical Description - same logic as personas
     height: aiGeneratedTraits.physical_appearance?.height_build || aiGeneratedTraits.height || 'average height',
     build_body_type: aiGeneratedTraits.physical_appearance?.height_build || aiGeneratedTraits.build_body_type || 'average build',
     hair_color: aiGeneratedTraits.physical_appearance?.hair || aiGeneratedTraits.hair_color || 'brown',
@@ -181,7 +237,7 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     eye_color: aiGeneratedTraits.physical_appearance?.eye_color || aiGeneratedTraits.eye_color || 'brown',
     skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || aiGeneratedTraits.skin_tone || 'natural complexion',
     
-    // Cultural & Background
+    // Cultural & Background - same as persona system
     religious_affiliation: aiGeneratedTraits.religious_affiliation || 'Christian',
     religious_practice_level: aiGeneratedTraits.religious_practice_level || 'moderate',
     cultural_background: aiGeneratedTraits.cultural_background || ethnicity,
