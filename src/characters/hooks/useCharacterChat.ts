@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useCharacterHook } from './useCharacterHook';
+import { useCharacter } from './useCharacter';
 import { Message, ChatMode } from '../types/chatTypes';
 import { Character } from '../types/characterTraitTypes';
 import { breakIntoMultipleMessages } from '../utils/characterChatUtils';
@@ -11,7 +11,7 @@ export const useCharacterChat = (characterId: string, chatMode: ChatMode = 'conv
   const [messages, setMessages] = useState<Message[]>([]);
   const [isResponding, setIsResponding] = useState(false);
   const [conversationContext, setConversationContext] = useState<string>('');
-  const { loadCharacter, activeCharacter, isLoading, error } = useCharacterHook();
+  const { loadCharacter, activeCharacter, isLoading, error } = useCharacter();
 
   // Load character on mount
   useEffect(() => {

@@ -6,7 +6,7 @@ import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import Section from '@/components/ui-custom/Section';
 import CharacterChatInterface from '../components/CharacterChatInterface';
-import { PersonaProvider } from '@/context/PersonaProvider';
+import { CharacterProvider } from '@/context/CharacterProvider';
 import { Toaster } from 'sonner';
 
 // Create a QueryClient for this route
@@ -20,7 +20,7 @@ const CharacterChat = () => {
   }
 
   return (
-    <PersonaProvider>
+    <CharacterProvider>
       <QueryClientProvider client={queryClient}>
         <div className="min-h-screen flex flex-col bg-background">
           <CharacterHeader />
@@ -41,7 +41,7 @@ const CharacterChat = () => {
           <Toaster />
         </div>
       </QueryClientProvider>
-    </PersonaProvider>
+    </CharacterProvider>
   );
 };
 
