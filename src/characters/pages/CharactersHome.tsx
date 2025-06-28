@@ -115,7 +115,7 @@ const CharactersHome = () => {
 
       <main className="relative pt-20">
         {/* Hero Section with Background Image */}
-        <Section className="text-center py-32 relative overflow-hidden min-h-screen flex items-center">
+        <Section className="text-center relative overflow-hidden min-h-screen flex items-start justify-center pt-24">
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -124,17 +124,17 @@ const CharactersHome = () => {
             }}
           >
             {/* Dark overlay for text readability */}
-            <div className="absolute inset-0 bg-black/60"></div>
+            <div className="absolute inset-0 bg-black/50"></div>
           </div>
           
           <div className="max-w-4xl mx-auto relative z-10">
-            <h1 className="text-6xl font-sans font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-6">
-              PersonaAI Characters
+            <h1 className="text-7xl font-orbitron font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-16 drop-shadow-2xl tracking-wider">
+              Character Genesis
             </h1>
-            <p className="text-xl text-gray-100 mb-4 drop-shadow-lg">
+            <p className="text-xl text-gray-100 mb-6 drop-shadow-lg">
               Step into the minds of generals, poets, rebels, and androids.
             </p>
-            <p className="text-lg text-gray-200 mb-8 drop-shadow-lg">
+            <p className="text-lg text-gray-200 mb-12 drop-shadow-lg">
               Build them. Chat with them. Challenge them.
               <br />
               🧬 Every character thinks, remembers, and evolves.
