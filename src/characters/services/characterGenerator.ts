@@ -16,16 +16,13 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     // Demographics
     age: parseInt(formData.age) || 30,
     gender: formData.gender || 'male',
-    historical_period: formData.historical_period || '1700s',
     social_class: formData.social_class || 'middle class',
     region: formData.region || 'Europe',
     
     // Physical appearance
-    height: formData.height || 'average height',
-    build_body_type: formData.build_body_type || 'average build',
-    hair_color: formData.hair_color || 'brown',
-    hair_style: formData.hair_style || 'practical unstyled',
-    eye_color: formData.eye_color || 'brown',
+    height_build: formData.height_build || 'average height and build',
+    hair: formData.hair || 'brown hair',
+    eye_color: formData.eye_color || 'brown eyes',
     skin_tone: formData.skin_tone || 'natural complexion',
     
     // Basic info
@@ -43,11 +40,9 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
 
   // Build physical appearance object
   const physical_appearance = {
-    height: formData.height || 'average height',
-    build_body_type: formData.build_body_type || 'average build',
-    hair_color: formData.hair_color || 'brown',
-    hair_style: formData.hair_style || 'practical unstyled',
-    eye_color: formData.eye_color || 'brown',
+    height_build: formData.height_build || 'average height and build',
+    hair: formData.hair || 'brown hair',
+    eye_color: formData.eye_color || 'brown eyes',
     skin_tone: formData.skin_tone || 'natural complexion',
   };
 
@@ -160,11 +155,9 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     
     // Character-specific physical traits from form data
     physical_appearance: {
-      height: formData.height || 'average height',
-      build_body_type: formData.build_body_type || 'average build',
-      hair_color: formData.hair_color || 'brown',
-      hair_style: formData.hair_style || 'practical unstyled',
-      eye_color: formData.eye_color || 'brown',
+      height_build: formData.height_build || 'average height and build',
+      hair: formData.hair || 'brown hair',
+      eye_color: formData.eye_color || 'brown eyes',
       skin_tone: formData.skin_tone || 'natural complexion',
     },
     
@@ -189,7 +182,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     speech_register: 'formal',
     regional_influence: formData.region || 'European',
     professional_or_educational_influence: formData.occupation || null,
-    cultural_speech_patterns: `${formData.historical_period || '1700s'} speech patterns`,
+    cultural_speech_patterns: 'Historical speech patterns',
     generational_or_peer_influence: null,
     speaking_style: {
       formal: true,
@@ -224,7 +217,6 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     // New demographic fields
     age: parseInt(formData.age) || 30,
     gender: formData.gender || 'male',
-    historical_period: formData.historical_period || '1700s',
     social_class: formData.social_class || 'middle class',
     region: formData.region || 'Europe',
     physical_appearance,

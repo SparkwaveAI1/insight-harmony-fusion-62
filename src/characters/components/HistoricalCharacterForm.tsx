@@ -24,13 +24,10 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
       age: '',
       location: '',
       gender: '',
-      historical_period: '',
       social_class: '',
       region: '',
-      height: '',
-      build_body_type: '',
-      hair_color: '',
-      hair_style: '',
+      height_build: '',
+      hair: '',
       eye_color: '',
       skin_tone: '',
       description: '',
@@ -55,7 +52,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   <FormItem>
                     <FormLabel>Full Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter character's full name" {...field} />
+                      <Input placeholder="" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -70,7 +67,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormItem>
                       <FormLabel>Birth Date *</FormLabel>
                       <FormControl>
-                        <Input placeholder="March 15, 1767" {...field} />
+                        <Input placeholder="" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -84,7 +81,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormItem>
                       <FormLabel>Age *</FormLabel>
                       <FormControl>
-                        <Input placeholder="56" {...field} />
+                        <Input placeholder="" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -98,7 +95,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormItem>
                       <FormLabel>Gender *</FormLabel>
                       <FormControl>
-                        <Input placeholder="male, female" {...field} />
+                        <Input placeholder="" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -114,7 +111,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormItem>
                       <FormLabel>Location *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Virginia, United States" {...field} />
+                        <Input placeholder="" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -123,32 +120,18 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
 
                 <FormField
                   control={form.control}
-                  name="historical_period"
+                  name="occupation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Historical Period *</FormLabel>
+                      <FormLabel>Primary Occupation</FormLabel>
                       <FormControl>
-                        <Input placeholder="1700s, 18th Century" {...field} />
+                        <Input placeholder="" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="occupation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Occupation</FormLabel>
-                    <FormControl>
-                      <Input placeholder="President, Military General, Scholar" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
           </FormSectionWrapper>
 
@@ -157,12 +140,12 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="height"
+                  name="height_build"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Height & Build</FormLabel>
                       <FormControl>
-                        <Input placeholder="tall, stocky build" {...field} />
+                        <Input placeholder="e.g., tall, average, 5 feet 8 inches, 175cm" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -171,12 +154,12 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
 
                 <FormField
                   control={form.control}
-                  name="hair_color"
+                  name="hair"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hair</FormLabel>
                       <FormControl>
-                        <Input placeholder="dark brown, powdered wig" {...field} />
+                        <Input placeholder="e.g., dark brown, powdered wig" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

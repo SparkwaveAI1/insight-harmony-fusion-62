@@ -10,15 +10,12 @@ export const historicalCharacterSchema = z.object({
   
   // Demographics
   gender: z.string().min(1, 'Gender is required'),
-  historical_period: z.string().min(1, 'Historical period is required'),
   social_class: z.string().optional(),
   region: z.string().optional(),
   
-  // Physical Appearance (consolidated)
-  height: z.string().optional(),
-  build_body_type: z.string().optional(),
-  hair_color: z.string().optional(),
-  hair_style: z.string().optional(),
+  // Physical Appearance
+  height_build: z.string().optional(),
+  hair: z.string().optional(),
   eye_color: z.string().optional(),
   skin_tone: z.string().optional(),
   
