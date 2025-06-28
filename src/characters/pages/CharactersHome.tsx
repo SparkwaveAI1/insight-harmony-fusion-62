@@ -1,105 +1,121 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Sparkles, Library } from 'lucide-react';
+import { Users, Play, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Card from '@/components/ui-custom/Card';
-import Section from '@/components/ui-custom/Section';
 
 const CharactersHome = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Section className="py-12 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-heading">
-              Character Creation & Management
-            </h1>
-            <p className="text-muted-foreground text-lg md:text-xl mb-8">
-              Design, manage, and chat with historical characters
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+      
+      {/* Navigation Header */}
+      <header className="relative z-10 p-6">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center space-x-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">P</span>
+            </div>
+            <span className="text-white text-xl font-bold">PersonaAI</span>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <Button 
+              onClick={() => navigate('/characters-home')}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium px-6"
+            >
+              Character Dashboard
+            </Button>
+            <Button 
+              onClick={() => navigate('/characters/create/historical')}
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Create Historical
+            </Button>
+            <Button 
+              onClick={() => navigate('/characters/create/creative')}
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Create Fictional
+            </Button>
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="text-white font-bold">S</span>
+            </div>
+            <Button 
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Logout
+            </Button>
           </div>
         </div>
-      </Section>
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Character Dashboards Section */}
-        <Section>
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Character Dashboard</h2>
-            <p className="text-lg text-muted-foreground">
-              Manage your historical characters
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-6">
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Main Title */}
+          <h1 className="text-6xl md:text-8xl font-bold mb-8 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent leading-tight">
+            CHARACTER
+            <br />
+            GENESIS
+          </h1>
+          
+          {/* Subtitle */}
+          <p className="text-white/90 text-xl md:text-2xl mb-4 font-light">
+            Step into the minds of generals, poets, rebels, and androids.
+          </p>
+          
+          {/* Description */}
+          <div className="space-y-2 mb-12">
+            <p className="text-white/80 text-lg">
+              Build them. Chat with them. Challenge them.
+            </p>
+            <p className="text-white/70 text-base flex items-center justify-center">
+              <span className="mr-2">🧬</span>
+              Every character thinks, remembers, and evolves.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-            {/* Historical Characters Dashboard */}
-            <div 
-              className="cursor-pointer" 
-              onClick={() => navigate('/characters/historical')}
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              onClick={() => navigate('/characters/create/historical')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-medium min-w-[200px]"
             >
-              <Card className="p-8 hover:shadow-lg transition-shadow">
-                <div className="text-center">
-                  <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-3">Historical Characters</h3>
-                  <p className="text-muted-foreground mb-6">
-                    View and manage all your historical characters in one place. Based on real 
-                    historical figures with authentic cultural context and period-appropriate traits.
-                  </p>
-                  <Button className="w-full">
-                    View Historical Dashboard
-                  </Button>
-                </div>
-              </Card>
-            </div>
-
-            {/* Creative Characters Dashboard */}
-            <div 
-              className="cursor-pointer" 
-              onClick={() => navigate('/characters/creative')}
-            >
-              <Card className="p-8 hover:shadow-lg transition-shadow">
-                <div className="text-center">
-                  <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-3">Creative Characters</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Create and manage original characters from any genre, species, or universe. 
-                    Design unique personalities with custom traits and backstories.
-                  </p>
-                  <Button className="w-full">
-                    View Creative Dashboard
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* Quick Actions Section */}
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Quick Actions</h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Create new characters or browse your complete library
-            </p>
+              <Users className="h-5 w-5 mr-2" />
+              Create a Character
+            </Button>
             
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button onClick={() => navigate('/characters/create/historical')}>
-                <Clock className="h-4 w-4 mr-2" />
-                Create Historical Character
-              </Button>
-              <Button onClick={() => navigate('/characters/create/creative')}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Create Creative Character
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/characters')}>
-                <Library className="h-4 w-4 mr-2" />
-                Browse All Characters
-              </Button>
-            </div>
+            <Button 
+              onClick={() => navigate('/research')}
+              variant="outline" 
+              className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-4 text-lg font-medium min-w-[200px]"
+            >
+              <Play className="h-5 w-5 mr-2" />
+              Run a Scenario
+            </Button>
+            
+            <Button 
+              onClick={() => navigate('/characters')}
+              variant="ghost" 
+              className="text-white/80 hover:text-white hover:bg-white/10 px-8 py-4 text-lg font-medium min-w-[200px]"
+            >
+              <Library className="h-5 w-5 mr-2" />
+              Browse All Characters
+            </Button>
           </div>
-        </Section>
-      </div>
+        </div>
+      </main>
+      
+      {/* Ambient Lighting Effects */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
     </div>
   );
 };
