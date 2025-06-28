@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -130,6 +131,35 @@ const CharacterDetail = () => {
             </div>
           </div>
 
+          {/* Character Image - Moved to top */}
+          <div className="mb-8">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Character Image</h3>
+              <div className="flex flex-col items-center space-y-4">
+                {activeCharacter.profile_image_url ? (
+                  <div className="w-full max-w-sm">
+                    <img 
+                      src={activeCharacter.profile_image_url} 
+                      alt={`${activeCharacter.name} portrait`}
+                      className="w-full h-auto rounded-lg border-4 border-primary/20 shadow-lg"
+                    />
+                  </div>
+                ) : (
+                  <CharacterAvatar 
+                    character={activeCharacter} 
+                    size="xl" 
+                    className="border-4 border-primary/20"
+                  />
+                )}
+                <GenerateCharacterImageButton
+                  character={activeCharacter}
+                  onImageGenerated={handleImageGenerated}
+                  className="w-full max-w-sm"
+                />
+              </div>
+            </Card>
+          </div>
+
           {/* Character Information */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Details */}
@@ -183,33 +213,6 @@ const CharacterDetail = () => {
 
             {/* Side Panel */}
             <div className="space-y-6">
-              {/* Character Image */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Character Image</h3>
-                <div className="flex flex-col items-center space-y-4">
-                  {activeCharacter.profile_image_url ? (
-                    <div className="w-full max-w-sm">
-                      <img 
-                        src={activeCharacter.profile_image_url} 
-                        alt={`${activeCharacter.name} portrait`}
-                        className="w-full h-auto rounded-lg border-4 border-primary/20 shadow-lg"
-                      />
-                    </div>
-                  ) : (
-                    <CharacterAvatar 
-                      character={activeCharacter} 
-                      size="xl" 
-                      className="border-4 border-primary/20"
-                    />
-                  )}
-                  <GenerateCharacterImageButton
-                    character={activeCharacter}
-                    onImageGenerated={handleImageGenerated}
-                    className="w-full"
-                  />
-                </div>
-              </Card>
-
               {/* Quick Stats */}
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
