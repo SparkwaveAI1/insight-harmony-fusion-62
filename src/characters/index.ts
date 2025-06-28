@@ -1,23 +1,26 @@
 
-// Character module exports - for clean imports
-export { default as CharacterDashboard } from './pages/CharacterDashboard';
-export { default as CharacterLibrary } from './pages/CharacterLibrary';
-export { default as CharactersHome } from './pages/CharactersHome';
-export { default as CharacterDetail } from './pages/CharacterDetail';
-export { default as CharacterEdit } from './pages/CharacterEdit';
-export { default as HistoricalCharacterCreate } from './pages/HistoricalCharacterCreate';
-export { default as FictionalCharacterCreate } from './pages/FictionalCharacterCreate';
-export { default as HistoricalCharacterForm } from './components/HistoricalCharacterForm';
-export { default as HistoricalCharacterHeader } from './components/HistoricalCharacterHeader';
-export { default as CharacterTraits } from './components/CharacterTraits';
-export { default as CharacterVisibilityToggle } from './components/CharacterVisibilityToggle';
+// Re-export all functions from the operations
+export { 
+  getCharacterById, 
+  getCharacterByCharacterId, 
+  getAllCharacters 
+} from './services/characterService';
+export { 
+  updateCharacterVisibility, 
+  updateCharacterName,
+  updateCharacterProfileImageUrl 
+} from './services/characterService';
+export { deleteCharacter } from './services/characterService';
+export { cloneCharacter } from './services/characterService';
+export { generateCharacter } from './services/characterGenerator';
+export { generateCharacterImage } from './services/characterImageService';
 
-// Export character trait types (renamed to avoid conflicts)
-export * from './types/characterTraitTypes';
-export * from './schemas/historicalCharacterSchema';
+// Re-export types
+export type { Character, CharacterTraitProfile } from './types/characterTraitTypes';
+export type { Message, ChatMode } from './types/chatTypes';
 
-// Export character services and hooks
-export * from './services/characterService';
-export * from './services/characterGenerator';
-export * from './hooks/useCharacter';
-export * from './hooks/useCharacters';
+// Re-export hooks
+export { useCharacterHook } from './hooks/useCharacterHook';
+export { useCharacterChat } from './hooks/useCharacterChat';
+export { useCharacter } from './hooks/useCharacter';
+export { useCharacters } from './hooks/useCharacters';

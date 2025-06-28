@@ -1,136 +1,132 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { Character } from '../types/characterTraitTypes';
-import { getCharacterById, getCharacterByCharacterId } from '../services/characterService';
-import { Message, ChatMode } from '../types/chatTypes';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { useCharacterHook } from './useCharacterHook';
+import { Message, ChatMode } from '../types/chatTypes';
+import { Character } from '../types/characterTraitTypes';
+import { breakIntoMultipleMessages } from '../utils/characterChatUtils';
+import { sendMessageToCharacter } from '../api/characterApiService';
 
-export const useCharacterChat = (characterId: string, chatMode: ChatMode) => {
-  const [activeCharacter, setActiveCharacter] = useState<Character | null>(null);
+export const useCharacterChat = (characterId: string, chatMode: ChatMode = 'conversation') => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isResponding, setIsResponding] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [conversationContext, setConversationContext] = useState<string>('');
+  const { loadCharacter, activeCharacter, isLoading, error } = useCharacterHook();
 
-  // Load character when hook initializes
-  const loadCharacter = useCallback(async () => {
-    console.log('=== LOADING CHARACTER FOR CHAT ===');
-    console.log('Character ID:', characterId);
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      let character: Character | null = null;
-      
-      // Try to load by character_id first, then by id
-      character = await getCharacterByCharacterId(characterId);
-      
-      if (!character) {
-        character = await getCharacterById(characterId);
-      }
-      
-      if (!character) {
-        throw new Error('Character not found');
-      }
-      
-      setActiveCharacter(character);
-      console.log('✅ Character loaded for chat:', character.name);
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load character';
-      console.error('Error loading character for chat:', error);
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [characterId]);
-
+  // Load character on mount
   useEffect(() => {
-    loadCharacter();
-  }, [loadCharacter]);
+    const initChat = async () => {
+      try {
+        await loadCharacter(characterId);
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+      }
+    };
 
-  const handleSendMessage = useCallback(async (messageContent: string, imageFile: File | null = null) => {
-    if (!activeCharacter || !messageContent.trim()) return;
+    initChat();
+  }, [characterId, loadCharacter]);
 
-    console.log('=== SENDING CHARACTER CHAT MESSAGE ===');
-    console.log('Character:', activeCharacter.name);
-    console.log('Message:', messageContent);
-    console.log('Chat Mode:', chatMode);
+  // Add initial greeting once character is loaded
+  useEffect(() => {
+    if (activeCharacter && messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: `Greetings! I am ${activeCharacter.name}.`,
+          timestamp: new Date(),
+        },
+        {
+          role: 'assistant',
+          content: `How may I assist you today?`,
+          timestamp: new Date(Date.now() + 500),
+        },
+      ]);
+    }
+  }, [activeCharacter, messages.length]);
 
-    // Add user message to chat
+  const handleSendMessage = async (inputMessage: string, imageFile: File | null = null) => {
+    if ((!inputMessage.trim() && !imageFile) || !activeCharacter || isResponding) return;
+
+    let imageBase64: string | undefined;
+    
+    if (imageFile) {
+      try {
+        imageBase64 = await convertFileToBase64(imageFile);
+      } catch (error) {
+        console.error('Error converting image to base64:', error);
+        toast.error('Failed to process image');
+        return;
+      }
+    }
+
     const userMessage: Message = {
       role: 'user',
-      content: messageContent,
+      content: inputMessage,
       timestamp: new Date(),
-      image: imageFile ? URL.createObjectURL(imageFile) : undefined
+      image: imageBase64,
     };
 
     setMessages(prev => [...prev, userMessage]);
     setIsResponding(true);
 
     try {
-      // Call the character-specific response function
-      const { data, error } = await supabase.functions.invoke('generate-character-response', {
-        body: {
-          character: activeCharacter,
-          message: messageContent,
-          conversationContext,
-          chatMode,
-          messageHistory: messages.map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        }
-      });
-
-      if (error) {
-        console.error('❌ Error generating character response:', error);
-        throw new Error(`Failed to generate response: ${error.message}`);
-      }
-
-      if (!data?.response) {
-        console.error('❌ No response received from character');
-        throw new Error('No response received from character');
-      }
-
-      console.log('✅ Character response received');
-
-      // Add character response to chat
-      const characterMessage: Message = {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, characterMessage]);
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
-      console.error('Error in character chat:', error);
-      toast.error(errorMessage);
+      console.log("Chat Mode:", chatMode);
+      console.log("Conversation Context:", conversationContext);
+      console.log("Sending message with image:", !!imageBase64);
       
-      // Add error message to chat
-      const errorResponse: Message = {
-        role: 'assistant',
-        content: `I apologize, but I'm having trouble responding right now. Please try again in a moment.`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
+      const response = await sendMessageToCharacter(
+        characterId,
+        inputMessage,
+        messages,
+        activeCharacter,
+        chatMode,
+        conversationContext,
+        imageBase64
+      );
+      
+      // Break long responses into multiple sequential messages
+      const messageSegments = breakIntoMultipleMessages(response);
+      
+      // Add messages with slight delays to simulate typing
+      for (let i = 0; i < messageSegments.length; i++) {
+        const segment = messageSegments[i].trim();
+        if (segment) {
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: segment,
+              timestamp: new Date(),
+            }]);
+            
+            // Only mark as not responding after the last message
+            if (i === messageSegments.length - 1) {
+              setIsResponding(false);
+            }
+          }, i * 1000); // Add a 1 second delay between messages
+        }
+      }
+    } catch (error) {
+      console.error('Error getting response:', error);
+      toast.error(`Failed to get response from character: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsResponding(false);
     }
-  }, [activeCharacter, conversationContext, chatMode, messages]);
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
 
   return {
-    activeCharacter,
     messages,
-    isLoading,
     isResponding,
+    isLoading,
     error,
+    activeCharacter,
     handleSendMessage,
     setConversationContext
   };
