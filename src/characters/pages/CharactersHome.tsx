@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -130,7 +129,7 @@ const CharactersHome = () => {
           </div>
           
           <div className="max-w-4xl mx-auto relative z-10">
-            <h1 className="text-7xl font-panchang font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-16 drop-shadow-2xl tracking-wider uppercase">
+            <h1 className="text-7xl font-lastica font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-16 drop-shadow-2xl tracking-wider uppercase">
               Character Genesis
             </h1>
             <p className="text-xl text-gray-100 mb-6 drop-shadow-lg">
