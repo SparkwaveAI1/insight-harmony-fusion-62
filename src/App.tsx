@@ -46,7 +46,8 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
 import CharactersHome from "./characters/pages/CharactersHome";
 import HistoricalCharacterCreate from "./characters/pages/HistoricalCharacterCreate";
-import FictionalCharacterCreate from "./characters/pages/FictionalCharacterCreate";
+import CreativeCharacterCreate from "./characters/pages/CreativeCharacterCreate";
+import CreativeCharacterDashboard from "./characters/pages/CreativeCharacterDashboard";
 import CharacterChat from "./characters/pages/CharacterChat";
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -106,11 +107,12 @@ function App() {
                 {/* Character routes - New home page and existing routes */}
                 <Route path="/characters-home" element={<CharactersHome />} />
                 <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
+                <Route path="/characters/creative" element={<ProtectedRoute><CreativeCharacterDashboard /></ProtectedRoute>} />
                 <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
                 <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
                 <Route path="/characters/:characterId/chat" element={<ProtectedRoute><CharacterChat /></ProtectedRoute>} />
                 <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
-                <Route path="/characters/create/fictional" element={<ProtectedRoute><FictionalCharacterCreate /></ProtectedRoute>} />
+                <Route path="/characters/create/creative" element={<ProtectedRoute><CreativeCharacterCreate /></ProtectedRoute>} />
                 
                 {/* Research section - Protected */}
                 <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />

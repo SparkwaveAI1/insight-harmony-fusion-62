@@ -9,6 +9,8 @@ import {
   FlaskConical,
   Mail,
   Brain,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -28,9 +30,14 @@ export const navigationMenuItems = [
     icon: UserPlus,
   },
   {
-    title: "Characters",
-    url: "/characters-home",
-    icon: Brain,
+    title: "Historical Characters",
+    url: "/characters",
+    icon: Clock,
+  },
+  {
+    title: "Creative Characters",
+    url: "/characters/creative",
+    icon: Sparkles,
   },
   {
     title: "Collections",

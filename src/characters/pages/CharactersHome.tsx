@@ -10,7 +10,8 @@ import {
   Brain,
   Filter,
   Search,
-  Shuffle
+  Shuffle,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,15 +115,13 @@ const CharactersHome = () => {
       </div>
 
       <main className="relative pt-20">
-        {/* Hero Section with Background Image */}
+        {/* Hero Section with Background Pattern */}
         <Section className="text-center relative overflow-hidden min-h-screen flex items-start justify-center pt-24">
-          {/* Background Image */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url('/lovable-uploads/f917355d-cf0c-40f6-864f-b0c2588d0143.png')`
-            }}
-          >
+          {/* CSS-based dotted background pattern */}
+          <div className="absolute inset-0 bg-slate-900" style={{
+            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '20px 20px'
+          }}>
             {/* Dark overlay for text readability */}
             <div className="absolute inset-0 bg-black/50"></div>
           </div>
@@ -141,19 +140,21 @@ const CharactersHome = () => {
             </p>
             
             <div className="flex gap-4 justify-center flex-wrap">
+              <Button size="lg" asChild className="bg-amber-600 hover:bg-amber-700 shadow-lg">
+                <Link to="/characters">
+                  <Clock className="mr-2 h-5 w-5" />
+                  Historical Characters
+                </Link>
+              </Button>
               <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700 shadow-lg">
-                <Link to="/characters/create/historical">
-                  <Users className="mr-2 h-5 w-5" />
-                  Create a Character
+                <Link to="/characters/creative">
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Creative Characters
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 shadow-lg">
                 <Play className="mr-2 h-5 w-5" />
                 Run a Scenario
-              </Button>
-              <Button size="lg" variant="ghost" className="text-purple-300 hover:bg-purple-500/20 shadow-lg">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Browse All Characters
               </Button>
             </div>
           </div>
@@ -357,13 +358,21 @@ const CharactersHome = () => {
             <Card className="p-8 bg-slate-800/30 border-slate-700 text-center">
               <Users className="h-16 w-16 mx-auto text-gray-500 mb-4" />
               <h3 className="text-xl font-semibold text-gray-300 mb-2">No Recent Interactions</h3>
-              <p className="text-gray-500 mb-6">Start chatting with characters to see your history here</p>
-              <Button asChild>
-                <Link to="/characters/create/historical">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Create Your First Character
-                </Link>
-              </Button>
+              <p className="text-gray-500 mb-6">Start creating characters to see your history here</p>
+              <div className="flex gap-4 justify-center">
+                <Button asChild>
+                  <Link to="/characters">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Historical Characters
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/characters/creative">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Creative Characters
+                  </Link>
+                </Button>
+              </div>
             </Card>
           </div>
         </Section>
