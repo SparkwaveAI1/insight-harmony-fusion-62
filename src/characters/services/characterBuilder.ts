@@ -1,4 +1,3 @@
-
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
@@ -131,13 +130,15 @@ function assignRelationshipAndFamilyDynamics(age: number, maritalStatus: string)
 export function buildCharacterMetadata(formData: HistoricalCharacterFormData, aiGeneratedTraits: any) {
   const age = parseInt(formData.age) || 30;
   
-  // Assign traits by probability if not specified
-  const gender = aiGeneratedTraits.gender || assignGenderByProbability();
-  const ethnicity = aiGeneratedTraits.ethnicity || assignEthnicityByProbability();
+  // Use AI-generated traits first, then user-specified traits, then probability-based assignment
+  // This ensures consistency with the user's prompt and specified traits
+  const gender = aiGeneratedTraits.gender || formData.gender || assignGenderByProbability();
+  const ethnicity = aiGeneratedTraits.ethnicity || aiGeneratedTraits.race_ethnicity || formData.ethnicity || assignEthnicityByProbability();
   const occupation = aiGeneratedTraits.occupation || formData.occupation || assignOccupationByProbability();
-  const socialClass = aiGeneratedTraits.social_class || assignSocialClassByProbability();
+  const socialClass = aiGeneratedTraits.social_class || aiGeneratedTraits.social_class_identity || formData.social_class || assignSocialClassByProbability();
   const maritalStatus = aiGeneratedTraits.marital_status || assignMaritalStatusByProbability(age);
-  const relationshipDynamics = assignRelationshipAndFamilyDynamics(age, maritalStatus);
+  const relationshipDynamics = aiGeneratedTraits.relationships_family || assignRelationshipAndFamilyDynamics(age, maritalStatus);
+  const region = aiGeneratedTraits.region || formData.region || formData.location || 'Rural England';
 
   return {
     // Core user inputs
@@ -147,24 +148,24 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     location: formData.location,
     description: formData.description,
     
-    // Core Demographics - properly assigned
+    // Core Demographics - intelligently assigned
     gender: gender,
     race_ethnicity: ethnicity,
     occupation: occupation,
     social_class_identity: socialClass,
-    region: aiGeneratedTraits.region || formData.location || 'Unknown region',
+    region: region,
     marital_status: maritalStatus,
     education_level: aiGeneratedTraits.education_level || 'basic education',
     
     // Location & Environment
     urban_rural_context: aiGeneratedTraits.urban_rural_context || 'rural',
     location_history: {
-      grew_up_in: aiGeneratedTraits.birthplace || formData.location,
+      grew_up_in: aiGeneratedTraits.birthplace || aiGeneratedTraits.location_history?.grew_up_in || formData.location,
       current_residence: formData.location,
       places_lived: [formData.location]
     },
     
-    // Relationships & Family - fully assigned
+    // Relationships & Family - fully assigned based on AI or probability
     relationships_family: relationshipDynamics,
     
     // Health Profile
@@ -173,12 +174,12 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     fitness_activity_level: aiGeneratedTraits.fitness_activity_level || 'moderate',
     
     // Physical Description
-    height: aiGeneratedTraits.physical_appearance?.height_build || 'average height',
-    build_body_type: aiGeneratedTraits.physical_appearance?.height_build || 'average build',
-    hair_color: aiGeneratedTraits.physical_appearance?.hair || 'brown',
-    hair_style: aiGeneratedTraits.physical_appearance?.hair_style || 'period appropriate',
-    eye_color: aiGeneratedTraits.physical_appearance?.eye_color || 'brown',
-    skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || 'natural complexion',
+    height: aiGeneratedTraits.physical_appearance?.height_build || aiGeneratedTraits.height || 'average height',
+    build_body_type: aiGeneratedTraits.physical_appearance?.height_build || aiGeneratedTraits.build_body_type || 'average build',
+    hair_color: aiGeneratedTraits.physical_appearance?.hair || aiGeneratedTraits.hair_color || 'brown',
+    hair_style: aiGeneratedTraits.physical_appearance?.hair_style || aiGeneratedTraits.hair_style || 'period appropriate',
+    eye_color: aiGeneratedTraits.physical_appearance?.eye_color || aiGeneratedTraits.eye_color || 'brown',
+    skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || aiGeneratedTraits.skin_tone || 'natural complexion',
     
     // Cultural & Background
     religious_affiliation: aiGeneratedTraits.religious_affiliation || 'Christian',
@@ -190,10 +191,10 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     historical_period: formData.date_of_birth ? '1700s' : 'Historical',
     
     // Legacy fields for backward compatibility
-    backstory: aiGeneratedTraits.backstory || 'Generated from character description',
-    personality_traits: aiGeneratedTraits.personality_traits || 'Generated personality traits',
+    backstory: aiGeneratedTraits.backstory || formData.backstory || 'Generated from character description',
+    personality_traits: aiGeneratedTraits.personality_traits || formData.personality_traits || 'Generated personality traits',
     appearance: aiGeneratedTraits.appearance || 'Generated appearance description',
-    historical_context: aiGeneratedTraits.historical_context || 'Generated historical context',
+    historical_context: aiGeneratedTraits.historical_context || formData.historical_context || 'Generated historical context',
   };
 }
 

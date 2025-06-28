@@ -16,11 +16,24 @@ export function buildFallbackCharacter(
 ): Character {
   const fallbackTraits = generateFallbackTraits(formData);
   
-  // Use the same probability-based assignment as the main builder
-  const metadata = buildCharacterMetadata(formData, {});
+  // Use user-specified traits first, then fallback traits, then probability-based assignment
+  const enhancedFallbackTraits = {
+    ...fallbackTraits,
+    gender: formData.gender || fallbackTraits.gender,
+    ethnicity: formData.ethnicity || fallbackTraits.ethnicity,
+    occupation: formData.occupation || fallbackTraits.occupation,
+    social_class: formData.social_class || fallbackTraits.social_class,
+    region: formData.region || fallbackTraits.region,
+    personality_traits: formData.personality_traits || fallbackTraits.personality_traits,
+    backstory: formData.backstory || fallbackTraits.backstory,
+    historical_context: formData.historical_context || fallbackTraits.historical_context,
+  };
+  
+  // Use the same intelligent assignment as the main builder
+  const metadata = buildCharacterMetadata(formData, enhancedFallbackTraits);
   
   const trait_profile = {
-    ...fallbackTraits,
+    ...enhancedFallbackTraits,
     physical_appearance: {
       height_build: 'average height and build',
       hair: 'brown hair',
@@ -31,7 +44,7 @@ export function buildFallbackCharacter(
   };
 
   const behavioral_modulation = buildBehavioralModulation();
-  const linguistic_profile = buildLinguisticProfile({}, formData);
+  const linguistic_profile = buildLinguisticProfile(enhancedFallbackTraits, formData);
   const emotional_triggers = buildEmotionalTriggers();
 
   return {
