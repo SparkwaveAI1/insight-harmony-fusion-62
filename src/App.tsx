@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import Dashboard from './pages/Dashboard';
 import PersonaViewer from './pages/PersonaViewer';
 import SimulatedPersona from './pages/SimulatedPersona';
@@ -17,47 +18,45 @@ import CharacterChat from './characters/pages/CharacterChat';
 import CharactersHome from './characters/pages/CharactersHome';
 import HistoricalCharacterCreate from './characters/pages/HistoricalCharacterCreate';
 import HistoricalCharactersDashboard from './characters/pages/HistoricalCharactersDashboard';
+import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
+import CreativeCharactersDashboard from './characters/pages/CreativeCharactersDashboard';
 import Collections from './pages/Collections';
 import Projects from './pages/Projects';
 
-// Temporarily remove Creative Characters routes until backend is set up
-// import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
-// import CreativeCharactersDashboard from './characters/pages/CreativeCharactersDashboard';
-
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Core App Routes */}
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/persona-viewer" element={<PersonaViewer />} />
-          <Route path="/simulated-persona" element={<SimulatedPersona />} />
-          <Route path="/research" element={<Research />} />
-          <Route path="/prsna" element={<PRSNAToken />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="*" element={<PageNotFound />} />
-          
-          {/* Character routes - only Historical for now */}
-          <Route path="/characters" element={<CharacterLibrary />} />
-          <Route path="/characters-home" element={<CharactersHome />} />
-          <Route path="/characters/historical" element={<HistoricalCharactersDashboard />} />
-          <Route path="/characters/create/historical" element={<HistoricalCharacterCreate />} />
-          <Route path="/characters/:characterId" element={<CharacterDetail />} />
-          <Route path="/characters/:characterId/edit" element={<CharacterEdit />} />
-          <Route path="/characters/:characterId/chat" element={<CharacterChat />} />
-          
-          {/* Temporarily disabled Creative Characters routes */}
-          {/* <Route path="/characters/creative" element={<CreativeCharactersDashboard />} />
-          <Route path="/characters/create/creative" element={<CreativeCharacterCreate />} /> */}
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            {/* Core App Routes */}
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/persona-viewer" element={<PersonaViewer />} />
+            <Route path="/simulated-persona" element={<SimulatedPersona />} />
+            <Route path="/research" element={<Research />} />
+            <Route path="/prsna" element={<PRSNAToken />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="*" element={<PageNotFound />} />
+            
+            {/* Character routes */}
+            <Route path="/characters" element={<CharacterLibrary />} />
+            <Route path="/characters-home" element={<CharactersHome />} />
+            <Route path="/characters/historical" element={<HistoricalCharactersDashboard />} />
+            <Route path="/characters/creative" element={<CreativeCharactersDashboard />} />
+            <Route path="/characters/create/historical" element={<HistoricalCharacterCreate />} />
+            <Route path="/characters/create/creative" element={<CreativeCharacterCreate />} />
+            <Route path="/characters/:characterId" element={<CharacterDetail />} />
+            <Route path="/characters/:characterId/edit" element={<CharacterEdit />} />
+            <Route path="/characters/:characterId/chat" element={<CharacterChat />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
