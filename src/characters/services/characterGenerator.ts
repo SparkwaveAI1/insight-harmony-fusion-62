@@ -1,4 +1,3 @@
-
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
@@ -17,6 +16,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     // Demographics
     age: parseInt(formData.age) || 30,
     gender: formData.gender || 'male',
+    ethnicity: formData.ethnicity || 'Not specified',
     social_class: formData.social_class || 'middle class',
     region: formData.region || 'Europe',
     
@@ -45,6 +45,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     hair: formData.hair || 'brown hair',
     eye_color: formData.eye_color || 'brown eyes',
     skin_tone: formData.skin_tone || 'natural complexion',
+    ethnicity: formData.ethnicity || 'Not specified',
   };
 
   try {
@@ -54,6 +55,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       name: formData.name,
       age: parseInt(formData.age) || 30,
       gender: formData.gender || 'male',
+      ethnicity: formData.ethnicity,
       social_class: formData.social_class || 'middle class',
       region: formData.region || 'Europe',
       occupation: formData.occupation,
@@ -74,6 +76,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
         hair: formData.hair || 'brown hair',
         eye_color: formData.eye_color || 'brown eyes',
         skin_tone: formData.skin_tone || 'natural complexion',
+        ethnicity: formData.ethnicity || 'Not specified',
       },
     };
 
@@ -146,6 +149,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
         hair: formData.hair || 'brown hair',
         eye_color: formData.eye_color || 'brown eyes',
         skin_tone: formData.skin_tone || 'natural complexion',
+        ethnicity: formData.ethnicity || 'Not specified',
       },
     };
 

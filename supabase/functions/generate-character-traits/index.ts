@@ -18,6 +18,7 @@ interface CharacterTraitRequest {
   backstory?: string;
   historical_context?: string;
   date_of_birth?: string;
+  ethnicity?: string;
 }
 
 serve(async (req) => {
@@ -96,6 +97,7 @@ Analyze this historical character and generate a comprehensive psychological tra
 - Name: ${character.name}
 - Age: ${character.age}
 - Gender: ${character.gender}
+- Ethnicity: ${character.ethnicity || 'Not specified'}
 - Social Class: ${character.social_class}
 - Region: ${character.region}
 - Birth Date: ${character.date_of_birth || 'Unknown'}
@@ -116,6 +118,7 @@ Generate trait scores (0.0 to 1.0) for this character considering:
 3. Regional cultural values
 4. Personal background and experiences
 5. Gender roles and expectations of their era
+6. Ethnic and cultural background influences
 
 Provide scores in this exact JSON format:
 {
@@ -163,6 +166,7 @@ Provide scores in this exact JSON format:
 }
 
 Consider historical context carefully - different eras had different values, social structures, and worldviews.
+For ethnicity, consider how cultural background would influence personality traits, values, and worldview within their historical context.
 `;
 }
 
@@ -237,6 +241,7 @@ function parseTraitResponse(response: string, character: CharacterTraitRequest):
         hair: 'brown hair',
         eye_color: 'brown eyes',
         skin_tone: 'natural complexion',
+        ethnicity: character.ethnicity || 'Not specified',
       },
       physical_health: {
         disabilities: [],

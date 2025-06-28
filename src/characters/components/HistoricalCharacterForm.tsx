@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
@@ -24,6 +23,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
       age: '',
       location: '',
       gender: '',
+      ethnicity: '',
       social_class: '',
       region: '',
       height_build: '',
@@ -120,18 +120,32 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
 
                 <FormField
                   control={form.control}
-                  name="occupation"
+                  name="ethnicity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Primary Occupation</FormLabel>
+                      <FormLabel>Ethnicity</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input placeholder="e.g., African, European, Indigenous, Asian, etc." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="occupation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Primary Occupation</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </FormSectionWrapper>
 

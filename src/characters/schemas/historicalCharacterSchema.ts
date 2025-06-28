@@ -10,6 +10,7 @@ export const historicalCharacterSchema = z.object({
   
   // Demographics
   gender: z.string().min(1, 'Gender is required'),
+  ethnicity: z.string().optional(),
   social_class: z.string().optional(),
   region: z.string().optional(),
   

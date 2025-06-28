@@ -12,6 +12,7 @@ interface CharacterTraitRequest {
   backstory?: string;
   historical_context?: string;
   date_of_birth?: string;
+  ethnicity?: string;
 }
 
 export const generateCharacterTraits = async (characterData: CharacterTraitRequest) => {
