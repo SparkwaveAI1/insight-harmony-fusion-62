@@ -1,3 +1,4 @@
+
 import { DbPersona, Persona, PersonaMetadata, InterviewSection } from "./types";
 import { Json } from "@/integrations/supabase/types";
 
@@ -114,7 +115,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
   console.log("Raw trait profile type:", typeof traitProfile);
   console.log("Raw trait profile keys:", traitProfile ? Object.keys(traitProfile) : "none");
   
-  // Check for various forms of malformed trait data
+  // Check for various forms of malformed trait data - FIXED VALIDATION LOGIC
   if (!traitProfile || 
       typeof traitProfile !== 'object' || 
       traitProfile._type === "undefined" || 
@@ -125,7 +126,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
     console.warn("Creating comprehensive default structure");
     traitProfile = createDefaultTraitProfile();
   } else {
-    console.log("✅ Trait profile exists, validating structure...");
+    console.log("✅ Trait profile exists with valid structure, preserving original data");
     
     // Log some sample values before validation
     if (traitProfile.big_five) {
@@ -135,8 +136,8 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
       });
     }
     
-    // Validate existing trait profile structure
-    traitProfile = validateTraitProfile(traitProfile);
+    // Only validate structure, don't replace valid data with defaults
+    traitProfile = validateAndPreserveTraitProfile(traitProfile);
   }
   
   console.log("=== FINAL TRAIT PROFILE CHECK ===");
@@ -263,46 +264,56 @@ function createDefaultTraitProfile() {
   };
 }
 
-function validateTraitProfile(traitProfile: Record<string, any>) {
-  console.log("=== VALIDATING TRAIT PROFILE ===");
+function validateAndPreserveTraitProfile(traitProfile: Record<string, any>) {
+  console.log("=== VALIDATING AND PRESERVING TRAIT PROFILE ===");
   const defaultProfile = createDefaultTraitProfile();
   
-  // Ensure all main categories exist and have proper values
+  // Only fill in missing categories, don't overwrite existing valid values
   for (const [category, defaultValues] of Object.entries(defaultProfile)) {
     if (!traitProfile[category] || typeof traitProfile[category] !== 'object') {
-      console.warn(`Missing trait category: ${category}, using defaults`);
+      console.warn(`Missing trait category: ${category}, adding defaults`);
       traitProfile[category] = defaultValues;
     } else {
-      // Validate individual traits within each category
+      // For existing categories, only add missing traits, preserve existing values
       for (const [trait, defaultValue] of Object.entries(defaultValues as any)) {
         if (typeof defaultValue === 'object') {
           // Handle nested objects like political_motivations
           if (!traitProfile[category][trait] || typeof traitProfile[category][trait] !== 'object') {
-            console.warn(`Missing nested trait object: ${category}.${trait}, using defaults`);
+            console.warn(`Missing nested trait object: ${category}.${trait}, adding defaults`);
             traitProfile[category][trait] = defaultValue;
           } else {
             for (const [nestedTrait, nestedDefault] of Object.entries(defaultValue)) {
-              if (typeof traitProfile[category][trait][nestedTrait] !== 'number' ||
-                  traitProfile[category][trait][nestedTrait] < 0 ||
-                  traitProfile[category][trait][nestedTrait] > 1) {
-                console.warn(`Invalid nested trait value for ${category}.${trait}.${nestedTrait}, using default`);
+              if (traitProfile[category][trait][nestedTrait] === undefined || 
+                  traitProfile[category][trait][nestedTrait] === null) {
+                console.warn(`Missing nested trait value for ${category}.${trait}.${nestedTrait}, adding default`);
                 traitProfile[category][trait][nestedTrait] = nestedDefault;
+              }
+              // Only validate ranges, don't replace valid values
+              else if (typeof traitProfile[category][trait][nestedTrait] === 'number') {
+                const value = traitProfile[category][trait][nestedTrait];
+                if (value < 0) traitProfile[category][trait][nestedTrait] = 0;
+                else if (value > 1) traitProfile[category][trait][nestedTrait] = 1;
               }
             }
           }
         } else {
-          // Handle regular numeric traits
-          if (typeof traitProfile[category][trait] !== 'number' ||
-              traitProfile[category][trait] < 0 ||
-              traitProfile[category][trait] > 1) {
-            console.warn(`Invalid trait value for ${category}.${trait}, using default`);
+          // Handle regular numeric traits - only add if missing
+          if (traitProfile[category][trait] === undefined || 
+              traitProfile[category][trait] === null) {
+            console.warn(`Missing trait value for ${category}.${trait}, adding default`);
             traitProfile[category][trait] = defaultValue;
+          }
+          // Only validate ranges, don't replace valid values
+          else if (typeof traitProfile[category][trait] === 'number') {
+            const value = traitProfile[category][trait];
+            if (value < 0) traitProfile[category][trait] = 0;
+            else if (value > 1) traitProfile[category][trait] = 1;
           }
         }
       }
     }
   }
   
-  console.log("=== END TRAIT PROFILE VALIDATION ===");
+  console.log("=== END TRAIT PROFILE VALIDATION AND PRESERVATION ===");
   return traitProfile;
 }
