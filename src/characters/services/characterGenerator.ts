@@ -1,4 +1,3 @@
-
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character } from '../types/characterTraitTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -50,12 +49,12 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     skin_tone: formData.skin_tone || 'natural complexion',
   };
 
-  // Generate comprehensive trait profile with physical traits
+  // Generate comprehensive trait profile with full persona system structure
   const trait_profile = {
     // Core personality traits (Big Five)
     big_five: {
-      conscientiousness: 0.7,
       openness: 0.6,
+      conscientiousness: 0.7,
       extraversion: 0.5,
       agreeableness: 0.6,
       neuroticism: 0.4,
@@ -63,20 +62,101 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     
     // Moral foundations
     moral_foundations: {
-      care_harm: 0.7,
-      fairness_cheating: 0.6,
-      loyalty_betrayal: 0.8,
-      authority_subversion: 0.7,
-      sanctity_degradation: 0.5,
+      care: 0.7,
+      fairness: 0.6,
+      loyalty: 0.8,
+      authority: 0.7,
+      sanctity: 0.5,
+      liberty: 0.6,
     },
     
-    // Political compass
+    // World values
+    world_values: {
+      traditional_vs_secular: 0.3,
+      survival_vs_self_expression: 0.4,
+      materialist_vs_postmaterialist: 0.5,
+    },
+    
+    // Political compass with enhanced structure
     political_compass: {
-      economic_left_right: 0.3,
-      social_libertarian_authoritarian: 0.2,
+      economic: 0.3,
+      authoritarian_libertarian: 0.2,
+      cultural_conservative_progressive: 0.4,
+      political_salience: 0.5,
+      group_fusion_level: 0.6,
+      outgroup_threat_sensitivity: 0.4,
+      commons_orientation: 0.7,
+      political_motivations: {
+        material_interest: 0.5,
+        moral_vision: 0.6,
+        cultural_preservation: 0.7,
+        status_reordering: 0.3,
+      },
     },
     
-    // Physical appearance traits from form data
+    // Behavioral economics
+    behavioral_economics: {
+      present_bias: 0.4,
+      loss_aversion: 0.6,
+      overconfidence: 0.5,
+      risk_sensitivity: 0.6,
+      scarcity_sensitivity: 0.7,
+    },
+    
+    // Cultural dimensions
+    cultural_dimensions: {
+      power_distance: 0.6,
+      individualism_vs_collectivism: 0.4,
+      masculinity_vs_femininity: 0.5,
+      uncertainty_avoidance: 0.6,
+      long_term_orientation: 0.7,
+      indulgence_vs_restraint: 0.4,
+    },
+    
+    // Social identity
+    social_identity: {
+      identity_strength: 0.7,
+      identity_complexity: 0.5,
+      ingroup_bias_tendency: 0.6,
+      outgroup_bias_tendency: 0.4,
+      social_dominance_orientation: 0.3,
+      system_justification: 0.6,
+      intergroup_contact_comfort: 0.5,
+      cultural_intelligence: 0.6,
+    },
+    
+    // Extended traits
+    extended_traits: {
+      truth_orientation: 0.7,
+      moral_consistency: 0.6,
+      self_awareness: 0.5,
+      empathy: 0.6,
+      self_efficacy: 0.7,
+      manipulativeness: 0.2,
+      impulse_control: 0.6,
+      shadow_trait_activation: 0.3,
+      attention_pattern: 0.5,
+      cognitive_load_resilience: 0.6,
+      institutional_trust: 0.7,
+      conformity_tendency: 0.5,
+      conflict_avoidance: 0.4,
+      cognitive_flexibility: 0.6,
+      need_for_cognitive_closure: 0.5,
+      emotional_intensity: 0.5,
+      emotional_regulation: 0.6,
+      trigger_sensitivity: 0.4,
+    },
+    
+    // Dynamic state
+    dynamic_state: {
+      current_stress_level: 0.3,
+      emotional_stability_context: 0.6,
+      motivation_orientation: 0.7,
+      trust_volatility: 0.4,
+      trigger_threshold: 0.5,
+    },
+    
+    // Character-specific physical traits from form data
     physical_appearance: {
       height: formData.height || 'average height',
       build_body_type: formData.build_body_type || 'average build',

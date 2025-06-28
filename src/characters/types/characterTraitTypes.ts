@@ -1,5 +1,12 @@
 // Character trait and type definitions
-import { TraitProfile } from '../../services/persona/types/trait-profile';
+import { 
+  TraitProfile,
+  EmotionalTriggersProfile 
+} from '../../services/persona/types/trait-profile';
+import { 
+  BehavioralModulation,
+  LinguisticProfile 
+} from '../../services/persona/types/linguistic-profile';
 
 // Extend the persona TraitProfile to include character-specific physical traits
 export interface CharacterTraitProfile extends TraitProfile {
@@ -83,36 +90,6 @@ export interface CharacterFilters {
   search?: string;
   sortBy?: 'name' | 'created_at' | 'updated_at';
   sortOrder?: 'asc' | 'desc';
-}
-
-// Trait definitions remain the same
-export interface TraitProfile {
-  conscientiousness: number;
-  openness: number;
-  extraversion: number;
-  agreeableness: number;
-  neuroticism: number;
-}
-
-export interface BehavioralModulation {
-  formality: number;
-  enthusiasm: number;
-  assertiveness: number;
-  empathy: number;
-  patience: number;
-}
-
-export interface LinguisticProfile {
-  vocabulary_complexity: number;
-  sentence_structure: number;
-  use_of_metaphors: number;
-  emotional_expressiveness: number;
-  technical_language: number;
-}
-
-export interface EmotionalTriggers {
-  positive_triggers: string[];
-  negative_triggers: string[];
 }
 
 export interface ChatMessage {
