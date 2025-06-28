@@ -19,6 +19,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
   const form = useForm<HistoricalCharacterFormData>({
     resolver: zodResolver(historicalCharacterSchema),
     defaultValues: {
+      name: '',
       date_of_birth: '',
       age: '',
       location: '',
@@ -32,6 +33,20 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormSectionWrapper title="Create Historical Character">
             <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Character Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Benjamin Franklin" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -84,7 +99,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormLabel>Character Description *</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe your historical character in detail. Include their background, personality, occupation, beliefs, and any other important details. The AI will use this description to generate their complete profile including name, appearance, comprehensive personality traits, and historical context."
+                        placeholder="Describe your historical character in detail. Include their background, personality, occupation, beliefs, and any other important details. The AI will use this description to generate their complete profile including comprehensive personality traits, physical appearance, and historical context."
                         className="min-h-[120px]"
                         {...field}
                       />

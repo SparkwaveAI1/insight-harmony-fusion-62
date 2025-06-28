@@ -3,13 +3,13 @@ import { z } from 'zod';
 
 export const historicalCharacterSchema = z.object({
   // Essential fields only
+  name: z.string().min(1, 'Name is required'),
   date_of_birth: z.string().min(1, 'Date of birth is required'),
   age: z.string().min(1, 'Age is required'),
   location: z.string().min(1, 'Location is required'),
   description: z.string().min(10, 'Please provide a detailed description (at least 10 characters)'),
   
   // All other fields are optional - AI will generate them
-  name: z.string().optional(),
   gender: z.string().optional(),
   ethnicity: z.string().optional(),
   social_class: z.string().optional(),

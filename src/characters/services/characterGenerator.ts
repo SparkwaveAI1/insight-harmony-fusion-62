@@ -1,4 +1,3 @@
-
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
@@ -16,12 +15,12 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     // Generate comprehensive character details from the description and core inputs
     console.log('Generating AI-powered character from description...');
     const aiGeneratedTraits = await generateCharacterTraits({
+      name: formData.name, // Use the provided name
       description: formData.description,
       date_of_birth: formData.date_of_birth,
       age: parseInt(formData.age) || 30,
       location: formData.location,
       // AI will infer these from the description
-      name: formData.name || '',
       gender: formData.gender || '',
       ethnicity: formData.ethnicity || '',
       social_class: formData.social_class || '',
@@ -37,13 +36,13 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     // Build comprehensive metadata from AI generation and user inputs
     const metadata = {
       // Core user inputs
+      name: formData.name, // Use the provided name
       date_of_birth: formData.date_of_birth,
       age: parseInt(formData.age) || 30,
       location: formData.location,
       description: formData.description,
       
       // AI-generated details (will be populated by the trait service)
-      name: aiGeneratedTraits.name || 'Generated Character',
       gender: aiGeneratedTraits.gender || 'not specified',
       ethnicity: aiGeneratedTraits.ethnicity || 'not specified',
       social_class: aiGeneratedTraits.social_class || 'middle class',
@@ -107,7 +106,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
 
     const character: Character = {
       character_id: characterId,
-      name: aiGeneratedTraits.name || 'Generated Character',
+      name: formData.name, // Use the provided name
       character_type: 'historical',
       creation_date: currentDate,
       created_at: currentDate,
@@ -185,11 +184,11 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     };
 
     const metadata = {
+      name: formData.name, // Use the provided name
       date_of_birth: formData.date_of_birth,
       age: parseInt(formData.age) || 30,
       location: formData.location,
       description: formData.description,
-      name: 'Historical Character',
       gender: 'not specified',
       ethnicity: 'not specified',
       social_class: 'middle class',
@@ -207,7 +206,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
 
     const character: Character = {
       character_id: characterId,
-      name: 'Historical Character',
+      name: formData.name, // Use the provided name
       character_type: 'historical',
       creation_date: currentDate,
       created_at: currentDate,
