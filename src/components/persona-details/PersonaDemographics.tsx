@@ -186,12 +186,6 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
           return acc;
         }, {} as Record<string, string>)
       )}
-
-      {/* Digital & Media */}
-      {renderSection("Digital & Media", {
-        media_ecosystem: metadata?.media_ecosystem,
-        aesthetic_subculture: metadata?.aesthetic_subculture
-      })}
     </div>
   );
 };

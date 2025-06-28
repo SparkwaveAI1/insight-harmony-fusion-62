@@ -19,7 +19,7 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     race_ethnicity: aiGeneratedTraits.ethnicity || 'not specified',
     occupation: aiGeneratedTraits.occupation || formData.occupation || 'Unknown occupation',
     social_class_identity: aiGeneratedTraits.social_class || 'middle class',
-    region: aiGeneratedTraits.region || 'Europe',
+    region: aiGeneratedTraits.region || formData.location || 'not specified',
     marital_status: aiGeneratedTraits.marital_status || 'unknown',
     education_level: aiGeneratedTraits.education_level || 'basic education',
     
