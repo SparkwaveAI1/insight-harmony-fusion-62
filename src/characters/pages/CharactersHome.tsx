@@ -115,7 +115,7 @@ const CharactersHome = () => {
 
       <main className="relative pt-20">
         {/* Hero Section with Background Image */}
-        <Section className="text-center py-20 relative overflow-hidden">
+        <Section className="text-center py-32 relative overflow-hidden min-h-screen flex items-center">
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
