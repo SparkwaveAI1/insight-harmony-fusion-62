@@ -126,11 +126,6 @@ const CharacterDetail = () => {
                   Edit Character
                 </Link>
               </Button>
-              <DeleteCharacterButton
-                characterId={activeCharacter.character_id}
-                characterName={activeCharacter.name}
-                onDeleted={handleCharacterDeleted}
-              />
             </div>
           </div>
 
@@ -279,6 +274,21 @@ const CharacterDetail = () => {
                     <span>{activeCharacter.age}</span>
                   </div>
                 )}
+              </div>
+            </Card>
+
+            {/* Delete Character Section - Moved to bottom */}
+            <Card className="p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-2 text-destructive">Danger Zone</h3>
+                <p className="text-muted-foreground mb-4">
+                  Once you delete a character, there is no going back. Please be certain.
+                </p>
+                <DeleteCharacterButton
+                  characterId={activeCharacter.character_id}
+                  characterName={activeCharacter.name}
+                  onDeleted={handleCharacterDeleted}
+                />
               </div>
             </Card>
           </div>
