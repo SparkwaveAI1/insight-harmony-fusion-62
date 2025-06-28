@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -5,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
-import CharacterTraits from '../components/CharacterTraits';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
 import { downloadCharacterAsJSON } from '../utils/downloadUtils';
+// Import the comprehensive trait display components from Personas
+import PersonaTraits from '@/components/persona-details/PersonaTraits';
+import PersonaDemographics from '@/components/persona-details/PersonaDemographics';
+import PersonaEmotionalTriggers from '@/components/persona-details/PersonaEmotionalTriggers';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -167,82 +171,96 @@ const CharacterDetail = () => {
             </Card>
           </div>
 
-          {/* Character Information */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Details */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Basic Information */}
+          {/* Character Information - Using Persona-style comprehensive display */}
+          <div className="space-y-8">
+            {/* Demographics Section */}
+            {activeCharacter.metadata && (
               <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-                <div className="space-y-3">
-                  <div>
-                    <span className="font-medium">Character ID:</span>{' '}
-                    <span className="text-muted-foreground">{activeCharacter.character_id}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">Type:</span>{' '}
-                    <span className="text-muted-foreground">{activeCharacter.character_type}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">Created:</span>{' '}
-                    <span className="text-muted-foreground">
-                      {new Date(activeCharacter.creation_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {activeCharacter.metadata?.description && (
-                    <div>
-                      <span className="font-medium">Description:</span>
-                      <p className="text-muted-foreground mt-1">
-                        {activeCharacter.metadata.description}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <PersonaDemographics metadata={activeCharacter.metadata} />
               </Card>
+            )}
 
-              {/* Prompt */}
-              {activeCharacter.prompt && (
-                <Card className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Creation Prompt</h2>
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {activeCharacter.prompt}
-                  </p>
-                </Card>
-              )}
-
-              {/* Character Traits */}
-              {activeCharacter.trait_profile && (
-                <Card className="p-6">
-                  <CharacterTraits traitProfile={activeCharacter.trait_profile} />
-                </Card>
-              )}
-            </div>
-
-            {/* Side Panel */}
-            <div className="space-y-6">
-              {/* Quick Stats */}
+            {/* Comprehensive Traits Profile */}
+            {activeCharacter.trait_profile && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Visibility:</span>
-                    <span className={activeCharacter.is_public ? 'text-green-600' : 'text-gray-600'}>
-                      {activeCharacter.is_public ? 'Public' : 'Private'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Version:</span>
-                    <span>{activeCharacter.enhanced_metadata_version || 2}</span>
-                  </div>
-                  {activeCharacter.trait_profile && (
-                    <div className="flex justify-between">
-                      <span>Trait Categories:</span>
-                      <span>{Object.keys(activeCharacter.trait_profile).length}</span>
-                    </div>
-                  )}
-                </div>
+                <PersonaTraits traitProfile={activeCharacter.trait_profile} />
               </Card>
-            </div>
+            )}
+
+            {/* Emotional Triggers */}
+            {activeCharacter.emotional_triggers && (
+              <Card className="p-6">
+                <PersonaEmotionalTriggers emotionalTriggers={activeCharacter.emotional_triggers} />
+              </Card>
+            )}
+
+            {/* Creation Prompt */}
+            {activeCharacter.prompt && (
+              <Card className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Creation Prompt</h2>
+                <p className="text-muted-foreground whitespace-pre-wrap">
+                  {activeCharacter.prompt}
+                </p>
+              </Card>
+            )}
+
+            {/* Basic Information */}
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+              <div className="space-y-3">
+                <div>
+                  <span className="font-medium">Character ID:</span>{' '}
+                  <span className="text-muted-foreground">{activeCharacter.character_id}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Type:</span>{' '}
+                  <span className="text-muted-foreground">{activeCharacter.character_type}</span>
+                </div>
+                <div>
+                  <span className="font-medium">Created:</span>{' '}
+                  <span className="text-muted-foreground">
+                    {new Date(activeCharacter.creation_date).toLocaleDateString()}
+                  </span>
+                </div>
+                {activeCharacter.metadata?.description && (
+                  <div>
+                    <span className="font-medium">Description:</span>
+                    <p className="text-muted-foreground mt-1">
+                      {activeCharacter.metadata.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Visibility</span>
+                  <span className={activeCharacter.is_public ? 'text-green-600' : 'text-gray-600'}>
+                    {activeCharacter.is_public ? 'Public' : 'Private'}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Version</span>
+                  <span>{activeCharacter.enhanced_metadata_version || 2}</span>
+                </div>
+                {activeCharacter.trait_profile && (
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">Trait Categories</span>
+                    <span>{Object.keys(activeCharacter.trait_profile).length}</span>
+                  </div>
+                )}
+                {activeCharacter.age && (
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">Age</span>
+                    <span>{activeCharacter.age}</span>
+                  </div>
+                )}
+              </div>
+            </Card>
           </div>
         </Section>
       </div>
