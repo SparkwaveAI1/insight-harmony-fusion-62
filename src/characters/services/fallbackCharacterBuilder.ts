@@ -16,24 +16,28 @@ export function buildFallbackCharacter(
 ): Character {
   const fallbackTraits = generateFallbackTraits(formData);
   
-  // Use user-specified traits first, then fallback traits, then probability-based assignment
-  const enhancedFallbackTraits = {
+  // Create a mock AI-generated traits object with the fallback traits
+  // This allows us to use the same intelligent assignment logic as the main builder
+  const mockAiGeneratedTraits = {
     ...fallbackTraits,
-    gender: formData.gender || fallbackTraits.gender,
-    ethnicity: formData.ethnicity || fallbackTraits.ethnicity,
-    occupation: formData.occupation || fallbackTraits.occupation,
-    social_class: formData.social_class || fallbackTraits.social_class,
-    region: formData.region || fallbackTraits.region,
-    personality_traits: formData.personality_traits || fallbackTraits.personality_traits,
-    backstory: formData.backstory || fallbackTraits.backstory,
-    historical_context: formData.historical_context || fallbackTraits.historical_context,
+    // Add demographic fields that would normally come from AI generation
+    gender: formData.gender || null, // Let the metadata builder handle probability assignment
+    ethnicity: formData.ethnicity || null,
+    race_ethnicity: formData.ethnicity || null,
+    occupation: formData.occupation || null,
+    social_class: formData.social_class || null,
+    social_class_identity: formData.social_class || null,
+    region: formData.region || null,
+    personality_traits: formData.personality_traits || null,
+    backstory: formData.backstory || null,
+    historical_context: formData.historical_context || null,
   };
   
   // Use the same intelligent assignment as the main builder
-  const metadata = buildCharacterMetadata(formData, enhancedFallbackTraits);
+  const metadata = buildCharacterMetadata(formData, mockAiGeneratedTraits);
   
   const trait_profile = {
-    ...enhancedFallbackTraits,
+    ...fallbackTraits,
     physical_appearance: {
       height_build: 'average height and build',
       hair: 'brown hair',
@@ -44,7 +48,7 @@ export function buildFallbackCharacter(
   };
 
   const behavioral_modulation = buildBehavioralModulation();
-  const linguistic_profile = buildLinguisticProfile(enhancedFallbackTraits, formData);
+  const linguistic_profile = buildLinguisticProfile(mockAiGeneratedTraits, formData);
   const emotional_triggers = buildEmotionalTriggers();
 
   return {
