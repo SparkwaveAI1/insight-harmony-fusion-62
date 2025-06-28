@@ -14,7 +14,7 @@ export const historicalCharacterSchema = z.object({
   social_class: z.string().optional(),
   region: z.string().optional(),
   
-  // Physical Appearance
+  // Physical Appearance (consolidated)
   height: z.string().optional(),
   build_body_type: z.string().optional(),
   hair_color: z.string().optional(),
