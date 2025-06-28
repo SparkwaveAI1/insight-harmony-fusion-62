@@ -4,43 +4,168 @@ import { Character, CharacterBehavioralModulation } from '../types/characterTrai
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
 import { v4 as uuidv4 } from 'uuid';
 
+// Probability-based trait assignment functions
+function assignGenderByProbability(): string {
+  const rand = Math.random();
+  if (rand < 0.51) return 'female';
+  return 'male';
+}
+
+function assignEthnicityByProbability(): string {
+  const ethnicities = [
+    { value: 'European', probability: 0.6 },
+    { value: 'Mediterranean', probability: 0.15 },
+    { value: 'Middle Eastern', probability: 0.1 },
+    { value: 'North African', probability: 0.08 },
+    { value: 'Mixed heritage', probability: 0.07 }
+  ];
+  
+  const rand = Math.random();
+  let cumulative = 0;
+  for (const ethnicity of ethnicities) {
+    cumulative += ethnicity.probability;
+    if (rand < cumulative) return ethnicity.value;
+  }
+  return 'European';
+}
+
+function assignOccupationByProbability(): string {
+  const occupations = [
+    { value: 'Farmer', probability: 0.7 },
+    { value: 'Merchant', probability: 0.08 },
+    { value: 'Artisan', probability: 0.06 },
+    { value: 'Servant', probability: 0.05 },
+    { value: 'Clergy', probability: 0.03 },
+    { value: 'Soldier', probability: 0.03 },
+    { value: 'Blacksmith', probability: 0.02 },
+    { value: 'Miller', probability: 0.015 },
+    { value: 'Innkeeper', probability: 0.01 },
+    { value: 'Nobleman', probability: 0.005 }
+  ];
+  
+  const rand = Math.random();
+  let cumulative = 0;
+  for (const occupation of occupations) {
+    cumulative += occupation.probability;
+    if (rand < cumulative) return occupation.value;
+  }
+  return 'Farmer';
+}
+
+function assignSocialClassByProbability(): string {
+  const classes = [
+    { value: 'lower class', probability: 0.75 },
+    { value: 'middle class', probability: 0.2 },
+    { value: 'upper class', probability: 0.05 }
+  ];
+  
+  const rand = Math.random();
+  let cumulative = 0;
+  for (const cls of classes) {
+    cumulative += cls.probability;
+    if (rand < cumulative) return cls.value;
+  }
+  return 'lower class';
+}
+
+function assignMaritalStatusByProbability(age: number): string {
+  if (age < 18) return 'single';
+  
+  const statuses = [
+    { value: 'married', probability: 0.65 },
+    { value: 'single', probability: 0.2 },
+    { value: 'widowed', probability: 0.1 },
+    { value: 'separated', probability: 0.05 }
+  ];
+  
+  const rand = Math.random();
+  let cumulative = 0;
+  for (const status of statuses) {
+    cumulative += status.probability;
+    if (rand < cumulative) return status.value;
+  }
+  return 'married';
+}
+
+function assignRelationshipAndFamilyDynamics(age: number, maritalStatus: string) {
+  const hasChildren = maritalStatus === 'married' ? Math.random() < 0.7 : Math.random() < 0.2;
+  const numberOfChildren = hasChildren ? Math.floor(Math.random() * 5) + 1 : 0;
+  const childrenAges = [];
+  
+  if (hasChildren) {
+    for (let i = 0; i < numberOfChildren; i++) {
+      const childAge = Math.floor(Math.random() * (age - 18)) + 1;
+      childrenAges.push(childAge);
+    }
+    childrenAges.sort((a, b) => b - a); // Sort descending
+  }
+
+  const livingSituations = [
+    'nuclear family household',
+    'extended family household', 
+    'multi-generational household',
+    'single household',
+    'communal living'
+  ];
+  
+  const householdCompositions = [
+    'spouse and children',
+    'extended family members',
+    'parents and siblings',
+    'multiple families',
+    'single occupant'
+  ];
+
+  return {
+    has_children: hasChildren,
+    number_of_children: numberOfChildren,
+    children_ages: childrenAges,
+    living_situation: livingSituations[Math.floor(Math.random() * livingSituations.length)],
+    household_composition: [householdCompositions[Math.floor(Math.random() * householdCompositions.length)]],
+    family_relationship_quality: ['excellent', 'good', 'average', 'strained', 'poor'][Math.floor(Math.random() * 5)],
+    support_system_strength: ['very strong', 'strong', 'moderate', 'weak', 'very weak'][Math.floor(Math.random() * 5)],
+    extended_family_involvement: ['very high', 'high', 'moderate', 'low', 'minimal'][Math.floor(Math.random() * 5)]
+  };
+}
+
 export function buildCharacterMetadata(formData: HistoricalCharacterFormData, aiGeneratedTraits: any) {
-  // Create comprehensive metadata structure that matches PersonaMetadata format
+  const age = parseInt(formData.age) || 30;
+  
+  // Assign traits by probability if not specified
+  const gender = aiGeneratedTraits.gender || assignGenderByProbability();
+  const ethnicity = aiGeneratedTraits.ethnicity || assignEthnicityByProbability();
+  const occupation = aiGeneratedTraits.occupation || formData.occupation || assignOccupationByProbability();
+  const socialClass = aiGeneratedTraits.social_class || assignSocialClassByProbability();
+  const maritalStatus = aiGeneratedTraits.marital_status || assignMaritalStatusByProbability(age);
+  const relationshipDynamics = assignRelationshipAndFamilyDynamics(age, maritalStatus);
+
   return {
     // Core user inputs
     name: formData.name,
     date_of_birth: formData.date_of_birth,
-    age: parseInt(formData.age) || 30,
+    age: age,
     location: formData.location,
     description: formData.description,
     
-    // Core Demographics - properly structured
-    gender: aiGeneratedTraits.gender || 'not specified',
-    race_ethnicity: aiGeneratedTraits.ethnicity || 'not specified',
-    occupation: aiGeneratedTraits.occupation || formData.occupation || 'Unknown occupation',
-    social_class_identity: aiGeneratedTraits.social_class || 'middle class',
-    region: aiGeneratedTraits.region || formData.location || 'not specified',
-    marital_status: aiGeneratedTraits.marital_status || 'unknown',
+    // Core Demographics - properly assigned
+    gender: gender,
+    race_ethnicity: ethnicity,
+    occupation: occupation,
+    social_class_identity: socialClass,
+    region: aiGeneratedTraits.region || formData.location || 'Unknown region',
+    marital_status: maritalStatus,
     education_level: aiGeneratedTraits.education_level || 'basic education',
     
     // Location & Environment
-    urban_rural_context: aiGeneratedTraits.urban_rural_context || 'mixed',
+    urban_rural_context: aiGeneratedTraits.urban_rural_context || 'rural',
     location_history: {
       grew_up_in: aiGeneratedTraits.birthplace || formData.location,
       current_residence: formData.location,
       places_lived: [formData.location]
     },
     
-    // Relationships & Family
-    relationships_family: {
-      has_children: aiGeneratedTraits.has_children || false,
-      number_of_children: aiGeneratedTraits.number_of_children || 0,
-      children_ages: aiGeneratedTraits.children_ages || [],
-      living_situation: aiGeneratedTraits.living_situation || 'unknown',
-      household_composition: aiGeneratedTraits.household_composition || [],
-      family_relationship_quality: aiGeneratedTraits.family_relationship_quality || 'average',
-      support_system_strength: aiGeneratedTraits.support_system_strength || 'moderate'
-    },
+    // Relationships & Family - fully assigned
+    relationships_family: relationshipDynamics,
     
     // Health Profile
     physical_health_status: aiGeneratedTraits.physical_health_status || 'average',
@@ -58,7 +183,7 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     // Cultural & Background
     religious_affiliation: aiGeneratedTraits.religious_affiliation || 'Christian',
     religious_practice_level: aiGeneratedTraits.religious_practice_level || 'moderate',
-    cultural_background: aiGeneratedTraits.cultural_background || 'European',
+    cultural_background: aiGeneratedTraits.cultural_background || ethnicity,
     language_proficiency: aiGeneratedTraits.language_proficiency || ['Local language'],
     
     // Historical context
@@ -160,9 +285,9 @@ export function buildCharacter(
     is_public: false,
     enhanced_metadata_version: 2,
     age: parseInt(formData.age) || 30,
-    gender: aiGeneratedTraits.gender || 'not specified',
-    social_class: aiGeneratedTraits.social_class || 'middle class',
-    region: aiGeneratedTraits.region || 'Europe',
+    gender: metadata.gender,
+    social_class: metadata.social_class_identity,
+    region: metadata.region,
     physical_appearance,
   };
 }

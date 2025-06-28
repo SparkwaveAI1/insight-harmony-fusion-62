@@ -5,7 +5,8 @@ import { generateFallbackTraits } from './fallbackTraitsGenerator';
 import { 
   buildBehavioralModulation, 
   buildLinguisticProfile, 
-  buildEmotionalTriggers 
+  buildEmotionalTriggers,
+  buildCharacterMetadata 
 } from './characterBuilder';
 
 export function buildFallbackCharacter(
@@ -15,6 +16,9 @@ export function buildFallbackCharacter(
 ): Character {
   const fallbackTraits = generateFallbackTraits(formData);
   
+  // Use the same probability-based assignment as the main builder
+  const metadata = buildCharacterMetadata(formData, {});
+  
   const trait_profile = {
     ...fallbackTraits,
     physical_appearance: {
@@ -22,34 +26,13 @@ export function buildFallbackCharacter(
       hair: 'brown hair',
       eye_color: 'brown eyes',
       skin_tone: 'natural complexion',
-      ethnicity: 'not specified',
+      ethnicity: metadata.race_ethnicity,
     },
   };
 
   const behavioral_modulation = buildBehavioralModulation();
   const linguistic_profile = buildLinguisticProfile({}, formData);
   const emotional_triggers = buildEmotionalTriggers();
-
-  const metadata = {
-    name: formData.name,
-    date_of_birth: formData.date_of_birth,
-    age: parseInt(formData.age) || 30,
-    location: formData.location,
-    description: formData.description,
-    gender: 'not specified',
-    ethnicity: 'not specified',
-    social_class: 'middle class',
-    region: 'Europe',
-    height_build: 'average height and build',
-    hair: 'brown hair',
-    eye_color: 'brown eyes',
-    skin_tone: 'natural complexion',
-    backstory: 'Generated from user description',
-    personality_traits: 'To be determined from description',
-    appearance: 'Average appearance for the historical period',
-    occupation: 'To be determined from description',
-    historical_context: 'Historical context based on date and location',
-  };
 
   return {
     character_id: characterId,
@@ -68,15 +51,15 @@ export function buildFallbackCharacter(
     is_public: false,
     enhanced_metadata_version: 2,
     age: parseInt(formData.age) || 30,
-    gender: 'not specified',
-    social_class: 'middle class',
-    region: 'Europe',
+    gender: metadata.gender,
+    social_class: metadata.social_class_identity,
+    region: metadata.region,
     physical_appearance: {
       height_build: 'average height and build',
       hair: 'brown hair',
       eye_color: 'brown eyes',
       skin_tone: 'natural complexion',
-      ethnicity: 'not specified',
+      ethnicity: metadata.race_ethnicity,
     },
   };
 }
