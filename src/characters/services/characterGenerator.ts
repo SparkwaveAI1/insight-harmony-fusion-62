@@ -106,3 +106,6 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
   console.log('Generated character:', character);
   return character;
 };
+
+// Export alias for consistency with the form component
+export const generateCharacterFromFormData = generateHistoricalCharacter;

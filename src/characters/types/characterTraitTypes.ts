@@ -1,4 +1,9 @@
 // Character trait and type definitions
+import { TraitProfile } from '../../services/persona/types/trait-profile';
+
+// Re-export the persona TraitProfile as CharacterTraitProfile for consistency
+export type CharacterTraitProfile = TraitProfile;
+
 export interface Character {
   id?: string;
   character_id: string;
