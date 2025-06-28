@@ -1,8 +1,24 @@
 // Character trait and type definitions
 import { TraitProfile } from '../../services/persona/types/trait-profile';
 
-// Re-export the persona TraitProfile as CharacterTraitProfile for consistency
-export type CharacterTraitProfile = TraitProfile;
+// Extend the persona TraitProfile to include character-specific physical traits
+export interface CharacterTraitProfile extends TraitProfile {
+  physical_appearance?: {
+    height?: string;
+    build_body_type?: string;
+    hair_color?: string;
+    hair_style?: string;
+    eye_color?: string;
+    skin_tone?: string;
+    [key: string]: any;
+  };
+  physical_health?: {
+    disabilities?: string[];
+    health_conditions?: string[];
+    mobility?: string;
+    [key: string]: any;
+  };
+}
 
 export interface Character {
   id?: string;

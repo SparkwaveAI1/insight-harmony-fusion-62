@@ -50,13 +50,48 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     skin_tone: formData.skin_tone || 'natural complexion',
   };
 
-  // Generate basic trait profiles (these could be enhanced later)
+  // Generate comprehensive trait profile with physical traits
   const trait_profile = {
-    conscientiousness: 0.7,
-    openness: 0.6,
-    extraversion: 0.5,
-    agreeableness: 0.6,
-    neuroticism: 0.4,
+    // Core personality traits (Big Five)
+    big_five: {
+      conscientiousness: 0.7,
+      openness: 0.6,
+      extraversion: 0.5,
+      agreeableness: 0.6,
+      neuroticism: 0.4,
+    },
+    
+    // Moral foundations
+    moral_foundations: {
+      care_harm: 0.7,
+      fairness_cheating: 0.6,
+      loyalty_betrayal: 0.8,
+      authority_subversion: 0.7,
+      sanctity_degradation: 0.5,
+    },
+    
+    // Political compass
+    political_compass: {
+      economic_left_right: 0.3,
+      social_libertarian_authoritarian: 0.2,
+    },
+    
+    // Physical appearance traits from form data
+    physical_appearance: {
+      height: formData.height || 'average height',
+      build_body_type: formData.build_body_type || 'average build',
+      hair_color: formData.hair_color || 'brown',
+      hair_style: formData.hair_style || 'practical unstyled',
+      eye_color: formData.eye_color || 'brown',
+      skin_tone: formData.skin_tone || 'natural complexion',
+    },
+    
+    // Physical health (basic for historical context)
+    physical_health: {
+      disabilities: [],
+      health_conditions: [],
+      mobility: 'normal',
+    },
   };
 
   const behavioral_modulation = {
