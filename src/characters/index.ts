@@ -10,6 +10,7 @@ export { default as FictionalCharacterCreate } from './pages/FictionalCharacterC
 export { default as HistoricalCharacterForm } from './components/HistoricalCharacterForm';
 export { default as HistoricalCharacterHeader } from './components/HistoricalCharacterHeader';
 export { default as CharacterTraits } from './components/CharacterTraits';
+export { default as CharacterVisibilityToggle } from './components/CharacterVisibilityToggle';
 
 // Export character trait types (renamed to avoid conflicts)
 export * from './types/characterTraitTypes';

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Eye, EyeOff, MessageCircle } from 'lucide-react';
@@ -9,6 +8,7 @@ import { useCharacter } from '../hooks/useCharacter';
 import CharacterTraits from '../components/CharacterTraits';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
+import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -25,6 +25,14 @@ const CharacterDetail = () => {
     // Reload character to get updated image URL
     if (characterId) {
       await loadCharacter(characterId);
+    }
+  };
+
+  const handleVisibilityChange = (isPublic: boolean) => {
+    // Update the character state to reflect the new visibility
+    if (activeCharacter) {
+      // This will trigger a re-render with the updated visibility status
+      loadCharacter(characterId!);
     }
   };
 
@@ -86,6 +94,12 @@ const CharacterDetail = () => {
                 <p className="text-muted-foreground">
                   {activeCharacter.character_type} Character
                 </p>
+                <CharacterVisibilityToggle
+                  characterId={activeCharacter.character_id}
+                  isPublic={activeCharacter.is_public || false}
+                  isOwner={true} // TODO: Add proper ownership check
+                  onVisibilityChange={handleVisibilityChange}
+                />
               </div>
             </div>
             
