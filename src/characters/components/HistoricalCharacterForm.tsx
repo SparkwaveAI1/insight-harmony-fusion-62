@@ -5,7 +5,6 @@ import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import FormSectionWrapper from '@/components/ui-custom/FormSectionWrapper';
 import { historicalCharacterSchema, HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
@@ -118,18 +117,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Gender *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="non-binary">Non-binary</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., male, female, non-binary" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -141,19 +131,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Historical Period *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select period" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="1600s">1600s (17th Century)</SelectItem>
-                          <SelectItem value="1700s">1700s (18th Century)</SelectItem>
-                          <SelectItem value="1800s">1800s (19th Century)</SelectItem>
-                          <SelectItem value="1900s">1900s (20th Century)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., 1700s, 18th Century, Late Medieval" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -167,19 +147,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Social Class</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select social class" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="upper class">Upper Class</SelectItem>
-                          <SelectItem value="middle class">Middle Class</SelectItem>
-                          <SelectItem value="working class">Working Class</SelectItem>
-                          <SelectItem value="lower class">Lower Class</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., nobility, merchant class, peasant" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -192,7 +162,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormItem>
                       <FormLabel>Region/Country</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Virginia, England, France" {...field} />
+                        <Input placeholder="e.g., Virginia, England, Edo Japan" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -211,19 +181,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Height</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select height" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="short">Short</SelectItem>
-                          <SelectItem value="average height">Average Height</SelectItem>
-                          <SelectItem value="tall">Tall</SelectItem>
-                          <SelectItem value="very tall">Very Tall</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., tall, average, 5'8\", 175cm" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -235,20 +195,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Build/Body Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select build" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="slim">Slim</SelectItem>
-                          <SelectItem value="average build">Average Build</SelectItem>
-                          <SelectItem value="stocky">Stocky</SelectItem>
-                          <SelectItem value="muscular">Muscular</SelectItem>
-                          <SelectItem value="heavy-set">Heavy-set</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., slender, stocky, athletic" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -262,24 +211,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hair Color</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select hair color" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="black">Black</SelectItem>
-                          <SelectItem value="dark brown">Dark Brown</SelectItem>
-                          <SelectItem value="brown">Brown</SelectItem>
-                          <SelectItem value="light brown">Light Brown</SelectItem>
-                          <SelectItem value="blonde">Blonde</SelectItem>
-                          <SelectItem value="red">Red</SelectItem>
-                          <SelectItem value="auburn">Auburn</SelectItem>
-                          <SelectItem value="gray">Gray</SelectItem>
-                          <SelectItem value="white">White</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., dark brown, silver, auburn" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -291,23 +225,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hair Style</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select hair style" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="practical unstyled">Practical/Unstyled</SelectItem>
-                          <SelectItem value="short cropped">Short Cropped</SelectItem>
-                          <SelectItem value="shoulder length">Shoulder Length</SelectItem>
-                          <SelectItem value="long">Long</SelectItem>
-                          <SelectItem value="braided">Braided</SelectItem>
-                          <SelectItem value="upswept">Upswept</SelectItem>
-                          <SelectItem value="curly">Curly</SelectItem>
-                          <SelectItem value="wavy">Wavy</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., powdered wig, long braided, topknot" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -321,22 +241,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Eye Color</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select eye color" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="brown">Brown</SelectItem>
-                          <SelectItem value="dark brown">Dark Brown</SelectItem>
-                          <SelectItem value="hazel">Hazel</SelectItem>
-                          <SelectItem value="green">Green</SelectItem>
-                          <SelectItem value="blue">Blue</SelectItem>
-                          <SelectItem value="gray">Gray</SelectItem>
-                          <SelectItem value="amber">Amber</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., deep brown, hazel, green" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -348,22 +255,9 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Skin Tone</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select skin tone" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="fair">Fair</SelectItem>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="olive">Olive</SelectItem>
-                          <SelectItem value="tan">Tan</SelectItem>
-                          <SelectItem value="brown">Brown</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input placeholder="e.g., olive, fair, dark, bronze" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -381,7 +275,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                   <FormItem>
                     <FormLabel>Primary Occupation</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., President, Military General" {...field} />
+                      <Input placeholder="e.g., President, Military General, Scholar" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
