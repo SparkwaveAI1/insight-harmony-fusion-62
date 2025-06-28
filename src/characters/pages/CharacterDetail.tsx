@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -97,18 +96,6 @@ const CharacterDetail = () => {
                   Back to Library
                 </Link>
               </Button>
-              <div>
-                <h1 className="text-3xl font-bold">{activeCharacter.name}</h1>
-                <p className="text-muted-foreground">
-                  {activeCharacter.character_type} Character
-                </p>
-                <CharacterVisibilityToggle
-                  characterId={activeCharacter.character_id}
-                  isPublic={activeCharacter.is_public || false}
-                  isOwner={true} // TODO: Add proper ownership check
-                  onVisibilityChange={handleVisibilityChange}
-                />
-              </div>
             </div>
             
             <div className="flex items-center gap-2">
@@ -131,26 +118,46 @@ const CharacterDetail = () => {
             </div>
           </div>
 
-          {/* Character Image - Moved to top */}
-          <div className="mb-8">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Character Image</h3>
-              <div className="flex flex-col items-center space-y-4">
-                {activeCharacter.profile_image_url ? (
-                  <div className="w-full max-w-sm">
-                    <img 
-                      src={activeCharacter.profile_image_url} 
-                      alt={`${activeCharacter.name} portrait`}
-                      className="w-full h-auto rounded-lg border-4 border-primary/20 shadow-lg"
-                    />
-                  </div>
-                ) : (
-                  <CharacterAvatar 
-                    character={activeCharacter} 
-                    size="xl" 
-                    className="border-4 border-primary/20"
+          {/* Character Profile Header - Similar to Persona layout */}
+          <div className="text-center mb-8">
+            <Card className="p-8">
+              <div className="flex flex-col items-center">
+                {/* Character Image - Large and rectangular */}
+                <div className="mb-6">
+                  {activeCharacter.profile_image_url ? (
+                    <div className="w-full max-w-md">
+                      <img 
+                        src={activeCharacter.profile_image_url} 
+                        alt={`${activeCharacter.name} portrait`}
+                        className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
+                      <CharacterAvatar 
+                        character={activeCharacter} 
+                        size="xl" 
+                        className="w-24 h-24"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Character Info */}
+                <div className="mb-6">
+                  <h1 className="text-3xl font-bold mb-2">{activeCharacter.name}</h1>
+                  <p className="text-muted-foreground mb-4">
+                    {activeCharacter.character_type} Character
+                  </p>
+                  <CharacterVisibilityToggle
+                    characterId={activeCharacter.character_id}
+                    isPublic={activeCharacter.is_public || false}
+                    isOwner={true}
+                    onVisibilityChange={handleVisibilityChange}
                   />
-                )}
+                </div>
+
+                {/* Generate Image Button */}
                 <GenerateCharacterImageButton
                   character={activeCharacter}
                   onImageGenerated={handleImageGenerated}
