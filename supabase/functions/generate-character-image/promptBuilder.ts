@@ -1,18 +1,16 @@
-
-
 function getPhysicalDescription(characterData: any): string {
-  const metadata = characterData.metadata || {};
+  // Use the new direct fields first, fall back to metadata for backwards compatibility
+  const age = characterData.age || parseInt(characterData.metadata?.age) || 30;
+  const gender = characterData.gender || characterData.metadata?.gender || 'person';
   
-  const age = parseInt(metadata?.age) || 30;
-  const gender = metadata?.gender || 'person';
-  
-  // Basic physical attributes from metadata
-  const height = metadata?.height || 'average height';
-  const build = metadata?.build_body_type || 'average build';
-  const hairColor = metadata?.hair_color || 'brown';
-  const hairStyle = metadata?.hair_style || 'practical unstyled';
-  const eyeColor = metadata?.eye_color || 'brown';
-  const skinTone = metadata?.skin_tone || 'natural complexion';
+  // Physical attributes from new direct fields or metadata
+  const physicalAppearance = characterData.physical_appearance || {};
+  const height = physicalAppearance.height || characterData.metadata?.height || 'average height';
+  const build = physicalAppearance.build_body_type || characterData.metadata?.build_body_type || 'average build';
+  const hairColor = physicalAppearance.hair_color || characterData.metadata?.hair_color || 'brown';
+  const hairStyle = physicalAppearance.hair_style || characterData.metadata?.hair_style || 'practical unstyled';
+  const eyeColor = physicalAppearance.eye_color || characterData.metadata?.eye_color || 'brown';
+  const skinTone = physicalAppearance.skin_tone || characterData.metadata?.skin_tone || 'natural complexion';
   
   // Build consolidated description with more authentic hair styling
   let description = `${age}-year-old ${gender}, ${height}, ${build}, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone}`;
@@ -21,10 +19,10 @@ function getPhysicalDescription(characterData: any): string {
 }
 
 function getHistoricalClothing(characterData: any): string {
-  const metadata = characterData.metadata || {};
-  const historicalPeriod = metadata?.historical_period || '1700s';
-  const socialClass = metadata?.social_class || 'middle class';
-  const region = metadata?.region || 'European';
+  // Use new direct fields first, fall back to metadata
+  const historicalPeriod = characterData.historical_period || characterData.metadata?.historical_period || '1700s';
+  const socialClass = characterData.social_class || characterData.metadata?.social_class || 'middle class';
+  const region = characterData.region || characterData.metadata?.region || 'European';
   
   const isFrontier = region.toLowerCase().includes('virginia') || 
                     region.toLowerCase().includes('frontier') || 
@@ -52,8 +50,9 @@ function getHistoricalClothing(characterData: any): string {
 export function buildCharacterImagePrompt(characterData: any): string {
   console.log("Building character portrait prompt with new template");
   
-  const historicalPeriod = characterData.metadata?.historical_period || '1700s';
-  const region = characterData.metadata?.region || 'Europe';
+  // Use new direct fields first, fall back to metadata
+  const historicalPeriod = characterData.historical_period || characterData.metadata?.historical_period || '1700s';
+  const region = characterData.region || characterData.metadata?.region || 'Europe';
   
   // Get physical description and clothing
   const physicalDescription = getPhysicalDescription(characterData);
@@ -67,4 +66,3 @@ export function buildCharacterImagePrompt(characterData: any): string {
   console.log("Generated character portrait prompt with new template:", prompt);
   return prompt;
 }
-

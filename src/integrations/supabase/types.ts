@@ -55,6 +55,7 @@ export type Database = {
       }
       characters: {
         Row: {
+          age: number | null
           behavioral_modulation: Json
           character_id: string
           character_type: string
@@ -62,20 +63,26 @@ export type Database = {
           creation_date: string
           emotional_triggers: Json | null
           enhanced_metadata_version: number | null
+          gender: string | null
+          historical_period: string | null
           id: string
           interview_sections: Json
           is_public: boolean | null
           linguistic_profile: Json
           metadata: Json
           name: string
+          physical_appearance: Json | null
           preinterview_tags: Json
           profile_image_url: string | null
           prompt: string | null
+          region: string | null
           simulation_directives: Json
+          social_class: string | null
           trait_profile: Json
           user_id: string | null
         }
         Insert: {
+          age?: number | null
           behavioral_modulation?: Json
           character_id: string
           character_type: string
@@ -83,20 +90,26 @@ export type Database = {
           creation_date: string
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
+          gender?: string | null
+          historical_period?: string | null
           id?: string
           interview_sections?: Json
           is_public?: boolean | null
           linguistic_profile?: Json
           metadata?: Json
           name: string
+          physical_appearance?: Json | null
           preinterview_tags?: Json
           profile_image_url?: string | null
           prompt?: string | null
+          region?: string | null
           simulation_directives?: Json
+          social_class?: string | null
           trait_profile?: Json
           user_id?: string | null
         }
         Update: {
+          age?: number | null
           behavioral_modulation?: Json
           character_id?: string
           character_type?: string
@@ -104,16 +117,21 @@ export type Database = {
           creation_date?: string
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
+          gender?: string | null
+          historical_period?: string | null
           id?: string
           interview_sections?: Json
           is_public?: boolean | null
           linguistic_profile?: Json
           metadata?: Json
           name?: string
+          physical_appearance?: Json | null
           preinterview_tags?: Json
           profile_image_url?: string | null
           prompt?: string | null
+          region?: string | null
           simulation_directives?: Json
+          social_class?: string | null
           trait_profile?: Json
           user_id?: string | null
         }
