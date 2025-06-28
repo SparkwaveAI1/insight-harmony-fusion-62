@@ -13,6 +13,8 @@ interface CharacterTraitRequest {
   historical_context?: string;
   date_of_birth?: string;
   ethnicity?: string;
+  description?: string; // Added description field for AI generation
+  location?: string; // Added location field
 }
 
 export const generateCharacterTraits = async (characterData: CharacterTraitRequest) => {
