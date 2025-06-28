@@ -4,9 +4,17 @@ import {
   EmotionalTriggersProfile 
 } from '../../services/persona/types/trait-profile';
 import { 
-  BehavioralModulation,
   LinguisticProfile 
 } from '../../services/persona/types/linguistic-profile';
+
+// Character-specific behavioral modulation (separate from persona behavioral modulation)
+export interface CharacterBehavioralModulation {
+  formality?: number;
+  enthusiasm?: number;
+  assertiveness?: number;
+  empathy?: number;
+  patience?: number;
+}
 
 // Extend the persona TraitProfile to include character-specific physical traits
 export interface CharacterTraitProfile extends TraitProfile {
@@ -35,13 +43,13 @@ export interface Character {
   creation_date: string;
   created_at: string;
   metadata: any;
-  behavioral_modulation: any;
+  behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
-  linguistic_profile: any;
+  linguistic_profile: LinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
-  trait_profile: any;
-  emotional_triggers?: any;
+  trait_profile: CharacterTraitProfile;
+  emotional_triggers?: EmotionalTriggersProfile;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
@@ -65,13 +73,13 @@ export interface DbCharacter {
   creation_date: string;
   created_at?: string;
   metadata: any;
-  behavioral_modulation: any;
+  behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
-  linguistic_profile: any;
+  linguistic_profile: LinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
-  trait_profile: any;
-  emotional_triggers?: any;
+  trait_profile: CharacterTraitProfile;
+  emotional_triggers?: EmotionalTriggersProfile;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;

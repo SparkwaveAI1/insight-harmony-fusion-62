@@ -1,5 +1,7 @@
+
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
-import { Character } from '../types/characterTraitTypes';
+import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
+import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
 import { v4 as uuidv4 } from 'uuid';
 
 export const generateHistoricalCharacter = async (formData: HistoricalCharacterFormData): Promise<Character> => {
@@ -174,7 +176,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     },
   };
 
-  const behavioral_modulation = {
+  const behavioral_modulation: CharacterBehavioralModulation = {
     formality: 0.8,
     enthusiasm: 0.6,
     assertiveness: 0.7,
@@ -183,11 +185,24 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
   };
 
   const linguistic_profile = {
-    vocabulary_complexity: 0.7,
-    sentence_structure: 0.8,
-    use_of_metaphors: 0.5,
-    emotional_expressiveness: 0.6,
-    technical_language: 0.4,
+    default_output_length: 'medium',
+    speech_register: 'formal',
+    regional_influence: formData.region || 'European',
+    professional_or_educational_influence: formData.occupation || null,
+    cultural_speech_patterns: `${formData.historical_period || '1700s'} speech patterns`,
+    generational_or_peer_influence: null,
+    speaking_style: {
+      formal: true,
+      casual: false,
+      technical: false,
+      storytelling: true,
+    },
+    sample_phrasing: [],
+  };
+
+  const emotional_triggers: EmotionalTriggersProfile = {
+    positive_triggers: [],
+    negative_triggers: [],
   };
 
   const character: Character = {
@@ -203,10 +218,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     preinterview_tags: [],
     simulation_directives: {},
     trait_profile,
-    emotional_triggers: {
-      positive_triggers: [],
-      negative_triggers: [],
-    },
+    emotional_triggers,
     is_public: false,
     enhanced_metadata_version: 2,
     // New demographic fields
