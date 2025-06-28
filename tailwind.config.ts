@@ -28,6 +28,7 @@ export default {
 				plasmik: ['Plasmik Pro', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				chivo: ['Chivo', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				orbitron: ['Orbitron', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
+				baufra: ['Baufra', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
