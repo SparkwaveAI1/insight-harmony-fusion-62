@@ -2,6 +2,7 @@
 import { CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
+import { generateCharacterEmotionalTriggers } from './emotionalTriggerGenerator';
 
 export function buildTraitProfile(aiGeneratedTraits: any) {
   return {
@@ -44,11 +45,12 @@ export function buildLinguisticProfile(aiGeneratedTraits: any, formData: Histori
   };
 }
 
-export function buildEmotionalTriggers(): EmotionalTriggersProfile {
-  return {
-    positive_triggers: [],
-    negative_triggers: [],
-  };
+export function buildEmotionalTriggers(
+  formData: HistoricalCharacterFormData, 
+  aiGeneratedTraits: any
+): EmotionalTriggersProfile {
+  console.log('🎭 Building emotional triggers for character:', formData.name);
+  return generateCharacterEmotionalTriggers(formData, aiGeneratedTraits);
 }
 
 export function buildPhysicalAppearance(aiGeneratedTraits: any) {

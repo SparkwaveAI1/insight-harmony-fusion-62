@@ -5,9 +5,9 @@ import { generateFallbackTraits } from './fallbackTraitsGenerator';
 import { 
   buildBehavioralModulation, 
   buildLinguisticProfile, 
-  buildEmotionalTriggers,
-  buildCharacterMetadata 
-} from './characterBuilder';
+  buildEmotionalTriggers
+} from './characterProfiles';
+import { buildCharacterMetadata } from './characterMetadata';
 
 export function buildFallbackCharacter(
   formData: HistoricalCharacterFormData,
@@ -93,7 +93,7 @@ export function buildFallbackCharacter(
 
   const behavioral_modulation = buildBehavioralModulation();
   const linguistic_profile = buildLinguisticProfile(mockAiGeneratedTraits, formData);
-  const emotional_triggers = buildEmotionalTriggers();
+  const emotional_triggers = buildEmotionalTriggers(formData, mockAiGeneratedTraits);
 
   return {
     character_id: characterId,

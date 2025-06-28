@@ -11,37 +11,25 @@ import {
   buildPhysicalAppearance 
 } from './characterProfiles';
 
-// Comprehensive trait assignment using the same logic as persona system
-function assignTraitsFromMultipleSources(
-  aiTraits: any, 
-  userTraits: any, 
-  probabilityFn: () => any,
-  fieldMappings: string[] = []
-) {
-  // Check AI traits first (multiple possible field names)
-  for (const field of fieldMappings) {
-    if (aiTraits[field]) return aiTraits[field];
-  }
-  
-  // Then check user traits
-  if (userTraits) return userTraits;
-  
-  // Finally use probability-based assignment
-  return probabilityFn();
-}
-
 export function buildCharacter(
   formData: HistoricalCharacterFormData,
   aiGeneratedTraits: any,
   characterId: string,
   currentDate: string
 ): Character {
+  console.log('🏗️ Building character with enhanced emotional triggers:', formData.name);
+  
   const metadata = buildCharacterMetadata(formData, aiGeneratedTraits);
   const trait_profile = buildTraitProfile(aiGeneratedTraits);
   const behavioral_modulation = buildBehavioralModulation();
   const linguistic_profile = buildLinguisticProfile(aiGeneratedTraits, formData);
-  const emotional_triggers = buildEmotionalTriggers();
+  const emotional_triggers = buildEmotionalTriggers(formData, aiGeneratedTraits);
   const physical_appearance = buildPhysicalAppearance(aiGeneratedTraits);
+
+  console.log('✅ Character built with', 
+    emotional_triggers.positive_triggers.length, 'positive and', 
+    emotional_triggers.negative_triggers.length, 'negative emotional triggers'
+  );
 
   return {
     character_id: characterId,
