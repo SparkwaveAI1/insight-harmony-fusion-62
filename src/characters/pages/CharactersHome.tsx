@@ -34,7 +34,7 @@ const CharactersHome = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto mb-12">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
             {/* Historical Characters Dashboard */}
             <div 
               className="cursor-pointer" 
@@ -55,16 +55,24 @@ const CharactersHome = () => {
               </Card>
             </div>
 
-            {/* Creative Characters - Coming Soon */}
-            <div className="text-center p-8 border-2 border-dashed border-muted rounded-lg">
-              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-3 text-muted-foreground">Creative Characters</h3>
-              <p className="text-muted-foreground mb-6">
-                Coming soon! Create original characters from any genre, species, or universe.
-              </p>
-              <Button disabled variant="outline" className="w-full">
-                Coming Soon
-              </Button>
+            {/* Creative Characters Dashboard */}
+            <div 
+              className="cursor-pointer" 
+              onClick={() => navigate('/characters/creative')}
+            >
+              <Card className="p-8 hover:shadow-lg transition-shadow">
+                <div className="text-center">
+                  <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-3">Creative Characters</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Create and manage original characters from any genre, species, or universe. 
+                    Design unique personalities with custom traits and backstories.
+                  </p>
+                  <Button className="w-full">
+                    View Creative Dashboard
+                  </Button>
+                </div>
+              </Card>
             </div>
           </div>
 
@@ -79,6 +87,10 @@ const CharactersHome = () => {
               <Button onClick={() => navigate('/characters/create/historical')}>
                 <Clock className="h-4 w-4 mr-2" />
                 Create Historical Character
+              </Button>
+              <Button onClick={() => navigate('/characters/create/creative')}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Create Creative Character
               </Button>
               <Button variant="outline" onClick={() => navigate('/characters')}>
                 <Library className="h-4 w-4 mr-2" />
