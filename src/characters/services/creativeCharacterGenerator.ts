@@ -16,20 +16,11 @@ export const generateCreativeCharacter = async (formData: CreativeCharacterFormD
   try {
     // Generate comprehensive creative character details from the form inputs
     console.log('Generating AI-powered creative character...');
+    
+    // Filter form data to match CharacterTraitRequest interface
     const aiGeneratedTraits = await generateCharacterTraits({
       name: formData.name,
       description: formData.description,
-      // Creative-specific context
-      genre: formData.genre,
-      species: formData.species,
-      universe: formData.universe,
-      magical_abilities: formData.magical_abilities || '',
-      technological_augmentations: formData.technological_augmentations || '',
-      power_level: formData.power_level || '',
-      faction_allegiance: formData.faction_allegiance || '',
-      // Set creative context for AI
-      generation_type: 'creative',
-      character_type: 'creative',
       // Map creative fields to expected AI service inputs
       age: 25, // Default age for creative characters
       date_of_birth: '', // Not relevant for creative characters
@@ -42,6 +33,9 @@ export const generateCreativeCharacter = async (formData: CreativeCharacterFormD
       personality_traits: formData.personality_traits || '',
       backstory: formData.backstory || '',
       historical_context: `Creative character from ${formData.genre} genre in ${formData.universe}`,
+      // Set creative context for AI
+      generation_type: 'creative',
+      character_type: 'creative',
     });
 
     console.log('Successfully generated AI traits for creative character');

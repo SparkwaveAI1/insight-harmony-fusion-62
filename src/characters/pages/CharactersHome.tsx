@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Sparkles } from 'lucide-react';
@@ -35,36 +36,44 @@ const CharactersHome = () => {
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
             {/* Historical Characters */}
-            <Card className="p-8 hover:shadow-lg transition-shadow cursor-pointer" 
-                  onClick={() => navigate('/characters/create/historical')}>
-              <div className="text-center">
-                <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-3">Historical Characters</h3>
-                <p className="text-muted-foreground mb-6">
-                  Create characters based on real historical figures with accurate cultural context, 
-                  period-appropriate traits, and historical authenticity.
-                </p>
-                <Button className="w-full">
-                  Create Historical Character
-                </Button>
-              </div>
-            </Card>
+            <div 
+              className="cursor-pointer" 
+              onClick={() => navigate('/characters/create/historical')}
+            >
+              <Card className="p-8 hover:shadow-lg transition-shadow">
+                <div className="text-center">
+                  <Clock className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-3">Historical Characters</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Create characters based on real historical figures with accurate cultural context, 
+                    period-appropriate traits, and historical authenticity.
+                  </p>
+                  <Button className="w-full">
+                    Create Historical Character
+                  </Button>
+                </div>
+              </Card>
+            </div>
 
             {/* Creative Characters */}
-            <Card className="p-8 hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => navigate('/characters/create/creative')}>
-              <div className="text-center">
-                <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-3">Creative Characters</h3>
-                <p className="text-muted-foreground mb-6">
-                  Design original characters from any genre, species, or universe. Perfect for 
-                  fantasy, sci-fi, and imaginative storytelling.
-                </p>
-                <Button className="w-full">
-                  Create Creative Character
-                </Button>
-              </div>
-            </Card>
+            <div 
+              className="cursor-pointer"
+              onClick={() => navigate('/characters/create/creative')}
+            >
+              <Card className="p-8 hover:shadow-lg transition-shadow">
+                <div className="text-center">
+                  <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-3">Creative Characters</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Design original characters from any genre, species, or universe. Perfect for 
+                    fantasy, sci-fi, and imaginative storytelling.
+                  </p>
+                  <Button className="w-full">
+                    Create Creative Character
+                  </Button>
+                </div>
+              </Card>
+            </div>
           </div>
 
           {/* Character Library Section */}
