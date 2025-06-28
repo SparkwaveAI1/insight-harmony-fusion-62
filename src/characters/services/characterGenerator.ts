@@ -51,3 +51,6 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
 
 // Export alias for consistency with the form component
 export const generateCharacterFromFormData = generateHistoricalCharacter;
+
+// Add a general generateCharacter function that can handle different types
+export const generateCharacter = generateHistoricalCharacter;

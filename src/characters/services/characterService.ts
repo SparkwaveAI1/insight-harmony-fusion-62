@@ -159,6 +159,29 @@ export const updateCharacterName = async (characterId: string, name: string): Pr
   }
 };
 
+export const updateCharacterProfileImageUrl = async (characterId: string, profileImageUrl: string): Promise<void> => {
+  console.log('=== UPDATING CHARACTER PROFILE IMAGE URL ===');
+  console.log('Character ID:', characterId, 'Image URL:', profileImageUrl);
+  
+  try {
+    // Use any to bypass TypeScript check until Supabase types are regenerated
+    const { error } = await (supabase as any)
+      .from('characters')
+      .update({ profile_image_url: profileImageUrl })
+      .eq('character_id', characterId);
+
+    if (error) {
+      console.error('Error updating character profile image URL:', error);
+      throw new Error(`Failed to update character profile image URL: ${error.message}`);
+    }
+
+    console.log('✅ Character profile image URL updated successfully');
+  } catch (error) {
+    console.error('Error in updateCharacterProfileImageUrl:', error);
+    throw error;
+  }
+};
+
 export const deleteCharacter = async (characterId: string): Promise<void> => {
   console.log('=== DELETING CHARACTER ===');
   console.log('Character ID:', characterId);
@@ -178,6 +201,42 @@ export const deleteCharacter = async (characterId: string): Promise<void> => {
     console.log('✅ Character deleted successfully');
   } catch (error) {
     console.error('Error in deleteCharacter:', error);
+    throw error;
+  }
+};
+
+export const cloneCharacter = async (originalCharacter: Character, customizations: { name: string; customization_notes?: string }): Promise<Character> => {
+  console.log('=== CLONING CHARACTER ===');
+  console.log('Original Character:', originalCharacter.character_id);
+  console.log('Customizations:', customizations);
+  
+  try {
+    // Create a new character based on the original
+    const clonedCharacter: Character = {
+      ...originalCharacter,
+      character_id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: customizations.name,
+      creation_date: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      is_public: false, // Cloned characters are private by default
+      profile_image_url: null, // Reset image URL for cloned character
+    };
+
+    // Add customization notes to metadata if provided
+    if (customizations.customization_notes) {
+      clonedCharacter.metadata = {
+        ...clonedCharacter.metadata,
+        customization_notes: customizations.customization_notes,
+        cloned_from: originalCharacter.character_id
+      };
+    }
+
+    // Save the cloned character
+    const savedCharacter = await saveCharacter(clonedCharacter);
+    console.log('✅ Character cloned successfully');
+    return savedCharacter;
+  } catch (error) {
+    console.error('Error in cloneCharacter:', error);
     throw error;
   }
 };
