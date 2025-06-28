@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
@@ -8,6 +9,7 @@ import { useCharacter } from '../hooks/useCharacter';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
+import DeleteCharacterButton from '../components/DeleteCharacterButton';
 import { downloadCharacterAsJSON } from '../utils/downloadUtils';
 // Import the comprehensive trait display components from Personas
 import PersonaTraits from '@/components/persona-details/PersonaTraits';
@@ -16,6 +18,7 @@ import PersonaEmotionalTriggers from '@/components/persona-details/PersonaEmotio
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
+  const navigate = useNavigate();
   const { activeCharacter, isLoading, error, loadCharacter } = useCharacter();
 
   // Load character when component mounts
@@ -44,6 +47,11 @@ const CharacterDetail = () => {
     if (activeCharacter) {
       downloadCharacterAsJSON(activeCharacter);
     }
+  };
+
+  const handleCharacterDeleted = async (): Promise<void> => {
+    // Navigate back to character library after successful deletion
+    navigate('/characters');
   };
 
   if (isLoading) {
@@ -118,6 +126,11 @@ const CharacterDetail = () => {
                   Edit Character
                 </Link>
               </Button>
+              <DeleteCharacterButton
+                characterId={activeCharacter.character_id}
+                characterName={activeCharacter.name}
+                onDeleted={handleCharacterDeleted}
+              />
             </div>
           </div>
 
