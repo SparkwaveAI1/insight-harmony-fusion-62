@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Eye, EyeOff, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -9,6 +9,7 @@ import CharacterTraits from '../components/CharacterTraits';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
+import { downloadCharacterAsJSON } from '../utils/downloadUtils';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -33,6 +34,12 @@ const CharacterDetail = () => {
     if (activeCharacter) {
       // This will trigger a re-render with the updated visibility status
       loadCharacter(characterId!);
+    }
+  };
+
+  const handleDownloadJSON = () => {
+    if (activeCharacter) {
+      downloadCharacterAsJSON(activeCharacter);
     }
   };
 
@@ -104,18 +111,9 @@ const CharacterDetail = () => {
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                {activeCharacter.is_public ? (
-                  <>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Public
-                  </>
-                ) : (
-                  <>
-                    <EyeOff className="h-4 w-4 mr-2" />
-                    Private
-                  </>
-                )}
+              <Button variant="outline" onClick={handleDownloadJSON}>
+                <Download className="h-4 w-4 mr-2" />
+                Download JSON
               </Button>
               <Button variant="outline" asChild>
                 <Link to={`/characters/${activeCharacter.character_id}/chat`}>
