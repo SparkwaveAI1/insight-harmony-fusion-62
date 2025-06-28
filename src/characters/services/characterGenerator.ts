@@ -1,3 +1,4 @@
+
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
@@ -5,78 +6,73 @@ import { generateCharacterTraits } from './characterTraitService';
 import { v4 as uuidv4 } from 'uuid';
 
 export const generateHistoricalCharacter = async (formData: HistoricalCharacterFormData): Promise<Character> => {
-  console.log('=== GENERATING HISTORICAL CHARACTER WITH AI TRAITS ===');
+  console.log('=== GENERATING HISTORICAL CHARACTER FROM MINIMAL INPUT ===');
   console.log('Form data:', formData);
 
   const characterId = uuidv4();
   const currentDate = new Date().toISOString();
 
-  // Build metadata with all the form data
-  const metadata = {
-    // Demographics
-    age: parseInt(formData.age) || 30,
-    gender: formData.gender || 'male',
-    ethnicity: formData.ethnicity || 'Not specified',
-    social_class: formData.social_class || 'middle class',
-    region: formData.region || 'Europe',
-    
-    // Physical appearance
-    height_build: formData.height_build || 'average height and build',
-    hair: formData.hair || 'brown hair',
-    eye_color: formData.eye_color || 'brown eyes',
-    skin_tone: formData.skin_tone || 'natural complexion',
-    
-    // Basic info
-    date_of_birth: formData.date_of_birth,
-    location: formData.location,
-    occupation: formData.occupation,
-    
-    // Character details
-    description: formData.description,
-    backstory: formData.backstory,
-    personality_traits: formData.personality_traits,
-    appearance: formData.appearance,
-    historical_context: formData.historical_context,
-  };
-
-  // Build physical appearance object
-  const physical_appearance = {
-    height_build: formData.height_build || 'average height and build',
-    hair: formData.hair || 'brown hair',
-    eye_color: formData.eye_color || 'brown eyes',
-    skin_tone: formData.skin_tone || 'natural complexion',
-    ethnicity: formData.ethnicity || 'Not specified',
-  };
-
   try {
-    // Generate AI-powered trait profile using the dedicated character service
-    console.log('Generating AI-powered traits for historical character...');
+    // Generate comprehensive character details from the description and core inputs
+    console.log('Generating AI-powered character from description...');
     const aiGeneratedTraits = await generateCharacterTraits({
-      name: formData.name,
-      age: parseInt(formData.age) || 30,
-      gender: formData.gender || 'male',
-      ethnicity: formData.ethnicity,
-      social_class: formData.social_class || 'middle class',
-      region: formData.region || 'Europe',
-      occupation: formData.occupation,
-      personality_traits: formData.personality_traits,
-      backstory: formData.backstory,
-      historical_context: formData.historical_context,
+      description: formData.description,
       date_of_birth: formData.date_of_birth,
+      age: parseInt(formData.age) || 30,
+      location: formData.location,
+      // AI will infer these from the description
+      name: formData.name || '',
+      gender: formData.gender || '',
+      ethnicity: formData.ethnicity || '',
+      social_class: formData.social_class || '',
+      region: formData.region || '',
+      occupation: formData.occupation || '',
+      personality_traits: formData.personality_traits || '',
+      backstory: formData.backstory || '',
+      historical_context: formData.historical_context || '',
     });
 
-    console.log('Successfully generated AI traits for character:', formData.name);
+    console.log('Successfully generated AI traits for character from description');
+
+    // Build comprehensive metadata from AI generation and user inputs
+    const metadata = {
+      // Core user inputs
+      date_of_birth: formData.date_of_birth,
+      age: parseInt(formData.age) || 30,
+      location: formData.location,
+      description: formData.description,
+      
+      // AI-generated details (will be populated by the trait service)
+      name: aiGeneratedTraits.name || 'Generated Character',
+      gender: aiGeneratedTraits.gender || 'not specified',
+      ethnicity: aiGeneratedTraits.ethnicity || 'not specified',
+      social_class: aiGeneratedTraits.social_class || 'middle class',
+      region: aiGeneratedTraits.region || 'Europe',
+      
+      // Physical appearance (AI-generated)
+      height_build: aiGeneratedTraits.physical_appearance?.height_build || 'average height and build',
+      hair: aiGeneratedTraits.physical_appearance?.hair || 'brown hair',
+      eye_color: aiGeneratedTraits.physical_appearance?.eye_color || 'brown eyes',
+      skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || 'natural complexion',
+      
+      // Character details (AI-generated)
+      backstory: aiGeneratedTraits.backstory || 'Generated from character description',
+      personality_traits: aiGeneratedTraits.personality_traits || 'Generated personality traits',
+      appearance: aiGeneratedTraits.appearance || 'Generated appearance description',
+      occupation: aiGeneratedTraits.occupation || 'Generated occupation',
+      historical_context: aiGeneratedTraits.historical_context || 'Generated historical context',
+    };
 
     // Use AI-generated traits as the foundation
     const trait_profile = {
       ...aiGeneratedTraits,
       // Ensure physical appearance is properly set
       physical_appearance: {
-        height_build: formData.height_build || 'average height and build',
-        hair: formData.hair || 'brown hair',
-        eye_color: formData.eye_color || 'brown eyes',
-        skin_tone: formData.skin_tone || 'natural complexion',
-        ethnicity: formData.ethnicity || 'Not specified',
+        height_build: aiGeneratedTraits.physical_appearance?.height_build || 'average height and build',
+        hair: aiGeneratedTraits.physical_appearance?.hair || 'brown hair',
+        eye_color: aiGeneratedTraits.physical_appearance?.eye_color || 'brown eyes',
+        skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || 'natural complexion',
+        ethnicity: aiGeneratedTraits.physical_appearance?.ethnicity || 'not specified',
       },
     };
 
@@ -91,8 +87,8 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     const linguistic_profile = {
       default_output_length: 'medium',
       speech_register: 'formal',
-      regional_influence: formData.region || 'European',
-      professional_or_educational_influence: formData.occupation || null,
+      regional_influence: aiGeneratedTraits.region || formData.location || 'European',
+      professional_or_educational_influence: aiGeneratedTraits.occupation || null,
       cultural_speech_patterns: 'Historical speech patterns',
       generational_or_peer_influence: null,
       speaking_style: {
@@ -111,7 +107,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
 
     const character: Character = {
       character_id: characterId,
-      name: formData.name,
+      name: aiGeneratedTraits.name || 'Generated Character',
       character_type: 'historical',
       creation_date: currentDate,
       created_at: currentDate,
@@ -127,29 +123,35 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       enhanced_metadata_version: 2,
       // New demographic fields
       age: parseInt(formData.age) || 30,
-      gender: formData.gender || 'male',
-      social_class: formData.social_class || 'middle class',
-      region: formData.region || 'Europe',
-      physical_appearance,
+      gender: aiGeneratedTraits.gender || 'not specified',
+      social_class: aiGeneratedTraits.social_class || 'middle class',
+      region: aiGeneratedTraits.region || 'Europe',
+      physical_appearance: {
+        height_build: aiGeneratedTraits.physical_appearance?.height_build || 'average height and build',
+        hair: aiGeneratedTraits.physical_appearance?.hair || 'brown hair',
+        eye_color: aiGeneratedTraits.physical_appearance?.eye_color || 'brown eyes',
+        skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || 'natural complexion',
+        ethnicity: aiGeneratedTraits.physical_appearance?.ethnicity || 'not specified',
+      },
     };
 
-    console.log('Generated character with AI-powered traits:', character);
+    console.log('Generated character with AI-powered traits from user description:', character);
     return character;
 
   } catch (error) {
     console.error('Error generating AI traits for character, falling back to defaults:', error);
     
-    // Fallback to historically-informed defaults if AI generation fails
+    // Fallback to basic character creation if AI generation fails
     const fallbackTraits = generateFallbackTraits(formData);
     
     const trait_profile = {
       ...fallbackTraits,
       physical_appearance: {
-        height_build: formData.height_build || 'average height and build',
-        hair: formData.hair || 'brown hair',
-        eye_color: formData.eye_color || 'brown eyes',
-        skin_tone: formData.skin_tone || 'natural complexion',
-        ethnicity: formData.ethnicity || 'Not specified',
+        height_build: 'average height and build',
+        hair: 'brown hair',
+        eye_color: 'brown eyes',
+        skin_tone: 'natural complexion',
+        ethnicity: 'not specified',
       },
     };
 
@@ -164,8 +166,8 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     const linguistic_profile = {
       default_output_length: 'medium',
       speech_register: 'formal',
-      regional_influence: formData.region || 'European',
-      professional_or_educational_influence: formData.occupation || null,
+      regional_influence: formData.location || 'European',
+      professional_or_educational_influence: null,
       cultural_speech_patterns: 'Historical speech patterns',
       generational_or_peer_influence: null,
       speaking_style: {
@@ -182,9 +184,30 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       negative_triggers: [],
     };
 
+    const metadata = {
+      date_of_birth: formData.date_of_birth,
+      age: parseInt(formData.age) || 30,
+      location: formData.location,
+      description: formData.description,
+      name: 'Historical Character',
+      gender: 'not specified',
+      ethnicity: 'not specified',
+      social_class: 'middle class',
+      region: 'Europe',
+      height_build: 'average height and build',
+      hair: 'brown hair',
+      eye_color: 'brown eyes',
+      skin_tone: 'natural complexion',
+      backstory: 'Generated from user description',
+      personality_traits: 'To be determined from description',
+      appearance: 'Average appearance for the historical period',
+      occupation: 'To be determined from description',
+      historical_context: 'Historical context based on date and location',
+    };
+
     const character: Character = {
       character_id: characterId,
-      name: formData.name,
+      name: 'Historical Character',
       character_type: 'historical',
       creation_date: currentDate,
       created_at: currentDate,
@@ -199,10 +222,16 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       is_public: false,
       enhanced_metadata_version: 2,
       age: parseInt(formData.age) || 30,
-      gender: formData.gender || 'male',
-      social_class: formData.social_class || 'middle class',
-      region: formData.region || 'Europe',
-      physical_appearance,
+      gender: 'not specified',
+      social_class: 'middle class',
+      region: 'Europe',
+      physical_appearance: {
+        height_build: 'average height and build',
+        hair: 'brown hair',
+        eye_color: 'brown eyes',
+        skin_tone: 'natural complexion',
+        ethnicity: 'not specified',
+      },
     };
 
     console.log('Generated character with fallback traits due to AI error');
@@ -213,12 +242,11 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
 // Fallback function for historically-informed defaults
 function generateFallbackTraits(formData: HistoricalCharacterFormData) {
   const isPreIndustrial = formData.date_of_birth && new Date(formData.date_of_birth).getFullYear() < 1800;
-  const isUpperClass = formData.social_class?.toLowerCase().includes('upper');
   
   return {
     big_five: {
       openness: isPreIndustrial ? 0.4 : 0.6,
-      conscientiousness: isUpperClass ? 0.7 : 0.6,
+      conscientiousness: 0.6,
       extraversion: 0.5,
       agreeableness: 0.6,
       neuroticism: 0.4,
