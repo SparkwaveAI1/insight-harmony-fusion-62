@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -10,7 +9,7 @@ import { useCharacters } from '../hooks/useCharacters';
 import CharacterAvatar from '../components/CharacterAvatar';
 
 const CharacterLibrary = () => {
-  const { characters, isLoading, error } = useCharacters();
+  const { data: characters = [], isLoading, error } = useCharacters();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filterType, setFilterType] = React.useState<'all' | 'historical' | 'fictional'>('all');
 
@@ -44,7 +43,7 @@ const CharacterLibrary = () => {
         <Section>
           <Card className="text-center py-12">
             <h2 className="text-xl font-semibold mb-2 text-red-600">Error Loading Characters</h2>
-            <p className="text-muted-foreground">{error}</p>
+            <p className="text-muted-foreground">{error.message || 'An error occurred'}</p>
           </Card>
         </Section>
       </div>
