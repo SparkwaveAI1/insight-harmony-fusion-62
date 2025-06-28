@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { BarChart3, LockIcon, Lightbulb, Bot } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -35,7 +34,7 @@ const PRSNAEcosystem = () => {
   } = useWeb3Wallet();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
       <Header />
       
       <main className="flex-grow pt-16">
@@ -56,7 +55,7 @@ const PRSNAEcosystem = () => {
         {!isWalletConnected && <ResearchAgentSection />}
         
         {/* Web3 Dashboard Section */}
-        <Section className="bg-muted/50">
+        <Section className="bg-gray-900">
           <div className="container px-4 mx-auto">
             <div className="max-w-5xl mx-auto">
               {isWalletConnected ? (
@@ -70,20 +69,20 @@ const PRSNAEcosystem = () => {
                   
                   <Reveal delay={100}>
                     <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="mb-10">
-                      <TabsList className="grid grid-cols-4 mb-8 bg-muted p-1 border">
-                        <TabsTrigger value="dashboard" className="text-sm">
+                      <TabsList className="grid grid-cols-4 mb-8 bg-gray-800 p-1 border border-gray-700">
+                        <TabsTrigger value="dashboard" className="data-[state=active]:bg-gray-700">
                           <BarChart3 className="h-4 w-4 mr-2" />
                           <span className="hidden sm:inline">Dashboard</span>
                         </TabsTrigger>
-                        <TabsTrigger value="staking" className="text-sm">
+                        <TabsTrigger value="staking" className="data-[state=active]:bg-gray-700">
                           <LockIcon className="h-4 w-4 mr-2" />
                           <span className="hidden sm:inline">Staking</span>
                         </TabsTrigger>
-                        <TabsTrigger value="research" className="text-sm">
+                        <TabsTrigger value="research" className="data-[state=active]:bg-gray-700">
                           <Lightbulb className="h-4 w-4 mr-2" />
                           <span className="hidden sm:inline">Research</span>
                         </TabsTrigger>
-                        <TabsTrigger value="ai-agent" className="text-sm">
+                        <TabsTrigger value="ai-agent" className="data-[state=active]:bg-gray-700">
                           <Bot className="h-4 w-4 mr-2" />
                           <span className="hidden sm:inline">AI Agent</span>
                         </TabsTrigger>
@@ -114,10 +113,7 @@ const PRSNAEcosystem = () => {
                   </Reveal>
                 </>
               ) : (
-                <div className="py-16 text-center">
-                  <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-                  <p className="text-muted-foreground mb-8">Connect your wallet to access the full $PRSNA ecosystem</p>
-                </div>
+                null
               )}
             </div>
           </div>
@@ -127,7 +123,7 @@ const PRSNAEcosystem = () => {
         {!isWalletConnected && (
           <>
             {/* Insights Conductor Section with proper background and spacing */}
-            <div className="bg-muted">
+            <div className="bg-gray-800 text-gray-100">
               <Section className="pt-8 pb-16" reducedPadding>
                 <QualitativeAnalysis />
               </Section>
@@ -137,7 +133,7 @@ const PRSNAEcosystem = () => {
             <StakingPreview connectWallet={connectWallet} />
             
             {/* Token Features Overview (below staking) */}
-            <Section className="bg-background">
+            <Section className="bg-gray-900">
               <div className="container px-4 mx-auto">
                 <div className="max-w-5xl mx-auto">
                   <TokenFeaturesOverview />
