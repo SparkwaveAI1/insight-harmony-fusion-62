@@ -2,10 +2,11 @@
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
+import { generateCharacterTraits } from './characterTraitService';
 import { v4 as uuidv4 } from 'uuid';
 
 export const generateHistoricalCharacter = async (formData: HistoricalCharacterFormData): Promise<Character> => {
-  console.log('=== GENERATING HISTORICAL CHARACTER ===');
+  console.log('=== GENERATING HISTORICAL CHARACTER WITH AI TRAITS ===');
   console.log('Form data:', formData);
 
   const characterId = uuidv4();
@@ -46,39 +47,195 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     skin_tone: formData.skin_tone || 'natural complexion',
   };
 
-  // Generate comprehensive trait profile with full persona system structure
-  const trait_profile = {
-    // Core personality traits (Big Five)
+  try {
+    // Generate AI-powered trait profile using the dedicated character service
+    console.log('Generating AI-powered traits for historical character...');
+    const aiGeneratedTraits = await generateCharacterTraits({
+      name: formData.name,
+      age: parseInt(formData.age) || 30,
+      gender: formData.gender || 'male',
+      social_class: formData.social_class || 'middle class',
+      region: formData.region || 'Europe',
+      occupation: formData.occupation,
+      personality_traits: formData.personality_traits,
+      backstory: formData.backstory,
+      historical_context: formData.historical_context,
+      date_of_birth: formData.date_of_birth,
+    });
+
+    console.log('Successfully generated AI traits for character:', formData.name);
+
+    // Use AI-generated traits as the foundation
+    const trait_profile = {
+      ...aiGeneratedTraits,
+      // Ensure physical appearance is properly set
+      physical_appearance: {
+        height_build: formData.height_build || 'average height and build',
+        hair: formData.hair || 'brown hair',
+        eye_color: formData.eye_color || 'brown eyes',
+        skin_tone: formData.skin_tone || 'natural complexion',
+      },
+    };
+
+    const behavioral_modulation: CharacterBehavioralModulation = {
+      formality: 0.8,
+      enthusiasm: 0.6,
+      assertiveness: 0.7,
+      empathy: 0.6,
+      patience: 0.7,
+    };
+
+    const linguistic_profile = {
+      default_output_length: 'medium',
+      speech_register: 'formal',
+      regional_influence: formData.region || 'European',
+      professional_or_educational_influence: formData.occupation || null,
+      cultural_speech_patterns: 'Historical speech patterns',
+      generational_or_peer_influence: null,
+      speaking_style: {
+        formal: true,
+        casual: false,
+        technical: false,
+        storytelling: true,
+      },
+      sample_phrasing: [],
+    };
+
+    const emotional_triggers: EmotionalTriggersProfile = {
+      positive_triggers: [],
+      negative_triggers: [],
+    };
+
+    const character: Character = {
+      character_id: characterId,
+      name: formData.name,
+      character_type: 'historical',
+      creation_date: currentDate,
+      created_at: currentDate,
+      metadata,
+      behavioral_modulation,
+      interview_sections: [],
+      linguistic_profile,
+      preinterview_tags: [],
+      simulation_directives: {},
+      trait_profile,
+      emotional_triggers,
+      is_public: false,
+      enhanced_metadata_version: 2,
+      // New demographic fields
+      age: parseInt(formData.age) || 30,
+      gender: formData.gender || 'male',
+      social_class: formData.social_class || 'middle class',
+      region: formData.region || 'Europe',
+      physical_appearance,
+    };
+
+    console.log('Generated character with AI-powered traits:', character);
+    return character;
+
+  } catch (error) {
+    console.error('Error generating AI traits for character, falling back to defaults:', error);
+    
+    // Fallback to historically-informed defaults if AI generation fails
+    const fallbackTraits = generateFallbackTraits(formData);
+    
+    const trait_profile = {
+      ...fallbackTraits,
+      physical_appearance: {
+        height_build: formData.height_build || 'average height and build',
+        hair: formData.hair || 'brown hair',
+        eye_color: formData.eye_color || 'brown eyes',
+        skin_tone: formData.skin_tone || 'natural complexion',
+      },
+    };
+
+    const behavioral_modulation: CharacterBehavioralModulation = {
+      formality: 0.8,
+      enthusiasm: 0.6,
+      assertiveness: 0.7,
+      empathy: 0.6,
+      patience: 0.7,
+    };
+
+    const linguistic_profile = {
+      default_output_length: 'medium',
+      speech_register: 'formal',
+      regional_influence: formData.region || 'European',
+      professional_or_educational_influence: formData.occupation || null,
+      cultural_speech_patterns: 'Historical speech patterns',
+      generational_or_peer_influence: null,
+      speaking_style: {
+        formal: true,
+        casual: false,
+        technical: false,
+        storytelling: true,
+      },
+      sample_phrasing: [],
+    };
+
+    const emotional_triggers: EmotionalTriggersProfile = {
+      positive_triggers: [],
+      negative_triggers: [],
+    };
+
+    const character: Character = {
+      character_id: characterId,
+      name: formData.name,
+      character_type: 'historical',
+      creation_date: currentDate,
+      created_at: currentDate,
+      metadata,
+      behavioral_modulation,
+      interview_sections: [],
+      linguistic_profile,
+      preinterview_tags: [],
+      simulation_directives: {},
+      trait_profile,
+      emotional_triggers,
+      is_public: false,
+      enhanced_metadata_version: 2,
+      age: parseInt(formData.age) || 30,
+      gender: formData.gender || 'male',
+      social_class: formData.social_class || 'middle class',
+      region: formData.region || 'Europe',
+      physical_appearance,
+    };
+
+    console.log('Generated character with fallback traits due to AI error');
+    return character;
+  }
+};
+
+// Fallback function for historically-informed defaults
+function generateFallbackTraits(formData: HistoricalCharacterFormData) {
+  const isPreIndustrial = formData.date_of_birth && new Date(formData.date_of_birth).getFullYear() < 1800;
+  const isUpperClass = formData.social_class?.toLowerCase().includes('upper');
+  
+  return {
     big_five: {
-      openness: 0.6,
-      conscientiousness: 0.7,
+      openness: isPreIndustrial ? 0.4 : 0.6,
+      conscientiousness: isUpperClass ? 0.7 : 0.6,
       extraversion: 0.5,
       agreeableness: 0.6,
       neuroticism: 0.4,
     },
-    
-    // Moral foundations
     moral_foundations: {
       care: 0.7,
       fairness: 0.6,
-      loyalty: 0.8,
-      authority: 0.7,
-      sanctity: 0.5,
-      liberty: 0.6,
+      loyalty: isPreIndustrial ? 0.8 : 0.6,
+      authority: isPreIndustrial ? 0.8 : 0.5,
+      sanctity: isPreIndustrial ? 0.7 : 0.4,
+      liberty: isPreIndustrial ? 0.3 : 0.6,
     },
-    
-    // World values
     world_values: {
-      traditional_vs_secular: 0.3,
-      survival_vs_self_expression: 0.4,
+      traditional_vs_secular: isPreIndustrial ? 0.2 : 0.4,
+      survival_vs_self_expression: isPreIndustrial ? 0.3 : 0.5,
       materialist_vs_postmaterialist: 0.5,
     },
-    
-    // Political compass with enhanced structure
     political_compass: {
       economic: 0.3,
-      authoritarian_libertarian: 0.2,
-      cultural_conservative_progressive: 0.4,
+      authoritarian_libertarian: isPreIndustrial ? -0.3 : 0.2,
+      cultural_conservative_progressive: isPreIndustrial ? -0.5 : 0.4,
       political_salience: 0.5,
       group_fusion_level: 0.6,
       outgroup_threat_sensitivity: 0.4,
@@ -90,27 +247,21 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
         status_reordering: 0.3,
       },
     },
-    
-    // Behavioral economics
     behavioral_economics: {
       present_bias: 0.4,
       loss_aversion: 0.6,
       overconfidence: 0.5,
       risk_sensitivity: 0.6,
-      scarcity_sensitivity: 0.7,
+      scarcity_sensitivity: isPreIndustrial ? 0.8 : 0.6,
     },
-    
-    // Cultural dimensions
     cultural_dimensions: {
-      power_distance: 0.6,
-      individualism_vs_collectivism: 0.4,
+      power_distance: isPreIndustrial ? 0.8 : 0.6,
+      individualism_vs_collectivism: isPreIndustrial ? 0.3 : 0.5,
       masculinity_vs_femininity: 0.5,
       uncertainty_avoidance: 0.6,
       long_term_orientation: 0.7,
       indulgence_vs_restraint: 0.4,
     },
-    
-    // Social identity
     social_identity: {
       identity_strength: 0.7,
       identity_complexity: 0.5,
@@ -121,8 +272,6 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       intergroup_contact_comfort: 0.5,
       cultural_intelligence: 0.6,
     },
-    
-    // Extended traits
     extended_traits: {
       truth_orientation: 0.7,
       moral_consistency: 0.6,
@@ -143,8 +292,6 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       emotional_regulation: 0.6,
       trigger_sensitivity: 0.4,
     },
-    
-    // Dynamic state
     dynamic_state: {
       current_stress_level: 0.3,
       emotional_stability_context: 0.6,
@@ -152,79 +299,13 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
       trust_volatility: 0.4,
       trigger_threshold: 0.5,
     },
-    
-    // Character-specific physical traits from form data
-    physical_appearance: {
-      height_build: formData.height_build || 'average height and build',
-      hair: formData.hair || 'brown hair',
-      eye_color: formData.eye_color || 'brown eyes',
-      skin_tone: formData.skin_tone || 'natural complexion',
-    },
-    
-    // Physical health (basic for historical context)
     physical_health: {
       disabilities: [],
       health_conditions: [],
       mobility: 'normal',
     },
   };
-
-  const behavioral_modulation: CharacterBehavioralModulation = {
-    formality: 0.8,
-    enthusiasm: 0.6,
-    assertiveness: 0.7,
-    empathy: 0.6,
-    patience: 0.7,
-  };
-
-  const linguistic_profile = {
-    default_output_length: 'medium',
-    speech_register: 'formal',
-    regional_influence: formData.region || 'European',
-    professional_or_educational_influence: formData.occupation || null,
-    cultural_speech_patterns: 'Historical speech patterns',
-    generational_or_peer_influence: null,
-    speaking_style: {
-      formal: true,
-      casual: false,
-      technical: false,
-      storytelling: true,
-    },
-    sample_phrasing: [],
-  };
-
-  const emotional_triggers: EmotionalTriggersProfile = {
-    positive_triggers: [],
-    negative_triggers: [],
-  };
-
-  const character: Character = {
-    character_id: characterId,
-    name: formData.name,
-    character_type: 'historical',
-    creation_date: currentDate,
-    created_at: currentDate,
-    metadata,
-    behavioral_modulation,
-    interview_sections: [],
-    linguistic_profile,
-    preinterview_tags: [],
-    simulation_directives: {},
-    trait_profile,
-    emotional_triggers,
-    is_public: false,
-    enhanced_metadata_version: 2,
-    // New demographic fields
-    age: parseInt(formData.age) || 30,
-    gender: formData.gender || 'male',
-    social_class: formData.social_class || 'middle class',
-    region: formData.region || 'Europe',
-    physical_appearance,
-  };
-
-  console.log('Generated character:', character);
-  return character;
-};
+}
 
 // Export alias for consistency with the form component
 export const generateCharacterFromFormData = generateHistoricalCharacter;
