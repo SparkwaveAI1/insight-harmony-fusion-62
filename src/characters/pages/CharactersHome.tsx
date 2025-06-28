@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -117,7 +118,7 @@ const CharactersHome = () => {
         {/* Hero Section */}
         <Section className="text-center py-20">
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl font-bold font-chivo bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-6">
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-6">
               PersonaAI Characters
             </h1>
             <p className="text-xl text-gray-300 mb-4">
@@ -151,7 +152,7 @@ const CharactersHome = () => {
         {/* Featured Character of the Day */}
         <Section className="py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold font-chivo text-center mb-12 text-gray-100">
+            <h2 className="text-3xl font-bold text-center mb-12 text-gray-100">
               Featured Character of the Day
             </h2>
             
@@ -163,7 +164,7 @@ const CharactersHome = () => {
                       <Users className="h-16 w-16 text-purple-400" />
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold font-chivo text-gray-100 mb-2">{featuredCharacter.name}</h3>
+                  <h3 className="text-2xl font-bold text-gray-100 mb-2">{featuredCharacter.name}</h3>
                   <p className="text-gray-300 mb-4">{featuredCharacter.description}</p>
                   <Badge variant="outline" className="border-cyan-400 text-cyan-400">
                     {featuredCharacter.world}
@@ -171,7 +172,7 @@ const CharactersHome = () => {
                 </div>
                 
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold font-chivo text-gray-200 mb-3">Trait Preview</h4>
+                  <h4 className="text-lg font-semibold text-gray-200 mb-3">Trait Preview</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-300">Empathy</span>
@@ -204,7 +205,7 @@ const CharactersHome = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  <h4 className="text-lg font-semibold font-chivo text-gray-200">Quick Actions</h4>
+                  <h4 className="text-lg font-semibold text-gray-200">Quick Actions</h4>
                   <div className="space-y-2">
                     <Button className="w-full" variant="default">
                       <Zap className="mr-2 h-4 w-4" />
@@ -229,7 +230,7 @@ const CharactersHome = () => {
         <Section className="py-8">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col lg:flex-row gap-4 items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold font-chivo text-gray-100">
+              <h2 className="text-3xl font-bold text-gray-100">
                 Discover Characters
               </h2>
               
@@ -280,7 +281,7 @@ const CharactersHome = () => {
                         <Users className="h-10 w-10 text-purple-400" />
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold font-chivo text-gray-100 mb-1">{character.name}</h3>
+                    <h3 className="text-xl font-bold text-gray-100 mb-1">{character.name}</h3>
                     <Badge variant="outline" className="mb-2">
                       {character.world}
                     </Badge>
@@ -314,7 +315,7 @@ const CharactersHome = () => {
         {/* Quickstart Scenarios */}
         <Section className="py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold font-chivo text-center mb-4 text-gray-100">
+            <h2 className="text-3xl font-bold text-center mb-4 text-gray-100">
               Quickstart Scenarios
             </h2>
             <p className="text-center text-gray-400 mb-12">Drop anyone into a test</p>
@@ -323,7 +324,7 @@ const CharactersHome = () => {
               {scenarios.map((scenario) => (
                 <Card key={scenario.id} className="p-6 bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 transition-all text-center">
                   <div className="text-4xl mb-4">{scenario.icon}</div>
-                  <h3 className="text-lg font-bold font-chivo text-gray-100 mb-2">{scenario.title}</h3>
+                  <h3 className="text-lg font-bold text-gray-100 mb-2">{scenario.title}</h3>
                   <p className="text-sm text-gray-400 mb-4">{scenario.description}</p>
                   <Button size="sm" className="w-full" variant="outline">
                     <Play className="mr-2 h-4 w-4" />
@@ -338,14 +339,14 @@ const CharactersHome = () => {
         {/* Your Saved Characters */}
         <Section className="py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold font-chivo text-center mb-4 text-gray-100">
+            <h2 className="text-3xl font-bold text-center mb-4 text-gray-100">
               Your Worlds
             </h2>
             <p className="text-center text-gray-400 mb-12">Recent minds you've engaged</p>
             
             <Card className="p-8 bg-slate-800/30 border-slate-700 text-center">
               <Users className="h-16 w-16 mx-auto text-gray-500 mb-4" />
-              <h3 className="text-xl font-semibold font-chivo text-gray-300 mb-2">No Recent Interactions</h3>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Recent Interactions</h3>
               <p className="text-gray-500 mb-6">Start chatting with characters to see your history here</p>
               <Button asChild>
                 <Link to="/characters/create/historical">
