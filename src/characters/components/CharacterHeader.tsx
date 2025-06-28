@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import Logo from "@/components/ui-custom/Logo";
+import Logo from "../../components/ui-custom/Logo";
+import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
+import ActionButtons from "../../components/layout/navigation/ActionButtons";
 import { Menu, X, LogOut, UserRound } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -21,27 +23,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
-import MobileDrawerMenu from "@/components/navigation/MobileDrawerMenu";
+import MobileDrawerMenu from "../../components/navigation/MobileDrawerMenu";
 
 const CharacterHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
   const { user, signOut } = useAuth();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
+  // Character navigation items
   const characterNavItems = [
     {
       title: "Character Dashboard",
@@ -56,20 +47,35 @@ const CharacterHeader = () => {
       href: "/characters/create/fictional",
     },
   ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   
   return (
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4",
-        "bg-background/95 backdrop-blur-md shadow-md"
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md shadow-md" 
+          : "bg-slate-900/90 backdrop-blur-md"
       )}
     >
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link to="/characters" className="flex items-center">
+          <Link to="/characters-home" className="flex items-center">
             <Logo 
               size="md" 
-              className="text-foreground"
+              className={isScrolled ? "text-foreground" : "text-white"}
             />
           </Link>
         </div>
@@ -77,9 +83,10 @@ const CharacterHeader = () => {
         {/* Centered Navigation Links - Desktop */}
         <NavigationMenu className="hidden md:flex mx-auto">
           <NavigationMenuList className="space-x-2">
+            {/* Character Navigation Links */}
             {characterNavItems.map((link) => {
               const isActive = location.pathname === link.href || 
-                             (link.href !== "/characters" && location.pathname.startsWith(link.href));
+                             (link.href !== "/" && location.pathname.startsWith(link.href));
               
               return (
                 <NavigationMenuItem key={link.title}>
@@ -103,7 +110,7 @@ const CharacterHeader = () => {
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-2">
-          {/* User Menu - Desktop */}
+          {/* Action Buttons (right side) - Desktop */}
           <div className="hidden md:flex items-center gap-4">
             {user && (
               <DropdownMenu>
@@ -136,10 +143,21 @@ const CharacterHeader = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+            <ActionButtons 
+              showWalletOptions={false}
+              isWalletConnected={isWalletConnected}
+              connectWallet={connectWallet}
+              disconnectWallet={disconnectWallet}
+              isDarkRoute={!isScrolled}
+            />
           </div>
           
           <Button 
-            className="md:hidden text-foreground p-2" 
+            className={cn(
+              "md:hidden",
+              "text-foreground",
+              "p-2"
+            )} 
             variant="ghost"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Toggle menu"
