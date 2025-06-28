@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -115,15 +116,17 @@ const CharactersHome = () => {
       </div>
 
       <main className="relative pt-20">
-        {/* Hero Section with Background Pattern */}
+        {/* Hero Section with Background Image */}
         <Section className="text-center relative overflow-hidden min-h-screen flex items-start justify-center pt-24">
-          {/* CSS-based dotted background pattern */}
-          <div className="absolute inset-0 bg-slate-900" style={{
-            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '20px 20px'
-          }}>
+          {/* Background image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url('/lovable-uploads/d628bc8b-42cb-48fc-b9c4-16c21cf80cfe.png')`
+            }}
+          >
             {/* Dark overlay for text readability */}
-            <div className="absolute inset-0 bg-black/50"></div>
+            <div className="absolute inset-0 bg-black/60"></div>
           </div>
           
           <div className="max-w-4xl mx-auto relative z-10">
