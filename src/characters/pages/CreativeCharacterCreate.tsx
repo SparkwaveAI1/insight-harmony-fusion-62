@@ -1,46 +1,28 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Sparkles, ArrowLeft, Save } from 'lucide-react';
+import { Sparkles, ArrowLeft, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import FormSectionWrapper from '@/components/ui-custom/FormSectionWrapper';
+import CreativeCharacterDialog from '../components/CreativeCharacterDialog';
 import { toast } from 'sonner';
 
-const creativeCharacterSchema = z.object({
-  name: z.string().min(1, 'Character name is required'),
-  description: z.string().optional(),
-  backstory: z.string().optional(),
-  personality_traits: z.string().optional(),
-  appearance: z.string().optional(),
-  // TODO: Add creative-specific traits
-});
-
-type CreativeCharacterFormData = z.infer<typeof creativeCharacterSchema>;
+interface CreativeCharacterData {
+  identityType: string;
+  archetype: string;
+  location: string;
+  era: string;
+  genres: string[];
+  description: string;
+}
 
 const CreativeCharacterCreate = () => {
   const navigate = useNavigate();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<CreativeCharacterFormData>({
-    resolver: zodResolver(creativeCharacterSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      backstory: '',
-      personality_traits: '',
-      appearance: '',
-    },
-  });
-
-  const onSubmit = async (data: CreativeCharacterFormData) => {
+  const handleCharacterComplete = async (data: CreativeCharacterData) => {
     setIsSubmitting(true);
     
     try {
@@ -80,85 +62,59 @@ const CreativeCharacterCreate = () => {
             <Sparkles className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-3xl font-bold">Create Creative Character</h1>
-              <p className="text-muted-foreground">Design an original creative character</p>
+              <p className="text-muted-foreground">Design an original creative character through our guided process</p>
             </div>
           </div>
 
-          <div className="max-w-2xl">
-            <Card className="p-6 mb-6 bg-blue-50 border-blue-200">
-              <div className="flex items-center gap-3">
-                <Sparkles className="h-6 w-6 text-blue-600" />
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-8 text-center">
+              <div className="space-y-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-10 w-10 text-white" />
+                </div>
+                
                 <div>
-                  <h3 className="font-semibold text-blue-900">Coming Soon</h3>
-                  <p className="text-blue-700 text-sm">
-                    The creative character creation interface is being designed with custom traits. 
-                    We'll determine the specific trait architecture for creative characters.
+                  <h2 className="text-2xl font-bold mb-2">Character Genesis</h2>
+                  <p className="text-muted-foreground mb-6">
+                    Step through our guided creation process to build a unique creative character with rich depth and personality.
                   </p>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="font-semibold text-blue-900 mb-1">5 Steps</div>
+                    <div className="text-blue-700">Guided creation process</div>
+                  </div>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <div className="font-semibold text-purple-900 mb-1">Rich Traits</div>
+                    <div className="text-purple-700">Complex personality system</div>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="font-semibold text-green-900 mb-1">Any Genre</div>
+                    <div className="text-green-700">Fantasy, sci-fi, and more</div>
+                  </div>
+                </div>
+
+                <Button
+                  size="lg"
+                  onClick={() => setDialogOpen(true)}
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Start Character Creation
+                </Button>
               </div>
             </Card>
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormSectionWrapper title="Basic Information">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Character Name *</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter character name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Brief description of your creative character"
-                              className="min-h-[100px]"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </FormSectionWrapper>
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {isSubmitting ? 'Creating...' : 'Create Creative Character'}
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate('/characters/creative')}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Form>
           </div>
         </Section>
       </div>
+
+      <CreativeCharacterDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onComplete={handleCharacterComplete}
+      />
     </div>
   );
 };
