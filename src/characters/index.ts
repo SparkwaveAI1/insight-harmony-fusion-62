@@ -2,6 +2,7 @@
 // Character module exports - for clean imports
 export { default as CharacterDashboard } from './pages/CharacterDashboard';
 export { default as CharacterLibrary } from './pages/CharacterLibrary';
+export { default as CharactersHome } from './pages/CharactersHome';
 export { default as CharacterDetail } from './pages/CharacterDetail';
 export { default as CharacterEdit } from './pages/CharacterEdit';
 export { default as HistoricalCharacterCreate } from './pages/HistoricalCharacterCreate';

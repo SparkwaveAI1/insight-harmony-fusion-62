@@ -44,6 +44,7 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 
 // Character pages
 import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
+import CharactersHome from "./characters/pages/CharactersHome";
 import HistoricalCharacterCreate from "./characters/pages/HistoricalCharacterCreate";
 import FictionalCharacterCreate from "./characters/pages/FictionalCharacterCreate";
 import CharacterChat from "./characters/pages/CharacterChat";
@@ -101,7 +102,8 @@ function App() {
               <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
               <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
               
-              {/* Character routes - Protected */}
+              {/* Character routes - New home page and existing routes */}
+              <Route path="/characters-home" element={<CharactersHome />} />
               <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
               <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
               <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
