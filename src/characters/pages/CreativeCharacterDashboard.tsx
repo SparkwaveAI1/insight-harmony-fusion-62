@@ -1,18 +1,17 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, Plus, Library, Clock, Users } from 'lucide-react';
+import { Sparkles, Plus, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { cn } from '@/lib/utils';
-import CharacterLibrary from './CharacterLibrary';
+import CreativeCharacterLibrary from './CreativeCharacterLibrary';
 import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
 
 const CreativeCharacterDashboard = () => {
-  const [characters] = useState([]); // Will connect to service later
   const [activeSection, setActiveSection] = useState('library');
   const location = useLocation();
 
@@ -74,9 +73,9 @@ const CreativeCharacterDashboard = () => {
 
           {/* Main Content */}
           <div className="flex-1">
-            {/* Show Character Library when on main creative characters route */}
+            {/* Show Creative Character Library when on main creative characters route */}
             {location.pathname === '/characters/creative' ? (
-              <CharacterLibrary />
+              <CreativeCharacterLibrary />
             ) : (
               <div className="container mx-auto px-4 py-8">
                 <Section>
