@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -137,7 +138,7 @@ const CharacterLibrary = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{character.name}</h3>
                       <p className="text-sm text-muted-foreground capitalize">
-                        {character.character_type} Character
+                        {character.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
                       </p>
                     </div>
                   </div>
