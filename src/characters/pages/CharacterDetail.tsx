@@ -151,7 +151,7 @@ const CharacterDetail = () => {
                 <div className="mb-6">
                   <h1 className="text-3xl font-bold mb-2">{activeCharacter.name}</h1>
                   <p className="text-muted-foreground mb-4">
-                    {activeCharacter.character_type} Character
+                    {activeCharacter.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
                   </p>
                   <CharacterVisibilityToggle
                     characterId={activeCharacter.character_id}
