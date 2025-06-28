@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import FormSectionWrapper from '@/components/ui-custom/FormSectionWrapper';
 import { historicalCharacterSchema, HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 interface HistoricalCharacterFormProps {
   onSubmit: (data: HistoricalCharacterFormData) => Promise<void>;
@@ -16,6 +18,9 @@ interface HistoricalCharacterFormProps {
 }
 
 const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: HistoricalCharacterFormProps) => {
+  const [searchParams] = useSearchParams();
+  const isPrefilled = searchParams.get('prefill') === 'true';
+  
   const form = useForm<HistoricalCharacterFormData>({
     resolver: zodResolver(historicalCharacterSchema),
     defaultValues: {
@@ -27,8 +32,43 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
     },
   });
 
+  useEffect(() => {
+    if (isPrefilled) {
+      const prefilledData = {
+        description: searchParams.get('description') || '',
+        location: searchParams.get('location') || '',
+        // Extract approximate date and age from era if available
+        date_of_birth: extractDateFromEra(searchParams.get('era') || ''),
+        age: '25', // Default age, user can modify
+        name: 'Creative Character', // Placeholder name, user should modify
+      };
+      
+      form.reset(prefilledData);
+    }
+  }, [isPrefilled, searchParams, form]);
+
+  const extractDateFromEra = (era: string): string => {
+    // Simple extraction logic - this could be more sophisticated
+    const yearMatch = era.match(/(\d{4})/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1]);
+      return `${year}-01-01`;
+    }
+    return '';
+  };
+
   return (
     <div className="max-w-2xl">
+      {isPrefilled && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="font-medium text-blue-900 mb-2">Creative Character Genesis</h3>
+          <p className="text-sm text-blue-800">
+            This form has been pre-filled with information from your Creative Character Genesis process. 
+            Please review and adjust the details as needed, especially the character name and specific dates.
+          </p>
+        </div>
+      )}
+      
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormSectionWrapper title="Create Historical Character">

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 
 interface CreativeCharacterDialogProps {
   open: boolean;
@@ -26,6 +26,7 @@ interface CreativeCharacterData {
 }
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CreativeCharacterData>({
     identityType: '',
@@ -137,6 +138,38 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     { id: 'hybrid', label: 'Hybrid / Cross-Genre', icon: '🧬' }
   ];
 
+  const compileForHistoricalCreator = (data: CreativeCharacterData) => {
+    const finalArchetype = data.archetype === 'Custom' ? customArchetype : data.archetype;
+    const genreLabels = data.genres.map(g => {
+      if (g.startsWith('custom:')) {
+        return g.replace('custom:', '');
+      }
+      return narrativeGenres.find(opt => opt.id === g)?.label || g;
+    }).join(', ');
+
+    // Create a comprehensive description for the historical character creator
+    const compiledDescription = `${data.description}
+
+Character Context:
+- Archetype: ${finalArchetype}
+- Era: ${data.era}
+- Location: ${data.location}
+- Narrative Genres: ${genreLabels}
+
+This character was created through the Creative Character Genesis process and represents a ${finalArchetype} archetype in ${data.era}. They exist in a world influenced by ${genreLabels} themes.`;
+
+    // Navigate to historical character creator with pre-filled data
+    const searchParams = new URLSearchParams({
+      prefill: 'true',
+      description: compiledDescription,
+      location: data.location,
+      era: data.era,
+      source: 'creative-genesis'
+    });
+
+    navigate(`/characters/create/historical?${searchParams.toString()}`);
+  };
+
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -217,8 +250,16 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
       ...formData,
       archetype: formData.archetype === 'Custom' ? customArchetype : formData.archetype
     };
-    onComplete(finalData);
-    onOpenChange(false);
+
+    // If it's a humanoid character, compile and send to Historical Character creator
+    if (formData.identityType === 'human') {
+      compileForHistoricalCreator(finalData);
+      onOpenChange(false);
+    } else {
+      // For multi-species, use the original creative character flow
+      onComplete(finalData);
+      onOpenChange(false);
+    }
   };
 
   const renderStep = () => {
@@ -464,6 +505,12 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
                   return narrativeGenres.find(opt => opt.id === g)?.label;
                 }).join(', ')}</p>
               </div>
+              
+              {formData.identityType === 'human' && (
+                <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
+                  <strong>Note:</strong> This humanoid character will be sent to the Historical Character creator for detailed trait generation.
+                </div>
+              )}
             </div>
           </div>
         );
@@ -542,7 +589,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
               className="flex items-center gap-2"
             >
               <Sparkles className="h-4 w-4" />
-              Create Character
+              {formData.identityType === 'human' ? 'Create Historical Character' : 'Create Character'}
             </Button>
           )}
         </div>
