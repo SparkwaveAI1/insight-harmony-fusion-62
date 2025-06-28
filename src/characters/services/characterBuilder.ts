@@ -1,4 +1,3 @@
-
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
 import { Character, CharacterBehavioralModulation } from '../types/characterTraitTypes';
 import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
@@ -150,13 +149,11 @@ function assignTraitsFromMultipleSources(
 export function buildCharacterMetadata(formData: HistoricalCharacterFormData, aiGeneratedTraits: any) {
   const age = parseInt(formData.age) || 30;
   
-  // Use the same intelligent assignment as personas - AI first, then user, then probability
-  const gender = assignTraitsFromMultipleSources(
-    aiGeneratedTraits, 
-    formData.gender, 
-    assignGenderByProbability,
-    ['gender']
-  );
+  // CRITICAL: Ensure core fields from form are prioritized and correctly assigned
+  const gender = formData.gender || 
+    aiGeneratedTraits.gender || 
+    aiGeneratedTraits.demographics?.gender ||
+    assignGenderByProbability();
   
   const ethnicity = assignTraitsFromMultipleSources(
     aiGeneratedTraits, 
@@ -196,15 +193,21 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     ['region', 'location']
   );
 
+  // Extract historical period from date_of_birth or AI traits
+  const historicalPeriod = extractHistoricalPeriod(formData.date_of_birth, aiGeneratedTraits);
+  
+  // Extract religious context from AI traits or historical period
+  const religiousContext = extractReligiousContext(aiGeneratedTraits, historicalPeriod);
+
   return {
-    // Core user inputs
+    // Core user inputs - ALWAYS prioritize these
     name: formData.name,
     date_of_birth: formData.date_of_birth,
     age: age,
     location: formData.location,
     description: formData.description,
     
-    // Core Demographics - intelligently assigned using same logic as personas
+    // Core Demographics - intelligently assigned with form data priority
     gender: gender,
     race_ethnicity: ethnicity,
     occupation: occupation,
@@ -212,6 +215,10 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     region: region,
     marital_status: maritalStatus,
     education_level: aiGeneratedTraits.education_level || 'basic education',
+    
+    // Historical Context - extracted from AI traits and date
+    historical_period: historicalPeriod,
+    cultural_context: aiGeneratedTraits.cultural_context || aiGeneratedTraits.historical_context,
     
     // Location & Environment - same as persona system
     urban_rural_context: aiGeneratedTraits.urban_rural_context || 'rural',
@@ -221,7 +228,7 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
       places_lived: [formData.location]
     },
     
-    // Relationships & Family - fully assigned based on AI or probability (same as personas)
+    // Relationships & Family - fully assigned based on AI or probability
     relationships_family: relationshipDynamics,
     
     // Health Profile - same defaults as persona system
@@ -237,20 +244,72 @@ export function buildCharacterMetadata(formData: HistoricalCharacterFormData, ai
     eye_color: aiGeneratedTraits.physical_appearance?.eye_color || aiGeneratedTraits.eye_color || 'brown',
     skin_tone: aiGeneratedTraits.physical_appearance?.skin_tone || aiGeneratedTraits.skin_tone || 'natural complexion',
     
-    // Cultural & Background - same as persona system
-    religious_affiliation: aiGeneratedTraits.religious_affiliation || 'Christian',
-    religious_practice_level: aiGeneratedTraits.religious_practice_level || 'moderate',
+    // Religious/Spiritual Context - extracted appropriately for historical period
+    religious_affiliation: religiousContext.affiliation,
+    religious_practice_level: religiousContext.practice_level,
     cultural_background: aiGeneratedTraits.cultural_background || ethnicity,
     language_proficiency: aiGeneratedTraits.language_proficiency || ['Local language'],
-    
-    // Historical context
-    historical_period: formData.date_of_birth ? '1700s' : 'Historical',
     
     // Legacy fields for backward compatibility
     backstory: aiGeneratedTraits.backstory || formData.backstory || 'Generated from character description',
     personality_traits: aiGeneratedTraits.personality_traits || formData.personality_traits || 'Generated personality traits',
     appearance: aiGeneratedTraits.appearance || 'Generated appearance description',
     historical_context: aiGeneratedTraits.historical_context || formData.historical_context || 'Generated historical context',
+  };
+}
+
+// Helper function to extract historical period from date of birth
+function extractHistoricalPeriod(dateOfBirth: string, aiTraits: any): string {
+  if (aiTraits.historical_period) return aiTraits.historical_period;
+  
+  // Try to parse the date and determine period
+  if (dateOfBirth) {
+    const year = parseInt(dateOfBirth.split('-')[0]) || parseInt(dateOfBirth.match(/\d{4}/)?.[0] || '');
+    if (year) {
+      if (year < -8000) return 'Paleolithic';
+      if (year < -4000) return 'Epipaleolithic/Mesolithic';
+      if (year < -3000) return 'Neolithic';
+      if (year < 0) return 'Bronze/Iron Age';
+      if (year < 500) return 'Classical Antiquity';
+      if (year < 1000) return 'Early Medieval';
+      if (year < 1500) return 'Medieval';
+      if (year < 1800) return 'Early Modern';
+      return 'Modern';
+    }
+  }
+  
+  return 'Historical Period';
+}
+
+// Helper function to extract appropriate religious context
+function extractReligiousContext(aiTraits: any, historicalPeriod: string): { affiliation: string, practice_level: string } {
+  // If AI has specific religious context, use it
+  if (aiTraits.religious_affiliation && aiTraits.religious_affiliation !== 'Christian') {
+    return {
+      affiliation: aiTraits.religious_affiliation,
+      practice_level: aiTraits.religious_practice_level || 'moderate'
+    };
+  }
+  
+  // Otherwise, determine appropriate religious context based on historical period
+  if (['Paleolithic', 'Epipaleolithic/Mesolithic', 'Neolithic'].includes(historicalPeriod)) {
+    return {
+      affiliation: 'Animistic/Shamanic traditions',
+      practice_level: aiTraits.religious_practice_level || 'integrated into daily life'
+    };
+  }
+  
+  if (['Bronze/Iron Age', 'Classical Antiquity'].includes(historicalPeriod)) {
+    return {
+      affiliation: 'Polytheistic/Traditional beliefs',
+      practice_level: aiTraits.religious_practice_level || 'moderate'
+    };
+  }
+  
+  // For later periods, default to regional appropriate religion
+  return {
+    affiliation: aiTraits.religious_affiliation || 'Regional traditional beliefs',
+    practice_level: aiTraits.religious_practice_level || 'moderate'
   };
 }
 
@@ -342,7 +401,7 @@ export function buildCharacter(
     is_public: false,
     enhanced_metadata_version: 2,
     age: parseInt(formData.age) || 30,
-    gender: metadata.gender,
+    gender: metadata.gender, // Use the properly determined gender
     social_class: metadata.social_class_identity,
     region: metadata.region,
     physical_appearance,
