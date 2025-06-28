@@ -17,6 +17,7 @@ interface CreativeCharacterDialogProps {
 }
 
 interface CreativeCharacterData {
+  name: string;
   identityType: string;
   archetype: string;
   location: string;
@@ -29,6 +30,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CreativeCharacterData>({
+    name: '',
     identityType: '',
     archetype: '',
     location: '',
@@ -40,7 +42,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
   const [customGenres, setCustomGenres] = useState<string[]>([]);
   const [newCustomGenre, setNewCustomGenre] = useState('');
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   const humanArchetypes = [
     { value: 'Explorer', description: 'Seeks new territories, knowledge, or experiences' },
@@ -148,19 +150,24 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     }).join(', ');
 
     // Create a comprehensive description for the historical character creator
-    const compiledDescription = `${data.description}
+    const compiledDescription = `Creative Character Genesis - ${data.name}
+
+${data.description}
 
 Character Context:
+- Name: ${data.name}
 - Archetype: ${finalArchetype}
 - Era: ${data.era}
 - Location: ${data.location}
 - Narrative Genres: ${genreLabels}
+- Source: Creative Character Genesis
 
 This character was created through the Creative Character Genesis process and represents a ${finalArchetype} archetype in ${data.era}. They exist in a world influenced by ${genreLabels} themes.`;
 
     // Navigate to historical character creator with pre-filled data
     const searchParams = new URLSearchParams({
       prefill: 'true',
+      name: data.name,
       description: compiledDescription,
       location: data.location,
       era: data.era,
@@ -208,22 +215,26 @@ This character was created through the Creative Character Genesis process and re
   const handleRandomize = () => {
     switch (currentStep) {
       case 1:
-        setFormData({ ...formData, identityType: Math.random() > 0.5 ? 'human' : 'multi-species' });
+        const randomNames = ['Aria', 'Zephyr', 'Kai', 'Luna', 'Phoenix', 'Sage', 'River', 'Storm', 'Atlas', 'Nova'];
+        setFormData({ ...formData, name: randomNames[Math.floor(Math.random() * randomNames.length)] });
         break;
       case 2:
+        setFormData({ ...formData, identityType: Math.random() > 0.5 ? 'human' : 'multi-species' });
+        break;
+      case 3:
         const archetypes = formData.identityType === 'human' ? humanArchetypes : multiSpeciesArchetypes;
         const validArchetypes = archetypes.filter(a => a.value !== 'Custom');
         setFormData({ ...formData, archetype: validArchetypes[Math.floor(Math.random() * validArchetypes.length)].value });
         setCustomArchetype('');
         break;
-      case 3:
+      case 4:
         setFormData({ 
           ...formData, 
           era: globalEras[Math.floor(Math.random() * globalEras.length)],
           location: 'Random location based on era'
         });
         break;
-      case 4:
+      case 5:
         const predefinedGenres = narrativeGenres.filter(g => g.id !== 'hybrid');
         const randomGenres = predefinedGenres
           .sort(() => Math.random() - 0.5)
@@ -236,11 +247,12 @@ This character was created through the Creative Character Genesis process and re
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return formData.identityType !== '';
-      case 2: return formData.archetype !== '' || customArchetype.trim() !== '';
-      case 3: return formData.era !== '' && formData.location !== '';
-      case 4: return formData.genres.length > 0;
-      case 5: return formData.description.length >= 50;
+      case 1: return formData.name.trim() !== '';
+      case 2: return formData.identityType !== '';
+      case 3: return formData.archetype !== '' || customArchetype.trim() !== '';
+      case 4: return formData.era !== '' && formData.location !== '';
+      case 5: return formData.genres.length > 0;
+      case 6: return formData.description.length >= 50;
       default: return false;
     }
   };
@@ -265,6 +277,32 @@ This character was created through the Creative Character Genesis process and re
   const renderStep = () => {
     switch (currentStep) {
       case 1:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-semibold">What is your character's name?</h3>
+              <p className="text-muted-foreground">Give your creative character a memorable name.</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Character Name</Label>
+                <Input
+                  placeholder="e.g., Aria Windwhisper, Zephyr Stormwright, Luna Nightshade"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="text-center text-lg"
+                />
+              </div>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                This will be the name displayed in your character library and used in conversations.
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
@@ -296,7 +334,7 @@ This character was created through the Creative Character Genesis process and re
           </div>
         );
 
-      case 2:
+      case 3:
         const currentArchetypes = formData.identityType === 'human' ? humanArchetypes : multiSpeciesArchetypes;
         return (
           <div className="space-y-6">
@@ -355,7 +393,7 @@ This character was created through the Creative Character Genesis process and re
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
@@ -396,7 +434,7 @@ This character was created through the Creative Character Genesis process and re
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
@@ -471,11 +509,11 @@ This character was created through the Creative Character Genesis process and re
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">Tell us more about this character</h3>
+              <h3 className="text-xl font-semibold">Tell us more about {formData.name}</h3>
               <p className="text-muted-foreground">What drives them? What kind of world do they live in?</p>
             </div>
             
@@ -494,6 +532,7 @@ This character was created through the Creative Character Genesis process and re
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">Character Summary</h4>
               <div className="space-y-1 text-sm text-blue-800">
+                <p><strong>Name:</strong> {formData.name}</p>
                 <p><strong>Type:</strong> {formData.identityType === 'human' ? 'Human/Humanoid' : 'Multi-Species Entity'}</p>
                 <p><strong>Archetype:</strong> {formData.archetype === 'Custom' ? customArchetype : formData.archetype}</p>
                 <p><strong>Era:</strong> {formData.era}</p>

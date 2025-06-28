@@ -35,12 +35,12 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
   useEffect(() => {
     if (isPrefilled) {
       const prefilledData = {
+        name: searchParams.get('name') || 'Creative Character',
         description: searchParams.get('description') || '',
         location: searchParams.get('location') || '',
         // Extract approximate date and age from era if available
         date_of_birth: extractDateFromEra(searchParams.get('era') || ''),
         age: '25', // Default age, user can modify
-        name: 'Creative Character', // Placeholder name, user should modify
       };
       
       form.reset(prefilledData);
@@ -64,7 +64,7 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
           <h3 className="font-medium text-blue-900 mb-2">Creative Character Genesis</h3>
           <p className="text-sm text-blue-800">
             This form has been pre-filled with information from your Creative Character Genesis process. 
-            Please review and adjust the details as needed, especially the character name and specific dates.
+            Please review and adjust the details as needed, especially the specific dates and any other details you'd like to refine.
           </p>
         </div>
       )}
