@@ -9,13 +9,7 @@ import PRSNAToken from './pages/PRSNAEcosystem';
 import Contact from './pages/Contact';
 import Support from './pages/Contact';
 import Settings from './pages/UserProfile';
-import Calendar from './pages/Calendar';
 import PageNotFound from './pages/NotFound';
-import Legal from './pages/Legal';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import CookiePolicy from './pages/CookiePolicy';
-import AccessibilityStatement from './pages/AccessibilityStatement';
 import CharacterLibrary from './characters/pages/CharacterLibrary';
 import CharacterDetail from './characters/pages/CharacterDetail';
 import CharacterEdit from './characters/pages/CharacterEdit';
@@ -42,16 +36,8 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/support" element={<Support />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/calendar" element={<Calendar />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/projects" element={<Projects />} />
-
-          {/* Legal Pages */}
-          <Route path="/legal" element={<Legal />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/cookie-policy" element={<CookiePolicy />} />
-          <Route path="/accessibility-statement" element={<AccessibilityStatement />} />
           <Route path="*" element={<PageNotFound />} />
           
           {/* Character routes */}

@@ -33,9 +33,6 @@ export const generateCreativeCharacter = async (formData: CreativeCharacterFormD
       personality_traits: formData.personality_traits || '',
       backstory: formData.backstory || '',
       historical_context: `Creative character from ${formData.genre} genre in ${formData.universe}`,
-      // Set creative context for AI
-      generation_type: 'creative',
-      character_type: 'creative',
     });
 
     console.log('Successfully generated AI traits for creative character');
