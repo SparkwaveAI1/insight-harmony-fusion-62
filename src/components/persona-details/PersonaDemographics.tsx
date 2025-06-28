@@ -8,18 +8,12 @@ interface PersonaDemographicsProps {
 }
 
 const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
-  console.log("=== DEMOGRAPHICS COMPONENT DEBUG ===");
-  console.log("Full metadata:", metadata);
-  console.log("relationships_family:", metadata?.relationships_family);
-  
   // Extract children data from multiple possible locations
   let childrenData = {
     has_children: metadata?.has_children || metadata?.relationships_family?.has_children,
     number_of_children: metadata?.number_of_children || metadata?.relationships_family?.number_of_children,
     children_ages: metadata?.children_ages || metadata?.relationships_family?.children_ages
   };
-  
-  console.log("Extracted children data:", childrenData);
 
   const renderSection = (title: string, data: any) => {
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
@@ -198,23 +192,6 @@ const PersonaDemographics = ({ metadata }: PersonaDemographicsProps) => {
         media_ecosystem: metadata?.media_ecosystem,
         aesthetic_subculture: metadata?.aesthetic_subculture
       })}
-
-      {/* Debug Section - Remove this in production */}
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-600">Debug: Children Data Sources</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-xs">
-            <div><strong>metadata.has_children:</strong> {JSON.stringify(metadata?.has_children)}</div>
-            <div><strong>metadata.number_of_children:</strong> {JSON.stringify(metadata?.number_of_children)}</div>
-            <div><strong>metadata.children_ages:</strong> {JSON.stringify(metadata?.children_ages)}</div>
-            <div><strong>metadata.relationships_family:</strong> {JSON.stringify(metadata?.relationships_family, null, 2)}</div>
-            <div><strong>Extracted children data:</strong> {JSON.stringify(childrenData, null, 2)}</div>
-            <div><strong>Family section data count:</strong> {Object.keys(cleanedFamilyData).length}</div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
