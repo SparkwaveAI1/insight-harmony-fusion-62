@@ -39,7 +39,9 @@ const HistoricalCharacterCreate = () => {
       
       console.log('✅ Historical character created with trait architecture:', savedCharacter);
       toast.success('Historical character created successfully!');
-      navigate('/characters');
+      
+      // Navigate to the newly created character's detail page
+      navigate(`/characters/${savedCharacter.character_id}`);
     } catch (error) {
       console.error('Error creating historical character:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to create historical character');
