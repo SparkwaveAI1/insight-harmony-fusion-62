@@ -30,7 +30,7 @@ export default {
 				orbitron: ['Orbitron', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				baufra: ['Baufra', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				panchang: ['Orbitron', 'Chivo', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
-				lastica: ['Lastica', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
+				lastica: ['Bungee', 'Orbitron', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
