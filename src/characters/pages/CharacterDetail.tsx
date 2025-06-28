@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -209,6 +208,10 @@ const CharacterDetail = () => {
               <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
               <div className="space-y-3">
                 <div>
+                  <span className="font-medium">Character Number:</span>{' '}
+                  <span className="text-muted-foreground">#{activeCharacter.character_id.slice(-8).toUpperCase()}</span>
+                </div>
+                <div>
                   <span className="font-medium">Character ID:</span>{' '}
                   <span className="text-muted-foreground">{activeCharacter.character_id}</span>
                 </div>
@@ -237,6 +240,10 @@ const CharacterDetail = () => {
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Character #</span>
+                  <span className="font-mono">#{activeCharacter.character_id.slice(-8).toUpperCase()}</span>
+                </div>
                 <div className="flex flex-col">
                   <span className="text-muted-foreground">Visibility</span>
                   <span className={activeCharacter.is_public ? 'text-green-600' : 'text-gray-600'}>
