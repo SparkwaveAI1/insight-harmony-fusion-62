@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -115,33 +114,44 @@ const CharactersHome = () => {
       </div>
 
       <main className="relative pt-20">
-        {/* Hero Section */}
-        <Section className="text-center py-20">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-6">
+        {/* Hero Section with Background Image */}
+        <Section className="text-center py-20 relative overflow-hidden">
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url('/lovable-uploads/f917355d-cf0c-40f6-864f-b0c2588d0143.png')`
+            }}
+          >
+            {/* Dark overlay for text readability */}
+            <div className="absolute inset-0 bg-black/60"></div>
+          </div>
+          
+          <div className="max-w-4xl mx-auto relative z-10">
+            <h1 className="text-6xl font-sans font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-6">
               PersonaAI Characters
             </h1>
-            <p className="text-xl text-gray-300 mb-4">
+            <p className="text-xl text-gray-100 mb-4 drop-shadow-lg">
               Step into the minds of generals, poets, rebels, and androids.
             </p>
-            <p className="text-lg text-gray-400 mb-8">
+            <p className="text-lg text-gray-200 mb-8 drop-shadow-lg">
               Build them. Chat with them. Challenge them.
               <br />
               🧬 Every character thinks, remembers, and evolves.
             </p>
             
             <div className="flex gap-4 justify-center flex-wrap">
-              <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700">
+              <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700 shadow-lg">
                 <Link to="/characters/create/historical">
                   <Users className="mr-2 h-5 w-5" />
                   Create a Character
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-cyan-400 text-cyan-400 hover:bg-cyan-400/10">
+              <Button size="lg" variant="outline" className="border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 shadow-lg">
                 <Play className="mr-2 h-5 w-5" />
                 Run a Scenario
               </Button>
-              <Button size="lg" variant="ghost" className="text-purple-300 hover:bg-purple-500/20">
+              <Button size="lg" variant="ghost" className="text-purple-300 hover:bg-purple-500/20 shadow-lg">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Browse All Characters
               </Button>
@@ -152,7 +162,7 @@ const CharactersHome = () => {
         {/* Featured Character of the Day */}
         <Section className="py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12 text-gray-100">
+            <h2 className="text-3xl font-sans font-bold text-center mb-12 text-gray-100">
               Featured Character of the Day
             </h2>
             
@@ -230,7 +240,7 @@ const CharactersHome = () => {
         <Section className="py-8">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col lg:flex-row gap-4 items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-gray-100">
+              <h2 className="text-3xl font-sans font-bold text-gray-100">
                 Discover Characters
               </h2>
               
@@ -315,7 +325,7 @@ const CharactersHome = () => {
         {/* Quickstart Scenarios */}
         <Section className="py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4 text-gray-100">
+            <h2 className="text-3xl font-sans font-bold text-center mb-4 text-gray-100">
               Quickstart Scenarios
             </h2>
             <p className="text-center text-gray-400 mb-12">Drop anyone into a test</p>
@@ -339,7 +349,7 @@ const CharactersHome = () => {
         {/* Your Saved Characters */}
         <Section className="py-16">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4 text-gray-100">
+            <h2 className="text-3xl font-sans font-bold text-center mb-4 text-gray-100">
               Your Worlds
             </h2>
             <p className="text-center text-gray-400 mb-12">Recent minds you've engaged</p>
