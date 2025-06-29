@@ -6,6 +6,19 @@ export interface NonHumanoidCommunicationStyle {
   expression_register: string;
 }
 
+export interface NonHumanoidPhysicalManifestationTraits {
+  primary_form: string; // e.g., "Crystalline Matrix", "Energy Field", "Gaseous Cloud"
+  scale_category: string; // e.g., "Microscopic", "Human-scale", "Massive", "Planetary"
+  material_composition: string; // e.g., "Pure Energy", "Living Crystal", "Metallic Liquid"
+  dimensional_properties: string; // e.g., "3D Stable", "4D Shifting", "Non-Euclidean"
+  luminescence_pattern: string; // e.g., "Pulsing Blue", "Static Amber", "Shifting Spectrum"
+  texture_quality: string; // e.g., "Smooth Glass", "Rough Stone", "Flowing Liquid"
+  movement_characteristics: string; // e.g., "Floating", "Phase-shifting", "Crystalline Growth"
+  environmental_interaction: string; // e.g., "Absorbs Light", "Distorts Space", "Emits Radiation"
+  sensory_emanations: string; // e.g., "Harmonic Vibrations", "Electromagnetic Pulses", "Psychic Resonance"
+  structural_complexity: string; // e.g., "Fractal Patterns", "Geometric Precision", "Organic Chaos"
+}
+
 export interface NonHumanoidCoreMotives {
   pattern_completion?: number;
   influence_expansion?: number;
@@ -101,6 +114,7 @@ export interface NonHumanoidTraitProfile {
   origin_universe?: string;
   species_type: string;
   form_factor?: string;
+  physical_manifestation: NonHumanoidPhysicalManifestationTraits;
   communication_style: NonHumanoidCommunicationStyle;
   core_motives: NonHumanoidCoreMotives;
   behavioral_triggers: NonHumanoidBehavioralTriggers;

@@ -10,12 +10,19 @@ const corsHeaders = {
 };
 
 interface NonHumanoidGenerationRequest {
-  name: string;
-  description: string;
-  archetype: string;
-  era: string;
-  location: string;
-  genres: string[];
+  creativeData: {
+    name: string;
+    description: string;
+    entityType: string;
+    narrativeDomain: string;
+    functionalRole: string;
+    environment: string;
+    physicalForm: string;
+    communication: string;
+    coreDrives: string[];
+    surfaceTriggers: string[];
+    changeResponseStyle: string;
+  };
 }
 
 serve(async (req) => {
@@ -25,29 +32,43 @@ serve(async (req) => {
 
   try {
     const input: NonHumanoidGenerationRequest = await req.json();
+    const { creativeData } = input;
     
-    console.log('Generating non-humanoid traits for:', input.name);
+    console.log('Generating non-humanoid traits for:', creativeData.name);
 
     const systemPrompt = `You are an expert in creating complex non-humanoid character traits for creative fiction. You generate psychological profiles for entities that are NOT human and do NOT follow human psychology or morality.
 
-Generate a complete trait profile using this architecture:
+Generate a complete trait profile using this architecture, with special emphasis on detailed physical appearance traits:
 
-1. Core Motives: Fundamental drives (pattern_completion, influence_expansion, information_accumulation, etc.)
-2. Behavioral Triggers: Short-term reaction triggers (ritual_disruption, signal_noise_anomalies, etc.)
-3. Institutional Recognition: How they interact with organized systems
-4. Action Constraints: What limits their behavior (core directives, ritual requirements)
-5. Decision Model: How they resolve conflicts and make choices
-6. Memory Architecture: How they store and process experiences
-7. Behavioral Adaptivity: How they evolve and change
-8. Latent Values: Implicit behavioral weights they develop
-9. Evolution Conditions: What causes them to change
-10. Simulation Directives: Environmental preferences and patterns
+1. Physical Manifestation: Detailed appearance traits for non-humanoid forms
+2. Core Motives: Fundamental drives (pattern_completion, influence_expansion, information_accumulation, etc.)
+3. Behavioral Triggers: Short-term reaction triggers (ritual_disruption, signal_noise_anomalies, etc.)
+4. Institutional Recognition: How they interact with organized systems
+5. Action Constraints: What limits their behavior (core directives, ritual requirements)
+6. Decision Model: How they resolve conflicts and make choices
+7. Memory Architecture: How they store and process experiences
+8. Behavioral Adaptivity: How they evolve and change
+9. Latent Values: Implicit behavioral weights they develop
+10. Evolution Conditions: What causes them to change
+11. Simulation Directives: Environmental preferences and patterns
 
 Return ONLY a valid JSON object matching this exact structure:
 
 {
   "species_type": "string",
   "form_factor": "string", 
+  "physical_manifestation": {
+    "primary_form": "string (e.g., 'Crystalline Matrix', 'Energy Field', 'Gaseous Cloud')",
+    "scale_category": "string (e.g., 'Microscopic', 'Human-scale', 'Massive', 'Planetary')",
+    "material_composition": "string (e.g., 'Pure Energy', 'Living Crystal', 'Metallic Liquid')",
+    "dimensional_properties": "string (e.g., '3D Stable', '4D Shifting', 'Non-Euclidean')",
+    "luminescence_pattern": "string (e.g., 'Pulsing Blue', 'Static Amber', 'Shifting Spectrum')",
+    "texture_quality": "string (e.g., 'Smooth Glass', 'Rough Stone', 'Flowing Liquid')",
+    "movement_characteristics": "string (e.g., 'Floating', 'Phase-shifting', 'Crystalline Growth')",
+    "environmental_interaction": "string (e.g., 'Absorbs Light', 'Distorts Space', 'Emits Radiation')",
+    "sensory_emanations": "string (e.g., 'Harmonic Vibrations', 'Electromagnetic Pulses', 'Psychic Resonance')",
+    "structural_complexity": "string (e.g., 'Fractal Patterns', 'Geometric Precision', 'Organic Chaos')"
+  },
   "communication_style": {
     "modality": "string",
     "linguistic_structure": "string",
@@ -103,18 +124,22 @@ Return ONLY a valid JSON object matching this exact structure:
   }
 }
 
-Make this entity truly alien - different psychology, different values, different logic systems. Not human-like at all.`;
+Make this entity truly alien - different psychology, different values, different logic systems. Not human-like at all. Pay special attention to creating vivid, detailed physical manifestation traits that capture the alien nature of this being.`;
 
     const userPrompt = `Create a non-humanoid character with these details:
 
-Name: ${input.name}
-Archetype: ${input.archetype}
-Description: ${input.description}
-Era: ${input.era}
-Location: ${input.location}
-Genres: ${input.genres.join(', ')}
+Name: ${creativeData.name}
+Entity Type: ${creativeData.entityType}
+Description: ${creativeData.description}
+Narrative Domain: ${creativeData.narrativeDomain}
+Functional Role: ${creativeData.functionalRole}
+Environment: ${creativeData.environment}
+Physical Form: ${creativeData.physicalForm}
+Communication: ${creativeData.communication}
+Core Drives: ${creativeData.coreDrives.join(', ')}
+Surface Triggers: ${creativeData.surfaceTriggers.join(', ')}
 
-Generate a complete trait profile that makes this entity feel truly non-human while still being interesting and coherent for creative storytelling.`;
+Generate a complete trait profile that makes this entity feel truly non-human while still being interesting and coherent for creative storytelling. Focus especially on creating detailed, vivid physical manifestation traits that capture the alien nature of this being.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -129,7 +154,7 @@ Generate a complete trait profile that makes this entity feel truly non-human wh
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 2500,
       }),
     });
 
@@ -143,15 +168,15 @@ Generate a complete trait profile that makes this entity feel truly non-human wh
     console.log('Generated content:', generatedContent);
     
     // Parse the JSON response
-    let traits;
+    let traitProfile;
     try {
-      traits = JSON.parse(generatedContent);
+      traitProfile = JSON.parse(generatedContent);
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError);
       throw new Error('Invalid JSON response from AI');
     }
 
-    return new Response(JSON.stringify({ traits }), {
+    return new Response(JSON.stringify({ traitProfile }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

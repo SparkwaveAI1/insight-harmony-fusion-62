@@ -54,6 +54,18 @@ const generateFallbackTraits = (input: NonHumanoidGenerationInput): NonHumanoidT
   return {
     species_type: input.entityType || 'Unknown',
     form_factor: input.physicalForm || 'Abstract',
+    physical_manifestation: {
+      primary_form: input.physicalForm || 'Energy Matrix',
+      scale_category: determineScale(input.description),
+      material_composition: determineMaterial(input.entityType),
+      dimensional_properties: '3D Stable',
+      luminescence_pattern: determineLuminescence(input.entityType),
+      texture_quality: determineTexture(input.physicalForm),
+      movement_characteristics: determineMovement(input.physicalForm),
+      environmental_interaction: determineEnvironmentalInteraction(input.environment),
+      sensory_emanations: determineSensoryEmanations(input.communication),
+      structural_complexity: determineStructuralComplexity(input.entityType)
+    },
     communication_style: {
       modality: input.communication || 'Unknown',
       linguistic_structure: 'Basic',
@@ -107,4 +119,68 @@ const generateFallbackTraits = (input: NonHumanoidGenerationInput): NonHumanoidT
       memory_decay_profile: 'Stable'
     }
   };
+};
+
+// Helper functions for fallback appearance generation
+const determineScale = (description: string): string => {
+  const desc = description.toLowerCase();
+  if (desc.includes('microscopic') || desc.includes('tiny')) return 'Microscopic';
+  if (desc.includes('massive') || desc.includes('giant') || desc.includes('huge')) return 'Massive';
+  if (desc.includes('planetary') || desc.includes('cosmic')) return 'Planetary';
+  return 'Human-scale';
+};
+
+const determineMaterial = (entityType: string): string => {
+  const type = entityType.toLowerCase();
+  if (type.includes('energy') || type.includes('plasma')) return 'Pure Energy';
+  if (type.includes('crystal') || type.includes('mineral')) return 'Living Crystal';
+  if (type.includes('metal') || type.includes('machine')) return 'Metallic Liquid';
+  if (type.includes('gas') || type.includes('vapor')) return 'Gaseous Compound';
+  return 'Unknown Matter';
+};
+
+const determineLuminescence = (entityType: string): string => {
+  const patterns = ['Pulsing Blue', 'Static Amber', 'Shifting Spectrum', 'No Luminescence', 'Flickering White'];
+  return patterns[Math.floor(Math.random() * patterns.length)];
+};
+
+const determineTexture = (physicalForm: string): string => {
+  const form = physicalForm.toLowerCase();
+  if (form.includes('smooth') || form.includes('glass')) return 'Smooth Glass';
+  if (form.includes('rough') || form.includes('stone')) return 'Rough Stone';
+  if (form.includes('liquid') || form.includes('fluid')) return 'Flowing Liquid';
+  if (form.includes('soft') || form.includes('cloud')) return 'Soft Membrane';
+  return 'Variable Texture';
+};
+
+const determineMovement = (physicalForm: string): string => {
+  const form = physicalForm.toLowerCase();
+  if (form.includes('float') || form.includes('hover')) return 'Floating';
+  if (form.includes('phase') || form.includes('shift')) return 'Phase-shifting';
+  if (form.includes('grow') || form.includes('expand')) return 'Crystalline Growth';
+  if (form.includes('flow') || form.includes('liquid')) return 'Fluid Motion';
+  return 'Static Form';
+};
+
+const determineEnvironmentalInteraction = (environment: string): string => {
+  const env = environment.toLowerCase();
+  if (env.includes('light') || env.includes('bright')) return 'Absorbs Light';
+  if (env.includes('space') || env.includes('void')) return 'Distorts Space';
+  if (env.includes('energy') || env.includes('electric')) return 'Emits Radiation';
+  if (env.includes('cold') || env.includes('ice')) return 'Freezes Surroundings';
+  return 'Neutral Interaction';
+};
+
+const determineSensoryEmanations = (communication: string): string => {
+  const comm = communication.toLowerCase();
+  if (comm.includes('sound') || comm.includes('vibrat')) return 'Harmonic Vibrations';
+  if (comm.includes('electric') || comm.includes('magnetic')) return 'Electromagnetic Pulses';
+  if (comm.includes('psychic') || comm.includes('mental')) return 'Psychic Resonance';
+  if (comm.includes('chemical') || comm.includes('scent')) return 'Chemical Signals';
+  return 'Unknown Emanations';
+};
+
+const determineStructuralComplexity = (entityType: string): string => {
+  const patterns = ['Fractal Patterns', 'Geometric Precision', 'Organic Chaos', 'Crystalline Order', 'Fluid Dynamics'];
+  return patterns[Math.floor(Math.random() * patterns.length)];
 };

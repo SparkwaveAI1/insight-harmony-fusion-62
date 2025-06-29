@@ -114,6 +114,104 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         </CardContent>
       </Card>
 
+      {/* Physical Manifestation Section for Non-Humanoid Characters */}
+      {isNonHumanoid && character.trait_profile?.physical_manifestation && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Atom className="h-5 w-5" />
+              Physical Manifestation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border-l-4 border-purple-400">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {character.trait_profile.physical_manifestation.primary_form && (
+                  <div>
+                    <span className="font-medium text-purple-800">Primary Form:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.primary_form}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.scale_category && (
+                  <div>
+                    <span className="font-medium text-purple-800">Scale:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.scale_category}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.material_composition && (
+                  <div>
+                    <span className="font-medium text-purple-800">Material:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.material_composition}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.dimensional_properties && (
+                  <div>
+                    <span className="font-medium text-purple-800">Dimensions:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.dimensional_properties}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.luminescence_pattern && (
+                  <div>
+                    <span className="font-medium text-purple-800">Luminescence:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.luminescence_pattern}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.texture_quality && (
+                  <div>
+                    <span className="font-medium text-purple-800">Texture:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.texture_quality}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.movement_characteristics && (
+                  <div>
+                    <span className="font-medium text-purple-800">Movement:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.movement_characteristics}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.environmental_interaction && (
+                  <div>
+                    <span className="font-medium text-purple-800">Environmental Effect:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.environmental_interaction}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.sensory_emanations && (
+                  <div>
+                    <span className="font-medium text-purple-800">Sensory Output:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.sensory_emanations}
+                    </p>
+                  </div>
+                )}
+                {character.trait_profile.physical_manifestation.structural_complexity && (
+                  <div>
+                    <span className="font-medium text-purple-800">Structure:</span>
+                    <p className="text-purple-700 text-sm mt-1">
+                      {character.trait_profile.physical_manifestation.structural_complexity}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Enhanced Communication Section for Non-Humanoid Characters */}
       {isNonHumanoid && character.linguistic_profile && (
         <Card>
