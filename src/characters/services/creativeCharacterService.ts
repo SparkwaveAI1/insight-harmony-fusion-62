@@ -52,7 +52,11 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
         patience: 0.7
       },
       linguistic_profile: {
-        communication_patterns: traitProfile.communication_style?.modality || 'Non-verbal'
+        // Use the basic structure that LinguisticProfile expects
+        primary_language: data.communication || 'Universal',
+        dialect_patterns: [],
+        vocabulary_complexity: 'moderate',
+        sentence_structure: 'standard'
       },
       interview_sections: [],
       preinterview_tags: [data.entityType, data.narrativeDomain, data.functionalRole],
@@ -61,7 +65,7 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
         positive_triggers: data.coreDrives.map(drive => ({
           trigger: drive,
           keywords: [drive.toLowerCase()],
-          emotion_type: 'positive',
+          emotion_type: 'positive' as const,
           intensity: 0.7,
           intensity_multiplier: 1.0,
           description: `Responds positively to ${drive.toLowerCase()}`
@@ -69,7 +73,7 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
         negative_triggers: data.surfaceTriggers.map(trigger => ({
           trigger: trigger,
           keywords: [trigger.toLowerCase()],
-          emotion_type: 'negative',
+          emotion_type: 'negative' as const,
           intensity: 0.8,
           intensity_multiplier: 1.2,
           description: `Becomes agitated by ${trigger.toLowerCase()}`
