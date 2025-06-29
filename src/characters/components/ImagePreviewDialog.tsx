@@ -3,7 +3,8 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Save, Star, X, Check } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Save, Star, X, Check, ChevronDown } from 'lucide-react';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 
@@ -35,12 +36,14 @@ const ImagePreviewDialog = ({
   const isNonHumanoid = 'species_type' in character;
   const [savedToGallery, setSavedToGallery] = React.useState(false);
   const [setAsProfile, setSetAsProfile] = React.useState(false);
+  const [isPromptOpen, setIsPromptOpen] = React.useState(false);
 
   // Reset states when dialog opens/closes
   React.useEffect(() => {
     if (!isOpen) {
       setSavedToGallery(false);
       setSetAsProfile(false);
+      setIsPromptOpen(false);
     }
   }, [isOpen]);
 
@@ -81,11 +84,20 @@ const ImagePreviewDialog = ({
             />
           </AspectRatio>
           
-          {/* Prompt Display */}
-          <div className="bg-muted p-3 rounded-lg">
-            <p className="text-sm text-muted-foreground mb-1">Generation Prompt:</p>
-            <p className="text-sm">{prompt}</p>
-          </div>
+          {/* Collapsible Prompt Display */}
+          <Collapsible open={isPromptOpen} onOpenChange={setIsPromptOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-3 h-auto">
+                <span className="text-sm font-medium">Generation Prompt</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isPromptOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-sm">{prompt}</p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
           
           {/* Action Status */}
           {(savedToGallery || setAsProfile) && (
