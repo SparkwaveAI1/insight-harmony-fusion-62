@@ -116,24 +116,10 @@ const CharacterDetail = () => {
           <div className="text-center mb-8">
             <Card className="p-8">
               <div className="flex flex-col items-center">
-                {/* Character Image - Only show existing images, no generation for non-humanoid */}
+                {/* Character Image/Avatar */}
                 <div className="mb-6">
-                  {activeCharacter.profile_image_url && !isNonHumanoidCharacter ? (
-                    <div className="w-full max-w-md">
-                      <img 
-                        src={activeCharacter.profile_image_url} 
-                        alt={`${activeCharacter.name} portrait`}
-                        className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
-                        onError={(e) => {
-                          console.error('Error loading image:', activeCharacter.profile_image_url);
-                          console.log('Image load error event:', e);
-                        }}
-                        onLoad={() => {
-                          console.log('Image loaded successfully:', activeCharacter.profile_image_url);
-                        }}
-                      />
-                    </div>
-                  ) : (
+                  {isNonHumanoidCharacter ? (
+                    // Non-humanoid characters: only show avatar, no profile images
                     <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
                       <CharacterAvatar 
                         character={activeCharacter} 
@@ -141,6 +127,32 @@ const CharacterDetail = () => {
                         className="w-24 h-24"
                       />
                     </div>
+                  ) : (
+                    // Humanoid characters: show profile image or fallback to avatar
+                    activeCharacter.profile_image_url ? (
+                      <div className="w-full max-w-md">
+                        <img 
+                          src={activeCharacter.profile_image_url} 
+                          alt={`${activeCharacter.name} portrait`}
+                          className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                          onError={(e) => {
+                            console.error('Error loading image:', activeCharacter.profile_image_url);
+                            console.log('Image load error event:', e);
+                          }}
+                          onLoad={() => {
+                            console.log('Image loaded successfully:', activeCharacter.profile_image_url);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
+                        <CharacterAvatar 
+                          character={activeCharacter} 
+                          size="xl" 
+                          className="w-24 h-24"
+                        />
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -159,7 +171,7 @@ const CharacterDetail = () => {
                   />
                 </div>
 
-                {/* Generate Image Button - Only show for humanoid characters */}
+                {/* Generate Image Button - Only for humanoid characters */}
                 {!isNonHumanoidCharacter && (
                   <GenerateCharacterImageButton
                     character={activeCharacter as any}
