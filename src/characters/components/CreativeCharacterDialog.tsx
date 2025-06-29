@@ -521,8 +521,8 @@ This character was created through the Creative Character Genesis process.`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] flex flex-col p-0">
+        <DialogHeader className="flex-shrink-0 p-4 sm:p-6 pb-2 sm:pb-4">
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             Character Genesis Creation
@@ -533,7 +533,7 @@ This character was created through the Creative Character Genesis process.`;
         </DialogHeader>
         
         {/* Progress indicator */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 pb-2 sm:pb-4 flex-shrink-0">
           <div className="flex space-x-1 sm:space-x-2">
             {Array.from({ length: totalSteps }, (_, i) => (
               <div
@@ -558,20 +558,20 @@ This character was created through the Creative Character Genesis process.`;
           </div>
         </div>
 
-        {/* Step content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="min-h-[300px] sm:min-h-[400px]">
+        {/* Step content - with proper scrolling */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+          <div className="pb-4">
             {renderStep()}
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between pt-4 sm:pt-6 border-t flex-shrink-0">
+        {/* Navigation - Fixed at bottom */}
+        <div className="flex justify-between items-center p-4 sm:p-6 pt-2 sm:pt-4 border-t flex-shrink-0 bg-background">
           <Button
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 1}
-            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-8 sm:h-9"
           >
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             Back
@@ -581,7 +581,7 @@ This character was created through the Creative Character Genesis process.`;
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-8 sm:h-9"
             >
               Next
               <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -590,7 +590,7 @@ This character was created through the Creative Character Genesis process.`;
             <Button
               onClick={handleComplete}
               disabled={!canProceed()}
-              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-8 sm:h-9"
             >
               <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">{formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}</span>
