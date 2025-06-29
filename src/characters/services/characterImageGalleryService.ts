@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CharacterImage {
@@ -11,6 +10,52 @@ export interface CharacterImage {
   physical_attributes?: any;
   created_at: string;
   is_current: boolean;
+}
+
+// Helper function to upload image to storage bucket
+async function uploadImageToStorage(
+  imageDataUrl: string,
+  characterId: string
+): Promise<{ storageUrl: string; filePath: string } | null> {
+  try {
+    // Convert data URL to blob
+    const response = await fetch(imageDataUrl);
+    const blob = await response.blob();
+    
+    // Generate unique filename
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `${characterId}_${timestamp}.png`;
+    
+    console.log('Uploading image to character-images bucket:', fileName);
+    
+    // Upload to character-images bucket
+    const { data, error } = await supabase.storage
+      .from('character-images')
+      .upload(fileName, blob, {
+        contentType: 'image/png',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error('Error uploading to storage:', error);
+      return null;
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('character-images')
+      .getPublicUrl(fileName);
+    
+    console.log('Successfully uploaded image to storage:', urlData.publicUrl);
+    
+    return {
+      storageUrl: urlData.publicUrl,
+      filePath: fileName
+    };
+  } catch (error) {
+    console.error('Error in uploadImageToStorage:', error);
+    return null;
+  }
 }
 
 export async function getCharacterImages(characterId: string): Promise<CharacterImage[]> {
@@ -38,15 +83,25 @@ export async function getCharacterImages(characterId: string): Promise<Character
 
 export async function saveCharacterImage(
   characterId: string,
-  storageUrl: string,
-  filePath: string,
+  imageDataUrl: string,
+  originalFilePath: string,
   originalUrl?: string,
   generationPrompt?: string,
   physicalAttributes?: any,
   isCurrent: boolean = false
 ): Promise<CharacterImage | null> {
   try {
-    console.log('Saving character image:', { characterId, storageUrl, filePath, isCurrent });
+    console.log('Saving character image:', { characterId, isCurrent });
+    
+    // Upload image to storage bucket
+    const uploadResult = await uploadImageToStorage(imageDataUrl, characterId);
+    
+    if (!uploadResult) {
+      console.error('Failed to upload image to storage');
+      throw new Error('Failed to upload image to storage');
+    }
+    
+    const { storageUrl, filePath } = uploadResult;
     
     // If isCurrent is true, first set all other images for this character to not current
     if (isCurrent) {
@@ -67,7 +122,7 @@ export async function saveCharacterImage(
         character_id: characterId,
         storage_url: storageUrl,
         file_path: filePath,
-        original_url: originalUrl || storageUrl,
+        original_url: originalUrl || imageDataUrl,
         generation_prompt: generationPrompt || '',
         physical_attributes: physicalAttributes || {},
         is_current: isCurrent
