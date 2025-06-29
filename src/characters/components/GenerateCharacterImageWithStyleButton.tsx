@@ -95,10 +95,13 @@ const GenerateCharacterImageWithStyleButton = ({
   const handleSaveToGallery = async () => {
     setIsSaving(true);
     try {
+      // Extract filename from the data URL or create a unique one
+      const fileName = `${character.character_id}_${Date.now()}.png`;
+      
       await saveCharacterImage(
         character.character_id,
         generatedImageUrl,
-        `${character.character_id}_${Date.now()}.png`,
+        fileName,
         generatedImageUrl,
         generatedPrompt,
         {},
@@ -137,11 +140,14 @@ const GenerateCharacterImageWithStyleButton = ({
   const handleSaveAndSetAsProfile = async () => {
     setIsSaving(true);
     try {
+      // Extract filename from the data URL or create a unique one
+      const fileName = `${character.character_id}_${Date.now()}.png`;
+      
       // Save to gallery and set as current
       await saveCharacterImage(
         character.character_id,
         generatedImageUrl,
-        `${character.character_id}_${Date.now()}.png`,
+        fileName,
         generatedImageUrl,
         generatedPrompt,
         {},

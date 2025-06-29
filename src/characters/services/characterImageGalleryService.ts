@@ -46,7 +46,20 @@ export async function saveCharacterImage(
   isCurrent: boolean = false
 ): Promise<CharacterImage | null> {
   try {
-    console.log('Saving character image:', { characterId, storageUrl, isCurrent });
+    console.log('Saving character image:', { characterId, storageUrl, filePath, isCurrent });
+    
+    // If isCurrent is true, first set all other images for this character to not current
+    if (isCurrent) {
+      const { error: updateError } = await supabase
+        .from('character_images')
+        .update({ is_current: false })
+        .eq('character_id', characterId);
+      
+      if (updateError) {
+        console.error('Error updating current images:', updateError);
+        // Don't throw here, continue with insert
+      }
+    }
     
     const { data, error } = await supabase
       .from('character_images')
@@ -54,8 +67,8 @@ export async function saveCharacterImage(
         character_id: characterId,
         storage_url: storageUrl,
         file_path: filePath,
-        original_url: originalUrl,
-        generation_prompt: generationPrompt,
+        original_url: originalUrl || storageUrl,
+        generation_prompt: generationPrompt || '',
         physical_attributes: physicalAttributes || {},
         is_current: isCurrent
       })
@@ -79,6 +92,18 @@ export async function setCurrentCharacterImage(characterId: string, imageId: str
   try {
     console.log('Setting current image for character:', characterId, 'imageId:', imageId);
     
+    // First, set all images for this character to not current
+    const { error: updateAllError } = await supabase
+      .from('character_images')
+      .update({ is_current: false })
+      .eq('character_id', characterId);
+
+    if (updateAllError) {
+      console.error('Error updating all character images:', updateAllError);
+      throw updateAllError;
+    }
+
+    // Then set the specific image as current
     const { error } = await supabase
       .from('character_images')
       .update({ is_current: true })
