@@ -67,7 +67,7 @@ const ImagePreviewDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Generated Image Preview - {character.name}
@@ -75,14 +75,14 @@ const ImagePreviewDialog = ({
         </DialogHeader>
         
         <div className="space-y-4">
-          {/* Image Preview */}
-          <AspectRatio ratio={1} className="w-full">
+          {/* Image Preview - Constrained height */}
+          <div className="w-full max-h-[50vh]">
             <img
               src={imageUrl}
               alt={`Generated image for ${character.name}`}
-              className="w-full h-full object-contain rounded-lg border"
+              className="w-full h-full object-contain rounded-lg border max-h-[50vh]"
             />
-          </AspectRatio>
+          </div>
           
           {/* Collapsible Prompt Display */}
           <Collapsible open={isPromptOpen} onOpenChange={setIsPromptOpen}>
