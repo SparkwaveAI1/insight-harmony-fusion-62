@@ -65,9 +65,18 @@ const GenerateCharacterImageWithStyleButton = ({
       
       const result = await generateCharacterImage(generationData, selectedStyle, false); // false = don't auto-save
       
-      if (result && result.image_url) {
+      // Handle both string and GenerationResult return types
+      if (typeof result === 'object' && result && 'image_url' in result && result.image_url) {
         setGeneratedImageUrl(result.image_url);
         setGeneratedPrompt(result.prompt || '');
+        setIsPreviewOpen(true);
+        setIsDialogOpen(false);
+        
+        toast.success(`${isNonHumanoid ? 'Entity' : 'Character'} image generated successfully!`);
+      } else if (typeof result === 'string' && result) {
+        // Handle legacy string return format
+        setGeneratedImageUrl(result);
+        setGeneratedPrompt('');
         setIsPreviewOpen(true);
         setIsDialogOpen(false);
         

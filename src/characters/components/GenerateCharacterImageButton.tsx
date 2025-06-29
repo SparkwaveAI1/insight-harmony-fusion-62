@@ -36,7 +36,10 @@ const GenerateCharacterImageButton = ({
         description: 'This may take a few moments'
       });
       
-      const imageUrl = await generateCharacterImage(character);
+      const result = await generateCharacterImage(character);
+      
+      // Handle both string and GenerationResult return types
+      const imageUrl = typeof result === 'string' ? result : result?.image_url;
       
       if (imageUrl) {
         toast.success('Character image generated successfully!');
