@@ -1,22 +1,15 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Sparkles, Clock, User } from 'lucide-react';
+import { Plus, Sparkles, Clock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import { useCharacters } from '../hooks/useCharacters';
+import { useNonHumanoidCharacters } from '../hooks/useNonHumanoidCharacters';
 import { Badge } from '@/components/ui/badge';
 
-const CreativeCharacterLibrary = () => {
-  const { data: characters, isLoading } = useCharacters();
-  
-  // Filter characters that were created through Creative Genesis (source field or specific markers)
-  const creativeCharacters = characters?.filter(character => 
-    character.metadata?.source === 'creative-genesis' || 
-    character.prompt?.includes('Creative Character Genesis') ||
-    character.prompt?.includes('Character Context:')
-  ) || [];
+const NonHumanoidCharacterLibrary = () => {
+  const { data: characters, isLoading } = useNonHumanoidCharacters();
 
   if (isLoading) {
     return (
@@ -25,7 +18,7 @@ const CreativeCharacterLibrary = () => {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading creative characters...</p>
+              <p className="text-muted-foreground">Loading non-humanoid characters...</p>
             </div>
           </div>
         </Section>
@@ -39,9 +32,9 @@ const CreativeCharacterLibrary = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Creative Character Library</h1>
+            <h1 className="text-3xl font-bold">Non-Humanoid Character Library</h1>
             <p className="text-muted-foreground">
-              Browse and manage your original creative characters
+              Browse and manage your creative non-humanoid characters
             </p>
           </div>
           
@@ -49,16 +42,16 @@ const CreativeCharacterLibrary = () => {
             <Button asChild>
               <Link to="/characters/create/creative">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Creative Character
+                Create Non-Humanoid Character
               </Link>
             </Button>
           </div>
         </div>
 
         {/* Characters Grid */}
-        {creativeCharacters.length > 0 ? (
+        {characters && characters.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {creativeCharacters.map((character) => (
+            {characters.map((character) => (
               <Card key={character.character_id} className="p-6 hover:shadow-lg transition-shadow">
                 <div className="space-y-4">
                   {/* Character Avatar/Icon */}
@@ -71,14 +64,14 @@ const CreativeCharacterLibrary = () => {
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        <User className="h-6 w-6 text-white" />
+                        <Zap className="h-6 w-6 text-white" />
                       )}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{character.name}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        {character.historical_period || character.metadata?.era || 'Unknown Era'}
+                        {character.species_type || 'Unknown Species'}
                       </div>
                     </div>
                   </div>
@@ -89,10 +82,17 @@ const CreativeCharacterLibrary = () => {
                       {character.prompt || character.metadata?.description || 'No description available'}
                     </p>
                     
-                    {(character.region || character.metadata?.location) && (
+                    {character.origin_universe && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span>📍</span>
-                        <span>{character.region || character.metadata?.location}</span>
+                        <span>🌌</span>
+                        <span>{character.origin_universe}</span>
+                      </div>
+                    )}
+
+                    {character.form_factor && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span>⚡</span>
+                        <span>{character.form_factor}</span>
                       </div>
                     )}
                   </div>
@@ -101,11 +101,11 @@ const CreativeCharacterLibrary = () => {
                   <div className="flex flex-wrap gap-1">
                     <Badge variant="secondary" className="text-xs">
                       <Sparkles className="h-3 w-3 mr-1" />
-                      Creative Genesis
+                      Non-Humanoid
                     </Badge>
-                    {(character.metadata?.occupation || character.social_class) && (
+                    {character.species_type && (
                       <Badge variant="outline" className="text-xs">
-                        {character.metadata?.occupation || character.social_class}
+                        {character.species_type}
                       </Badge>
                     )}
                   </div>
@@ -130,15 +130,15 @@ const CreativeCharacterLibrary = () => {
         ) : (
           /* Empty State */
           <Card className="text-center py-12">
-            <Sparkles className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Creative Characters Yet</h2>
+            <Zap className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">No Non-Humanoid Characters Yet</h2>
             <p className="text-muted-foreground mb-6">
-              Start creating your first original creative character with custom traits and personalities.
+              Start creating your first non-humanoid character with unique species traits and behaviors.
             </p>
             <Button asChild>
               <Link to="/characters/create/creative">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Create Your First Creative Character
+                Create Your First Non-Humanoid Character
               </Link>
             </Button>
           </Card>
@@ -148,4 +148,4 @@ const CreativeCharacterLibrary = () => {
   );
 };
 
-export default CreativeCharacterLibrary;
+export default NonHumanoidCharacterLibrary;

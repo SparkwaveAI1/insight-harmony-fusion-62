@@ -1,6 +1,31 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { NonHumanoidCharacter, DbNonHumanoidCharacter } from '../types/nonHumanoidTypes';
+import { NonHumanoidCharacter, NonHumanoidTraitProfile } from '../types/nonHumanoidTypes';
+
+// Database representation with proper Json typing
+interface DbNonHumanoidCharacterInsert {
+  character_id: string;
+  name: string;
+  character_type: 'multi_species';
+  creation_date: string;
+  created_at: string;
+  user_id: string;
+  metadata: any;
+  behavioral_modulation: any;
+  interview_sections: any;
+  linguistic_profile: any;
+  preinterview_tags: any;
+  simulation_directives: any;
+  trait_profile: any; // Use any for Json serialization
+  emotional_triggers?: any;
+  prompt?: string;
+  is_public?: boolean;
+  profile_image_url?: string;
+  enhanced_metadata_version?: number;
+  origin_universe?: string;
+  species_type: string;
+  form_factor?: string;
+}
 
 export const saveNonHumanoidCharacter = async (character: NonHumanoidCharacter): Promise<NonHumanoidCharacter> => {
   console.log('=== SAVING NON-HUMANOID CHARACTER ===');
@@ -12,21 +37,21 @@ export const saveNonHumanoidCharacter = async (character: NonHumanoidCharacter):
   });
 
   try {
-    // Prepare data for database insertion
-    const dbCharacter: Omit<DbNonHumanoidCharacter, 'id'> = {
+    // Prepare data for database insertion with proper type conversion
+    const dbCharacter: DbNonHumanoidCharacterInsert = {
       character_id: character.character_id,
       name: character.name,
-      character_type: character.character_type,
+      character_type: 'multi_species' as const,
       creation_date: character.creation_date,
       created_at: character.created_at,
-      user_id: character.user_id,
+      user_id: character.user_id!,
       metadata: character.metadata,
       behavioral_modulation: character.behavioral_modulation,
       interview_sections: character.interview_sections,
       linguistic_profile: character.linguistic_profile,
       preinterview_tags: character.preinterview_tags,
       simulation_directives: character.simulation_directives,
-      trait_profile: character.trait_profile,
+      trait_profile: character.trait_profile, // This will be serialized as Json
       emotional_triggers: character.emotional_triggers,
       prompt: character.prompt,
       is_public: character.is_public,
@@ -53,7 +78,7 @@ export const saveNonHumanoidCharacter = async (character: NonHumanoidCharacter):
     }
 
     console.log('✅ Non-humanoid character saved successfully:', data.character_id);
-    return mapDbCharacterToCharacter(data);
+    return mapDbRowToCharacter(data);
   } catch (error) {
     console.error('Error in saveNonHumanoidCharacter:', error);
     throw error instanceof Error ? error : new Error('Unknown error saving non-humanoid character');
@@ -82,7 +107,7 @@ export const getNonHumanoidCharacterById = async (id: string): Promise<NonHumano
     }
 
     console.log('✅ Non-humanoid character fetched by ID:', data.character_id);
-    return mapDbCharacterToCharacter(data);
+    return mapDbRowToCharacter(data);
   } catch (error) {
     console.error('Error in getNonHumanoidCharacterById:', error);
     throw error instanceof Error ? error : new Error('Unknown error fetching non-humanoid character');
@@ -111,7 +136,7 @@ export const getNonHumanoidCharacterByCharacterId = async (characterId: string):
     }
 
     console.log('✅ Non-humanoid character fetched by character_id:', data.character_id);
-    return mapDbCharacterToCharacter(data);
+    return mapDbRowToCharacter(data);
   } catch (error) {
     console.error('Error in getNonHumanoidCharacterByCharacterId:', error);
     throw error instanceof Error ? error : new Error('Unknown error fetching non-humanoid character');
@@ -133,7 +158,7 @@ export const getAllNonHumanoidCharacters = async (): Promise<NonHumanoidCharacte
     }
 
     console.log(`✅ Fetched ${data?.length || 0} non-humanoid characters`);
-    return data ? data.map(mapDbCharacterToCharacter) : [];
+    return data ? data.map(mapDbRowToCharacter) : [];
   } catch (error) {
     console.error('Error in getAllNonHumanoidCharacters:', error);
     throw error instanceof Error ? error : new Error('Unknown error fetching non-humanoid characters');
@@ -206,30 +231,30 @@ export const deleteNonHumanoidCharacter = async (characterId: string): Promise<v
   }
 };
 
-// Helper function to map database record to character interface
-const mapDbCharacterToCharacter = (dbCharacter: DbNonHumanoidCharacter): NonHumanoidCharacter => {
+// Helper function to map database row to character interface with proper type handling
+const mapDbRowToCharacter = (dbRow: any): NonHumanoidCharacter => {
   return {
-    id: dbCharacter.id,
-    character_id: dbCharacter.character_id,
-    name: dbCharacter.name,
-    character_type: dbCharacter.character_type,
-    creation_date: dbCharacter.creation_date,
-    created_at: dbCharacter.created_at || dbCharacter.creation_date,
-    metadata: dbCharacter.metadata,
-    behavioral_modulation: dbCharacter.behavioral_modulation,
-    interview_sections: dbCharacter.interview_sections,
-    linguistic_profile: dbCharacter.linguistic_profile,
-    preinterview_tags: dbCharacter.preinterview_tags,
-    simulation_directives: dbCharacter.simulation_directives,
-    trait_profile: dbCharacter.trait_profile,
-    emotional_triggers: dbCharacter.emotional_triggers,
-    prompt: dbCharacter.prompt,
-    user_id: dbCharacter.user_id,
-    is_public: dbCharacter.is_public,
-    profile_image_url: dbCharacter.profile_image_url,
-    enhanced_metadata_version: dbCharacter.enhanced_metadata_version,
-    origin_universe: dbCharacter.origin_universe,
-    species_type: dbCharacter.species_type,
-    form_factor: dbCharacter.form_factor
+    id: dbRow.id,
+    character_id: dbRow.character_id,
+    name: dbRow.name,
+    character_type: 'multi_species' as const,
+    creation_date: dbRow.creation_date,
+    created_at: dbRow.created_at || dbRow.creation_date,
+    metadata: dbRow.metadata || {},
+    behavioral_modulation: dbRow.behavioral_modulation || {},
+    interview_sections: dbRow.interview_sections || [],
+    linguistic_profile: dbRow.linguistic_profile || {},
+    preinterview_tags: dbRow.preinterview_tags || [],
+    simulation_directives: dbRow.simulation_directives || {},
+    trait_profile: dbRow.trait_profile as NonHumanoidTraitProfile,
+    emotional_triggers: dbRow.emotional_triggers,
+    prompt: dbRow.prompt,
+    user_id: dbRow.user_id,
+    is_public: dbRow.is_public,
+    profile_image_url: dbRow.profile_image_url,
+    enhanced_metadata_version: dbRow.enhanced_metadata_version,
+    origin_universe: dbRow.origin_universe,
+    species_type: dbRow.species_type,
+    form_factor: dbRow.form_factor
   };
 };
