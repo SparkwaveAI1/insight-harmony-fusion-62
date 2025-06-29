@@ -19,9 +19,19 @@ export {
 } from './services/characterGenerator';
 export { generateCharacterImage } from './services/characterImageService';
 
+// Re-export image gallery functions
+export {
+  getCharacterImages,
+  saveCharacterImage,
+  setCurrentCharacterImage,
+  deleteCharacterImage,
+  getCurrentCharacterImage
+} from './services/characterImageGalleryService';
+
 // Re-export types
 export type { Character, CharacterTraitProfile } from './types/characterTraitTypes';
 export type { Message, ChatMode } from './types/chatTypes';
+export type { CharacterImage } from './services/characterImageGalleryService';
 
 // Re-export hooks
 export { useCharacterHook } from './hooks/useCharacterHook';
@@ -37,3 +47,4 @@ export { default as CharacterLibrary } from './pages/CharacterLibrary';
 
 // Re-export components
 export { default as CharacterCloneForm } from './components/CharacterCloneForm';
+export { default as CharacterImageGallery } from './components/CharacterImageGallery';

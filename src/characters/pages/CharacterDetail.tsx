@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -15,6 +14,7 @@ import { downloadCharacterAsJSON } from '../utils/downloadUtils';
 import CharacterDetailHeader from '../components/CharacterDetailHeader';
 import CharacterInfoSections from '../components/CharacterInfoSections';
 import CharacterDangerZone from '../components/CharacterDangerZone';
+import CharacterImageGallery from '../components/CharacterImageGallery';
 
 const CharacterDetail = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -34,6 +34,14 @@ const CharacterDetail = () => {
     if (characterId) {
       console.log('Reloading character data...');
       await loadCharacter(characterId);
+    }
+  };
+
+  const handleCurrentImageChange = (imageUrl: string) => {
+    // Update the character's profile image URL in the UI
+    if (activeCharacter) {
+      // This will trigger a re-render with the updated image
+      loadCharacter(characterId!);
     }
   };
 
@@ -157,12 +165,19 @@ const CharacterDetail = () => {
                   />
                 </div>
 
-                {/* Generate Image Button - Updated with style selection */}
-                <GenerateCharacterImageWithStyleButton
-                  character={activeCharacter}
-                  onImageGenerated={handleImageGenerated}
-                  className="w-full max-w-sm"
-                />
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                  <GenerateCharacterImageWithStyleButton
+                    character={activeCharacter}
+                    onImageGenerated={handleImageGenerated}
+                    className="flex-1"
+                  />
+                  
+                  <CharacterImageGallery
+                    character={activeCharacter}
+                    onCurrentImageChange={handleCurrentImageChange}
+                  />
+                </div>
               </div>
             </Card>
           </div>

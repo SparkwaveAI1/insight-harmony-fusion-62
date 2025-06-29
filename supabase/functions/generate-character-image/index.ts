@@ -4,7 +4,11 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { buildCharacterImagePrompt } from "./promptBuilder.ts";
 import { buildNonHumanoidImagePrompt, IMAGE_STYLES } from "./nonHumanoidPromptBuilder.ts";
 import { generateImageWithOpenAI } from "./openaiService.ts";
-import { uploadImageToStorage, updateCharacterWithImageUrl } from "./imageUploadService.ts";
+import { 
+  uploadImageToStorage, 
+  updateCharacterWithImageUrl,
+  saveToCharacterImagesTable 
+} from "./imageUploadService.ts";
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -79,7 +83,21 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Update the character record with the new image URL
+    // Extract file path from the public URL
+    const filePath = publicUrl.split('/').slice(-1)[0];
+    
+    // Save to character_images table for gallery
+    await saveToCharacterImagesTable(
+      characterData.character_id,
+      publicUrl,
+      filePath,
+      publicUrl, // Use storage URL as original URL since we're storing it
+      imagePrompt,
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY
+    );
+    
+    // Update the character record with the new image URL (as profile image)
     await updateCharacterWithImageUrl(
       characterData.character_id, 
       publicUrl, 

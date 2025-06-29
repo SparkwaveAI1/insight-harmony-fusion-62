@@ -51,6 +51,40 @@ export async function uploadImageToStorage(
   return publicUrl;
 }
 
+export async function saveToCharacterImagesTable(
+  characterId: string,
+  storageUrl: string,
+  filePath: string,
+  originalUrl: string,
+  generationPrompt: string,
+  supabaseUrl: string,
+  serviceRoleKey: string
+): Promise<void> {
+  console.log('Saving image to character_images table');
+  
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  
+  const { data, error } = await supabase
+    .from('character_images')
+    .insert({
+      character_id: characterId,
+      storage_url: storageUrl,
+      file_path: filePath,
+      original_url: originalUrl,
+      generation_prompt: generationPrompt,
+      is_current: true // New images are set as current
+    })
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Error saving to character_images table:', error);
+    throw new Error(`Failed to save image record: ${error.message}`);
+  }
+  
+  console.log('Successfully saved image to character_images table:', data);
+}
+
 export async function updateCharacterWithImageUrl(
   characterId: string, 
   imageUrl: string, 
