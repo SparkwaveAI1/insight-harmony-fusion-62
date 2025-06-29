@@ -63,38 +63,8 @@ export async function updateCharacterWithImageUrl(
   
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
-  // First check which table the character exists in by trying to find it
-  console.log('Looking for character in non-humanoid characters table first...');
-  const { data: nonHumanoidCheck, error: nonHumanoidCheckError } = await supabase
-    .from('non_humanoid_characters')
-    .select('character_id')
-    .eq('character_id', characterId)
-    .maybeSingle();
-    
-  if (!nonHumanoidCheckError && nonHumanoidCheck) {
-    console.log('Character found in non-humanoid table, updating there...');
-    // Update non-humanoid characters table
-    const { data: nonHumanoidData, error: nonHumanoidUpdateError } = await supabase
-      .from('non_humanoid_characters')
-      .update({ profile_image_url: imageUrl })
-      .eq('character_id', characterId)
-      .select();
-      
-    if (nonHumanoidUpdateError) {
-      console.error('Error updating non-humanoid character with image URL:', nonHumanoidUpdateError);
-      throw new Error(`Failed to update non-humanoid character: ${nonHumanoidUpdateError.message}`);
-    }
-    
-    if (nonHumanoidData && nonHumanoidData.length > 0) {
-      console.log('Successfully updated non-humanoid character record with image URL:', nonHumanoidData[0]);
-    } else {
-      throw new Error('Failed to update non-humanoid character - no rows affected');
-    }
-    return;
-  }
-  
-  // If not found in non-humanoid table, try regular characters table
-  console.log('Character not found in non-humanoid table, trying regular characters table...');
+  // Only update regular characters table - skip non-humanoid characters
+  console.log('Updating regular characters table...');
   const { data: regularCharacterData, error: updateError } = await supabase
     .from('characters')
     .update({ profile_image_url: imageUrl })
@@ -109,7 +79,7 @@ export async function updateCharacterWithImageUrl(
   if (regularCharacterData && regularCharacterData.length > 0) {
     console.log('Successfully updated regular character record with image URL:', regularCharacterData[0]);
   } else {
-    console.log('No character found with character_id:', characterId);
-    throw new Error('Character not found in either table');
+    console.log('Character not found in regular characters table - this may be a non-humanoid character');
+    throw new Error('Character not found in regular characters table');
   }
 }

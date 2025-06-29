@@ -116,9 +116,9 @@ const CharacterDetail = () => {
           <div className="text-center mb-8">
             <Card className="p-8">
               <div className="flex flex-col items-center">
-                {/* Character Image - Large and rectangular */}
+                {/* Character Image - Only show existing images, no generation for non-humanoid */}
                 <div className="mb-6">
-                  {activeCharacter.profile_image_url ? (
+                  {activeCharacter.profile_image_url && !isNonHumanoidCharacter ? (
                     <div className="w-full max-w-md">
                       <img 
                         src={activeCharacter.profile_image_url} 
@@ -159,7 +159,7 @@ const CharacterDetail = () => {
                   />
                 </div>
 
-                {/* Generate Image Button - Only show for regular characters, not non-humanoid */}
+                {/* Generate Image Button - Only show for humanoid characters */}
                 {!isNonHumanoidCharacter && (
                   <GenerateCharacterImageButton
                     character={activeCharacter as any}
