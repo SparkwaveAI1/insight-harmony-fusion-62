@@ -58,31 +58,62 @@ export async function updateCharacterWithImageUrl(
   serviceRoleKey: string
 ): Promise<void> {
   console.log('Updating character record with new image URL');
+  console.log('Character ID:', characterId);
+  console.log('Image URL:', imageUrl);
   
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
-  // First try to update regular characters table
-  const { error: updateError } = await supabase
+  // First try to update regular characters table using character_id (text field)
+  const { data: regularCharacterData, error: updateError } = await supabase
     .from('characters')
     .update({ profile_image_url: imageUrl })
-    .eq('character_id', characterId);
+    .eq('character_id', characterId)
+    .select();
     
   if (updateError) {
-    console.log('Character not found in regular characters table, trying non-humanoid characters table');
+    console.log('Error updating regular characters table:', updateError);
+    console.log('Trying non-humanoid characters table...');
     
-    // Try to update non-humanoid characters table
-    const { error: nonHumanoidUpdateError } = await supabase
+    // Try to update non-humanoid characters table using character_id (text field)
+    const { data: nonHumanoidData, error: nonHumanoidUpdateError } = await supabase
       .from('non_humanoid_characters')
       .update({ profile_image_url: imageUrl })
-      .eq('character_id', characterId);
+      .eq('character_id', characterId)
+      .select();
       
     if (nonHumanoidUpdateError) {
-      console.error('Error updating character with image URL:', nonHumanoidUpdateError);
+      console.error('Error updating non-humanoid character with image URL:', nonHumanoidUpdateError);
       throw new Error(`Failed to update character: ${nonHumanoidUpdateError.message}`);
     }
     
-    console.log('Successfully updated non-humanoid character record with image URL');
+    if (nonHumanoidData && nonHumanoidData.length > 0) {
+      console.log('Successfully updated non-humanoid character record with image URL:', nonHumanoidData[0]);
+    } else {
+      console.log('No non-humanoid character found with character_id:', characterId);
+      throw new Error('Character not found in either table');
+    }
   } else {
-    console.log('Successfully updated regular character record with image URL');
+    if (regularCharacterData && regularCharacterData.length > 0) {
+      console.log('Successfully updated regular character record with image URL:', regularCharacterData[0]);
+    } else {
+      console.log('No regular character found with character_id:', characterId);
+      // Still try non-humanoid table as fallback
+      const { data: nonHumanoidData, error: nonHumanoidUpdateError } = await supabase
+        .from('non_humanoid_characters')
+        .update({ profile_image_url: imageUrl })
+        .eq('character_id', characterId)
+        .select();
+        
+      if (nonHumanoidUpdateError) {
+        console.error('Error updating non-humanoid character with image URL:', nonHumanoidUpdateError);
+        throw new Error(`Failed to update character: ${nonHumanoidUpdateError.message}`);
+      }
+      
+      if (nonHumanoidData && nonHumanoidData.length > 0) {
+        console.log('Successfully updated non-humanoid character record with image URL:', nonHumanoidData[0]);
+      } else {
+        throw new Error('Character not found in either table');
+      }
+    }
   }
 }

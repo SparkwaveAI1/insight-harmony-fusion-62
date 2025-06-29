@@ -34,8 +34,10 @@ const CharacterDetail = () => {
   }, [characterId]);
 
   const handleImageGenerated = async (imageUrl: string) => {
-    // Reload character to get updated image URL
+    console.log('Image generated successfully:', imageUrl);
+    // Force reload character to get updated image URL
     if (characterId) {
+      console.log('Reloading character data...');
       await loadCharacter(characterId);
     }
   };
@@ -123,6 +125,13 @@ const CharacterDetail = () => {
                         src={activeCharacter.profile_image_url} 
                         alt={`${activeCharacter.name} portrait`}
                         className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                        onError={(e) => {
+                          console.error('Error loading image:', activeCharacter.profile_image_url);
+                          console.log('Image load error event:', e);
+                        }}
+                        onLoad={() => {
+                          console.log('Image loaded successfully:', activeCharacter.profile_image_url);
+                        }}
                       />
                     </div>
                   ) : (
