@@ -40,10 +40,25 @@ export interface HumanoidCharacterTraitProfile extends TraitProfile {
 }
 
 // Export NonHumanoidTraitProfile for proper access
-export { NonHumanoidTraitProfile } from './nonHumanoidTypes';
+export type { NonHumanoidTraitProfile } from './nonHumanoidTypes';
 
 // Union type for trait profiles
 export type CharacterTraitProfile = HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
+
+// Creative Character Dialog Data Interface
+export interface CreativeCharacterData {
+  name: string;
+  entityType: string;
+  narrativeDomain: string;
+  functionalRole: string;
+  description: string;
+  environment: string;
+  physicalForm: string;
+  communication: string;
+  coreDrives: string[];
+  surfaceTriggers: string[];
+  changeResponseStyle: string;
+}
 
 export interface Character {
   id?: string;

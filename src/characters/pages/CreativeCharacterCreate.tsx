@@ -6,16 +6,8 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import CreativeCharacterDialog from '../components/CreativeCharacterDialog';
+import { CreativeCharacterData } from '../types/characterTraitTypes';
 import { toast } from 'sonner';
-
-interface CreativeCharacterData {
-  identityType: string;
-  archetype: string;
-  location: string;
-  era: string;
-  genres: string[];
-  description: string;
-}
 
 const CreativeCharacterCreate = () => {
   const navigate = useNavigate();
@@ -82,7 +74,7 @@ const CreativeCharacterCreate = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="font-semibold text-blue-900 mb-1">5 Steps</div>
+                    <div className="font-semibold text-blue-900 mb-1">8 Steps</div>
                     <div className="text-blue-700">Guided creation process</div>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-lg">
