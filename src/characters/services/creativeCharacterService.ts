@@ -19,6 +19,20 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
 
     console.log('Creating character for user:', userId);
 
+    // Verify the user is authenticated by checking with Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication check failed:', authError);
+      throw new Error('Authentication required. Please sign in and try again.');
+    }
+
+    if (user.id !== userId) {
+      console.error('User ID mismatch - provided:', userId, 'authenticated:', user.id);
+      throw new Error('Authentication error. Please refresh and try again.');
+    }
+
+    console.log('Authentication verified for user:', user.id);
+
     // Generate non-humanoid traits based on the creative data
     const traitProfile = await generateNonHumanoidTraits({
       name: data.name,
@@ -34,14 +48,14 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
       changeResponseStyle: data.changeResponseStyle
     });
 
-    // Create the character object
+    // Create the character object with explicit user_id assignment
     const character: Character = {
       character_id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: data.name,
       character_type: 'multi_species',
       creation_date: new Date().toISOString(),
       created_at: new Date().toISOString(),
-      user_id: userId, // CRITICAL: Set the user_id for RLS compliance
+      user_id: user.id, // Use the authenticated user ID directly from Supabase
       metadata: {
         description: data.description,
         narrative_domain: data.narrativeDomain,
@@ -99,6 +113,12 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
       is_public: false,
       enhanced_metadata_version: 2
     };
+
+    console.log('Character object before saving:', {
+      character_id: character.character_id,
+      user_id: character.user_id,
+      name: character.name
+    });
 
     // Save the character to the database
     const savedCharacter = await saveCharacter(character);
