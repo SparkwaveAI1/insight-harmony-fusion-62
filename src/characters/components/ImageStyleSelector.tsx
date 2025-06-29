@@ -1,0 +1,103 @@
+
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+
+export interface ImageStyle {
+  id: string;
+  name: string;
+  description: string;
+  recommended?: boolean;
+}
+
+export const IMAGE_STYLES: ImageStyle[] = [
+  {
+    id: 'photorealistic',
+    name: 'Photorealistic',
+    description: 'High-detail, realistic rendering',
+    recommended: true
+  },
+  {
+    id: 'concept_art',
+    name: 'Concept Art',
+    description: 'Artistic, fantasy-style illustration'
+  },
+  {
+    id: 'scientific',
+    name: 'Scientific Illustration',
+    description: 'Technical, diagram-like representation'
+  },
+  {
+    id: 'abstract',
+    name: 'Abstract',
+    description: 'Stylized, symbolic representation'
+  },
+  {
+    id: 'cinematic',
+    name: 'Cinematic',
+    description: 'Movie/game-style dramatic lighting'
+  }
+];
+
+interface ImageStyleSelectorProps {
+  selectedStyle: string;
+  onStyleChange: (style: string) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+const ImageStyleSelector = ({ 
+  selectedStyle, 
+  onStyleChange, 
+  disabled = false,
+  className 
+}: ImageStyleSelectorProps) => {
+  const selectedStyleInfo = IMAGE_STYLES.find(style => style.id === selectedStyle);
+
+  return (
+    <div className={className}>
+      <Label htmlFor="image-style" className="text-sm font-medium mb-2 block">
+        Image Style
+      </Label>
+      <Select
+        value={selectedStyle}
+        onValueChange={onStyleChange}
+        disabled={disabled}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select a style" />
+        </SelectTrigger>
+        <SelectContent>
+          {IMAGE_STYLES.map((style) => (
+            <SelectItem key={style.id} value={style.id}>
+              <div className="flex items-center justify-between w-full">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{style.name}</span>
+                    {style.recommended && (
+                      <Badge variant="secondary" className="text-xs">
+                        Recommended
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {style.description}
+                  </p>
+                </div>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      {selectedStyleInfo && (
+        <p className="text-xs text-muted-foreground mt-2">
+          <strong>{selectedStyleInfo.name}:</strong> {selectedStyleInfo.description}
+        </p>
+      )}
+    </div>
+  );
+};
+
+export default ImageStyleSelector;

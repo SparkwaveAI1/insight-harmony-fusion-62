@@ -7,16 +7,11 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
 import CharacterAvatar from '../components/CharacterAvatar';
-import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
+import GenerateCharacterImageWithStyleButton from '../components/GenerateCharacterImageWithStyleButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
 import DeleteCharacterButton from '../components/DeleteCharacterButton';
 import { downloadCharacterAsJSON } from '../utils/downloadUtils';
-// Import the comprehensive trait display components from Personas
-import PersonaTraits from '@/components/persona-details/PersonaTraits';
-import PersonaDemographics from '@/components/persona-details/PersonaDemographics';
-import PersonaEmotionalTriggers from '@/components/persona-details/PersonaEmotionalTriggers';
 import CharacterDetailHeader from '../components/CharacterDetailHeader';
-import CharacterProfileSection from '../components/CharacterProfileSection';
 import CharacterInfoSections from '../components/CharacterInfoSections';
 import CharacterDangerZone from '../components/CharacterDangerZone';
 
@@ -75,7 +70,7 @@ const CharacterDetail = () => {
         </div>
       </div>
     );
-  }
+  };
 
   if (error || !activeCharacter) {
     return (
@@ -118,8 +113,22 @@ const CharacterDetail = () => {
               <div className="flex flex-col items-center">
                 {/* Character Image/Avatar */}
                 <div className="mb-6">
-                  {isNonHumanoidCharacter ? (
-                    // Non-humanoid characters: only show avatar, no profile images
+                  {activeCharacter.profile_image_url ? (
+                    <div className="w-full max-w-md">
+                      <img 
+                        src={activeCharacter.profile_image_url} 
+                        alt={`${activeCharacter.name} ${isNonHumanoidCharacter ? 'entity' : 'portrait'}`}
+                        className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                        onError={(e) => {
+                          console.error('Error loading image:', activeCharacter.profile_image_url);
+                          console.log('Image load error event:', e);
+                        }}
+                        onLoad={() => {
+                          console.log('Image loaded successfully:', activeCharacter.profile_image_url);
+                        }}
+                      />
+                    </div>
+                  ) : (
                     <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
                       <CharacterAvatar 
                         character={activeCharacter} 
@@ -127,32 +136,6 @@ const CharacterDetail = () => {
                         className="w-24 h-24"
                       />
                     </div>
-                  ) : (
-                    // Humanoid characters: show profile image or fallback to avatar
-                    activeCharacter.profile_image_url ? (
-                      <div className="w-full max-w-md">
-                        <img 
-                          src={activeCharacter.profile_image_url} 
-                          alt={`${activeCharacter.name} portrait`}
-                          className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
-                          onError={(e) => {
-                            console.error('Error loading image:', activeCharacter.profile_image_url);
-                            console.log('Image load error event:', e);
-                          }}
-                          onLoad={() => {
-                            console.log('Image loaded successfully:', activeCharacter.profile_image_url);
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
-                        <CharacterAvatar 
-                          character={activeCharacter} 
-                          size="xl" 
-                          className="w-24 h-24"
-                        />
-                      </div>
-                    )
                   )}
                 </div>
 
@@ -160,7 +143,7 @@ const CharacterDetail = () => {
                 <div className="mb-6">
                   <h1 className="text-3xl font-bold mb-2">{activeCharacter.name}</h1>
                   <p className="text-muted-foreground mb-4">
-                    {isNonHumanoidCharacter ? 'Non-Humanoid' : 
+                    {isNonHumanoidCharacter ? 'Creative Entity' : 
                      activeCharacter.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
                   </p>
                   <CharacterVisibilityToggle
@@ -171,14 +154,12 @@ const CharacterDetail = () => {
                   />
                 </div>
 
-                {/* Generate Image Button - Only for humanoid characters */}
-                {!isNonHumanoidCharacter && (
-                  <GenerateCharacterImageButton
-                    character={activeCharacter as any}
-                    onImageGenerated={handleImageGenerated}
-                    className="w-full max-w-sm"
-                  />
-                )}
+                {/* Generate Image Button - Updated with style selection */}
+                <GenerateCharacterImageWithStyleButton
+                  character={activeCharacter}
+                  onImageGenerated={handleImageGenerated}
+                  className="w-full max-w-sm"
+                />
               </div>
             </Card>
           </div>

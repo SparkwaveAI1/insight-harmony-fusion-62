@@ -1,6 +1,25 @@
 
-export async function generateImageWithOpenAI(prompt: string, apiKey: string): Promise<string> {
+export async function generateImageWithOpenAI(
+  prompt: string, 
+  apiKey: string, 
+  customParams?: any
+): Promise<string> {
   console.log("Calling OpenAI API for character image generation with base64 format...");
+  
+  const defaultParams = {
+    model: "dall-e-3",
+    prompt: prompt,
+    n: 1,
+    size: "1024x1024",
+    response_format: "b64_json",
+    quality: "hd",
+    style: "natural"
+  };
+  
+  // Merge custom parameters with defaults
+  const params = { ...defaultParams, ...customParams, prompt };
+  
+  console.log("OpenAI parameters:", params);
   
   const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -8,15 +27,7 @@ export async function generateImageWithOpenAI(prompt: string, apiKey: string): P
       "Content-Type": "application/json",
       "Authorization": `Bearer ${apiKey}`
     },
-    body: JSON.stringify({
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-      response_format: "b64_json",
-      quality: "hd",
-      style: "natural"
-    })
+    body: JSON.stringify(params)
   });
   
   if (!imageResponse.ok) {

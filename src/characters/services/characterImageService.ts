@@ -5,13 +5,20 @@ import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 
 type AnyCharacter = Character | NonHumanoidCharacter;
 
-export async function generateCharacterImage(character: AnyCharacter): Promise<string | null> {
+export async function generateCharacterImage(
+  character: AnyCharacter, 
+  style: string = 'photorealistic'
+): Promise<string | null> {
   try {
     console.log('Generating character image for:', character.name);
     console.log('Character type check - has species_type:', 'species_type' in character);
+    console.log('Selected style:', style);
     
     const { data, error } = await supabase.functions.invoke('generate-character-image', {
-      body: { characterData: character }
+      body: { 
+        characterData: character,
+        style: style
+      }
     });
 
     if (error) {
@@ -25,6 +32,8 @@ export async function generateCharacterImage(character: AnyCharacter): Promise<s
     }
 
     console.log('Successfully generated character image:', data.image_url);
+    console.log('Generated with style:', data.style);
+    console.log('Character type:', data.character_type);
     return data.image_url;
   } catch (error) {
     console.error('Error in generateCharacterImage:', error);
