@@ -1,4 +1,3 @@
-
 export interface StyleConfig {
   name: string;
   description: string;
@@ -13,10 +12,8 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
     description: 'High-detail, realistic rendering',
     promptModifiers: [
       'photorealistic',
-      'high resolution',
-      'professional photography',
-      'studio lighting',
-      'neutral background'
+      'high quality',
+      'detailed'
     ],
     openaiStyle: 'natural',
     quality: 'hd'
@@ -26,10 +23,8 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
     description: 'Movie-style dramatic lighting and composition',
     promptModifiers: [
       'cinematic',
-      'movie poster style',
       'dramatic lighting',
-      'epic composition',
-      'neutral backdrop'
+      'movie style'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -39,10 +34,8 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
     description: 'Japanese animation art style',
     promptModifiers: [
       'anime style',
-      'manga illustration',
-      'cel shading',
-      'vibrant colors',
-      'clean background'
+      'manga style',
+      'clean art'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -52,10 +45,8 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
     description: 'Comic book illustration style',
     promptModifiers: [
       'comic book style',
-      'graphic novel art',
-      'bold outlines',
-      'dynamic pose',
-      'simple background'
+      'illustration',
+      'clean lines'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -63,56 +54,31 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
 };
 
 export function buildNonHumanoidImagePrompt(characterData: any, style: string = 'photorealistic'): string {
-  console.log("Generating non-humanoid character image prompt");
+  console.log("Generating minimal non-humanoid character image prompt");
   
   const styleConfig = IMAGE_STYLES[style] || IMAGE_STYLES.photorealistic;
   
-  // Start with basic character description from metadata
+  // Start with the character's basic description
   let prompt = '';
   
-  // Use the character's description from metadata first
   if (characterData.metadata?.description) {
+    // Use the description but clean it up
     prompt = characterData.metadata.description.trim();
-    // Clean up the description - remove trailing periods/commas
+    // Remove any trailing punctuation
     prompt = prompt.replace(/[.,\s]+$/, '');
   } else if (characterData.name) {
     prompt = `${characterData.name}`;
   } else {
-    prompt = 'A unique non-humanoid character';
-  }
-  
-  // Add environment context if available
-  if (characterData.metadata?.environment) {
-    const environment = characterData.metadata.environment.toLowerCase();
-    if (!environment.includes('earth') && !environment.includes('environment')) {
-      prompt += `, in ${environment}`;
-    }
+    prompt = 'A unique character';
   }
   
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
   prompt += `, ${styleModifiers}`;
   
-  // Ensure full body and neutral background
-  prompt += ', full body portrait, standing pose, neutral background, professional composition';
+  // Add essential composition requirements - keep it simple
+  prompt += ', single character, full body, standing, plain background, no text, no annotations, no labels, clean image';
   
-  console.log("Generated non-humanoid prompt:", prompt);
-  return prompt;
-}
-
-function buildBasicNonHumanoidPrompt(characterData: any, styleConfig: StyleConfig): string {
-  let prompt = `${characterData.name || 'Non-humanoid character'}`;
-  
-  if (characterData.metadata?.description) {
-    prompt = characterData.metadata.description.trim();
-  }
-  
-  // Add style modifiers
-  const styleModifiers = styleConfig.promptModifiers.join(', ');
-  prompt += `, ${styleModifiers}`;
-  
-  // Add full-body and background specifications
-  prompt += ', full body portrait, standing pose, neutral background, professional composition';
-  
+  console.log("Generated minimal prompt:", prompt);
   return prompt;
 }
