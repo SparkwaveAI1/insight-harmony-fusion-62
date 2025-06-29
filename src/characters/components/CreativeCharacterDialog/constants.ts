@@ -16,17 +16,17 @@ export const functionalRoles = [
 ];
 
 export const coreDriveOptions = [
-  'Pattern Completion', 'Influence Expansion', 'Resource Stability', 'Information Accumulation',
-  'Cosmological Balance', 'Self Replication', 'Ancestral Code Obedience', 'Core Entity Loyalty',
-  'Emotional Mimicry', 'Territorial Stability', 'Subordinate Protection', 'Harmony Maintenance',
-  'Chaos Introduction', 'Memory Preservation', 'Reality Manipulation', 'Consciousness Evolution'
+  'Survival & Food Security', 'Sexual Desire & Reproduction', 'Power & Control', 'Love & Connection',
+  'Knowledge & Understanding', 'Safety & Security', 'Freedom & Independence', 'Recognition & Status',
+  'Revenge & Justice', 'Wealth & Resources', 'Spiritual Fulfillment', 'Creative Expression',
+  'Legacy & Immortality', 'Adventure & Novelty', 'Harmony & Peace', 'Territory & Dominance'
 ];
 
 export const surfaceTriggerOptions = [
-  'Ritual Disruption', 'Signal Noise Anomalies', 'Memory Interference', 'Sound Resonance',
-  'Resource Fluctuation', 'Social Mimicry', 'Memory Integrity Threats', 'Honor Rituals',
-  'Symbolic Anomalies', 'Power Displays', 'Ritual Breaches', 'Pattern Recognition',
-  'Emotional Resonance', 'Territory Violations', 'Communication Attempts', 'Change Detection'
+  'Loud Noises', 'Being Ignored', 'Disrespect', 'Physical Threats', 'Hunger',
+  'Unfairness', 'Crowds', 'Being Alone', 'Criticism', 'Authority Figures',
+  'Change & Uncertainty', 'Being Lied To', 'Physical Pain', 'Embarrassment',
+  'Time Pressure', 'Interruptions', 'Darkness', 'Heights', 'Confinement', 'Rejection'
 ];
 
 export const changeResponseStyles = [

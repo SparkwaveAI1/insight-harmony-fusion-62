@@ -1,6 +1,6 @@
 
 import { CreativeCharacterData } from './types';
-import { narrativeDomains, functionalRoles, coreDriveOptions, surfaceTriggerOptions, changeResponseStyles } from './constants';
+import { narrativeDomains, functionalRoles, coreDriveOptions, surfaceTriggerOptions } from './constants';
 
 export const handleRandomize = (currentStep: number, formData: CreativeCharacterData, setFormData: (data: CreativeCharacterData) => void) => {
   switch (currentStep) {
@@ -19,6 +19,14 @@ export const handleRandomize = (currentStep: number, formData: CreativeCharacter
       const randomRole = functionalRoles[Math.floor(Math.random() * functionalRoles.length)];
       setFormData({ ...formData, functionalRole: randomRole });
       break;
+    case 5:
+      const randomDescriptions = [
+        'A mysterious figure driven by an insatiable hunger for knowledge and understanding of the universe.',
+        'Someone who values freedom above all else and will fight against any form of oppression or control.',
+        'A character motivated by deep love for their family and community, willing to sacrifice everything for them.'
+      ];
+      setFormData({ ...formData, description: randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)] });
+      break;
     case 6:
       const randomEnvironment = formData.narrativeDomain === 'sci-fi' 
         ? 'Quantum processing networks beneath Europa\'s ice'
@@ -35,10 +43,6 @@ export const handleRandomize = (currentStep: number, formData: CreativeCharacter
         .sort(() => Math.random() - 0.5)
         .slice(0, 2);
       setFormData({ ...formData, coreDrives: randomDrives, surfaceTriggers: randomTriggers });
-      break;
-    case 8:
-      const randomResponse = changeResponseStyles[Math.floor(Math.random() * changeResponseStyles.length)];
-      setFormData({ ...formData, changeResponseStyle: randomResponse.id });
       break;
   }
 };

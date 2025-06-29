@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ import Step4FunctionalRole from './CreativeCharacterDialog/steps/Step4Functional
 import Step5Description from './CreativeCharacterDialog/steps/Step5Description';
 import Step6Environment from './CreativeCharacterDialog/steps/Step6Environment';
 import Step7Drives from './CreativeCharacterDialog/steps/Step7Drives';
-import Step8Response from './CreativeCharacterDialog/steps/Step8Response';
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
   const navigate = useNavigate();
@@ -30,10 +28,10 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     communication: '',
     coreDrives: [],
     surfaceTriggers: [],
-    changeResponseStyle: ''
+    changeResponseStyle: 'mutate_adapt'
   });
 
-  const totalSteps = 8;
+  const totalSteps = 7;
 
   const compileForNonHumanoidCreator = async (data: CreativeCharacterData) => {
     try {
@@ -120,8 +118,6 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
         return <Step6Environment formData={formData} setFormData={setFormData} />;
       case 7:
         return <Step7Drives formData={formData} setFormData={setFormData} />;
-      case 8:
-        return <Step8Response formData={formData} setFormData={setFormData} />;
       default:
         console.log('Unknown step in renderStep:', currentStep);
         return (
