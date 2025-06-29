@@ -16,9 +16,7 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
       'high resolution',
       'professional photography',
       'studio lighting',
-      'full body portrait',
-      'neutral background',
-      '8K quality'
+      'neutral background'
     ],
     openaiStyle: 'natural',
     quality: 'hd'
@@ -31,9 +29,7 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
       'movie poster style',
       'dramatic lighting',
       'epic composition',
-      'full body shot',
-      'neutral backdrop',
-      'high contrast'
+      'neutral backdrop'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -46,9 +42,7 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
       'manga illustration',
       'cel shading',
       'vibrant colors',
-      'full body character design',
-      'clean background',
-      'high quality anime art'
+      'clean background'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -61,9 +55,7 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
       'graphic novel art',
       'bold outlines',
       'dynamic pose',
-      'full body illustration',
-      'simple background',
-      'superhero comic style'
+      'simple background'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -73,94 +65,54 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
 export function buildNonHumanoidImagePrompt(characterData: any, style: string = 'photorealistic'): string {
   console.log("Generating non-humanoid character image prompt");
   
-  const traitProfile = characterData.trait_profile;
-  const physicalManifest = traitProfile?.physical_manifestation;
   const styleConfig = IMAGE_STYLES[style] || IMAGE_STYLES.photorealistic;
   
-  if (!physicalManifest) {
-    console.warn("No physical manifestation data found, using basic prompt");
-    return buildBasicNonHumanoidPrompt(characterData, styleConfig);
+  // Start with basic character description from metadata
+  let prompt = '';
+  
+  // Use the character's description from metadata first
+  if (characterData.metadata?.description) {
+    prompt = characterData.metadata.description.trim();
+    // Clean up the description - remove trailing periods/commas
+    prompt = prompt.replace(/[.,\s]+$/, '');
+  } else if (characterData.name) {
+    prompt = `${characterData.name}`;
+  } else {
+    prompt = 'A unique non-humanoid character';
   }
   
-  let prompt = `Full body portrait of a ${characterData.species_type || 'mysterious entity'}`;
-  
-  // Primary form and composition
-  if (physicalManifest.primary_form) {
-    prompt += ` manifesting as ${physicalManifest.primary_form.toLowerCase()}`;
-  }
-  
-  if (physicalManifest.material_composition) {
-    prompt += ` composed of ${physicalManifest.material_composition.toLowerCase()}`;
-  }
-  
-  // Scale and dimensions
-  if (physicalManifest.scale_category) {
-    const scaleMap: Record<string, string> = {
-      'Microscopic': 'tiny, intricate details visible',
-      'Human-scale': 'human-sized proportions',
-      'Massive': 'imposing, large-scale presence',
-      'Planetary': 'enormous, cosmic scale'
-    };
-    const scaleDesc = scaleMap[physicalManifest.scale_category] || physicalManifest.scale_category.toLowerCase();
-    prompt += `, ${scaleDesc}`;
-  }
-  
-  // Visual characteristics
-  if (physicalManifest.luminescence_pattern) {
-    prompt += `, emanating ${physicalManifest.luminescence_pattern.toLowerCase()} light`;
-  }
-  
-  if (physicalManifest.texture_quality) {
-    prompt += `, with ${physicalManifest.texture_quality.toLowerCase()} surface texture`;
-  }
-  
-  // Movement and interaction - simplified for static image
-  if (physicalManifest.movement_characteristics) {
-    const movementHints = physicalManifest.movement_characteristics.toLowerCase();
-    if (movementHints.includes('elegant') || movementHints.includes('graceful')) {
-      prompt += `, posed gracefully`;
-    } else if (movementHints.includes('powerful') || movementHints.includes('strong')) {
-      prompt += `, in a powerful stance`;
+  // Add environment context if available
+  if (characterData.metadata?.environment) {
+    const environment = characterData.metadata.environment.toLowerCase();
+    if (!environment.includes('earth') && !environment.includes('environment')) {
+      prompt += `, in ${environment}`;
     }
-  }
-  
-  // Dimensional properties
-  if (physicalManifest.dimensional_properties && 
-      physicalManifest.dimensional_properties !== '3D Stable') {
-    prompt += `, exhibiting ${physicalManifest.dimensional_properties.toLowerCase()} geometry`;
   }
   
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
-  prompt += `, rendered in ${styleModifiers} style`;
+  prompt += `, ${styleModifiers}`;
   
-  // Add full-body and background specifications
-  prompt += ', standing pose, full body visible, neutral background, professional composition';
+  // Ensure full body and neutral background
+  prompt += ', full body portrait, standing pose, neutral background, professional composition';
   
   console.log("Generated non-humanoid prompt:", prompt);
   return prompt;
 }
 
 function buildBasicNonHumanoidPrompt(characterData: any, styleConfig: StyleConfig): string {
-  let prompt = `Full body portrait of a ${characterData.species_type || 'mysterious non-humanoid entity'}`;
+  let prompt = `${characterData.name || 'Non-humanoid character'}`;
   
-  if (characterData.form_factor) {
-    prompt += ` with ${characterData.form_factor.toLowerCase()} characteristics`;
-  }
-  
-  // Add basic mysterious/otherworldly elements
-  prompt += ', otherworldly appearance, unique alien features';
-  
-  if (characterData.origin_universe) {
-    prompt += `, from ${characterData.origin_universe}`;
+  if (characterData.metadata?.description) {
+    prompt = characterData.metadata.description.trim();
   }
   
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
-  prompt += `, rendered in ${styleModifiers} style`;
+  prompt += `, ${styleModifiers}`;
   
   // Add full-body and background specifications
-  prompt += ', standing pose, full body visible, neutral background, professional composition';
+  prompt += ', full body portrait, standing pose, neutral background, professional composition';
   
   return prompt;
 }
