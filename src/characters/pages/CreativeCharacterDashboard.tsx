@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, Plus, Library } from 'lucide-react';
+import { Sparkles, Plus, Library, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -10,6 +10,13 @@ import CreativeCharacterLibrary from './CreativeCharacterLibrary';
 import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CreativeCharacterDashboard = () => {
   const [activeSection, setActiveSection] = useState('library');
@@ -39,13 +46,20 @@ const CreativeCharacterDashboard = () => {
     }
   ];
 
+  const handleSectionChange = (value: string) => {
+    const item = menuItems.find(item => item.id === value);
+    if (item) {
+      window.location.href = item.href;
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <CharacterHeader />
       <main className="flex-grow">
         <div className="flex pt-20">
-          {/* Left Sidebar */}
-          <div className="w-64 bg-card border-r border-border p-6">
+          {/* Desktop Left Sidebar - Hidden on mobile */}
+          <div className="hidden md:block w-64 bg-card border-r border-border p-6">
             <div className="flex items-center gap-3 mb-8">
               <Sparkles className="h-6 w-6 text-primary" />
               <h2 className="text-lg font-semibold">Creative Characters</h2>
@@ -72,31 +86,57 @@ const CreativeCharacterDashboard = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 w-full overflow-x-hidden">
+            {/* Mobile Navigation - Only visible on mobile */}
+            <div className="md:hidden px-4 py-4 border-b bg-card">
+              <div className="flex items-center gap-3 mb-4">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h2 className="text-base font-semibold">Creative Characters</h2>
+              </div>
+              
+              <Select value={activeSection} onValueChange={handleSectionChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select section" />
+                </SelectTrigger>
+                <SelectContent>
+                  {menuItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      <div className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        {item.title}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Show Creative Character Library when on main creative characters route */}
             {location.pathname === '/characters/creative' ? (
-              <CreativeCharacterLibrary />
+              <div className="w-full">
+                <CreativeCharacterLibrary />
+              </div>
             ) : (
-              <div className="container mx-auto px-4 py-8">
+              <div className="w-full px-4 md:px-8 py-8">
                 <Section>
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex flex-col gap-6 mb-8">
                     <div className="flex items-center gap-3">
-                      <Sparkles className="h-8 w-8 text-primary" />
+                      <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                       <div>
-                        <h1 className="text-3xl font-bold">Creative Characters Dashboard</h1>
-                        <p className="text-muted-foreground">Design and manage your original fictional characters</p>
+                        <h1 className="text-xl md:text-3xl font-bold">Creative Characters Dashboard</h1>
+                        <p className="text-sm md:text-base text-muted-foreground">Design and manage your original fictional characters</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Creative Character Creation Option */}
                   <div className="grid grid-cols-1 gap-6 mb-8">
-                    <Card className="p-6 hover:shadow-md transition-shadow">
+                    <Card className="p-4 md:p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
-                        <Sparkles className="h-8 w-8 text-primary" />
-                        <h3 className="text-xl font-semibold">Creative Characters</h3>
+                        <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                        <h3 className="text-lg md:text-xl font-semibold">Creative Characters</h3>
                       </div>
-                      <p className="text-muted-foreground mb-4">
+                      <p className="text-sm md:text-base text-muted-foreground mb-4">
                         Design original fictional characters with custom traits, creative backgrounds, and unique personalities.
                       </p>
                       <Button asChild className="w-full">
@@ -109,10 +149,10 @@ const CreativeCharacterDashboard = () => {
                   </div>
 
                   {/* Library Preview */}
-                  <Card className="text-center py-12">
-                    <Library className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h2 className="text-xl font-semibold mb-2">Creative Character Library</h2>
-                    <p className="text-muted-foreground mb-6">
+                  <Card className="text-center py-8 md:py-12">
+                    <Library className="h-12 w-12 md:h-16 md:w-16 mx-auto text-muted-foreground mb-4" />
+                    <h2 className="text-lg md:text-xl font-semibold mb-2">Creative Character Library</h2>
+                    <p className="text-sm md:text-base text-muted-foreground mb-6">
                       View and manage all your creative characters
                     </p>
                     <Button asChild>
