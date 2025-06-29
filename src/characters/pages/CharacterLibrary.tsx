@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -8,6 +7,7 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useCharacters } from '../hooks/useCharacters';
 import CharacterAvatar from '../components/CharacterAvatar';
+import CharacterIdDisplay from '../components/CharacterIdDisplay';
 
 const CharacterLibrary = () => {
   const { data: characters = [], isLoading, error } = useCharacters();
@@ -149,13 +149,17 @@ const CharacterLibrary = () => {
                     </p>
                   )}
                   
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      Created {new Date(character.creation_date).toLocaleDateString()}
-                    </span>
-                    <span className={character.is_public ? 'text-green-600' : 'text-gray-600'}>
-                      {character.is_public ? 'Public' : 'Private'}
-                    </span>
+                  <div className="space-y-2">
+                    <CharacterIdDisplay characterId={character.character_id} />
+                    
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        Created {new Date(character.creation_date).toLocaleDateString()}
+                      </span>
+                      <span className={character.is_public ? 'text-green-600' : 'text-gray-600'}>
+                        {character.is_public ? 'Public' : 'Private'}
+                      </span>
+                    </div>
                   </div>
                 </Link>
               </Card>

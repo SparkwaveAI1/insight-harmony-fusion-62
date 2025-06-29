@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Sparkles, Clock, Zap } from 'lucide-react';
@@ -7,6 +6,7 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useNonHumanoidCharacters } from '../hooks/useNonHumanoidCharacters';
 import { Badge } from '@/components/ui/badge';
+import CharacterIdDisplay from '../components/CharacterIdDisplay';
 
 const NonHumanoidCharacterLibrary = () => {
   const { data: characters, isLoading } = useNonHumanoidCharacters();
@@ -96,6 +96,9 @@ const NonHumanoidCharacterLibrary = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Character ID */}
+                  <CharacterIdDisplay characterId={character.character_id} />
 
                   {/* Tags/Badges */}
                   <div className="flex flex-wrap gap-1">
