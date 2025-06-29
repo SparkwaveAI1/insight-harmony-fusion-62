@@ -53,7 +53,6 @@ serve(async (req) => {
     const isNonHumanoid = characterData.character_type === 'multi_species' || 
                           'species_type' in characterData;
 
-    // Build the image prompt based on character type
     let imagePrompt: string;
     let openaiParams: any = {
       model: "dall-e-3",
@@ -64,31 +63,61 @@ serve(async (req) => {
       style: "natural"
     };
 
-    if (isNonHumanoid) {
-      console.log("Processing non-humanoid character");
-      imagePrompt = buildNonHumanoidImagePrompt(characterData, style);
+    // If we have a reference image, use a simple prompt approach
+    if (referenceImageUrl) {
+      console.log("Using reference image - generating simple prompt");
       
-      // Apply style-specific OpenAI parameters
+      // Simple prompt: character name + custom text + style modifiers
+      imagePrompt = `${characterData.name}`;
+      
+      if (customText && customText.trim()) {
+        imagePrompt += `, ${customText.trim()}`;
+      }
+      
+      // Add basic style guidance based on selected style
       const styleConfig = IMAGE_STYLES[style];
+      if (styleConfig && styleConfig.prompt) {
+        imagePrompt += `, ${styleConfig.prompt}`;
+      } else if (style === 'photorealistic') {
+        imagePrompt += ', photorealistic, high quality, detailed';
+      } else if (style === 'cinematic') {
+        imagePrompt += ', cinematic, dramatic lighting, movie style';
+      } else if (style === 'artistic') {
+        imagePrompt += ', artistic, painterly style, creative composition';
+      }
+      
+      // Add reference image guidance
+      imagePrompt += ', using similar visual style and composition as reference';
+      
+      // Apply style-specific OpenAI parameters if available
       if (styleConfig) {
         openaiParams.quality = styleConfig.quality || "hd";
         openaiParams.style = styleConfig.openaiStyle || "natural";
       }
+      
+      console.log("Reference-based prompt:", imagePrompt);
     } else {
-      console.log("Processing humanoid character");
-      imagePrompt = buildCharacterImagePrompt(characterData);
-    }
+      // No reference image - use the full character-based prompt generation
+      if (isNonHumanoid) {
+        console.log("Processing non-humanoid character");
+        imagePrompt = buildNonHumanoidImagePrompt(characterData, style);
+        
+        // Apply style-specific OpenAI parameters
+        const styleConfig = IMAGE_STYLES[style];
+        if (styleConfig) {
+          openaiParams.quality = styleConfig.quality || "hd";
+          openaiParams.style = styleConfig.openaiStyle || "natural";
+        }
+      } else {
+        console.log("Processing humanoid character");
+        imagePrompt = buildCharacterImagePrompt(characterData);
+      }
 
-    // Add custom text to the prompt if provided
-    if (customText && customText.trim()) {
-      imagePrompt += `, ${customText.trim()}`;
-      console.log("Added custom text to prompt");
-    }
-
-    // Add reference image guidance if provided
-    if (referenceImageUrl) {
-      imagePrompt += ", using similar visual style and composition as reference";
-      console.log("Added reference image guidance to prompt");
+      // Add custom text to the prompt if provided
+      if (customText && customText.trim()) {
+        imagePrompt += `, ${customText.trim()}`;
+        console.log("Added custom text to prompt");
+      }
     }
     
     console.log("Final generated prompt:", imagePrompt);
