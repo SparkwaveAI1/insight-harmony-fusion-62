@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Shuffle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import Step7Drives from './CreativeCharacterDialog/steps/Step7Drives';
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState<CreativeCharacterData>({
     name: '',
     entityType: '',
@@ -35,6 +36,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
 
   const compileForNonHumanoidCreator = async (data: CreativeCharacterData) => {
     try {
+      setIsProcessing(true);
       const { generateNonHumanoidTraits } = await import('../services/nonHumanoidTraitGenerator');
       
       const traits = await generateNonHumanoidTraits({
@@ -57,6 +59,8 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     } catch (error) {
       console.error('Error generating non-humanoid traits:', error);
       onComplete(data);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -96,7 +100,6 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
       onOpenChange(false);
     } else {
       compileForNonHumanoidCreator(formData);
-      onOpenChange(false);
     }
   };
 
@@ -142,7 +145,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
             Character Genesis Creation
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
-            Create a unique character through our guided 8-step process
+            Create a unique character through our guided 7-step process
           </DialogDescription>
         </DialogHeader>
         
@@ -165,6 +168,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
               size="sm"
               onClick={() => handleRandomize(currentStep, formData, setFormData)}
               className="flex items-center gap-1 text-xs sm:text-sm px-2 py-1 h-auto"
+              disabled={isProcessing}
             >
               <Shuffle className="h-3 w-3" />
               <span className="hidden sm:inline">Randomize</span>
@@ -184,7 +188,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || isProcessing}
             className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-8 sm:h-9"
           >
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -194,7 +198,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
           {currentStep < totalSteps ? (
             <Button
               onClick={handleNext}
-              disabled={!canProceed(currentStep, formData)}
+              disabled={!canProceed(currentStep, formData) || isProcessing}
               className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-8 sm:h-9"
             >
               Next
@@ -203,12 +207,22 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
           ) : (
             <Button
               onClick={handleComplete}
-              disabled={!canProceed(currentStep, formData)}
+              disabled={!canProceed(currentStep, formData) || isProcessing}
               className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2 h-8 sm:h-9"
             >
-              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">{formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}</span>
-              <span className="sm:hidden">Create</span>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  <span className="hidden sm:inline">Processing...</span>
+                  <span className="sm:hidden">...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">{formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}</span>
+                  <span className="sm:hidden">Create</span>
+                </>
+              )}
             </Button>
           )}
         </div>

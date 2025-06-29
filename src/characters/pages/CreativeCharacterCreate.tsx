@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowLeft, Plus } from 'lucide-react';
+import { Sparkles, ArrowLeft, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -30,15 +30,25 @@ const CreativeCharacterCreate = () => {
       console.log('Creating creative character with data:', data);
       console.log('User from useAuth:', user);
       
+      // Show loading toast
+      toast.loading('Creating your character...', {
+        id: 'character-creation',
+        description: 'This may take a moment while we generate your character traits.'
+      });
+      
       // Pass the user ID from the auth context to the service
       const createdCharacter = await createCreativeCharacter(data, user.id);
       
+      // Dismiss loading toast and show success
+      toast.dismiss('character-creation');
       toast.success(`Creative character "${createdCharacter.name}" created successfully!`);
       
       // Navigate to the character detail page
       navigate(`/characters/${createdCharacter.character_id}`);
     } catch (error) {
       console.error('Error creating creative character:', error);
+      // Dismiss loading toast and show error
+      toast.dismiss('character-creation');
       toast.error(error instanceof Error ? error.message : 'Failed to create creative character');
     } finally {
       setIsSubmitting(false);
@@ -162,8 +172,17 @@ const CreativeCharacterCreate = () => {
                   disabled={isSubmitting}
                   className="w-full"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Start Character Creation
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Creating Character...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5 mr-2" />
+                      Start Character Creation
+                    </>
+                  )}
                 </Button>
               </div>
             </Card>
