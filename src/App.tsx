@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
@@ -78,6 +79,9 @@ function App() {
                 <Route path="/sign-in" element={<Auth />} />
                 <Route path="/contact" element={<Contact />} />
                 
+                {/* Character Home - Public access (anyone can view) */}
+                <Route path="/characters-home" element={<CharactersHome />} />
+                
                 {/* PRSNA token routes - public access */}
                 <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
                 <Route path="/prsna" element={<EarnPRSNA />} />
@@ -104,8 +108,7 @@ function App() {
                 <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
                 <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
                 
-                {/* Character routes - New home page and existing routes */}
-                <Route path="/characters-home" element={<CharactersHome />} />
+                {/* Character routes - ALL PROTECTED except CharactersHome */}
                 <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
                 <Route path="/characters/creative" element={<ProtectedRoute><CreativeCharacterDashboard /></ProtectedRoute>} />
                 <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
