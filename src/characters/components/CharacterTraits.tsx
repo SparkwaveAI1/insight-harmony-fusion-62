@@ -45,9 +45,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={motive}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{motive.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -62,9 +62,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={trigger}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{trigger.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((sensitivity || 0) * 100)}%</span>
+                  <span>{Math.round(((sensitivity as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(sensitivity || 0) * 100} className="h-2" />
+                <Progress value={((sensitivity as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -136,9 +136,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={trait}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{trait}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -156,9 +156,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={foundation}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{foundation.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -176,9 +176,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={value}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{value.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((score || 0) * 100)}%</span>
+                  <span>{Math.round(((score as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(score || 0) * 100} className="h-2" />
+                <Progress value={((score as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -196,9 +196,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={axis}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{axis.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -216,9 +216,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={trait}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -236,9 +236,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={dimension}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{dimension.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -256,9 +256,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={aspect}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{aspect.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -276,9 +276,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={trait}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -296,9 +296,9 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div key={state}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="capitalize">{state.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value || 0) * 100)}%</span>
+                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
-                <Progress value={(value || 0) * 100} className="h-2" />
+                <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>

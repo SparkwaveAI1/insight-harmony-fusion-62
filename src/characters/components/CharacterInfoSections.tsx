@@ -121,7 +121,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
                 <div className="flex flex-wrap gap-2">
                   {character.emotional_triggers.positive_triggers.map((trigger, index) => (
                     <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
-                      {trigger}
+                      {typeof trigger === 'string' ? trigger : String(trigger)}
                     </Badge>
                   ))}
                 </div>
@@ -133,7 +133,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
                 <div className="flex flex-wrap gap-2">
                   {character.emotional_triggers.negative_triggers.map((trigger, index) => (
                     <Badge key={index} variant="secondary" className="bg-red-100 text-red-800">
-                      {trigger}
+                      {typeof trigger === 'string' ? trigger : String(trigger)}
                     </Badge>
                   ))}
                 </div>

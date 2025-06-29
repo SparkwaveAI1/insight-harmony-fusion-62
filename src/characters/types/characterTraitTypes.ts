@@ -1,3 +1,4 @@
+
 // Character trait and type definitions
 import { 
   TraitProfile,
@@ -38,10 +39,11 @@ export interface HumanoidCharacterTraitProfile extends TraitProfile {
   };
 }
 
-// Discriminated union for trait profiles based on character type
-export type CharacterTraitProfile = 
-  | { character_type: 'historical' | 'fictional'; profile: HumanoidCharacterTraitProfile }
-  | { character_type: 'multi_species'; profile: NonHumanoidTraitProfile };
+// Export NonHumanoidTraitProfile for proper access
+export { NonHumanoidTraitProfile } from './nonHumanoidTypes';
+
+// Union type for trait profiles
+export type CharacterTraitProfile = HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
 
 export interface Character {
   id?: string;
@@ -56,7 +58,7 @@ export interface Character {
   linguistic_profile: LinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
-  trait_profile: HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
+  trait_profile: CharacterTraitProfile;
   emotional_triggers?: EmotionalTriggersProfile;
   prompt?: string;
   user_id?: string;
@@ -90,7 +92,7 @@ export interface DbCharacter {
   linguistic_profile: LinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
-  trait_profile: HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
+  trait_profile: CharacterTraitProfile;
   emotional_triggers?: EmotionalTriggersProfile;
   prompt?: string;
   user_id?: string;

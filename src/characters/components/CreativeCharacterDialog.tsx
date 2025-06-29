@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
 
 interface CreativeCharacterDialogProps {
@@ -18,12 +20,16 @@ interface CreativeCharacterDialogProps {
 
 interface CreativeCharacterData {
   name: string;
-  identityType: string;
-  archetype: string;
-  location: string;
-  era: string;
-  genres: string[];
+  entityType: string;
+  narrativeDomain: string;
+  functionalRole: string;
   description: string;
+  environment: string;
+  physicalForm: string;
+  communication: string;
+  coreDrives: string[];
+  surfaceTriggers: string[];
+  changeResponseStyle: string;
 }
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
@@ -31,145 +37,81 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CreativeCharacterData>({
     name: '',
-    identityType: '',
-    archetype: '',
-    location: '',
-    era: '',
-    genres: [],
-    description: ''
+    entityType: '',
+    narrativeDomain: '',
+    functionalRole: '',
+    description: '',
+    environment: '',
+    physicalForm: '',
+    communication: '',
+    coreDrives: [],
+    surfaceTriggers: [],
+    changeResponseStyle: ''
   });
-  const [customArchetype, setCustomArchetype] = useState('');
-  const [customGenres, setCustomGenres] = useState<string[]>([]);
-  const [newCustomGenre, setNewCustomGenre] = useState('');
 
-  const totalSteps = 6;
+  const totalSteps = 8;
 
-  const humanArchetypes = [
-    { value: 'Explorer', description: 'Seeks new territories, knowledge, or experiences' },
-    { value: 'Monarch', description: 'Natural leader who commands respect and authority' },
-    { value: 'Mystic', description: 'Connected to spiritual or supernatural forces' },
-    { value: 'Warrior', description: 'Fighter who protects or conquers through strength' },
-    { value: 'Philosopher', description: 'Seeker of wisdom and understanding of existence' },
-    { value: 'Rebel', description: 'Challenges established order and fights for change' },
-    { value: 'Merchant', description: 'Trader who creates value through exchange and commerce' },
-    { value: 'Artisan', description: 'Creator who shapes the world through craft and skill' },
-    { value: 'Spy', description: 'Operates in shadows, gathering intelligence and secrets' },
-    { value: 'Healer', description: 'Mends bodies, minds, or spirits of others' },
-    { value: 'Scholar', description: 'Devoted to learning, research, and knowledge preservation' },
-    { value: 'Nomad', description: 'Wanderer who belongs to no fixed place or society' },
-    { value: 'Guardian', description: 'Protector of people, places, or sacred things' },
-    { value: 'Trickster', description: 'Uses wit, humor, and cunning to navigate the world' },
-    { value: 'Sage', description: 'Wise counselor who guides others with deep understanding' }
+  const narrativeDomains = [
+    { id: 'historical', label: 'Historical', icon: '📜', description: 'Grounded in real historical periods' },
+    { id: 'fantasy', label: 'Fantasy', icon: '🧝', description: 'Magic, mythical creatures, enchanted worlds' },
+    { id: 'sci-fi', label: 'Sci-Fi', icon: '🛸', description: 'Technology, space, future scenarios' },
+    { id: 'mythic', label: 'Mythic', icon: '🔮', description: 'Archetypal, legendary, divine realms' },
+    { id: 'surreal', label: 'Surreal / Abstract', icon: '🌀', description: 'Dream-like, non-linear reality' },
+    { id: 'hybrid', label: 'Hybrid / Unclassified', icon: '🧬', description: 'Blends multiple genres or unique' }
   ];
 
-  const multiSpeciesArchetypes = [
-    { value: 'Hive Intelligence', description: 'Collective consciousness operating as one mind' },
-    { value: 'Bioengineered Diplomat', description: 'Designed entity bridging different species or realms' },
-    { value: 'Interdimensional Oracle', description: 'Seer who perceives across multiple realities' },
-    { value: 'Terraforming Entity', description: 'Being that shapes worlds and environments' },
-    { value: 'Spirit-Bound AI', description: 'Artificial intelligence merged with spiritual essence' },
-    { value: 'Dream-Eater', description: 'Entity that feeds on thoughts, dreams, or emotions' },
-    { value: 'Quantum Shepherd', description: 'Guardian of probability streams and possibilities' },
-    { value: 'Memory Weaver', description: 'Curator of experiences across time and space' },
-    { value: 'Void Walker', description: 'Traveler between the spaces that separate realities' },
-    { value: 'Symbiotic Network', description: 'Multiple beings functioning as integrated system' },
-    { value: 'Energy Sculptor', description: 'Manipulator of fundamental forces and matter' },
-    { value: 'Time Gardener', description: 'Cultivator of temporal flows and causality' },
-    { value: 'Custom', description: 'Define your own unique non-human entity' }
+  const functionalRoles = [
+    'Oracle', 'Warrior', 'Guardian', 'Parasite', 'Explorer', 'Diplomat', 
+    'Trickster', 'Dream-form', 'Weapon', 'Scholar', 'Prophet', 'Healer',
+    'Memory Keeper', 'Pattern Weaver', 'Energy Sculptor', 'Time Gardener',
+    'Void Walker', 'Reality Anchor', 'Consciousness Fragment', 'Living Algorithm'
   ];
 
-  const globalEras = [
-    'Prehistoric Era (Before 3000 BCE)',
-    'Ancient Mesopotamia (3500-539 BCE)',
-    'Ancient Egypt (3100-30 BCE)',
-    'Indus Valley Civilization (3300-1300 BCE)',
-    'Ancient China - Shang/Zhou (1600-221 BCE)',
-    'Classical Antiquity - Mediterranean (800 BCE-600 CE)',
-    'Mayan Classical Period (250-900 CE)',
-    'Islamic Golden Age (8th-13th Century)',
-    'Medieval Europe (500-1500 CE)',
-    'Medieval Japan - Heian/Kamakura (794-1333 CE)',
-    'Aztec Empire (1345-1521 CE)',
-    'Ming Dynasty China (1368-1644 CE)',
-    'Mughal Empire India (1526-1857 CE)',
-    'Renaissance Europe (1400-1600 CE)',
-    'Age of Exploration (1400-1600 CE)',
-    'Edo Period Japan (1603-1868 CE)',
-    'Enlightenment Era (1650-1800 CE)',
-    'Industrial Revolution (1760-1840 CE)',
-    'Victorian Era (1837-1901 CE)',
-    'Meiji Restoration (1868-1912 CE)',
-    'Belle Époque (1871-1914 CE)',
-    'Interwar Period (1918-1939 CE)',
-    'Post-WWII Era (1945-1991 CE)',
-    'Digital Age (1991-2010 CE)',
-    'Contemporary Era (2010-Present)',
-    'Near Future (2025-2100 CE)',
-    'Far Future (2100+ CE)',
-    'Post-Apocalyptic Timeline',
-    'Alternate History Branch',
-    'Mythological Time'
+  const coreDriveOptions = [
+    'Pattern Completion', 'Influence Expansion', 'Resource Stability', 'Information Accumulation',
+    'Cosmological Balance', 'Self Replication', 'Ancestral Code Obedience', 'Core Entity Loyalty',
+    'Emotional Mimicry', 'Territorial Stability', 'Subordinate Protection', 'Harmony Maintenance',
+    'Chaos Introduction', 'Memory Preservation', 'Reality Manipulation', 'Consciousness Evolution'
   ];
 
-  const narrativeGenres = [
-    { id: 'historical', label: 'Historical Fiction', icon: '🏛️' },
-    { id: 'fantasy', label: 'Fantasy', icon: '🧝' },
-    { id: 'sci-fi', label: 'Science Fiction', icon: '🛸' },
-    { id: 'mythological', label: 'Mythological', icon: '🌀' },
-    { id: 'speculative', label: 'Speculative Fiction', icon: '💡' },
-    { id: 'surreal', label: 'Surreal / Abstract', icon: '👁️' },
-    { id: 'horror', label: 'Horror / Gothic', icon: '🌙' },
-    { id: 'mystery', label: 'Mystery / Thriller', icon: '🔍' },
-    { id: 'romance', label: 'Romance', icon: '💕' },
-    { id: 'adventure', label: 'Adventure', icon: '⚔️' },
-    { id: 'dystopian', label: 'Dystopian', icon: '🌆' },
-    { id: 'steampunk', label: 'Steampunk', icon: '⚙️' },
-    { id: 'cyberpunk', label: 'Cyberpunk', icon: '🤖' },
-    { id: 'urban-fantasy', label: 'Urban Fantasy', icon: '🌃' },
-    { id: 'magical-realism', label: 'Magical Realism', icon: '✨' },
-    { id: 'post-apocalyptic', label: 'Post-Apocalyptic', icon: '☢️' },
-    { id: 'space-opera', label: 'Space Opera', icon: '🌌' },
-    { id: 'alternate-history', label: 'Alternate History', icon: '🌍' },
-    { id: 'superhero', label: 'Superhero', icon: '🦸' },
-    { id: 'western', label: 'Western', icon: '🤠' },
-    { id: 'noir', label: 'Noir', icon: '🎭' },
-    { id: 'comedy', label: 'Comedy', icon: '😄' },
-    { id: 'slice-of-life', label: 'Slice of Life', icon: '☕' },
-    { id: 'bildungsroman', label: 'Coming of Age', icon: '🌱' },
-    { id: 'hybrid', label: 'Hybrid / Cross-Genre', icon: '🧬' }
+  const surfaceTriggerOptions = [
+    'Ritual Disruption', 'Signal Noise Anomalies', 'Memory Interference', 'Sound Resonance',
+    'Resource Fluctuation', 'Social Mimicry', 'Memory Integrity Threats', 'Honor Rituals',
+    'Symbolic Anomalies', 'Power Displays', 'Ritual Breaches', 'Pattern Recognition',
+    'Emotional Resonance', 'Territory Violations', 'Communication Attempts', 'Change Detection'
+  ];
+
+  const changeResponseStyles = [
+    { id: 'mutate_adapt', label: 'Mutate and Adapt', description: 'Evolves and changes when challenged' },
+    { id: 'suppress_contradiction', label: 'Suppress Contradiction', description: 'Rejects or blocks conflicting information' },
+    { id: 'fork_behavior', label: 'Fork Behavior', description: 'Creates parallel response patterns' },
+    { id: 'seek_council', label: 'Seek Council / Resonance', description: 'Looks for external guidance or harmony' },
+    { id: 'collapse_destabilize', label: 'Collapse / Destabilize', description: 'Becomes unstable when contradicted' }
   ];
 
   const compileForHistoricalCreator = (data: CreativeCharacterData) => {
-    const finalArchetype = data.archetype === 'Custom' ? customArchetype : data.archetype;
-    const genreLabels = data.genres.map(g => {
-      if (g.startsWith('custom:')) {
-        return g.replace('custom:', '');
-      }
-      return narrativeGenres.find(opt => opt.id === g)?.label || g;
-    }).join(', ');
-
-    // Create a comprehensive description for the historical character creator
     const compiledDescription = `Creative Character Genesis - ${data.name}
 
 ${data.description}
 
 Character Context:
 - Name: ${data.name}
-- Archetype: ${finalArchetype}
-- Era: ${data.era}
-- Location: ${data.location}
-- Narrative Genres: ${genreLabels}
+- Entity Type: ${data.entityType}
+- Narrative Domain: ${data.narrativeDomain}
+- Functional Role: ${data.functionalRole || 'Undefined'}
+- Environment: ${data.environment}
+- Core Drives: ${data.coreDrives.join(', ')}
+- Surface Triggers: ${data.surfaceTriggers.join(', ')}
+- Change Response: ${data.changeResponseStyle}
 - Source: Creative Character Genesis
 
-This character was created through the Creative Character Genesis process and represents a ${finalArchetype} archetype in ${data.era}. They exist in a world influenced by ${genreLabels} themes.`;
+This character was created through the Creative Character Genesis process.`;
 
-    // Navigate to historical character creator with pre-filled data
     const searchParams = new URLSearchParams({
       prefill: 'true',
       name: data.name,
       description: compiledDescription,
-      location: data.location,
-      era: data.era,
+      location: data.environment,
       source: 'creative-genesis'
     });
 
@@ -177,30 +119,28 @@ This character was created through the Creative Character Genesis process and re
   };
 
   const compileForNonHumanoidCreator = async (data: CreativeCharacterData) => {
-    const finalArchetype = data.archetype === 'Custom' ? customArchetype : data.archetype;
-    
     try {
-      // Generate non-humanoid traits using the new service
       const { generateNonHumanoidTraits } = await import('../services/nonHumanoidTraitGenerator');
       
       const traits = await generateNonHumanoidTraits({
         name: data.name,
         description: data.description,
-        archetype: finalArchetype,
-        era: data.era,
-        location: data.location,
-        genres: data.genres
+        entityType: data.entityType,
+        narrativeDomain: data.narrativeDomain,
+        functionalRole: data.functionalRole,
+        environment: data.environment,
+        physicalForm: data.physicalForm,
+        communication: data.communication,
+        coreDrives: data.coreDrives,
+        surfaceTriggers: data.surfaceTriggers,
+        changeResponseStyle: data.changeResponseStyle
       });
 
       console.log('Generated non-humanoid traits:', traits);
-      
-      // For now, complete the creation process
-      // TODO: Navigate to a dedicated non-humanoid character creator or save directly
       onComplete(data);
       
     } catch (error) {
       console.error('Error generating non-humanoid traits:', error);
-      // Fallback to regular completion
       onComplete(data);
     }
   };
@@ -217,81 +157,59 @@ This character was created through the Creative Character Genesis process and re
     }
   };
 
-  const handleGenreToggle = (genreId: string) => {
-    const newGenres = formData.genres.includes(genreId)
-      ? formData.genres.filter(g => g !== genreId)
-      : [...formData.genres, genreId];
+  const handleCoreDriveToggle = (drive: string) => {
+    const newDrives = formData.coreDrives.includes(drive)
+      ? formData.coreDrives.filter(d => d !== drive)
+      : [...formData.coreDrives, drive];
     
-    setFormData({ ...formData, genres: newGenres });
+    setFormData({ ...formData, coreDrives: newDrives });
   };
 
-  const addCustomGenre = () => {
-    if (newCustomGenre.trim() && !customGenres.includes(newCustomGenre.trim())) {
-      const newGenres = [...customGenres, newCustomGenre.trim()];
-      setCustomGenres(newGenres);
-      setFormData({ ...formData, genres: [...formData.genres, `custom:${newCustomGenre.trim()}`] });
-      setNewCustomGenre('');
-    }
-  };
-
-  const removeCustomGenre = (genre: string) => {
-    const customGenreKey = `custom:${genre}`;
-    setCustomGenres(customGenres.filter(g => g !== genre));
-    setFormData({ ...formData, genres: formData.genres.filter(g => g !== customGenreKey) });
+  const handleSurfaceTriggerToggle = (trigger: string) => {
+    const newTriggers = formData.surfaceTriggers.includes(trigger)
+      ? formData.surfaceTriggers.filter(t => t !== trigger)
+      : [...formData.surfaceTriggers, trigger];
+    
+    setFormData({ ...formData, surfaceTriggers: newTriggers });
   };
 
   const handleRandomize = () => {
     switch (currentStep) {
       case 1:
-        const randomNames = ['Aria', 'Zephyr', 'Kai', 'Luna', 'Phoenix', 'Sage', 'River', 'Storm', 'Atlas', 'Nova'];
+        const randomNames = ['Zephyr', 'Axiom', 'Vex', 'Quill', 'Ember', 'Drift', 'Pulse', 'Void', 'Echo', 'Flux'];
         setFormData({ ...formData, name: randomNames[Math.floor(Math.random() * randomNames.length)] });
         break;
       case 2:
-        setFormData({ ...formData, identityType: Math.random() > 0.5 ? 'human' : 'multi-species' });
+        setFormData({ ...formData, entityType: Math.random() > 0.5 ? 'human' : 'non-humanoid' });
         break;
       case 3:
-        if (formData.identityType === 'human') {
-          const validArchetypes = humanArchetypes;
-          setFormData({ ...formData, archetype: validArchetypes[Math.floor(Math.random() * validArchetypes.length)].value });
-          setCustomArchetype('');
-        } else {
-          // Random non-humanoid entity types
-          const randomNonHumanoidTypes = [
-            'Collective Consciousness Entity',
-            'Quantum Oracle',
-            'Memory Weaver',
-            'Dream-Eater',
-            'Void Walker',
-            'Energy Sculptor',
-            'Time Gardener',
-            'Dimensional Seer',
-            'Symbiotic Network',
-            'Pattern Weaver',
-            'Entropy Shepherd',
-            'Reality Anchor',
-            'Probability Manipulator',
-            'Consciousness Fragment',
-            'Living Algorithm'
-          ];
-          const randomType = randomNonHumanoidTypes[Math.floor(Math.random() * randomNonHumanoidTypes.length)];
-          setCustomArchetype(randomType);
-          setFormData({ ...formData, archetype: 'Custom' });
-        }
+        const randomDomain = narrativeDomains[Math.floor(Math.random() * narrativeDomains.length)];
+        setFormData({ ...formData, narrativeDomain: randomDomain.id });
         break;
       case 4:
-        setFormData({ 
-          ...formData, 
-          era: globalEras[Math.floor(Math.random() * globalEras.length)],
-          location: 'Random location based on era'
-        });
+        const randomRole = functionalRoles[Math.floor(Math.random() * functionalRoles.length)];
+        setFormData({ ...formData, functionalRole: randomRole });
         break;
-      case 5:
-        const predefinedGenres = narrativeGenres.filter(g => g.id !== 'hybrid');
-        const randomGenres = predefinedGenres
+      case 6:
+        const randomEnvironment = formData.narrativeDomain === 'sci-fi' 
+          ? 'Quantum processing networks beneath Europa\'s ice'
+          : formData.narrativeDomain === 'fantasy'
+          ? 'Ancient grove where moonlight pools into silver memory'
+          : 'Liminal space between waking and dreaming';
+        setFormData({ ...formData, environment: randomEnvironment });
+        break;
+      case 7:
+        const randomDrives = coreDriveOptions
           .sort(() => Math.random() - 0.5)
-          .slice(0, Math.floor(Math.random() * 3) + 1)
-          .map(g => g.id);
-        setFormData({ ...formData, genres: randomGenres });
+          .slice(0, 3);
+        const randomTriggers = surfaceTriggerOptions
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 2);
+        setFormData({ ...formData, coreDrives: randomDrives, surfaceTriggers: randomTriggers });
+        break;
+      case 8:
+        const randomResponse = changeResponseStyles[Math.floor(Math.random() * changeResponseStyles.length)];
+        setFormData({ ...formData, changeResponseStyle: randomResponse.id });
         break;
     }
   };
@@ -299,38 +217,23 @@ This character was created through the Creative Character Genesis process and re
   const canProceed = () => {
     switch (currentStep) {
       case 1: return formData.name.trim() !== '';
-      case 2: return formData.identityType !== '';
-      case 3: 
-        if (formData.identityType === 'human') {
-          return formData.archetype !== '';
-        } else {
-          return customArchetype.trim() !== '';
-        }
-      case 4: return formData.era !== '' && formData.location !== '';
-      case 5: return formData.genres.length > 0;
-      case 6: return formData.description.length >= 50;
+      case 2: return formData.entityType !== '';
+      case 3: return formData.narrativeDomain !== '';
+      case 4: return true; // Optional step
+      case 5: return formData.description.length >= 50;
+      case 6: return formData.environment.trim() !== '';
+      case 7: return formData.coreDrives.length > 0;
+      case 8: return formData.changeResponseStyle !== '';
       default: return false;
     }
   };
 
   const handleComplete = () => {
-    const finalData = {
-      ...formData,
-      archetype: formData.archetype === 'Custom' ? customArchetype : formData.archetype
-    };
-
-    // Route based on character type
-    if (formData.identityType === 'human') {
-      // Send humanoid characters to Historical Character creator
-      compileForHistoricalCreator(finalData);
-      onOpenChange(false);
-    } else if (formData.identityType === 'multi-species') {
-      // Handle non-humanoid characters with the new system
-      compileForNonHumanoidCreator(finalData);
+    if (formData.entityType === 'human') {
+      compileForHistoricalCreator(formData);
       onOpenChange(false);
     } else {
-      // Fallback for any other case
-      onComplete(finalData);
+      compileForNonHumanoidCreator(formData);
       onOpenChange(false);
     }
   };
@@ -346,19 +249,12 @@ This character was created through the Creative Character Genesis process and re
             </div>
             
             <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Character Name</Label>
-                <Input
-                  placeholder="e.g., Aria Windwhisper, Zephyr Stormwright, Luna Nightshade"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="text-center text-lg"
-                />
-              </div>
-              
-              <div className="text-center text-sm text-muted-foreground">
-                This will be the name displayed in your character library and used in conversations.
-              </div>
+              <Input
+                placeholder="e.g., Zephyr, Axiom, Vex, Echo..."
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="text-center text-lg"
+              />
             </div>
           </div>
         );
@@ -367,28 +263,28 @@ This character was created through the Creative Character Genesis process and re
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What kind of being are you creating?</h3>
-              <p className="text-muted-foreground">This determines the trait architecture used for your character.</p>
+              <h3 className="text-xl font-semibold">What kind of entity are you creating?</h3>
+              <p className="text-muted-foreground">This sets the trait architecture but keeps full expressive flexibility.</p>
             </div>
             
             <RadioGroup 
-              value={formData.identityType} 
-              onValueChange={(value) => setFormData({ ...formData, identityType: value })}
+              value={formData.entityType} 
+              onValueChange={(value) => setFormData({ ...formData, entityType: value })}
               className="space-y-4"
             >
               <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
                 <RadioGroupItem value="human" id="human" />
                 <Label htmlFor="human" className="flex-1 cursor-pointer">
-                  <div className="font-medium">🔘 Human or Humanoid</div>
-                  <div className="text-sm text-muted-foreground">Traditional human characteristics and psychology</div>
+                  <div className="font-medium">🔘 Human / Humanoid</div>
+                  <div className="text-sm text-muted-foreground">Traditional human psychology and traits</div>
                 </Label>
               </div>
               
               <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
-                <RadioGroupItem value="multi-species" id="multi-species" />
-                <Label htmlFor="multi-species" className="flex-1 cursor-pointer">
-                  <div className="font-medium">🔘 Multi-Species / Non-Human Entity</div>
-                  <div className="text-sm text-muted-foreground">Alien, AI, or other non-human consciousness</div>
+                <RadioGroupItem value="non-humanoid" id="non-humanoid" />
+                <Label htmlFor="non-humanoid" className="flex-1 cursor-pointer">
+                  <div className="font-medium">🔘 Non-Humanoid / Multi-Species</div>
+                  <div className="text-sm text-muted-foreground">Alien consciousness, AI, or other non-human entity</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -399,83 +295,30 @@ This character was created through the Creative Character Genesis process and re
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What broad kind of mind or role does this character represent?</h3>
-              <p className="text-muted-foreground">
-                {formData.identityType === 'human' 
-                  ? 'Choose an archetype that defines their core nature and drives.'
-                  : 'Describe the entity type, consciousness form, or primary function of this being.'
-                }
-              </p>
+              <h3 className="text-xl font-semibold">What kind of world does this character come from?</h3>
+              <p className="text-muted-foreground">This determines world logic, not behavior. Influences naming, scenario compatibility, and visual design.</p>
             </div>
             
-            <div className="space-y-4">
-              {formData.identityType === 'human' ? (
-                // Traditional dropdown for humanoid characters
-                <Select 
-                  value={formData.archetype} 
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, archetype: value });
-                    setCustomArchetype('');
-                  }}
+            <div className="grid grid-cols-1 gap-3">
+              {narrativeDomains.map((domain) => (
+                <div
+                  key={domain.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    formData.narrativeDomain === domain.id
+                      ? 'border-primary bg-primary/10'
+                      : 'hover:bg-accent/50'
+                  }`}
+                  onClick={() => setFormData({ ...formData, narrativeDomain: domain.id })}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an archetype..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {humanArchetypes.map((archetype) => (
-                      <SelectItem key={archetype.value} value={archetype.value}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{archetype.value}</span>
-                          <span className="text-xs text-muted-foreground">{archetype.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                // Free-form text input for non-humanoid entities
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Entity Type / Consciousness Form</Label>
-                  <Input
-                    placeholder="e.g., Hive Intelligence, Quantum Oracle, Memory Weaver, Dream-Eater, Void Walker..."
-                    value={customArchetype}
-                    onChange={(e) => {
-                      setCustomArchetype(e.target.value);
-                      setFormData({ ...formData, archetype: 'Custom' });
-                    }}
-                    className="text-base"
-                  />
-                  <div className="text-xs text-muted-foreground mt-2">
-                    Be creative! Examples: "Collective Consciousness Entity", "Dimensional Seer", "Energy-based Lifeform", 
-                    "Synthetic Consciousness", "Terraforming Entity", "Time Gardener", "Symbiotic Network"
-                  </div>
-                </div>
-              )}
-              
-              {formData.identityType === 'human' && formData.archetype && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-800">
-                      <strong>{formData.archetype}:</strong> {humanArchetypes.find(a => a.value === formData.archetype)?.description}
+                  <div className="flex items-start space-x-3">
+                    <span className="text-2xl">{domain.icon}</span>
+                    <div>
+                      <div className="font-medium">{domain.label}</div>
+                      <div className="text-sm text-muted-foreground">{domain.description}</div>
                     </div>
                   </div>
                 </div>
-              )}
-
-              {formData.identityType === 'multi-species' && customArchetype && (
-                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-purple-800">
-                      <strong>Entity Type:</strong> {customArchetype}
-                      <div className="mt-1 text-xs">
-                        This will be used to generate unique non-human psychological traits and behaviors.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         );
@@ -484,38 +327,27 @@ This character was created through the Creative Character Genesis process and re
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">Where and when do they exist?</h3>
-              <p className="text-muted-foreground">Define their temporal and spatial context.</p>
+              <h3 className="text-xl font-semibold">Do they play a specific role in their world?</h3>
+              <p className="text-muted-foreground">Optional - used as a soft seed for trait shaping, never rigid.</p>
             </div>
             
             <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Era / Time Period</Label>
-                <Select value={formData.era} onValueChange={(value) => setFormData({ ...formData, era: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a time period..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {globalEras.map((era) => (
-                      <SelectItem key={era} value={era}>
-                        {era}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={formData.functionalRole} onValueChange={(value) => setFormData({ ...formData, functionalRole: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role (or leave blank)" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <SelectItem value="">No specific role</SelectItem>
+                  {functionalRoles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Location / Region</Label>
-                <Textarea
-                  placeholder={formData.identityType === 'human' 
-                    ? 'e.g., The Silk Road trading posts, Feudal Japanese countryside, Victorian London, Maasai territories in Kenya'
-                    : 'e.g., On the Red Spiral moons during the Collapse, Between universe cycles, Inside a fractured Dyson lattice'
-                  }
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="min-h-[80px]"
-                />
+              <div className="text-sm text-muted-foreground text-center">
+                This is optional and serves as inspiration, not limitation.
               </div>
             </div>
           </div>
@@ -525,88 +357,13 @@ This character was created through the Creative Character Genesis process and re
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What narrative genres does this character belong to?</h3>
-              <p className="text-muted-foreground">Select genres that define their world's tone and style. You can choose multiple.</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto">
-              {narrativeGenres.map((genre) => (
-                <div
-                  key={genre.id}
-                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                    formData.genres.includes(genre.id)
-                      ? 'border-primary bg-primary/10'
-                      : 'hover:bg-accent/50'
-                  }`}
-                  onClick={() => handleGenreToggle(genre.id)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{genre.icon}</span>
-                    <span className="text-sm font-medium">{genre.label}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Add Custom Genre</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="e.g., Biopunk, Solarpunk, Weird West"
-                  value={newCustomGenre}
-                  onChange={(e) => setNewCustomGenre(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addCustomGenre()}
-                />
-                <Button onClick={addCustomGenre} disabled={!newCustomGenre.trim()}>
-                  Add
-                </Button>
-              </div>
-            </div>
-            
-            {(formData.genres.length > 0 || customGenres.length > 0) && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Selected Genres:</Label>
-                <div className="flex flex-wrap gap-2">
-                  {formData.genres.map((genreId) => {
-                    if (genreId.startsWith('custom:')) {
-                      const customGenre = genreId.replace('custom:', '');
-                      return (
-                        <Badge key={genreId} variant="secondary" className="flex items-center gap-1">
-                          🎨 {customGenre}
-                          <button
-                            onClick={() => removeCustomGenre(customGenre)}
-                            className="ml-1 text-xs hover:text-red-600"
-                          >
-                            ×
-                          </button>
-                        </Badge>
-                      );
-                    } else {
-                      const genre = narrativeGenres.find(g => g.id === genreId);
-                      return (
-                        <Badge key={genreId} variant="secondary">
-                          {genre?.icon} {genre?.label}
-                        </Badge>
-                      );
-                    }
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">Tell us more about {formData.name}</h3>
-              <p className="text-muted-foreground">What drives them? What kind of world do they live in?</p>
+              <h3 className="text-xl font-semibold">Describe what you have in mind for this character</h3>
+              <p className="text-muted-foreground">Freeform description - we'll extract aesthetic cues and unique attributes.</p>
             </div>
             
             <div className="space-y-4">
               <Textarea
-                placeholder="What drives them? What kind of world do they live in? What is their place in that world? What challenges do they face? What are their goals or desires?"
+                placeholder="What drives them? What makes them unique? How do they think or perceive reality? What is their nature or essence?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="min-h-[120px]"
@@ -615,28 +372,143 @@ This character was created through the Creative Character Genesis process and re
                 {formData.description.length}/500 characters (minimum 50)
               </div>
             </div>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-semibold">Where—and how—does this being exist?</h3>
+              <p className="text-muted-foreground">Describe their environment and existence context.</p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Environment / Existence Context</Label>
+                <Textarea
+                  placeholder={formData.narrativeDomain === 'sci-fi' 
+                    ? 'e.g., Quantum processing networks, deep space stations, digital realms...'
+                    : formData.narrativeDomain === 'fantasy'
+                    ? 'e.g., Ancient groves, magical academies, elemental planes...'
+                    : 'e.g., Liminal spaces, dream realms, abstract dimensions...'
+                  }
+                  value={formData.environment}
+                  onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
+                  className="min-h-[80px]"
+                />
+              </div>
+              
+              {formData.entityType === 'non-humanoid' && (
+                <>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Physical Form (Optional)</Label>
+                    <Input
+                      placeholder="e.g., Energy patterns, crystalline structures, living code..."
+                      value={formData.physicalForm}
+                      onChange={(e) => setFormData({ ...formData, physicalForm: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Communication Method (Optional)</Label>
+                    <Input
+                      placeholder="e.g., Quantum resonance, color patterns, direct thought transfer..."
+                      value={formData.communication}
+                      onChange={(e) => setFormData({ ...formData, communication: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+
+      case 7:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-semibold">What drives them, deep down?</h3>
+              <p className="text-muted-foreground">Choose 1-3 core drives and surface triggers that shape their behavior.</p>
+            </div>
+            
+            <div className="space-y-6">
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Core Drives (Choose 1-3)</Label>
+                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                  {coreDriveOptions.map((drive) => (
+                    <div key={drive} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={drive}
+                        checked={formData.coreDrives.includes(drive)}
+                        onCheckedChange={() => handleCoreDriveToggle(drive)}
+                        disabled={!formData.coreDrives.includes(drive) && formData.coreDrives.length >= 3}
+                      />
+                      <Label htmlFor={drive} className="text-sm cursor-pointer">
+                        {drive}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Surface Triggers (Choose 1-3)</Label>
+                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                  {surfaceTriggerOptions.map((trigger) => (
+                    <div key={trigger} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={trigger}
+                        checked={formData.surfaceTriggers.includes(trigger)}
+                        onCheckedChange={() => handleSurfaceTriggerToggle(trigger)}
+                        disabled={!formData.surfaceTriggers.includes(trigger) && formData.surfaceTriggers.length >= 3}
+                      />
+                      <Label htmlFor={trigger} className="text-sm cursor-pointer">
+                        {trigger}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 8:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-xl font-semibold">How do they respond to change, conflict, or contradiction?</h3>
+              <p className="text-muted-foreground">This enables memory modeling and contradiction resolution behavior.</p>
+            </div>
+            
+            <RadioGroup 
+              value={formData.changeResponseStyle} 
+              onValueChange={(value) => setFormData({ ...formData, changeResponseStyle: value })}
+              className="space-y-3"
+            >
+              {changeResponseStyles.map((style) => (
+                <div key={style.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer">
+                  <RadioGroupItem value={style.id} id={style.id} />
+                  <Label htmlFor={style.id} className="flex-1 cursor-pointer">
+                    <div className="font-medium">{style.label}</div>
+                    <div className="text-sm text-muted-foreground">{style.description}</div>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
             
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">Character Summary</h4>
               <div className="space-y-1 text-sm text-blue-800">
                 <p><strong>Name:</strong> {formData.name}</p>
-                <p><strong>Type:</strong> {formData.identityType === 'human' ? 'Human/Humanoid' : 'Multi-Species Entity'}</p>
-                <p><strong>Archetype:</strong> {formData.archetype === 'Custom' ? customArchetype : formData.archetype}</p>
-                <p><strong>Era:</strong> {formData.era}</p>
-                <p><strong>Location:</strong> {formData.location}</p>
-                <p><strong>Genres:</strong> {formData.genres.map(g => {
-                  if (g.startsWith('custom:')) {
-                    return g.replace('custom:', '');
-                  }
-                  return narrativeGenres.find(opt => opt.id === g)?.label;
-                }).join(', ')}</p>
+                <p><strong>Type:</strong> {formData.entityType === 'human' ? 'Human/Humanoid' : 'Non-Humanoid Entity'}</p>
+                <p><strong>World:</strong> {narrativeDomains.find(d => d.id === formData.narrativeDomain)?.label}</p>
+                <p><strong>Role:</strong> {formData.functionalRole || 'Undefined'}</p>
+                <p><strong>Environment:</strong> {formData.environment}</p>
+                <p><strong>Core Drives:</strong> {formData.coreDrives.join(', ')}</p>
+                <p><strong>Surface Triggers:</strong> {formData.surfaceTriggers.join(', ')}</p>
               </div>
-              
-              {formData.identityType === 'human' && (
-                <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
-                  <strong>Note:</strong> This humanoid character will be sent to the Historical Character creator for detailed trait generation.
-                </div>
-              )}
             </div>
           </div>
         );
@@ -715,7 +587,7 @@ This character was created through the Creative Character Genesis process and re
               className="flex items-center gap-2"
             >
               <Sparkles className="h-4 w-4" />
-              {formData.identityType === 'human' ? 'Create Historical Character' : 'Create Character'}
+              {formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}
             </Button>
           )}
         </div>
