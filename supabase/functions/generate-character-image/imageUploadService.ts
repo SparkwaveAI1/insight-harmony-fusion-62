@@ -63,18 +63,17 @@ export async function updateCharacterWithImageUrl(
   
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
-  // First try to update regular characters table using character_id (text field)
-  const { data: regularCharacterData, error: updateError } = await supabase
-    .from('characters')
-    .update({ profile_image_url: imageUrl })
+  // First check which table the character exists in by trying to find it
+  console.log('Looking for character in non-humanoid characters table first...');
+  const { data: nonHumanoidCheck, error: nonHumanoidCheckError } = await supabase
+    .from('non_humanoid_characters')
+    .select('character_id')
     .eq('character_id', characterId)
-    .select();
+    .maybeSingle();
     
-  if (updateError) {
-    console.log('Error updating regular characters table:', updateError);
-    console.log('Trying non-humanoid characters table...');
-    
-    // Try to update non-humanoid characters table using character_id (text field)
+  if (!nonHumanoidCheckError && nonHumanoidCheck) {
+    console.log('Character found in non-humanoid table, updating there...');
+    // Update non-humanoid characters table
     const { data: nonHumanoidData, error: nonHumanoidUpdateError } = await supabase
       .from('non_humanoid_characters')
       .update({ profile_image_url: imageUrl })
@@ -83,37 +82,34 @@ export async function updateCharacterWithImageUrl(
       
     if (nonHumanoidUpdateError) {
       console.error('Error updating non-humanoid character with image URL:', nonHumanoidUpdateError);
-      throw new Error(`Failed to update character: ${nonHumanoidUpdateError.message}`);
+      throw new Error(`Failed to update non-humanoid character: ${nonHumanoidUpdateError.message}`);
     }
     
     if (nonHumanoidData && nonHumanoidData.length > 0) {
       console.log('Successfully updated non-humanoid character record with image URL:', nonHumanoidData[0]);
     } else {
-      console.log('No non-humanoid character found with character_id:', characterId);
-      throw new Error('Character not found in either table');
+      throw new Error('Failed to update non-humanoid character - no rows affected');
     }
+    return;
+  }
+  
+  // If not found in non-humanoid table, try regular characters table
+  console.log('Character not found in non-humanoid table, trying regular characters table...');
+  const { data: regularCharacterData, error: updateError } = await supabase
+    .from('characters')
+    .update({ profile_image_url: imageUrl })
+    .eq('character_id', characterId)
+    .select();
+    
+  if (updateError) {
+    console.error('Error updating regular characters table:', updateError);
+    throw new Error(`Failed to update character: ${updateError.message}`);
+  }
+  
+  if (regularCharacterData && regularCharacterData.length > 0) {
+    console.log('Successfully updated regular character record with image URL:', regularCharacterData[0]);
   } else {
-    if (regularCharacterData && regularCharacterData.length > 0) {
-      console.log('Successfully updated regular character record with image URL:', regularCharacterData[0]);
-    } else {
-      console.log('No regular character found with character_id:', characterId);
-      // Still try non-humanoid table as fallback
-      const { data: nonHumanoidData, error: nonHumanoidUpdateError } = await supabase
-        .from('non_humanoid_characters')
-        .update({ profile_image_url: imageUrl })
-        .eq('character_id', characterId)
-        .select();
-        
-      if (nonHumanoidUpdateError) {
-        console.error('Error updating non-humanoid character with image URL:', nonHumanoidUpdateError);
-        throw new Error(`Failed to update character: ${nonHumanoidUpdateError.message}`);
-      }
-      
-      if (nonHumanoidData && nonHumanoidData.length > 0) {
-        console.log('Successfully updated non-humanoid character record with image URL:', nonHumanoidData[0]);
-      } else {
-        throw new Error('Character not found in either table');
-      }
-    }
+    console.log('No character found with character_id:', characterId);
+    throw new Error('Character not found in either table');
   }
 }
