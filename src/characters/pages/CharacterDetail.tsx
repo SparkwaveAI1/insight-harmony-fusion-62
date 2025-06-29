@@ -5,6 +5,7 @@ import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useCharacter } from '../hooks/useCharacter';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageWithStyleButton from '../components/GenerateCharacterImageWithStyleButton';
@@ -112,13 +113,13 @@ const CharacterDetail = () => {
             <Card className="p-8">
               <div className="flex flex-col items-center">
                 {/* Character Image/Avatar */}
-                <div className="mb-6">
+                <div className="mb-6 w-full max-w-md">
                   {activeCharacter.profile_image_url ? (
-                    <div className="w-full max-w-md">
+                    <AspectRatio ratio={1} className="w-full">
                       <img 
                         src={activeCharacter.profile_image_url} 
                         alt={`${activeCharacter.name} ${isNonHumanoidCharacter ? 'entity' : 'portrait'}`}
-                        className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                        className="w-full h-full object-cover rounded-lg border-4 border-primary/20 shadow-lg"
                         onError={(e) => {
                           console.error('Error loading image:', activeCharacter.profile_image_url);
                           console.log('Image load error event:', e);
@@ -127,15 +128,17 @@ const CharacterDetail = () => {
                           console.log('Image loaded successfully:', activeCharacter.profile_image_url);
                         }}
                       />
-                    </div>
+                    </AspectRatio>
                   ) : (
-                    <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
-                      <CharacterAvatar 
-                        character={activeCharacter} 
-                        size="xl" 
-                        className="w-24 h-24"
-                      />
-                    </div>
+                    <AspectRatio ratio={1} className="w-full">
+                      <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
+                        <CharacterAvatar 
+                          character={activeCharacter} 
+                          size="xl" 
+                          className="w-24 h-24"
+                        />
+                      </div>
+                    </AspectRatio>
                   )}
                 </div>
 
