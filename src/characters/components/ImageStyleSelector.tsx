@@ -19,24 +19,19 @@ export const IMAGE_STYLES: ImageStyle[] = [
     recommended: true
   },
   {
-    id: 'concept_art',
-    name: 'Concept Art',
-    description: 'Artistic, fantasy-style illustration'
-  },
-  {
-    id: 'scientific',
-    name: 'Scientific Illustration',
-    description: 'Technical, diagram-like representation'
-  },
-  {
-    id: 'abstract',
-    name: 'Abstract',
-    description: 'Stylized, symbolic representation'
-  },
-  {
     id: 'cinematic',
     name: 'Cinematic',
-    description: 'Movie/game-style dramatic lighting'
+    description: 'Movie-style dramatic lighting and composition'
+  },
+  {
+    id: 'anime',
+    name: 'Anime',
+    description: 'Japanese animation art style'
+  },
+  {
+    id: 'comics',
+    name: 'Comics',
+    description: 'Comic book illustration style'
   }
 ];
 

@@ -14,66 +14,56 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
     promptModifiers: [
       'photorealistic',
       'high resolution',
-      'detailed texture',
       'professional photography',
-      'natural lighting',
+      'studio lighting',
+      'full body portrait',
+      'neutral background',
       '8K quality'
     ],
     openaiStyle: 'natural',
     quality: 'hd'
   },
-  concept_art: {
-    name: 'Concept Art',
-    description: 'Artistic, fantasy-style illustration',
+  cinematic: {
+    name: 'Cinematic',
+    description: 'Movie-style dramatic lighting and composition',
     promptModifiers: [
-      'concept art',
-      'fantasy illustration',
-      'digital painting',
-      'artistic rendering',
-      'dramatic composition',
-      'stylized'
+      'cinematic',
+      'movie poster style',
+      'dramatic lighting',
+      'epic composition',
+      'full body shot',
+      'neutral backdrop',
+      'high contrast'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
   },
-  scientific: {
-    name: 'Scientific Illustration',
-    description: 'Technical, diagram-like representation',
+  anime: {
+    name: 'Anime',
+    description: 'Japanese animation art style',
     promptModifiers: [
-      'scientific illustration',
-      'technical diagram',
-      'educational reference',
-      'clean lines',
-      'precise details',
-      'documentary style'
-    ],
-    openaiStyle: 'natural',
-    quality: 'standard'
-  },
-  abstract: {
-    name: 'Abstract',
-    description: 'Stylized, symbolic representation',
-    promptModifiers: [
-      'abstract art',
-      'symbolic representation',
-      'minimalist',
-      'geometric forms',
-      'artistic interpretation',
-      'stylized composition'
+      'anime style',
+      'manga illustration',
+      'cel shading',
+      'vibrant colors',
+      'full body character design',
+      'clean background',
+      'high quality anime art'
     ],
     openaiStyle: 'vivid',
-    quality: 'standard'
+    quality: 'hd'
   },
-  cinematic: {
-    name: 'Cinematic',
-    description: 'Movie/game-style dramatic lighting',
+  comics: {
+    name: 'Comics',
+    description: 'Comic book illustration style',
     promptModifiers: [
-      'cinematic lighting',
-      'dramatic atmosphere',
-      'movie poster style',
-      'epic composition',
-      'dynamic lighting',
-      'high contrast'
+      'comic book style',
+      'graphic novel art',
+      'bold outlines',
+      'dynamic pose',
+      'full body illustration',
+      'simple background',
+      'superhero comic style'
     ],
     openaiStyle: 'vivid',
     quality: 'hd'
@@ -92,7 +82,7 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
     return buildBasicNonHumanoidPrompt(characterData, styleConfig);
   }
   
-  let prompt = `A ${characterData.species_type || 'mysterious entity'}`;
+  let prompt = `Full body portrait of a ${characterData.species_type || 'mysterious entity'}`;
   
   // Primary form and composition
   if (physicalManifest.primary_form) {
@@ -106,7 +96,7 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
   // Scale and dimensions
   if (physicalManifest.scale_category) {
     const scaleMap: Record<string, string> = {
-      'Microscopic': 'tiny, intricate details visible under magnification',
+      'Microscopic': 'tiny, intricate details visible',
       'Human-scale': 'human-sized proportions',
       'Massive': 'imposing, large-scale presence',
       'Planetary': 'enormous, cosmic scale'
@@ -124,13 +114,14 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
     prompt += `, with ${physicalManifest.texture_quality.toLowerCase()} surface texture`;
   }
   
-  // Movement and interaction
+  // Movement and interaction - simplified for static image
   if (physicalManifest.movement_characteristics) {
-    prompt += `, ${physicalManifest.movement_characteristics.toLowerCase()}`;
-  }
-  
-  if (physicalManifest.environmental_interaction) {
-    prompt += `, ${physicalManifest.environmental_interaction.toLowerCase()}`;
+    const movementHints = physicalManifest.movement_characteristics.toLowerCase();
+    if (movementHints.includes('elegant') || movementHints.includes('graceful')) {
+      prompt += `, posed gracefully`;
+    } else if (movementHints.includes('powerful') || movementHints.includes('strong')) {
+      prompt += `, in a powerful stance`;
+    }
   }
   
   // Dimensional properties
@@ -139,29 +130,19 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
     prompt += `, exhibiting ${physicalManifest.dimensional_properties.toLowerCase()} geometry`;
   }
   
-  // Sensory emanations
-  if (physicalManifest.sensory_emanations) {
-    prompt += `, producing ${physicalManifest.sensory_emanations.toLowerCase()}`;
-  }
-  
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
   prompt += `, rendered in ${styleModifiers} style`;
   
-  // Environment context
-  if (characterData.origin_universe) {
-    prompt += `, set in ${characterData.origin_universe} environment`;
-  }
-  
-  // Final quality specifications
-  prompt += ', highly detailed, professional quality';
+  // Add full-body and background specifications
+  prompt += ', standing pose, full body visible, neutral background, professional composition';
   
   console.log("Generated non-humanoid prompt:", prompt);
   return prompt;
 }
 
 function buildBasicNonHumanoidPrompt(characterData: any, styleConfig: StyleConfig): string {
-  let prompt = `A ${characterData.species_type || 'mysterious non-humanoid entity'}`;
+  let prompt = `Full body portrait of a ${characterData.species_type || 'mysterious non-humanoid entity'}`;
   
   if (characterData.form_factor) {
     prompt += ` with ${characterData.form_factor.toLowerCase()} characteristics`;
@@ -176,7 +157,10 @@ function buildBasicNonHumanoidPrompt(characterData: any, styleConfig: StyleConfi
   
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
-  prompt += `, rendered in ${styleModifiers} style, highly detailed`;
+  prompt += `, rendered in ${styleModifiers} style`;
+  
+  // Add full-body and background specifications
+  prompt += ', standing pose, full body visible, neutral background, professional composition';
   
   return prompt;
 }
