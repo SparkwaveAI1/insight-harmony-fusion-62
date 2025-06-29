@@ -43,15 +43,7 @@ export type Database = {
           physical_attributes?: Json | null
           storage_url?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "character_images_character_id_fkey"
-            columns: ["character_id"]
-            isOneToOne: false
-            referencedRelation: "characters"
-            referencedColumns: ["character_id"]
-          },
-        ]
+        Relationships: []
       }
       characters: {
         Row: {
