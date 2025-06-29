@@ -1,10 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Character } from '../types/characterTraitTypes';
+import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 
-export async function generateCharacterImage(character: Character): Promise<string | null> {
+type AnyCharacter = Character | NonHumanoidCharacter;
+
+export async function generateCharacterImage(character: AnyCharacter): Promise<string | null> {
   try {
     console.log('Generating character image for:', character.name);
+    console.log('Character type check - has species_type:', 'species_type' in character);
     
     const { data, error } = await supabase.functions.invoke('generate-character-image', {
       body: { characterData: character }

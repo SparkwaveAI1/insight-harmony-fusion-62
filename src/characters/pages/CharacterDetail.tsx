@@ -154,13 +154,13 @@ const CharacterDetail = () => {
                 {/* Generate Image Button - Use correct component based on character type */}
                 {isNonHumanoidCharacter ? (
                   <GenerateNonHumanoidCharacterImageButton
-                    character={activeCharacter}
+                    character={activeCharacter as any}
                     onImageGenerated={handleImageGenerated}
                     className="w-full max-w-sm"
                   />
                 ) : (
                   <GenerateCharacterImageButton
-                    character={activeCharacter}
+                    character={activeCharacter as any}
                     onImageGenerated={handleImageGenerated}
                     className="w-full max-w-sm"
                   />
