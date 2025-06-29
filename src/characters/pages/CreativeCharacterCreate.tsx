@@ -7,6 +7,7 @@ import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import CreativeCharacterDialog from '../components/CreativeCharacterDialog';
 import { CreativeCharacterData } from '../types/characterTraitTypes';
+import { createCreativeCharacter } from '../services/creativeCharacterService';
 import { toast } from 'sonner';
 
 const CreativeCharacterCreate = () => {
@@ -18,19 +19,20 @@ const CreativeCharacterCreate = () => {
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement creative character creation service
-      console.log('Creating creative character:', data);
+      console.log('Creating creative character with data:', data);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const createdCharacter = await createCreativeCharacter(data);
       
-      toast.success('Creative character created successfully!');
-      navigate('/characters/creative');
+      toast.success(`Creative character "${createdCharacter.name}" created successfully!`);
+      
+      // Navigate to the character detail page
+      navigate(`/characters/${createdCharacter.character_id}`);
     } catch (error) {
       console.error('Error creating creative character:', error);
-      toast.error('Failed to create creative character');
+      toast.error(error instanceof Error ? error.message : 'Failed to create creative character');
     } finally {
       setIsSubmitting(false);
+      setDialogOpen(false);
     }
   };
 

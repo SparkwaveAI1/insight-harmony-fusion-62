@@ -63,6 +63,7 @@ export type Database = {
           creation_date: string
           emotional_triggers: Json | null
           enhanced_metadata_version: number | null
+          form_factor: string | null
           gender: string | null
           historical_period: string | null
           id: string
@@ -71,6 +72,7 @@ export type Database = {
           linguistic_profile: Json
           metadata: Json
           name: string
+          origin_universe: string | null
           physical_appearance: Json | null
           preinterview_tags: Json
           profile_image_url: string | null
@@ -78,6 +80,7 @@ export type Database = {
           region: string | null
           simulation_directives: Json
           social_class: string | null
+          species_type: string | null
           trait_profile: Json
           user_id: string | null
         }
@@ -90,6 +93,7 @@ export type Database = {
           creation_date: string
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
+          form_factor?: string | null
           gender?: string | null
           historical_period?: string | null
           id?: string
@@ -98,6 +102,7 @@ export type Database = {
           linguistic_profile?: Json
           metadata?: Json
           name: string
+          origin_universe?: string | null
           physical_appearance?: Json | null
           preinterview_tags?: Json
           profile_image_url?: string | null
@@ -105,6 +110,7 @@ export type Database = {
           region?: string | null
           simulation_directives?: Json
           social_class?: string | null
+          species_type?: string | null
           trait_profile?: Json
           user_id?: string | null
         }
@@ -117,6 +123,7 @@ export type Database = {
           creation_date?: string
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
+          form_factor?: string | null
           gender?: string | null
           historical_period?: string | null
           id?: string
@@ -125,6 +132,7 @@ export type Database = {
           linguistic_profile?: Json
           metadata?: Json
           name?: string
+          origin_universe?: string | null
           physical_appearance?: Json | null
           preinterview_tags?: Json
           profile_image_url?: string | null
@@ -132,6 +140,7 @@ export type Database = {
           region?: string | null
           simulation_directives?: Json
           social_class?: string | null
+          species_type?: string | null
           trait_profile?: Json
           user_id?: string | null
         }

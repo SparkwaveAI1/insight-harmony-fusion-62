@@ -1,4 +1,5 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { NonHumanoidTraitProfile } from '../types/nonHumanoidTypes';
 
 export interface NonHumanoidGenerationInput {
@@ -16,9 +17,40 @@ export interface NonHumanoidGenerationInput {
 }
 
 export const generateNonHumanoidTraits = async (input: NonHumanoidGenerationInput): Promise<NonHumanoidTraitProfile> => {
-  // Fallback implementation - replace with actual logic
-  console.warn('Non-humanoid trait generation is not fully implemented. Using fallback.');
+  console.log('=== GENERATING NON-HUMANOID TRAITS ===');
+  console.log('Input data:', input);
 
+  try {
+    // Call the Supabase edge function for non-humanoid trait generation
+    const { data, error } = await supabase.functions.invoke('generate-nonhumanoid-traits', {
+      body: {
+        creativeData: input
+      }
+    });
+
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(`Failed to generate non-humanoid traits: ${error.message}`);
+    }
+
+    if (!data || !data.traitProfile) {
+      console.error('Invalid response from edge function:', data);
+      throw new Error('Invalid response from trait generation service');
+    }
+
+    console.log('✅ Non-humanoid traits generated successfully');
+    return data.traitProfile;
+  } catch (error) {
+    console.error('Error generating non-humanoid traits:', error);
+    
+    // Fallback to local generation if edge function fails
+    console.warn('Using fallback non-humanoid trait generation');
+    return generateFallbackTraits(input);
+  }
+};
+
+// Fallback implementation for when the edge function is unavailable
+const generateFallbackTraits = (input: NonHumanoidGenerationInput): NonHumanoidTraitProfile => {
   return {
     species_type: input.entityType || 'Unknown',
     form_factor: input.physicalForm || 'Abstract',
@@ -45,7 +77,7 @@ export const generateNonHumanoidTraits = async (input: NonHumanoidGenerationInpu
       subversion_potential: 0.4
     },
     action_constraints: {
-      core_directives: ['Observe', 'Adapt', 'Learn']
+      core_directives: input.coreDrives.length > 0 ? input.coreDrives : ['Observe', 'Adapt', 'Learn']
     },
     decision_model: {
       conflict_resolution_style: 'hierarchical_override',
@@ -57,7 +89,7 @@ export const generateNonHumanoidTraits = async (input: NonHumanoidGenerationInpu
       salience_tags: ['primary', 'secondary']
     },
     behavioral_adaptivity: {
-      contradiction_resolution_mode: 'Integration',
+      contradiction_resolution_mode: input.changeResponseStyle || 'Integration',
       state_evolution_rate: 0.3,
       experience_threshold_for_change: 0.7
     },
@@ -66,7 +98,7 @@ export const generateNonHumanoidTraits = async (input: NonHumanoidGenerationInpu
       non_isolation: 0.6
     },
     evolution_conditions: {
-      mutation_triggers: ['contradiction', 'novelty'],
+      mutation_triggers: input.surfaceTriggers.length > 0 ? input.surfaceTriggers : ['contradiction', 'novelty'],
       emergent_trait_generation: true,
       behavioral_forking: false
     },

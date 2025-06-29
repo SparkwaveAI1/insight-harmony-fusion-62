@@ -23,13 +23,17 @@ export const characterToDbCharacter = (character: Character): DbCharacter => {
     is_public: character.is_public,
     profile_image_url: character.profile_image_url,
     enhanced_metadata_version: character.enhanced_metadata_version,
-    // Map new demographic fields
+    // Map demographic fields (for humanoid characters)
     age: character.age,
     gender: character.gender,
     historical_period: character.historical_period,
     social_class: character.social_class,
     region: character.region,
     physical_appearance: character.physical_appearance,
+    // Map non-humanoid specific fields
+    origin_universe: character.origin_universe,
+    species_type: character.species_type,
+    form_factor: character.form_factor,
   };
   
   console.log('Mapped DB character:', dbCharacter);
@@ -60,13 +64,17 @@ export const dbCharacterToCharacter = (dbCharacter: DbCharacter): Character => {
     is_public: dbCharacter.is_public || false,
     profile_image_url: dbCharacter.profile_image_url,
     enhanced_metadata_version: dbCharacter.enhanced_metadata_version || 1,
-    // Map new demographic fields
+    // Map demographic fields (for humanoid characters)
     age: dbCharacter.age,
     gender: dbCharacter.gender,
     historical_period: dbCharacter.historical_period,
     social_class: dbCharacter.social_class,
     region: dbCharacter.region,
     physical_appearance: dbCharacter.physical_appearance || {},
+    // Map non-humanoid specific fields
+    origin_universe: dbCharacter.origin_universe,
+    species_type: dbCharacter.species_type,
+    form_factor: dbCharacter.form_factor,
   };
   
   console.log('Mapped character:', character);
