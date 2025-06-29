@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { CharacterTraitProfile, HumanoidCharacterTraitProfile, NonHumanoidTraitProfile } from '../types/characterTraitTypes';
 
 interface CharacterTraitsProps {
@@ -47,6 +45,7 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
                   <span className="capitalize">{motive.replace(/_/g, ' ')}</span>
                   <span>{Math.round(((value as number) || 0) * 100)}%</span>
                 </div>
+                {/* Ensure value is not null or undefined before using it */}
                 <Progress value={((value as number) || 0) * 100} className="h-2" />
               </div>
             ))}
@@ -64,6 +63,7 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
                   <span className="capitalize">{trigger.replace(/_/g, ' ')}</span>
                   <span>{Math.round(((sensitivity as number) || 0) * 100)}%</span>
                 </div>
+                {/* Ensure sensitivity is not null or undefined before using it */}
                 <Progress value={((sensitivity as number) || 0) * 100} className="h-2" />
               </div>
             ))}
@@ -86,224 +86,107 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
     );
   }
 
-  // Handle humanoid characters
+  // Handle humanoid characters with descriptive content instead of detailed traits
   const humanoidProfile = traitProfile as HumanoidCharacterTraitProfile;
 
   return (
     <div className="space-y-6">
-      {/* Physical Appearance */}
-      {humanoidProfile.physical_appearance && Object.keys(humanoidProfile.physical_appearance).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Physical Appearance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {Object.entries(humanoidProfile.physical_appearance).map(([key, value]) => (
-              <div key={key} className="flex justify-between">
-                <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
-                <span>{value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Physical Health */}
-      {humanoidProfile.physical_health && Object.keys(humanoidProfile.physical_health).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Physical Health</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {Object.entries(humanoidProfile.physical_health).map(([key, value]) => (
-              <div key={key} className="flex justify-between">
-                <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
-                <span>{Array.isArray(value) ? value.join(', ') : value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Big Five Personality */}
-      {humanoidProfile.big_five && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Big Five Personality</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.big_five).map(([trait, value]) => (
-              <div key={trait}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{trait}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Moral Foundations */}
-      {humanoidProfile.moral_foundations && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Moral Foundations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.moral_foundations).map(([foundation, value]) => (
-              <div key={foundation}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{foundation.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* World Values */}
-      {humanoidProfile.world_values && (
-        <Card>
-          <CardHeader>
-            <CardTitle>World Values</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.world_values).map(([value, score]) => (
-              <div key={value}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{value.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((score as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((score as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Political Compass */}
-      {humanoidProfile.political_compass && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Political Compass</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.political_compass).map(([axis, value]) => (
-              <div key={axis}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{axis.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Behavioral Economics */}
-      {humanoidProfile.behavioral_economics && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Behavioral Economics</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.behavioral_economics).map(([trait, value]) => (
-              <div key={trait}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Cultural Dimensions */}
-      {humanoidProfile.cultural_dimensions && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Cultural Dimensions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.cultural_dimensions).map(([dimension, value]) => (
-              <div key={dimension}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{dimension.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Social Identity */}
-      {humanoidProfile.social_identity && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Social Identity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.social_identity).map(([aspect, value]) => (
-              <div key={aspect}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{aspect.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Extended Traits */}
-      {humanoidProfile.extended_traits && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Extended Traits</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.extended_traits).map(([trait, value]) => (
-              <div key={trait}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Dynamic State */}
-      {humanoidProfile.dynamic_state && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Dynamic State</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(humanoidProfile.dynamic_state).map(([state, value]) => (
-              <div key={state}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{state.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      <h2 className="text-xl font-bold text-gray-800 flex items-center">
+        <span className="inline-block w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
+        Character Psychological Profile
+      </h2>
+      
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6 border border-amber-100">
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              {characterType === 'historical' ? 'Historically Accurate Personality' : 'Rich Character Development'}
+            </h3>
+            <p className="text-gray-600 leading-relaxed">
+              {characterType === 'historical' 
+                ? `This historical character has been carefully researched and modeled to reflect authentic 
+                   personality traits, cultural context, and behavioral patterns from their era. Our advanced 
+                   psychological modeling captures the complexity of how they would have thought, felt, and 
+                   interacted based on historical evidence and period-appropriate worldviews.`
+                : `This fictional character has been developed with deep psychological complexity using 
+                   comprehensive personality modeling. Every aspect of their behavior, decision-making, 
+                   and emotional responses has been carefully crafted to create an authentic and 
+                   engaging character that feels real and relatable.`
+              }
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-4 mt-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <h4 className="font-medium text-gray-800 mb-2">
+                {characterType === 'historical' ? '📚 Historical Context' : '🎭 Character Depth'}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {characterType === 'historical'
+                  ? `Grounded in extensive historical research, reflecting the social norms, 
+                     cultural values, and life experiences typical of their time period and circumstances.`
+                  : `Developed with multi-dimensional personality traits that create consistent, 
+                     believable responses across different scenarios and interactions.`
+                }
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <h4 className="font-medium text-gray-800 mb-2">🧠 Cognitive Patterns</h4>
+              <p className="text-sm text-gray-600">
+                {characterType === 'historical'
+                  ? `Thinking patterns and decision-making processes informed by the knowledge, 
+                     beliefs, and cognitive frameworks available during their historical period.`
+                  : `Unique thought processes, problem-solving approaches, and mental models that 
+                     define how this character perceives and interacts with their world.`
+                }
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <h4 className="font-medium text-gray-800 mb-2">💭 Emotional Landscape</h4>
+              <p className="text-sm text-gray-600">
+                {characterType === 'historical'
+                  ? `Emotional responses and interpersonal dynamics shaped by historical social 
+                     structures, family dynamics, and the challenges of their era.`
+                  : `Complex emotional intelligence with authentic reactions, relationship patterns, 
+                     and emotional growth that makes interactions feel genuine and meaningful.`
+                }
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <h4 className="font-medium text-gray-800 mb-2">
+                {characterType === 'historical' ? '⚖️ Period Values' : '🎯 Value System'}
+              </h4>
+              <p className="text-sm text-gray-600">
+                {characterType === 'historical'
+                  ? `Moral foundations and ethical frameworks consistent with their historical 
+                     context, social class, and cultural background.`
+                  : `Core beliefs, moral principles, and value systems that guide their choices 
+                     and create consistent character motivations.`
+                }
+              </p>
+            </div>
+          </div>
+          
+          <div className="text-center mt-6 p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg">
+            <p className="text-sm text-gray-700 font-medium">
+              ✨ This comprehensive character modeling enables authentic, engaging conversations that 
+              capture the {characterType === 'historical' ? 'historical authenticity' : 'creative depth'} and 
+              personality nuances that make each interaction unique and memorable.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Technical summary for reference */}
+      <details className="mt-4 p-2 bg-gray-50 rounded text-xs">
+        <summary className="cursor-pointer font-mono text-gray-500">Technical: Character Analysis</summary>
+        <div className="mt-2 text-gray-600">
+          <p>Character model includes comprehensive psychological profiling across validated personality frameworks</p>
+        </div>
+      </details>
     </div>
   );
 };
