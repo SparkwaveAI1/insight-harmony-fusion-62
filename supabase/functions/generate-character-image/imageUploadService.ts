@@ -63,23 +63,36 @@ export async function updateCharacterWithImageUrl(
   
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
-  // Only update humanoid characters table - non-humanoid characters don't support images
-  console.log('Updating characters table...');
-  const { data: characterData, error: updateError } = await supabase
+  // First try to update the humanoid characters table
+  console.log('Trying to update characters table...');
+  const { data: characterData, error: characterError } = await supabase
     .from('characters')
     .update({ profile_image_url: imageUrl })
     .eq('character_id', characterId)
     .select();
     
-  if (updateError) {
-    console.error('Error updating characters table:', updateError);
-    throw new Error(`Failed to update character: ${updateError.message}`);
+  if (!characterError && characterData && characterData.length > 0) {
+    console.log('Successfully updated character record with image URL:', characterData[0]);
+    return;
   }
   
-  if (characterData && characterData.length > 0) {
-    console.log('Successfully updated character record with image URL:', characterData[0]);
+  // If not found in characters table, try non_humanoid_characters table
+  console.log('Character not found in characters table, trying non_humanoid_characters table...');
+  const { data: nonHumanoidData, error: nonHumanoidError } = await supabase
+    .from('non_humanoid_characters')
+    .update({ profile_image_url: imageUrl })
+    .eq('character_id', characterId)
+    .select();
+    
+  if (nonHumanoidError) {
+    console.error('Error updating non_humanoid_characters table:', nonHumanoidError);
+    throw new Error(`Failed to update non-humanoid character: ${nonHumanoidError.message}`);
+  }
+  
+  if (nonHumanoidData && nonHumanoidData.length > 0) {
+    console.log('Successfully updated non-humanoid character record with image URL:', nonHumanoidData[0]);
   } else {
-    console.log('Character not found in characters table');
-    throw new Error('Character not found - image generation only supported for humanoid characters');
+    console.log('Character not found in either table');
+    throw new Error('Character not found - unable to update with image URL');
   }
 }
