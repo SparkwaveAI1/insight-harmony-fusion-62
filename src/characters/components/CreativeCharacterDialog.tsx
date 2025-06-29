@@ -177,6 +177,35 @@ This character was created through the Creative Character Genesis process and re
     navigate(`/characters/create/historical?${searchParams.toString()}`);
   };
 
+  const compileForNonHumanoidCreator = async (data: CreativeCharacterData) => {
+    const finalArchetype = data.archetype === 'Custom' ? customArchetype : data.archetype;
+    
+    try {
+      // Generate non-humanoid traits using the new service
+      const { generateNonHumanoidTraits } = await import('../services/nonHumanoidTraitGenerator');
+      
+      const traits = await generateNonHumanoidTraits({
+        name: data.name,
+        description: data.description,
+        archetype: finalArchetype,
+        era: data.era,
+        location: data.location,
+        genres: data.genres
+      });
+
+      console.log('Generated non-humanoid traits:', traits);
+      
+      // For now, complete the creation process
+      // TODO: Navigate to a dedicated non-humanoid character creator or save directly
+      onComplete(data);
+      
+    } catch (error) {
+      console.error('Error generating non-humanoid traits:', error);
+      // Fallback to regular completion
+      onComplete(data);
+    }
+  };
+
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -263,12 +292,17 @@ This character was created through the Creative Character Genesis process and re
       archetype: formData.archetype === 'Custom' ? customArchetype : formData.archetype
     };
 
-    // If it's a humanoid character, compile and send to Historical Character creator
+    // Route based on character type
     if (formData.identityType === 'human') {
+      // Send humanoid characters to Historical Character creator
       compileForHistoricalCreator(finalData);
       onOpenChange(false);
+    } else if (formData.identityType === 'multi-species') {
+      // Handle non-humanoid characters with the new system
+      compileForNonHumanoidCreator(finalData);
+      onOpenChange(false);
     } else {
-      // For multi-species, use the original creative character flow
+      // Fallback for any other case
       onComplete(finalData);
       onOpenChange(false);
     }
