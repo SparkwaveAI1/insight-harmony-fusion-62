@@ -1,5 +1,5 @@
 
-import { Users, Beaker, Search } from "lucide-react";
+import { Users, Beaker, Search, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -57,6 +57,17 @@ const Hero = () => {
               >
                 Create a Simulated Persona
                 <Beaker className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
+              </Button>
+
+              <Button 
+                size="lg" 
+                className="group py-6 px-8 text-lg bg-purple-600 hover:bg-purple-700 transition-all shadow-lg w-full sm:w-auto"
+                as={Link}
+                to="/characters-home"
+                variant="primary"
+              >
+                Explore Characters
+                <Brain className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
 
               <Button 
