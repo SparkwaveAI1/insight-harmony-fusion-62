@@ -109,8 +109,7 @@ const GenerateCharacterImageWithStyleButton = ({
       );
       
       toast.success('Image saved to gallery!');
-      setIsPreviewOpen(false);
-      resetForm();
+      // Don't close preview dialog anymore
     } catch (error) {
       console.error('Error saving to gallery:', error);
       toast.error('Failed to save image to gallery');
@@ -127,8 +126,7 @@ const GenerateCharacterImageWithStyleButton = ({
       
       toast.success('Image set as profile!');
       onImageGenerated?.(generatedImageUrl);
-      setIsPreviewOpen(false);
-      resetForm();
+      // Don't close preview dialog anymore, let user choose when to close
     } catch (error) {
       console.error('Error setting as profile:', error);
       toast.error('Failed to set as profile image');
@@ -159,8 +157,7 @@ const GenerateCharacterImageWithStyleButton = ({
       
       toast.success('Image saved to gallery and set as profile!');
       onImageGenerated?.(generatedImageUrl);
-      setIsPreviewOpen(false);
-      resetForm();
+      // Don't close preview dialog anymore, let user choose when to close
     } catch (error) {
       console.error('Error saving and setting as profile:', error);
       toast.error('Failed to save and set as profile');
@@ -174,6 +171,11 @@ const GenerateCharacterImageWithStyleButton = ({
     setReferenceImage(null);
     setGeneratedImageUrl('');
     setGeneratedPrompt('');
+  };
+
+  const handlePreviewClose = () => {
+    setIsPreviewOpen(false);
+    resetForm();
   };
 
   return (
@@ -264,7 +266,7 @@ const GenerateCharacterImageWithStyleButton = ({
 
       <ImagePreviewDialog
         isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
+        onClose={handlePreviewClose}
         imageUrl={generatedImageUrl}
         character={character}
         prompt={generatedPrompt}

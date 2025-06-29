@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Save, Star, X } from 'lucide-react';
+import { Save, Star, X, Check } from 'lucide-react';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 
@@ -33,6 +33,34 @@ const ImagePreviewDialog = ({
   isSaving
 }: ImagePreviewDialogProps) => {
   const isNonHumanoid = 'species_type' in character;
+  const [savedToGallery, setSavedToGallery] = React.useState(false);
+  const [setAsProfile, setSetAsProfile] = React.useState(false);
+
+  // Reset states when dialog opens/closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setSavedToGallery(false);
+      setSetAsProfile(false);
+    }
+  }, [isOpen]);
+
+  const handleSaveToGallery = async () => {
+    await onSaveToGallery();
+    setSavedToGallery(true);
+  };
+
+  const handleSetAsProfile = async () => {
+    await onSetAsProfile();
+    setSetAsProfile(true);
+    // Don't close dialog anymore, let user decide when to close
+  };
+
+  const handleSaveAndSetAsProfile = async () => {
+    await onSaveAndSetAsProfile();
+    setSavedToGallery(true);
+    setSetAsProfile(true);
+    // Don't close dialog anymore, let user decide when to close
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -59,35 +87,76 @@ const ImagePreviewDialog = ({
             <p className="text-sm">{prompt}</p>
           </div>
           
+          {/* Action Status */}
+          {(savedToGallery || setAsProfile) && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-green-700">
+                <Check className="h-4 w-4" />
+                <span className="text-sm font-medium">Completed:</span>
+              </div>
+              <ul className="text-sm text-green-600 mt-1 ml-6">
+                {savedToGallery && <li>• Saved to gallery</li>}
+                {setAsProfile && <li>• Set as profile image</li>}
+              </ul>
+            </div>
+          )}
+          
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-2">
             <Button
-              onClick={onSaveToGallery}
-              disabled={isSaving}
+              onClick={handleSaveToGallery}
+              disabled={isSaving || savedToGallery}
               variant="outline"
               className="flex-1"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Save to Gallery
+              {savedToGallery ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Saved to Gallery
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save to Gallery
+                </>
+              )}
             </Button>
             
             <Button
-              onClick={onSetAsProfile}
-              disabled={isSaving}
+              onClick={handleSetAsProfile}
+              disabled={isSaving || setAsProfile}
               variant="outline"
               className="flex-1"
             >
-              <Star className="h-4 w-4 mr-2" />
-              Set as Profile
+              {setAsProfile ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Set as Profile
+                </>
+              ) : (
+                <>
+                  <Star className="h-4 w-4 mr-2" />
+                  Set as Profile
+                </>
+              )}
             </Button>
             
             <Button
-              onClick={onSaveAndSetAsProfile}
-              disabled={isSaving}
+              onClick={handleSaveAndSetAsProfile}
+              disabled={isSaving || (savedToGallery && setAsProfile)}
               className="flex-1"
             >
-              <Save className="h-4 w-4 mr-2" />
-              Save & Set as Profile
+              {(savedToGallery && setAsProfile) ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Completed
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save & Set as Profile
+                </>
+              )}
             </Button>
           </div>
           
@@ -98,7 +167,7 @@ const ImagePreviewDialog = ({
               variant="ghost"
             >
               <X className="h-4 w-4 mr-2" />
-              Cancel
+              Close
             </Button>
           </div>
         </div>
