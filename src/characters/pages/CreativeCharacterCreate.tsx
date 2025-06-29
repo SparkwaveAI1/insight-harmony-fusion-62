@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowLeft, Plus, Loader2 } from 'lucide-react';
@@ -43,12 +42,8 @@ const CreativeCharacterCreate = () => {
       toast.dismiss('character-creation');
       toast.success(`Creative character "${createdCharacter.name}" created successfully!`);
       
-      // Navigate to the appropriate library based on character type
-      if (data.entityType === 'non-humanoid') {
-        navigate('/characters/non-humanoid');
-      } else {
-        navigate('/characters');
-      }
+      // ALL creative characters (both humanoid and non-humanoid) go to the creative character library
+      navigate('/characters/creative');
     } catch (error) {
       console.error('Error creating creative character:', error);
       // Dismiss loading toast and show error
