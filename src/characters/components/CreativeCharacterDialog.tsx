@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate } from 'react-router-dom';
@@ -242,10 +241,10 @@ This character was created through the Creative Character Genesis process.`;
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What is your character's name?</h3>
-              <p className="text-muted-foreground">Give your creative character a memorable name.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">What is your character's name?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Give your creative character a memorable name.</p>
             </div>
             
             <div className="space-y-4">
@@ -253,7 +252,7 @@ This character was created through the Creative Character Genesis process.`;
                 placeholder="e.g., Zephyr, Axiom, Vex, Echo..."
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="text-center text-lg"
+                className="text-center text-base sm:text-lg"
               />
             </div>
           </div>
@@ -261,30 +260,30 @@ This character was created through the Creative Character Genesis process.`;
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What kind of entity are you creating?</h3>
-              <p className="text-muted-foreground">This sets the trait architecture but keeps full expressive flexibility.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">What kind of entity are you creating?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">This sets the trait architecture but keeps full expressive flexibility.</p>
             </div>
             
             <RadioGroup 
               value={formData.entityType} 
               onValueChange={(value) => setFormData({ ...formData, entityType: value })}
-              className="space-y-4"
+              className="space-y-3 sm:space-y-4"
             >
-              <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 sm:p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
                 <RadioGroupItem value="human" id="human" />
                 <Label htmlFor="human" className="flex-1 cursor-pointer">
-                  <div className="font-medium">🔘 Human / Humanoid</div>
-                  <div className="text-sm text-muted-foreground">Traditional human psychology and traits</div>
+                  <div className="font-medium text-sm sm:text-base">🔘 Human / Humanoid</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Traditional human psychology and traits</div>
                 </Label>
               </div>
               
-              <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
+              <div className="flex items-center space-x-3 p-3 sm:p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
                 <RadioGroupItem value="non-humanoid" id="non-humanoid" />
                 <Label htmlFor="non-humanoid" className="flex-1 cursor-pointer">
-                  <div className="font-medium">🔘 Non-Humanoid / Multi-Species</div>
-                  <div className="text-sm text-muted-foreground">Alien consciousness, AI, or other non-human entity</div>
+                  <div className="font-medium text-sm sm:text-base">🔘 Non-Humanoid / Multi-Species</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Alien consciousness, AI, or other non-human entity</div>
                 </Label>
               </div>
             </RadioGroup>
@@ -293,28 +292,28 @@ This character was created through the Creative Character Genesis process.`;
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What kind of world does this character come from?</h3>
-              <p className="text-muted-foreground">This determines world logic, not behavior. Influences naming, scenario compatibility, and visual design.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">What kind of world does this character come from?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">This determines world logic, not behavior. Influences naming, scenario compatibility, and visual design.</p>
             </div>
             
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:gap-3">
               {narrativeDomains.map((domain) => (
                 <div
                   key={domain.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                  className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-all ${
                     formData.narrativeDomain === domain.id
                       ? 'border-primary bg-primary/10'
                       : 'hover:bg-accent/50'
                   }`}
                   onClick={() => setFormData({ ...formData, narrativeDomain: domain.id })}
                 >
-                  <div className="flex items-start space-x-3">
-                    <span className="text-2xl">{domain.icon}</span>
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <span className="text-xl sm:text-2xl">{domain.icon}</span>
                     <div>
-                      <div className="font-medium">{domain.label}</div>
-                      <div className="text-sm text-muted-foreground">{domain.description}</div>
+                      <div className="font-medium text-sm sm:text-base">{domain.label}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">{domain.description}</div>
                     </div>
                   </div>
                 </div>
@@ -325,10 +324,10 @@ This character was created through the Creative Character Genesis process.`;
 
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">Do they play a specific role in their world?</h3>
-              <p className="text-muted-foreground">Optional - used as a soft seed for trait shaping, never rigid.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">Do they play a specific role in their world?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Optional - used as a soft seed for trait shaping, never rigid.</p>
             </div>
             
             <div className="space-y-4">
@@ -346,7 +345,7 @@ This character was created through the Creative Character Genesis process.`;
                 </SelectContent>
               </Select>
               
-              <div className="text-sm text-muted-foreground text-center">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center">
                 This is optional and serves as inspiration, not limitation.
               </div>
             </div>
@@ -355,10 +354,10 @@ This character was created through the Creative Character Genesis process.`;
 
       case 5:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">Describe what you have in mind for this character</h3>
-              <p className="text-muted-foreground">Freeform description - we'll extract aesthetic cues and unique attributes.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">Describe what you have in mind for this character</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Freeform description - we'll extract aesthetic cues and unique attributes.</p>
             </div>
             
             <div className="space-y-4">
@@ -366,9 +365,9 @@ This character was created through the Creative Character Genesis process.`;
                 placeholder="What drives them? What makes them unique? How do they think or perceive reality? What is their nature or essence?"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="min-h-[120px]"
+                className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
               />
-              <div className="text-sm text-muted-foreground text-right">
+              <div className="text-xs sm:text-sm text-muted-foreground text-right">
                 {formData.description.length}/500 characters (minimum 50)
               </div>
             </div>
@@ -377,15 +376,15 @@ This character was created through the Creative Character Genesis process.`;
 
       case 6:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">Where—and how—does this being exist?</h3>
-              <p className="text-muted-foreground">Describe their environment and existence context.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">Where—and how—does this being exist?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Describe their environment and existence context.</p>
             </div>
             
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Environment / Existence Context</Label>
+                <Label className="text-xs sm:text-sm font-medium mb-2 block">Environment / Existence Context</Label>
                 <Textarea
                   placeholder={formData.narrativeDomain === 'sci-fi' 
                     ? 'e.g., Quantum processing networks, deep space stations, digital realms...'
@@ -395,27 +394,29 @@ This character was created through the Creative Character Genesis process.`;
                   }
                   value={formData.environment}
                   onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
-                  className="min-h-[80px]"
+                  className="min-h-[60px] sm:min-h-[80px] text-sm sm:text-base"
                 />
               </div>
               
               {formData.entityType === 'non-humanoid' && (
                 <>
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Physical Form (Optional)</Label>
+                    <Label className="text-xs sm:text-sm font-medium mb-2 block">Physical Form (Optional)</Label>
                     <Input
                       placeholder="e.g., Energy patterns, crystalline structures, living code..."
                       value={formData.physicalForm}
                       onChange={(e) => setFormData({ ...formData, physicalForm: e.target.value })}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Communication Method (Optional)</Label>
+                    <Label className="text-xs sm:text-sm font-medium mb-2 block">Communication Method (Optional)</Label>
                     <Input
                       placeholder="e.g., Quantum resonance, color patterns, direct thought transfer..."
                       value={formData.communication}
                       onChange={(e) => setFormData({ ...formData, communication: e.target.value })}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                 </>
@@ -426,16 +427,16 @@ This character was created through the Creative Character Genesis process.`;
 
       case 7:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">What drives them, deep down?</h3>
-              <p className="text-muted-foreground">Choose 1-3 core drives and surface triggers that shape their behavior.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">What drives them, deep down?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">Choose 1-3 core drives and surface triggers that shape their behavior.</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div>
-                <Label className="text-sm font-medium mb-3 block">Core Drives (Choose 1-3)</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                <Label className="text-xs sm:text-sm font-medium mb-3 block">Core Drives (Choose 1-3)</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[150px] sm:max-h-[200px] overflow-y-auto">
                   {coreDriveOptions.map((drive) => (
                     <div key={drive} className="flex items-center space-x-2">
                       <Checkbox
@@ -444,7 +445,7 @@ This character was created through the Creative Character Genesis process.`;
                         onCheckedChange={() => handleCoreDriveToggle(drive)}
                         disabled={!formData.coreDrives.includes(drive) && formData.coreDrives.length >= 3}
                       />
-                      <Label htmlFor={drive} className="text-sm cursor-pointer">
+                      <Label htmlFor={drive} className="text-xs sm:text-sm cursor-pointer">
                         {drive}
                       </Label>
                     </div>
@@ -453,8 +454,8 @@ This character was created through the Creative Character Genesis process.`;
               </div>
               
               <div>
-                <Label className="text-sm font-medium mb-3 block">Surface Triggers (Choose 1-3)</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                <Label className="text-xs sm:text-sm font-medium mb-3 block">Surface Triggers (Choose 1-3)</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[150px] sm:max-h-[200px] overflow-y-auto">
                   {surfaceTriggerOptions.map((trigger) => (
                     <div key={trigger} className="flex items-center space-x-2">
                       <Checkbox
@@ -463,7 +464,7 @@ This character was created through the Creative Character Genesis process.`;
                         onCheckedChange={() => handleSurfaceTriggerToggle(trigger)}
                         disabled={!formData.surfaceTriggers.includes(trigger) && formData.surfaceTriggers.length >= 3}
                       />
-                      <Label htmlFor={trigger} className="text-sm cursor-pointer">
+                      <Label htmlFor={trigger} className="text-xs sm:text-sm cursor-pointer">
                         {trigger}
                       </Label>
                     </div>
@@ -476,31 +477,31 @@ This character was created through the Creative Character Genesis process.`;
 
       case 8:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <h3 className="text-xl font-semibold">How do they respond to change, conflict, or contradiction?</h3>
-              <p className="text-muted-foreground">This enables memory modeling and contradiction resolution behavior.</p>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-semibold">How do they respond to change, conflict, or contradiction?</h3>
+              <p className="text-sm sm:text-base text-muted-foreground">This enables memory modeling and contradiction resolution behavior.</p>
             </div>
             
             <RadioGroup 
               value={formData.changeResponseStyle} 
               onValueChange={(value) => setFormData({ ...formData, changeResponseStyle: value })}
-              className="space-y-3"
+              className="space-y-2 sm:space-y-3"
             >
               {changeResponseStyles.map((style) => (
-                <div key={style.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer">
+                <div key={style.id} className="flex items-center space-x-3 p-2 sm:p-3 border rounded-lg hover:bg-accent/50 cursor-pointer">
                   <RadioGroupItem value={style.id} id={style.id} />
                   <Label htmlFor={style.id} className="flex-1 cursor-pointer">
-                    <div className="font-medium">{style.label}</div>
-                    <div className="text-sm text-muted-foreground">{style.description}</div>
+                    <div className="font-medium text-sm sm:text-base">{style.label}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">{style.description}</div>
                   </Label>
                 </div>
               ))}
             </RadioGroup>
             
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">Character Summary</h4>
-              <div className="space-y-1 text-sm text-blue-800">
+            <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2 text-sm sm:text-base">Character Summary</h4>
+              <div className="space-y-1 text-xs sm:text-sm text-blue-800">
                 <p><strong>Name:</strong> {formData.name}</p>
                 <p><strong>Type:</strong> {formData.entityType === 'human' ? 'Human/Humanoid' : 'Non-Humanoid Entity'}</p>
                 <p><strong>World:</strong> {narrativeDomains.find(d => d.id === formData.narrativeDomain)?.label}</p>
@@ -520,54 +521,59 @@ This character was created through the Creative Character Genesis process.`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+      <DialogContent className="w-[95vw] max-w-2xl h-[90vh] max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             Character Genesis Creation
           </DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
+            Create a unique character through our guided 8-step process
+          </DialogDescription>
         </DialogHeader>
         
         {/* Progress indicator */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex space-x-2">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-shrink-0">
+          <div className="flex space-x-1 sm:space-x-2">
             {Array.from({ length: totalSteps }, (_, i) => (
               <div
                 key={i}
-                className={`w-3 h-3 rounded-full ${
+                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                   i + 1 <= currentStep ? 'bg-primary' : 'bg-gray-200'
                 }`}
               />
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
             <Button
               variant="outline"
               size="sm"
               onClick={handleRandomize}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-1 h-auto"
             >
               <Shuffle className="h-3 w-3" />
-              Randomize
+              <span className="hidden sm:inline">Randomize</span>
             </Button>
           </div>
         </div>
 
         {/* Step content */}
-        <div className="min-h-[400px]">
-          {renderStep()}
+        <div className="flex-1 overflow-y-auto">
+          <div className="min-h-[300px] sm:min-h-[400px]">
+            {renderStep()}
+          </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between pt-6 border-t">
+        <div className="flex justify-between pt-4 sm:pt-6 border-t flex-shrink-0">
           <Button
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 1}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             Back
           </Button>
           
@@ -575,19 +581,20 @@ This character was created through the Creative Character Genesis process.`;
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2"
             >
               Next
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           ) : (
             <Button
               onClick={handleComplete}
               disabled={!canProceed()}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-3 py-2"
             >
-              <Sparkles className="h-4 w-4" />
-              {formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}
+              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">{formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}</span>
+              <span className="sm:hidden">Create</span>
             </Button>
           )}
         </div>
