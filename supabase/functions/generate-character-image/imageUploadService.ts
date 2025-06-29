@@ -61,15 +61,28 @@ export async function updateCharacterWithImageUrl(
   
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
+  // First try to update regular characters table
   const { error: updateError } = await supabase
     .from('characters')
     .update({ profile_image_url: imageUrl })
     .eq('character_id', characterId);
     
   if (updateError) {
-    console.error('Error updating character with image URL:', updateError);
-    throw new Error(`Failed to update character: ${updateError.message}`);
+    console.log('Character not found in regular characters table, trying non-humanoid characters table');
+    
+    // Try to update non-humanoid characters table
+    const { error: nonHumanoidUpdateError } = await supabase
+      .from('non_humanoid_characters')
+      .update({ profile_image_url: imageUrl })
+      .eq('character_id', characterId);
+      
+    if (nonHumanoidUpdateError) {
+      console.error('Error updating character with image URL:', nonHumanoidUpdateError);
+      throw new Error(`Failed to update character: ${nonHumanoidUpdateError.message}`);
+    }
+    
+    console.log('Successfully updated non-humanoid character record with image URL');
+  } else {
+    console.log('Successfully updated regular character record with image URL');
   }
-  
-  console.log('Successfully updated character record with image URL');
 }

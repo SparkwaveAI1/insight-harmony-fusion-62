@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -7,6 +8,7 @@ import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
+import GenerateNonHumanoidCharacterImageButton from '../components/GenerateNonHumanoidCharacterImageButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
 import DeleteCharacterButton from '../components/DeleteCharacterButton';
 import { downloadCharacterAsJSON } from '../utils/downloadUtils';
@@ -97,6 +99,9 @@ const CharacterDetail = () => {
     );
   }
 
+  // Check if it's a non-humanoid character
+  const isNonHumanoidCharacter = 'species_type' in activeCharacter;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -106,11 +111,63 @@ const CharacterDetail = () => {
             onDownloadJSON={handleDownloadJSON}
           />
 
-          <CharacterProfileSection
-            character={activeCharacter}
-            onImageGenerated={handleImageGenerated}
-            onVisibilityChange={handleVisibilityChange}
-          />
+          {/* Character Profile Section */}
+          <div className="text-center mb-8">
+            <Card className="p-8">
+              <div className="flex flex-col items-center">
+                {/* Character Image - Large and rectangular */}
+                <div className="mb-6">
+                  {activeCharacter.profile_image_url ? (
+                    <div className="w-full max-w-md">
+                      <img 
+                        src={activeCharacter.profile_image_url} 
+                        alt={`${activeCharacter.name} portrait`}
+                        className="w-full h-64 object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-md h-64 flex items-center justify-center bg-muted rounded-lg border-4 border-primary/20">
+                      <CharacterAvatar 
+                        character={activeCharacter} 
+                        size="xl" 
+                        className="w-24 h-24"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Character Info */}
+                <div className="mb-6">
+                  <h1 className="text-3xl font-bold mb-2">{activeCharacter.name}</h1>
+                  <p className="text-muted-foreground mb-4">
+                    {isNonHumanoidCharacter ? 'Non-Humanoid' : 
+                     activeCharacter.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
+                  </p>
+                  <CharacterVisibilityToggle
+                    characterId={activeCharacter.character_id}
+                    isPublic={activeCharacter.is_public || false}
+                    isOwner={true}
+                    onVisibilityChange={handleVisibilityChange}
+                  />
+                </div>
+
+                {/* Generate Image Button - Use correct component based on character type */}
+                {isNonHumanoidCharacter ? (
+                  <GenerateNonHumanoidCharacterImageButton
+                    character={activeCharacter}
+                    onImageGenerated={handleImageGenerated}
+                    className="w-full max-w-sm"
+                  />
+                ) : (
+                  <GenerateCharacterImageButton
+                    character={activeCharacter}
+                    onImageGenerated={handleImageGenerated}
+                    className="w-full max-w-sm"
+                  />
+                )}
+              </div>
+            </Card>
+          </div>
 
           <CharacterInfoSections character={activeCharacter} />
 
