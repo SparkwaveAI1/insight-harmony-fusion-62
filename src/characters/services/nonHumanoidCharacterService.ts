@@ -107,7 +107,7 @@ export const getNonHumanoidCharacterById = async (id: string): Promise<NonHumano
     }
 
     console.log('✅ Non-humanoid character fetched by ID:', data.character_id);
-    return await mapDbRowToCharacterWithImageFallback(data);
+    return mapDbRowToCharacter(data);
   } catch (error) {
     console.error('Error in getNonHumanoidCharacterById:', error);
     throw error instanceof Error ? error : new Error('Unknown error fetching non-humanoid character');
@@ -136,7 +136,7 @@ export const getNonHumanoidCharacterByCharacterId = async (characterId: string):
     }
 
     console.log('✅ Non-humanoid character fetched by character_id:', data.character_id);
-    return await mapDbRowToCharacterWithImageFallback(data);
+    return mapDbRowToCharacter(data);
   } catch (error) {
     console.error('Error in getNonHumanoidCharacterByCharacterId:', error);
     throw error instanceof Error ? error : new Error('Unknown error fetching non-humanoid character');
@@ -169,12 +169,7 @@ export const getAllNonHumanoidCharacters = async (): Promise<NonHumanoidCharacte
 
     console.log(`✅ Fetched ${data?.length || 0} non-humanoid characters`);
     
-    // Map all characters with image fallback
-    const mappedCharacters = await Promise.all(
-      (data || []).map(dbRow => mapDbRowToCharacterWithImageFallback(dbRow))
-    );
-    
-    return mappedCharacters;
+    return (data || []).map(dbRow => mapDbRowToCharacter(dbRow));
   } catch (error) {
     console.error('Error in getAllNonHumanoidCharacters:', error);
     throw error instanceof Error ? error : new Error('Unknown error fetching non-humanoid characters');
@@ -245,83 +240,6 @@ export const deleteNonHumanoidCharacter = async (characterId: string): Promise<v
     console.error('Error in deleteNonHumanoidCharacter:', error);
     throw error instanceof Error ? error : new Error('Unknown error deleting non-humanoid character');
   }
-};
-
-// Helper function to get image URL from regular characters table
-const getImageUrlFromRegularCharacter = async (characterId: string): Promise<string | null> => {
-  try {
-    console.log('Getting image URL from regular characters table for:', characterId);
-    
-    // First try by character_id
-    let { data, error } = await supabase
-      .from('characters')
-      .select('profile_image_url')
-      .eq('character_id', characterId)
-      .maybeSingle();
-      
-    if (error) {
-      console.log('Error checking regular characters table by character_id:', error);
-    }
-    
-    // If not found by character_id, try by id (UUID)
-    if (!data) {
-      console.log('Not found by character_id, trying by id...');
-      const result = await supabase
-        .from('characters')
-        .select('profile_image_url')
-        .eq('id', characterId)
-        .maybeSingle();
-        
-      data = result.data;
-      error = result.error;
-      
-      if (error) {
-        console.log('Error checking regular characters table by id:', error);
-      }
-    }
-    
-    if (data?.profile_image_url) {
-      console.log('Found image URL in regular characters table:', data.profile_image_url);
-      return data.profile_image_url;
-    }
-    
-    console.log('No image URL found in regular characters table');
-    return null;
-  } catch (error) {
-    console.error('Error getting image URL from regular character:', error);
-    return null;
-  }
-};
-
-// Enhanced mapper function that gets image URL from regular characters table
-const mapDbRowToCharacterWithImageFallback = async (dbRow: any): Promise<NonHumanoidCharacter> => {
-  // Always check regular characters table for the image URL since that's where images are stored
-  const profileImageUrl = await getImageUrlFromRegularCharacter(dbRow.character_id);
-
-  return {
-    id: dbRow.id,
-    character_id: dbRow.character_id,
-    name: dbRow.name,
-    character_type: 'multi_species' as const,
-    creation_date: dbRow.creation_date,
-    created_at: dbRow.created_at || dbRow.creation_date,
-    metadata: dbRow.metadata || {},
-    behavioral_modulation: dbRow.behavioral_modulation || {},
-    interview_sections: dbRow.interview_sections || [],
-    linguistic_profile: dbRow.linguistic_profile || {},
-    preinterview_tags: dbRow.preinterview_tags || [],
-    simulation_directives: dbRow.simulation_directives || {},
-    trait_profile: dbRow.trait_profile as NonHumanoidTraitProfile,
-    emotional_triggers: dbRow.emotional_triggers,
-    prompt: dbRow.prompt,
-    user_id: dbRow.user_id,
-    is_public: dbRow.is_public,
-    profile_image_url: profileImageUrl, // Always get from regular characters table
-    enhanced_metadata_version: dbRow.enhanced_metadata_version,
-    origin_universe: dbRow.origin_universe,
-    species_type: dbRow.species_type,
-    form_factor: dbRow.form_factor
-  };
 };
 
 // Helper function to map database row to character interface with proper type handling

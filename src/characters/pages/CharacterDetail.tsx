@@ -8,7 +8,6 @@ import Section from '@/components/ui-custom/Section';
 import { useCharacter } from '../hooks/useCharacter';
 import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageButton from '../components/GenerateCharacterImageButton';
-import GenerateNonHumanoidCharacterImageButton from '../components/GenerateNonHumanoidCharacterImageButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
 import DeleteCharacterButton from '../components/DeleteCharacterButton';
 import { downloadCharacterAsJSON } from '../utils/downloadUtils';
@@ -160,14 +159,8 @@ const CharacterDetail = () => {
                   />
                 </div>
 
-                {/* Generate Image Button - Use correct component based on character type */}
-                {isNonHumanoidCharacter ? (
-                  <GenerateNonHumanoidCharacterImageButton
-                    character={activeCharacter as any}
-                    onImageGenerated={handleImageGenerated}
-                    className="w-full max-w-sm"
-                  />
-                ) : (
+                {/* Generate Image Button - Only show for regular characters, not non-humanoid */}
+                {!isNonHumanoidCharacter && (
                   <GenerateCharacterImageButton
                     character={activeCharacter as any}
                     onImageGenerated={handleImageGenerated}
