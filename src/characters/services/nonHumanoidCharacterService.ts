@@ -246,10 +246,10 @@ export const deleteNonHumanoidCharacter = async (characterId: string): Promise<v
   }
 };
 
-// Helper function to check for image URL in regular characters table as fallback
+// Helper function to get image URL from regular characters table
 const getImageUrlFromRegularCharacter = async (characterId: string): Promise<string | null> => {
   try {
-    console.log('Checking regular characters table for image URL...');
+    console.log('Getting image URL from regular characters table for:', characterId);
     
     const { data, error } = await supabase
       .from('characters')
@@ -267,6 +267,7 @@ const getImageUrlFromRegularCharacter = async (characterId: string): Promise<str
       return data.profile_image_url;
     }
     
+    console.log('No image URL found in regular characters table');
     return null;
   } catch (error) {
     console.error('Error getting image URL from regular character:', error);
@@ -274,15 +275,10 @@ const getImageUrlFromRegularCharacter = async (characterId: string): Promise<str
   }
 };
 
-// Enhanced mapper function that checks regular characters table for image URL
+// Enhanced mapper function that gets image URL from regular characters table
 const mapDbRowToCharacterWithImageFallback = async (dbRow: any): Promise<NonHumanoidCharacter> => {
-  let profileImageUrl = dbRow.profile_image_url;
-  
-  // If no image URL in non-humanoid table, check regular characters table
-  if (!profileImageUrl) {
-    console.log('No image URL in non-humanoid character, checking regular characters table...');
-    profileImageUrl = await getImageUrlFromRegularCharacter(dbRow.character_id);
-  }
+  // Always check regular characters table for the image URL since that's where images are stored
+  const profileImageUrl = await getImageUrlFromRegularCharacter(dbRow.character_id);
 
   return {
     id: dbRow.id,
@@ -302,7 +298,7 @@ const mapDbRowToCharacterWithImageFallback = async (dbRow: any): Promise<NonHuma
     prompt: dbRow.prompt,
     user_id: dbRow.user_id,
     is_public: dbRow.is_public,
-    profile_image_url: profileImageUrl, // Use the fallback image URL
+    profile_image_url: profileImageUrl, // Always get from regular characters table
     enhanced_metadata_version: dbRow.enhanced_metadata_version,
     origin_universe: dbRow.origin_universe,
     species_type: dbRow.species_type,
