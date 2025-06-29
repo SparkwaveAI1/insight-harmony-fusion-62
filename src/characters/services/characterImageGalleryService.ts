@@ -12,48 +12,57 @@ export interface CharacterImage {
   is_current: boolean;
 }
 
-// Helper function to upload image to storage bucket
-async function uploadImageToStorage(
-  imageDataUrl: string,
-  characterId: string
+// Helper function to copy image from one bucket to another
+async function copyImageToBucket(
+  sourceUrl: string,
+  characterId: string,
+  targetBucket: string
 ): Promise<{ storageUrl: string; filePath: string } | null> {
   try {
-    // Convert data URL to blob
-    const response = await fetch(imageDataUrl);
+    console.log('Copying image from source URL to bucket:', sourceUrl, targetBucket);
+    
+    // Fetch the image from the source URL
+    const response = await fetch(sourceUrl);
+    if (!response.ok) {
+      console.error('Failed to fetch source image:', response.status, response.statusText);
+      return null;
+    }
+    
     const blob = await response.blob();
     
     // Generate unique filename
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `${characterId}_${timestamp}.png`;
     
-    console.log('Uploading image to character-images bucket:', fileName);
+    console.log(`Uploading image to ${targetBucket} bucket:`, fileName);
     
-    // Upload to character-images bucket
+    // Upload to target bucket
     const { data, error } = await supabase.storage
-      .from('character-images')
+      .from(targetBucket)
       .upload(fileName, blob, {
         contentType: 'image/png',
-        upsert: false
+        upsert: false,
+        cacheControl: '3600'
       });
     
     if (error) {
-      console.error('Error uploading to storage:', error);
+      console.error(`Error uploading to ${targetBucket}:`, error);
       return null;
     }
     
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('character-images')
+      .from(targetBucket)
       .getPublicUrl(fileName);
     
-    console.log('Successfully uploaded image to storage:', urlData.publicUrl);
+    console.log(`Successfully uploaded image to ${targetBucket}:`, urlData.publicUrl);
     
     return {
       storageUrl: urlData.publicUrl,
       filePath: fileName
     };
   } catch (error) {
-    console.error('Error in uploadImageToStorage:', error);
+    console.error('Error in copyImageToBucket:', error);
     return null;
   }
 }
@@ -83,7 +92,7 @@ export async function getCharacterImages(characterId: string): Promise<Character
 
 export async function saveCharacterImage(
   characterId: string,
-  imageDataUrl: string,
+  imageUrl: string,
   originalFilePath: string,
   originalUrl?: string,
   generationPrompt?: string,
@@ -91,14 +100,14 @@ export async function saveCharacterImage(
   isCurrent: boolean = false
 ): Promise<CharacterImage | null> {
   try {
-    console.log('Saving character image:', { characterId, isCurrent });
+    console.log('Saving character image to gallery:', { characterId, imageUrl, isCurrent });
     
-    // Upload image to storage bucket
-    const uploadResult = await uploadImageToStorage(imageDataUrl, characterId);
+    // Copy image to character-images bucket
+    const uploadResult = await copyImageToBucket(imageUrl, characterId, 'character-images');
     
     if (!uploadResult) {
-      console.error('Failed to upload image to storage');
-      throw new Error('Failed to upload image to storage');
+      console.error('Failed to copy image to character-images bucket');
+      throw new Error('Failed to copy image to gallery bucket');
     }
     
     const { storageUrl, filePath } = uploadResult;
@@ -122,7 +131,7 @@ export async function saveCharacterImage(
         character_id: characterId,
         storage_url: storageUrl,
         file_path: filePath,
-        original_url: originalUrl || imageDataUrl,
+        original_url: originalUrl || imageUrl,
         generation_prompt: generationPrompt || '',
         physical_attributes: physicalAttributes || {},
         is_current: isCurrent
@@ -182,10 +191,22 @@ export async function updateCharacterWithImageUrl(characterId: string, imageUrl:
   try {
     console.log('Updating character profile image:', characterId, imageUrl);
     
+    // For profile images, we need to copy the gallery image to the profile bucket
+    let profileImageUrl = imageUrl;
+    
+    // If the image is from the character-images bucket, copy it to the profile bucket
+    if (imageUrl.includes('/character-images/')) {
+      const copyResult = await copyImageToBucket(imageUrl, characterId, 'profile-images');
+      if (copyResult) {
+        profileImageUrl = copyResult.storageUrl;
+        console.log('Copied gallery image to profile bucket:', profileImageUrl);
+      }
+    }
+    
     // First try humanoid characters table
     const { data: humanoidData, error: humanoidError } = await supabase
       .from('characters')
-      .update({ profile_image_url: imageUrl })
+      .update({ profile_image_url: profileImageUrl })
       .eq('character_id', characterId)
       .select();
     
@@ -197,7 +218,7 @@ export async function updateCharacterWithImageUrl(characterId: string, imageUrl:
     // Try non-humanoid characters table
     const { data: nonHumanoidData, error: nonHumanoidError } = await supabase
       .from('non_humanoid_characters')
-      .update({ profile_image_url: imageUrl })
+      .update({ profile_image_url: profileImageUrl })
       .eq('character_id', characterId)
       .select();
     
