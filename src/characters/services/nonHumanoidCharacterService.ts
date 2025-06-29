@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { NonHumanoidCharacter, NonHumanoidTraitProfile } from '../types/nonHumanoidTypes';
 
@@ -147,6 +146,16 @@ export const getAllNonHumanoidCharacters = async (): Promise<NonHumanoidCharacte
   console.log('=== FETCHING ALL NON-HUMANOID CHARACTERS ===');
 
   try {
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.log('No authenticated user, returning empty array');
+      return [];
+    }
+
+    console.log('Fetching characters for user:', user.id);
+
     const { data, error } = await supabase
       .from('non_humanoid_characters')
       .select('*')
