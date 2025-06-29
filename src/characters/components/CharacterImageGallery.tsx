@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Images, Trash2, Star, StarOff } from 'lucide-react';
+import { Images, Trash2, Star, StarOff, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
@@ -14,6 +14,7 @@ import {
   deleteCharacterImage,
   CharacterImage 
 } from '../services/characterImageGalleryService';
+import { updateCharacterWithImageUrl } from '../services/characterImageGalleryService';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 type AnyCharacter = Character | NonHumanoidCharacter;
@@ -68,6 +69,17 @@ const CharacterImageGallery = ({ character, onCurrentImageChange }: CharacterIma
     }
   };
 
+  const handleSetAsProfile = async (imageUrl: string) => {
+    try {
+      await updateCharacterWithImageUrl(character.character_id, imageUrl);
+      toast.success('Set as profile image');
+      onCurrentImageChange?.(imageUrl);
+    } catch (error) {
+      console.error('Error setting profile image:', error);
+      toast.error('Failed to set as profile image');
+    }
+  };
+
   const handleDeleteImage = async (imageId: string) => {
     try {
       const success = await deleteCharacterImage(imageId);
@@ -110,8 +122,8 @@ const CharacterImageGallery = ({ character, onCurrentImageChange }: CharacterIma
         ) : images.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Images className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No images generated yet</p>
-            <p className="text-sm">Generate some images to see them here!</p>
+            <p>No images saved yet</p>
+            <p className="text-sm">Generate and save images to see them here!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -130,17 +142,20 @@ const CharacterImageGallery = ({ character, onCurrentImageChange }: CharacterIma
                 
                 <div className="p-3">
                   <div className="flex items-center justify-between mb-2">
-                    {image.is_current && (
-                      <Badge variant="default" className="text-xs">
-                        Current
-                      </Badge>
-                    )}
-                    <div className="flex gap-1 ml-auto">
+                    <div className="flex gap-1">
+                      {image.is_current && (
+                        <Badge variant="default" className="text-xs">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
                       <Button
                         size="sm"
                         variant={image.is_current ? "default" : "outline"}
                         onClick={() => handleSetCurrent(image.id, image.storage_url)}
                         disabled={image.is_current}
+                        title="Set as current gallery image"
                       >
                         {image.is_current ? (
                           <Star className="h-3 w-3 fill-current" />
@@ -149,9 +164,18 @@ const CharacterImageGallery = ({ character, onCurrentImageChange }: CharacterIma
                         )}
                       </Button>
                       
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSetAsProfile(image.storage_url)}
+                        title="Set as profile image"
+                      >
+                        <User className="h-3 w-3" />
+                      </Button>
+                      
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" title="Delete image">
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </AlertDialogTrigger>

@@ -98,6 +98,47 @@ export async function setCurrentCharacterImage(characterId: string, imageId: str
   }
 }
 
+export async function updateCharacterWithImageUrl(characterId: string, imageUrl: string): Promise<boolean> {
+  try {
+    console.log('Updating character profile image:', characterId, imageUrl);
+    
+    // First try humanoid characters table
+    const { data: humanoidData, error: humanoidError } = await supabase
+      .from('characters')
+      .update({ profile_image_url: imageUrl })
+      .eq('character_id', characterId)
+      .select();
+    
+    if (!humanoidError && humanoidData && humanoidData.length > 0) {
+      console.log('Updated humanoid character profile image');
+      return true;
+    }
+    
+    // Try non-humanoid characters table
+    const { data: nonHumanoidData, error: nonHumanoidError } = await supabase
+      .from('non_humanoid_characters')
+      .update({ profile_image_url: imageUrl })
+      .eq('character_id', characterId)
+      .select();
+    
+    if (nonHumanoidError) {
+      console.error('Error updating character profile image:', nonHumanoidError);
+      throw nonHumanoidError;
+    }
+    
+    if (nonHumanoidData && nonHumanoidData.length > 0) {
+      console.log('Updated non-humanoid character profile image');
+      return true;
+    }
+    
+    console.log('Character not found in either table');
+    return false;
+  } catch (error) {
+    console.error('Error in updateCharacterWithImageUrl:', error);
+    return false;
+  }
+}
+
 export async function deleteCharacterImage(imageId: string): Promise<boolean> {
   try {
     console.log('Deleting character image:', imageId);

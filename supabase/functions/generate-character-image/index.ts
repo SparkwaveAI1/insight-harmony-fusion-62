@@ -29,7 +29,13 @@ serve(async (req) => {
       throw new Error("Supabase configuration is missing");
     }
 
-    const { characterData, style = 'photorealistic' } = await req.json();
+    const { 
+      characterData, 
+      style = 'photorealistic', 
+      customText = '', 
+      referenceImageUrl = null,
+      autoSave = true 
+    } = await req.json();
     
     if (!characterData || typeof characterData !== "object") {
       throw new Error("Invalid characterData provided");
@@ -39,6 +45,9 @@ serve(async (req) => {
     console.log("Character type:", characterData.character_type);
     console.log("Species type:", characterData.species_type);
     console.log("Style:", style);
+    console.log("Custom text:", customText);
+    console.log("Reference image:", referenceImageUrl);
+    console.log("Auto save:", autoSave);
 
     // Determine if this is a non-humanoid character
     const isNonHumanoid = characterData.character_type === 'multi_species' || 
@@ -69,13 +78,40 @@ serve(async (req) => {
       console.log("Processing humanoid character");
       imagePrompt = buildCharacterImagePrompt(characterData);
     }
+
+    // Add custom text to the prompt if provided
+    if (customText && customText.trim()) {
+      imagePrompt += `, ${customText.trim()}`;
+      console.log("Added custom text to prompt");
+    }
+
+    // Add reference image guidance if provided
+    if (referenceImageUrl) {
+      imagePrompt += ", using similar visual style and composition as reference";
+      console.log("Added reference image guidance to prompt");
+    }
     
-    console.log("Generated prompt:", imagePrompt);
+    console.log("Final generated prompt:", imagePrompt);
     
     // Generate image with OpenAI
     const base64Image = await generateImageWithOpenAI(imagePrompt, OPENAI_API_KEY, openaiParams);
     
-    // Upload image to Supabase storage
+    if (!autoSave) {
+      // Return the image data for preview without saving
+      const imageDataUrl = `data:image/png;base64,${base64Image}`;
+      return new Response(
+        JSON.stringify({
+          success: true,
+          image_url: imageDataUrl,
+          prompt: imagePrompt,
+          style: style,
+          character_type: isNonHumanoid ? 'non-humanoid' : 'humanoid'
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Upload image to Supabase storage (for auto-save)
     const publicUrl = await uploadImageToStorage(
       base64Image, 
       characterData.character_id, 
