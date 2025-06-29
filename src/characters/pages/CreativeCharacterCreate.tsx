@@ -43,8 +43,12 @@ const CreativeCharacterCreate = () => {
       toast.dismiss('character-creation');
       toast.success(`Creative character "${createdCharacter.name}" created successfully!`);
       
-      // Navigate to the non-humanoid character library instead of unified
-      navigate('/characters/non-humanoid');
+      // Navigate to the appropriate library based on character type
+      if (data.entityType === 'non-humanoid') {
+        navigate('/characters/non-humanoid');
+      } else {
+        navigate('/characters');
+      }
     } catch (error) {
       console.error('Error creating creative character:', error);
       // Dismiss loading toast and show error
@@ -75,11 +79,11 @@ const CreativeCharacterCreate = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/characters/non-humanoid')}
+                onClick={() => navigate('/characters')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Non-Humanoid Characters
+                Back to Characters
               </Button>
             </div>
 
@@ -93,7 +97,7 @@ const CreativeCharacterCreate = () => {
                   <div>
                     <h2 className="text-2xl font-bold mb-2">Sign In Required</h2>
                     <p className="text-muted-foreground mb-6">
-                      You need to be signed in to create non-humanoid characters.
+                      You need to be signed in to create creative characters.
                     </p>
                   </div>
 
@@ -121,19 +125,19 @@ const CreativeCharacterCreate = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/characters/non-humanoid')}
+              onClick={() => navigate('/characters')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Non-Humanoid Characters
+              Back to Characters
             </Button>
           </div>
 
           <div className="flex items-center gap-3 mb-8">
             <Sparkles className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold">Create Non-Humanoid Character</h1>
-              <p className="text-muted-foreground">Design an original non-humanoid character through our guided process</p>
+              <h1 className="text-3xl font-bold">Create Creative Character</h1>
+              <p className="text-muted-foreground">Design an original character through our guided process</p>
             </div>
           </div>
 
@@ -147,7 +151,7 @@ const CreativeCharacterCreate = () => {
                 <div>
                   <h2 className="text-2xl font-bold mb-2">Character Genesis</h2>
                   <p className="text-muted-foreground mb-6">
-                    Step through our guided creation process to build a unique non-humanoid character with rich depth and personality.
+                    Step through our guided creation process to build a unique character with rich depth and personality.
                   </p>
                 </div>
 
@@ -161,8 +165,8 @@ const CreativeCharacterCreate = () => {
                     <div className="text-purple-700">Complex personality system</div>
                   </div>
                   <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="font-semibold text-green-900 mb-1">Any Species</div>
-                    <div className="text-green-700">Alien, AI, energy beings</div>
+                    <div className="font-semibold text-green-900 mb-1">Any Type</div>
+                    <div className="text-green-700">Human or non-human</div>
                   </div>
                 </div>
 

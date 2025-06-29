@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
 import { CreativeCharacterDialogProps, CreativeCharacterData } from './CreativeCharacterDialog/types';
-import { canProceed, compileForHistoricalCreator } from './CreativeCharacterDialog/utils';
+import { canProceed } from './CreativeCharacterDialog/utils';
 import { handleRandomize } from './CreativeCharacterDialog/randomizers';
 import Step1NameInput from './CreativeCharacterDialog/steps/Step1NameInput';
 import Step2EntityType from './CreativeCharacterDialog/steps/Step2EntityType';
@@ -16,7 +15,6 @@ import Step6Environment from './CreativeCharacterDialog/steps/Step6Environment';
 import Step7Drives from './CreativeCharacterDialog/steps/Step7Drives';
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState<CreativeCharacterData>({
@@ -34,22 +32,6 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
   });
 
   const totalSteps = 7;
-
-  const compileForNonHumanoidCreator = async (data: CreativeCharacterData) => {
-    try {
-      setIsProcessing(true);
-      console.log('Creating non-humanoid character with data:', data);
-      
-      // Call the service directly to create the character
-      onComplete(data);
-      
-    } catch (error) {
-      console.error('Error in non-humanoid character creation:', error);
-      onComplete(data);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handleNext = () => {
     console.log('handleNext called - current step:', currentStep, 'can proceed:', canProceed(currentStep, formData));
@@ -74,20 +56,11 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
   };
 
   const handleComplete = () => {
-    if (formData.entityType === 'human') {
-      const compiledDescription = compileForHistoricalCreator(formData);
-      const searchParams = new URLSearchParams({
-        prefill: 'true',
-        name: formData.name,
-        description: compiledDescription,
-        location: formData.environment,
-        source: 'creative-genesis'
-      });
-      navigate(`/characters/create/historical?${searchParams.toString()}`);
-      onOpenChange(false);
-    } else {
-      compileForNonHumanoidCreator(formData);
-    }
+    setIsProcessing(true);
+    console.log('Creating character with data:', formData);
+    
+    // All characters now go through the same creative process
+    onComplete(formData);
   };
 
   const renderStep = () => {
@@ -206,7 +179,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
               ) : (
                 <>
                   <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">{formData.entityType === 'human' ? 'Create Historical Character' : 'Create Character'}</span>
+                  <span className="hidden sm:inline">Create Character</span>
                   <span className="sm:hidden">Create</span>
                 </>
               )}
