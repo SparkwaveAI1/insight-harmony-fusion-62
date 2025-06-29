@@ -119,7 +119,7 @@ const CharacterDetail = () => {
                       <img 
                         src={activeCharacter.profile_image_url} 
                         alt={`${activeCharacter.name} ${isNonHumanoidCharacter ? 'entity' : 'portrait'}`}
-                        className="w-full h-full object-cover rounded-lg border-4 border-primary/20 shadow-lg"
+                        className="w-full h-full object-contain rounded-lg border-4 border-primary/20 shadow-lg bg-muted"
                         onError={(e) => {
                           console.error('Error loading image:', activeCharacter.profile_image_url);
                           console.log('Image load error event:', e);
