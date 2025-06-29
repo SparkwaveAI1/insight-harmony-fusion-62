@@ -6,25 +6,18 @@ import { CreativeCharacterData } from '../types/characterTraitTypes';
 import { generateNonHumanoidTraits } from './nonHumanoidTraitGenerator';
 import { saveCharacter } from './characterService';
 
-export const createCreativeCharacter = async (data: CreativeCharacterData): Promise<Character> => {
+export const createCreativeCharacter = async (data: CreativeCharacterData, userId: string): Promise<Character> => {
   console.log('=== CREATING CREATIVE CHARACTER ===');
   console.log('Creative character data:', data);
+  console.log('User ID provided:', userId);
 
   try {
-    // Get the current user - this will throw if not authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError) {
-      console.error('Error getting user:', userError);
-      throw new Error('Authentication error. Please try logging in again.');
-    }
-
-    if (!user) {
-      console.error('No authenticated user found');
+    if (!userId) {
+      console.error('No user ID provided');
       throw new Error('You must be logged in to create characters. Please sign in and try again.');
     }
 
-    console.log('Creating character for user:', user.id);
+    console.log('Creating character for user:', userId);
 
     // Generate non-humanoid traits based on the creative data
     const traitProfile = await generateNonHumanoidTraits({
@@ -48,7 +41,7 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
       character_type: 'multi_species',
       creation_date: new Date().toISOString(),
       created_at: new Date().toISOString(),
-      user_id: user.id, // CRITICAL: Set the user_id for RLS compliance
+      user_id: userId, // CRITICAL: Set the user_id for RLS compliance
       metadata: {
         description: data.description,
         narrative_domain: data.narrativeDomain,

@@ -28,8 +28,10 @@ const CreativeCharacterCreate = () => {
     
     try {
       console.log('Creating creative character with data:', data);
+      console.log('User from useAuth:', user);
       
-      const createdCharacter = await createCreativeCharacter(data);
+      // Pass the user ID from the auth context to the service
+      const createdCharacter = await createCreativeCharacter(data, user.id);
       
       toast.success(`Creative character "${createdCharacter.name}" created successfully!`);
       
