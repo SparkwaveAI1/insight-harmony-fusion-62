@@ -71,13 +71,13 @@ const ReferenceImageSelector = ({
               <X className="h-3 w-3" />
             </Button>
           </div>
-          <AspectRatio ratio={1} className="w-20">
+          <div className="w-20 h-20 overflow-hidden rounded">
             <img
               src={selectedImage.storage_url}
               alt="Reference"
-              className="w-full h-full object-cover rounded"
+              className="w-full h-full object-cover"
             />
-          </AspectRatio>
+          </div>
         </div>
       )}
 
@@ -88,50 +88,52 @@ const ReferenceImageSelector = ({
             {selectedImage ? 'Change Reference' : 'Select Reference Image'}
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Select Reference Image</DialogTitle>
           </DialogHeader>
           
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : images.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Images className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No images in gallery yet</p>
-              <p className="text-sm">Generate some images first to use as reference!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {images.map((image) => (
-                <div
-                  key={image.id}
-                  className="border rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary"
-                  onClick={() => handleImageSelect(image)}
-                >
-                  <AspectRatio ratio={1}>
-                    <img
-                      src={image.storage_url}
-                      alt="Reference option"
-                      className="w-full h-full object-cover"
-                    />
-                  </AspectRatio>
-                  <div className="p-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(image.created_at).toLocaleDateString()}
-                      </span>
-                      <Button size="sm" variant="ghost">
-                        <Check className="h-3 w-3" />
-                      </Button>
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : images.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Images className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No images in gallery yet</p>
+                <p className="text-sm">Generate some images first to use as reference!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-1">
+                {images.map((image) => (
+                  <div
+                    key={image.id}
+                    className="border rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                    onClick={() => handleImageSelect(image)}
+                  >
+                    <AspectRatio ratio={1}>
+                      <img
+                        src={image.storage_url}
+                        alt="Reference option"
+                        className="w-full h-full object-cover"
+                      />
+                    </AspectRatio>
+                    <div className="p-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(image.created_at).toLocaleDateString()}
+                        </span>
+                        <Button size="sm" variant="ghost">
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
