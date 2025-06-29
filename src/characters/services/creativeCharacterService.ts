@@ -11,20 +11,19 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
   console.log('Creative character data:', data);
 
   try {
-    // First check if we have a session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // Get the current user - this will throw if not authenticated
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (sessionError) {
-      console.error('Error getting session:', sessionError);
-      throw new Error('Authentication session error. Please try logging in again.');
+    if (userError) {
+      console.error('Error getting user:', userError);
+      throw new Error('Authentication error. Please try logging in again.');
     }
 
-    if (!session || !session.user) {
-      console.error('No active session found');
+    if (!user) {
+      console.error('No authenticated user found');
       throw new Error('You must be logged in to create characters. Please sign in and try again.');
     }
 
-    const user = session.user;
     console.log('Creating character for user:', user.id);
 
     // Generate non-humanoid traits based on the creative data
