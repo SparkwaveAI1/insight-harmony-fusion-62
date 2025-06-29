@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
+import { ArrowLeft, Edit, MessageCircle, Download, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Character } from '../types/characterTraitTypes';
 
 interface CharacterDetailHeaderProps {
@@ -11,6 +12,8 @@ interface CharacterDetailHeaderProps {
 }
 
 const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHeaderProps) => {
+  const isNonHumanoid = character.character_type === 'multi_species';
+
   return (
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-4">
@@ -20,6 +23,15 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
             Back to Library
           </Link>
         </Button>
+        
+        {isNonHumanoid && (
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-purple-600" />
+            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              Creative Entity
+            </Badge>
+          </div>
+        )}
       </div>
       
       <div className="flex items-center gap-2">
@@ -30,7 +42,7 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
         <Button variant="outline" asChild>
           <Link to={`/characters/${character.character_id}/chat`}>
             <MessageCircle className="h-4 w-4 mr-2" />
-            Chat
+            {isNonHumanoid ? 'Communicate' : 'Chat'}
           </Link>
         </Button>
         <Button asChild>
