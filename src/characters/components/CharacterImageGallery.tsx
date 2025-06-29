@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Images, Trash2, Star, StarOff, User } from 'lucide-react';
+import { Images, Trash2, Star, StarOff, User, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
@@ -16,6 +16,7 @@ import {
 } from '../services/characterImageGalleryService';
 import { updateCharacterWithImageUrl } from '../services/characterImageGalleryService';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { downloadImage, generateImageFilename } from '../utils/imageDownloadUtils';
 
 type AnyCharacter = Character | NonHumanoidCharacter;
 
@@ -95,6 +96,17 @@ const CharacterImageGallery = ({ character, onCurrentImageChange }: CharacterIma
     }
   };
 
+  const handleDownloadImage = async (image: CharacterImage) => {
+    try {
+      const filename = generateImageFilename(character.name, image.id, image.created_at);
+      await downloadImage(image.storage_url, filename);
+      toast.success('Image downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast.error('Failed to download image');
+    }
+  };
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
@@ -171,6 +183,15 @@ const CharacterImageGallery = ({ character, onCurrentImageChange }: CharacterIma
                         title="Set as profile image"
                       >
                         <User className="h-3 w-3" />
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDownloadImage(image)}
+                        title="Download image"
+                      >
+                        <Download className="h-3 w-3" />
                       </Button>
                       
                       <AlertDialog>
