@@ -52,11 +52,14 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
         patience: 0.7
       },
       linguistic_profile: {
-        // Use the basic structure that LinguisticProfile expects
-        primary_language: data.communication || 'Universal',
-        dialect_patterns: [],
-        vocabulary_complexity: 'moderate',
-        sentence_structure: 'standard'
+        // For non-humanoid characters, use minimal human-centric linguistic profile
+        // The actual communication happens through the Universal Translator
+        speech_register: 'alien_translated',
+        cultural_speech_patterns: `Translated from ${data.communication}`,
+        sample_phrasing: [
+          `Communication patterns reflect ${data.entityType} nature`,
+          `Universal Translator active for ${data.communication} modality`
+        ]
       },
       interview_sections: [],
       preinterview_tags: [data.entityType, data.narrativeDomain, data.functionalRole],
