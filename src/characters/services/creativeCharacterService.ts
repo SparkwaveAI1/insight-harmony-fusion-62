@@ -1,5 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 import { Character } from '../types/characterTraitTypes';
 import { CreativeCharacterData } from '../types/characterTraitTypes';
 import { generateNonHumanoidTraits } from './nonHumanoidTraitGenerator';
@@ -10,6 +11,19 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
   console.log('Creative character data:', data);
 
   try {
+    // Get the current authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) {
+      console.error('Error getting authenticated user:', userError);
+      throw new Error('Authentication required to create characters');
+    }
+
+    if (!user) {
+      throw new Error('You must be logged in to create characters');
+    }
+
+    console.log('Creating character for user:', user.id);
+
     // Generate non-humanoid traits based on the creative data
     const traitProfile = await generateNonHumanoidTraits({
       name: data.name,
@@ -32,6 +46,7 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
       character_type: 'multi_species',
       creation_date: new Date().toISOString(),
       created_at: new Date().toISOString(),
+      user_id: user.id, // CRITICAL: Set the user_id for RLS compliance
       metadata: {
         description: data.description,
         narrative_domain: data.narrativeDomain,
