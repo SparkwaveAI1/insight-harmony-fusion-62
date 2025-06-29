@@ -2,21 +2,18 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 
 export interface ImageStyle {
   id: string;
   name: string;
   description: string;
-  recommended?: boolean;
 }
 
 export const IMAGE_STYLES: ImageStyle[] = [
   {
     id: 'photorealistic',
-    name: 'Photorealistic',
-    description: 'High-detail, realistic rendering',
-    recommended: true
+    name: 'Hyper',
+    description: 'High-detail, realistic rendering'
   },
   {
     id: 'cinematic',
@@ -70,11 +67,6 @@ const ImageStyleSelector = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{style.name}</span>
-                    {style.recommended && (
-                      <Badge variant="secondary" className="text-xs">
-                        Recommended
-                      </Badge>
-                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {style.description}
