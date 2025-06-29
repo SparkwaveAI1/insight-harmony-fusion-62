@@ -182,6 +182,11 @@ This character was created through the Creative Character Genesis process.`;
     setFormData({ ...formData, surfaceTriggers: newTriggers });
   };
 
+  const handleNarrativeDomainSelect = (domainId: string) => {
+    console.log('Narrative domain selected:', domainId);
+    setFormData({ ...formData, narrativeDomain: domainId });
+  };
+
   const handleRandomize = () => {
     switch (currentStep) {
       case 1:
@@ -336,27 +341,26 @@ This character was created through the Creative Character Genesis process.`;
               <p className="text-sm sm:text-base text-muted-foreground">This determines world logic, not behavior. Influences naming, scenario compatibility, and visual design.</p>
             </div>
             
-            <div className="grid grid-cols-1 gap-2 sm:gap-3">
+            <RadioGroup 
+              value={formData.narrativeDomain} 
+              onValueChange={handleNarrativeDomainSelect}
+              className="space-y-2 sm:space-y-3"
+            >
               {narrativeDomains.map((domain) => (
-                <div
-                  key={domain.id}
-                  className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-all ${
-                    formData.narrativeDomain === domain.id
-                      ? 'border-primary bg-primary/10'
-                      : 'hover:bg-accent/50'
-                  }`}
-                  onClick={() => setFormData({ ...formData, narrativeDomain: domain.id })}
-                >
-                  <div className="flex items-start space-x-2 sm:space-x-3">
-                    <span className="text-xl sm:text-2xl">{domain.icon}</span>
-                    <div>
-                      <div className="font-medium text-sm sm:text-base">{domain.label}</div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">{domain.description}</div>
+                <div key={domain.id} className="flex items-center space-x-3 p-3 sm:p-4 border rounded-lg hover:bg-accent/50 cursor-pointer">
+                  <RadioGroupItem value={domain.id} id={domain.id} />
+                  <Label htmlFor={domain.id} className="flex-1 cursor-pointer">
+                    <div className="flex items-start space-x-2 sm:space-x-3">
+                      <span className="text-xl sm:text-2xl">{domain.icon}</span>
+                      <div>
+                        <div className="font-medium text-sm sm:text-base">{domain.label}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">{domain.description}</div>
+                      </div>
                     </div>
-                  </div>
+                  </Label>
                 </div>
               ))}
-            </div>
+            </RadioGroup>
           </div>
         );
 
