@@ -59,8 +59,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     { value: 'Nomad', description: 'Wanderer who belongs to no fixed place or society' },
     { value: 'Guardian', description: 'Protector of people, places, or sacred things' },
     { value: 'Trickster', description: 'Uses wit, humor, and cunning to navigate the world' },
-    { value: 'Sage', description: 'Wise counselor who guides others with deep understanding' },
-    { value: 'Custom', description: 'Define your own unique archetype' }
+    { value: 'Sage', description: 'Wise counselor who guides others with deep understanding' }
   ];
 
   const multiSpeciesArchetypes = [
@@ -251,10 +250,33 @@ This character was created through the Creative Character Genesis process and re
         setFormData({ ...formData, identityType: Math.random() > 0.5 ? 'human' : 'multi-species' });
         break;
       case 3:
-        const archetypes = formData.identityType === 'human' ? humanArchetypes : multiSpeciesArchetypes;
-        const validArchetypes = archetypes.filter(a => a.value !== 'Custom');
-        setFormData({ ...formData, archetype: validArchetypes[Math.floor(Math.random() * validArchetypes.length)].value });
-        setCustomArchetype('');
+        if (formData.identityType === 'human') {
+          const validArchetypes = humanArchetypes;
+          setFormData({ ...formData, archetype: validArchetypes[Math.floor(Math.random() * validArchetypes.length)].value });
+          setCustomArchetype('');
+        } else {
+          // Random non-humanoid entity types
+          const randomNonHumanoidTypes = [
+            'Collective Consciousness Entity',
+            'Quantum Oracle',
+            'Memory Weaver',
+            'Dream-Eater',
+            'Void Walker',
+            'Energy Sculptor',
+            'Time Gardener',
+            'Dimensional Seer',
+            'Symbiotic Network',
+            'Pattern Weaver',
+            'Entropy Shepherd',
+            'Reality Anchor',
+            'Probability Manipulator',
+            'Consciousness Fragment',
+            'Living Algorithm'
+          ];
+          const randomType = randomNonHumanoidTypes[Math.floor(Math.random() * randomNonHumanoidTypes.length)];
+          setCustomArchetype(randomType);
+          setFormData({ ...formData, archetype: 'Custom' });
+        }
         break;
       case 4:
         setFormData({ 
@@ -278,7 +300,12 @@ This character was created through the Creative Character Genesis process and re
     switch (currentStep) {
       case 1: return formData.name.trim() !== '';
       case 2: return formData.identityType !== '';
-      case 3: return formData.archetype !== '' || customArchetype.trim() !== '';
+      case 3: 
+        if (formData.identityType === 'human') {
+          return formData.archetype !== '';
+        } else {
+          return customArchetype.trim() !== '';
+        }
       case 4: return formData.era !== '' && formData.location !== '';
       case 5: return formData.genres.length > 0;
       case 6: return formData.description.length >= 50;
@@ -369,56 +396,82 @@ This character was created through the Creative Character Genesis process and re
         );
 
       case 3:
-        const currentArchetypes = formData.identityType === 'human' ? humanArchetypes : multiSpeciesArchetypes;
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
               <h3 className="text-xl font-semibold">What broad kind of mind or role does this character represent?</h3>
-              <p className="text-muted-foreground">Choose an archetype that defines their core nature and drives.</p>
+              <p className="text-muted-foreground">
+                {formData.identityType === 'human' 
+                  ? 'Choose an archetype that defines their core nature and drives.'
+                  : 'Describe the entity type, consciousness form, or primary function of this being.'
+                }
+              </p>
             </div>
             
             <div className="space-y-4">
-              <Select 
-                value={formData.archetype} 
-                onValueChange={(value) => {
-                  setFormData({ ...formData, archetype: value });
-                  if (value !== 'Custom') {
+              {formData.identityType === 'human' ? (
+                // Traditional dropdown for humanoid characters
+                <Select 
+                  value={formData.archetype} 
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, archetype: value });
                     setCustomArchetype('');
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an archetype..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {currentArchetypes.map((archetype) => (
-                    <SelectItem key={archetype.value} value={archetype.value}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{archetype.value}</span>
-                        <span className="text-xs text-muted-foreground">{archetype.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              {formData.archetype === 'Custom' && (
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an archetype..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {humanArchetypes.map((archetype) => (
+                      <SelectItem key={archetype.value} value={archetype.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{archetype.value}</span>
+                          <span className="text-xs text-muted-foreground">{archetype.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                // Free-form text input for non-humanoid entities
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Custom Archetype</Label>
+                  <Label className="text-sm font-medium">Entity Type / Consciousness Form</Label>
                   <Input
-                    placeholder="Enter your custom archetype (e.g., Time-Traveling Librarian, Quantum Bard)"
+                    placeholder="e.g., Hive Intelligence, Quantum Oracle, Memory Weaver, Dream-Eater, Void Walker..."
                     value={customArchetype}
-                    onChange={(e) => setCustomArchetype(e.target.value)}
+                    onChange={(e) => {
+                      setCustomArchetype(e.target.value);
+                      setFormData({ ...formData, archetype: 'Custom' });
+                    }}
+                    className="text-base"
                   />
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Be creative! Examples: "Collective Consciousness Entity", "Dimensional Seer", "Energy-based Lifeform", 
+                    "Synthetic Consciousness", "Terraforming Entity", "Time Gardener", "Symbiotic Network"
+                  </div>
                 </div>
               )}
               
-              {formData.archetype && formData.archetype !== 'Custom' && (
+              {formData.identityType === 'human' && formData.archetype && (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-start gap-2">
                     <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-blue-800">
-                      <strong>{formData.archetype}:</strong> {currentArchetypes.find(a => a.value === formData.archetype)?.description}
+                      <strong>{formData.archetype}:</strong> {humanArchetypes.find(a => a.value === formData.archetype)?.description}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {formData.identityType === 'multi-species' && customArchetype && (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-purple-800">
+                      <strong>Entity Type:</strong> {customArchetype}
+                      <div className="mt-1 text-xs">
+                        This will be used to generate unique non-human psychological traits and behaviors.
+                      </div>
                     </div>
                   </div>
                 </div>

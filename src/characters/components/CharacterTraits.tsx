@@ -1,261 +1,310 @@
+
 import React from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CharacterTraitProfile } from '../types/characterTraitTypes';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { CharacterTraitProfile, HumanoidCharacterTraitProfile, NonHumanoidTraitProfile } from '../types/characterTraitTypes';
 
 interface CharacterTraitsProps {
   traitProfile: CharacterTraitProfile;
+  characterType: 'historical' | 'fictional' | 'multi_species';
 }
 
-const CharacterTraits = ({ traitProfile }: CharacterTraitsProps) => {
-  console.log("=== CHARACTER TRAITS COMPONENT DEBUG ===");
-  console.log("Received traitProfile:", traitProfile);
-  console.log("TraitProfile type:", typeof traitProfile);
-  
-  if (!traitProfile) {
-    console.error("❌ No trait profile provided to CharacterTraits component");
+const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) => {
+  // Handle different character types
+  if (characterType === 'multi_species') {
+    const nonHumanoidProfile = traitProfile as NonHumanoidTraitProfile;
     return (
       <div className="space-y-6">
-        <h2 className="text-xl font-bold text-red-600">
-          Error: No trait profile data available
-        </h2>
-        <p className="text-muted-foreground">The trait profile is missing or undefined.</p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Species Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <span className="font-medium">Species Type:</span>
+              <span className="ml-2">{nonHumanoidProfile.species_type}</span>
+            </div>
+            <div>
+              <span className="font-medium">Form Factor:</span>
+              <span className="ml-2">{nonHumanoidProfile.form_factor}</span>
+            </div>
+            <div>
+              <span className="font-medium">Communication:</span>
+              <span className="ml-2">{nonHumanoidProfile.communication_style.modality}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Core Motives</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(nonHumanoidProfile.core_motives).map(([motive, value]) => (
+              <div key={motive}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{motive.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Behavioral Triggers</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(nonHumanoidProfile.behavioral_triggers).map(([trigger, sensitivity]) => (
+              <div key={trigger}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{trigger.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((sensitivity || 0) * 100)}%</span>
+                </div>
+                <Progress value={(sensitivity || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Core Directives</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {nonHumanoidProfile.action_constraints.core_directives.map((directive, index) => (
+                <Badge key={index} variant="outline">{directive}</Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const traitCategories = Object.keys(traitProfile);
-  const expectedCategories = [
-    'big_five', 'moral_foundations', 'world_values', 'political_compass',
-    'behavioral_economics', 'cultural_dimensions', 'social_identity', 
-    'extended_traits', 'dynamic_state', 'physical_appearance', 'physical_health'
-  ];
-  const foundCategories = expectedCategories.filter(cat => traitProfile[cat]);
-  
-  console.log("Available trait categories:", traitCategories);
-  console.log("Expected categories found:", foundCategories);
+  // Handle humanoid characters
+  const humanoidProfile = traitProfile as HumanoidCharacterTraitProfile;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-800 flex items-center">
-        <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>
-        Character Traits Profile ({foundCategories.length}/11 categories)
-      </h2>
-      
-      <Accordion type="multiple" defaultValue={["big-five", "moral-foundations", "political-compass"]}>
-        {/* Physical Appearance */}
-        {traitProfile.physical_appearance && (
-          <TraitCategory 
-            value="physical-appearance"
-            title="Physical Appearance & Clothing"
-            traits={traitProfile.physical_appearance}
-            highlightColor="bg-pink-50"
-            description="Detailed physical characteristics and clothing traits"
-          />
-        )}
-        
-        {/* Physical Health */}
-        {traitProfile.physical_health && (
-          <TraitCategory 
-            value="physical-health"
-            title="Physical Health & Disabilities"
-            traits={traitProfile.physical_health}
-            highlightColor="bg-red-50"
-            description="Health status, disabilities, and physical conditions"
-          />
-        )}
-        
-        {/* Big Five */}
-        {traitProfile.big_five && (
-          <TraitCategory 
-            value="big-five"
-            title="Big Five Personality Traits"
-            traits={traitProfile.big_five}
-            highlightColor="bg-green-50"
-            description="Core personality dimensions (OCEAN model)"
-          />
-        )}
-        
-        {/* Moral Foundations */}
-        {traitProfile.moral_foundations && (
-          <TraitCategory 
-            value="moral-foundations"
-            title="Moral Foundations"
-            traits={traitProfile.moral_foundations}
-            highlightColor="bg-blue-50"
-            description="Moral reasoning patterns and priorities"
-          />
-        )}
-        
-        {/* World Values */}
-        {traitProfile.world_values && (
-          <TraitCategory 
-            value="world-values"
-            title="World Values Survey"
-            traits={traitProfile.world_values}
-            highlightColor="bg-amber-50"
-            description="Cultural value orientations and priorities"
-          />
-        )}
-        
-        {/* Political Compass */}
-        {traitProfile.political_compass && (
-          <TraitCategory 
-            value="political-compass"
-            title="Political & Social Orientation"
-            traits={traitProfile.political_compass}
-            highlightColor="bg-purple-50"
-            description="Political attitudes and group dynamics"
-          />
-        )}
-        
-        {/* Behavioral Economics */}
-        {traitProfile.behavioral_economics && (
-          <TraitCategory 
-            value="behavioral-economics"
-            title="Behavioral Economics"
-            traits={traitProfile.behavioral_economics}
-            highlightColor="bg-emerald-50"
-            description="Decision-making patterns and biases"
-          />
-        )}
-        
-        {/* Cultural Dimensions */}
-        {traitProfile.cultural_dimensions && (
-          <TraitCategory 
-            value="cultural-dimensions"
-            title="Cultural Dimensions (Hofstede)"
-            traits={traitProfile.cultural_dimensions}
-            highlightColor="bg-orange-50"
-            description="Cultural value orientations and behaviors"
-          />
-        )}
-        
-        {/* Social Identity */}
-        {traitProfile.social_identity && (
-          <TraitCategory 
-            value="social-identity"
-            title="Social Identity & Group Dynamics"
-            traits={traitProfile.social_identity}
-            highlightColor="bg-teal-50"
-            description="Group membership and social behavior patterns"
-          />
-        )}
-        
-        {/* Extended Traits */}
-        {traitProfile.extended_traits && (
-          <TraitCategory 
-            value="extended-traits"
-            title="Extended Psychological Traits"
-            traits={traitProfile.extended_traits}
-            highlightColor="bg-gray-50"
-            description="Additional personality and cognitive traits"
-          />
-        )}
-        
-        {/* Dynamic State */}
-        {traitProfile.dynamic_state && (
-          <TraitCategory 
-            value="dynamic-state"
-            title="Dynamic State Modifiers"
-            traits={traitProfile.dynamic_state}
-            highlightColor="bg-rose-50"
-            description="Current psychological and emotional state"
-          />
-        )}
-      </Accordion>
-      
-      {/* Category Coverage Summary */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h3 className="font-semibold mb-2">Trait Coverage Summary</h3>
-        <div className="text-sm text-gray-600">
-          <p>Generated {foundCategories.length} of 11 expected trait categories</p>
-          {foundCategories.length < 11 && (
-            <p className="text-amber-600 mt-1">
-              Missing: {expectedCategories.filter(cat => !traitProfile[cat]).join(', ')}
-            </p>
-          )}
-        </div>
-      </div>
+      {/* Physical Appearance */}
+      {humanoidProfile.physical_appearance && Object.keys(humanoidProfile.physical_appearance).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Physical Appearance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(humanoidProfile.physical_appearance).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
+                <span>{value}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Physical Health */}
+      {humanoidProfile.physical_health && Object.keys(humanoidProfile.physical_health).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Physical Health</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(humanoidProfile.physical_health).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span className="capitalize font-medium">{key.replace(/_/g, ' ')}</span>
+                <span>{Array.isArray(value) ? value.join(', ') : value}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Big Five Personality */}
+      {humanoidProfile.big_five && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Big Five Personality</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.big_five).map(([trait, value]) => (
+              <div key={trait}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{trait}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Moral Foundations */}
+      {humanoidProfile.moral_foundations && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Moral Foundations</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.moral_foundations).map(([foundation, value]) => (
+              <div key={foundation}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{foundation.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* World Values */}
+      {humanoidProfile.world_values && (
+        <Card>
+          <CardHeader>
+            <CardTitle>World Values</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.world_values).map(([value, score]) => (
+              <div key={value}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{value.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((score || 0) * 100)}%</span>
+                </div>
+                <Progress value={(score || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Political Compass */}
+      {humanoidProfile.political_compass && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Political Compass</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.political_compass).map(([axis, value]) => (
+              <div key={axis}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{axis.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Behavioral Economics */}
+      {humanoidProfile.behavioral_economics && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Behavioral Economics</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.behavioral_economics).map(([trait, value]) => (
+              <div key={trait}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Cultural Dimensions */}
+      {humanoidProfile.cultural_dimensions && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Cultural Dimensions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.cultural_dimensions).map(([dimension, value]) => (
+              <div key={dimension}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{dimension.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Social Identity */}
+      {humanoidProfile.social_identity && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Social Identity</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.social_identity).map(([aspect, value]) => (
+              <div key={aspect}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{aspect.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Extended Traits */}
+      {humanoidProfile.extended_traits && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Extended Traits</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.extended_traits).map(([trait, value]) => (
+              <div key={trait}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dynamic State */}
+      {humanoidProfile.dynamic_state && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Dynamic State</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(humanoidProfile.dynamic_state).map(([state, value]) => (
+              <div key={state}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="capitalize">{state.replace(/_/g, ' ')}</span>
+                  <span>{Math.round((value || 0) * 100)}%</span>
+                </div>
+                <Progress value={(value || 0) * 100} className="h-2" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
-  );
-};
-
-interface TraitCategoryProps {
-  value: string;
-  title: string;
-  traits?: Record<string, any>;
-  highlightColor: string;
-  description?: string;
-}
-
-const TraitCategory = ({ value, title, traits, highlightColor, description }: TraitCategoryProps) => {
-  console.log(`=== TRAIT CATEGORY: ${title} ===`);
-  console.log("Traits data:", traits);
-  
-  if (!traits) {
-    console.warn(`❌ No traits data for category: ${title}`);
-    return (
-      <AccordionItem value={value} className="border-0 mb-2">
-        <AccordionTrigger className={`text-lg font-semibold py-2 px-3 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
-          {title} - No Data
-        </AccordionTrigger>
-        <AccordionContent className="pt-4">
-          <p className="text-sm text-red-500 italic">No traits data available for this category</p>
-        </AccordionContent>
-      </AccordionItem>
-    );
-  }
-  
-  const traitEntries = Object.entries(traits);
-  console.log(`${title} has ${traitEntries.length} trait entries:`, traitEntries.map(([k, v]) => `${k}=${v}`));
-  
-  // Handle nested objects like political_motivations
-  const renderTraitValue = (key: string, value: any): React.ReactNode => {
-    if (typeof value === 'object' && value !== null) {
-      return (
-        <div key={key} className="ml-4 border-l-2 border-gray-200 pl-2 mb-2">
-          <div className="font-medium capitalize mb-1">{key.replace(/_/g, ' ')}</div>
-          {Object.entries(value).map(([subKey, subValue]) => (
-            <div key={subKey} className="flex justify-between items-center py-1 text-sm">
-              <span className="capitalize text-gray-600">{subKey.replace(/_/g, ' ')}</span>
-              <span className="font-medium">
-                {typeof subValue === 'number' ? subValue.toFixed(2) : String(subValue)}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    
-    return (
-      <div key={key} className="flex justify-between items-center py-2 border-b border-gray-100">
-        <span className="capitalize text-gray-700">{key.replace(/_/g, ' ')}</span>
-        <span className="font-medium text-gray-900">
-          {typeof value === 'number' ? value.toFixed(2) : String(value)}
-        </span>
-      </div>
-    );
-  };
-  
-  return (
-    <AccordionItem value={value} className="border-0 mb-2">
-      <AccordionTrigger className={`text-lg font-semibold py-3 px-4 ${highlightColor} rounded-md hover:opacity-90 transition-colors`}>
-        <div className="text-left">
-          <div>{title}</div>
-          {description && (
-            <div className="text-sm font-normal text-gray-600 mt-1">{description}</div>
-          )}
-          <div className="text-sm font-normal text-gray-500 mt-1">
-            {traitEntries.length} traits
-          </div>
-        </div>
-      </AccordionTrigger>
-      <AccordionContent className="pt-4 px-4">
-        <div className="space-y-1">
-          {traitEntries.map(([key, value]) => renderTraitValue(key, value))}
-        </div>
-      </AccordionContent>
-    </AccordionItem>
   );
 };
 
