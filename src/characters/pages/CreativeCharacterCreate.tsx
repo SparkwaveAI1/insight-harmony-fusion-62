@@ -9,13 +9,21 @@ import CreativeCharacterDialog from '../components/CreativeCharacterDialog';
 import { CreativeCharacterData } from '../types/characterTraitTypes';
 import { createCreativeCharacter } from '../services/creativeCharacterService';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 const CreativeCharacterCreate = () => {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCharacterComplete = async (data: CreativeCharacterData) => {
+    if (!user) {
+      toast.error('Please sign in to create characters');
+      navigate('/sign-in');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -35,6 +43,63 @@ const CreativeCharacterCreate = () => {
       setDialogOpen(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show sign in prompt if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <Section>
+            <div className="flex items-center gap-4 mb-8">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/characters/creative')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Creative Characters
+              </Button>
+            </div>
+
+            <div className="max-w-2xl mx-auto">
+              <Card className="p-8 text-center">
+                <div className="space-y-6">
+                  <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-10 w-10 text-white" />
+                  </div>
+                  
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Sign In Required</h2>
+                    <p className="text-muted-foreground mb-6">
+                      You need to be signed in to create creative characters.
+                    </p>
+                  </div>
+
+                  <Button
+                    size="lg"
+                    onClick={() => navigate('/sign-in')}
+                    className="w-full"
+                  >
+                    Sign In to Continue
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </Section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,7 +141,7 @@ const CreativeCharacterCreate = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="font-semibold text-blue-900 mb-1">8 Steps</div>
+                    <div className="font-semibold text-blue-900 mb-1">7 Steps</div>
                     <div className="text-blue-700">Guided creation process</div>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-lg">
