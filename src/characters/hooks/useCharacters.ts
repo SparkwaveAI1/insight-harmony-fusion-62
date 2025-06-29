@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllCharacters } from '../services/characterService';
-import { Character } from '../types/characterTraitTypes';
+import { getAllUnifiedCharacters, UnifiedCharacter } from '../services/unifiedCharacterService';
 
 export const useCharacters = () => {
   return useQuery({
-    queryKey: ['characters'],
-    queryFn: getAllCharacters,
+    queryKey: ['unified-characters'],
+    queryFn: getAllUnifiedCharacters,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

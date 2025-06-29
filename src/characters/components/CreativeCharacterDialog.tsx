@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,27 +38,13 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
   const compileForNonHumanoidCreator = async (data: CreativeCharacterData) => {
     try {
       setIsProcessing(true);
-      const { generateNonHumanoidTraits } = await import('../services/nonHumanoidTraitGenerator');
+      console.log('Creating non-humanoid character with data:', data);
       
-      const traits = await generateNonHumanoidTraits({
-        name: data.name,
-        description: data.description,
-        entityType: data.entityType,
-        narrativeDomain: data.narrativeDomain,
-        functionalRole: data.functionalRole,
-        environment: data.environment,
-        physicalForm: data.physicalForm,
-        communication: data.communication,
-        coreDrives: data.coreDrives,
-        surfaceTriggers: data.surfaceTriggers,
-        changeResponseStyle: data.changeResponseStyle
-      });
-
-      console.log('Generated non-humanoid traits:', traits);
+      // Call the service directly to create the character
       onComplete(data);
       
     } catch (error) {
-      console.error('Error generating non-humanoid traits:', error);
+      console.error('Error in non-humanoid character creation:', error);
       onComplete(data);
     } finally {
       setIsProcessing(false);

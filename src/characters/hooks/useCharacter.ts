@@ -1,11 +1,12 @@
 
 import { useState, useCallback } from 'react';
 import { Character } from '../types/characterTraitTypes';
-import { getCharacterById, getCharacterByCharacterId } from '../services/characterService';
+import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
+import { getAnyCharacterById, getAnyCharacterByCharacterId, UnifiedCharacter } from '../services/unifiedCharacterService';
 import { toast } from 'sonner';
 
 export const useCharacter = () => {
-  const [activeCharacter, setActiveCharacter] = useState<Character | null>(null);
+  const [activeCharacter, setActiveCharacter] = useState<UnifiedCharacter | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,13 +18,13 @@ export const useCharacter = () => {
     setError(null);
     
     try {
-      let character: Character | null = null;
+      let character: UnifiedCharacter | null = null;
       
       // Try to load by character_id first, then by id
-      character = await getCharacterByCharacterId(characterId);
+      character = await getAnyCharacterByCharacterId(characterId);
       
       if (!character) {
-        character = await getCharacterById(characterId);
+        character = await getAnyCharacterById(characterId);
       }
       
       if (!character) {

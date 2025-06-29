@@ -2,11 +2,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { Character } from '../types/characterTraitTypes';
+import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 import { CreativeCharacterData } from '../types/characterTraitTypes';
 import { generateNonHumanoidTraits } from './nonHumanoidTraitGenerator';
 import { saveCharacter } from './characterService';
+import { saveNonHumanoidCharacter } from './nonHumanoidCharacterService';
 
-export const createCreativeCharacter = async (data: CreativeCharacterData, userId: string): Promise<Character> => {
+export const createCreativeCharacter = async (data: CreativeCharacterData, userId: string): Promise<Character | NonHumanoidCharacter> => {
   console.log('=== CREATING CREATIVE CHARACTER ===');
   console.log('Creative character data:', data);
   console.log('User ID provided:', userId);
@@ -33,6 +35,11 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
 
     console.log('Authentication verified for user:', user.id);
 
+    // Check if this is a human character (redirect to historical character creation)
+    if (data.entityType === 'human') {
+      throw new Error('Human characters should be created through the historical character creator');
+    }
+
     // Generate non-humanoid traits based on the creative data
     const traitProfile = await generateNonHumanoidTraits({
       name: data.name,
@@ -48,14 +55,14 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
       changeResponseStyle: data.changeResponseStyle
     });
 
-    // Create the character object with explicit user_id assignment
-    const character: Character = {
+    // Create the non-humanoid character object
+    const nonHumanoidCharacter: NonHumanoidCharacter = {
       character_id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: data.name,
       character_type: 'multi_species',
       creation_date: new Date().toISOString(),
       created_at: new Date().toISOString(),
-      user_id: user.id, // Use the authenticated user ID directly from Supabase
+      user_id: user.id,
       metadata: {
         description: data.description,
         narrative_domain: data.narrativeDomain,
@@ -76,8 +83,6 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
         patience: 0.7
       },
       linguistic_profile: {
-        // For non-humanoid characters, use minimal human-centric linguistic profile
-        // The actual communication happens through the Universal Translator
         speech_register: 'alien_translated',
         cultural_speech_patterns: `Translated from ${data.communication}`,
         sample_phrasing: [
@@ -114,16 +119,17 @@ export const createCreativeCharacter = async (data: CreativeCharacterData, userI
       enhanced_metadata_version: 2
     };
 
-    console.log('Character object before saving:', {
-      character_id: character.character_id,
-      user_id: character.user_id,
-      name: character.name
+    console.log('Non-humanoid character object before saving:', {
+      character_id: nonHumanoidCharacter.character_id,
+      user_id: nonHumanoidCharacter.user_id,
+      name: nonHumanoidCharacter.name,
+      species_type: nonHumanoidCharacter.species_type
     });
 
-    // Save the character to the database
-    const savedCharacter = await saveCharacter(character);
+    // Save the non-humanoid character to the dedicated table
+    const savedCharacter = await saveNonHumanoidCharacter(nonHumanoidCharacter);
     
-    console.log('✅ Creative character created successfully');
+    console.log('✅ Creative non-humanoid character created successfully');
     return savedCharacter;
   } catch (error) {
     console.error('Error creating creative character:', error);
