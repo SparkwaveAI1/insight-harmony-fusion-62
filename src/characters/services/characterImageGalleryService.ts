@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CharacterImage {
@@ -67,6 +68,41 @@ async function copyImageToBucket(
   }
 }
 
+// Helper function to verify character exists in either table
+async function verifyCharacterExists(characterId: string): Promise<boolean> {
+  try {
+    // Check in characters table first
+    const { data: character, error: characterError } = await supabase
+      .from('characters')
+      .select('character_id')
+      .eq('character_id', characterId)
+      .single();
+    
+    if (!characterError && character) {
+      console.log('Character found in characters table');
+      return true;
+    }
+    
+    // Check in non_humanoid_characters table
+    const { data: nonHumanoidCharacter, error: nonHumanoidError } = await supabase
+      .from('non_humanoid_characters')
+      .select('character_id')
+      .eq('character_id', characterId)
+      .single();
+    
+    if (!nonHumanoidError && nonHumanoidCharacter) {
+      console.log('Character found in non_humanoid_characters table');
+      return true;
+    }
+    
+    console.error('Character not found in either table:', characterId);
+    return false;
+  } catch (error) {
+    console.error('Error verifying character exists:', error);
+    return false;
+  }
+}
+
 export async function getCharacterImages(characterId: string): Promise<CharacterImage[]> {
   try {
     console.log('Fetching images for character:', characterId);
@@ -101,6 +137,12 @@ export async function saveCharacterImage(
 ): Promise<CharacterImage | null> {
   try {
     console.log('Saving character image to gallery:', { characterId, imageUrl, isCurrent });
+    
+    // Verify character exists in either table
+    const characterExists = await verifyCharacterExists(characterId);
+    if (!characterExists) {
+      throw new Error(`Character ${characterId} not found in database`);
+    }
     
     // Copy image to character-images bucket
     const uploadResult = await copyImageToBucket(imageUrl, characterId, 'character-images');
