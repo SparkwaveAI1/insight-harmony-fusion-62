@@ -52,16 +52,24 @@ export const createCreativeCharacter = async (data: CreativeCharacterData): Prom
         patience: 0.7
       },
       linguistic_profile: {
-        communication_style: traitProfile.communication_style,
         preferred_language: 'Universal',
-        complexity_level: 'Standard'
+        complexity_level: 'Standard',
+        communication_patterns: traitProfile.communication_style?.modality || 'Non-verbal'
       },
       interview_sections: [],
       preinterview_tags: [data.entityType, data.narrativeDomain, data.functionalRole],
       simulation_directives: traitProfile.simulation_directives,
       emotional_triggers: {
-        positive_triggers: data.coreDrives,
-        negative_triggers: data.surfaceTriggers
+        positive_triggers: data.coreDrives.map(drive => ({
+          trigger: drive,
+          intensity: 0.7,
+          description: `Responds positively to ${drive.toLowerCase()}`
+        })),
+        negative_triggers: data.surfaceTriggers.map(trigger => ({
+          trigger: trigger,
+          intensity: 0.8,
+          description: `Becomes agitated by ${trigger.toLowerCase()}`
+        }))
       },
       // Non-humanoid specific fields
       origin_universe: data.narrativeDomain,
