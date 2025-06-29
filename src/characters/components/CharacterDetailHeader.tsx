@@ -1,19 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Edit, MessageCircle, Download, Sparkles, Copy } from 'lucide-react';
+import { ArrowLeft, Edit, MessageCircle, Download, Sparkles, Copy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Character } from '../types/characterTraitTypes';
+import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
+import CharacterCloneForm from './CharacterCloneForm';
 
 interface CharacterDetailHeaderProps {
-  character: Character;
+  character: Character | NonHumanoidCharacter;
   onDownloadJSON: () => void;
 }
 
 const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHeaderProps) => {
-  const isNonHumanoid = character.character_type === 'multi_species';
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
+  const isNonHumanoid = character.character_type === 'multi_species' || 'species_type' in character;
 
   const handleCopyCharacterId = async () => {
     try {
@@ -46,6 +50,24 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
         </div>
         
         <div className="flex items-center gap-2">
+          <Dialog open={cloneDialogOpen} onOpenChange={setCloneDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Users className="h-4 w-4 mr-2" />
+                Clone & Customize
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-xl">Clone & Customize Character</DialogTitle>
+                <DialogDescription>
+                  Create a customized version of this character using the appropriate creation process for their type.
+                </DialogDescription>
+              </DialogHeader>
+              <CharacterCloneForm character={character} />
+            </DialogContent>
+          </Dialog>
+          
           <Button variant="outline" onClick={onDownloadJSON}>
             <Download className="h-4 w-4 mr-2" />
             Download JSON
