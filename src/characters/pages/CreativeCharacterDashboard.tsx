@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sparkles, Plus, Library, Menu } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { cn } from '@/lib/utils';
-import CreativeCharacterLibrary from './CreativeCharacterLibrary';
+import NonHumanoidCharacterLibrary from './NonHumanoidCharacterLibrary';
 import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
@@ -111,10 +110,10 @@ const CreativeCharacterDashboard = () => {
               </Select>
             </div>
 
-            {/* Show Creative Character Library when on main creative characters route */}
+            {/* Show Non-Humanoid Character Library when on main creative characters route */}
             {location.pathname === '/characters/creative' ? (
               <div className="w-full">
-                <CreativeCharacterLibrary />
+                <NonHumanoidCharacterLibrary />
               </div>
             ) : (
               <div className="w-full px-4 md:px-8 py-8">
