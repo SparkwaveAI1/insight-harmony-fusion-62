@@ -145,14 +145,24 @@ This character was created through the Creative Character Genesis process.`;
   };
 
   const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+    console.log('handleNext called - current step:', currentStep, 'can proceed:', canProceed());
+    console.log('Form data at step:', currentStep, formData);
+    
+    if (currentStep < totalSteps && canProceed()) {
+      const nextStep = currentStep + 1;
+      console.log('Moving to step:', nextStep);
+      setCurrentStep(nextStep);
+    } else {
+      console.log('Cannot proceed to next step');
     }
   };
 
   const handleBack = () => {
+    console.log('handleBack called - current step:', currentStep);
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      console.log('Moving to step:', prevStep);
+      setCurrentStep(prevStep);
     }
   };
 
@@ -214,16 +224,42 @@ This character was created through the Creative Character Genesis process.`;
   };
 
   const canProceed = () => {
+    console.log('canProceed called for step:', currentStep);
     switch (currentStep) {
-      case 1: return formData.name.trim() !== '';
-      case 2: return formData.entityType !== '';
-      case 3: return formData.narrativeDomain !== '';
-      case 4: return true; // Optional step
-      case 5: return formData.description.length >= 50;
-      case 6: return formData.environment.trim() !== '';
-      case 7: return formData.coreDrives.length > 0;
-      case 8: return formData.changeResponseStyle !== '';
-      default: return false;
+      case 1: 
+        const step1Valid = formData.name.trim() !== '';
+        console.log('Step 1 valid:', step1Valid, 'name:', formData.name);
+        return step1Valid;
+      case 2: 
+        const step2Valid = formData.entityType !== '';
+        console.log('Step 2 valid:', step2Valid, 'entityType:', formData.entityType);
+        return step2Valid;
+      case 3: 
+        const step3Valid = formData.narrativeDomain !== '';
+        console.log('Step 3 valid:', step3Valid, 'narrativeDomain:', formData.narrativeDomain);
+        return step3Valid;
+      case 4: 
+        console.log('Step 4 valid: true (optional step)');
+        return true; // Optional step
+      case 5: 
+        const step5Valid = formData.description.length >= 50;
+        console.log('Step 5 valid:', step5Valid, 'description length:', formData.description.length);
+        return step5Valid;
+      case 6: 
+        const step6Valid = formData.environment.trim() !== '';
+        console.log('Step 6 valid:', step6Valid, 'environment:', formData.environment);
+        return step6Valid;
+      case 7: 
+        const step7Valid = formData.coreDrives.length > 0;
+        console.log('Step 7 valid:', step7Valid, 'coreDrives length:', formData.coreDrives.length);
+        return step7Valid;
+      case 8: 
+        const step8Valid = formData.changeResponseStyle !== '';
+        console.log('Step 8 valid:', step8Valid, 'changeResponseStyle:', formData.changeResponseStyle);
+        return step8Valid;
+      default: 
+        console.log('Unknown step:', currentStep);
+        return false;
     }
   };
 
@@ -238,6 +274,8 @@ This character was created through the Creative Character Genesis process.`;
   };
 
   const renderStep = () => {
+    console.log('renderStep called for step:', currentStep);
+    
     switch (currentStep) {
       case 1:
         return (
@@ -515,9 +553,19 @@ This character was created through the Creative Character Genesis process.`;
         );
 
       default:
-        return null;
+        console.log('Unknown step in renderStep:', currentStep);
+        return (
+          <div className="text-center p-8">
+            <p className="text-muted-foreground">Error: Unknown step {currentStep}</p>
+            <Button onClick={() => setCurrentStep(1)} className="mt-4">
+              Return to Step 1
+            </Button>
+          </div>
+        );
     }
   };
+
+  console.log('CreativeCharacterDialog render - current step:', currentStep, 'open:', open);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
