@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { NonHumanoidCharacter, NonHumanoidTraitProfile } from '../types/nonHumanoidTypes';
 
@@ -251,15 +252,32 @@ const getImageUrlFromRegularCharacter = async (characterId: string): Promise<str
   try {
     console.log('Getting image URL from regular characters table for:', characterId);
     
-    const { data, error } = await supabase
+    // First try by character_id
+    let { data, error } = await supabase
       .from('characters')
       .select('profile_image_url')
       .eq('character_id', characterId)
       .maybeSingle();
       
     if (error) {
-      console.log('Error checking regular characters table:', error);
-      return null;
+      console.log('Error checking regular characters table by character_id:', error);
+    }
+    
+    // If not found by character_id, try by id (UUID)
+    if (!data) {
+      console.log('Not found by character_id, trying by id...');
+      const result = await supabase
+        .from('characters')
+        .select('profile_image_url')
+        .eq('id', characterId)
+        .maybeSingle();
+        
+      data = result.data;
+      error = result.error;
+      
+      if (error) {
+        console.log('Error checking regular characters table by id:', error);
+      }
     }
     
     if (data?.profile_image_url) {
