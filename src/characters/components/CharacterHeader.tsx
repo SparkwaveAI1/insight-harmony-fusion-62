@@ -38,12 +38,6 @@ const CharacterHeader = () => {
             >
               Creative Characters
             </Link>
-            <Link 
-              to="/dashboard" 
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              Dashboard
-            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -82,13 +76,6 @@ const CharacterHeader = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Creative Characters
-              </Link>
-              <Link 
-                to="/dashboard" 
-                className="block text-gray-300 hover:text-white transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
               </Link>
             </nav>
           </div>
