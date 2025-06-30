@@ -9,6 +9,9 @@ export const historicalCharacterSchema = z.object({
   location: z.string().min(1, 'Location is required'),
   description: z.string().min(10, 'Please provide a detailed description (at least 10 characters)'),
   
+  // NEW: Physical appearance description
+  physical_appearance_description: z.string().min(10, 'Please provide a physical appearance description (at least 10 characters)'),
+  
   // All other fields are optional - AI will generate them
   gender: z.string().optional(),
   ethnicity: z.string().optional(),

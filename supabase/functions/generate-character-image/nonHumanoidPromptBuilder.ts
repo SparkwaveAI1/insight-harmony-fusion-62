@@ -49,20 +49,32 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
 };
 
 export function buildNonHumanoidImagePrompt(characterData: any, style: string = 'photorealistic'): string {
-  console.log("Generating simple non-humanoid visual prompt");
+  console.log("Generating visual prompt for non-humanoid character using physical appearance description");
   
   const styleConfig = IMAGE_STYLES[style] || IMAGE_STYLES.photorealistic;
   
-  // Extract only the basic visual essence
-  let prompt = characterData.name || 'Unique entity';
+  // Try to get the dedicated physical appearance description first
+  let visualDescription = '';
+  
+  if (characterData.physical_appearance_description) {
+    visualDescription = characterData.physical_appearance_description;
+  } else if (characterData.physicalForm) {
+    visualDescription = characterData.physicalForm;
+  } else {
+    // Minimal fallback
+    visualDescription = characterData.name || 'Unique creative entity';
+  }
+  
+  // Build clean visual prompt
+  let prompt = visualDescription;
   
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
   prompt += `, ${styleModifiers}`;
   
-  // Simple composition requirements
-  prompt += ', single subject, clean background, no text, no words, no annotations';
+  // Add professional image requirements
+  prompt += ', single subject, clean background, high quality, detailed, no text, no words, no labels, no annotations';
   
-  console.log("Simple non-humanoid prompt:", prompt);
+  console.log("Non-humanoid appearance prompt:", prompt);
   return prompt;
 }
