@@ -5,6 +5,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import Section from '@/components/ui-custom/Section';
 
 const CharactersHero = () => {
@@ -27,9 +28,14 @@ const CharactersHero = () => {
       </div>
       
       <div className="max-w-4xl mx-auto relative z-10">
-        <h1 className="text-7xl font-lastica font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-16 drop-shadow-2xl tracking-wider uppercase">
-          Character Genesis
-        </h1>
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <h1 className="text-7xl font-lastica font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-2xl tracking-wider uppercase">
+            Character Genesis
+          </h1>
+          <Badge className="bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold px-3 py-1 text-sm animate-pulse">
+            NEW!
+          </Badge>
+        </div>
         <p className="text-xl text-gray-100 mb-6 drop-shadow-lg">
           Step into the minds of generals, poets, rebels, and androids.
         </p>
