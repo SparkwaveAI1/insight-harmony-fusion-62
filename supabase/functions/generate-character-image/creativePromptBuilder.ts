@@ -48,8 +48,8 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
   }
 };
 
-export function buildNonHumanoidImagePrompt(characterData: any, style: string = 'photorealistic'): string {
-  console.log("Generating visual prompt for non-humanoid character using physical appearance description");
+export function buildCreativeCharacterImagePrompt(characterData: any, style: string = 'photorealistic'): string {
+  console.log("Generating visual prompt for creative/fictional character using physical appearance description");
   console.log("Character data:", JSON.stringify(characterData, null, 2));
   
   const styleConfig = IMAGE_STYLES[style] || IMAGE_STYLES.photorealistic;
@@ -61,7 +61,7 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
     visualDescription = characterData.physical_appearance_description;
     console.log("Using physical_appearance_description:", visualDescription);
   } 
-  // Check for trait profile physical manifestation (for non-humanoid characters)
+  // Check for trait profile physical manifestation (for creative characters)
   else if (characterData.trait_profile?.physical_manifestation?.primary_form) {
     visualDescription = characterData.trait_profile.physical_manifestation.primary_form;
     console.log("Using trait_profile primary_form:", visualDescription);
@@ -115,6 +115,6 @@ Physical description: ${visualDescription}`;
   // Add professional image requirements with explicit neutral background instruction
   prompt += ', single subject, neutral background, detailed, accurate representation, no text, no words, no labels, no annotations';
   
-  console.log("Non-humanoid appearance prompt:", prompt);
+  console.log("Creative character appearance prompt:", prompt);
   return prompt;
 }
