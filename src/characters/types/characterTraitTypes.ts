@@ -18,6 +18,7 @@ export interface CharacterBehavioralModulation {
   assertiveness?: number;
   empathy?: number;
   patience?: number;
+  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 // Extend the persona TraitProfile to include character-specific physical traits for humanoid characters

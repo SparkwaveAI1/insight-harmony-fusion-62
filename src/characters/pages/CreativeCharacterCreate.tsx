@@ -24,14 +24,9 @@ const CreativeCharacterCreate = () => {
       navigate('/sign-in');
       return;
     }
-
-    if (!data.customization_notes || data.customization_notes.trim() === '') {
-      toast.warning("Please provide customization instructions to make your cloned character unique");
-      return;
-    }
     
     if (!data.name || data.name.trim() === '') {
-      toast.warning("Please provide a name for your cloned character");
+      toast.warning("Please provide a name for your character");
       return;
     }
 

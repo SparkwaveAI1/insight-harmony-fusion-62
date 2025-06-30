@@ -50,7 +50,6 @@ export const createCreativeCharacter = async (
         },
         interview_sections: [],
         linguistic_profile: {
-          vocabulary_complexity: 0.7,
           sentence_structure: 'complex',
           formality_level: 0.6,
           emotional_expressiveness: 0.5,
@@ -74,7 +73,17 @@ export const createCreativeCharacter = async (
       console.log('Saving non-humanoid character to database');
       const { data: savedCharacter, error } = await supabase
         .from('non_humanoid_characters')
-        .insert(nonHumanoidCharacter)
+        .insert({
+          ...nonHumanoidCharacter,
+          // Cast complex objects to Json for database compatibility
+          trait_profile: traitProfile as any,
+          behavioral_modulation: nonHumanoidCharacter.behavioral_modulation as any,
+          linguistic_profile: nonHumanoidCharacter.linguistic_profile as any,
+          metadata: nonHumanoidCharacter.metadata as any,
+          simulation_directives: nonHumanoidCharacter.simulation_directives as any,
+          interview_sections: nonHumanoidCharacter.interview_sections as any,
+          preinterview_tags: nonHumanoidCharacter.preinterview_tags as any
+        })
         .select()
         .single();
 
@@ -84,7 +93,8 @@ export const createCreativeCharacter = async (
       }
 
       console.log('Non-humanoid character saved successfully:', savedCharacter);
-      return savedCharacter;
+      // Cast the database result back to our interface type
+      return savedCharacter as NonHumanoidCharacter;
     } else {
       // Create humanoid character
       console.log('Creating humanoid character');
@@ -131,7 +141,6 @@ export const createCreativeCharacter = async (
         },
         interview_sections: [],
         linguistic_profile: {
-          vocabulary_complexity: 0.7,
           sentence_structure: 'complex',
           formality_level: 0.6,
           emotional_expressiveness: 0.6,
@@ -158,7 +167,18 @@ export const createCreativeCharacter = async (
       console.log('Saving humanoid character to database');
       const { data: savedCharacter, error } = await supabase
         .from('characters')
-        .insert(humanoidCharacter)
+        .insert({
+          ...humanoidCharacter,
+          // Cast complex objects to Json for database compatibility
+          trait_profile: traitProfile as any,
+          behavioral_modulation: humanoidCharacter.behavioral_modulation as any,
+          linguistic_profile: humanoidCharacter.linguistic_profile as any,
+          metadata: humanoidCharacter.metadata as any,
+          simulation_directives: humanoidCharacter.simulation_directives as any,
+          interview_sections: humanoidCharacter.interview_sections as any,
+          preinterview_tags: humanoidCharacter.preinterview_tags as any,
+          physical_appearance: humanoidCharacter.physical_appearance as any
+        })
         .select()
         .single();
 
@@ -168,7 +188,8 @@ export const createCreativeCharacter = async (
       }
 
       console.log('Humanoid character saved successfully:', savedCharacter);
-      return savedCharacter;
+      // Cast the database result back to our interface type
+      return savedCharacter as Character;
     }
   } catch (error) {
     console.error('Error in createCreativeCharacter:', error);
