@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { buildCharacterImagePrompt } from "./promptBuilder.ts";
@@ -47,6 +48,7 @@ serve(async (req) => {
     console.log("Custom text:", customText);
     console.log("Reference image:", referenceImageUrl);
     console.log("Auto save:", autoSave);
+    console.log("Has appearance_prompt:", !!characterData.appearance_prompt);
 
     let imagePrompt: string;
     let openaiParams: any = {
@@ -91,8 +93,34 @@ serve(async (req) => {
       }
       
       console.log("Reference-based prompt:", imagePrompt);
+    } else if (characterData.appearance_prompt && 
+               (characterData.metadata?.created_via === 'creative_genesis' || 
+                characterData.character_type === 'fictional')) {
+      // Use the pre-generated appearance prompt for creative characters
+      console.log("Using pre-generated appearance prompt for creative character");
+      imagePrompt = characterData.appearance_prompt;
+      
+      // Add custom text if provided
+      if (customText && customText.trim()) {
+        imagePrompt += `, ${customText.trim()}`;
+        console.log("Added custom text to pre-generated prompt");
+      }
+      
+      // Apply style-specific modifications for creative characters
+      const styleConfig = IMAGE_STYLES[style];
+      if (styleConfig) {
+        openaiParams.quality = styleConfig.quality || "hd";
+        openaiParams.style = styleConfig.openaiStyle || "natural";
+        
+        // Add style-specific modifiers if they don't conflict with the appearance prompt
+        if (styleConfig.promptModifiers && !imagePrompt.includes('photorealistic')) {
+          imagePrompt += `, ${styleConfig.promptModifiers.join(', ')}`;
+        }
+      }
+      
+      console.log("Using appearance prompt:", imagePrompt);
     } else {
-      // No reference image - use character-type-specific prompt generation
+      // No reference image and no appearance prompt - use character-type-specific prompt generation
       if (characterData.character_type === 'historical') {
         console.log("Processing historical character");
         imagePrompt = buildHistoricalCharacterImagePrompt(characterData);

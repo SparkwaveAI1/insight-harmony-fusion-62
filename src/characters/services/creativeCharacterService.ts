@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 import { Character } from '../types/characterTraitTypes';
@@ -8,6 +7,7 @@ import { generateNonHumanoidTraits } from './nonHumanoidTraitGenerator';
 import { generateCharacterTraits } from './characterTraitService';
 import { saveCharacter } from './characterService';
 import { saveNonHumanoidCharacter } from './nonHumanoidCharacterService';
+import { generateAppearancePromptFromCreativeData, generateAppearancePrompt } from './appearancePromptGenerator';
 
 export const createCreativeCharacter = async (data: CreativeCharacterData, userId: string): Promise<Character | NonHumanoidCharacter> => {
   console.log('=== CREATING CREATIVE CHARACTER ===');
@@ -65,6 +65,18 @@ const createNonHumanoidCreativeCharacter = async (data: CreativeCharacterData, u
     changeResponseStyle: data.changeResponseStyle
   });
 
+  // Generate appearance prompt from Physical Manifestation data
+  const appearancePrompt = generateAppearancePrompt({
+    name: data.name,
+    entityType: data.entityType,
+    environment: data.environment,
+    physicalManifestation: traitProfile.physical_manifestation,
+    speciesType: traitProfile.species_type,
+    formFactor: traitProfile.form_factor
+  });
+
+  console.log('Generated appearance prompt for non-humanoid:', appearancePrompt);
+
   // Create the non-humanoid character object
   const nonHumanoidCharacter: NonHumanoidCharacter = {
     character_id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -73,6 +85,7 @@ const createNonHumanoidCreativeCharacter = async (data: CreativeCharacterData, u
     creation_date: new Date().toISOString(),
     created_at: new Date().toISOString(),
     user_id: userId,
+    appearance_prompt: appearancePrompt,
     metadata: {
       description: data.description,
       narrative_domain: data.narrativeDomain,
@@ -133,7 +146,8 @@ const createNonHumanoidCreativeCharacter = async (data: CreativeCharacterData, u
     character_id: nonHumanoidCharacter.character_id,
     user_id: nonHumanoidCharacter.user_id,
     name: nonHumanoidCharacter.name,
-    species_type: nonHumanoidCharacter.species_type
+    species_type: nonHumanoidCharacter.species_type,
+    appearance_prompt: nonHumanoidCharacter.appearance_prompt?.substring(0, 100) + '...'
   });
 
   // Save the non-humanoid character to the dedicated table
@@ -148,6 +162,10 @@ const createHumanoidCreativeCharacter = async (data: CreativeCharacterData, user
   
   // Build a description for AI trait generation
   const fullDescription = buildHumanoidDescription(data);
+  
+  // Generate appearance prompt from physical description
+  const appearancePrompt = generateAppearancePromptFromCreativeData(data);
+  console.log('Generated appearance prompt for humanoid:', appearancePrompt);
   
   // Generate humanoid traits using the existing character trait service
   const aiGeneratedTraits = await generateCharacterTraits({
@@ -174,6 +192,7 @@ const createHumanoidCreativeCharacter = async (data: CreativeCharacterData, user
     creation_date: new Date().toISOString(),
     created_at: new Date().toISOString(),
     user_id: userId,
+    appearance_prompt: appearancePrompt,
     metadata: {
       description: data.description,
       narrative_domain: data.narrativeDomain,
@@ -229,7 +248,8 @@ const createHumanoidCreativeCharacter = async (data: CreativeCharacterData, user
     character_id: humanoidCharacter.character_id,
     user_id: humanoidCharacter.user_id,
     name: humanoidCharacter.name,
-    character_type: humanoidCharacter.character_type
+    character_type: humanoidCharacter.character_type,
+    appearance_prompt: humanoidCharacter.appearance_prompt?.substring(0, 100) + '...'
   });
 
   // Save the humanoid character to the characters table
