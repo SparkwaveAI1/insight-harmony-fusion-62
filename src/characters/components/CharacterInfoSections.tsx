@@ -23,7 +23,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
     entityProfile: false,
     metadata: false,
     behavioralModulation: false,
-    emotionalTriggers: false,
+    emotionalSystem: false,
     characterTraits: false,
   });
 
@@ -418,38 +418,46 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         </CollapsibleCard>
       )}
 
-      {/* Emotional Triggers */}
-      {character.emotional_triggers && (
+      {/* Emotional System (character-specific) */}
+      {character.emotional_system && (
         <CollapsibleCard
-          sectionKey="emotionalTriggers"
-          title={isNonHumanoid ? 'Response Triggers' : 'Emotional Triggers'}
+          sectionKey="emotionalSystem"
+          title={isNonHumanoid ? 'Response System' : 'Emotional System'}
         >
-          {character.emotional_triggers.positive_triggers && character.emotional_triggers.positive_triggers.length > 0 && (
+          {character.emotional_system.core_drives && character.emotional_system.core_drives.length > 0 && (
             <div>
-              <h4 className="font-medium text-green-700 mb-2">
-                {isNonHumanoid ? 'Positive Stimuli' : 'Positive Triggers'}
+              <h4 className="font-medium text-blue-700 mb-2">
+                {isNonHumanoid ? 'Core Drives' : 'Core Drives'}
               </h4>
               <div className="flex flex-wrap gap-2">
-                {character.emotional_triggers.positive_triggers.map((trigger, index) => (
-                  <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                {character.emotional_system.core_drives.map((drive, index) => (
+                  <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800">
+                    {typeof drive === 'string' ? drive : String(drive)}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {character.emotional_system.surface_triggers && character.emotional_system.surface_triggers.length > 0 && (
+            <div>
+              <h4 className="font-medium text-orange-700 mb-2">
+                {isNonHumanoid ? 'Surface Triggers' : 'Surface Triggers'}
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {character.emotional_system.surface_triggers.map((trigger, index) => (
+                  <Badge key={index} variant="secondary" className="bg-orange-100 text-orange-800">
                     {typeof trigger === 'string' ? trigger : String(trigger)}
                   </Badge>
                 ))}
               </div>
             </div>
           )}
-          {character.emotional_triggers.negative_triggers && character.emotional_triggers.negative_triggers.length > 0 && (
+          {character.emotional_system.emotional_responses?.change_response_style && (
             <div>
-              <h4 className="font-medium text-red-700 mb-2">
-                {isNonHumanoid ? 'Negative Stimuli' : 'Negative Triggers'}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {character.emotional_triggers.negative_triggers.map((trigger, index) => (
-                  <Badge key={index} variant="secondary" className="bg-red-100 text-red-800">
-                    {typeof trigger === 'string' ? trigger : String(trigger)}
-                  </Badge>
-                ))}
-              </div>
+              <h4 className="font-medium text-green-700 mb-2">Change Response Style</h4>
+              <p className="text-sm text-muted-foreground">
+                {character.emotional_system.emotional_responses.change_response_style}
+              </p>
             </div>
           )}
         </CollapsibleCard>

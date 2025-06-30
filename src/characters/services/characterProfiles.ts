@@ -1,8 +1,6 @@
 
-import { CharacterBehavioralModulation } from '../types/characterTraitTypes';
-import { EmotionalTriggersProfile } from '../../services/persona/types/trait-profile';
+import { CharacterBehavioralModulation, CharacterLinguisticProfile, CharacterEmotionalSystem } from '../types/characterLinguisticTypes';
 import { HistoricalCharacterFormData } from '../schemas/historicalCharacterSchema';
-import { generateCharacterEmotionalTriggers } from './emotionalTriggerGenerator';
 
 export function buildTraitProfile(aiGeneratedTraits: any) {
   return {
@@ -27,30 +25,29 @@ export function buildBehavioralModulation(): CharacterBehavioralModulation {
   };
 }
 
-export function buildLinguisticProfile(aiGeneratedTraits: any, formData: HistoricalCharacterFormData) {
+export function buildLinguisticProfile(aiGeneratedTraits: any, formData: HistoricalCharacterFormData): CharacterLinguisticProfile {
   return {
-    default_output_length: 'medium',
-    speech_register: 'formal',
-    regional_influence: aiGeneratedTraits.region || formData.location || 'European',
-    professional_or_educational_influence: aiGeneratedTraits.occupation || null,
-    cultural_speech_patterns: 'Historical speech patterns',
-    generational_or_peer_influence: null,
-    speaking_style: {
-      formal: true,
-      casual: false,
-      technical: false,
-      storytelling: true,
-    },
-    sample_phrasing: [],
+    communication_style: 'formal',
+    vocabulary_complexity: 'moderate',
+    speech_patterns: ['descriptive', 'analytical', 'historical'],
+    formality_level: 0.8,
+    expressiveness: 0.6,
+    cultural_speech_markers: [aiGeneratedTraits.region || formData.location || 'European'],
   };
 }
 
-export function buildEmotionalTriggers(
+export function buildEmotionalSystem(
   formData: HistoricalCharacterFormData, 
   aiGeneratedTraits: any
-): EmotionalTriggersProfile {
-  console.log('🎭 Building emotional triggers for character:', formData.name);
-  return generateCharacterEmotionalTriggers(formData, aiGeneratedTraits);
+): CharacterEmotionalSystem {
+  console.log('🎭 Building emotional system for character:', formData.name);
+  return {
+    core_drives: aiGeneratedTraits.personality_traits || [formData.personality_traits || 'Historical accuracy'],
+    surface_triggers: ['historical events', 'social interactions', 'cultural references'],
+    emotional_responses: {
+      change_response_style: 'gradual adaptation based on historical context'
+    }
+  };
 }
 
 export function buildPhysicalAppearance(aiGeneratedTraits: any) {

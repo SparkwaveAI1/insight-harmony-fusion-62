@@ -43,6 +43,12 @@ export interface HumanoidCharacterTraitProfile {
 // Union type for trait profiles
 export type CharacterTraitProfile = HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
 
+// Export NonHumanoidTraitProfile for direct access
+export type { NonHumanoidTraitProfile };
+
+// Export CharacterBehavioralModulation for direct access  
+export type { CharacterBehavioralModulation };
+
 // Creative Character Dialog Data Interface
 export interface CreativeCharacterData {
   name: string;
