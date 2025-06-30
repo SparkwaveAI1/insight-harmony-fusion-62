@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { NonHumanoidCharacter, DbNonHumanoidCharacter } from '../types/nonHumanoidTypes';
+import { CharacterLinguisticProfile, CharacterBehavioralModulation } from '../types/characterLinguisticTypes';
 
 export const getAllNonHumanoidCharacters = async (): Promise<NonHumanoidCharacter[]> => {
   console.log('🔍 Fetching all non-humanoid characters...');
@@ -198,10 +199,10 @@ export const cloneNonHumanoidCharacter = async (
 
     // Create a new character based on the original
     const newCharacterId = `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const clonedCharacter: Omit<DbNonHumanoidCharacter, 'id'> = {
+    const clonedCharacter = {
       character_id: newCharacterId,
       name: newName,
-      character_type: original.character_type,
+      character_type: 'multi_species' as const,
       creation_date: new Date().toISOString(),
       created_at: new Date().toISOString(),
       appearance_prompt: original.appearance_prompt,
@@ -228,7 +229,17 @@ export const cloneNonHumanoidCharacter = async (
 
     const { data, error } = await supabase
       .from('non_humanoid_characters')
-      .insert(clonedCharacter)
+      .insert({
+        ...clonedCharacter,
+        // Cast complex objects to Json for database compatibility
+        trait_profile: clonedCharacter.trait_profile as any,
+        behavioral_modulation: clonedCharacter.behavioral_modulation as any,
+        linguistic_profile: clonedCharacter.linguistic_profile as any,
+        metadata: clonedCharacter.metadata as any,
+        simulation_directives: clonedCharacter.simulation_directives as any,
+        interview_sections: clonedCharacter.interview_sections as any,
+        preinterview_tags: clonedCharacter.preinterview_tags as any
+      })
       .select()
       .single();
 
@@ -246,19 +257,25 @@ export const cloneNonHumanoidCharacter = async (
 };
 
 // Helper function to convert database character to NonHumanoidCharacter
-const dbCharacterToNonHumanoidCharacter = (dbCharacter: DbNonHumanoidCharacter): NonHumanoidCharacter => {
+const dbCharacterToNonHumanoidCharacter = (dbCharacter: any): NonHumanoidCharacter => {
   return {
     id: dbCharacter.id,
     character_id: dbCharacter.character_id,
     name: dbCharacter.name,
-    character_type: dbCharacter.character_type,
+    character_type: 'multi_species' as const,
     creation_date: dbCharacter.creation_date,
     created_at: dbCharacter.created_at || new Date().toISOString(),
     appearance_prompt: dbCharacter.appearance_prompt,
     metadata: dbCharacter.metadata || {},
-    behavioral_modulation: dbCharacter.behavioral_modulation || {},
+    behavioral_modulation: (dbCharacter.behavioral_modulation as CharacterBehavioralModulation) || {
+      formality: 0.5,
+      enthusiasm: 0.5,
+      assertiveness: 0.5,
+      empathy: 0.5,
+      patience: 0.5
+    },
     interview_sections: dbCharacter.interview_sections || [],
-    linguistic_profile: dbCharacter.linguistic_profile || {
+    linguistic_profile: (dbCharacter.linguistic_profile as CharacterLinguisticProfile) || {
       communication_style: 'non-verbal',
       vocabulary_complexity: 'complex',
       speech_patterns: ['alien'],

@@ -57,10 +57,10 @@ export const createCreativeCharacter = async (
 
       const characterId = `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      const nonHumanoidCharacter: NonHumanoidCharacter = {
+      const nonHumanoidCharacter = {
         character_id: characterId,
         name: data.name,
-        character_type: 'multi_species',
+        character_type: 'multi_species' as const,
         creation_date: new Date().toISOString(),
         created_at: new Date().toISOString(),
         appearance_prompt: appearancePrompt,
@@ -79,7 +79,6 @@ export const createCreativeCharacter = async (
           memory_decay_profile: 'stable'
         },
         trait_profile: traitProfile,
-        emotional_system: emotionalSystem,
         user_id: userId,
         is_public: false,
         origin_universe: data.narrativeDomain,
@@ -92,6 +91,7 @@ export const createCreativeCharacter = async (
         .from('non_humanoid_characters')
         .insert({
           ...nonHumanoidCharacter,
+          // Remove emotional_system as it's not in the database schema yet
           // Cast complex objects to Json for database compatibility
           trait_profile: traitProfile as any,
           behavioral_modulation: behavioralModulation as any,
@@ -110,8 +110,35 @@ export const createCreativeCharacter = async (
       }
 
       console.log('Non-humanoid character saved successfully:', savedCharacter);
-      // Cast the database result back to our interface type
-      return savedCharacter as NonHumanoidCharacter;
+      
+      // Convert database result to proper interface
+      const result: NonHumanoidCharacter = {
+        id: savedCharacter.id,
+        character_id: savedCharacter.character_id,
+        name: savedCharacter.name,
+        character_type: savedCharacter.character_type as 'multi_species',
+        creation_date: savedCharacter.creation_date,
+        created_at: savedCharacter.created_at || new Date().toISOString(),
+        appearance_prompt: savedCharacter.appearance_prompt,
+        metadata: savedCharacter.metadata || {},
+        behavioral_modulation: savedCharacter.behavioral_modulation as CharacterBehavioralModulation,
+        interview_sections: savedCharacter.interview_sections || [],
+        linguistic_profile: savedCharacter.linguistic_profile as CharacterLinguisticProfile,
+        preinterview_tags: savedCharacter.preinterview_tags || [],
+        simulation_directives: savedCharacter.simulation_directives || {},
+        trait_profile: savedCharacter.trait_profile as any,
+        emotional_system: emotionalSystem,
+        prompt: savedCharacter.prompt,
+        user_id: savedCharacter.user_id,
+        is_public: savedCharacter.is_public || false,
+        profile_image_url: savedCharacter.profile_image_url,
+        enhanced_metadata_version: savedCharacter.enhanced_metadata_version || 1,
+        origin_universe: savedCharacter.origin_universe,
+        species_type: savedCharacter.species_type,
+        form_factor: savedCharacter.form_factor,
+      };
+      
+      return result;
     } else {
       // Create humanoid character
       console.log('Creating humanoid character');
@@ -136,10 +163,10 @@ export const createCreativeCharacter = async (
 
       const characterId = `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      const humanoidCharacter: Character = {
+      const humanoidCharacter = {
         character_id: characterId,
         name: data.name,
-        character_type: 'fictional',
+        character_type: 'fictional' as const,
         creation_date: new Date().toISOString(),
         created_at: new Date().toISOString(),
         appearance_prompt: appearancePrompt,
@@ -158,7 +185,6 @@ export const createCreativeCharacter = async (
           memory_decay_profile: 'stable'
         },
         trait_profile: traitProfile,
-        emotional_system: emotionalSystem,
         user_id: userId,
         is_public: false,
         age: 30,
@@ -174,8 +200,7 @@ export const createCreativeCharacter = async (
         .from('characters')
         .insert({
           ...humanoidCharacter,
-          // Remove emotional_system as it's not in the database schema
-          emotional_system: undefined,
+          // Remove emotional_system as it's not in the database schema yet
           // Cast complex objects to Json for database compatibility
           trait_profile: traitProfile as any,
           behavioral_modulation: behavioralModulation as any,
@@ -195,8 +220,41 @@ export const createCreativeCharacter = async (
       }
 
       console.log('Humanoid character saved successfully:', savedCharacter);
-      // Cast the database result back to our interface type
-      return savedCharacter as Character;
+      
+      // Convert database result to proper interface
+      const result: Character = {
+        id: savedCharacter.id,
+        character_id: savedCharacter.character_id,
+        name: savedCharacter.name,
+        character_type: savedCharacter.character_type as 'fictional',
+        creation_date: savedCharacter.creation_date,
+        created_at: savedCharacter.created_at || new Date().toISOString(),
+        appearance_prompt: savedCharacter.appearance_prompt,
+        metadata: savedCharacter.metadata || {},
+        behavioral_modulation: savedCharacter.behavioral_modulation as CharacterBehavioralModulation,
+        interview_sections: savedCharacter.interview_sections || [],
+        linguistic_profile: savedCharacter.linguistic_profile as CharacterLinguisticProfile,
+        preinterview_tags: savedCharacter.preinterview_tags || [],
+        simulation_directives: savedCharacter.simulation_directives || {},
+        trait_profile: savedCharacter.trait_profile as any,
+        emotional_system: emotionalSystem,
+        prompt: savedCharacter.prompt,
+        user_id: savedCharacter.user_id,
+        is_public: savedCharacter.is_public || false,
+        profile_image_url: savedCharacter.profile_image_url,
+        enhanced_metadata_version: savedCharacter.enhanced_metadata_version || 1,
+        age: savedCharacter.age,
+        gender: savedCharacter.gender,
+        historical_period: savedCharacter.historical_period,
+        social_class: savedCharacter.social_class,
+        region: savedCharacter.region,
+        physical_appearance: savedCharacter.physical_appearance || {},
+        origin_universe: savedCharacter.origin_universe,
+        species_type: savedCharacter.species_type,
+        form_factor: savedCharacter.form_factor,
+      };
+      
+      return result;
     }
   } catch (error) {
     console.error('Error in createCreativeCharacter:', error);
