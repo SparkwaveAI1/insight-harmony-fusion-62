@@ -89,8 +89,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     // If asChild is true and we have a child Link, render it directly
     if (asChild && React.isValidElement(children) && children.type === Link) {
-      return React.cloneElement(children, {
-        className: cn(styles, children.props.className)
+      return React.cloneElement(children as React.ReactElement<any>, {
+        className: cn(styles, (children.props as any).className)
       });
     }
     
