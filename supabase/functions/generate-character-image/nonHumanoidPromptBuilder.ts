@@ -50,6 +50,7 @@ export const IMAGE_STYLES: Record<string, StyleConfig> = {
 
 export function buildNonHumanoidImagePrompt(characterData: any, style: string = 'photorealistic'): string {
   console.log("Generating visual prompt for non-humanoid character using physical appearance description");
+  console.log("Character data:", JSON.stringify(characterData, null, 2));
   
   const styleConfig = IMAGE_STYLES[style] || IMAGE_STYLES.photorealistic;
   
@@ -58,11 +59,48 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
   
   if (characterData.physical_appearance_description) {
     visualDescription = characterData.physical_appearance_description;
-  } else if (characterData.physicalForm) {
+    console.log("Using physical_appearance_description:", visualDescription);
+  } 
+  // Check for trait profile physical manifestation (for non-humanoid characters)
+  else if (characterData.trait_profile?.physical_manifestation?.primary_form) {
+    visualDescription = characterData.trait_profile.physical_manifestation.primary_form;
+    console.log("Using trait_profile primary_form:", visualDescription);
+  }
+  // Check metadata description and extract appearance details
+  else if (characterData.metadata?.description) {
+    const description = characterData.metadata.description;
+    console.log("Extracting from metadata description:", description);
+    
+    // Try to extract physical characteristics from the description
+    const lines = description.split('\n');
+    const physicalLines = lines.filter(line => 
+      line.toLowerCase().includes('thin') ||
+      line.toLowerCase().includes('body') ||
+      line.toLowerCase().includes('head') ||
+      line.toLowerCase().includes('appearance') ||
+      line.toLowerCase().includes('tall') ||
+      line.toLowerCase().includes('height') ||
+      line.toLowerCase().includes('build') ||
+      line.toLowerCase().includes('skin') ||
+      line.toLowerCase().includes('eyes') ||
+      line.toLowerCase().includes('hair')
+    );
+    
+    if (physicalLines.length > 0) {
+      visualDescription = physicalLines.join(', ');
+    } else {
+      // Fallback to species type if available
+      visualDescription = characterData.species_type || characterData.name;
+    }
+  }
+  else if (characterData.physicalForm) {
     visualDescription = characterData.physicalForm;
-  } else {
-    // Minimal fallback
-    visualDescription = characterData.name || 'Unique creative entity';
+    console.log("Using physicalForm:", visualDescription);
+  } 
+  else {
+    // Final fallback - use species type or name
+    visualDescription = characterData.species_type || characterData.name || 'Unique creative entity';
+    console.log("Using fallback:", visualDescription);
   }
   
   // Build clean visual prompt
@@ -73,7 +111,7 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
   prompt += `, ${styleModifiers}`;
   
   // Add professional image requirements
-  prompt += ', single subject, clean background, high quality, detailed, no text, no words, no labels, no annotations';
+  prompt += ', single subject, clean background, detailed, no text, no words, no labels, no annotations';
   
   console.log("Non-humanoid appearance prompt:", prompt);
   return prompt;
