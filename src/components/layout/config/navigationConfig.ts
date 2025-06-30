@@ -69,9 +69,9 @@ export const headerNavItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Dashboard",
+    title: "Personas",
     href: "/dashboard",
-    icon: LayoutDashboard,
+    icon: Users,
   },
   {
     title: "Characters",
