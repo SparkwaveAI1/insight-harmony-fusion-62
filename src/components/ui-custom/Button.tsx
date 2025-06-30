@@ -9,7 +9,6 @@ interface BaseButtonProps {
   size?: "sm" | "default" | "lg" | "icon";
   className?: string;
   isLoading?: boolean;
-  asChild?: boolean;
 }
 
 // For normal button
@@ -18,7 +17,6 @@ interface ButtonAsButtonProps extends BaseButtonProps {
   to?: never;
   href?: never;
   children: React.ReactNode;
-  asChild?: false;
 }
 
 // For Link component
@@ -27,7 +25,6 @@ interface ButtonAsLinkProps extends BaseButtonProps {
   to: string;
   href?: never;
   children: React.ReactNode;
-  asChild?: true;
 }
 
 // For anchor element
@@ -36,7 +33,6 @@ interface ButtonAsAnchorProps extends BaseButtonProps {
   href: string;
   to?: never;
   children: React.ReactNode;
-  asChild?: true;
 }
 
 // Union type for all possible button props
@@ -45,7 +41,7 @@ type ButtonProps = ButtonAsButtonProps & React.ButtonHTMLAttributes<HTMLButtonEl
                   ButtonAsAnchorProps & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'className' | 'href'>;
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "default", children, as, to, href, isLoading, asChild, ...props }, ref) => {
+  ({ className, variant = "default", size = "default", children, as, to, href, isLoading, ...props }, ref) => {
     const styles = cn(
       "relative inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
       // Variants
@@ -86,13 +82,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ></path>
       </svg>
     );
-    
-    // If asChild is true and we have a child Link, render it directly
-    if (asChild && React.isValidElement(children) && children.type === Link) {
-      return React.cloneElement(children as React.ReactElement<any>, {
-        className: cn(styles, (children.props as any).className)
-      });
-    }
     
     // Render as Link component
     if (as === Link && to) {

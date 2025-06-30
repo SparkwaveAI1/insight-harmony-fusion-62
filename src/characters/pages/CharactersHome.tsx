@@ -154,6 +154,10 @@ const CharactersHome = () => {
                   Creative Characters
                 </Link>
               </Button>
+              <Button size="lg" variant="outline" className="border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 shadow-lg">
+                <Play className="mr-2 h-5 w-5" />
+                Run a Scenario
+              </Button>
             </div>
           </div>
         </Section>

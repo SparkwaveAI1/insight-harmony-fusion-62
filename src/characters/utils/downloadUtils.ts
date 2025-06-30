@@ -14,7 +14,7 @@ export const downloadCharacterAsJSON = (character: Character) => {
     trait_profile: character.trait_profile,
     behavioral_modulation: character.behavioral_modulation,
     linguistic_profile: character.linguistic_profile,
-    emotional_system: character.emotional_system,
+    emotional_triggers: character.emotional_triggers,
     interview_sections: character.interview_sections,
     simulation_directives: character.simulation_directives,
     preinterview_tags: character.preinterview_tags,

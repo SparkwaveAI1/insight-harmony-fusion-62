@@ -28,10 +28,8 @@ export {
   getCurrentCharacterImage
 } from './services/characterImageGalleryService';
 
-// Re-export character-specific types only
+// Re-export types
 export type { Character, CharacterTraitProfile } from './types/characterTraitTypes';
-export type { CharacterLinguisticProfile, CharacterEmotionalSystem, CharacterBehavioralModulation } from './types/characterLinguisticTypes';
-export type { NonHumanoidCharacter, NonHumanoidTraitProfile } from './types/nonHumanoidTypes';
 export type { Message, ChatMode } from './types/chatTypes';
 export type { CharacterImage } from './services/characterImageGalleryService';
 

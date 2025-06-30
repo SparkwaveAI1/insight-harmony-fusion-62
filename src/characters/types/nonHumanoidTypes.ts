@@ -1,12 +1,9 @@
 
 // Non-humanoid character trait definitions - completely separate from persona types
-import { CharacterLinguisticProfile, CharacterEmotionalSystem, CharacterBehavioralModulation } from './characterLinguisticTypes';
-
 export interface NonHumanoidCommunicationStyle {
   modality: string;
   linguistic_structure: string;
   expression_register: string;
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidPhysicalManifestationTraits {
@@ -20,7 +17,6 @@ export interface NonHumanoidPhysicalManifestationTraits {
   environmental_interaction: string; // e.g., "Absorbs Light", "Distorts Space", "Emits Radiation"
   sensory_emanations: string; // e.g., "Harmonic Vibrations", "Electromagnetic Pulses", "Psychic Resonance"
   structural_complexity: string; // e.g., "Fractal Patterns", "Geometric Precision", "Organic Chaos"
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidCoreMotives {
@@ -61,7 +57,6 @@ export interface NonHumanoidInstitutionalRecognition {
   cultural_legitimacy_detection?: number;
   adaptive_protocol_alignment?: number;
   institutional_exploitation_tendency?: number;
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidActionConstraints {
@@ -78,20 +73,17 @@ export interface NonHumanoidDecisionModel {
   volatility_tolerance: number;
   reprioritization_threshold: number;
   reasoning_structure?: string;
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidMemoryArchitecture {
   type: string;
   salience_tags: string[];
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidBehavioralAdaptivity {
   contradiction_resolution_mode: string;
   state_evolution_rate: number;
   experience_threshold_for_change: number;
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidLatentValues {
@@ -109,7 +101,6 @@ export interface NonHumanoidEvolutionConditions {
   behavioral_forking: boolean;
   repetition_threshold?: number;
   contradiction_integration_style?: string;
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 export interface NonHumanoidSimulationDirectives {
@@ -135,7 +126,6 @@ export interface NonHumanoidTraitProfile {
   latent_values: NonHumanoidLatentValues;
   evolution_conditions: NonHumanoidEvolutionConditions;
   simulation_directives: NonHumanoidSimulationDirectives;
-  [key: string]: any; // Add index signature for JSON compatibility
 }
 
 // Non-humanoid character interface
@@ -146,15 +136,14 @@ export interface NonHumanoidCharacter {
   character_type: 'multi_species';
   creation_date: string;
   created_at: string;
-  appearance_prompt?: string;
   metadata: any;
-  behavioral_modulation: CharacterBehavioralModulation;
+  behavioral_modulation: any;
   interview_sections: any;
-  linguistic_profile: CharacterLinguisticProfile;
+  linguistic_profile: any;
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: NonHumanoidTraitProfile;
-  emotional_system?: CharacterEmotionalSystem; // Character-specific emotional system
+  emotional_triggers?: any;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
@@ -174,14 +163,14 @@ export interface DbNonHumanoidCharacter {
   character_type: 'multi_species';
   creation_date: string;
   created_at?: string;
-  appearance_prompt?: string;
   metadata: any;
-  behavioral_modulation: CharacterBehavioralModulation;
+  behavioral_modulation: any;
   interview_sections: any;
-  linguistic_profile: CharacterLinguisticProfile;
+  linguistic_profile: any;
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: NonHumanoidTraitProfile;
+  emotional_triggers?: any;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;

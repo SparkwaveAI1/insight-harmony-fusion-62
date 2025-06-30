@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -19,15 +18,7 @@ const CharacterLibrary = () => {
     return characters.filter(character => {
       const matchesSearch = character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            character.metadata?.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      let matchesFilter = true;
-      if (filterType === 'historical') {
-        matchesFilter = character.character_type === 'historical';
-      } else if (filterType === 'fictional') {
-        // Creative/Fictional characters can have character_type === 'fictional' OR legacy multi_species
-        matchesFilter = character.character_type === 'fictional' || character.character_type === 'multi_species';
-      }
-      
+      const matchesFilter = filterType === 'all' || character.character_type === filterType;
       return matchesSearch && matchesFilter;
     });
   }, [characters, searchTerm, filterType]);
@@ -80,9 +71,9 @@ const CharacterLibrary = () => {
               </Link>
             </Button>
             <Button asChild>
-              <Link to="/characters/create/creative">
+              <Link to="/characters/create/fictional">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Creative
+                Create Fictional
               </Link>
             </Button>
           </div>
@@ -108,8 +99,8 @@ const CharacterLibrary = () => {
               className="px-3 py-2 border border-input rounded-md bg-background"
             >
               <option value="all">All Types</option>
-              <option value="historical">Historical Characters</option>
-              <option value="fictional">Creative Characters</option>
+              <option value="historical">Historical</option>
+              <option value="fictional">Fictional</option>
             </select>
           </div>
         </div>
@@ -131,8 +122,8 @@ const CharacterLibrary = () => {
                 </Link>
               </Button>
               <Button asChild>
-                <Link to="/characters/create/creative">
-                  Create Creative Character
+                <Link to="/characters/create/fictional">
+                  Create Fictional Character
                 </Link>
               </Button>
             </div>
@@ -147,7 +138,7 @@ const CharacterLibrary = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{character.name}</h3>
                       <p className="text-sm text-muted-foreground capitalize">
-                        {character.character_type === 'historical' ? 'Historical Character' : 'Creative Character'}
+                        {character.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
                       </p>
                     </div>
                   </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -105,8 +104,8 @@ const CharacterDetail = () => {
     );
   }
 
-  // Properly check if it's a non-humanoid character based on character_type
-  const isNonHumanoidCharacter = activeCharacter.character_type === 'multi_species';
+  // Check if it's a non-humanoid character
+  const isNonHumanoidCharacter = 'species_type' in activeCharacter;
 
   return (
     <div className="min-h-screen bg-background">

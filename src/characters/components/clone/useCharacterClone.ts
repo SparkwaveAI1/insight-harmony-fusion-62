@@ -163,40 +163,6 @@ const cloneCreativeCharacter = async (
   const originalDescription = character.metadata?.description || '';
   const fullDescription = `${originalDescription}\n\nCustomization: ${customizations.customization_notes}`;
   
-  // Extract physical appearance data for the clone
-  const extractPhysicalAppearanceDescription = (char: Character | NonHumanoidCharacter): string => {
-    const metadata = char.metadata as any;
-    
-    // Try different sources for physical description
-    if (metadata?.physical_description) {
-      return metadata.physical_description;
-    }
-    
-    if (metadata?.physical_form) {
-      return metadata.physical_form;
-    }
-    
-    // For humanoid characters, check physical_appearance
-    if ('physical_appearance' in char && char.physical_appearance) {
-      const physicalAppearance = char.physical_appearance as any;
-      if (physicalAppearance?.description) {
-        return physicalAppearance.description;
-      }
-    }
-    
-    // For non-humanoid characters, try to extract from trait profile
-    if ('trait_profile' in char && char.trait_profile) {
-      const traitProfile = char.trait_profile as any;
-      if (traitProfile?.physical_manifestation) {
-        const manifest = traitProfile.physical_manifestation;
-        return `${manifest.primary_form || 'Unknown form'} with ${manifest.material_composition || 'unknown composition'}`;
-      }
-    }
-    
-    // Fallback description
-    return `${char.name}, a ${metadata?.entity_type || ('species_type' in char ? 'non-humanoid' : 'humanoid')} character`;
-  };
-  
   const creativeData = {
     name: customizations.name,
     entityType: character.metadata?.entity_type || ('species_type' in character ? 'non-humanoid' : 'humanoid'),
@@ -205,7 +171,6 @@ const cloneCreativeCharacter = async (
     description: fullDescription,
     environment: character.metadata?.environment || 'contemporary',
     physicalForm: character.metadata?.physical_form || '',
-    physicalAppearanceDescription: extractPhysicalAppearanceDescription(character),
     communication: character.metadata?.communication || 'verbal',
     coreDrives: character.metadata?.core_drives || ['survival'],
     surfaceTriggers: character.metadata?.surface_triggers || ['conflict'],

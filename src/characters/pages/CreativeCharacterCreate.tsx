@@ -9,8 +9,6 @@ import { CreativeCharacterData } from '../types/characterTraitTypes';
 import { createCreativeCharacter } from '../services/creativeCharacterService';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
-// Import the backfill utility for console access
-import '../utils/runBackfill';
 
 const CreativeCharacterCreate = () => {
   const navigate = useNavigate();
@@ -22,11 +20,6 @@ const CreativeCharacterCreate = () => {
     if (!user) {
       toast.error('Please sign in to create characters');
       navigate('/sign-in');
-      return;
-    }
-    
-    if (!data.name || data.name.trim() === '') {
-      toast.warning("Please provide a name for your character");
       return;
     }
 

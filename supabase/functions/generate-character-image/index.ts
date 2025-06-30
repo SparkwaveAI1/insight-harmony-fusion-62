@@ -2,8 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { buildCharacterImagePrompt } from "./promptBuilder.ts";
-import { buildCreativeCharacterImagePrompt, IMAGE_STYLES } from "./creativePromptBuilder.ts";
-import { buildHistoricalCharacterImagePrompt } from "./historicalPromptBuilder.ts";
+import { buildNonHumanoidImagePrompt, IMAGE_STYLES } from "./nonHumanoidPromptBuilder.ts";
 import { generateImageWithOpenAI } from "./openaiService.ts";
 import { 
   uploadImageToStorage, 
@@ -44,11 +43,15 @@ serve(async (req) => {
 
     console.log("Generating image for character:", characterData.name);
     console.log("Character type:", characterData.character_type);
+    console.log("Species type:", characterData.species_type);
     console.log("Style:", style);
     console.log("Custom text:", customText);
     console.log("Reference image:", referenceImageUrl);
     console.log("Auto save:", autoSave);
-    console.log("Has appearance_prompt:", !!characterData.appearance_prompt);
+
+    // Determine if this is a non-humanoid character
+    const isNonHumanoid = characterData.character_type === 'multi_species' || 
+                          'species_type' in characterData;
 
     let imagePrompt: string;
     let openaiParams: any = {
@@ -73,8 +76,8 @@ serve(async (req) => {
       
       // Add basic style guidance based on selected style
       const styleConfig = IMAGE_STYLES[style];
-      if (styleConfig && styleConfig.promptModifiers) {
-        imagePrompt += `, ${styleConfig.promptModifiers.join(', ')}`;
+      if (styleConfig && styleConfig.prompt) {
+        imagePrompt += `, ${styleConfig.prompt}`;
       } else if (style === 'photorealistic') {
         imagePrompt += ', photorealistic, high quality, detailed';
       } else if (style === 'cinematic') {
@@ -93,53 +96,20 @@ serve(async (req) => {
       }
       
       console.log("Reference-based prompt:", imagePrompt);
-    } else if (characterData.appearance_prompt && 
-               (characterData.metadata?.created_via === 'creative_genesis' || 
-                characterData.character_type === 'fictional' ||
-                characterData.character_type === 'multi_species')) {
-      // Use the pre-generated appearance prompt for creative characters
-      console.log("Using pre-generated appearance prompt for creative character");
-      imagePrompt = characterData.appearance_prompt;
-      
-      // Add custom text if provided
-      if (customText && customText.trim()) {
-        imagePrompt += `, ${customText.trim()}`;
-        console.log("Added custom text to pre-generated prompt");
-      }
-      
-      // Apply style-specific modifications for creative characters
-      const styleConfig = IMAGE_STYLES[style];
-      if (styleConfig) {
-        openaiParams.quality = styleConfig.quality || "hd";
-        openaiParams.style = styleConfig.openaiStyle || "natural";
-        
-        // Add style-specific modifiers if they don't conflict with the appearance prompt
-        if (styleConfig.promptModifiers && !imagePrompt.includes('photorealistic')) {
-          imagePrompt += `, ${styleConfig.promptModifiers.join(', ')}`;
-        }
-      }
-      
-      console.log("Using appearance prompt:", imagePrompt);
     } else {
-      // No reference image and no appearance prompt - use character-type-specific prompt generation
-      if (characterData.character_type === 'historical') {
-        console.log("Processing historical character");
-        imagePrompt = buildHistoricalCharacterImagePrompt(characterData);
-      } else if (characterData.character_type === 'fictional' || 
-                 characterData.character_type === 'multi_species' ||
-                 characterData.metadata?.created_via === 'creative_genesis') {
-        console.log("Processing creative/fictional character with creative prompt builder");
-        imagePrompt = buildCreativeCharacterImagePrompt(characterData, style);
+      // No reference image - use the full character-based prompt generation
+      if (isNonHumanoid) {
+        console.log("Processing non-humanoid character");
+        imagePrompt = buildNonHumanoidImagePrompt(characterData, style);
         
-        // Apply style-specific OpenAI parameters for creative characters
+        // Apply style-specific OpenAI parameters
         const styleConfig = IMAGE_STYLES[style];
         if (styleConfig) {
           openaiParams.quality = styleConfig.quality || "hd";
           openaiParams.style = styleConfig.openaiStyle || "natural";
         }
       } else {
-        // Fallback to the original prompt builder for any other types
-        console.log("Processing character with fallback prompt builder");
+        console.log("Processing humanoid character");
         imagePrompt = buildCharacterImagePrompt(characterData);
       }
 
@@ -164,7 +134,7 @@ serve(async (req) => {
           image_url: imageDataUrl,
           prompt: imagePrompt,
           style: style,
-          character_type: characterData.character_type
+          character_type: isNonHumanoid ? 'non-humanoid' : 'humanoid'
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -206,7 +176,7 @@ serve(async (req) => {
         image_url: publicUrl,
         prompt: imagePrompt,
         style: style,
-        character_type: characterData.character_type
+        character_type: isNonHumanoid ? 'non-humanoid' : 'humanoid'
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -29,7 +29,6 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
       age: '',
       location: '',
       description: '',
-      physical_appearance_description: '',
     },
   });
 
@@ -39,7 +38,6 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
         name: searchParams.get('name') || 'Creative Character',
         description: searchParams.get('description') || '',
         location: searchParams.get('location') || '',
-        physical_appearance_description: searchParams.get('physicalForm') || '',
         // Extract approximate date and age from era if available
         date_of_birth: extractDateFromEra(searchParams.get('era') || ''),
         age: '25', // Default age, user can modify
@@ -141,26 +139,8 @@ const HistoricalCharacterForm = ({ onSubmit, isSubmitting, onCancel }: Historica
                     <FormLabel>Character Description *</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe your historical character's background, personality, occupation, beliefs, and historical context. Include their role in society and what they're known for."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="physical_appearance_description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Physical Appearance Description *</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Describe how this character looks physically. Include details like height, build, hair color and style, eye color, skin tone, facial features, clothing style typical of their era, and any distinctive physical characteristics."
-                        className="min-h-[100px]"
+                        placeholder="Describe your historical character in detail. Include their background, personality, occupation, beliefs, and any other important details. The AI will use this description to generate their complete profile including comprehensive personality traits, physical appearance, and historical context."
+                        className="min-h-[120px]"
                         {...field}
                       />
                     </FormControl>

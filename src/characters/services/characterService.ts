@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Character, DbCharacter } from '../types/characterTraitTypes';
 import { characterToDbCharacter, dbCharacterToCharacter } from './characterMappers';

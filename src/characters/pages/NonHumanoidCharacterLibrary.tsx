@@ -19,7 +19,7 @@ const NonHumanoidCharacterLibrary = () => {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading characters...</p>
+              <p className="text-muted-foreground">Loading creative characters...</p>
             </div>
           </div>
         </Section>
@@ -33,17 +33,17 @@ const NonHumanoidCharacterLibrary = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Character Library</h1>
+            <h1 className="text-3xl font-bold">Creative Character Library</h1>
             <p className="text-muted-foreground">
-              Browse and manage your lab characters
+              Browse and manage your creative characters
             </p>
           </div>
           
           <div className="flex items-center gap-3">
             <Button asChild>
-              <Link to="/characters/lab/create">
+              <Link to="/characters/create/creative">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Character
+                Create Creative Character
               </Link>
             </Button>
           </div>
@@ -72,7 +72,7 @@ const NonHumanoidCharacterLibrary = () => {
                       <h3 className="font-semibold text-lg">{character.name}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        {character.species_type || 'Lab Character'}
+                        {character.species_type || 'Unknown Species'}
                       </div>
                     </div>
                   </div>
@@ -105,7 +105,7 @@ const NonHumanoidCharacterLibrary = () => {
                   <div className="flex flex-wrap gap-1">
                     <Badge variant="secondary" className="text-xs">
                       <Sparkles className="h-3 w-3 mr-1" />
-                      Lab
+                      Creative
                     </Badge>
                     {character.species_type && (
                       <Badge variant="outline" className="text-xs">
@@ -135,14 +135,14 @@ const NonHumanoidCharacterLibrary = () => {
           /* Empty State */
           <Card className="text-center py-12">
             <Zap className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Characters Yet</h2>
+            <h2 className="text-xl font-semibold mb-2">No Creative Characters Yet</h2>
             <p className="text-muted-foreground mb-6">
-              Start creating your first character with unique traits and behaviors.
+              Start creating your first creative character with unique traits and behaviors.
             </p>
             <Button asChild>
-              <Link to="/characters/lab/create">
+              <Link to="/characters/create/creative">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Create Your First Character
+                Create Your First Creative Character
               </Link>
             </Button>
           </Card>

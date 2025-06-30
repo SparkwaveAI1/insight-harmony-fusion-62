@@ -11,9 +11,8 @@ import Step2EntityType from './CreativeCharacterDialog/steps/Step2EntityType';
 import Step3NarrativeDomain from './CreativeCharacterDialog/steps/Step3NarrativeDomain';
 import Step4FunctionalRole from './CreativeCharacterDialog/steps/Step4FunctionalRole';
 import Step5Description from './CreativeCharacterDialog/steps/Step5Description';
-import Step6PhysicalAppearance from './CreativeCharacterDialog/steps/Step6PhysicalAppearance';
-import Step7Environment from './CreativeCharacterDialog/steps/Step7Environment';
-import Step8Drives from './CreativeCharacterDialog/steps/Step8Drives';
+import Step6Environment from './CreativeCharacterDialog/steps/Step6Environment';
+import Step7Drives from './CreativeCharacterDialog/steps/Step7Drives';
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,14 +25,13 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     description: '',
     environment: '',
     physicalForm: '',
-    physicalAppearanceDescription: '',
     communication: '',
     coreDrives: [],
     surfaceTriggers: [],
     changeResponseStyle: 'mutate_adapt'
   });
 
-  const totalSteps = 8; // Updated to 8 steps
+  const totalSteps = 7;
 
   const handleNext = () => {
     console.log('handleNext called - current step:', currentStep, 'can proceed:', canProceed(currentStep, formData));
@@ -80,11 +78,9 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
       case 5:
         return <Step5Description formData={formData} setFormData={setFormData} />;
       case 6:
-        return <Step6PhysicalAppearance formData={formData} setFormData={setFormData} />;
+        return <Step6Environment formData={formData} setFormData={setFormData} />;
       case 7:
-        return <Step7Environment formData={formData} setFormData={setFormData} />;
-      case 8:
-        return <Step8Drives formData={formData} setFormData={setFormData} />;
+        return <Step7Drives formData={formData} setFormData={setFormData} />;
       default:
         console.log('Unknown step in renderStep:', currentStep);
         return (
@@ -109,7 +105,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
             Character Genesis Creation
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
-            Create a unique character through our guided 8-step process
+            Create a unique character through our guided 7-step process
           </DialogDescription>
         </DialogHeader>
         
