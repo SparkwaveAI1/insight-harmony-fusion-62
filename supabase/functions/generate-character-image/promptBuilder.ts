@@ -37,11 +37,13 @@ export function buildCharacterImagePrompt(characterData: any): string {
     }
   }
   
-  // Build clean visual prompt focused on appearance only
-  let prompt = `Portrait of ${physicalDescription}`;
+  // Build clean visual prompt with explicit instructions for OpenAI
+  let prompt = `IMPORTANT: Focus only on the physical appearance details provided below. Create an accurate visual representation of this character with a neutral background.
+
+Physical description: ${physicalDescription}`;
   
-  // Add professional image requirements
-  prompt += ', professional portrait, clean background, photorealistic, high quality, detailed, no text, no words, no labels, no annotations';
+  // Add professional image requirements with explicit neutral background instruction
+  prompt += ', professional portrait, neutral background, photorealistic, high quality, detailed, accurate representation, no text, no words, no labels, no annotations';
   
   console.log("Character appearance prompt:", prompt);
   return prompt;

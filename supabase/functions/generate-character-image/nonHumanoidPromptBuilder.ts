@@ -103,15 +103,17 @@ export function buildNonHumanoidImagePrompt(characterData: any, style: string = 
     console.log("Using fallback:", visualDescription);
   }
   
-  // Build clean visual prompt
-  let prompt = visualDescription;
+  // Build clean visual prompt with explicit instructions for OpenAI
+  let prompt = `IMPORTANT: Focus only on the physical appearance details provided below. Create an accurate visual representation of this character with a neutral background. 
+
+Physical description: ${visualDescription}`;
   
   // Add style modifiers
   const styleModifiers = styleConfig.promptModifiers.join(', ');
   prompt += `, ${styleModifiers}`;
   
-  // Add professional image requirements
-  prompt += ', single subject, clean background, detailed, no text, no words, no labels, no annotations';
+  // Add professional image requirements with explicit neutral background instruction
+  prompt += ', single subject, neutral background, detailed, accurate representation, no text, no words, no labels, no annotations';
   
   console.log("Non-humanoid appearance prompt:", prompt);
   return prompt;
