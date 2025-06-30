@@ -1,20 +1,17 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import CharacterDashboard from './characters/pages/CharacterDashboard';
 import HistoricalCharacterCreate from './characters/pages/HistoricalCharacterCreate';
 import CharacterDetail from './characters/pages/CharacterDetail';
 import CharacterChat from './characters/pages/CharacterChat';
-import SignIn from './auth/pages/SignIn';
-import SignUp from './auth/pages/SignUp';
-import Account from './auth/pages/Account';
-import ProtectedRoute from './auth/components/ProtectedRoute';
-import LandingPage from './home/pages/LandingPage';
-import PricingPage from './pricing/pages/PricingPage';
-import CreativeCharacterDashboard from './characters/pages/CreativeCharacterDashboard';
-import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
-
+import Auth from './pages/Auth';
+import UserProfile from './pages/UserProfile';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import Index from './pages/Index';
+import Pricing from './pages/Pricing';
 import CharacterLabDashboard from './characters/pages/CharacterLabDashboard';
 import CharacterLabCreate from './characters/pages/CharacterLabCreate';
 
@@ -27,17 +24,16 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/sign-in" element={<SignIn />} />
-            <Route path="/sign-up" element={<SignUp />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/auth" element={<Auth />} />
 
             {/* Protected Routes */}
             <Route
               path="/account"
               element={
                 <ProtectedRoute>
-                  <Account />
+                  <UserProfile />
                 </ProtectedRoute>
               }
             />
@@ -73,26 +69,24 @@ function App() {
                 </ProtectedRoute>
               }
             />
-			      <Route
-              path="/characters/create/creative"
+            
+            {/* Character Lab Routes */}
+            <Route
+              path="/characters/lab"
               element={
                 <ProtectedRoute>
-                  <CreativeCharacterCreate />
+                  <CharacterLabDashboard />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/characters/creative"
+              path="/characters/lab/create"
               element={
                 <ProtectedRoute>
-                  <CreativeCharacterDashboard />
+                  <CharacterLabCreate />
                 </ProtectedRoute>
               }
             />
-            
-            {/* Character Lab Routes */}
-            <Route path="/characters/lab" element={<CharacterLabDashboard />} />
-            <Route path="/characters/lab/create" element={<CharacterLabCreate />} />
             
           </Routes>
         </QueryClientProvider>
