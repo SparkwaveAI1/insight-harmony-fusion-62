@@ -50,6 +50,25 @@ const backfillHumanoidCreativeCharacters = async (): Promise<void> => {
       // Cast metadata to any to access properties safely
       const metadata = character.metadata as any;
       
+      // Helper function to safely access physical appearance description
+      const getPhysicalDescription = (): string => {
+        // Try metadata first
+        if (metadata?.physical_description) {
+          return metadata.physical_description;
+        }
+        
+        // Try physical_appearance object with safe casting
+        if (character.physical_appearance && typeof character.physical_appearance === 'object') {
+          const physicalAppearance = character.physical_appearance as any;
+          if (physicalAppearance?.description && typeof physicalAppearance.description === 'string') {
+            return physicalAppearance.description;
+          }
+        }
+        
+        // Fallback
+        return `${character.name}, a humanoid character`;
+      };
+      
       // Try to generate from existing metadata
       if (metadata?.created_via === 'creative_genesis') {
         // This is a creative character, try to reconstruct the creative data
@@ -57,9 +76,7 @@ const backfillHumanoidCreativeCharacters = async (): Promise<void> => {
           name: character.name,
           entityType: 'humanoid',
           environment: metadata?.environment || '',
-          physicalAppearanceDescription: metadata?.physical_description || 
-                                       character.physical_appearance?.description || 
-                                       `${character.name}, a humanoid character`
+          physicalAppearanceDescription: getPhysicalDescription()
         };
         
         appearancePrompt = generateAppearancePromptFromCreativeData(creativeData as any);
@@ -69,8 +86,7 @@ const backfillHumanoidCreativeCharacters = async (): Promise<void> => {
           name: character.name,
           entityType: 'humanoid',
           environment: metadata?.environment || character.region || '',
-          physicalDescription: character.physical_appearance?.description || 
-                             `${character.name}, a ${character.character_type} character`
+          physicalDescription: getPhysicalDescription()
         });
       }
       
