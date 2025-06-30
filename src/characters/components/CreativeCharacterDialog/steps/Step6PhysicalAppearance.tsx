@@ -9,37 +9,38 @@ interface Step6PhysicalAppearanceProps {
 }
 
 const Step6PhysicalAppearance = ({ formData, setFormData }: Step6PhysicalAppearanceProps) => {
-  const handleChange = (value: string) => {
-    setFormData({
-      ...formData,
-      physicalAppearanceDescription: value
-    });
-  };
-
   return (
     <div className="space-y-4">
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold mb-2">Physical Appearance</h2>
-        <p className="text-muted-foreground text-sm">
-          Describe how your character looks physically - this will be used for image generation
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Physical Appearance</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Describe how your character looks in detail. This will be used for image generation.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="physicalAppearanceDescription" className="text-sm font-medium">
-          Detailed Physical Description *
-        </Label>
+        <Label htmlFor="physicalAppearance">Physical Description *</Label>
         <Textarea
-          id="physicalAppearanceDescription"
-          placeholder="Describe the character's physical appearance in detail. Include height, build, hair color and style, eye color, skin tone, facial features, clothing or attire, and any distinctive physical characteristics. Be specific and visual - this description will be used to generate the character's image."
+          id="physicalAppearance"
+          placeholder="Describe your character's physical appearance in detail (height, build, coloring, distinguishing features, etc.)"
           value={formData.physicalAppearanceDescription}
-          onChange={(e) => handleChange(e.target.value)}
-          className="min-h-[120px] resize-none"
+          onChange={(e) => setFormData({
+            ...formData,
+            physicalAppearanceDescription: e.target.value
+          })}
+          className="min-h-[120px]"
         />
         <p className="text-xs text-muted-foreground">
-          Example: "Tall, lean figure with flowing silver hair and piercing blue eyes. Pale, ethereal skin with sharp cheekbones. Wears flowing robes with intricate patterns. Has long, graceful fingers and an otherworldly presence."
+          Be specific about visual details - this helps generate accurate character images.
         </p>
       </div>
+
+      {formData.physicalAppearanceDescription.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-xs text-blue-700 font-medium mb-1">Preview:</p>
+          <p className="text-sm text-blue-800">{formData.physicalAppearanceDescription}</p>
+        </div>
+      )}
     </div>
   );
 };

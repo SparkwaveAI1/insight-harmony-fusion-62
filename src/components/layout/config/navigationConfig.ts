@@ -36,7 +36,7 @@ export const navigationMenuItems = [
   },
   {
     title: "Creative Characters",
-    url: "/characters/creative",
+    url: "/characters/create/creative",
     icon: Sparkles,
   },
   {

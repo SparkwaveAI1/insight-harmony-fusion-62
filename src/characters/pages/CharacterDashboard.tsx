@@ -12,7 +12,6 @@ import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
 
 const CharacterDashboard = () => {
-  const [characters] = useState([]); // Will connect to service later
   const [activeSection, setActiveSection] = useState('library');
   const location = useLocation();
 
@@ -34,7 +33,7 @@ const CharacterDashboard = () => {
     },
     {
       id: 'library',
-      title: 'Character Library',
+      title: 'All Characters',
       icon: Library,
       href: '/characters'
     }
@@ -91,7 +90,7 @@ const CharacterDashboard = () => {
                   </div>
 
                   {/* Character Creation Options */}
-                  <div className="grid grid-cols-1 gap-6 mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <Card className="p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
                         <Clock className="h-8 w-8 text-primary" />
@@ -107,6 +106,22 @@ const CharacterDashboard = () => {
                         </Link>
                       </Button>
                     </Card>
+
+                    <Card className="p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Plus className="h-8 w-8 text-primary" />
+                        <h3 className="text-xl font-semibold">Creative Characters</h3>
+                      </div>
+                      <p className="text-muted-foreground mb-4">
+                        Design original fictional characters with custom traits and unique personalities.
+                      </p>
+                      <Button asChild className="w-full">
+                        <Link to="/characters/create/creative">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Creative Character
+                        </Link>
+                      </Button>
+                    </Card>
                   </div>
 
                   {/* Library Preview */}
@@ -114,12 +129,12 @@ const CharacterDashboard = () => {
                     <Library className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                     <h2 className="text-xl font-semibold mb-2">Character Library</h2>
                     <p className="text-muted-foreground mb-6">
-                      View and manage all your created characters
+                      View and manage all your created characters (Historical and Creative)
                     </p>
                     <Button asChild>
                       <Link to="/characters">
                         <Library className="h-4 w-4 mr-2" />
-                        View Character Library
+                        View All Characters
                       </Link>
                     </Button>
                   </Card>
