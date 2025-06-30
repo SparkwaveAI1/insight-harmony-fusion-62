@@ -1,4 +1,3 @@
-
 function getAgeHealthAppearance(characterData: any): string {
   // Use new direct fields first, fall back to metadata for backwards compatibility
   const age = characterData.age || parseInt(characterData.metadata?.age) || 30;
@@ -43,20 +42,18 @@ function getAgeHealthAppearance(characterData: any): string {
 }
 
 export function buildCharacterImagePrompt(characterData: any): string {
-  console.log("Generating enhanced realistic character image prompt from character data");
+  console.log("Generating clean visual character image prompt from character data");
   
   // Use new direct fields first, fall back to metadata for backwards compatibility
   const age = characterData.age || parseInt(characterData.metadata?.age) || 30;
   const gender = characterData.gender || characterData.metadata?.gender || 'person';
   const ethnicity = characterData.ethnicity || characterData.metadata?.ethnicity || characterData.physical_appearance?.ethnicity || 'diverse';
-  const region = characterData.region || characterData.metadata?.region || 'general';
   
   // Physical characteristics from physical_appearance or metadata
   const physicalAppearance = characterData.physical_appearance || {};
   const height = physicalAppearance.height_build || characterData.metadata?.height || 'average height';
   const bodyType = physicalAppearance.height_build || characterData.metadata?.build_body_type || 'average build';
   const hairColor = physicalAppearance.hair || characterData.metadata?.hair_color || 'brown';
-  const hairStyle = physicalAppearance.hair || characterData.metadata?.hair_style || 'medium length';
   const eyeColor = physicalAppearance.eye_color || characterData.metadata?.eye_color || 'brown';
   const skinTone = physicalAppearance.skin_tone || characterData.metadata?.skin_tone || 'medium';
   
@@ -68,53 +65,45 @@ export function buildCharacterImagePrompt(characterData: any): string {
   // Enhanced appearance details
   const ageHealthAppearance = getAgeHealthAppearance(characterData);
   
-  // Build comprehensive prompt
-  let prompt = `Professional portrait of a ${age}-year-old ${gender}`;
+  // Build comprehensive but clean prompt focused on visual elements only
+  let prompt = `Portrait of a ${age}-year-old ${gender}`;
   
   if (ethnicity && ethnicity !== 'diverse' && ethnicity !== 'not specified') {
-    prompt += ` of ${ethnicity} ethnicity`;
+    prompt += ` of ${ethnicity} descent`;
   }
   
-  // Physical features
+  // Physical features - focus on visual description
   prompt += `, ${ageHealthAppearance}`;
-  prompt += `, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin tone`;
+  prompt += `, ${hairColor} hair, ${eyeColor} eyes, ${skinTone} complexion`;
   prompt += `, ${bodyType}, ${height}`;
   
-  // Historical context and clothing
-  let clothingStyle = 'period-appropriate attire';
+  // Historical context and clothing - simplified
+  let clothingStyle = 'period clothing';
   if (historicalPeriod.includes('1700') || historicalPeriod.includes('18th')) {
-    clothingStyle = '18th-century clothing';
+    clothingStyle = '18th century attire';
   } else if (historicalPeriod.includes('1800') || historicalPeriod.includes('19th')) {
-    clothingStyle = '19th-century attire';
+    clothingStyle = '19th century clothing';
   } else if (historicalPeriod.includes('medieval')) {
-    clothingStyle = 'medieval clothing';
+    clothingStyle = 'medieval garments';
   }
   
-  // Adjust clothing by social class
+  // Adjust clothing by social class - keep simple
   if (socialClass.toLowerCase().includes('upper')) {
-    clothingStyle = `fine ${clothingStyle}`;
+    clothingStyle = `elegant ${clothingStyle}`;
   } else if (socialClass.toLowerCase().includes('lower')) {
-    clothingStyle = `working-class ${clothingStyle}`;
+    clothingStyle = `simple ${clothingStyle}`;
   }
   
-  prompt += `, dressed in ${clothingStyle} appropriate for a ${occupation}`;
+  prompt += `, wearing ${clothingStyle}`;
   
-  // Regional influence
-  if (region && region !== 'general') {
-    prompt += `, ${region} regional style`;
-  }
+  // Photography style - emphasize no text
+  prompt += `, professional portrait, clean background, high quality, photorealistic`;
+  prompt += `, detailed facial features, natural lighting, studio photography`;
+  prompt += `, ${historicalPeriod} style portrait`;
   
-  // Photography style - professional portrait quality
-  prompt += `, professional lighting, clean background, high quality portrait photography`;
-  prompt += `, realistic, photorealistic, detailed facial features, natural expression`;
-  prompt += `, shot with professional camera, studio lighting, crisp details`;
+  // Strong emphasis on no text or annotations
+  prompt += `, no text, no words, no letters, no annotations, no labels, no captions, clean image without any written content`;
   
-  // Historical accuracy
-  prompt += `, historically accurate ${historicalPeriod} portrait style`;
-  
-  // Final quality modifiers
-  prompt += `, 4K resolution, professional headshot style, historical portrait quality`;
-  
-  console.log("Generated enhanced character image prompt:", prompt);
+  console.log("Generated clean visual character prompt:", prompt);
   return prompt;
 }

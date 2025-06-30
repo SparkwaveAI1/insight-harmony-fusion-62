@@ -42,7 +42,7 @@ function getAgeHealthAppearance(metadata: any): string {
 }
 
 export function buildImagePrompt(personaData: any): string {
-  console.log("Generating enhanced realistic image prompt from persona data");
+  console.log("Generating clean realistic image prompt from persona data");
   
   const metadata = personaData.metadata || {};
   
@@ -50,11 +50,10 @@ export function buildImagePrompt(personaData: any): string {
   const age = metadata.age || '30';
   const gender = metadata.gender || 'person';
   const ethnicity = metadata.race_ethnicity || 'diverse';
-  const region = metadata.region || 'general';
   
   // Physical characteristics
   const height = metadata.height || 'average height';
-  const bodyType = metadata.build_body_type || 'average';
+  const bodyType = metadata.build_body_type || 'average build';
   const hairColor = metadata.hair_color || 'brown';
   const hairStyle = metadata.hair_style || 'medium length';
   const eyeColor = metadata.eye_color || 'brown';
@@ -67,8 +66,8 @@ export function buildImagePrompt(personaData: any): string {
   // Enhanced appearance details
   const ageHealthAppearance = getAgeHealthAppearance(metadata);
   
-  // Build comprehensive prompt
-  let prompt = `Professional headshot portrait of a ${age}-year-old ${gender}`;
+  // Build clean visual prompt
+  let prompt = `Professional portrait of a ${age}-year-old ${gender}`;
   
   if (ethnicity && ethnicity !== 'diverse') {
     prompt += ` of ${ethnicity} ethnicity`;
@@ -77,19 +76,19 @@ export function buildImagePrompt(personaData: any): string {
   // Physical features
   prompt += `, ${ageHealthAppearance}`;
   prompt += `, ${hairColor} ${hairStyle} hair, ${eyeColor} eyes, ${skinTone} skin tone`;
-  prompt += `, ${bodyType} build, ${height}`;
+  prompt += `, ${bodyType}, ${height}`;
   
   // Style and presentation
-  prompt += `, dressed in ${fashionSense} attire appropriate for a ${occupation}`;
+  prompt += `, dressed in ${fashionSense} attire suitable for a ${occupation}`;
   
-  // Photography style
-  prompt += `, professional lighting, clean background, high quality portrait photography`;
-  prompt += `, realistic, photorealistic, detailed facial features, natural expression`;
-  prompt += `, shot with professional camera, studio lighting, crisp details`;
+  // Photography style - emphasize clean visual
+  prompt += `, professional headshot, clean background, high quality portrait photography`;
+  prompt += `, realistic, photorealistic, natural expression, professional lighting`;
+  prompt += `, studio quality, crisp details, 4K resolution`;
   
-  // Final quality modifiers
-  prompt += `, 4K resolution, professional headshot style, corporate portrait quality`;
+  // Strong emphasis on no text
+  prompt += `, no text, no words, no letters, no annotations, no labels, no captions, clean image without written content`;
   
-  console.log("Generated image prompt:", prompt);
+  console.log("Generated clean persona image prompt:", prompt);
   return prompt;
 }

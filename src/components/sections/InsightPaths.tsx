@@ -70,15 +70,24 @@ const InsightPaths = () => {
                   <p className="text-sm text-primary/80 italic mb-6">{path.note}</p>
                 )}
                 <div className="mt-auto">
-                  <Button
-                    as="a"
-                    href={path.buttonHref}
-                    variant={path.inDevelopment ? "outline" : "primary"}
-                    className={`w-full ${path.inDevelopment ? 'cursor-not-allowed opacity-60' : ''}`}
-                    disabled={path.inDevelopment}
-                  >
-                    {path.buttonText}
-                  </Button>
+                  {path.inDevelopment ? (
+                    <Button
+                      variant="outline"
+                      className="w-full cursor-not-allowed opacity-60"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      {path.buttonText}
+                    </Button>
+                  ) : (
+                    <Button
+                      as="a"
+                      href={path.buttonHref}
+                      variant="primary"
+                      className="w-full"
+                    >
+                      {path.buttonText}
+                    </Button>
+                  )}
                 </div>
               </Card>
             </Reveal>
