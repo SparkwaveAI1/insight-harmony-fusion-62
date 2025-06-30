@@ -47,14 +47,17 @@ const backfillHumanoidCreativeCharacters = async (): Promise<void> => {
     try {
       let appearancePrompt = '';
       
+      // Cast metadata to any to access properties safely
+      const metadata = character.metadata as any;
+      
       // Try to generate from existing metadata
-      if (character.metadata?.created_via === 'creative_genesis') {
+      if (metadata?.created_via === 'creative_genesis') {
         // This is a creative character, try to reconstruct the creative data
         const creativeData = {
           name: character.name,
           entityType: 'humanoid',
-          environment: character.metadata?.environment || '',
-          physicalAppearanceDescription: character.metadata?.physical_description || 
+          environment: metadata?.environment || '',
+          physicalAppearanceDescription: metadata?.physical_description || 
                                        character.physical_appearance?.description || 
                                        `${character.name}, a humanoid character`
         };
@@ -65,7 +68,7 @@ const backfillHumanoidCreativeCharacters = async (): Promise<void> => {
         appearancePrompt = generateAppearancePrompt({
           name: character.name,
           entityType: 'humanoid',
-          environment: character.metadata?.environment || character.region || '',
+          environment: metadata?.environment || character.region || '',
           physicalDescription: character.physical_appearance?.description || 
                              `${character.name}, a ${character.character_type} character`
         });
@@ -111,11 +114,15 @@ const backfillNonHumanoidCreativeCharacters = async (): Promise<void> => {
   
   for (const character of characters) {
     try {
+      // Cast metadata and trait_profile to any to access properties safely
+      const metadata = character.metadata as any;
+      const traitProfile = character.trait_profile as any;
+      
       const appearancePrompt = generateAppearancePrompt({
         name: character.name,
         entityType: 'non-humanoid',
-        environment: character.metadata?.environment || character.origin_universe || '',
-        physicalManifestation: character.trait_profile?.physical_manifestation,
+        environment: metadata?.environment || character.origin_universe || '',
+        physicalManifestation: traitProfile?.physical_manifestation,
         speciesType: character.species_type,
         formFactor: character.form_factor
       });

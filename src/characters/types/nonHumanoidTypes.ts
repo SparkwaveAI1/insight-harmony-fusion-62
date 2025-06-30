@@ -136,6 +136,7 @@ export interface NonHumanoidCharacter {
   character_type: 'multi_species';
   creation_date: string;
   created_at: string;
+  appearance_prompt?: string; // Add this field
   metadata: any;
   behavioral_modulation: any;
   interview_sections: any;
@@ -163,6 +164,7 @@ export interface DbNonHumanoidCharacter {
   character_type: 'multi_species';
   creation_date: string;
   created_at?: string;
+  appearance_prompt?: string; // Add this field
   metadata: any;
   behavioral_modulation: any;
   interview_sections: any;

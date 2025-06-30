@@ -54,6 +54,7 @@ export interface CreativeCharacterData {
   description: string;
   environment: string;
   physicalForm: string;
+  physicalAppearanceDescription: string; // Add this field
   communication: string;
   coreDrives: string[];
   surfaceTriggers: string[];
@@ -67,6 +68,7 @@ export interface Character {
   character_type: 'historical' | 'fictional' | 'multi_species';
   creation_date: string;
   created_at: string;
+  appearance_prompt?: string; // Add this field
   metadata: any;
   behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
@@ -101,6 +103,7 @@ export interface DbCharacter {
   character_type: 'historical' | 'fictional' | 'multi_species';
   creation_date: string;
   created_at?: string;
+  appearance_prompt?: string; // Add this field
   metadata: any;
   behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
