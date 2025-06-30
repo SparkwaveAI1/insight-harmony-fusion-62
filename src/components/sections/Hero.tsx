@@ -41,33 +41,11 @@ const Hero = () => {
                 size="lg" 
                 className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
                 as={Link}
-                to="/interviewer"
-                variant="primary"
-              >
-                Begin Your Persona Interview
-                <Users className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
-              </Button>
-
-              <Button 
-                size="lg" 
-                className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg w-full sm:w-auto"
-                as={Link}
                 to="/simulated-persona"
                 variant="primary"
               >
                 Create a Simulated Persona
                 <Beaker className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
-              </Button>
-
-              <Button 
-                size="lg" 
-                className="group py-6 px-8 text-lg bg-purple-600 hover:bg-purple-700 transition-all shadow-lg w-full sm:w-auto"
-                as={Link}
-                to="/characters-home"
-                variant="primary"
-              >
-                Explore Characters
-                <Brain className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
 
               <Button 
@@ -79,6 +57,17 @@ const Hero = () => {
               >
                 Run Research Simulations
                 <Search className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+
+              <Button 
+                size="lg" 
+                className="group py-6 px-8 text-lg bg-purple-600 hover:bg-purple-700 transition-all shadow-lg w-full sm:w-auto"
+                as={Link}
+                to="/characters-home"
+                variant="primary"
+              >
+                Explore Characters
+                <Brain className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
             </div>
           </Reveal>
