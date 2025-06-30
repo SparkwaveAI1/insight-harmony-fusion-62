@@ -95,7 +95,8 @@ serve(async (req) => {
       console.log("Reference-based prompt:", imagePrompt);
     } else if (characterData.appearance_prompt && 
                (characterData.metadata?.created_via === 'creative_genesis' || 
-                characterData.character_type === 'fictional')) {
+                characterData.character_type === 'fictional' ||
+                characterData.character_type === 'multi_species')) {
       // Use the pre-generated appearance prompt for creative characters
       console.log("Using pre-generated appearance prompt for creative character");
       imagePrompt = characterData.appearance_prompt;
@@ -124,8 +125,10 @@ serve(async (req) => {
       if (characterData.character_type === 'historical') {
         console.log("Processing historical character");
         imagePrompt = buildHistoricalCharacterImagePrompt(characterData);
-      } else if (characterData.character_type === 'fictional') {
-        console.log("Processing creative/fictional character");
+      } else if (characterData.character_type === 'fictional' || 
+                 characterData.character_type === 'multi_species' ||
+                 characterData.metadata?.created_via === 'creative_genesis') {
+        console.log("Processing creative/fictional character with creative prompt builder");
         imagePrompt = buildCreativeCharacterImagePrompt(characterData, style);
         
         // Apply style-specific OpenAI parameters for creative characters
