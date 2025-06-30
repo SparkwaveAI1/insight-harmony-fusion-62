@@ -18,8 +18,8 @@ import PersonaDashboard from './personas/pages/PersonaDashboard';
 import PersonaViewer from './pages/PersonaViewer';
 import PersonaDetail from './pages/PersonaDetail';
 import PersonaChat from './pages/PersonaChat';
-import PersonaCreate from './pages/PersonaCreate';
-import ResearchSession from './pages/ResearchSession';
+import PersonaCreate from './pages/persona-creation/PersonaCreationLanding';
+import ResearchSession from './pages/Research';
 
 // General pages
 import Auth from './pages/Auth';

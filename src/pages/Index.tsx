@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Brain, Users, BookOpen, Sparkles } from 'lucide-react';
@@ -33,17 +34,13 @@ const Index = () => {
 
           <Reveal delay={400}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button size="lg" asChild>
-                <Link to="/personas">
-                  <Brain className="mr-2 h-5 w-5" />
-                  Explore Personas
-                </Link>
+              <Button size="lg" as={Link} to="/personas">
+                <Brain className="mr-2 h-5 w-5" />
+                Explore Personas
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/characters">
-                  <Users className="mr-2 h-5 w-5" />
-                  Browse Characters
-                </Link>
+              <Button size="lg" variant="outline" as={Link} to="/characters">
+                <Users className="mr-2 h-5 w-5" />
+                Browse Characters
               </Button>
             </div>
           </Reveal>
@@ -75,10 +72,8 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6 flex-grow">
                   Research-grade behavioral personas with stable traits and psychologically grounded outputs. Perfect for academic research and behavioral studies.
                 </p>
-                <Button asChild className="w-full">
-                  <Link to="/personas">
-                    Enter Persona Module
-                  </Link>
+                <Button as={Link} to="/personas" className="w-full">
+                  Enter Persona Module
                 </Button>
               </Card>
             </Reveal>
@@ -93,10 +88,8 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6 flex-grow">
                   Accurately modeled historical figures with verifiable traits, timelines, and public records. No fictional or speculative content.
                 </p>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/characters">
-                    Browse Historical Figures
-                  </Link>
+                <Button as={Link} to="/characters" variant="outline" className="w-full">
+                  Browse Historical Figures
                 </Button>
               </Card>
             </Reveal>
@@ -111,10 +104,8 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6 flex-grow">
                   Freeform character creation for storytelling, games, and simulations. Create any humanoid or non-humanoid being with complete creative freedom.
                 </p>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/characters/lab">
-                    Enter Character Lab
-                  </Link>
+                <Button as={Link} to="/characters/lab" variant="outline" className="w-full">
+                  Enter Character Lab
                 </Button>
               </Card>
             </Reveal>
