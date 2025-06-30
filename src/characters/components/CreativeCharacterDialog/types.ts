@@ -7,7 +7,7 @@ export interface CreativeCharacterData {
   description: string;
   environment: string;
   physicalForm: string;
-  physicalAppearanceDescription: string; // NEW: Detailed physical appearance
+  physicalAppearanceDescription: string;
   communication: string;
   coreDrives: string[];
   surfaceTriggers: string[];

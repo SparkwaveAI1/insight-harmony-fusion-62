@@ -1,28 +1,18 @@
 
-// Character trait and type definitions
-import { 
-  TraitProfile,
-  EmotionalTriggersProfile 
-} from '../../services/persona/types/trait-profile';
-import { 
-  LinguisticProfile 
-} from '../../services/persona/types/linguistic-profile';
-import { 
-  NonHumanoidTraitProfile 
-} from './nonHumanoidTypes';
+// Character trait and type definitions - completely separate from persona system
+import { CharacterLinguisticProfile, CharacterEmotionalSystem, CharacterBehavioralModulation } from './characterLinguisticTypes';
+import { NonHumanoidTraitProfile } from './nonHumanoidTypes';
 
-// Character-specific behavioral modulation (separate from persona behavioral modulation)
-export interface CharacterBehavioralModulation {
-  formality?: number;
-  enthusiasm?: number;
-  assertiveness?: number;
-  empathy?: number;
-  patience?: number;
-  [key: string]: any; // Add index signature for JSON compatibility
-}
-
-// Extend the persona TraitProfile to include character-specific physical traits for humanoid characters
-export interface HumanoidCharacterTraitProfile extends TraitProfile {
+// Character-specific trait profile for humanoid characters
+export interface HumanoidCharacterTraitProfile {
+  // Basic demographics
+  age?: number;
+  gender?: string;
+  social_class?: string;
+  occupation?: string;
+  education_level?: string;
+  
+  // Physical traits
   physical_appearance?: {
     height?: string;
     build_body_type?: string;
@@ -32,16 +22,23 @@ export interface HumanoidCharacterTraitProfile extends TraitProfile {
     skin_tone?: string;
     [key: string]: any;
   };
+  
   physical_health?: {
     disabilities?: string[];
     health_conditions?: string[];
     mobility?: string;
     [key: string]: any;
   };
+  
+  // Character-specific personality traits
+  personality_traits?: string[];
+  character_background?: string;
+  motivations?: string[];
+  fears?: string[];
+  goals?: string[];
+  
+  [key: string]: any; // Add index signature for JSON compatibility
 }
-
-// Export NonHumanoidTraitProfile for proper access
-export type { NonHumanoidTraitProfile } from './nonHumanoidTypes';
 
 // Union type for trait profiles
 export type CharacterTraitProfile = HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
@@ -55,7 +52,7 @@ export interface CreativeCharacterData {
   description: string;
   environment: string;
   physicalForm: string;
-  physicalAppearanceDescription: string; // Add this field
+  physicalAppearanceDescription: string;
   communication: string;
   coreDrives: string[];
   surfaceTriggers: string[];
@@ -69,15 +66,15 @@ export interface Character {
   character_type: 'historical' | 'fictional' | 'multi_species';
   creation_date: string;
   created_at: string;
-  appearance_prompt?: string; // Add this field
+  appearance_prompt?: string;
   metadata: any;
   behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
-  linguistic_profile: LinguisticProfile;
+  linguistic_profile: CharacterLinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: CharacterTraitProfile;
-  emotional_triggers?: EmotionalTriggersProfile;
+  emotional_system?: CharacterEmotionalSystem; // Character-specific emotional system
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
@@ -104,15 +101,14 @@ export interface DbCharacter {
   character_type: 'historical' | 'fictional' | 'multi_species';
   creation_date: string;
   created_at?: string;
-  appearance_prompt?: string; // Add this field
+  appearance_prompt?: string;
   metadata: any;
   behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
-  linguistic_profile: LinguisticProfile;
+  linguistic_profile: CharacterLinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: CharacterTraitProfile;
-  emotional_triggers?: EmotionalTriggersProfile;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;

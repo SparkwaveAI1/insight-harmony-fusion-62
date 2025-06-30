@@ -1,5 +1,7 @@
 
 // Non-humanoid character trait definitions - completely separate from persona types
+import { CharacterLinguisticProfile, CharacterEmotionalSystem, CharacterBehavioralModulation } from './characterLinguisticTypes';
+
 export interface NonHumanoidCommunicationStyle {
   modality: string;
   linguistic_structure: string;
@@ -144,15 +146,15 @@ export interface NonHumanoidCharacter {
   character_type: 'multi_species';
   creation_date: string;
   created_at: string;
-  appearance_prompt?: string; // Add this field
+  appearance_prompt?: string;
   metadata: any;
-  behavioral_modulation: any;
+  behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
-  linguistic_profile: any;
+  linguistic_profile: CharacterLinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: NonHumanoidTraitProfile;
-  emotional_triggers?: any;
+  emotional_system?: CharacterEmotionalSystem; // Character-specific emotional system
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
@@ -172,15 +174,14 @@ export interface DbNonHumanoidCharacter {
   character_type: 'multi_species';
   creation_date: string;
   created_at?: string;
-  appearance_prompt?: string; // Add this field
+  appearance_prompt?: string;
   metadata: any;
-  behavioral_modulation: any;
+  behavioral_modulation: CharacterBehavioralModulation;
   interview_sections: any;
-  linguistic_profile: any;
+  linguistic_profile: CharacterLinguisticProfile;
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: NonHumanoidTraitProfile;
-  emotional_triggers?: any;
   prompt?: string;
   user_id?: string;
   is_public?: boolean;

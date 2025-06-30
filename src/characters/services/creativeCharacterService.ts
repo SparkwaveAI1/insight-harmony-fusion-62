@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 import { CreativeCharacterData } from '../types/characterTraitTypes';
+import { CharacterLinguisticProfile, CharacterEmotionalSystem, CharacterBehavioralModulation } from '../types/characterLinguisticTypes';
 import { generateNonHumanoidTraits } from './nonHumanoidTraitGenerator';
 import { generateCharacterTraits } from './characterTraitService';
 import { generateAppearancePromptFromCreativeData } from './appearancePromptGenerator';
@@ -18,6 +19,34 @@ export const createCreativeCharacter = async (
     // Generate appearance prompt from the creative data
     const appearancePrompt = generateAppearancePromptFromCreativeData(data);
     console.log('Generated appearance prompt:', appearancePrompt);
+
+    // Create character-specific emotional system from creative data
+    const emotionalSystem: CharacterEmotionalSystem = {
+      core_drives: data.coreDrives,
+      surface_triggers: data.surfaceTriggers,
+      emotional_responses: {
+        change_response_style: data.changeResponseStyle
+      }
+    };
+
+    // Create character-specific linguistic profile
+    const linguisticProfile: CharacterLinguisticProfile = {
+      communication_style: data.communication,
+      vocabulary_complexity: 'moderate',
+      speech_patterns: ['descriptive', 'narrative'],
+      formality_level: 0.6,
+      expressiveness: 0.7,
+      cultural_speech_markers: []
+    };
+
+    // Create character-specific behavioral modulation
+    const behavioralModulation: CharacterBehavioralModulation = {
+      formality: 0.5,
+      enthusiasm: 0.7,
+      assertiveness: 0.6,
+      empathy: data.entityType === 'non-humanoid' ? 0.4 : 0.6,
+      patience: 0.5
+    };
 
     if (data.entityType === 'non-humanoid') {
       // Create non-humanoid character
@@ -41,28 +70,16 @@ export const createCreativeCharacter = async (
           environment: data.environment,
           physical_description: data.physicalAppearanceDescription
         },
-        behavioral_modulation: {
-          formality: 0.5,
-          enthusiasm: 0.7, 
-          assertiveness: 0.6,
-          empathy: 0.4,
-          patience: 0.5
-        },
+        behavioral_modulation: behavioralModulation,
         interview_sections: [],
-        linguistic_profile: {
-          sentence_structure: 'complex',
-          formality_level: 0.6,
-          emotional_expressiveness: 0.5,
-          cultural_references: 0.4,
-          technical_terminology: 0.8,
-          rhetorical_patterns: ['analytical', 'descriptive']
-        },
+        linguistic_profile: linguisticProfile,
         preinterview_tags: [],
         simulation_directives: {
           preferred_environment: data.environment,
           memory_decay_profile: 'stable'
         },
         trait_profile: traitProfile,
+        emotional_system: emotionalSystem,
         user_id: userId,
         is_public: false,
         origin_universe: data.narrativeDomain,
@@ -77,8 +94,8 @@ export const createCreativeCharacter = async (
           ...nonHumanoidCharacter,
           // Cast complex objects to Json for database compatibility
           trait_profile: traitProfile as any,
-          behavioral_modulation: nonHumanoidCharacter.behavioral_modulation as any,
-          linguistic_profile: nonHumanoidCharacter.linguistic_profile as any,
+          behavioral_modulation: behavioralModulation as any,
+          linguistic_profile: linguisticProfile as any,
           metadata: nonHumanoidCharacter.metadata as any,
           simulation_directives: nonHumanoidCharacter.simulation_directives as any,
           interview_sections: nonHumanoidCharacter.interview_sections as any,
@@ -132,28 +149,16 @@ export const createCreativeCharacter = async (
           environment: data.environment,
           physical_description: data.physicalAppearanceDescription
         },
-        behavioral_modulation: {
-          formality: 0.5,
-          enthusiasm: 0.7,
-          assertiveness: 0.6,
-          empathy: 0.6,
-          patience: 0.5
-        },
+        behavioral_modulation: behavioralModulation,
         interview_sections: [],
-        linguistic_profile: {
-          sentence_structure: 'complex',
-          formality_level: 0.6,
-          emotional_expressiveness: 0.6,
-          cultural_references: 0.5,
-          technical_terminology: 0.5,
-          rhetorical_patterns: ['conversational', 'descriptive']
-        },
+        linguistic_profile: linguisticProfile,
         preinterview_tags: [],
         simulation_directives: {
           preferred_environment: data.environment,
           memory_decay_profile: 'stable'
         },
         trait_profile: traitProfile,
+        emotional_system: emotionalSystem,
         user_id: userId,
         is_public: false,
         age: 30,
@@ -169,10 +174,12 @@ export const createCreativeCharacter = async (
         .from('characters')
         .insert({
           ...humanoidCharacter,
+          // Remove emotional_system as it's not in the database schema
+          emotional_system: undefined,
           // Cast complex objects to Json for database compatibility
           trait_profile: traitProfile as any,
-          behavioral_modulation: humanoidCharacter.behavioral_modulation as any,
-          linguistic_profile: humanoidCharacter.linguistic_profile as any,
+          behavioral_modulation: behavioralModulation as any,
+          linguistic_profile: linguisticProfile as any,
           metadata: humanoidCharacter.metadata as any,
           simulation_directives: humanoidCharacter.simulation_directives as any,
           interview_sections: humanoidCharacter.interview_sections as any,
