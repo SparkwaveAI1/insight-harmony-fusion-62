@@ -48,6 +48,7 @@ export type Database = {
       characters: {
         Row: {
           age: number | null
+          appearance_prompt: string | null
           behavioral_modulation: Json
           character_id: string
           character_type: string
@@ -78,6 +79,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          appearance_prompt?: string | null
           behavioral_modulation?: Json
           character_id: string
           character_type: string
@@ -108,6 +110,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          appearance_prompt?: string | null
           behavioral_modulation?: Json
           character_id?: string
           character_type?: string
@@ -378,6 +381,7 @@ export type Database = {
       }
       non_humanoid_characters: {
         Row: {
+          appearance_prompt: string | null
           behavioral_modulation: Json
           character_id: string
           character_type: string
@@ -402,6 +406,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          appearance_prompt?: string | null
           behavioral_modulation?: Json
           character_id: string
           character_type?: string
@@ -426,6 +431,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          appearance_prompt?: string | null
           behavioral_modulation?: Json
           character_id?: string
           character_type?: string

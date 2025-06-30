@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { MessageCircle, Menu, Save, Languages, Info } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,7 +13,7 @@ import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import CharacterChatModeSelector from './CharacterChatModeSelector';
-import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
+import SaveCharacterConversationModal from './SaveCharacterConversationModal';
 import { useCharacterChat } from '../hooks/useCharacterChat';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
@@ -78,8 +79,8 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
   };
 
   const handleConversationSaved = (conversationId: string, projectId: string) => {
-    toast.success("Conversation saved successfully", {
-      description: "Your conversation has been saved to your project.",
+    toast.success("Character conversation saved successfully", {
+      description: "Your character conversation has been saved to your project.",
       action: {
         label: "Go to Project",
         onClick: () => navigate(`/projects/${projectId}`),
@@ -245,16 +246,16 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
           onOpenChange={setMobileMenuOpen}
         />
         
-        {/* Save Conversation Modal */}
-        <SaveConversationModal
+        {/* Save Character Conversation Modal */}
+        <SaveCharacterConversationModal
           open={saveModalOpen}
           onOpenChange={setSaveModalOpen}
           messages={messages.map(m => ({
             role: m.role,
             content: m.content,
-            persona_id: characterId
+            character_id: characterId
           }))}
-          personaIds={[characterId]}
+          characterIds={[characterId]}
           defaultTitle={generateDefaultTitle()}
           onSaved={handleConversationSaved}
         />

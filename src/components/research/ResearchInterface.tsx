@@ -8,7 +8,7 @@ import { SendToPersonaSection } from './SendToPersonaSection';
 import { ActivePersonasDisplay } from './ActivePersonasDisplay';
 import { SessionData } from './hooks/types';
 import { exportTranscript } from './utils/exportUtils';
-import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
+import SaveResearchConversationModal from './SaveResearchConversationModal';
 
 interface ResearchInterfaceProps {
   sessionData: SessionData;
@@ -48,17 +48,17 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   };
 
   const handleConversationSaved = (conversationId: string, projectId: string) => {
-    console.log('Conversation saved successfully:', conversationId, 'to project:', projectId);
+    console.log('Research conversation saved successfully:', conversationId, 'to project:', projectId);
     setShowSaveModal(false);
     // User can continue the conversation after saving
   };
 
-  // Convert research messages to the format expected by SaveConversationModal
+  // Convert research messages to the format expected by SaveResearchConversationModal
   const formatMessagesForSave = () => {
     return messages.map(message => ({
       role: message.role as "user" | "assistant",
       content: message.content,
-      persona_id: message.responding_persona_id
+      responding_persona_id: message.responding_persona_id
     }));
   };
 
@@ -126,9 +126,9 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       {/* Loaded Personas Display */}
       <ActivePersonasDisplay loadedPersonas={loadedPersonas} />
 
-      {/* Save Conversation Modal - Only show if has project */}
+      {/* Save Research Conversation Modal - Only show if has project */}
       {hasProject && (
-        <SaveConversationModal
+        <SaveResearchConversationModal
           open={showSaveModal}
           onOpenChange={setShowSaveModal}
           messages={formatMessagesForSave()}
