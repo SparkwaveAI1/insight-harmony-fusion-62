@@ -139,7 +139,7 @@ const CreativeCharacterDashboard = () => {
                       <p className="text-sm md:text-base text-muted-foreground mb-4">
                         Design original fictional characters with custom traits, creative backgrounds, and unique personalities.
                       </p>
-                      <Button asChild className="w-full">
+                      <Button asChild className="w-full font-orbitron">
                         <Link to="/characters/create/creative">
                           <FlaskConical className="h-4 w-4 mr-2" />
                           Create Creative Character
