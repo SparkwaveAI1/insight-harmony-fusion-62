@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -155,9 +154,9 @@ const CharactersHome = () => {
                 asChild 
                 className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg font-orbitron"
               >
-                <Link to="/characters/creative" className="font-orbitron">
+                <Link to="/characters/creative">
                   <TestTube className="mr-2 h-5 w-5" />
-                  <span className="font-orbitron">Character Lab</span>
+                  Character Lab
                 </Link>
               </Button>
             </div>
