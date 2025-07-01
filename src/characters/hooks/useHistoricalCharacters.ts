@@ -1,15 +1,15 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { getAllCharacters } from '../services/characterService';
+import { getAllHistoricalCharacters } from '../services/unifiedCharacterService';
+import { useAuth } from '@/context/AuthContext';
 
 export const useHistoricalCharacters = () => {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['historical-characters'],
-    queryFn: async () => {
-      const allCharacters = await getAllCharacters();
-      // Filter to only show characters with creation_source = 'historical'
-      return allCharacters.filter(character => character.creation_source === 'historical');
-    },
+    queryKey: ['historical-characters', user?.id],
+    queryFn: () => getAllHistoricalCharacters(user?.id),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!user, // Only run query when user is authenticated
   });
 };

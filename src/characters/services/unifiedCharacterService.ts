@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Character, DbCharacter } from '../types/characterTraitTypes';
 import { characterToDbCharacter, dbCharacterToCharacter } from './characterMappers';
@@ -29,23 +28,29 @@ export const saveCharacter = async (character: Character): Promise<Character> =>
   }
 };
 
-export const getCharactersByCreationSource = async (creationSource: 'historical' | 'creative'): Promise<Character[]> => {
+export const getCharactersByCreationSource = async (creationSource: 'historical' | 'creative', userId?: string): Promise<Character[]> => {
   console.log('=== GETTING CHARACTERS BY CREATION SOURCE ===');
-  console.log('Creation source:', creationSource);
+  console.log('Creation source:', creationSource, 'User ID:', userId);
   
   try {
-    const { data, error } = await (supabase as any)
+    let query = (supabase as any)
       .from('characters')
       .select('*')
-      .eq('creation_source', creationSource)
-      .order('created_at', { ascending: false });
+      .eq('creation_source', creationSource);
+
+    // If userId is provided, filter by user
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error getting characters:', error);
       throw new Error(`Failed to get characters: ${error.message}`);
     }
 
-    console.log(`✅ Retrieved ${data?.length || 0} ${creationSource} characters`);
+    console.log(`✅ Retrieved ${data?.length || 0} ${creationSource} characters for user ${userId || 'all'}`);
     return data ? data.map(dbCharacterToCharacter) : [];
   } catch (error) {
     console.error('Error in getCharactersByCreationSource:', error);
@@ -53,12 +58,12 @@ export const getCharactersByCreationSource = async (creationSource: 'historical'
   }
 };
 
-export const getAllCreativeCharacters = async (): Promise<Character[]> => {
-  return getCharactersByCreationSource('creative');
+export const getAllCreativeCharacters = async (userId?: string): Promise<Character[]> => {
+  return getCharactersByCreationSource('creative', userId);
 };
 
-export const getAllHistoricalCharacters = async (): Promise<Character[]> => {
-  return getCharactersByCreationSource('historical');
+export const getAllHistoricalCharacters = async (userId?: string): Promise<Character[]> => {
+  return getCharactersByCreationSource('historical', userId);
 };
 
 export const getCharacterById = async (id: string): Promise<Character | null> => {
