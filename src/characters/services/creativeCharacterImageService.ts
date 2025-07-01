@@ -30,20 +30,13 @@ export async function generateCreativeCharacterImage(
       throw new Error('This service only handles creative characters from Character Lab');
     }
 
-    // Verify ownership by checking if the character exists and belongs to the current user
-    const { data: ownershipCheck, error: ownershipError } = await supabase
-      .from('characters')
-      .select('user_id')
-      .eq('character_id', characterData.character_id)
-      .eq('creation_source', 'creative')
-      .single();
-
-    if (ownershipError || !ownershipCheck) {
-      console.error('Character ownership verification failed:', ownershipError);
-      throw new Error('Character not found or access denied');
+    // Get current session for auth token
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      throw new Error('Authentication required');
     }
 
-    console.log('Character ownership verified for user:', ownershipCheck.user_id);
+    console.log('User session verified for user:', session.user.id);
 
     // Prepare request data
     const requestData = {
@@ -57,7 +50,10 @@ export async function generateCreativeCharacterImage(
     console.log('Calling generate-creative-character-image function...');
 
     const { data, error } = await supabase.functions.invoke('generate-creative-character-image', {
-      body: requestData
+      body: requestData,
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      }
     });
 
     if (error) {
