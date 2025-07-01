@@ -78,7 +78,7 @@ const Hero = () => {
                 to="/characters-home"
                 variant="primary"
               >
-                Explore Characters
+                Character Lab
                 <Brain className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
             </div>
