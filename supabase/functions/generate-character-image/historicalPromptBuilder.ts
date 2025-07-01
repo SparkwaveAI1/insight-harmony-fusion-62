@@ -23,7 +23,7 @@ export const HISTORICAL_STYLES = {
 };
 
 export function buildHistoricalCharacterImagePrompt(characterData: any, style: string = 'photorealistic'): string {
-  console.log("Building historical character image prompt");
+  console.log("Building historical character image prompt with exact user format");
   console.log("Character data:", JSON.stringify(characterData, null, 2));
   
   // Extract key information from character data
@@ -34,7 +34,7 @@ export function buildHistoricalCharacterImagePrompt(characterData: any, style: s
   const heightBuild = characterData.trait_profile?.height_build || characterData.height_build || '';
   const appearance = characterData.appearance || characterData.trait_profile?.appearance || characterData.trait_profile?.physical_appearance || '';
   
-  // Extract historical context - this is crucial for accuracy
+  // Extract historical context
   const historicalPeriod = characterData.historical_period || characterData.trait_profile?.historical_period || '';
   const region = characterData.region || characterData.trait_profile?.region || '';
   const culturalContext = characterData.trait_profile?.cultural_context || characterData.trait_profile?.cultural_background || '';
@@ -62,7 +62,7 @@ export function buildHistoricalCharacterImagePrompt(characterData: any, style: s
     }
   }
   
-  // Build the historical prompt using the new format
+  // Build EXACTLY the user's format: Create: [style] historical character, [gender], [age] years old, born [year], [ethnicity], [height/build], [appearance], from [period], [region], [cultural context], [social class], working as [occupation]
   let prompt = `Create: ${style} historical character, ${gender}, ${age} years old`;
   
   if (yearOfBirth) {
@@ -81,7 +81,6 @@ export function buildHistoricalCharacterImagePrompt(characterData: any, style: s
     prompt += `, ${appearance}`;
   }
   
-  // Add historical and cultural context - this is key for period accuracy
   if (historicalPeriod) {
     prompt += `, from ${historicalPeriod}`;
   }
@@ -102,20 +101,6 @@ export function buildHistoricalCharacterImagePrompt(characterData: any, style: s
     prompt += `, working as ${occupation}`;
   }
   
-  // Add specific styling instructions for historical accuracy
-  prompt += ', wearing authentic period-accurate clothing and hairstyle';
-  prompt += ', traditional cultural dress of the era';
-  prompt += ', historically accurate appearance and setting';
-  
-  // Add style-specific modifiers
-  const styleConfig = HISTORICAL_STYLES[style];
-  if (styleConfig && styleConfig.prompt) {
-    prompt += `, ${styleConfig.prompt}`;
-  }
-  
-  // Final composition guidelines
-  prompt += ', detailed historical portrait, single person, no modern elements, museum quality accuracy';
-  
-  console.log("Generated historical prompt:", prompt);
+  console.log("Generated exact user format prompt:", prompt);
   return prompt;
 }
