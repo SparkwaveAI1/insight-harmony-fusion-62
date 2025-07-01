@@ -27,16 +27,16 @@ const CharacterHeader = () => {
               Home
             </Link>
             <Link 
-              to="/characters" 
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              Historical Characters
-            </Link>
-            <Link 
               to="/characters/creative" 
               className="text-gray-300 hover:text-white transition-colors"
             >
               Character Lab
+            </Link>
+            <Link 
+              to="/characters" 
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Historical Characters
             </Link>
           </nav>
 
@@ -64,18 +64,18 @@ const CharacterHeader = () => {
                 Home
               </Link>
               <Link 
-                to="/characters" 
-                className="block text-gray-300 hover:text-white transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Historical Characters
-              </Link>
-              <Link 
                 to="/characters/creative" 
                 className="block text-gray-300 hover:text-white transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Character Lab
+              </Link>
+              <Link 
+                to="/characters" 
+                className="block text-gray-300 hover:text-white transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Historical Characters
               </Link>
             </nav>
           </div>
