@@ -18,23 +18,23 @@ const CharacterHeader = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-6 font-orbitron">
             <Link 
               to="/" 
-              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors font-orbitron"
             >
               <Home className="h-4 w-4" />
               Home
             </Link>
             <Link 
               to="/characters" 
-              className="text-gray-300 hover:text-white transition-colors"
+              className="text-gray-300 hover:text-white transition-colors font-orbitron"
             >
               Historical Characters
             </Link>
             <Link 
               to="/characters/creative" 
-              className="text-gray-300 hover:text-white transition-colors"
+              className="text-gray-300 hover:text-white transition-colors font-orbitron"
             >
               Character Lab
             </Link>
@@ -54,10 +54,10 @@ const CharacterHeader = () => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-slate-900/95 border-t border-slate-800">
-            <nav className="px-4 py-4 space-y-2">
+            <nav className="px-4 py-4 space-y-2 font-orbitron">
               <Link 
                 to="/" 
-                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors py-2"
+                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors py-2 font-orbitron"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <Home className="h-4 w-4" />
@@ -65,14 +65,14 @@ const CharacterHeader = () => {
               </Link>
               <Link 
                 to="/characters" 
-                className="block text-gray-300 hover:text-white transition-colors py-2"
+                className="block text-gray-300 hover:text-white transition-colors py-2 font-orbitron"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Historical Characters
               </Link>
               <Link 
                 to="/characters/creative" 
-                className="block text-gray-300 hover:text-white transition-colors py-2"
+                className="block text-gray-300 hover:text-white transition-colors py-2 font-orbitron"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Character Lab
