@@ -153,8 +153,8 @@ const CharactersHome = () => {
               <Button 
                 size="lg" 
                 asChild 
-                className="bg-purple-600 hover:bg-purple-700 shadow-lg !font-orbitron font-bold text-lg tracking-wider"
-                style={{ fontFamily: 'Orbitron, monospace !important' }}
+                className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg tracking-wider font-orbitron"
+                style={{ fontFamily: 'Orbitron, monospace' }}
               >
                 <Link to="/characters/creative">
                   <TestTube className="mr-2 h-5 w-5" />
