@@ -1,7 +1,8 @@
+
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import Card from '@/components/ui-custom/Card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import CharacterAvatar from './CharacterAvatar';
 import GenerateCharacterImageWithStyleButton from './GenerateCharacterImageWithStyleButton';
 import CloneCharacterButton from './CloneCharacterButton';
@@ -43,10 +44,10 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
 
   return (
     <Card className={`hover:shadow-lg transition-shadow ${
-      viewMode === 'grid' ? 'h-96 flex flex-col' : 'h-32'
+      viewMode === 'grid' ? 'flex flex-col h-full' : 'h-32'
     }`}>
-      <div className="flex flex-col h-full p-6">
-        <div className="flex items-start gap-4 mb-4">
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-4">
           <CharacterAvatar 
             character={{
               name: character.name,
@@ -64,13 +65,16 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
-              {getCharacterDescription(character)}
-            </p>
           </div>
         </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 pb-3">
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+          {getCharacterDescription(character)}
+        </p>
         
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">
             {getCharacterTypeLabel(character)}
           </Badge>
@@ -85,40 +89,40 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
             </Badge>
           )}
         </div>
-        
-        <div className="mt-auto space-y-2">
-          {isOwner ? (
-            // Owner can generate images and view details
-            <div className="flex gap-2">
-              <Link to={`/characters/${character.character_id}`} className="flex-1">
-                <Button size="sm" className="w-full">
-                  View Details
-                </Button>
-              </Link>
-              <GenerateCharacterImageWithStyleButton
-                character={character}
-                onImageGenerated={onImageGenerated}
-                variant="outline"
-                size="sm"
-                className="flex-1"
-              />
-            </div>
-          ) : (
-            // Non-owner can only view details or clone - NO image generation
-            <div className="flex gap-2">
-              <Link to={`/characters/${character.character_id}`} className="flex-1">
-                <Button size="sm" variant="outline" className="w-full">
-                  View Details
-                </Button>
-              </Link>
-              <CloneCharacterButton 
-                character={character} 
-                className="flex-1"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      </CardContent>
+      
+      <CardFooter className="pt-0">
+        {isOwner ? (
+          // Owner can generate images and view details
+          <div className="flex gap-2 w-full">
+            <Link to={`/characters/${character.character_id}`} className="flex-1">
+              <Button size="sm" className="w-full">
+                View Details
+              </Button>
+            </Link>
+            <GenerateCharacterImageWithStyleButton
+              character={character}
+              onImageGenerated={onImageGenerated}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+            />
+          </div>
+        ) : (
+          // Non-owner can only view details or clone - NO image generation
+          <div className="flex gap-2 w-full">
+            <Link to={`/characters/${character.character_id}`} className="flex-1">
+              <Button size="sm" variant="outline" className="w-full">
+                View Details
+              </Button>
+            </Link>
+            <CloneCharacterButton 
+              character={character} 
+              className="flex-1"
+            />
+          </div>
+        )}
+      </CardFooter>
     </Card>
   );
 };
