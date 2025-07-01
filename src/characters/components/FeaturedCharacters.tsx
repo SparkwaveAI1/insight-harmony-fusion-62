@@ -82,10 +82,10 @@ const FeaturedCharacters = () => {
             return (
               <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="relative aspect-video overflow-hidden bg-gray-800">
+                  <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
                     <video 
                       src={video.video_url}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover"
                       preload="metadata"
                       muted
                       loop
@@ -104,27 +104,8 @@ const FeaturedCharacters = () => {
                       }}
                     />
                     
-                    {/* Fallback content if video fails to load */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/50 to-blue-900/50">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-purple-600/80 rounded-full flex items-center justify-center mb-4 mx-auto">
-                          <Play className="h-8 w-8 text-white ml-1" fill="white" />
-                        </div>
-                        <p className="text-white font-medium">{video.name}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300" />
-                    
-                    {/* Play button overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="bg-purple-600/80 backdrop-blur-sm rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                        <Play className="h-8 w-8 text-white ml-1" fill="white" />
-                      </div>
-                    </div>
-
                     {/* Character type badge */}
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-4 left-4 z-10">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         video.character_type === 'historical' 
                           ? 'bg-amber-600/80 text-amber-100' 
