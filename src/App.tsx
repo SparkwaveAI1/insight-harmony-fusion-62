@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -60,8 +61,8 @@ import Pricing from './pages/Pricing';
 import Roadmap from './pages/Roadmap';
 import WhitePaper from './pages/WhitePaper';
 
-// Protected route wrapper
-import ProtectedRoute from './components/auth/ProtectedRoute';
+// Protected route wrapper - using named import
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const queryClient = new QueryClient({
   defaultOptions: {
