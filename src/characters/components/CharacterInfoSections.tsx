@@ -38,6 +38,10 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
   // Type cast when we know it's a non-humanoid character
   const nonHumanoidTraitProfile = isNonHumanoid ? character.trait_profile as NonHumanoidTraitProfile : null;
 
+  // Access date_of_birth and backstory from metadata
+  const dateOfBirth = character.metadata?.date_of_birth;
+  const backstory = character.metadata?.backstory || character.trait_profile?.backstory;
+
   return (
     <div className="space-y-6">
       {/* Enhanced Basic Information */}
@@ -62,10 +66,10 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
             </div>
             
             {/* Historical Character Year */}
-            {isHistorical && character.date_of_birth && (
+            {isHistorical && dateOfBirth && (
               <div>
                 <span className="font-medium">Year:</span>
-                <span className="ml-2">{getYearFromDate(character.date_of_birth)}</span>
+                <span className="ml-2">{getYearFromDate(dateOfBirth)}</span>
               </div>
             )}
             
@@ -159,7 +163,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
       </Card>
 
       {/* Background Section (replaces Emotional Triggers for historical characters) */}
-      {isHistorical && character.backstory && (
+      {isHistorical && backstory && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -170,7 +174,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
           <CardContent>
             <div className="prose prose-sm max-w-none">
               <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                {character.backstory}
+                {backstory}
               </p>
             </div>
           </CardContent>
