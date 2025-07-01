@@ -11,7 +11,8 @@ import {
   Filter,
   Search,
   Shuffle,
-  Clock
+  Clock,
+  TestTube
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,13 +151,9 @@ const CharactersHome = () => {
               </Button>
               <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700 shadow-lg">
                 <Link to="/characters/creative">
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Creative Characters
+                  <TestTube className="mr-2 h-5 w-5" />
+                  Character Lab
                 </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 shadow-lg">
-                <Play className="mr-2 h-5 w-5" />
-                Run a Scenario
               </Button>
             </div>
           </div>
