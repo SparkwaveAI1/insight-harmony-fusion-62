@@ -34,14 +34,14 @@ export const useFeaturedCharacterVideos = () => {
         return data as FeaturedCharacterVideo[];
       }
 
-      // Otherwise, return sample data for your uploaded videos
+      // Otherwise, return sample data with the actual Supabase video URL for Isabella
       const sampleData: FeaturedCharacterVideo[] = [
         {
           id: '1',
-          character_id: 'isabella-historical',
+          character_id: 'b795b58e-19cb-426f-80b9-7899a1ebc3ff',
           name: 'Isabella',
           description: 'A compelling historical figure with a rich background and fascinating perspectives on life in her era.',
-          video_url: '/lovable-uploads/isabella-historical-7.1.25.mp4',
+          video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos/Isabella%20historical%207.1.25.mp4',
           thumbnail_url: null,
           character_type: 'historical',
           display_order: 1,
