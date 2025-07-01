@@ -1,13 +1,13 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { buildHistoricalCharacterImagePrompt } from "./historicalPromptBuilder.ts";
+import { buildNonHumanoidImagePrompt } from "./nonHumanoidPromptBuilder.ts";
 import { generateImageWithOpenAI } from "./openaiService.ts";
 import { 
-  uploadImageToStorage, 
-  updateCharacterWithImageUrl,
-  saveToCharacterImagesTable 
-} from "./characterImageUploadService.ts";
+  uploadNonHumanoidImageToStorage, 
+  updateNonHumanoidCharacterWithImageUrl,
+  saveToNonHumanoidCharacterImagesTable 
+} from "./nonHumanoidImageUploadService.ts";
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -40,20 +40,20 @@ serve(async (req) => {
       throw new Error("Invalid characterData provided");
     }
 
-    // This function now only handles historical characters
-    if (characterData.character_type !== 'historical') {
-      throw new Error("This function only handles historical characters. Use generate-nonhumanoid-character-image for non-humanoid characters.");
+    // This function only handles non-humanoid characters
+    if (!characterData.species_type) {
+      throw new Error("This function only handles non-humanoid characters. Use generate-character-image for historical characters.");
     }
 
-    console.log("Generating image for historical character:", characterData.name);
-    console.log("Historical period:", characterData.historical_period);
-    console.log("Cultural context:", characterData.trait_profile?.cultural_context);
+    console.log("Generating image for non-humanoid character:", characterData.name);
+    console.log("Species type:", characterData.species_type);
+    console.log("Physical form:", characterData.trait_profile?.physical_manifestation);
     console.log("Style:", style);
     console.log("Custom text:", customText);
     console.log("Auto save:", autoSave);
 
-    // Generate historical character prompt
-    let imagePrompt = buildHistoricalCharacterImagePrompt(characterData, style);
+    // Generate non-humanoid character prompt
+    let imagePrompt = buildNonHumanoidImagePrompt(characterData, style);
     
     // Add custom text to the prompt if provided
     if (customText && customText.trim()) {
@@ -63,7 +63,7 @@ serve(async (req) => {
     
     console.log("Final generated prompt:", imagePrompt);
     
-    // Set up OpenAI parameters for historical accuracy
+    // Set up OpenAI parameters for non-humanoid entities
     const openaiParams = {
       model: "dall-e-3",
       n: 1,
@@ -85,14 +85,14 @@ serve(async (req) => {
           image_url: imageDataUrl,
           prompt: imagePrompt,
           style: style,
-          character_type: 'historical'
+          character_type: 'non-humanoid'
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
     // Upload image to Supabase storage (for auto-save)
-    const publicUrl = await uploadImageToStorage(
+    const publicUrl = await uploadNonHumanoidImageToStorage(
       base64Image, 
       characterData.character_id, 
       SUPABASE_URL, 
@@ -102,8 +102,8 @@ serve(async (req) => {
     // Extract file path from the public URL
     const filePath = publicUrl.split('/').slice(-1)[0];
     
-    // Save to character_images table for gallery
-    await saveToCharacterImagesTable(
+    // Save to non_humanoid_character_images table for gallery
+    await saveToNonHumanoidCharacterImagesTable(
       characterData.character_id,
       publicUrl,
       filePath,
@@ -113,8 +113,8 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Update the character record with the new image URL (as profile image)
-    await updateCharacterWithImageUrl(
+    // Update the non-humanoid character record with the new image URL (as profile image)
+    await updateNonHumanoidCharacterWithImageUrl(
       characterData.character_id, 
       publicUrl, 
       SUPABASE_URL, 
@@ -127,16 +127,16 @@ serve(async (req) => {
         image_url: publicUrl,
         prompt: imagePrompt,
         style: style,
-        character_type: 'historical'
+        character_type: 'non-humanoid'
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error generating historical character image:", error);
+    console.error("Error generating non-humanoid character image:", error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Failed to generate historical character image",
+        error: error.message || "Failed to generate non-humanoid character image",
       }),
       { 
         status: 500,

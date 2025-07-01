@@ -20,7 +20,33 @@ export async function generateCharacterImage(
   try {
     console.log('Generating character image with data:', { characterOrData, style, autoSave });
     
+    // Determine character type to route to correct function
+    let functionName: string;
+    let characterData: any;
+    
     // Handle both old and new API formats
+    if (typeof characterOrData === 'object' && 'characterData' in characterOrData) {
+      characterData = characterOrData.characterData;
+    } else {
+      characterData = characterOrData;
+    }
+    
+    // Route to appropriate function based on character type
+    if (characterData.species_type) {
+      // Non-humanoid character
+      functionName = 'generate-nonhumanoid-character-image';
+      console.log('Routing to non-humanoid character image generation');
+    } else if (characterData.character_type === 'historical') {
+      // Historical character
+      functionName = 'generate-character-image';
+      console.log('Routing to historical character image generation');
+    } else {
+      // Default to historical for backward compatibility
+      functionName = 'generate-character-image';
+      console.log('Defaulting to historical character image generation');
+    }
+
+    // Prepare request data
     let requestData;
     if (typeof characterOrData === 'object' && 'characterData' in characterOrData) {
       // New format with additional parameters
@@ -40,9 +66,9 @@ export async function generateCharacterImage(
       };
     }
 
-    console.log('Calling generate-character-image function with:', requestData);
+    console.log(`Calling ${functionName} function with:`, requestData);
 
-    const { data, error } = await supabase.functions.invoke('generate-character-image', {
+    const { data, error } = await supabase.functions.invoke(functionName, {
       body: requestData
     });
 
