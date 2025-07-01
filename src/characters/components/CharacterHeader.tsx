@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Menu, X, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/ui-custom/Logo';
+import ActionButtons from '@/components/layout/navigation/ActionButtons';
 
 const CharacterHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -40,15 +41,23 @@ const CharacterHeader = () => {
             </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden text-white"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          {/* Right side - Login/Auth + Mobile Menu Button */}
+          <div className="flex items-center gap-4">
+            {/* Auth buttons - hidden on mobile */}
+            <div className="hidden md:block">
+              <ActionButtons isDarkRoute={true} />
+            </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden text-white"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -77,6 +86,11 @@ const CharacterHeader = () => {
               >
                 Historical Characters
               </Link>
+              
+              {/* Auth buttons in mobile menu */}
+              <div className="pt-4 border-t border-slate-700">
+                <ActionButtons isDarkRoute={true} />
+              </div>
             </nav>
           </div>
         )}
