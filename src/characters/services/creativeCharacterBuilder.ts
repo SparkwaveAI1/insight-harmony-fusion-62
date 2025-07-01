@@ -1,10 +1,9 @@
 
-import { CreativeCharacterData, Character } from '../types/characterTraitTypes';
-import { TraitProfileBuilder } from './traitProfileBuilder';
+import { CreativeCharacterData, CreativeCharacter } from '../types/creativeCharacterTypes';
 import { v4 as uuidv4 } from 'uuid';
 
 export class CreativeCharacterBuilder {
-  static buildCharacter(data: CreativeCharacterData, userId: string): Character {
+  static buildCharacter(data: CreativeCharacterData, userId: string): CreativeCharacter {
     const characterId = uuidv4();
     const creationDate = new Date().toISOString();
     
@@ -17,27 +16,58 @@ export class CreativeCharacterBuilder {
       created_at: creationDate,
       user_id: userId,
       
-      // Enhanced trait profile with all new systems
-      trait_profile: TraitProfileBuilder.buildEnhancedTraitProfile(data),
+      // Character Lab's own trait profile with Core Drives (NOT emotional triggers)
+      trait_profile: {
+        entity_type: data.entityType,
+        narrative_domain: data.narrativeDomain,
+        functional_role: data.functionalRole,
+        description: data.description,
+        environment: data.environment,
+        physical_form: data.physicalForm,
+        communication_method: data.communication,
+        
+        // Character Lab Core Drives - stored in their own trait architecture
+        core_drives: data.coreDrives,
+        surface_triggers: data.surfaceTriggers,
+        change_response_style: data.changeResponseStyle,
+        
+        // Creative character specific traits
+        creative_personality: {
+          imagination_level: 0.7,
+          expressiveness: 0.6,
+          social_comfort: 0.5,
+          collaborative_nature: 0.6,
+          emotional_depth: 0.7
+        },
+        
+        decision_approach: {
+          conflict_style: data.changeResponseStyle,
+          adaptability: 0.6,
+          change_threshold: 0.5
+        }
+      },
       
-      // Standard required fields with flexible JSON compatibility
+      // Standard required fields for database compatibility
       metadata: {
-        creation_method: 'enhanced_character_lab',
-        version: '2.0',
-        enhancement_level: 'full_cognitive_model'
-      } as any,
+        creation_method: 'character_lab',
+        version: '3.0',
+        module: 'character_lab'
+      },
+      
       behavioral_modulation: {
         formality: 0.5,
         enthusiasm: 0.6,
         assertiveness: 0.5,
         empathy: 0.7,
         patience: 0.6
-      } as any,
+      },
+      
       linguistic_profile: {
         default_output_length: 'medium',
         speech_register: 'contextual',
         cultural_speech_patterns: 'entity-appropriate'
-      } as any,
+      },
+      
       interview_sections: [],
       preinterview_tags: [],
       simulation_directives: {
@@ -46,16 +76,12 @@ export class CreativeCharacterBuilder {
         evolution_enabled: true
       },
       
-      // Simplified emotional triggers for Character Lab - using simple arrays
-      emotional_triggers: {
-        positive_triggers: data.coreDrives.map(drive => `Success in ${drive.toLowerCase()}`),
-        negative_triggers: data.surfaceTriggers.map(trigger => `Interference with ${trigger.toLowerCase()}`)
-      } as any,
+      // NO emotional_triggers field - Character Lab doesn't use them
       
       // Character-specific fields
       species_type: data.entityType === 'human' ? undefined : data.entityType,
       origin_universe: data.narrativeDomain,
-      enhanced_metadata_version: 2,
+      enhanced_metadata_version: 3,
       is_public: false
     };
   }

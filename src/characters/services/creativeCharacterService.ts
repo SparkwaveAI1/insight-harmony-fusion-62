@@ -1,30 +1,30 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Character, CreativeCharacterData } from '../types/characterTraitTypes';
+import { CreativeCharacter, CreativeCharacterData, DbCreativeCharacter } from '../types/creativeCharacterTypes';
 import { CreativeCharacterBuilder } from './creativeCharacterBuilder';
 
 export async function createCreativeCharacter(
   data: CreativeCharacterData, 
   userId: string
-): Promise<Character> {
-  console.log('Creating enhanced creative character with data:', data);
+): Promise<CreativeCharacter> {
+  console.log('Creating Character Lab character with data:', data);
   console.log('User ID:', userId);
 
   try {
-    // Build the enhanced character using the new builder
+    // Build the Character Lab character using the new builder
     const character = CreativeCharacterBuilder.buildCharacter(data, userId);
 
-    console.log('Built enhanced character object:', character);
+    console.log('Built Character Lab character object:', character);
 
     // Convert to database-compatible format
-    const dbCharacter = {
+    const dbCharacter: DbCreativeCharacter = {
       ...character,
       // Ensure JSON fields are properly serialized
       trait_profile: character.trait_profile as any,
       metadata: character.metadata as any,
       behavioral_modulation: character.behavioral_modulation as any,
-      linguistic_profile: character.linguistic_profile as any,
-      emotional_triggers: character.emotional_triggers as any
+      linguistic_profile: character.linguistic_profile as any
+      // NO emotional_triggers field
     };
 
     // Insert into the database
@@ -39,17 +39,17 @@ export async function createCreativeCharacter(
       throw new Error(`Failed to save character: ${error.message}`);
     }
 
-    console.log('Successfully created enhanced creative character:', insertedData);
+    console.log('Successfully created Character Lab character:', insertedData);
     
-    // Convert back to Character type for return
+    // Convert back to CreativeCharacter type for return
     return {
       ...insertedData,
       trait_profile: insertedData.trait_profile as any,
       metadata: insertedData.metadata as any,
       behavioral_modulation: insertedData.behavioral_modulation as any,
-      linguistic_profile: insertedData.linguistic_profile as any,
-      emotional_triggers: insertedData.emotional_triggers as any
-    } as Character;
+      linguistic_profile: insertedData.linguistic_profile as any
+      // NO emotional_triggers field
+    } as CreativeCharacter;
 
   } catch (error) {
     console.error('Error in createCreativeCharacter:', error);
@@ -57,8 +57,8 @@ export async function createCreativeCharacter(
   }
 }
 
-// Enhanced character retrieval with full trait profile support
-export async function getCreativeCharacter(characterId: string): Promise<Character | null> {
+// Character Lab character retrieval
+export async function getCreativeCharacter(characterId: string): Promise<CreativeCharacter | null> {
   try {
     const { data, error } = await supabase
       .from('characters')
@@ -78,17 +78,17 @@ export async function getCreativeCharacter(characterId: string): Promise<Charact
       trait_profile: data.trait_profile as any,
       metadata: data.metadata as any,
       behavioral_modulation: data.behavioral_modulation as any,
-      linguistic_profile: data.linguistic_profile as any,
-      emotional_triggers: data.emotional_triggers as any
-    } as Character;
+      linguistic_profile: data.linguistic_profile as any
+      // NO emotional_triggers field
+    } as CreativeCharacter;
   } catch (error) {
     console.error('Error in getCreativeCharacter:', error);
     return null;
   }
 }
 
-// Get all creative characters with enhanced trait profiles
-export async function getCreativeCharacters(userId: string): Promise<Character[]> {
+// Get all Character Lab characters
+export async function getCreativeCharacters(userId: string): Promise<CreativeCharacter[]> {
   try {
     const { data, error } = await supabase
       .from('characters')
@@ -108,60 +108,11 @@ export async function getCreativeCharacters(userId: string): Promise<Character[]
       trait_profile: item.trait_profile as any,
       metadata: item.metadata as any,
       behavioral_modulation: item.behavioral_modulation as any,
-      linguistic_profile: item.linguistic_profile as any,
-      emotional_triggers: item.emotional_triggers as any
-    })) as Character[];
+      linguistic_profile: item.linguistic_profile as any
+      // NO emotional_triggers field
+    })) as CreativeCharacter[];
   } catch (error) {
     console.error('Error in getCreativeCharacters:', error);
     return [];
-  }
-}
-
-// Update character evolution history when traits mutate
-export async function updateCharacterEvolution(
-  characterId: string,
-  trigger: string,
-  changes: string[]
-): Promise<void> {
-  try {
-    const character = await getCreativeCharacter(characterId);
-    if (!character) {
-      throw new Error('Character not found');
-    }
-
-    const evolutionModel = character.trait_profile.evolution_model || {
-      trait_mutation_history: []
-    };
-
-    const newMutation = {
-      timestamp: new Date().toISOString(),
-      trigger,
-      changes
-    };
-
-    evolutionModel.trait_mutation_history = [
-      ...(evolutionModel.trait_mutation_history || []),
-      newMutation
-    ].slice(-10); // Keep only last 10 mutations
-
-    const updatedTraitProfile = {
-      ...character.trait_profile,
-      evolution_model: evolutionModel
-    };
-
-    const { error } = await supabase
-      .from('characters')
-      .update({ trait_profile: updatedTraitProfile as any })
-      .eq('character_id', characterId);
-
-    if (error) {
-      console.error('Error updating character evolution:', error);
-      throw error;
-    }
-
-    console.log('Character evolution updated successfully');
-  } catch (error) {
-    console.error('Error in updateCharacterEvolution:', error);
-    throw error;
   }
 }

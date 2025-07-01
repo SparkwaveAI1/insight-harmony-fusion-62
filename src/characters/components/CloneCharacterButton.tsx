@@ -3,13 +3,14 @@ import { useState } from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { CreativeCharacter } from "../types/creativeCharacterTypes";
 import { Character } from "../types/characterTraitTypes";
 import { NonHumanoidCharacter } from "../types/nonHumanoidTypes";
 import { CloneCharacterFormContent } from "./clone/CloneCharacterFormContent";
 import { useCharacterClone } from "./clone/useCharacterClone";
 
 interface CloneCharacterButtonProps {
-  character: Character | NonHumanoidCharacter;
+  character: CreativeCharacter | Character | NonHumanoidCharacter;
   className?: string;
 }
 

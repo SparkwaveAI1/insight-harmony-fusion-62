@@ -6,11 +6,11 @@ import Card from '@/components/ui-custom/Card';
 import CharacterAvatar from './CharacterAvatar';
 import GenerateCharacterImageWithStyleButton from './GenerateCharacterImageWithStyleButton';
 import CloneCharacterButton from './CloneCharacterButton';
-import { Character } from '../types/characterTraitTypes';
+import { CreativeCharacter } from '../types/creativeCharacterTypes';
 import { useAuth } from '@/context/AuthContext';
 
 interface CreativeCharacterCardProps {
-  character: Character;
+  character: CreativeCharacter;
   viewMode: 'grid' | 'list';
   onImageGenerated?: (imageUrl: string) => void;
 }
@@ -19,16 +19,17 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
   const { user } = useAuth();
   const isOwner = user?.id === character.user_id;
   
-  const getCharacterTypeLabel = (character: Character) => {
+  const getCharacterTypeLabel = (character: CreativeCharacter) => {
     if (character.character_type === 'multi_species') {
       return character.species_type || 'Non-Humanoid';
     }
     return 'Humanoid';
   };
 
-  const getCharacterDescription = (character: Character) => {
+  const getCharacterDescription = (character: CreativeCharacter) => {
     const description = character.metadata?.description || 
-                       character.metadata?.backstory || 
+                       character.trait_profile?.description ||
+                       character.trait_profile?.background_story || 
                        `A ${getCharacterTypeLabel(character).toLowerCase()} character`;
     
     return description.length > 120 ? description.substring(0, 120) + '...' : description;
@@ -67,14 +68,14 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
           <Badge variant="secondary">
             {getCharacterTypeLabel(character)}
           </Badge>
-          {character.metadata?.narrative_domain && (
+          {character.trait_profile?.narrative_domain && (
             <Badge variant="outline">
-              {character.metadata.narrative_domain}
+              {character.trait_profile.narrative_domain}
             </Badge>
           )}
-          {character.metadata?.functional_role && (
+          {character.trait_profile?.functional_role && (
             <Badge variant="outline">
-              {character.metadata.functional_role}
+              {character.trait_profile.functional_role}
             </Badge>
           )}
         </div>

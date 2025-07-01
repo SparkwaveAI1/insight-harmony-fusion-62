@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Character } from '../types/characterTraitTypes';
+import { CreativeCharacter } from '../types/creativeCharacterTypes';
 import { useAuth } from '@/context/AuthContext';
 
 export const useUnifiedCreativeCharacters = () => {
@@ -9,7 +9,7 @@ export const useUnifiedCreativeCharacters = () => {
   
   return useQuery({
     queryKey: ['unified-creative-characters', user?.id],
-    queryFn: async (): Promise<Character[]> => {
+    queryFn: async (): Promise<CreativeCharacter[]> => {
       if (!user) {
         // If not authenticated, only fetch public characters
         const { data: publicData, error: publicError } = await supabase
@@ -20,7 +20,14 @@ export const useUnifiedCreativeCharacters = () => {
           .order('created_at', { ascending: false });
 
         if (publicError) throw publicError;
-        return (publicData || []) as Character[];
+        return (publicData || []).map(item => ({
+          ...item,
+          trait_profile: item.trait_profile as any,
+          metadata: item.metadata as any,
+          behavioral_modulation: item.behavioral_modulation as any,
+          linguistic_profile: item.linguistic_profile as any
+          // NO emotional_triggers mapping - Character Lab doesn't use them
+        })) as CreativeCharacter[];
       }
 
       // If authenticated, fetch both user's characters and public characters
@@ -44,8 +51,23 @@ export const useUnifiedCreativeCharacters = () => {
       if (userResult.error) throw userResult.error;
       if (publicResult.error) throw publicResult.error;
 
-      const userCharacters = (userResult.data || []) as Character[];
-      const publicCharacters = (publicResult.data || []) as Character[];
+      const userCharacters = (userResult.data || []).map(item => ({
+        ...item,
+        trait_profile: item.trait_profile as any,
+        metadata: item.metadata as any,
+        behavioral_modulation: item.behavioral_modulation as any,
+        linguistic_profile: item.linguistic_profile as any
+        // NO emotional_triggers mapping
+      })) as CreativeCharacter[];
+      
+      const publicCharacters = (publicResult.data || []).map(item => ({
+        ...item,
+        trait_profile: item.trait_profile as any,
+        metadata: item.metadata as any,
+        behavioral_modulation: item.behavioral_modulation as any,
+        linguistic_profile: item.linguistic_profile as any
+        // NO emotional_triggers mapping
+      })) as CreativeCharacter[];
 
       // Combine and sort by creation date
       const allCharacters = [...userCharacters, ...publicCharacters];

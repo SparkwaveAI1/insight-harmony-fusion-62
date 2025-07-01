@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useUnifiedCreativeCharacters } from '../hooks/useUnifiedCreativeCharacters';
-import { Character } from '../types/characterTraitTypes';
+import { CreativeCharacter } from '../types/creativeCharacterTypes';
 import { Link } from 'react-router-dom';
 import CreativeCharacterCard from '../components/CreativeCharacterCard';
 import { useAuth } from '@/context/AuthContext';
@@ -14,7 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 const UnifiedCreativeCharacterLibrary = () => {
   const { user } = useAuth();
   const { data: characters = [], isLoading, error } = useUnifiedCreativeCharacters();
-  const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
+  const [filteredCharacters, setFilteredCharacters] = useState<CreativeCharacter[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -30,8 +30,8 @@ const UnifiedCreativeCharacterLibrary = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(char => 
         char.name.toLowerCase().includes(query) ||
-        char.metadata?.description?.toLowerCase().includes(query) ||
-        char.metadata?.narrative_domain?.toLowerCase().includes(query)
+        char.trait_profile?.description?.toLowerCase().includes(query) ||
+        char.trait_profile?.narrative_domain?.toLowerCase().includes(query)
       );
     }
 
