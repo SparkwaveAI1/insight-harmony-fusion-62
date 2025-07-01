@@ -16,10 +16,10 @@ export async function createCreativeCharacter(
 
     console.log('Built Character Lab character object:', character);
 
-    // Convert to database-compatible format
-    const dbCharacter: DbCreativeCharacter = {
+    // Convert to database-compatible format with proper type casting
+    const dbCharacter = {
       ...character,
-      // Ensure JSON fields are properly serialized
+      // Cast JSON fields to any for database compatibility
       trait_profile: character.trait_profile as any,
       metadata: character.metadata as any,
       behavioral_modulation: character.behavioral_modulation as any,
