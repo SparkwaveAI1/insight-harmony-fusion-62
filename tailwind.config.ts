@@ -31,6 +31,7 @@ export default {
 				baufra: ['Baufra', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				panchang: ['Orbitron', 'Chivo', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
 				lastica: ['Bungee', 'Orbitron', 'Inter var', 'SF Pro Display', 'system-ui', 'sans-serif'],
+				medieval: ['MedievalSharp', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
