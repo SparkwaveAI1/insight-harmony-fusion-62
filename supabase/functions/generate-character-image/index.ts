@@ -102,7 +102,7 @@ serve(async (req) => {
     // Extract file path from the public URL
     const filePath = publicUrl.split('/').slice(-1)[0];
     
-    // Save to character_images table for gallery
+    // ALWAYS save to character_images table for gallery (this was missing!)
     await saveToCharacterImagesTable(
       characterData.character_id,
       publicUrl,

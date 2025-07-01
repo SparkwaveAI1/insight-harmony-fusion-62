@@ -40,14 +40,13 @@ serve(async (req) => {
       throw new Error("Invalid characterData provided");
     }
 
-    // This function only handles non-humanoid characters
+    // Ensure this is a non-humanoid character
     if (!characterData.species_type) {
       throw new Error("This function only handles non-humanoid characters. Use generate-character-image for historical characters.");
     }
 
     console.log("Generating image for non-humanoid character:", characterData.name);
     console.log("Species type:", characterData.species_type);
-    console.log("Physical form:", characterData.trait_profile?.physical_manifestation);
     console.log("Style:", style);
     console.log("Custom text:", customText);
     console.log("Auto save:", autoSave);
@@ -63,7 +62,7 @@ serve(async (req) => {
     
     console.log("Final generated prompt:", imagePrompt);
     
-    // Set up OpenAI parameters for non-humanoid entities
+    // Set up OpenAI parameters
     const openaiParams = {
       model: "dall-e-3",
       n: 1,
@@ -85,7 +84,7 @@ serve(async (req) => {
           image_url: imageDataUrl,
           prompt: imagePrompt,
           style: style,
-          character_type: 'non-humanoid'
+          character_type: 'non_humanoid'
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -102,7 +101,7 @@ serve(async (req) => {
     // Extract file path from the public URL
     const filePath = publicUrl.split('/').slice(-1)[0];
     
-    // Save to non_humanoid_character_images table for gallery
+    // ALWAYS save to non_humanoid_character_images table for gallery (this was missing!)
     await saveToNonHumanoidCharacterImagesTable(
       characterData.character_id,
       publicUrl,
@@ -113,7 +112,7 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Update the non-humanoid character record with the new image URL (as profile image)
+    // Update the character record with the new image URL (as profile image)
     await updateNonHumanoidCharacterWithImageUrl(
       characterData.character_id, 
       publicUrl, 
@@ -127,7 +126,7 @@ serve(async (req) => {
         image_url: publicUrl,
         prompt: imagePrompt,
         style: style,
-        character_type: 'non-humanoid'
+        character_type: 'non_humanoid'
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
