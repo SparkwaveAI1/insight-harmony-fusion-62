@@ -155,11 +155,13 @@ const UnifiedCreativeCharacterLibrary = () => {
           </Card>
         ) : (
           <div className={viewMode === 'grid' 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
             : "space-y-4"
           }>
             {filteredCharacters.map((character) => (
-              <Card key={character.character_id} className="p-6 hover:shadow-lg transition-shadow">
+              <Card key={character.character_id} className={`p-6 hover:shadow-lg transition-shadow ${
+                viewMode === 'grid' ? 'w-full max-w-sm' : ''
+              }`}>
                 <Link to={`/characters/${character.character_id}`}>
                   <div className="flex flex-col gap-4">
                     <div className="flex items-start justify-between">
