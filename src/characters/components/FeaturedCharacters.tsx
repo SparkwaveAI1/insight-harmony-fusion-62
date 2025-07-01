@@ -80,19 +80,18 @@ const FeaturedCharacters = () => {
             <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden">
               <CardContent className="p-0">
                 <div className="relative aspect-video overflow-hidden">
-                  {video.thumbnail_url ? (
-                    <img 
-                      src={video.thumbnail_url} 
-                      alt={video.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <video 
-                      src={video.video_url}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      preload="metadata"
-                    />
-                  )}
+                  <video 
+                    src={video.video_url}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    preload="metadata"
+                    muted
+                    loop
+                    onMouseEnter={(e) => e.currentTarget.play()}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
+                  />
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300" />
                   
                   {/* Play button overlay */}
