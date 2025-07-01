@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -51,10 +52,10 @@ export const useFeaturedCharacterVideos = () => {
           id: '2',
           character_id: 'rajiv-patel',
           name: 'Rajiv Patel',
-          description: 'An innovative creative character with unique insights and a captivating personality that brings stories to life.',
+          description: 'An innovative historical character with unique insights and a captivating personality that brings stories to life.',
           video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos/Rajiv%20Patel.mp4',
           thumbnail_url: null,
-          character_type: 'creative',
+          character_type: 'historical',
           display_order: 2,
           is_active: true
         }
