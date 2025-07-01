@@ -60,7 +60,7 @@ export function buildCreativeCharacter(
     }))
   };
 
-  console.log('✅ Unified creative character built with comprehensive traits');
+  console.log('✅ Creative character built with appropriate creative traits');
 
   return {
     character_id: characterId,
@@ -68,7 +68,7 @@ export function buildCreativeCharacter(
     character_type,
     creation_date: currentDate,
     created_at: currentDate,
-    creation_source: 'creative', // Key field for unified architecture
+    creation_source: 'creative',
     user_id: userId,
     metadata,
     behavioral_modulation,

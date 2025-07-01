@@ -1,16 +1,15 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Sparkles, Clock, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import { useNonHumanoidCharacters } from '../hooks/useNonHumanoidCharacters';
+import { useCreativeCharacters } from '../hooks/useCreativeCharacters';
 import { Badge } from '@/components/ui/badge';
 import CharacterIdDisplay from '../components/CharacterIdDisplay';
 
 const NonHumanoidCharacterLibrary = () => {
-  const { data: characters, isLoading } = useNonHumanoidCharacters();
+  const { data: characters, isLoading } = useCreativeCharacters();
 
   if (isLoading) {
     return (
