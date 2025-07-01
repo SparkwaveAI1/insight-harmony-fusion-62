@@ -75,7 +75,7 @@ const Hero = () => {
                 size="lg" 
                 className="group py-6 px-8 text-lg bg-purple-600 hover:bg-purple-700 transition-all shadow-lg w-full sm:w-auto"
                 as={Link}
-                to="/characters"
+                to="/characters-home"
                 variant="primary"
               >
                 Character Lab

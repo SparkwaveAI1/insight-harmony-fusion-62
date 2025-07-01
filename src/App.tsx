@@ -101,7 +101,8 @@ function App() {
                     <Route path="/your-persona" element={<YourPersona />} />
                     
                     {/* Public character routes */}
-                    <Route path="/characters" element={<CharactersHome />} />
+                    <Route path="/characters-home" element={<CharactersHome />} />
+                    <Route path="/characters" element={<CharacterLibrary />} />
                     <Route path="/characters/library" element={<CharacterLibrary />} />
                     <Route path="/characters/creative" element={<UnifiedCreativeCharacterLibrary />} />
                     <Route path="/characters/:id" element={<CharacterDetail />} />
