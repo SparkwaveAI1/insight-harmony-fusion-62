@@ -34,7 +34,7 @@ export const useFeaturedCharacterVideos = () => {
         return data as FeaturedCharacterVideo[];
       }
 
-      // Otherwise, return sample data with properly encoded URL
+      // Otherwise, return sample data with properly encoded URLs from Supabase storage
       const sampleData: FeaturedCharacterVideo[] = [
         {
           id: '1',
@@ -52,7 +52,7 @@ export const useFeaturedCharacterVideos = () => {
           character_id: 'rajiv-patel',
           name: 'Rajiv Patel',
           description: 'An innovative creative character with unique insights and a captivating personality that brings stories to life.',
-          video_url: '/lovable-uploads/rajiv-patel.mp4',
+          video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos/Rajiv%20Patel.mp4',
           thumbnail_url: null,
           character_type: 'creative',
           display_order: 2,
