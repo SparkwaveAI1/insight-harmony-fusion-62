@@ -1,4 +1,3 @@
-
 // Character trait and type definitions
 import { 
   TraitProfile,
@@ -17,6 +16,50 @@ export interface CharacterBehavioralModulation {
   patience?: number;
 }
 
+// Enhanced cognitive model for Character Lab
+export interface CognitiveModel {
+  temporal_perception?: string;
+  pattern_preference?: string;
+  cognitive_form?: string;
+  processing_speed?: string;
+  memory_architecture?: string;
+}
+
+// Enhanced constraint system for Character Lab
+export interface ConstraintModel {
+  enforcement_style?: string;
+  deviation_tolerance?: number;
+  forbidden_behaviors?: string[];
+  required_rituals?: string[];
+  constraint_type?: 'hard' | 'soft' | 'adaptive';
+}
+
+// Evolution and mutation tracking for Character Lab
+export interface EvolutionModel {
+  evolution_conditions?: string[];
+  trait_mutation_history?: Array<{
+    timestamp: string;
+    trigger: string;
+    changes: string[];
+  }>;
+  contradiction_tolerance?: number;
+  adaptation_style?: string;
+  growth_rate?: number;
+  transformation_triggers?: string[];
+}
+
+// Enhanced appearance system for Character Lab
+export interface AppearanceModel {
+  appearance_description?: string;
+  aesthetic_class?: string;
+  visual_theme?: string;
+  scale_reference?: string;
+  material_nature?: string;
+  visual_effects?: string;
+  presence_aura?: string;
+  signature_features?: string[];
+}
+
 // Unified flexible trait profile that can accommodate all character types
 export interface UnifiedCharacterTraitProfile {
   // Core identity
@@ -30,6 +73,18 @@ export interface UnifiedCharacterTraitProfile {
   core_drives?: string[];
   surface_triggers?: string[];
   change_response_style?: string;
+  
+  // Enhanced Character Lab cognitive model
+  cognition_model?: CognitiveModel;
+  
+  // Enhanced Character Lab constraint system
+  constraint_model?: ConstraintModel;
+  
+  // Enhanced Character Lab evolution system
+  evolution_model?: EvolutionModel;
+  
+  // Enhanced Character Lab appearance system
+  appearance_model?: AppearanceModel;
   
   // Physical characteristics
   physical_form?: string;
@@ -105,7 +160,7 @@ export interface UnifiedCharacterTraitProfile {
 // Use the unified trait profile as the main type
 export type CharacterTraitProfile = UnifiedCharacterTraitProfile;
 
-// Creative Character Dialog Data Interface
+// Enhanced Creative Character Dialog Data Interface
 export interface CreativeCharacterData {
   name: string;
   entityType: string;
@@ -118,6 +173,24 @@ export interface CreativeCharacterData {
   coreDrives: string[];
   surfaceTriggers: string[];
   changeResponseStyle: string;
+  // New enhanced fields
+  cognitionModel?: {
+    temporalPerception?: string;
+    patternPreference?: string;
+    cognitiveForm?: string;
+  };
+  constraintModel?: {
+    enforcementStyle?: string;
+    deviationTolerance?: number;
+    forbiddenBehaviors?: string[];
+    requiredRituals?: string[];
+  };
+  appearanceModel?: {
+    appearanceDescription?: string;
+    aestheticClass?: string;
+    visualTheme?: string;
+    signatureFeatures?: string[];
+  };
 }
 
 export interface Character {
