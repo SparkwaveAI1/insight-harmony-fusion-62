@@ -16,10 +16,21 @@ export async function createCreativeCharacter(
 
     console.log('Built enhanced character object:', character);
 
+    // Convert to database-compatible format
+    const dbCharacter = {
+      ...character,
+      // Ensure JSON fields are properly serialized
+      trait_profile: character.trait_profile as any,
+      metadata: character.metadata as any,
+      behavioral_modulation: character.behavioral_modulation as any,
+      linguistic_profile: character.linguistic_profile as any,
+      emotional_triggers: character.emotional_triggers as any
+    };
+
     // Insert into the database
     const { data: insertedData, error } = await supabase
       .from('characters')
-      .insert(character)
+      .insert(dbCharacter)
       .select()
       .single();
 
@@ -29,7 +40,16 @@ export async function createCreativeCharacter(
     }
 
     console.log('Successfully created enhanced creative character:', insertedData);
-    return insertedData as Character;
+    
+    // Convert back to Character type for return
+    return {
+      ...insertedData,
+      trait_profile: insertedData.trait_profile as any,
+      metadata: insertedData.metadata as any,
+      behavioral_modulation: insertedData.behavioral_modulation as any,
+      linguistic_profile: insertedData.linguistic_profile as any,
+      emotional_triggers: insertedData.emotional_triggers as any
+    } as Character;
 
   } catch (error) {
     console.error('Error in createCreativeCharacter:', error);
@@ -52,7 +72,15 @@ export async function getCreativeCharacter(characterId: string): Promise<Charact
       return null;
     }
 
-    return data as Character;
+    // Convert database JSON fields back to proper types
+    return {
+      ...data,
+      trait_profile: data.trait_profile as any,
+      metadata: data.metadata as any,
+      behavioral_modulation: data.behavioral_modulation as any,
+      linguistic_profile: data.linguistic_profile as any,
+      emotional_triggers: data.emotional_triggers as any
+    } as Character;
   } catch (error) {
     console.error('Error in getCreativeCharacter:', error);
     return null;
@@ -74,7 +102,15 @@ export async function getCreativeCharacters(userId: string): Promise<Character[]
       return [];
     }
 
-    return data as Character[];
+    // Convert database JSON fields back to proper types
+    return (data || []).map(item => ({
+      ...item,
+      trait_profile: item.trait_profile as any,
+      metadata: item.metadata as any,
+      behavioral_modulation: item.behavioral_modulation as any,
+      linguistic_profile: item.linguistic_profile as any,
+      emotional_triggers: item.emotional_triggers as any
+    })) as Character[];
   } catch (error) {
     console.error('Error in getCreativeCharacters:', error);
     return [];
@@ -115,7 +151,7 @@ export async function updateCharacterEvolution(
 
     const { error } = await supabase
       .from('characters')
-      .update({ trait_profile: updatedTraitProfile })
+      .update({ trait_profile: updatedTraitProfile as any })
       .eq('character_id', characterId);
 
     if (error) {

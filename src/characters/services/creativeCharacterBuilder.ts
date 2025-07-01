@@ -279,30 +279,36 @@ export class CreativeCharacterBuilder {
       // Enhanced trait profile with all new systems
       trait_profile: this.buildEnhancedTraitProfile(data),
       
-      // Standard required fields
+      // Standard required fields with flexible JSON compatibility
       metadata: {
         creation_method: 'enhanced_character_lab',
         version: '2.0',
         enhancement_level: 'full_cognitive_model'
-      },
+      } as any,
       behavioral_modulation: {
         formality: 0.5,
         enthusiasm: 0.6,
         assertiveness: 0.5,
         empathy: 0.7,
         patience: 0.6
-      },
+      } as any,
       linguistic_profile: {
-        vocabulary_complexity: 'adaptive',
-        sentence_structure: 'varied',
-        formality_level: 'contextual'
-      },
+        default_output_length: 'medium',
+        speech_register: 'contextual',
+        cultural_speech_patterns: 'entity-appropriate'
+      } as any,
       interview_sections: [],
       preinterview_tags: [],
       simulation_directives: {
         roleplay_style: 'immersive',
         consistency_level: 'high',
         evolution_enabled: true
+      },
+      
+      // Emotional triggers with proper typing
+      emotional_triggers: {
+        positive_triggers: data.coreDrives.map(drive => `Success in ${drive.toLowerCase()}`),
+        negative_triggers: data.surfaceTriggers.map(trigger => `Interference with ${trigger.toLowerCase()}`)
       },
       
       // Character-specific fields
