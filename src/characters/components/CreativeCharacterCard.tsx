@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -114,7 +113,6 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
               </Link>
               <CloneCharacterButton 
                 character={character} 
-                size="sm"
                 className="flex-1"
               />
             </div>
