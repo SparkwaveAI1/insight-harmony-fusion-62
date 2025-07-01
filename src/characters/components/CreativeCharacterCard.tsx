@@ -105,7 +105,7 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
               />
             </div>
           ) : (
-            // Non-owner can only clone or view limited details
+            // Non-owner can only view details or clone - NO image generation
             <div className="flex gap-2">
               <Link to={`/characters/${character.character_id}`} className="flex-1">
                 <Button size="sm" variant="outline" className="w-full">
@@ -114,6 +114,7 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
               </Link>
               <CloneCharacterButton 
                 character={character} 
+                size="sm"
                 className="flex-1"
               />
             </div>
