@@ -7,9 +7,6 @@ import {
 import { 
   LinguisticProfile 
 } from '../../services/persona/types/linguistic-profile';
-import { 
-  NonHumanoidTraitProfile 
-} from './nonHumanoidTypes';
 
 // Character-specific behavioral modulation (separate from persona behavioral modulation)
 export interface CharacterBehavioralModulation {
@@ -20,30 +17,93 @@ export interface CharacterBehavioralModulation {
   patience?: number;
 }
 
-// Extend the persona TraitProfile to include character-specific physical traits for humanoid characters
-export interface HumanoidCharacterTraitProfile extends TraitProfile {
-  physical_appearance?: {
-    height?: string;
-    build_body_type?: string;
-    hair_color?: string;
-    hair_style?: string;
-    eye_color?: string;
-    skin_tone?: string;
-    [key: string]: any;
+// Unified flexible trait profile that can accommodate all character types
+export interface UnifiedCharacterTraitProfile {
+  // Core identity
+  entity_type?: string;
+  narrative_domain?: string;
+  functional_role?: string;
+  description?: string;
+  
+  // Creative character traits
+  personality_summary?: string;
+  core_drives?: string[];
+  surface_triggers?: string[];
+  change_response_style?: string;
+  
+  // Physical characteristics
+  physical_form?: string;
+  environment?: string;
+  communication_method?: string;
+  
+  // Enhanced creative details
+  background_story?: string;
+  unique_abilities?: string[];
+  cultural_background?: string;
+  
+  // Creative entity-specific traits (for non-standard entities)
+  manifestation_type?: string;
+  primary_form?: string;
+  narrative_universe?: string;
+  
+  // Creative physical traits
+  creative_manifestation?: {
+    primary_appearance?: string;
+    scale_reference?: string;
+    material_nature?: string;
+    dimensional_type?: string;
+    visual_effects?: string;
+    texture_description?: string;
+    movement_style?: string;
+    environmental_relationship?: string;
+    presence_aura?: string;
+    complexity_level?: string;
   };
-  physical_health?: {
-    disabilities?: string[];
-    health_conditions?: string[];
-    mobility?: string;
-    [key: string]: any;
+  
+  // Creative decision patterns
+  decision_approach?: {
+    conflict_style?: string;
+    adaptability?: number;
+    change_threshold?: number;
   };
+  
+  // Memory and growth
+  experience_processing?: {
+    type?: string;
+    key_themes?: string[];
+  };
+  
+  creative_evolution?: {
+    adaptation_style?: string;
+    growth_rate?: number;
+    transformation_trigger?: number;
+  };
+  
+  // Creative personality (not psychological models)
+  creative_personality?: {
+    imagination_level?: number;
+    expressiveness?: number;
+    social_comfort?: number;
+    collaborative_nature?: number;
+    emotional_depth?: number;
+  };
+  
+  // Physical appearance for humanoid creatives
+  physical_description?: {
+    height_category?: string;
+    build_type?: string;
+    hair_description?: string;
+    eye_description?: string;
+    skin_description?: string;
+    overall_appearance?: string;
+  };
+  
+  // Fallback for any additional properties
+  [key: string]: any;
 }
 
-// Export NonHumanoidTraitProfile for proper access
-export type { NonHumanoidTraitProfile } from './nonHumanoidTypes';
-
-// Union type for trait profiles
-export type CharacterTraitProfile = HumanoidCharacterTraitProfile | NonHumanoidTraitProfile;
+// Use the unified trait profile as the main type
+export type CharacterTraitProfile = UnifiedCharacterTraitProfile;
 
 // Creative Character Dialog Data Interface
 export interface CreativeCharacterData {
@@ -100,7 +160,7 @@ export interface DbCharacter {
   character_id: string;
   name: string;
   character_type: 'historical' | 'fictional' | 'multi_species';
-  creation_source: 'historical' | 'creative'; // New field for unified architecture
+  creation_source?: 'historical' | 'creative'; // Optional for backwards compatibility
   creation_date: string;
   created_at?: string;
   metadata: any;
