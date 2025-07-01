@@ -4,93 +4,80 @@ export function buildCreativeCharacterImagePrompt(characterData: any, style: str
   
   let prompt = "";
   
-  // Use enhanced appearance description if available
+  // Start with character name and basic type
+  prompt += `${characterData.name} - `;
+  
+  // Use enhanced appearance description if available, but clean it up
   if (characterData.trait_profile?.appearance_model?.appearance_description) {
-    prompt += characterData.trait_profile.appearance_model.appearance_description;
-    console.log("Using enhanced appearance description");
+    let description = characterData.trait_profile.appearance_model.appearance_description;
+    // Clean up the description - remove complex formatting and technical terms
+    description = description.replace(/Species\s+/gi, '');
+    description = description.replace(/\([^)]*\)/g, ''); // Remove parenthetical content
+    description = description.split('.')[0]; // Take first sentence only
+    prompt += description;
   } else if (characterData.metadata?.description) {
-    // Fallback to basic description
+    // Fallback to basic description - first sentence only
     const description = characterData.metadata.description;
-    const firstParagraph = description.split('\n\n')[0] || description.split('\n')[0];
-    const shortDescription = firstParagraph.length > 200 ? 
-      firstParagraph.substring(0, 200) + "..." : firstParagraph;
+    const firstSentence = description.split('.')[0] + '.';
+    const shortDescription = firstSentence.length > 150 ? 
+      firstSentence.substring(0, 150) + "..." : firstSentence;
     prompt += shortDescription;
+  } else if (characterData.trait_profile?.physical_form) {
+    prompt += characterData.trait_profile.physical_form;
   } else {
-    prompt += `A character named ${characterData.name}`;
+    prompt += `character named ${characterData.name}`;
   }
   
-  // Add visual theme if available
-  if (characterData.trait_profile?.appearance_model?.visual_theme) {
-    prompt += `, rendered in ${characterData.trait_profile.appearance_model.visual_theme} style`;
-  }
-  
-  // Add aesthetic class if available
-  if (characterData.trait_profile?.appearance_model?.aesthetic_class) {
-    prompt += `, with ${characterData.trait_profile.appearance_model.aesthetic_class} design elements`;
-  }
-  
-  // Add signature features if available
-  if (characterData.trait_profile?.appearance_model?.signature_features?.length > 0) {
-    const features = characterData.trait_profile.appearance_model.signature_features.join(', ');
-    prompt += `, featuring ${features}`;
-  }
-  
-  // Add physical form details if available
-  if (characterData.trait_profile?.physical_form) {
-    prompt += `, with physical manifestation: ${characterData.trait_profile.physical_form}`;
-  }
-  
-  // Add environment context
+  // Add environment context in a simple way
   if (characterData.trait_profile?.environment) {
-    prompt += `, in environment: ${characterData.trait_profile.environment}`;
+    prompt += `, in ${characterData.trait_profile.environment}`;
   }
   
-  // Add narrative domain styling with enhanced logic
+  // Add narrative domain styling with simpler logic
   if (characterData.trait_profile?.narrative_domain) {
     const domain = characterData.trait_profile.narrative_domain.toLowerCase();
-    if (domain.includes('fantasy')) {
-      prompt += ", fantasy setting with magical elements, mystical lighting, arcane atmosphere";
-    } else if (domain.includes('sci-fi') || domain.includes('science fiction')) {
-      prompt += ", futuristic sci-fi setting with advanced technology, neon lighting, cyberpunk atmosphere";
+    if (domain.includes('sci-fi') || domain.includes('science fiction')) {
+      prompt += ", futuristic sci-fi setting";
+    } else if (domain.includes('fantasy')) {
+      prompt += ", fantasy setting with magical elements";
     } else if (domain.includes('horror')) {
-      prompt += ", dark atmospheric horror setting, ominous shadows, unsettling mood";
+      prompt += ", dark atmospheric horror setting";
     } else if (domain.includes('mystery')) {
-      prompt += ", mysterious atmospheric setting, enigmatic lighting, subtle intrigue";
-    } else if (domain.includes('romance')) {
-      prompt += ", romantic atmospheric setting, soft lighting, dreamy ambiance";
-    } else if (domain.includes('thriller')) {
-      prompt += ", intense thriller atmosphere, dramatic lighting, tension-filled environment";
+      prompt += ", mysterious atmospheric setting";
     } else {
-      prompt += `, ${domain} genre setting with appropriate atmosphere`;
+      prompt += `, ${domain} setting`;
     }
   }
   
-  // Apply style-specific modifiers with enhanced options
+  // Apply style-specific modifiers with cleaner options
   switch (style) {
     case 'photorealistic':
-      prompt += ", highly detailed photorealistic portrait, professional studio lighting, sharp focus, 8K resolution";
+      prompt += ", highly detailed photorealistic portrait, professional lighting";
       break;
     case 'artistic':
-      prompt += ", artistic illustration, creative composition, vibrant colors, painterly technique";
+      prompt += ", artistic illustration, vibrant colors";
       break;
     case 'cinematic':
-      prompt += ", cinematic composition, dramatic lighting, movie poster style, epic scale";
+      prompt += ", cinematic composition, dramatic lighting";
       break;
     case 'anime':
-      prompt += ", anime art style, detailed character design, expressive features, Japanese animation style";
+      prompt += ", anime art style, detailed character design";
       break;
     case 'cartoon':
-      prompt += ", cartoon illustration, stylized character design, bright colors, animated style";
+      prompt += ", cartoon illustration, stylized character design";
       break;
     case 'concept-art':
-      prompt += ", concept art style, detailed character sheet, multiple angles, professional game art";
+      prompt += ", concept art style, detailed character sheet";
       break;
     default:
-      prompt += ", detailed character portrait, high quality artwork";
+      prompt += ", detailed character portrait";
   }
   
-  // Ensure high quality output
-  prompt += ", masterpiece quality, trending on artstation, professional artwork";
+  // Ensure high quality output with simpler terms
+  prompt += ", high quality artwork";
+  
+  // Clean up any double spaces or formatting issues
+  prompt = prompt.replace(/\s+/g, ' ').trim();
   
   console.log("Generated enhanced creative character prompt:", prompt);
   return prompt;
