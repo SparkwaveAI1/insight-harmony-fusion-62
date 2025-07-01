@@ -146,7 +146,7 @@ const CharactersHome = () => {
               <Button 
                 size="lg" 
                 asChild 
-                className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg"
+                className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg px-8"
               >
                 <Link to="/characters/creative">
                   <TestTube className="mr-2 h-5 w-5" />
