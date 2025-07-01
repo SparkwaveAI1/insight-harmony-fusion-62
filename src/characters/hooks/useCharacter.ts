@@ -1,33 +1,29 @@
 
 import { useState, useCallback } from 'react';
 import { Character } from '../types/characterTraitTypes';
-import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
-import { getCharacterById, getCharacterByCharacterId } from '../services/characterService';
-import { getNonHumanoidCharacterById, getNonHumanoidCharacterByCharacterId } from '../services/nonHumanoidCharacterService';
+import { getCharacterById, getCharacterByCharacterId } from '../services/unifiedCharacterService';
 import { toast } from 'sonner';
 
-type AnyCharacter = Character | NonHumanoidCharacter;
-
 export const useCharacter = () => {
-  const [activeCharacter, setActiveCharacter] = useState<AnyCharacter | null>(null);
+  const [activeCharacter, setActiveCharacter] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadCharacter = useCallback(async (characterId: string) => {
-    console.log('=== LOADING CHARACTER ===');
+    console.log('=== LOADING UNIFIED CHARACTER ===');
     console.log('Character ID:', characterId);
     
     setIsLoading(true);
     setError(null);
     
     try {
-      let character: AnyCharacter | null = null;
+      let character: Character | null = null;
       
-      // Try to load as humanoid character first by character_id
+      // Try to load by character_id first
       try {
         character = await getCharacterByCharacterId(characterId);
       } catch (error) {
-        console.log('Not found as humanoid character by character_id');
+        console.log('Not found by character_id, trying by id');
       }
       
       // If not found, try by id
@@ -35,25 +31,7 @@ export const useCharacter = () => {
         try {
           character = await getCharacterById(characterId);
         } catch (error) {
-          console.log('Not found as humanoid character by id');
-        }
-      }
-      
-      // If still not found, try non-humanoid by character_id
-      if (!character) {
-        try {
-          character = await getNonHumanoidCharacterByCharacterId(characterId);
-        } catch (error) {
-          console.log('Not found as non-humanoid character by character_id');
-        }
-      }
-      
-      // If still not found, try non-humanoid by id
-      if (!character) {
-        try {
-          character = await getNonHumanoidCharacterById(characterId);
-        } catch (error) {
-          console.log('Not found as non-humanoid character by id');
+          console.log('Not found by id either');
         }
       }
       
@@ -62,7 +40,7 @@ export const useCharacter = () => {
       }
       
       setActiveCharacter(character);
-      console.log('✅ Character loaded successfully:', character.name);
+      console.log('✅ Unified character loaded successfully:', character.name);
       
       return character;
     } catch (error) {

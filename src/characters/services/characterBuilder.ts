@@ -35,6 +35,7 @@ export function buildCharacter(
     character_id: characterId,
     name: formData.name,
     character_type: 'historical',
+    creation_source: 'historical', // Add the required field
     creation_date: currentDate,
     created_at: currentDate,
     metadata,
