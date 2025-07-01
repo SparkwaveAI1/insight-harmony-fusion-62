@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download, Sparkles, Copy, Users } from 'lucide-react';
@@ -18,6 +17,7 @@ interface CharacterDetailHeaderProps {
 const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHeaderProps) => {
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const isNonHumanoid = character.character_type === 'multi_species' || 'species_type' in character;
+  const isCreativeCharacter = character.creation_source === 'creative';
 
   const handleCopyCharacterId = async () => {
     try {
@@ -28,14 +28,29 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
     }
   };
 
+  // Determine the correct back link based on character type
+  const getBackLink = () => {
+    if (isCreativeCharacter) {
+      return "/characters/creative";
+    }
+    return "/characters";
+  };
+
+  const getBackText = () => {
+    if (isCreativeCharacter) {
+      return "Back to Character Lab";
+    }
+    return "Back to Library";
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" asChild>
-            <Link to="/characters">
+            <Link to={getBackLink()}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Library
+              {getBackText()}
             </Link>
           </Button>
           
