@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
+import { ThemeToggle } from "../ui-custom/ThemeToggle";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
 import { Menu, X, LogOut, UserRound } from "lucide-react";
@@ -108,6 +108,7 @@ const Header = () => {
           <div className="flex items-center gap-2">
             {/* Action Buttons (right side) - Desktop */}
             <div className="hidden md:flex items-center gap-4">
+              <ThemeToggle />
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
