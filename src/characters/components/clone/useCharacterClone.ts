@@ -6,14 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 import { Character } from "../../types/characterTraitTypes";
-import { NonHumanoidCharacter } from "../../types/nonHumanoidTypes";
 import { createCreativeCharacter } from "../../services/creativeCharacterService";
 import { generateCharacterTraits } from "../../services/characterTraitService";
 import { saveCharacter } from "../../services/characterService";
 import { cloneFormSchema, CloneFormValues } from "./cloneFormSchema";
 import { useAuth } from "@/context/AuthContext";
 
-export function useCharacterClone(character: Character | NonHumanoidCharacter) {
+export function useCharacterClone(character: Character) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -51,18 +50,23 @@ export function useCharacterClone(character: Character | NonHumanoidCharacter) {
     try {
       console.log("Cloning character with customizations:", data);
       
-      let clonedCharacter: Character | NonHumanoidCharacter;
+      let clonedCharacter: Character;
       
       // Handle different character types
       if (character.character_type === 'historical') {
-        clonedCharacter = await cloneHistoricalCharacter(character as Character, data, user.id);
-      } else if (character.character_type === 'multi_species' || 'species_type' in character) {
-        clonedCharacter = await cloneEnhancedCreativeCharacter(character, data, user.id);
-      } else if (character.character_type === 'fictional') {
-        clonedCharacter = await cloneEnhancedCreativeCharacter(character, data, user.id);
+        clonedCharacter = await cloneHistoricalCharacter(character, data, user.id);
+      } else if (character.character_type === 'multi_species') {
+        // Check if it's a Character Lab character
+        const isCharacterLab = character.metadata?.module === 'character_lab';
+        if (isCharacterLab) {
+          clonedCharacter = await cloneCharacterLabCharacter(character, data, user.id);
+        } else {
+          // Legacy multi_species character
+          clonedCharacter = await cloneGenericCharacter(character, data, user.id);
+        }
       } else {
         // Fallback to generic cloning
-        clonedCharacter = await cloneGenericCharacter(character as Character, data, user.id);
+        clonedCharacter = await cloneGenericCharacter(character, data, user.id);
       }
       
       if (clonedCharacter) {
@@ -70,7 +74,7 @@ export function useCharacterClone(character: Character | NonHumanoidCharacter) {
         toast.success("Character cloned and customized successfully!");
         
         // Navigate to the appropriate library based on character type
-        if (clonedCharacter.character_type === 'multi_species' || 'species_type' in clonedCharacter) {
+        if (clonedCharacter.character_type === 'multi_species') {
           navigate('/characters/creative');
         } else {
           navigate(`/characters/${clonedCharacter.character_id}`);
@@ -152,11 +156,11 @@ const cloneHistoricalCharacter = async (
 };
 
 // Enhanced cloning for Character Lab characters that preserves all trait architecture
-const cloneEnhancedCreativeCharacter = async (
-  character: Character | NonHumanoidCharacter, 
+const cloneCharacterLabCharacter = async (
+  character: Character, 
   customizations: CloneFormValues, 
   userId: string
-): Promise<Character | NonHumanoidCharacter> => {
+): Promise<Character> => {
   console.log('Cloning Character Lab character with enhanced preservation');
   
   // Preserve all original trait profile data and enhance it
@@ -215,7 +219,7 @@ const cloneEnhancedCreativeCharacter = async (
   };
   
   // Create cloned character preserving all structure
-  const clonedCharacter = {
+  const clonedCharacter: Character = {
     ...character,
     character_id: `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     name: customizations.name,
@@ -228,50 +232,20 @@ const cloneEnhancedCreativeCharacter = async (
     // Enhanced trait profile with all original data preserved
     trait_profile: enhancedTraitProfile,
     
-    // Preserve behavioral modulation
-    behavioral_modulation: character.behavioral_modulation || {
-      formality: 0.5,
-      enthusiasm: 0.6,
-      assertiveness: 0.5,
-      empathy: 0.7,
-      patience: 0.6
-    },
-    
-    // Preserve linguistic profile
-    linguistic_profile: character.linguistic_profile || {
-      default_output_length: 'medium',
-      speech_register: 'contextual',
-      cultural_speech_patterns: 'entity-appropriate'
-    },
-    
     // Enhanced metadata
     metadata: {
       ...character.metadata,
       description: fullDescription,
       customization_notes: customizations.customization_notes,
       cloned_from: character.character_id,
-      created_via: 'enhanced_creative_clone',
-      clone_timestamp: new Date().toISOString()
-    },
-    
-    // Preserve other Character Lab specific fields
-    interview_sections: character.interview_sections || [],
-    preinterview_tags: character.preinterview_tags || [],
-    simulation_directives: character.simulation_directives || {
-      roleplay_style: 'immersive',
-      consistency_level: 'high',
-      evolution_enabled: true
-    },
-    
-    // Preserve emotional triggers for Character Lab characters
-    emotional_triggers: character.emotional_triggers || {
-      positive_triggers: [],
-      negative_triggers: []
+      created_via: 'character_lab_clone',
+      clone_timestamp: new Date().toISOString(),
+      module: 'character_lab' // Ensure it's marked as Character Lab
     }
   };
   
   console.log('Enhanced cloned character:', clonedCharacter);
-  return await saveCharacter(clonedCharacter as Character);
+  return await saveCharacter(clonedCharacter);
 };
 
 // Generic character cloning as fallback

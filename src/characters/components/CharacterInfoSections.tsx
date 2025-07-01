@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Character } from '../types/characterTraitTypes';
-import { NonHumanoidTraitProfile } from '../types/nonHumanoidTypes';
 import CharacterTraits from './CharacterTraits';
 import BasicInformationSection from './sections/BasicInformationSection';
 import BackgroundSection from './sections/BackgroundSection';
@@ -36,13 +35,9 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
     }
   };
 
-  const isNonHumanoid = character.character_type === 'multi_species';
   const isHistorical = character.character_type === 'historical';
-  const isCharacterLab = character.character_type === 'multi_species' && 
-    character.metadata?.module === 'character_lab';
-  
-  // Type cast when we know it's a non-humanoid character
-  const nonHumanoidTraitProfile = isNonHumanoid ? character.trait_profile as NonHumanoidTraitProfile : null;
+  const isMultiSpecies = character.character_type === 'multi_species';
+  const isCharacterLab = isMultiSpecies && character.metadata?.module === 'character_lab';
 
   // Access date_of_birth and backstory from metadata
   const dateOfBirth = character.metadata?.date_of_birth;
@@ -54,9 +49,9 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
       <BasicInformationSection
         character={character}
         dateOfBirth={dateOfBirth}
-        isNonHumanoid={isNonHumanoid}
+        isNonHumanoid={isMultiSpecies}
         isHistorical={isHistorical}
-        nonHumanoidTraitProfile={nonHumanoidTraitProfile}
+        nonHumanoidTraitProfile={null}
         formatDate={formatDate}
         getYearFromDate={getYearFromDate}
       />
@@ -71,29 +66,29 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         <BackgroundSection backstory={backstory} />
       )}
 
-      {/* Physical Manifestation Section for Non-Humanoid Characters */}
-      {isNonHumanoid && !isCharacterLab && nonHumanoidTraitProfile?.physical_manifestation && (
-        <PhysicalManifestationSection nonHumanoidTraitProfile={nonHumanoidTraitProfile} />
+      {/* Physical Manifestation Section for Multi-Species Characters */}
+      {isMultiSpecies && !isCharacterLab && character.trait_profile?.physical_manifestation && (
+        <PhysicalManifestationSection nonHumanoidTraitProfile={null} />
       )}
 
-      {/* Enhanced Communication Section for Non-Humanoid Characters */}
-      {isNonHumanoid && !isCharacterLab && character.linguistic_profile && (
-        <CommunicationSection character={character} isNonHumanoid={isNonHumanoid} />
+      {/* Enhanced Communication Section for Multi-Species Characters */}
+      {isMultiSpecies && !isCharacterLab && character.linguistic_profile && (
+        <CommunicationSection character={character} isNonHumanoid={isMultiSpecies} />
       )}
 
-      {/* Regular Linguistic Profile for Humanoid Characters */}
-      {!isNonHumanoid && character.linguistic_profile && Object.keys(character.linguistic_profile).length > 0 && (
-        <CommunicationSection character={character} isNonHumanoid={isNonHumanoid} />
+      {/* Regular Linguistic Profile for Historical Characters */}
+      {!isMultiSpecies && character.linguistic_profile && Object.keys(character.linguistic_profile).length > 0 && (
+        <CommunicationSection character={character} isNonHumanoid={false} />
       )}
 
-      {/* Enhanced Metadata for Non-Humanoid Characters */}
-      {isNonHumanoid && !isCharacterLab && character.metadata && Object.keys(character.metadata).length > 0 && (
+      {/* Enhanced Metadata for Multi-Species Characters */}
+      {isMultiSpecies && !isCharacterLab && character.metadata && Object.keys(character.metadata).length > 0 && (
         <EntityProfileSection character={character} />
       )}
 
       {/* Emotional Triggers - Only for Non-Historical Characters and not Character Lab */}
       {!isHistorical && !isCharacterLab && character.emotional_triggers && (
-        <EmotionalTriggersSection character={character} isNonHumanoid={isNonHumanoid} />
+        <EmotionalTriggersSection character={character} isNonHumanoid={isMultiSpecies} />
       )}
 
       {/* Character Traits - Show for non-Character Lab characters or as fallback */}
