@@ -1,82 +1,62 @@
-export interface StyleConfig {
-  name: string;
-  description: string;
-  promptModifiers: string[];
-  openaiStyle?: string;
-  quality?: 'hd' | 'standard';
-}
-
-export const IMAGE_STYLES: Record<string, StyleConfig> = {
+export const IMAGE_STYLES = {
   photorealistic: {
-    name: 'Photorealistic',
-    description: 'High-detail, realistic rendering',
-    promptModifiers: [
-      'photorealistic',
-      'high quality',
-      'detailed'
-    ],
-    openaiStyle: 'natural',
-    quality: 'hd'
+    prompt: "photorealistic, highly detailed, professional photography, clean composition",
+    quality: "hd",
+    openaiStyle: "natural"
   },
   cinematic: {
-    name: 'Cinematic',
-    description: 'Movie-style dramatic lighting and composition',
-    promptModifiers: [
-      'cinematic',
-      'dramatic lighting',
-      'movie style'
-    ],
-    openaiStyle: 'vivid',
-    quality: 'hd'
+    prompt: "cinematic lighting, dramatic composition, movie-style photography, high contrast",
+    quality: "hd", 
+    openaiStyle: "vivid"
   },
-  anime: {
-    name: 'Anime',
-    description: 'Japanese animation art style',
-    promptModifiers: [
-      'anime style',
-      'manga style',
-      'clean art'
-    ],
-    openaiStyle: 'vivid',
-    quality: 'hd'
+  artistic: {
+    prompt: "artistic style, painterly composition, creative lighting, stylized",
+    quality: "hd",
+    openaiStyle: "natural"
   },
-  comics: {
-    name: 'Comics',
-    description: 'Comic book illustration style',
-    promptModifiers: [
-      'comic book style',
-      'illustration',
-      'clean lines'
-    ],
-    openaiStyle: 'vivid',
-    quality: 'hd'
+  portrait: {
+    prompt: "professional portrait style, studio lighting, clean background, detailed facial features",
+    quality: "hd",
+    openaiStyle: "natural"
+  },
+  historical: {
+    prompt: "historically accurate, period-appropriate clothing and setting, authentic details",
+    quality: "hd",
+    openaiStyle: "natural"
   }
 };
 
 export function buildNonHumanoidImagePrompt(characterData: any, style: string = 'photorealistic'): string {
   console.log("Generating minimal non-humanoid character image prompt");
   
-  const styleConfig = IMAGE_STYLES[style] || IMAGE_STYLES.photorealistic;
+  // For non-humanoid characters, use a more descriptive approach
+  const name = characterData.name || 'Unknown Entity';
+  const speciesType = characterData.species_type || 'unknown entity';
+  const description = characterData.trait_profile?.description || characterData.description || '';
+  const environment = characterData.trait_profile?.environment || '';
+  const physicalForm = characterData.trait_profile?.physical_form || characterData.trait_profile?.physicalForm || '';
   
-  // Start with the character's basic description
-  let prompt = '';
+  let prompt = `${name} - ${speciesType}`;
   
-  if (characterData.metadata?.description) {
-    // Use the description but clean it up
-    prompt = characterData.metadata.description.trim();
-    // Remove any trailing punctuation
-    prompt = prompt.replace(/[.,\s]+$/, '');
-  } else if (characterData.name) {
-    prompt = `${characterData.name}`;
-  } else {
-    prompt = 'A unique character';
+  if (description) {
+    prompt += `, ${description}`;
   }
   
-  // Add style modifiers
-  const styleModifiers = styleConfig.promptModifiers.join(', ');
-  prompt += `, ${styleModifiers}`;
+  if (physicalForm) {
+    prompt += `, ${physicalForm}`;
+  }
   
-  // Add essential composition requirements - keep it simple
+  if (environment) {
+    prompt += `, in ${environment}`;
+  }
+  
+  // Add style-specific modifiers
+  const styleConfig = IMAGE_STYLES[style];
+  if (styleConfig && styleConfig.prompt) {
+    prompt += `, ${styleConfig.prompt}`;
+  }
+  
+  // Add basic composition guidelines
   prompt += ', single character, full body, standing, plain background, no text, no annotations, no labels, clean image';
   
   console.log("Generated minimal prompt:", prompt);
