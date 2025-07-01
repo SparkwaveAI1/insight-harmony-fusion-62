@@ -1,45 +1,25 @@
 
 import { useState, useEffect } from 'react';
-import { FlaskConical, Plus, Grid, List, Search, Filter } from 'lucide-react';
+import { FlaskConical, Plus, Grid, List, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import { getAllCreativeCharacters } from '../services/unifiedCharacterService';
+import { useCreativeCharactersFixed } from '../hooks/useCreativeCharactersFixed';
 import { Character } from '../types/characterTraitTypes';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 
 const UnifiedCreativeCharacterLibrary = () => {
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const { data: characters = [], isLoading, error } = useCreativeCharactersFixed();
   const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'humanoid' | 'non_humanoid'>('all');
 
   useEffect(() => {
-    loadCharacters();
-  }, []);
-
-  useEffect(() => {
     filterCharacters();
   }, [characters, searchQuery, selectedFilter]);
-
-  const loadCharacters = async () => {
-    try {
-      setIsLoading(true);
-      const allCreativeCharacters = await getAllCreativeCharacters();
-      console.log('Loaded creative characters:', allCreativeCharacters);
-      setCharacters(allCreativeCharacters);
-    } catch (error) {
-      console.error('Error loading creative characters:', error);
-      toast.error('Failed to load creative characters');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const filterCharacters = () => {
     let filtered = characters;
@@ -87,8 +67,24 @@ const UnifiedCreativeCharacterLibrary = () => {
       <div className="w-full px-4 md:px-8 py-8">
         <Section>
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+              <p className="text-muted-foreground">Loading creative characters...</p>
+            </div>
           </div>
+        </Section>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full px-4 md:px-8 py-8">
+        <Section>
+          <Card className="text-center py-12">
+            <h2 className="text-xl font-semibold mb-2 text-red-600">Error Loading Creative Characters</h2>
+            <p className="text-muted-foreground">{error.message || 'An error occurred'}</p>
+          </Card>
         </Section>
       </div>
     );
@@ -105,7 +101,7 @@ const UnifiedCreativeCharacterLibrary = () => {
               <div>
                 <h1 className="text-xl md:text-3xl font-bold">Creative Character Library</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  All your creative characters in one unified space
+                  All your creative characters from the Character Lab
                 </p>
               </div>
             </div>
@@ -123,7 +119,7 @@ const UnifiedCreativeCharacterLibrary = () => {
               <div className="relative flex-1 sm:w-80">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search characters..."
+                  placeholder="Search creative characters..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -203,41 +199,43 @@ const UnifiedCreativeCharacterLibrary = () => {
           }>
             {filteredCharacters.map((character) => (
               <Card key={character.character_id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-1">{character.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {getCharacterDescription(character)}
-                      </p>
+                <Link to={`/characters/${character.character_id}`}>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold mb-1">{character.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {getCharacterDescription(character)}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">
+                        {getCharacterTypeLabel(character)}
+                      </Badge>
+                      {character.metadata?.narrative_domain && (
+                        <Badge variant="outline">
+                          {character.metadata.narrative_domain}
+                        </Badge>
+                      )}
+                      {character.metadata?.functional_role && (
+                        <Badge variant="outline">
+                          {character.metadata.functional_role}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button size="sm" className="flex-1" onClick={(e) => e.preventDefault()}>
+                        Chat
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1">
+                        View Details
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">
-                      {getCharacterTypeLabel(character)}
-                    </Badge>
-                    {character.metadata?.narrative_domain && (
-                      <Badge variant="outline">
-                        {character.metadata.narrative_domain}
-                      </Badge>
-                    )}
-                    {character.metadata?.functional_role && (
-                      <Badge variant="outline">
-                        {character.metadata.functional_role}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2 pt-2">
-                    <Button size="sm" className="flex-1">
-                      Chat
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
+                </Link>
               </Card>
             ))}
           </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -5,23 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import { useCharacters } from '../hooks/useCharacters';
+import { useHistoricalCharacters } from '../hooks/useHistoricalCharacters';
 import CharacterAvatar from '../components/CharacterAvatar';
 import CharacterIdDisplay from '../components/CharacterIdDisplay';
 
 const CharacterLibrary = () => {
-  const { data: characters = [], isLoading, error } = useCharacters();
+  const { data: characters = [], isLoading, error } = useHistoricalCharacters();
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [filterType, setFilterType] = React.useState<'all' | 'historical' | 'fictional'>('all');
 
   const filteredCharacters = React.useMemo(() => {
     return characters.filter(character => {
       const matchesSearch = character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            character.metadata?.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType === 'all' || character.character_type === filterType;
-      return matchesSearch && matchesFilter;
+      return matchesSearch;
     });
-  }, [characters, searchTerm, filterType]);
+  }, [characters, searchTerm]);
 
   if (isLoading) {
     return (
@@ -30,7 +29,7 @@ const CharacterLibrary = () => {
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading characters...</p>
+              <p className="text-muted-foreground">Loading historical characters...</p>
             </div>
           </div>
         </Section>
@@ -57,9 +56,9 @@ const CharacterLibrary = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Character Library</h1>
+            <h1 className="text-3xl font-bold">Historical Characters</h1>
             <p className="text-muted-foreground">
-              Browse and manage your custom characters
+              Browse and manage your historically accurate characters
             </p>
           </div>
           
@@ -73,40 +72,27 @@ const CharacterLibrary = () => {
           </div>
         </div>
 
-        {/* Search and Filter */}
+        {/* Search */}
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search characters..."
+              placeholder="Search historical characters..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as 'all' | 'historical' | 'fictional')}
-              className="px-3 py-2 border border-input rounded-md bg-background"
-            >
-              <option value="all">All Types</option>
-              <option value="historical">Historical</option>
-              <option value="fictional">Fictional</option>
-            </select>
           </div>
         </div>
 
         {/* Character Grid */}
         {filteredCharacters.length === 0 ? (
           <Card className="text-center py-12">
-            <h2 className="text-xl font-semibold mb-2">No Characters Found</h2>
+            <h2 className="text-xl font-semibold mb-2">No Historical Characters Found</h2>
             <p className="text-muted-foreground mb-6">
               {characters.length === 0 
-                ? "You haven't created any characters yet." 
-                : "No characters match your search criteria."
+                ? "You haven't created any historical characters yet." 
+                : "No historical characters match your search criteria."
               }
             </p>
             <div className="flex items-center justify-center gap-3">
@@ -126,8 +112,8 @@ const CharacterLibrary = () => {
                     <CharacterAvatar character={character} size="md" />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{character.name}</h3>
-                      <p className="text-sm text-muted-foreground capitalize">
-                        {character.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
+                      <p className="text-sm text-muted-foreground">
+                        Historical Character
                       </p>
                     </div>
                   </div>
