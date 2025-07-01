@@ -26,7 +26,7 @@ const FeaturedCharacters = () => {
             {[...Array(4)].map((_, index) => (
               <Card key={index} className="bg-black/40 border-purple-500/30 animate-pulse">
                 <CardContent className="p-0">
-                  <div className="aspect-video bg-gray-700 rounded-t-lg"></div>
+                  <div className="aspect-[9/16] bg-gray-700 rounded-t-lg"></div>
                   <div className="p-6">
                     <div className="h-6 bg-gray-700 rounded mb-3"></div>
                     <div className="h-4 bg-gray-700 rounded mb-2"></div>
@@ -82,7 +82,7 @@ const FeaturedCharacters = () => {
             return (
               <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
+                  <div className="relative aspect-[9/16] bg-gray-900 rounded-t-lg overflow-hidden">
                     <video 
                       src={video.video_url}
                       className="w-full h-full object-cover"
