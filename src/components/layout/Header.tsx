@@ -55,107 +55,118 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         isScrolled || !isDarkRoute
-          ? "bg-background/95 backdrop-blur-md shadow-md" 
-          : "bg-slate-900/90 backdrop-blur-md"
+          ? "bg-background/95 backdrop-blur-md shadow-md border-b border-border" 
+          : "bg-slate-900/95 backdrop-blur-md border-b border-slate-800"
       )}
     >
-      <div className="container flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center">
-            <Logo 
-              size="md" 
-              className={isScrolled || !isDarkRoute ? "text-foreground" : "text-white"}
-            />
-          </Link>
-        </div>
-          
-        {/* Centered Navigation Links - Desktop */}
-        <NavigationMenu className="hidden md:flex mx-auto">
-          <NavigationMenuList className="space-x-2">
-            {/* Primary Navigation Links */}
-            {headerNavItems.map((link) => {
-              const isActive = location.pathname === link.href || 
-                             (link.href !== "/" && location.pathname.startsWith(link.href));
-              
-              return (
-                <NavigationMenuItem key={link.title}>
-                  <Link to={link.href}>
-                    <NavigationMenuLink 
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        "flex items-center gap-2 px-4 font-medium",
-                        "text-foreground", // Always use text-foreground (black in light mode)
-                        isActive && "bg-accent text-accent-foreground"
-                      )}
-                    >
-                      {link.icon && <link.icon className="w-4 h-4" />}
-                      {link.title}
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              );
-            })}
-          </NavigationMenuList>
-        </NavigationMenu>
-
-        {/* Mobile Menu Button */}
-        <div className="flex items-center gap-2">
-          {/* Action Buttons (right side) - Desktop */}
-          <div className="hidden md:flex items-center gap-4">
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {user.email?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem className="font-medium">{user.email}</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
-                      <UserRound className="mr-2 h-4 w-4" />
-                      <span>Your Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => signOut()}
-                    className="text-red-600 cursor-pointer"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            <ActionButtons 
-              showWalletOptions={isEarnPage}
-              isWalletConnected={isWalletConnected}
-              connectWallet={connectWallet}
-              disconnectWallet={disconnectWallet}
-              isDarkRoute={isDarkRoute && !isScrolled}
-            />
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center">
+              <Logo 
+                size="md" 
+                className={isScrolled || !isDarkRoute ? "text-foreground" : "text-white"}
+                textClassName={isScrolled || !isDarkRoute ? "text-foreground" : "text-white"}
+              />
+            </Link>
           </div>
-          
-          <Button 
-            className={cn(
-              "md:hidden",
-              "text-foreground", // Always use text-foreground (black in light mode) for mobile menu button
-              "p-2"
-            )} 
-            variant="ghost"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Toggle menu"
-          >
-            <Menu size={24} />
-          </Button>
+            
+          {/* Centered Navigation Links - Desktop */}
+          <NavigationMenu className="hidden md:flex mx-auto font-orbitron">
+            <NavigationMenuList className="space-x-2">
+              {/* Primary Navigation Links */}
+              {headerNavItems.map((link) => {
+                const isActive = location.pathname === link.href || 
+                               (link.href !== "/" && location.pathname.startsWith(link.href));
+                
+                return (
+                  <NavigationMenuItem key={link.title}>
+                    <Link to={link.href}>
+                      <NavigationMenuLink 
+                        className={cn(
+                          navigationMenuTriggerStyle(),
+                          "flex items-center gap-2 px-4 font-medium font-orbitron",
+                          isScrolled || !isDarkRoute 
+                            ? "text-foreground hover:bg-accent hover:text-accent-foreground" 
+                            : "text-gray-300 hover:text-white hover:bg-slate-800",
+                          isActive && (isScrolled || !isDarkRoute 
+                            ? "bg-accent text-accent-foreground" 
+                            : "bg-slate-800 text-white")
+                        )}
+                      >
+                        {link.icon && <link.icon className="w-4 h-4" />}
+                        {link.title}
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                );
+              })}
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          {/* Mobile Menu Button */}
+          <div className="flex items-center gap-2">
+            {/* Action Buttons (right side) - Desktop */}
+            <div className="hidden md:flex items-center gap-4">
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className={cn(
+                          isScrolled || !isDarkRoute 
+                            ? "bg-primary/20 text-foreground border border-primary/30"
+                            : "bg-primary/20 text-white border border-primary/30"
+                        )}>
+                          {user.email?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuItem className="font-medium">{user.email}</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="flex items-center">
+                        <UserRound className="mr-2 h-4 w-4" />
+                        <span>Your Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => signOut()}
+                      className="text-red-600 cursor-pointer"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              <ActionButtons 
+                showWalletOptions={isEarnPage}
+                isWalletConnected={isWalletConnected}
+                connectWallet={connectWallet}
+                disconnectWallet={disconnectWallet}
+                isDarkRoute={isDarkRoute && !isScrolled}
+              />
+            </div>
+            
+            <Button 
+              className={cn(
+                "md:hidden",
+                isScrolled || !isDarkRoute ? "text-foreground" : "text-white",
+                "p-2"
+              )} 
+              variant="ghost"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Toggle menu"
+            >
+              <Menu size={24} />
+            </Button>
+          </div>
         </div>
       </div>
       
