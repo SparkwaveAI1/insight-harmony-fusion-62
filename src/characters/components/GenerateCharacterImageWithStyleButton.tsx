@@ -31,7 +31,7 @@ const GenerateCharacterImageWithStyleButton = ({
   className 
 }: GenerateCharacterImageWithStyleButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState('photorealistic');
+  const [selectedStyle, setSelectedStyle] = useState('profile');
   const [customText, setCustomText] = useState('');
   const [referenceImage, setReferenceImage] = useState<CharacterImage | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

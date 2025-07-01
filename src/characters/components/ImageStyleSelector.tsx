@@ -11,9 +11,9 @@ export interface ImageStyle {
 
 export const IMAGE_STYLES: ImageStyle[] = [
   {
-    id: 'photorealistic',
-    name: 'Hyper',
-    description: 'High-detail, realistic rendering'
+    id: 'profile',
+    name: 'Profile',
+    description: 'Profile image, front view, realistic portrait'
   },
   {
     id: 'cinematic',

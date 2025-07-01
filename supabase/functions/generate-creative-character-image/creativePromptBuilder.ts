@@ -1,4 +1,5 @@
 
+
 export function buildCreativeCharacterImagePrompt(characterData: any, style: string): string {
   console.log("Building enhanced creative character image prompt for:", characterData.name);
   
@@ -51,6 +52,9 @@ export function buildCreativeCharacterImagePrompt(characterData: any, style: str
   
   // Apply style-specific modifiers with cleaner options
   switch (style) {
+    case 'profile':
+      prompt += ", profile image, front view, realistic portrait";
+      break;
     case 'photorealistic':
       prompt += ", highly detailed photorealistic portrait, professional lighting";
       break;
@@ -69,6 +73,9 @@ export function buildCreativeCharacterImagePrompt(characterData: any, style: str
     case 'concept-art':
       prompt += ", concept art style, detailed character sheet";
       break;
+    case 'comics':
+      prompt += ", comic book illustration style";
+      break;
     default:
       prompt += ", detailed character portrait";
   }
@@ -82,3 +89,4 @@ export function buildCreativeCharacterImagePrompt(characterData: any, style: str
   console.log("Generated enhanced creative character prompt:", prompt);
   return prompt;
 }
+
