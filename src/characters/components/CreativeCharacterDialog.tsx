@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,21 +6,19 @@ import { CreativeCharacterDialogProps, CreativeCharacterData } from './CreativeC
 import { canProceed } from './CreativeCharacterDialog/utils';
 import { handleRandomize } from './CreativeCharacterDialog/randomizers';
 import Step1NameInput from './CreativeCharacterDialog/steps/Step1NameInput';
-import Step2EntityType from './CreativeCharacterDialog/steps/Step2EntityType';
-import Step3NarrativeDomain from './CreativeCharacterDialog/steps/Step3NarrativeDomain';
-import Step4FunctionalRole from './CreativeCharacterDialog/steps/Step4FunctionalRole';
-import Step5Description from './CreativeCharacterDialog/steps/Step5Description';
-import Step6Environment from './CreativeCharacterDialog/steps/Step6Environment';
-import Step7Drives from './CreativeCharacterDialog/steps/Step7Drives';
+import Step2NarrativeDomain from './CreativeCharacterDialog/steps/Step2NarrativeDomain';
+import Step3Description from './CreativeCharacterDialog/steps/Step3Description';
+import Step4Environment from './CreativeCharacterDialog/steps/Step4Environment';
+import Step5Drives from './CreativeCharacterDialog/steps/Step5Drives';
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState<CreativeCharacterData>({
     name: '',
-    entityType: '',
+    entityType: 'human', // Default to human since we removed the step
     narrativeDomain: '',
-    functionalRole: '',
+    functionalRole: '', // Keep for compatibility but won't be used
     description: '',
     environment: '',
     physicalForm: '',
@@ -31,7 +28,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     changeResponseStyle: 'mutate_adapt'
   });
 
-  const totalSteps = 7;
+  const totalSteps = 5;
 
   const handleNext = () => {
     console.log('handleNext called - current step:', currentStep, 'can proceed:', canProceed(currentStep, formData));
@@ -70,17 +67,13 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
       case 1:
         return <Step1NameInput formData={formData} setFormData={setFormData} />;
       case 2:
-        return <Step2EntityType formData={formData} setFormData={setFormData} />;
+        return <Step2NarrativeDomain formData={formData} setFormData={setFormData} />;
       case 3:
-        return <Step3NarrativeDomain formData={formData} setFormData={setFormData} />;
+        return <Step3Description formData={formData} setFormData={setFormData} />;
       case 4:
-        return <Step4FunctionalRole formData={formData} setFormData={setFormData} />;
+        return <Step4Environment formData={formData} setFormData={setFormData} />;
       case 5:
-        return <Step5Description formData={formData} setFormData={setFormData} />;
-      case 6:
-        return <Step6Environment formData={formData} setFormData={setFormData} />;
-      case 7:
-        return <Step7Drives formData={formData} setFormData={setFormData} />;
+        return <Step5Drives formData={formData} setFormData={setFormData} />;
       default:
         console.log('Unknown step in renderStep:', currentStep);
         return (
@@ -105,7 +98,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
             Character Genesis Creation
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
-            Create a unique character through our guided 7-step process
+            Create a unique character through our guided 5-step process
           </DialogDescription>
         </DialogHeader>
         
