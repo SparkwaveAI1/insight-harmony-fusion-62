@@ -1,6 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { navigationMenuItems } from "../config/navigationConfig";
+import { cn } from "@/lib/utils";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -26,6 +27,7 @@ export function NavigationMenu() {
                   asChild
                   isActive={isActive}
                   tooltip={item.title}
+                  className="font-orbitron"
                 >
                   <Link to={item.url}>
                     <item.icon className="h-5 w-5" />
