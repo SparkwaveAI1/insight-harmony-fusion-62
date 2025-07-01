@@ -52,7 +52,7 @@ export const useFeaturedCharacterVideos = () => {
           id: '2',
           character_id: 'rajiv-patel',
           name: 'Rajiv Patel',
-          description: 'A brilliant software engineer from Mumbai who immigrated to Silicon Valley in the early 2000s during the tech boom. Rajiv\'s journey embodies the modern immigrant experience in America\'s technology sector, balancing traditional Indian values with Silicon Valley\'s fast-paced innovation culture. His expertise in artificial intelligence and machine learning has made him a sought-after voice in tech circles. He represents a generation of global professionals reshaping the landscape of American technology.',
+          description: 'A brilliant software engineer from Mumbai who immigrated to Silicon Valley in the early 2000s during the tech boom. Rajiv\'s journey embodies the modern immigrant experience in America\'s technology sector, balancing traditional Indian values with Silicon Valley\'s fast-paced innovation culture. His expertise in artificial intelligence and machine learning has made him a sought-after voice in tech circles.',
           video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos/Rajiv%20Patel.mp4',
           thumbnail_url: null,
           character_type: 'historical',
