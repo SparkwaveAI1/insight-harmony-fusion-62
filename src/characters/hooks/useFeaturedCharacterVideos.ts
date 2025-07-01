@@ -34,7 +34,7 @@ export const useFeaturedCharacterVideos = () => {
         return data as FeaturedCharacterVideo[];
       }
 
-      // Otherwise, return sample data with the actual Supabase video URL for Isabella
+      // Otherwise, return sample data with properly encoded URL
       const sampleData: FeaturedCharacterVideo[] = [
         {
           id: '1',
@@ -60,6 +60,7 @@ export const useFeaturedCharacterVideos = () => {
         }
       ];
 
+      console.log('Using sample data for featured videos:', sampleData);
       return sampleData;
     },
   });

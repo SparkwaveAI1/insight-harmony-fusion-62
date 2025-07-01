@@ -76,76 +76,99 @@ const FeaturedCharacters = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {videos.map((video) => (
-            <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden">
-              <CardContent className="p-0">
-                <div className="relative aspect-video overflow-hidden">
-                  <video 
-                    src={video.video_url}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    preload="metadata"
-                    muted
-                    loop
-                    onMouseEnter={(e) => e.currentTarget.play()}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.pause();
-                      e.currentTarget.currentTime = 0;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300" />
-                  
-                  {/* Play button overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="bg-purple-600/80 backdrop-blur-sm rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
-                      <Play className="h-8 w-8 text-white ml-1" fill="white" />
+          {videos.map((video) => {
+            console.log('Rendering video:', video.name, 'URL:', video.video_url);
+            
+            return (
+              <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="relative aspect-video overflow-hidden bg-gray-800">
+                    <video 
+                      src={video.video_url}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      preload="metadata"
+                      muted
+                      loop
+                      playsInline
+                      crossOrigin="anonymous"
+                      onLoadStart={() => console.log('Video load started for:', video.name)}
+                      onLoadedData={() => console.log('Video loaded for:', video.name)}
+                      onError={(e) => console.error('Video error for:', video.name, e)}
+                      onMouseEnter={(e) => {
+                        console.log('Mouse enter, attempting to play:', video.name);
+                        e.currentTarget.play().catch(err => console.error('Play failed:', err));
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.pause();
+                        e.currentTarget.currentTime = 0;
+                      }}
+                    />
+                    
+                    {/* Fallback content if video fails to load */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/50 to-blue-900/50">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-purple-600/80 rounded-full flex items-center justify-center mb-4 mx-auto">
+                          <Play className="h-8 w-8 text-white ml-1" fill="white" />
+                        </div>
+                        <p className="text-white font-medium">{video.name}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300" />
+                    
+                    {/* Play button overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-purple-600/80 backdrop-blur-sm rounded-full p-4 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                        <Play className="h-8 w-8 text-white ml-1" fill="white" />
+                      </div>
+                    </div>
+
+                    {/* Character type badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        video.character_type === 'historical' 
+                          ? 'bg-amber-600/80 text-amber-100' 
+                          : 'bg-purple-600/80 text-purple-100'
+                      }`}>
+                        {video.character_type === 'historical' ? 'Historical' : 'Creative'}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Character type badge */}
-                  <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      video.character_type === 'historical' 
-                        ? 'bg-amber-600/80 text-amber-100' 
-                        : 'bg-purple-600/80 text-purple-100'
-                    }`}>
-                      {video.character_type === 'historical' ? 'Historical' : 'Creative'}
-                    </span>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-orbitron font-bold text-white mb-3">
+                      {video.name}
+                    </h3>
+                    <p className="text-gray-300 mb-4 leading-relaxed">
+                      {video.description}
+                    </p>
+                    
+                    <div className="flex gap-3">
+                      <Button 
+                        size="sm" 
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-medium"
+                        asChild
+                      >
+                        <Link to={`/characters/${video.character_id}`}>
+                          Explore Character
+                        </Link>
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-purple-400/50 text-purple-300 hover:bg-purple-600/20"
+                        asChild
+                      >
+                        <Link to={`/characters/${video.character_id}/chat`}>
+                          Chat Now
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="p-6">
-                  <h3 className="text-2xl font-orbitron font-bold text-white mb-3">
-                    {video.name}
-                  </h3>
-                  <p className="text-gray-300 mb-4 leading-relaxed">
-                    {video.description}
-                  </p>
-                  
-                  <div className="flex gap-3">
-                    <Button 
-                      size="sm" 
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-medium"
-                      asChild
-                    >
-                      <Link to={`/characters/${video.character_id}`}>
-                        Explore Character
-                      </Link>
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="border-purple-400/50 text-purple-300 hover:bg-purple-600/20"
-                      asChild
-                    >
-                      <Link to={`/characters/${video.character_id}/chat`}>
-                        Chat Now
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {videos.length > 0 && (
