@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FlaskConical, Plus, Library, Menu } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { cn } from '@/lib/utils';
-import NonHumanoidCharacterLibrary from './NonHumanoidCharacterLibrary';
+import UnifiedCreativeCharacterLibrary from './UnifiedCreativeCharacterLibrary';
 import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
@@ -111,10 +110,10 @@ const CreativeCharacterDashboard = () => {
               </Select>
             </div>
 
-            {/* Show Non-Humanoid Character Library when on main creative characters route */}
+            {/* Show Unified Creative Character Library when on main creative characters route */}
             {location.pathname === '/characters/creative' ? (
               <div className="w-full">
-                <NonHumanoidCharacterLibrary />
+                <UnifiedCreativeCharacterLibrary />
               </div>
             ) : (
               <div className="w-full px-4 md:px-8 py-8">
@@ -124,12 +123,12 @@ const CreativeCharacterDashboard = () => {
                       <FlaskConical className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                       <div>
                         <h1 className="text-xl md:text-3xl font-bold">Character Lab Dashboard</h1>
-                        <p className="text-sm md:text-base text-muted-foreground">Design and manage your original fictional characters</p>
+                        <p className="text-sm md:text-base text-muted-foreground">Design and manage all your creative characters</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Creative Character Creation Option */}
+                  {/* Unified Creative Character Creation Option */}
                   <div className="grid grid-cols-1 gap-6 mb-8">
                     <Card className="p-4 md:p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
@@ -137,12 +136,13 @@ const CreativeCharacterDashboard = () => {
                         <h3 className="text-lg md:text-xl font-semibold">Creative Characters</h3>
                       </div>
                       <p className="text-sm md:text-base text-muted-foreground mb-4">
-                        Design original fictional characters with custom traits, creative backgrounds, and unique personalities.
+                        Design any type of original character - humanoid or non-humanoid, fantastical or realistic. 
+                        All characters use the same flexible trait system.
                       </p>
                       <Button asChild className="w-full font-orbitron">
                         <Link to="/characters/create/creative">
                           <FlaskConical className="h-4 w-4 mr-2" />
-                          Create Creative Character
+                          Create Any Character
                         </Link>
                       </Button>
                     </Card>
@@ -151,14 +151,14 @@ const CreativeCharacterDashboard = () => {
                   {/* Library Preview */}
                   <Card className="text-center py-8 md:py-12">
                     <Library className="h-12 w-12 md:h-16 md:w-16 mx-auto text-muted-foreground mb-4" />
-                    <h2 className="text-lg md:text-xl font-semibold mb-2">Creative Character Library</h2>
+                    <h2 className="text-lg md:text-xl font-semibold mb-2">Unified Character Library</h2>
                     <p className="text-sm md:text-base text-muted-foreground mb-6">
-                      View and manage all your creative characters
+                      View and manage all your creative characters in one place
                     </p>
                     <Button asChild>
                       <Link to="/characters/creative">
                         <Library className="h-4 w-4 mr-2" />
-                        View Creative Character Library
+                        View All Creative Characters
                       </Link>
                     </Button>
                   </Card>

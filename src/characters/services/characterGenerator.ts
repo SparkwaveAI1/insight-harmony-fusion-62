@@ -36,7 +36,11 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     console.log('Successfully generated AI traits for character from description');
 
     const character = buildCharacter(formData, aiGeneratedTraits, characterId, currentDate);
-    console.log('Generated character with AI-powered traits from user description:', character);
+    
+    // Ensure historical characters have the correct creation_source
+    character.creation_source = 'historical';
+    
+    console.log('Generated historical character with AI-powered traits:', character);
     return character;
 
   } catch (error) {
@@ -44,6 +48,7 @@ export const generateHistoricalCharacter = async (formData: HistoricalCharacterF
     
     // Fallback to basic character creation if AI generation fails
     const character = buildFallbackCharacter(formData, characterId, currentDate);
+    character.creation_source = 'historical';
     console.log('Generated character with fallback traits due to AI error');
     return character;
   }

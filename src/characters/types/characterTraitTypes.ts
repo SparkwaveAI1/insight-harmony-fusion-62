@@ -65,6 +65,7 @@ export interface Character {
   character_id: string;
   name: string;
   character_type: 'historical' | 'fictional' | 'multi_species';
+  creation_source: 'historical' | 'creative'; // New field for unified architecture
   creation_date: string;
   created_at: string;
   metadata: any;
@@ -99,6 +100,7 @@ export interface DbCharacter {
   character_id: string;
   name: string;
   character_type: 'historical' | 'fictional' | 'multi_species';
+  creation_source: 'historical' | 'creative'; // New field for unified architecture
   creation_date: string;
   created_at?: string;
   metadata: any;
