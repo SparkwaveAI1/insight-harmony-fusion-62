@@ -20,7 +20,7 @@ export const useUnifiedCreativeCharacters = () => {
           .order('created_at', { ascending: false });
 
         if (publicError) throw publicError;
-        return publicData || [];
+        return (publicData || []) as Character[];
       }
 
       // If authenticated, fetch both user's characters and public characters
@@ -44,8 +44,8 @@ export const useUnifiedCreativeCharacters = () => {
       if (userResult.error) throw userResult.error;
       if (publicResult.error) throw publicResult.error;
 
-      const userCharacters = userResult.data || [];
-      const publicCharacters = publicResult.data || [];
+      const userCharacters = (userResult.data || []) as Character[];
+      const publicCharacters = (publicResult.data || []) as Character[];
 
       // Combine and sort by creation date
       const allCharacters = [...userCharacters, ...publicCharacters];

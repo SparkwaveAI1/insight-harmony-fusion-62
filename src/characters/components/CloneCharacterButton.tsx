@@ -17,11 +17,12 @@ const CloneCharacterButton = ({ character, className }: CloneCharacterButtonProp
   const [open, setOpen] = useState(false);
   const { form, onSubmit, isSubmitting } = useCharacterClone(character);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: any): Promise<boolean> => {
     const success = await onSubmit(data);
     if (success) {
       setOpen(false);
     }
+    return success;
   };
 
   return (
