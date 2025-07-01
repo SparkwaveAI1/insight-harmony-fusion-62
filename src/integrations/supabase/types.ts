@@ -54,6 +54,7 @@ export type Database = {
           character_type: string
           created_at: string
           creation_date: string
+          creation_source: string
           emotional_triggers: Json | null
           enhanced_metadata_version: number | null
           form_factor: string | null
@@ -85,6 +86,7 @@ export type Database = {
           character_type: string
           created_at?: string
           creation_date: string
+          creation_source?: string
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
           form_factor?: string | null
@@ -116,6 +118,7 @@ export type Database = {
           character_type?: string
           created_at?: string
           creation_date?: string
+          creation_source?: string
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
           form_factor?: string | null
