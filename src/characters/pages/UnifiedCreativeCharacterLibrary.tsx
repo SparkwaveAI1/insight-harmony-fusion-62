@@ -1,17 +1,19 @@
+
 import { useState, useEffect } from 'react';
 import { FlaskConical, Plus, Grid, List, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import { useCreativeCharactersFixed } from '../hooks/useCreativeCharactersFixed';
+import { useUnifiedCreativeCharacters } from '../hooks/useUnifiedCreativeCharacters';
 import { Character } from '../types/characterTraitTypes';
 import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import CharacterAvatar from '../components/CharacterAvatar';
+import CreativeCharacterCard from '../components/CreativeCharacterCard';
+import { useAuth } from '@/context/AuthContext';
 
 const UnifiedCreativeCharacterLibrary = () => {
-  const { data: characters = [], isLoading, error } = useCreativeCharactersFixed();
+  const { user } = useAuth();
+  const { data: characters = [], isLoading, error } = useUnifiedCreativeCharacters();
   const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -36,20 +38,9 @@ const UnifiedCreativeCharacterLibrary = () => {
     setFilteredCharacters(filtered);
   };
 
-  const getCharacterTypeLabel = (character: Character) => {
-    if (character.character_type === 'multi_species') {
-      return character.species_type || 'Non-Humanoid';
-    }
-    return 'Humanoid';
-  };
-
-  const getCharacterDescription = (character: Character) => {
-    const description = character.metadata?.description || 
-                       character.metadata?.backstory || 
-                       `A ${getCharacterTypeLabel(character).toLowerCase()} character`;
-    
-    // Truncate description to ensure consistent card heights
-    return description.length > 120 ? description.substring(0, 120) + '...' : description;
+  const handleImageGenerated = (imageUrl: string) => {
+    // Refresh the character list to show updated images
+    // The query will automatically refetch due to React Query
   };
 
   if (isLoading) {
@@ -80,6 +71,9 @@ const UnifiedCreativeCharacterLibrary = () => {
     );
   }
 
+  const userCharacters = characters.filter(char => user && char.user_id === user.id);
+  const publicCharacters = characters.filter(char => !user || char.user_id !== user.id);
+
   return (
     <div className="w-full px-4 md:px-8 py-8">
       <Section>
@@ -91,7 +85,7 @@ const UnifiedCreativeCharacterLibrary = () => {
               <div>
                 <h1 className="text-xl md:text-3xl font-bold">Character Lab Library</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  All your creative characters from the Character Lab
+                  Your creative characters and public community creations
                 </p>
               </div>
             </div>
@@ -157,61 +151,46 @@ const UnifiedCreativeCharacterLibrary = () => {
             )}
           </Card>
         ) : (
-          <div className={viewMode === 'grid' 
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
-            : "space-y-4"
-          }>
-            {filteredCharacters.map((character) => (
-              <Card key={character.character_id} className={`hover:shadow-lg transition-shadow ${
-                viewMode === 'grid' ? 'h-80 flex flex-col' : 'h-32'
-              }`}>
-                <Link to={`/characters/${character.character_id}`} className="flex flex-col h-full p-6">
-                  <div className="flex flex-col flex-1">
-                    <div className="flex items-start gap-4 mb-4">
-                      <CharacterAvatar 
-                        character={{
-                          name: character.name,
-                          profile_image_url: character.profile_image_url
-                        }}
-                        size="md"
-                        className="flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{character.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
-                          {getCharacterDescription(character)}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="secondary">
-                        {getCharacterTypeLabel(character)}
-                      </Badge>
-                      {character.metadata?.narrative_domain && (
-                        <Badge variant="outline">
-                          {character.metadata.narrative_domain}
-                        </Badge>
-                      )}
-                      {character.metadata?.functional_role && (
-                        <Badge variant="outline">
-                          {character.metadata.functional_role}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2 mt-auto">
-                      <Button size="sm" className="flex-1" onClick={(e) => e.preventDefault()}>
-                        Chat
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                </Link>
-              </Card>
-            ))}
+          <div className="space-y-8">
+            {/* User's Characters Section */}
+            {user && userCharacters.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">Your Characters</h2>
+                <div className={viewMode === 'grid' 
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
+                  : "space-y-4"
+                }>
+                  {userCharacters.map((character) => (
+                    <CreativeCharacterCard
+                      key={character.character_id}
+                      character={character}
+                      viewMode={viewMode}
+                      onImageGenerated={handleImageGenerated}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Public Characters Section */}
+            {publicCharacters.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">Community Characters</h2>
+                <div className={viewMode === 'grid' 
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
+                  : "space-y-4"
+                }>
+                  {publicCharacters.map((character) => (
+                    <CreativeCharacterCard
+                      key={character.character_id}
+                      character={character}
+                      viewMode={viewMode}
+                      onImageGenerated={handleImageGenerated}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Section>
