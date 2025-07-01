@@ -1,73 +1,65 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-import { AuthProvider } from '@/context/AuthContext';
-import { PersonaProvider } from '@/context/PersonaProvider';
-import { CharacterProvider } from '@/context/CharacterProvider';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { PersonaProvider } from "./context/PersonaProvider";
+import { CharacterProvider } from "./context/CharacterProvider";
+import { Toaster } from "sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Pages
-import Index from './pages/Index';
-import Dashboard from './pages/Dashboard';
-import Auth from './pages/Auth';
-import PersonaViewer from './pages/PersonaViewer';
-import PersonaDetail from './pages/PersonaDetail';
-import PersonaChat from './pages/PersonaChat';
-import Research from './pages/Research';
-import CustomResearch from './pages/CustomResearch';
-import UserProfile from './pages/UserProfile';
-import Collections from './pages/Collections';
-import CollectionDetail from './pages/CollectionDetail';
-import Projects from './pages/Projects';
-import ProjectDetail from './pages/ProjectDetail';
-import ConversationDetail from './pages/ConversationDetail';
-import NotFound from './pages/NotFound';
+import Index from "./pages/Index";
+import PersonaViewer from "./pages/PersonaViewer";
+import PersonaChat from "./pages/PersonaChat";
+import PersonaDetail from "./pages/PersonaDetail";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
+import ConversationDetail from "./pages/ConversationDetail";
+import YourPersona from "./pages/YourPersona";
+import Interviewer from "./pages/Interviewer";
+import PRSNAEcosystem from "./pages/PRSNAEcosystem";
+import Collections from "./pages/Collections";
+import CollectionDetail from "./pages/CollectionDetail";
+import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
+import AIFocusGroups from "./pages/AIFocusGroups";
+import SimulatedPersona from "./pages/SimulatedPersona";
+import CustomResearch from "./pages/CustomResearch";
+import InsightConductor from "./pages/InsightConductor";
+import Research from "./pages/Research";
+import Auth from "./pages/Auth";
+import UserProfile from "./pages/UserProfile";
+import Contact from "./pages/Contact";
+import NotFound from "./pages/NotFound";
+import ParticipateResearch from "./pages/ParticipateResearch";
+import InterviewProcess from "./pages/InterviewProcess";
+import WhitePaper from "./pages/WhitePaper";
+import Roadmap from "./pages/Roadmap";
+import EarnPRSNA from "./pages/EarnPRSNA";
+
+// Pages - Persona Creation
+import ConsentForm from "./pages/persona-creation/ConsentForm";
+import PersonaCreationLanding from "./pages/persona-creation/PersonaCreationLanding";
+import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScreener";
+import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
+import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
 
 // Character pages
-import CharactersHome from './characters/pages/CharactersHome';
-import CharacterLibrary from './characters/pages/CharacterLibrary';
-import CharacterDashboard from './characters/pages/CharacterDashboard';
-import CharacterDetail from './characters/pages/CharacterDetail';
-import CharacterChat from './characters/pages/CharacterChat';
-import CharacterCreate from './characters/pages/CharacterCreate';
-import CharacterEdit from './characters/pages/CharacterEdit';
-import HistoricalCharacterCreate from './characters/pages/HistoricalCharacterCreate';
-import CreativeCharacterCreate from './characters/pages/CreativeCharacterCreate';
-import CreativeCharacterDashboard from './characters/pages/CreativeCharacterDashboard';
-import UnifiedCreativeCharacterLibrary from './characters/pages/UnifiedCreativeCharacterLibrary';
+import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
+import CharactersHome from "./characters/pages/CharactersHome";
+import HistoricalCharacterCreate from "./characters/pages/HistoricalCharacterCreate";
+import CreativeCharacterCreate from "./characters/pages/CreativeCharacterCreate";
+import CreativeCharacterDashboard from "./characters/pages/CreativeCharacterDashboard";
+import CharacterChat from "./characters/pages/CharacterChat";
 
-// Other pages
-import Interviewer from './pages/Interviewer';
-import PersonaAIInterviewer from './pages/PersonaAIInterviewer';
-import InterviewProcess from './pages/InterviewProcess';
-import PersonaCreationLanding from './pages/persona-creation/PersonaCreationLanding';
-import PersonaCreationScreener from './pages/persona-creation/PersonaCreationScreener';
-import PersonaCreationQuestionnaire from './pages/persona-creation/PersonaCreationQuestionnaire';
-import PersonaCreationComplete from './pages/persona-creation/PersonaCreationComplete';
-import ConsentForm from './pages/persona-creation/ConsentForm';
-import YourPersona from './pages/YourPersona';
-import SimulatedPersona from './pages/SimulatedPersona';
-import InsightConductor from './pages/InsightConductor';
-import AIFocusGroups from './pages/AIFocusGroups';
-import PRSNAEcosystem from './pages/PRSNAEcosystem';
-import EarnPRSNA from './pages/EarnPRSNA';
-import ParticipateResearch from './pages/ParticipateResearch';
-import Contact from './pages/Contact';
-import Team from './pages/Team';
-import Pricing from './pages/Pricing';
-import Roadmap from './pages/Roadmap';
-import WhitePaper from './pages/WhitePaper';
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
-// Protected route wrapper - using named import
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import "./App.css";
 
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
     },
   },
@@ -75,162 +67,83 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <AuthProvider>
           <PersonaProvider>
             <CharacterProvider>
-              <Router>
-                <div className="min-h-screen bg-background">
-                  <Routes>
-                    {/* Public routes */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/team" element={<Team />} />
-                    <Route path="/pricing" element={<Pricing />} />
-                    <Route path="/roadmap" element={<Roadmap />} />
-                    <Route path="/white-paper" element={<WhitePaper />} />
-                    
-                    {/* Persona creation routes */}
-                    <Route path="/persona-creation" element={<PersonaCreationLanding />} />
-                    <Route path="/persona-creation/screener" element={<PersonaCreationScreener />} />
-                    <Route path="/persona-creation/consent" element={<ConsentForm />} />
-                    <Route path="/persona-creation/questionnaire" element={<PersonaCreationQuestionnaire />} />
-                    <Route path="/persona-creation/complete" element={<PersonaCreationComplete />} />
-                    <Route path="/your-persona" element={<YourPersona />} />
-                    
-                    {/* Public character routes */}
-                    <Route path="/characters-home" element={<CharactersHome />} />
-                    <Route path="/characters" element={<CharacterLibrary />} />
-                    <Route path="/characters/library" element={<CharacterLibrary />} />
-                    <Route path="/characters/creative" element={<UnifiedCreativeCharacterLibrary />} />
-                    <Route path="/characters/:id" element={<CharacterDetail />} />
-                    <Route path="/characters/:id/chat" element={<CharacterChat />} />
-                    
-                    {/* Product pages */}
-                    <Route path="/simulated-persona" element={<SimulatedPersona />} />
-                    <Route path="/interviewer" element={<Interviewer />} />
-                    <Route path="/persona-ai-interviewer" element={<PersonaAIInterviewer />} />
-                    <Route path="/insight-conductor" element={<InsightConductor />} />
-                    <Route path="/ai-focus-groups" element={<AIFocusGroups />} />
-                    
-                    {/* PRSNA Ecosystem */}
-                    <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
-                    <Route path="/earn-prsna" element={<EarnPRSNA />} />
-                    <Route path="/participate-research" element={<ParticipateResearch />} />
-                    
-                    {/* Protected routes */}
-                    <Route path="/dashboard" element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/personas" element={
-                      <ProtectedRoute>
-                        <PersonaViewer />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/personas/:id" element={
-                      <ProtectedRoute>
-                        <PersonaDetail />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/personas/:id/chat" element={
-                      <ProtectedRoute>
-                        <PersonaChat />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/research" element={
-                      <ProtectedRoute>
-                        <Research />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/custom-research" element={
-                      <ProtectedRoute>
-                        <CustomResearch />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
-                      <ProtectedRoute>
-                        <UserProfile />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/collections" element={
-                      <ProtectedRoute>
-                        <Collections />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/collections/:id" element={
-                      <ProtectedRoute>
-                        <CollectionDetail />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/projects" element={
-                      <ProtectedRoute>
-                        <Projects />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/projects/:id" element={
-                      <ProtectedRoute>
-                        <ProjectDetail />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/conversations/:id" element={
-                      <ProtectedRoute>
-                        <ConversationDetail />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/interview" element={
-                      <ProtectedRoute>
-                        <InterviewProcess />
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* Protected character routes */}
-                    <Route path="/characters/dashboard" element={
-                      <ProtectedRoute>
-                        <CharacterDashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/characters/create" element={
-                      <ProtectedRoute>
-                        <CharacterCreate />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/characters/create/historical" element={
-                      <ProtectedRoute>
-                        <HistoricalCharacterCreate />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/characters/create/creative" element={
-                      <ProtectedRoute>
-                        <CreativeCharacterCreate />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/characters/creative/dashboard" element={
-                      <ProtectedRoute>
-                        <CreativeCharacterDashboard />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/characters/:id/edit" element={
-                      <ProtectedRoute>
-                        <CharacterEdit />
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* 404 route */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-                <Toaster />
-                <SonnerToaster />
-              </Router>
+              <Routes>
+                {/* Public Routes - Accessible without login */}
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/sign-in" element={<Auth />} />
+                <Route path="/contact" element={<Contact />} />
+                
+                {/* Character Home - Public access (anyone can view) */}
+                <Route path="/characters-home" element={<CharactersHome />} />
+                
+                {/* PRSNA token routes - public access */}
+                <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
+                <Route path="/prsna" element={<EarnPRSNA />} />
+                <Route path="/prsna/roadmap" element={<Roadmap />} />
+                <Route path="/prsna/whitepaper" element={<WhitePaper />} />
+                <Route path="/whitepaper" element={<WhitePaper />} />
+                
+                {/* User Profile Route */}
+                <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                
+                {/* Protected Routes - Require authentication */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
+                <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
+                <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
+                <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+                <Route path="/your-persona" element={<ProtectedRoute><YourPersona /></ProtectedRoute>} />
+                <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+                <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
+                <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+                
+                {/* IMPORTANT: Add support for both URL formats to avoid breaking existing links */}
+                <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+                <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
+                
+                {/* Character routes - ALL PROTECTED except CharactersHome */}
+                <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
+                <Route path="/characters/creative" element={<ProtectedRoute><CreativeCharacterDashboard /></ProtectedRoute>} />
+                <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
+                <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
+                <Route path="/characters/:characterId/chat" element={<ProtectedRoute><CharacterChat /></ProtectedRoute>} />
+                <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
+                <Route path="/characters/create/creative" element={<ProtectedRoute><CreativeCharacterCreate /></ProtectedRoute>} />
+                
+                {/* Research section - Protected */}
+                <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
+                <Route path="/persona-ai-interviewer" element={<ProtectedRoute><PersonaAIInterviewer /></ProtectedRoute>} />
+                <Route path="/ai-focus-groups" element={<ProtectedRoute><AIFocusGroups /></ProtectedRoute>} />
+                <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
+                <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
+                <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />
+                <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
+                <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
+                <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
+                
+                {/* Persona Creation Flow - Protected */}
+                <Route path="/create" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />
+                <Route path="/consent" element={<ProtectedRoute><ConsentForm /></ProtectedRoute>} />
+                <Route path="/screener" element={<ProtectedRoute><PersonaCreationScreener /></ProtectedRoute>} />
+                <Route path="/questionnaire" element={<ProtectedRoute><PersonaCreationQuestionnaire /></ProtectedRoute>} />
+                <Route path="/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
+                
+                {/* 404 Route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster position="top-right" />
             </CharacterProvider>
           </PersonaProvider>
         </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
