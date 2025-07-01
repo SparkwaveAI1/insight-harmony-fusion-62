@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ArrowLeft, Plus, Loader2 } from 'lucide-react';
@@ -128,14 +129,6 @@ const CreativeCharacterCreate = () => {
             </Button>
           </div>
 
-          <div className="flex items-center gap-3 mb-8">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Create Creative Character</h1>
-              <p className="text-muted-foreground">Design an original character through our guided process</p>
-            </div>
-          </div>
-
           <div className="max-w-2xl mx-auto">
             <Card className="p-8 text-center">
               <div className="space-y-6">
@@ -150,18 +143,12 @@ const CreativeCharacterCreate = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="font-semibold text-blue-900 mb-1">7 Steps</div>
-                    <div className="text-blue-700">Guided creation process</div>
+                    <div className="font-semibold text-blue-900 mb-1">Guided Creation Process</div>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-lg">
-                    <div className="font-semibold text-purple-900 mb-1">Rich Traits</div>
-                    <div className="text-purple-700">Complex personality system</div>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <div className="font-semibold text-green-900 mb-1">Any Type</div>
-                    <div className="text-green-700">Human or non-human</div>
+                    <div className="font-semibold text-purple-900 mb-1">Complex Personality System</div>
                   </div>
                 </div>
 
