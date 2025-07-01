@@ -4,6 +4,7 @@ import { Character } from '../types/characterTraitTypes';
 import CharacterTraits from './CharacterTraits';
 import BasicInformationSection from './sections/BasicInformationSection';
 import BackgroundSection from './sections/BackgroundSection';
+import CollapsibleBackgroundSection from './sections/CollapsibleBackgroundSection';
 import PhysicalManifestationSection from './sections/PhysicalManifestationSection';
 import CommunicationSection from './sections/CommunicationSection';
 import EntityProfileSection from './sections/EntityProfileSection';
@@ -42,6 +43,9 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
   // Access date_of_birth and backstory from metadata
   const dateOfBirth = character.metadata?.date_of_birth;
   const backstory = character.metadata?.backstory || character.trait_profile?.backstory;
+  
+  // Get description from trait_profile for Background section
+  const description = character.trait_profile?.description;
 
   return (
     <div className="space-y-6">
@@ -55,6 +59,11 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         formatDate={formatDate}
         getYearFromDate={getYearFromDate}
       />
+
+      {/* Collapsible Background Section - Show if description exists */}
+      {description && (
+        <CollapsibleBackgroundSection description={description} />
+      )}
 
       {/* Character Lab Enhanced Section - Show for Character Lab characters */}
       {isCharacterLab && (
