@@ -14,7 +14,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    console.log("ProtectedRoute - auth state:", { user, isLoading, path: location.pathname });
+    console.log("ProtectedRoute - auth state:", { 
+      userId: user?.id, 
+      userEmail: user?.email,
+      isLoading, 
+      path: location.pathname 
+    });
     
     if (!isLoading) {
       if (!user) {

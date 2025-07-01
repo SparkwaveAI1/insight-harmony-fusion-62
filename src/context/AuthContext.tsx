@@ -28,7 +28,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // First set up the auth state listener before checking existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log("Auth state changed:", event);
+        console.log("Auth state changed:", event, {
+          userId: currentSession?.user?.id,
+          userEmail: currentSession?.user?.email
+        });
         
         if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -36,6 +39,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else if (currentSession) {
           setUser(currentSession.user);
           setSession(currentSession);
+          console.log("User authenticated:", {
+            id: currentSession.user.id,
+            email: currentSession.user.email
+          });
         }
         
         setIsLoading(false);
@@ -49,7 +56,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         
         if (existingSession) {
-          console.log("Found existing session:", existingSession.user?.email);
+          console.log("Found existing session:", {
+            userId: existingSession.user?.id,
+            userEmail: existingSession.user?.email
+          });
           setUser(existingSession.user);
           setSession(existingSession);
         } else {
@@ -94,7 +104,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      console.log("Sign in successful:", !!data.session);
+      console.log("Sign in successful:", {
+        userId: data.session?.user?.id,
+        userEmail: data.session?.user?.email
+      });
       toast.success("Successfully signed in");
     } catch (error: any) {
       console.error("Sign in exception:", error);

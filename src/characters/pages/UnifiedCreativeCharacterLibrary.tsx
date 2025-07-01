@@ -12,11 +12,29 @@ import CreativeCharacterCard from '../components/CreativeCharacterCard';
 import { useAuth } from '@/context/AuthContext';
 
 const UnifiedCreativeCharacterLibrary = () => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { data: characters = [], isLoading, error } = useUnifiedCreativeCharacters();
   const [filteredCharacters, setFilteredCharacters] = useState<CreativeCharacter[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Debug authentication state
+  console.log('UnifiedCreativeCharacterLibrary - Auth state:', {
+    user: user?.id,
+    userEmail: user?.email,
+    authLoading,
+    charactersCount: characters.length
+  });
+
+  // Debug each character's ownership
+  useEffect(() => {
+    if (characters.length > 0 && user) {
+      console.log('Character ownership analysis:');
+      characters.forEach(char => {
+        console.log(`${char.name}: owner=${char.user_id}, currentUser=${user.id}, isOwner=${char.user_id === user.id}`);
+      });
+    }
+  }, [characters, user]);
 
   useEffect(() => {
     filterCharacters();
@@ -43,6 +61,22 @@ const UnifiedCreativeCharacterLibrary = () => {
     // The query will automatically refetch due to React Query
   };
 
+  // Show loading state if auth is still loading
+  if (authLoading) {
+    return (
+      <div className="w-full px-4 md:px-8 py-8">
+        <Section>
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+              <p className="text-muted-foreground">Loading authentication...</p>
+            </div>
+          </div>
+        </Section>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="w-full px-4 md:px-8 py-8">
@@ -65,6 +99,11 @@ const UnifiedCreativeCharacterLibrary = () => {
           <Card className="text-center py-12">
             <h2 className="text-xl font-semibold mb-2 text-red-600">Error Loading Creative Characters</h2>
             <p className="text-muted-foreground">{error.message || 'An error occurred'}</p>
+            {!user && (
+              <p className="text-sm text-muted-foreground mt-2">
+                You may need to sign in to view your characters.
+              </p>
+            )}
           </Card>
         </Section>
       </div>
@@ -73,6 +112,13 @@ const UnifiedCreativeCharacterLibrary = () => {
 
   const userCharacters = characters.filter(char => user && char.user_id === user.id);
   const publicCharacters = characters.filter(char => !user || char.user_id !== user.id);
+
+  console.log('Character distribution:', {
+    total: characters.length,
+    userOwned: userCharacters.length,
+    public: publicCharacters.length,
+    currentUser: user?.id
+  });
 
   return (
     <div className="w-full px-4 md:px-8 py-8">
@@ -85,16 +131,23 @@ const UnifiedCreativeCharacterLibrary = () => {
               <div>
                 <h1 className="text-xl md:text-3xl font-bold">Character Lab Library</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  Your creative characters and public community creations
+                  {user ? 'Your creative characters and public community creations' : 'Public community creations (sign in to create your own)'}
                 </p>
+                {user && (
+                  <p className="text-xs text-muted-foreground">
+                    Signed in as: {user.email}
+                  </p>
+                )}
               </div>
             </div>
-            <Button asChild>
-              <Link to="/characters/create/creative">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Character
-              </Link>
-            </Button>
+            {user && (
+              <Button asChild>
+                <Link to="/characters/create/creative">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Character
+                </Link>
+              </Button>
+            )}
           </div>
 
           {/* Search and View Controls */}
@@ -138,10 +191,12 @@ const UnifiedCreativeCharacterLibrary = () => {
             <p className="text-muted-foreground mb-6">
               {searchQuery 
                 ? 'Try adjusting your search'
-                : 'Create your first creative character to get started'
+                : user 
+                  ? 'Create your first creative character to get started'
+                  : 'Sign in to create and view your own characters'
               }
             </p>
-            {!searchQuery && (
+            {!searchQuery && user && (
               <Button asChild>
                 <Link to="/characters/create/creative">
                   <Plus className="h-4 w-4 mr-2" />
@@ -155,7 +210,7 @@ const UnifiedCreativeCharacterLibrary = () => {
             {/* User's Characters Section */}
             {user && userCharacters.length > 0 && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4">Your Characters</h2>
+                <h2 className="text-2xl font-semibold mb-4">Your Characters ({userCharacters.length})</h2>
                 <div className={viewMode === 'grid' 
                   ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
                   : "space-y-4"
@@ -175,7 +230,7 @@ const UnifiedCreativeCharacterLibrary = () => {
             {/* Public Characters Section */}
             {publicCharacters.length > 0 && (
               <div>
-                <h2 className="text-2xl font-semibold mb-4">Community Characters</h2>
+                <h2 className="text-2xl font-semibold mb-4">Community Characters ({publicCharacters.length})</h2>
                 <div className={viewMode === 'grid' 
                   ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
                   : "space-y-4"
