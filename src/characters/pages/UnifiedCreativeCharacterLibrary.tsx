@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { FlaskConical, Plus, Grid, List, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,9 +43,12 @@ const UnifiedCreativeCharacterLibrary = () => {
   };
 
   const getCharacterDescription = (character: Character) => {
-    return character.metadata?.description || 
-           character.metadata?.backstory || 
-           `A ${getCharacterTypeLabel(character).toLowerCase()} character`;
+    const description = character.metadata?.description || 
+                       character.metadata?.backstory || 
+                       `A ${getCharacterTypeLabel(character).toLowerCase()} character`;
+    
+    // Truncate description to ensure consistent card heights
+    return description.length > 120 ? description.substring(0, 120) + '...' : description;
   };
 
   if (isLoading) {
@@ -159,21 +161,21 @@ const UnifiedCreativeCharacterLibrary = () => {
             : "space-y-4"
           }>
             {filteredCharacters.map((character) => (
-              <Card key={character.character_id} className={`p-6 hover:shadow-lg transition-shadow ${
-                viewMode === 'grid' ? 'w-full max-w-sm' : ''
+              <Card key={character.character_id} className={`hover:shadow-lg transition-shadow ${
+                viewMode === 'grid' ? 'h-80 flex flex-col' : 'h-32'
               }`}>
-                <Link to={`/characters/${character.character_id}`}>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-start justify-between">
+                <Link to={`/characters/${character.character_id}`} className="flex flex-col h-full p-6">
+                  <div className="flex flex-col flex-1">
+                    <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold mb-1">{character.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">
+                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">{character.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
                           {getCharacterDescription(character)}
                         </p>
                       </div>
                     </div>
                     
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       <Badge variant="secondary">
                         {getCharacterTypeLabel(character)}
                       </Badge>
@@ -189,7 +191,7 @@ const UnifiedCreativeCharacterLibrary = () => {
                       )}
                     </div>
                     
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 mt-auto">
                       <Button size="sm" className="flex-1" onClick={(e) => e.preventDefault()}>
                         Chat
                       </Button>
