@@ -127,7 +127,7 @@ const FeaturedCharacters = () => {
                       className="bg-purple-600 hover:bg-purple-700 text-white font-medium"
                       asChild
                     >
-                      <Link to={video.character_type === 'historical' ? '/characters' : '/characters/creative'}>
+                      <Link to={`/characters/${video.character_id}`}>
                         Explore Character
                       </Link>
                     </Button>
@@ -137,7 +137,7 @@ const FeaturedCharacters = () => {
                       className="border-purple-400/50 text-purple-300 hover:bg-purple-600/20"
                       asChild
                     >
-                      <Link to={video.character_type === 'historical' ? '/characters' : '/characters/creative'}>
+                      <Link to={`/characters/${video.character_id}/chat`}>
                         Chat Now
                       </Link>
                     </Button>
