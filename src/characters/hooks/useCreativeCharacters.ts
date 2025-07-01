@@ -12,7 +12,7 @@ export const useCreativeCharacters = () => {
       const { data, error } = await supabase
         .from('characters')
         .select('*')
-        .eq('creation_source', 'creative')
+        .eq('character_type', 'fictional')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -22,37 +22,42 @@ export const useCreativeCharacters = () => {
 
       console.log('✅ Creative characters fetched:', data?.length || 0);
       
-      // Map database results to Character type
+      // Map database results to Character type with safe type casting
       return data ? data.map((dbRow): Character => ({
         id: dbRow.id,
         character_id: dbRow.character_id,
         name: dbRow.name,
         character_type: dbRow.character_type as 'historical' | 'fictional' | 'multi_species',
-        creation_source: (dbRow.creation_source as 'historical' | 'creative') || 'creative',
+        creation_source: 'creative',
         creation_date: dbRow.creation_date,
         created_at: dbRow.created_at || dbRow.creation_date,
-        metadata: dbRow.metadata || {},
-        behavioral_modulation: dbRow.behavioral_modulation || {},
-        interview_sections: dbRow.interview_sections || [],
-        linguistic_profile: dbRow.linguistic_profile || {},
-        preinterview_tags: dbRow.preinterview_tags || [],
-        simulation_directives: dbRow.simulation_directives || {},
-        trait_profile: dbRow.trait_profile || {},
-        emotional_triggers: dbRow.emotional_triggers,
-        prompt: dbRow.prompt,
-        user_id: dbRow.user_id,
-        is_public: dbRow.is_public,
-        profile_image_url: dbRow.profile_image_url,
-        enhanced_metadata_version: dbRow.enhanced_metadata_version,
-        age: dbRow.age,
-        gender: dbRow.gender,
-        historical_period: dbRow.historical_period,
-        social_class: dbRow.social_class,
-        region: dbRow.region,
-        physical_appearance: dbRow.physical_appearance,
-        origin_universe: dbRow.origin_universe,
-        species_type: dbRow.species_type,
-        form_factor: dbRow.form_factor,
+        metadata: (typeof dbRow.metadata === 'object' && dbRow.metadata !== null) ? dbRow.metadata : {},
+        behavioral_modulation: (typeof dbRow.behavioral_modulation === 'object' && dbRow.behavioral_modulation !== null) 
+          ? dbRow.behavioral_modulation as any : {},
+        interview_sections: Array.isArray(dbRow.interview_sections) ? dbRow.interview_sections : [],
+        linguistic_profile: (typeof dbRow.linguistic_profile === 'object' && dbRow.linguistic_profile !== null)
+          ? dbRow.linguistic_profile as any : {},
+        preinterview_tags: Array.isArray(dbRow.preinterview_tags) ? dbRow.preinterview_tags : [],
+        simulation_directives: (typeof dbRow.simulation_directives === 'object' && dbRow.simulation_directives !== null)
+          ? dbRow.simulation_directives : {},
+        trait_profile: (typeof dbRow.trait_profile === 'object' && dbRow.trait_profile !== null)
+          ? dbRow.trait_profile as any : {},
+        emotional_triggers: undefined, // Character Lab doesn't use emotional triggers
+        prompt: dbRow.prompt || undefined,
+        user_id: dbRow.user_id || undefined,
+        is_public: dbRow.is_public || false,
+        profile_image_url: dbRow.profile_image_url || undefined,
+        enhanced_metadata_version: dbRow.enhanced_metadata_version || undefined,
+        age: dbRow.age || undefined,
+        gender: dbRow.gender || undefined,
+        historical_period: dbRow.historical_period || undefined,
+        social_class: dbRow.social_class || undefined,
+        region: dbRow.region || undefined,
+        physical_appearance: (typeof dbRow.physical_appearance === 'object' && dbRow.physical_appearance !== null)
+          ? dbRow.physical_appearance : {},
+        origin_universe: dbRow.origin_universe || undefined,
+        species_type: dbRow.species_type || undefined,
+        form_factor: dbRow.form_factor || undefined,
       })) : [];
     },
   });

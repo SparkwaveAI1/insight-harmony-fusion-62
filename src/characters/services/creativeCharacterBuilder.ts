@@ -18,7 +18,7 @@ export function buildCreativeCharacter(
   // Determine character_type based on entity type
   const character_type = formData.entityType === 'non_humanoid' ? 'multi_species' : 'fictional';
   
-  // Enhanced behavioral modulation for creative characters
+  // Simplified behavioral modulation for creative characters (not psychological)
   const behavioral_modulation = {
     formality: aiGeneratedTraits.behavioral_modulation?.formality || 0.6,
     enthusiasm: aiGeneratedTraits.behavioral_modulation?.enthusiasm || 0.7,
@@ -27,14 +27,12 @@ export function buildCreativeCharacter(
     patience: aiGeneratedTraits.behavioral_modulation?.patience || 0.6,
   };
 
-  // Linguistic profile adapted for creative characters
+  // Simplified linguistic profile for creative characters
   const linguistic_profile = {
     default_output_length: 'medium',
     speech_register: aiGeneratedTraits.communication_style || 'casual',
     regional_influence: formData.environment || 'Universal',
-    professional_or_educational_influence: null,
     cultural_speech_patterns: aiGeneratedTraits.cultural_speech_patterns || 'Creative character patterns',
-    generational_or_peer_influence: null,
     speaking_style: {
       formal: formData.entityType === 'formal_entity',
       casual: formData.entityType !== 'formal_entity',
@@ -44,23 +42,7 @@ export function buildCreativeCharacter(
     sample_phrasing: aiGeneratedTraits.sample_phrasing || [],
   };
 
-  // Build emotional triggers from core drives and surface triggers
-  const emotional_triggers = {
-    positive_triggers: (formData.coreDrives || []).map(drive => ({
-      keywords: [drive.toLowerCase()],
-      emotion_type: 'accomplishment',
-      intensity_multiplier: 1.2,
-      description: `Triggered by ${drive}`
-    })),
-    negative_triggers: (formData.surfaceTriggers || []).map(trigger => ({
-      keywords: [trigger.toLowerCase()],
-      emotion_type: 'frustration',
-      intensity_multiplier: 1.1,
-      description: `Negatively triggered by ${trigger}`
-    }))
-  };
-
-  console.log('✅ Creative character built with appropriate creative traits');
+  console.log('✅ Creative character built with creative-specific traits only');
 
   return {
     character_id: characterId,
@@ -77,7 +59,8 @@ export function buildCreativeCharacter(
     preinterview_tags: [],
     simulation_directives: {},
     trait_profile,
-    emotional_triggers,
+    // Character Lab doesn't use emotional triggers - they're for psychological modeling
+    emotional_triggers: undefined,
     is_public: false,
     enhanced_metadata_version: 2,
     // Fields for all character types

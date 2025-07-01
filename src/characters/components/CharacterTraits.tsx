@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CharacterTraitProfile, HumanoidCharacterTraitProfile, NonHumanoidTraitProfile } from '../types/characterTraitTypes';
+import { CharacterTraitProfile } from '../types/characterTraitTypes';
 
 interface CharacterTraitsProps {
   traitProfile: CharacterTraitProfile;
@@ -11,163 +11,144 @@ interface CharacterTraitsProps {
 }
 
 const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) => {
-  // Handle different character types
-  if (characterType === 'multi_species') {
-    const nonHumanoidProfile = traitProfile as NonHumanoidTraitProfile;
+  // For Character Lab (creative characters), show creative traits
+  if (characterType === 'multi_species' || characterType === 'fictional') {
     return (
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Species Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <span className="font-medium">Species Type:</span>
-              <span className="ml-2">{nonHumanoidProfile.species_type}</span>
+        <h2 className="text-xl font-bold text-gray-800 flex items-center">
+          <span className="inline-block w-3 h-3 rounded-full bg-purple-500 mr-2"></span>
+          Creative Character Profile
+        </h2>
+        
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-100">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Imaginative Character Design
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                This creative character has been designed with imaginative traits focused on storytelling, 
+                world-building, and narrative depth. The character embodies creative elements that make 
+                them unique and engaging for interactive experiences.
+              </p>
             </div>
-            <div>
-              <span className="font-medium">Form Factor:</span>
-              <span className="ml-2">{nonHumanoidProfile.form_factor}</span>
-            </div>
-            <div>
-              <span className="font-medium">Communication:</span>
-              <span className="ml-2">{nonHumanoidProfile.communication_style.modality}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Core Motives</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(nonHumanoidProfile.core_motives).map(([motive, value]) => (
-              <div key={motive}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{motive.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((value as number) || 0) * 100)}%</span>
-                </div>
-                {/* Ensure value is not null or undefined before using it */}
-                <Progress value={((value as number) || 0) * 100} className="h-2" />
+            
+            <div className="grid md:grid-cols-2 gap-4 mt-6">
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <h4 className="font-medium text-gray-800 mb-2">🎭 Creative Identity</h4>
+                <p className="text-sm text-gray-600">
+                  {traitProfile.entity_type && `Entity Type: ${traitProfile.entity_type}`}
+                  {traitProfile.narrative_domain && ` | Universe: ${traitProfile.narrative_domain}`}
+                  {traitProfile.functional_role && ` | Role: ${traitProfile.functional_role}`}
+                </p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Behavioral Triggers</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(nonHumanoidProfile.behavioral_triggers).map(([trigger, sensitivity]) => (
-              <div key={trigger}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{trigger.replace(/_/g, ' ')}</span>
-                  <span>{Math.round(((sensitivity as number) || 0) * 100)}%</span>
-                </div>
-                {/* Ensure sensitivity is not null or undefined before using it */}
-                <Progress value={((sensitivity as number) || 0) * 100} className="h-2" />
+              
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <h4 className="font-medium text-gray-800 mb-2">🌟 Core Drives</h4>
+                <p className="text-sm text-gray-600">
+                  {traitProfile.core_drives?.length ? 
+                    traitProfile.core_drives.join(', ') : 
+                    'Creative motivations and drives'
+                  }
+                </p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Core Directives</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {nonHumanoidProfile.action_constraints.core_directives.map((directive, index) => (
-                <Badge key={index} variant="outline">{directive}</Badge>
-              ))}
+              
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <h4 className="font-medium text-gray-800 mb-2">⚡ Manifestation</h4>
+                <p className="text-sm text-gray-600">
+                  {traitProfile.physical_form || 'Creative physical form'} in {traitProfile.environment || 'their world'}
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <h4 className="font-medium text-gray-800 mb-2">💫 Communication</h4>
+                <p className="text-sm text-gray-600">
+                  {traitProfile.communication_method || 'Creative communication style'}
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            {traitProfile.description && (
+              <div className="text-center mt-6 p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg">
+                <p className="text-sm text-gray-700 font-medium">
+                  ✨ {traitProfile.description}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Creative-specific traits */}
+        {traitProfile.unique_abilities && traitProfile.unique_abilities.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Unique Abilities</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {traitProfile.unique_abilities.map((ability, index) => (
+                  <Badge key={index} variant="outline">{ability}</Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
 
-  // Handle humanoid characters with descriptive content instead of detailed traits
-  const humanoidProfile = traitProfile as HumanoidCharacterTraitProfile;
-
+  // Handle historical characters with descriptive content
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800 flex items-center">
         <span className="inline-block w-3 h-3 rounded-full bg-amber-500 mr-2"></span>
-        Character Psychological Profile
+        Historical Character Profile
       </h2>
       
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6 border border-amber-100">
         <div className="space-y-4">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              {characterType === 'historical' ? 'Historically Accurate Personality' : 'Rich Character Development'}
+              Historically Accurate Personality
             </h3>
             <p className="text-gray-600 leading-relaxed">
-              {characterType === 'historical' 
-                ? `This historical character has been carefully researched and modeled to reflect authentic 
-                   personality traits, cultural context, and behavioral patterns from their era. Our advanced 
-                   psychological modeling captures the complexity of how they would have thought, felt, and 
-                   interacted based on historical evidence and period-appropriate worldviews.`
-                : `This fictional character has been developed with deep psychological complexity using 
-                   comprehensive personality modeling. Every aspect of their behavior, decision-making, 
-                   and emotional responses has been carefully crafted to create an authentic and 
-                   engaging character that feels real and relatable.`
-              }
+              This historical character has been carefully researched and modeled to reflect authentic 
+              personality traits, cultural context, and behavioral patterns from their era. Our advanced 
+              character modeling captures the complexity of how they would have thought, felt, and 
+              interacted based on historical evidence and period-appropriate worldviews.
             </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-4 mt-6">
             <div className="bg-white rounded-lg p-4 shadow-sm">
-              <h4 className="font-medium text-gray-800 mb-2">
-                {characterType === 'historical' ? '📚 Historical Context' : '🎭 Character Depth'}
-              </h4>
+              <h4 className="font-medium text-gray-800 mb-2">📚 Historical Context</h4>
               <p className="text-sm text-gray-600">
-                {characterType === 'historical'
-                  ? `Grounded in extensive historical research, reflecting the social norms, 
-                     cultural values, and life experiences typical of their time period and circumstances.`
-                  : `Developed with multi-dimensional personality traits that create consistent, 
-                     believable responses across different scenarios and interactions.`
-                }
+                Grounded in extensive historical research, reflecting the social norms, 
+                cultural values, and life experiences typical of their time period and circumstances.
               </p>
             </div>
             
             <div className="bg-white rounded-lg p-4 shadow-sm">
               <h4 className="font-medium text-gray-800 mb-2">🧠 Cognitive Patterns</h4>
               <p className="text-sm text-gray-600">
-                {characterType === 'historical'
-                  ? `Thinking patterns and decision-making processes informed by the knowledge, 
-                     beliefs, and cognitive frameworks available during their historical period.`
-                  : `Unique thought processes, problem-solving approaches, and mental models that 
-                     define how this character perceives and interacts with their world.`
-                }
+                Thinking patterns and decision-making processes informed by the knowledge, 
+                beliefs, and cognitive frameworks available during their historical period.
               </p>
             </div>
             
             <div className="bg-white rounded-lg p-4 shadow-sm">
-              <h4 className="font-medium text-gray-800 mb-2">💭 Emotional Landscape</h4>
+              <h4 className="font-medium text-gray-800 mb-2">💭 Cultural Understanding</h4>
               <p className="text-sm text-gray-600">
-                {characterType === 'historical'
-                  ? `Emotional responses and interpersonal dynamics shaped by historical social 
-                     structures, family dynamics, and the challenges of their era.`
-                  : `Complex emotional intelligence with authentic reactions, relationship patterns, 
-                     and emotional growth that makes interactions feel genuine and meaningful.`
-                }
+                Responses shaped by historical social structures, family dynamics, and the 
+                challenges of their era.
               </p>
             </div>
             
             <div className="bg-white rounded-lg p-4 shadow-sm">
-              <h4 className="font-medium text-gray-800 mb-2">
-                {characterType === 'historical' ? '⚖️ Period Values' : '🎯 Value System'}
-              </h4>
+              <h4 className="font-medium text-gray-800 mb-2">⚖️ Period Values</h4>
               <p className="text-sm text-gray-600">
-                {characterType === 'historical'
-                  ? `Moral foundations and ethical frameworks consistent with their historical 
-                     context, social class, and cultural background.`
-                  : `Core beliefs, moral principles, and value systems that guide their choices 
-                     and create consistent character motivations.`
-                }
+                Moral foundations and ethical frameworks consistent with their historical 
+                context, social class, and cultural background.
               </p>
             </div>
           </div>
@@ -175,20 +156,11 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
           <div className="text-center mt-6 p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg">
             <p className="text-sm text-gray-700 font-medium">
               ✨ This comprehensive character modeling enables authentic, engaging conversations that 
-              capture the {characterType === 'historical' ? 'historical authenticity' : 'creative depth'} and 
-              personality nuances that make each interaction unique and memorable.
+              capture the historical authenticity and personality nuances that make each interaction unique and memorable.
             </p>
           </div>
         </div>
       </div>
-      
-      {/* Technical summary for reference */}
-      <details className="mt-4 p-2 bg-gray-50 rounded text-xs">
-        <summary className="cursor-pointer font-mono text-gray-500">Technical: Character Analysis</summary>
-        <div className="mt-2 text-gray-600">
-          <p>Character model includes comprehensive psychological profiling across validated personality frameworks</p>
-        </div>
-      </details>
     </div>
   );
 };
