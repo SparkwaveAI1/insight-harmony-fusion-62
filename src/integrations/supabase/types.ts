@@ -291,6 +291,48 @@ export type Database = {
           },
         ]
       }
+      featured_character_videos: {
+        Row: {
+          character_id: string
+          character_type: string
+          created_at: string
+          description: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          thumbnail_url: string | null
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          character_id: string
+          character_type: string
+          created_at?: string
+          description: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          character_id?: string
+          character_type?: string
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       knowledge_base_documents: {
         Row: {
           content: string | null
