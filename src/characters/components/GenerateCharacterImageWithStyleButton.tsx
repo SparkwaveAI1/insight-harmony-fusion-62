@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ImageIcon } from 'lucide-react';
-import { DialogTrigger } from '@/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 import { useImageGeneration } from '../hooks/useImageGeneration';
@@ -65,17 +65,15 @@ const GenerateCharacterImageWithStyleButton = ({
 
   return (
     <>
-      <DialogTrigger asChild>
-        <Button
-          variant={variant}
-          size={size}
-          className={className}
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <ImageIcon className="h-4 w-4 mr-2" />
-          Generate {isNonHumanoid ? 'Entity' : 'Character'} Image
-        </Button>
-      </DialogTrigger>
+      <Button
+        variant={variant}
+        size={size}
+        className={className}
+        onClick={() => setIsDialogOpen(true)}
+      >
+        <ImageIcon className="h-4 w-4 mr-2" />
+        Generate {isNonHumanoid ? 'Entity' : 'Character'} Image
+      </Button>
 
       <ImageGenerationDialog
         isOpen={isDialogOpen}
