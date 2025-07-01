@@ -11,6 +11,8 @@ interface CharacterTraitsProps {
 }
 
 const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) => {
+  console.log('CharacterTraits received:', { traitProfile, characterType });
+  
   // For Character Lab (creative characters), show creative traits
   if (characterType === 'multi_species' || characterType === 'fictional') {
     return (
@@ -36,28 +38,46 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
             <div className="grid md:grid-cols-2 gap-4 mt-6">
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-medium text-gray-800 mb-2">🎭 Creative Identity</h4>
-                <p className="text-sm text-gray-600">
-                  {traitProfile.entity_type && `Entity Type: ${traitProfile.entity_type}`}
-                  {traitProfile.narrative_domain && ` | Universe: ${traitProfile.narrative_domain}`}
-                  {traitProfile.functional_role && ` | Role: ${traitProfile.functional_role}`}
-                </p>
+                <div className="text-sm text-gray-600 space-y-1">
+                  {traitProfile.entity_type && (
+                    <p><strong>Type:</strong> {traitProfile.entity_type}</p>
+                  )}
+                  {traitProfile.narrative_domain && (
+                    <p><strong>Universe:</strong> {traitProfile.narrative_domain}</p>
+                  )}
+                  {traitProfile.functional_role && (
+                    <p><strong>Role:</strong> {traitProfile.functional_role}</p>
+                  )}
+                </div>
               </div>
               
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-medium text-gray-800 mb-2">🌟 Core Drives</h4>
-                <p className="text-sm text-gray-600">
-                  {traitProfile.core_drives?.length ? 
-                    traitProfile.core_drives.join(', ') : 
-                    'Creative motivations and drives'
-                  }
-                </p>
+                <div className="text-sm text-gray-600">
+                  {traitProfile.core_drives?.length ? (
+                    <div className="flex flex-wrap gap-1">
+                      {traitProfile.core_drives.map((drive, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {drive}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p>Creative motivations and drives</p>
+                  )}
+                </div>
               </div>
               
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-medium text-gray-800 mb-2">⚡ Manifestation</h4>
-                <p className="text-sm text-gray-600">
-                  {traitProfile.physical_form || 'Creative physical form'} in {traitProfile.environment || 'their world'}
-                </p>
+                <div className="text-sm text-gray-600">
+                  {traitProfile.physical_form && (
+                    <p><strong>Form:</strong> {traitProfile.physical_form}</p>
+                  )}
+                  {traitProfile.environment && (
+                    <p><strong>Environment:</strong> {traitProfile.environment}</p>
+                  )}
+                </div>
               </div>
               
               <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -78,6 +98,22 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
           </div>
         </div>
         
+        {/* Surface Triggers */}
+        {traitProfile.surface_triggers && traitProfile.surface_triggers.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Surface Triggers</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {traitProfile.surface_triggers.map((trigger, index) => (
+                  <Badge key={index} variant="outline">{trigger}</Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Creative-specific traits */}
         {traitProfile.unique_abilities && traitProfile.unique_abilities.length > 0 && (
           <Card>
@@ -88,6 +124,39 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div className="flex flex-wrap gap-2">
                 {traitProfile.unique_abilities.map((ability, index) => (
                   <Badge key={index} variant="outline">{ability}</Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Personality Summary */}
+        {traitProfile.personality_summary && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Personality Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-700">{traitProfile.personality_summary}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Creative Manifestation (for non-humanoid characters) */}
+        {traitProfile.creative_manifestation && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Creative Manifestation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
+                {Object.entries(traitProfile.creative_manifestation).map(([key, value]) => (
+                  <div key={key} className="space-y-1">
+                    <p className="text-sm font-medium text-gray-800 capitalize">
+                      {key.replace(/_/g, ' ')}:
+                    </p>
+                    <p className="text-sm text-gray-600">{value}</p>
+                  </div>
                 ))}
               </div>
             </CardContent>
