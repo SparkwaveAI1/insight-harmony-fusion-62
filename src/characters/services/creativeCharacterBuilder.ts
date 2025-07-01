@@ -305,11 +305,11 @@ export class CreativeCharacterBuilder {
         evolution_enabled: true
       },
       
-      // Emotional triggers with proper typing
+      // Simplified emotional triggers for Character Lab - using simple arrays
       emotional_triggers: {
         positive_triggers: data.coreDrives.map(drive => `Success in ${drive.toLowerCase()}`),
         negative_triggers: data.surfaceTriggers.map(trigger => `Interference with ${trigger.toLowerCase()}`)
-      },
+      } as any,
       
       // Character-specific fields
       species_type: data.entityType === 'human' ? undefined : data.entityType,
