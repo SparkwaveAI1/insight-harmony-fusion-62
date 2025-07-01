@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Section from '@/components/ui-custom/Section';
 import CharacterHeader from '../components/CharacterHeader';
+import FeaturedCharacters from '../components/FeaturedCharacters';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
 
@@ -67,6 +68,9 @@ const CharactersHome = () => {
             </div>
           </div>
         </Section>
+
+        {/* Featured Characters Section */}
+        <FeaturedCharacters />
       </main>
       
       <Footer />
