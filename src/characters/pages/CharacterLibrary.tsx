@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter } from 'lucide-react';
@@ -64,16 +65,10 @@ const CharacterLibrary = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="outline" asChild>
+            <Button asChild>
               <Link to="/characters/create/historical">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Historical
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link to="/characters/create/fictional">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Fictional
               </Link>
             </Button>
           </div>
@@ -116,14 +111,9 @@ const CharacterLibrary = () => {
               }
             </p>
             <div className="flex items-center justify-center gap-3">
-              <Button variant="outline" asChild>
+              <Button asChild>
                 <Link to="/characters/create/historical">
                   Create Historical Character
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link to="/characters/create/fictional">
-                  Create Fictional Character
                 </Link>
               </Button>
             </div>
