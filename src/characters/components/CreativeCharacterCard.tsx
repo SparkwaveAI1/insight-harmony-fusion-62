@@ -19,6 +19,13 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
   const { user } = useAuth();
   const isOwner = user?.id === character.user_id;
   
+  console.log('CreativeCharacterCard ownership check:', {
+    currentUserId: user?.id,
+    characterUserId: character.user_id,
+    characterName: character.name,
+    isOwner
+  });
+  
   const getCharacterTypeLabel = (character: CreativeCharacter) => {
     if (character.character_type === 'multi_species') {
       return character.species_type || 'Non-Humanoid';

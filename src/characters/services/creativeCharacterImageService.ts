@@ -30,6 +30,21 @@ export async function generateCreativeCharacterImage(
       throw new Error('This service only handles creative characters from Character Lab');
     }
 
+    // Verify ownership by checking if the character exists and belongs to the current user
+    const { data: ownershipCheck, error: ownershipError } = await supabase
+      .from('characters')
+      .select('user_id')
+      .eq('character_id', characterData.character_id)
+      .eq('creation_source', 'creative')
+      .single();
+
+    if (ownershipError || !ownershipCheck) {
+      console.error('Character ownership verification failed:', ownershipError);
+      throw new Error('Character not found or access denied');
+    }
+
+    console.log('Character ownership verified for user:', ownershipCheck.user_id);
+
     // Prepare request data
     const requestData = {
       characterData: characterData,
