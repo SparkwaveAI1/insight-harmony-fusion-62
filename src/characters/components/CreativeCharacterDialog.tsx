@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -98,7 +99,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
             Character Genesis Creation
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
-            Create a unique character through our guided 5-step process
+            Guided creation process to build a unique character with rich depth and personality
           </DialogDescription>
         </DialogHeader>
         
