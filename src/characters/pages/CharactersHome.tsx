@@ -149,7 +149,7 @@ const CharactersHome = () => {
                   Historical Characters
                 </Link>
               </Button>
-              <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700 shadow-lg">
+              <Button size="lg" asChild className="bg-purple-600 hover:bg-purple-700 shadow-lg font-orbitron">
                 <Link to="/characters/creative">
                   <TestTube className="mr-2 h-5 w-5" />
                   Character Lab
