@@ -20,7 +20,7 @@ const CharacterHeader = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6 font-orbitron">
             <Link 
-              to="/" 
+              to="/characters-home" 
               className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
             >
               <Home className="h-4 w-4" />
@@ -56,7 +56,7 @@ const CharacterHeader = () => {
           <div className="md:hidden bg-slate-900/95 border-t border-slate-800">
             <nav className="px-4 py-4 space-y-2 font-orbitron">
               <Link 
-                to="/" 
+                to="/characters-home" 
                 className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
