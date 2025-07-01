@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download, Sparkles, Copy, Users } from 'lucide-react';
@@ -6,17 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Character } from '../types/characterTraitTypes';
-import { NonHumanoidCharacter } from '../types/nonHumanoidTypes';
 import CharacterCloneForm from './CharacterCloneForm';
 
 interface CharacterDetailHeaderProps {
-  character: Character | NonHumanoidCharacter;
+  character: Character;
   onDownloadJSON: () => void;
 }
 
 const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHeaderProps) => {
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
-  const isNonHumanoid = character.character_type === 'multi_species' || 'species_type' in character;
   const isCreativeCharacter = character.creation_source === 'creative';
 
   const handleCopyCharacterId = async () => {
@@ -54,11 +53,11 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
             </Link>
           </Button>
           
-          {isNonHumanoid && (
+          {isCreativeCharacter && (
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-purple-600" />
               <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                Creative Entity
+                Character Lab
               </Badge>
             </div>
           )}
@@ -90,7 +89,7 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
           <Button variant="outline" asChild>
             <Link to={`/characters/${character.character_id}/chat`}>
               <MessageCircle className="h-4 w-4 mr-2" />
-              {isNonHumanoid ? 'Communicate' : 'Chat'}
+              Chat
             </Link>
           </Button>
           <Button asChild>
