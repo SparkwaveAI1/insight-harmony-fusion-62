@@ -9,6 +9,7 @@ import PhysicalManifestationSection from './sections/PhysicalManifestationSectio
 import CommunicationSection from './sections/CommunicationSection';
 import EntityProfileSection from './sections/EntityProfileSection';
 import EmotionalTriggersSection from './sections/EmotionalTriggersSection';
+import CharacterLabEnhancedSection from './sections/CharacterLabEnhancedSection';
 
 interface CharacterInfoSectionsProps {
   character: Character;
@@ -37,6 +38,9 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
 
   const isNonHumanoid = character.character_type === 'multi_species';
   const isHistorical = character.character_type === 'historical';
+  const isCharacterLab = character.character_type === 'multi_species' && 
+    character.metadata?.module === 'character_lab';
+  
   // Type cast when we know it's a non-humanoid character
   const nonHumanoidTraitProfile = isNonHumanoid ? character.trait_profile as NonHumanoidTraitProfile : null;
 
@@ -57,18 +61,23 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         getYearFromDate={getYearFromDate}
       />
 
+      {/* Character Lab Enhanced Section - Show for Character Lab characters */}
+      {isCharacterLab && (
+        <CharacterLabEnhancedSection character={character} />
+      )}
+
       {/* Background Section (replaces Emotional Triggers for historical characters) */}
       {isHistorical && backstory && (
         <BackgroundSection backstory={backstory} />
       )}
 
       {/* Physical Manifestation Section for Non-Humanoid Characters */}
-      {isNonHumanoid && nonHumanoidTraitProfile?.physical_manifestation && (
+      {isNonHumanoid && !isCharacterLab && nonHumanoidTraitProfile?.physical_manifestation && (
         <PhysicalManifestationSection nonHumanoidTraitProfile={nonHumanoidTraitProfile} />
       )}
 
       {/* Enhanced Communication Section for Non-Humanoid Characters */}
-      {isNonHumanoid && character.linguistic_profile && (
+      {isNonHumanoid && !isCharacterLab && character.linguistic_profile && (
         <CommunicationSection character={character} isNonHumanoid={isNonHumanoid} />
       )}
 
@@ -78,20 +87,22 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
       )}
 
       {/* Enhanced Metadata for Non-Humanoid Characters */}
-      {isNonHumanoid && character.metadata && Object.keys(character.metadata).length > 0 && (
+      {isNonHumanoid && !isCharacterLab && character.metadata && Object.keys(character.metadata).length > 0 && (
         <EntityProfileSection character={character} />
       )}
 
-      {/* Emotional Triggers - Only for Non-Historical Characters */}
-      {!isHistorical && character.emotional_triggers && (
+      {/* Emotional Triggers - Only for Non-Historical Characters and not Character Lab */}
+      {!isHistorical && !isCharacterLab && character.emotional_triggers && (
         <EmotionalTriggersSection character={character} isNonHumanoid={isNonHumanoid} />
       )}
 
-      {/* Character Traits */}
-      <CharacterTraits 
-        traitProfile={character.trait_profile} 
-        characterType={character.character_type}
-      />
+      {/* Character Traits - Show for non-Character Lab characters or as fallback */}
+      {!isCharacterLab && (
+        <CharacterTraits 
+          traitProfile={character.trait_profile} 
+          characterType={character.character_type}
+        />
+      )}
     </div>
   );
 };
