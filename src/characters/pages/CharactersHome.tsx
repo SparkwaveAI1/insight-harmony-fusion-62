@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -153,10 +152,10 @@ const CharactersHome = () => {
               <Button 
                 size="lg" 
                 asChild 
-                className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg tracking-wider font-orbitron"
-                style={{ fontFamily: 'Orbitron, monospace' }}
+                className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg tracking-wider [&>*]:!font-orbitron"
+                style={{ fontFamily: 'Orbitron, monospace !important' }}
               >
-                <Link to="/characters/creative">
+                <Link to="/characters/creative" style={{ fontFamily: 'Orbitron, monospace !important' }}>
                   <TestTube className="mr-2 h-5 w-5" />
                   Character Lab
                 </Link>
