@@ -41,7 +41,7 @@ export const useFeaturedCharacterVideos = () => {
           id: '1',
           character_id: 'b795b58e-19cb-426f-80b9-7899a1ebc3ff',
           name: 'Isabella',
-          description: 'Born into Castilian nobility in the 15th century, Isabella navigated the complex political landscape of medieval Iberia with remarkable acumen. Her early years were shaped by civil war and dynastic struggles that would forge her into a formidable ruler. She understood that true power came not just from birthright, but from the careful cultivation of alliances and the unwavering pursuit of her kingdom\'s interests. Her legacy would forever change the course of Spanish and world history.',
+          description: 'Isabella was born in 1790 in a small fishing village along the northeastern Brazilian coast. Raised amid the hardships of colonial exploitation, she learned fishing and farming from a young age, and now helps support her extended family.',
           video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos/Isabella%20historical%207.1.25.mp4',
           thumbnail_url: null,
           character_type: 'historical',
