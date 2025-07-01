@@ -8,6 +8,7 @@ import { useCreativeCharactersFixed } from '../hooks/useCreativeCharactersFixed'
 import { Character } from '../types/characterTraitTypes';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import CharacterAvatar from '../components/CharacterAvatar';
 
 const UnifiedCreativeCharacterLibrary = () => {
   const { data: characters = [], isLoading, error } = useCreativeCharactersFixed();
@@ -166,8 +167,16 @@ const UnifiedCreativeCharacterLibrary = () => {
               }`}>
                 <Link to={`/characters/${character.character_id}`} className="flex flex-col h-full p-6">
                   <div className="flex flex-col flex-1">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
+                    <div className="flex items-start gap-4 mb-4">
+                      <CharacterAvatar 
+                        character={{
+                          name: character.name,
+                          profile_image_url: character.profile_image_url
+                        }}
+                        size="md"
+                        className="flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold mb-2 line-clamp-2">{character.name}</h3>
                         <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3">
                           {getCharacterDescription(character)}
