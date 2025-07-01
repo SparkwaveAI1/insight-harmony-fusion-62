@@ -141,7 +141,7 @@ const CreativeCharacterDashboard = () => {
                       </p>
                       <Button asChild className="w-full">
                         <Link to="/characters/create/creative">
-                          <Sparkles className="h-4 w-4 mr-2" />
+                          <FlaskConical className="h-4 w-4 mr-2" />
                           Create Creative Character
                         </Link>
                       </Button>
