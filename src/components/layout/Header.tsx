@@ -8,13 +8,6 @@ import ActionButtons from "./navigation/ActionButtons";
 import { Menu, X, LogOut, UserRound } from "lucide-react";
 import { Button } from "../ui/button";
 import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -74,37 +67,42 @@ const Header = () => {
           </div>
             
           {/* Centered Navigation Links - Desktop */}
-          <NavigationMenu className="hidden md:flex mx-auto font-orbitron">
-            <NavigationMenuList className="space-x-2">
+          <nav className="hidden md:flex mx-auto font-orbitron">
+            <div className="flex items-center space-x-8">
               {/* Primary Navigation Links */}
               {headerNavItems.map((link) => {
                 const isActive = location.pathname === link.href || 
                                (link.href !== "/" && location.pathname.startsWith(link.href));
                 
+                // Update the display text based on the title
+                let displayText = link.title;
+                if (link.title === "Personas") {
+                  displayText = "Persona Lab";
+                } else if (link.title === "Characters") {
+                  displayText = "Character Lab";
+                }
+                
                 return (
-                  <NavigationMenuItem key={link.title}>
-                    <Link to={link.href}>
-                      <NavigationMenuLink 
-                        className={cn(
-                          navigationMenuTriggerStyle(),
-                          "flex items-center gap-2 px-4 font-medium font-orbitron",
-                          isScrolled || !isDarkRoute 
-                            ? "text-foreground hover:bg-accent hover:text-accent-foreground" 
-                            : "text-gray-300 hover:text-white hover:bg-slate-800",
-                          isActive && (isScrolled || !isDarkRoute 
-                            ? "bg-accent text-accent-foreground" 
-                            : "bg-slate-800 text-white")
-                        )}
-                      >
-                        {link.icon && <link.icon className="w-4 h-4" />}
-                        {link.title}
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
+                  <Link 
+                    key={link.title}
+                    to={link.href}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 font-medium font-orbitron transition-colors",
+                      isScrolled || !isDarkRoute 
+                        ? "text-foreground hover:text-primary" 
+                        : "text-gray-300 hover:text-white",
+                      isActive && (isScrolled || !isDarkRoute 
+                        ? "text-primary" 
+                        : "text-white")
+                    )}
+                  >
+                    {link.icon && <link.icon className="w-4 h-4" />}
+                    {displayText}
+                  </Link>
                 );
               })}
-            </NavigationMenuList>
-          </NavigationMenu>
+            </div>
+          </nav>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2">
