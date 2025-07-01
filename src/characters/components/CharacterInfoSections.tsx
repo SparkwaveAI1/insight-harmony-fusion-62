@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Atom, Globe, Zap, Brain, Languages } from 'lucide-react';
+import { Atom, Globe, Zap, Brain, Languages, BookOpen, Calendar } from 'lucide-react';
 import { Character } from '../types/characterTraitTypes';
 import { NonHumanoidTraitProfile } from '../types/nonHumanoidTypes';
 import CharacterTraits from './CharacterTraits';
@@ -21,17 +21,30 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
     }
   };
 
+  // Extract year from date of birth for historical characters
+  const getYearFromDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.getFullYear().toString();
+    } catch {
+      // Try to extract year from string format like "1790-01-01"
+      const yearMatch = dateString.match(/(\d{4})/);
+      return yearMatch ? yearMatch[1] : null;
+    }
+  };
+
   const isNonHumanoid = character.character_type === 'multi_species';
+  const isHistorical = character.character_type === 'historical';
   // Type cast when we know it's a non-humanoid character
   const nonHumanoidTraitProfile = isNonHumanoid ? character.trait_profile as NonHumanoidTraitProfile : null;
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Basic Information for Non-Humanoid Characters */}
+      {/* Enhanced Basic Information */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {isNonHumanoid ? <Atom className="h-5 w-5" /> : null}
+            {isNonHumanoid ? <Atom className="h-5 w-5" /> : isHistorical ? <Calendar className="h-5 w-5" /> : null}
             {isNonHumanoid ? 'Entity Information' : 'Basic Information'}
           </CardTitle>
         </CardHeader>
@@ -47,6 +60,14 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
               <span className="font-medium">Created:</span>
               <span className="ml-2">{formatDate(character.creation_date)}</span>
             </div>
+            
+            {/* Historical Character Year */}
+            {isHistorical && character.date_of_birth && (
+              <div>
+                <span className="font-medium">Year:</span>
+                <span className="ml-2">{getYearFromDate(character.date_of_birth)}</span>
+              </div>
+            )}
             
             {/* Non-Humanoid Specific Fields */}
             {isNonHumanoid && (
@@ -114,8 +135,47 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
               </>
             )}
           </div>
+
+          {/* Behavioral Modulation moved under Basic Information */}
+          {character.behavioral_modulation && Object.keys(character.behavioral_modulation).length > 0 && (
+            <div className="mt-6 pt-4 border-t">
+              <h4 className="font-medium mb-3">
+                {isNonHumanoid ? 'Behavioral Parameters' : 'Behavioral Modulation'}
+              </h4>
+              <div className="space-y-3">
+                {Object.entries(character.behavioral_modulation).map(([trait, value]) => (
+                  <div key={trait}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
+                      <span>{Math.round((value as number || 0) * 100)}%</span>
+                    </div>
+                    <Progress value={(value as number || 0) * 100} className="h-2" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Background Section (replaces Emotional Triggers for historical characters) */}
+      {isHistorical && character.backstory && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Background
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none">
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                {character.backstory}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Physical Manifestation Section for Non-Humanoid Characters */}
       {isNonHumanoid && nonHumanoidTraitProfile?.physical_manifestation && (
@@ -356,30 +416,8 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         </Card>
       )}
 
-      {/* Behavioral Modulation */}
-      {character.behavioral_modulation && Object.keys(character.behavioral_modulation).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {isNonHumanoid ? 'Behavioral Parameters' : 'Behavioral Modulation'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(character.behavioral_modulation).map(([trait, value]) => (
-              <div key={trait}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="capitalize">{trait.replace(/_/g, ' ')}</span>
-                  <span>{Math.round((value as number || 0) * 100)}%</span>
-                </div>
-                <Progress value={(value as number || 0) * 100} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Emotional Triggers */}
-      {character.emotional_triggers && (
+      {/* Emotional Triggers - Only for Non-Historical Characters */}
+      {!isHistorical && character.emotional_triggers && (
         <Card>
           <CardHeader>
             <CardTitle>
