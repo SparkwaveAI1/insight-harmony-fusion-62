@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, Plus, Library, Menu } from 'lucide-react';
+import { FlaskConical, Plus, Library, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
@@ -34,7 +35,7 @@ const CreativeCharacterDashboard = () => {
     {
       id: 'create-creative',
       title: 'Create Creative Character',
-      icon: Sparkles,
+      icon: FlaskConical,
       href: '/characters/create/creative'
     },
     {
@@ -60,8 +61,8 @@ const CreativeCharacterDashboard = () => {
           {/* Desktop Left Sidebar - Hidden on mobile */}
           <div className="hidden md:block w-64 bg-card border-r border-border p-6">
             <div className="flex items-center gap-3 mb-8">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <h2 className="text-lg font-semibold">Creative Characters</h2>
+              <FlaskConical className="h-6 w-6 text-primary" />
+              <h2 className="text-lg font-semibold">Character Lab</h2>
             </div>
             
             <nav className="space-y-2">
@@ -89,8 +90,8 @@ const CreativeCharacterDashboard = () => {
             {/* Mobile Navigation - Only visible on mobile */}
             <div className="md:hidden px-4 py-4 border-b bg-card">
               <div className="flex items-center gap-3 mb-4">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-semibold">Creative Characters</h2>
+                <FlaskConical className="h-5 w-5 text-primary" />
+                <h2 className="text-base font-semibold">Character Lab</h2>
               </div>
               
               <Select value={activeSection} onValueChange={handleSectionChange}>
@@ -120,9 +121,9 @@ const CreativeCharacterDashboard = () => {
                 <Section>
                   <div className="flex flex-col gap-6 mb-8">
                     <div className="flex items-center gap-3">
-                      <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                      <FlaskConical className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                       <div>
-                        <h1 className="text-xl md:text-3xl font-bold">Creative Characters Dashboard</h1>
+                        <h1 className="text-xl md:text-3xl font-bold">Character Lab Dashboard</h1>
                         <p className="text-sm md:text-base text-muted-foreground">Design and manage your original fictional characters</p>
                       </div>
                     </div>
@@ -132,7 +133,7 @@ const CreativeCharacterDashboard = () => {
                   <div className="grid grid-cols-1 gap-6 mb-8">
                     <Card className="p-4 md:p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-4">
-                        <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                        <FlaskConical className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                         <h3 className="text-lg md:text-xl font-semibold">Creative Characters</h3>
                       </div>
                       <p className="text-sm md:text-base text-muted-foreground mb-4">
