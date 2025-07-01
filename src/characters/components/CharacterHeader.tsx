@@ -36,13 +36,7 @@ const CharacterHeader = () => {
               to="/characters/creative" 
               className="text-gray-300 hover:text-white transition-colors"
             >
-              Creative Characters
-            </Link>
-            <Link 
-              to="/dashboard" 
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              Dashboard
+              Character Lab
             </Link>
           </nav>
 
@@ -81,14 +75,7 @@ const CharacterHeader = () => {
                 className="block text-gray-300 hover:text-white transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Creative Characters
-              </Link>
-              <Link 
-                to="/dashboard" 
-                className="block text-gray-300 hover:text-white transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
+                Character Lab
               </Link>
             </nav>
           </div>
