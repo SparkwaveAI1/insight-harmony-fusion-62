@@ -15,11 +15,10 @@ const UnifiedCreativeCharacterLibrary = () => {
   const [filteredCharacters, setFilteredCharacters] = useState<Character[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'humanoid' | 'non_humanoid'>('all');
 
   useEffect(() => {
     filterCharacters();
-  }, [characters, searchQuery, selectedFilter]);
+  }, [characters, searchQuery]);
 
   const filterCharacters = () => {
     let filtered = characters;
@@ -32,18 +31,6 @@ const UnifiedCreativeCharacterLibrary = () => {
         char.metadata?.description?.toLowerCase().includes(query) ||
         char.metadata?.narrative_domain?.toLowerCase().includes(query)
       );
-    }
-
-    // Apply type filter
-    if (selectedFilter !== 'all') {
-      filtered = filtered.filter(char => {
-        if (selectedFilter === 'humanoid') {
-          return char.character_type === 'fictional';
-        } else if (selectedFilter === 'non_humanoid') {
-          return char.character_type === 'multi_species';
-        }
-        return true;
-      });
     }
 
     setFilteredCharacters(filtered);
@@ -99,7 +86,7 @@ const UnifiedCreativeCharacterLibrary = () => {
             <div className="flex items-center gap-3">
               <FlaskConical className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               <div>
-                <h1 className="text-xl md:text-3xl font-bold">Creative Character Library</h1>
+                <h1 className="text-xl md:text-3xl font-bold">Character Lab Library</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
                   All your creative characters from the Character Lab
                 </p>
@@ -113,42 +100,16 @@ const UnifiedCreativeCharacterLibrary = () => {
             </Button>
           </div>
 
-          {/* Search and Filters */}
+          {/* Search and View Controls */}
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex gap-4 items-center w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-80">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search creative characters..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant={selectedFilter === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedFilter('all')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={selectedFilter === 'humanoid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedFilter('humanoid')}
-                >
-                  Humanoid
-                </Button>
-                <Button
-                  variant={selectedFilter === 'non_humanoid' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedFilter('non_humanoid')}
-                >
-                  Non-Humanoid
-                </Button>
-              </div>
+            <div className="relative flex-1 sm:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search Character Lab..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
 
             <div className="flex gap-2">
@@ -175,15 +136,15 @@ const UnifiedCreativeCharacterLibrary = () => {
           <Card className="text-center py-12">
             <FlaskConical className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">
-              {searchQuery || selectedFilter !== 'all' ? 'No characters found' : 'No creative characters yet'}
+              {searchQuery ? 'No characters found' : 'No creative characters yet'}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchQuery || selectedFilter !== 'all' 
-                ? 'Try adjusting your search or filters'
+              {searchQuery 
+                ? 'Try adjusting your search'
                 : 'Create your first creative character to get started'
               }
             </p>
-            {!searchQuery && selectedFilter === 'all' && (
+            {!searchQuery && (
               <Button asChild>
                 <Link to="/characters/create/creative">
                   <Plus className="h-4 w-4 mr-2" />
