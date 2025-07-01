@@ -17,9 +17,15 @@ export async function generateCreativeCharacterImage(
   autoSave: boolean = true
 ): Promise<CreativeGenerationResult | string> {
   try {
-    console.log('Generating creative character image with data:', { characterData, style, autoSave });
+    console.log('=== GENERATING CREATIVE CHARACTER IMAGE ===');
+    console.log('Character data:', { 
+      name: characterData.name, 
+      character_id: characterData.character_id,
+      creation_source: characterData.creation_source 
+    });
+    console.log('Parameters:', { style, customText, referenceImageUrl, autoSave });
     
-    // Only handle creative characters
+    // Only handle creative characters from Character Lab
     if (characterData.creation_source !== 'creative') {
       throw new Error('This service only handles creative characters from Character Lab');
     }
@@ -33,7 +39,7 @@ export async function generateCreativeCharacterImage(
       autoSave: autoSave
     };
 
-    console.log('Calling generate-creative-character-image function with:', requestData);
+    console.log('Calling generate-creative-character-image function...');
 
     const { data, error } = await supabase.functions.invoke('generate-creative-character-image', {
       body: requestData

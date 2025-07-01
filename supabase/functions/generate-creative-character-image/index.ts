@@ -20,13 +20,20 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Starting creative character image generation...");
+    
     if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is missing");
       throw new Error("OPENAI_API_KEY is not configured in environment variables");
     }
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Supabase configuration is missing");
       throw new Error("Supabase configuration is missing");
     }
+
+    const requestBody = await req.json();
+    console.log("Request body received:", JSON.stringify(requestBody, null, 2));
 
     const { 
       characterData, 
@@ -34,22 +41,20 @@ serve(async (req) => {
       customText = '', 
       referenceImageUrl = null,
       autoSave = true 
-    } = await req.json();
+    } = requestBody;
     
     if (!characterData || typeof characterData !== "object") {
       throw new Error("Invalid characterData provided");
     }
 
-    // This function only handles creative characters from Character Lab
+    // Verify this is a creative character
     if (characterData.creation_source !== 'creative') {
       throw new Error("This function only handles creative characters from Character Lab.");
     }
 
-    console.log("Generating image for creative character:", characterData.name);
-    console.log("Entity type:", characterData.character_type);
-    console.log("Narrative domain:", characterData.metadata?.narrative_domain);
+    console.log("Processing creative character:", characterData.name);
+    console.log("Character ID:", characterData.character_id);
     console.log("Style:", style);
-    console.log("Custom text:", customText);
     console.log("Auto save:", autoSave);
 
     // Generate creative character prompt
@@ -73,12 +78,16 @@ serve(async (req) => {
       style: style === 'cinematic' ? "vivid" : "natural"
     };
     
+    console.log("Calling OpenAI with parameters:", openaiParams);
+    
     // Generate image with OpenAI
     const base64Image = await generateImageWithOpenAI(imagePrompt, OPENAI_API_KEY, openaiParams);
     
     if (!autoSave) {
       // Return the image data for preview without saving
       const imageDataUrl = `data:image/png;base64,${base64Image}`;
+      console.log("Returning preview image (not saving)");
+      
       return new Response(
         JSON.stringify({
           success: true,
@@ -91,6 +100,8 @@ serve(async (req) => {
       );
     }
     
+    console.log("Uploading image to storage...");
+    
     // Upload image to Supabase storage (for auto-save)
     const publicUrl = await uploadImageToStorage(
       base64Image, 
@@ -98,6 +109,8 @@ serve(async (req) => {
       SUPABASE_URL, 
       SUPABASE_SERVICE_ROLE_KEY
     );
+    
+    console.log("Image uploaded, public URL:", publicUrl);
     
     // Extract file path from the public URL
     const filePath = publicUrl.split('/').slice(-1)[0];
@@ -113,6 +126,8 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
     
+    console.log("Image saved to gallery table");
+    
     // Update the character record with the new image URL (as profile image)
     await updateCharacterWithImageUrl(
       characterData.character_id, 
@@ -120,6 +135,8 @@ serve(async (req) => {
       SUPABASE_URL, 
       SUPABASE_SERVICE_ROLE_KEY
     );
+    
+    console.log("Character updated with new image URL");
     
     return new Response(
       JSON.stringify({
@@ -133,6 +150,8 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Error generating creative character image:", error);
+    console.error("Error stack:", error.stack);
+    
     return new Response(
       JSON.stringify({
         success: false,

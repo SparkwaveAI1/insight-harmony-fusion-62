@@ -6,7 +6,12 @@ export function buildCreativeCharacterImagePrompt(characterData: any, style: str
   
   // Base character description
   if (characterData.metadata?.description) {
-    prompt += characterData.metadata.description;
+    // Take first paragraph or first 200 characters of description
+    const description = characterData.metadata.description;
+    const firstParagraph = description.split('\n\n')[0] || description.split('\n')[0];
+    const shortDescription = firstParagraph.length > 200 ? 
+      firstParagraph.substring(0, 200) + "..." : firstParagraph;
+    prompt += shortDescription;
   } else {
     prompt += `A character named ${characterData.name}`;
   }

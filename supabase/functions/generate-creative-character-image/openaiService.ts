@@ -4,7 +4,7 @@ export async function generateImageWithOpenAI(
   apiKey: string, 
   customParams?: any
 ): Promise<string> {
-  console.log("Calling OpenAI API for creative character image generation with base64 format...");
+  console.log("Calling OpenAI API for creative character image generation...");
   
   const defaultParams = {
     model: "dall-e-3",
@@ -19,31 +19,40 @@ export async function generateImageWithOpenAI(
   // Merge custom parameters with defaults
   const params = { ...defaultParams, ...customParams, prompt };
   
-  console.log("OpenAI parameters for creative character:", params);
+  console.log("OpenAI parameters:", JSON.stringify(params, null, 2));
   
-  const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify(params)
-  });
-  
-  if (!imageResponse.ok) {
-    const errorText = await imageResponse.text();
-    console.error("OpenAI API error for creative character:", errorText);
-    throw new Error(`OpenAI API error: ${imageResponse.status}`);
+  try {
+    const imageResponse = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(params)
+    });
+    
+    console.log("OpenAI response status:", imageResponse.status);
+    
+    if (!imageResponse.ok) {
+      const errorText = await imageResponse.text();
+      console.error("OpenAI API error response:", errorText);
+      throw new Error(`OpenAI API error: ${imageResponse.status} - ${errorText}`);
+    }
+    
+    const imageData = await imageResponse.json();
+    console.log("OpenAI response structure:", Object.keys(imageData));
+    
+    if (!imageData.data || !imageData.data[0] || !imageData.data[0].b64_json) {
+      console.error("Invalid OpenAI response structure:", imageData);
+      throw new Error("Invalid response from OpenAI image generation");
+    }
+    
+    const base64Image = imageData.data[0].b64_json;
+    console.log("Successfully received base64 image from OpenAI (length:", base64Image.length, "chars)");
+    
+    return base64Image;
+  } catch (error) {
+    console.error("Error in generateImageWithOpenAI:", error);
+    throw error;
   }
-  
-  const imageData = await imageResponse.json();
-  
-  if (!imageData.data || !imageData.data[0] || !imageData.data[0].b64_json) {
-    throw new Error("Invalid response from OpenAI image generation");
-  }
-  
-  const base64Image = imageData.data[0].b64_json;
-  console.log("Successfully received base64 image from OpenAI for creative character");
-  
-  return base64Image;
 }
