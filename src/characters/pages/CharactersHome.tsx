@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -146,14 +147,14 @@ const CharactersHome = () => {
               <Button 
                 size="lg" 
                 asChild 
-                className="bg-purple-600 hover:bg-purple-700 shadow-lg text-lg px-8"
+                className="bg-purple-600 hover:bg-purple-700 shadow-lg font-medieval text-lg px-8"
               >
                 <Link to="/characters/creative">
                   <TestTube className="mr-2 h-5 w-5" />
                   Character Lab
                 </Link>
               </Button>
-              <Button size="lg" asChild className="bg-amber-600 hover:bg-amber-700 shadow-lg font-medieval text-lg">
+              <Button size="lg" asChild className="bg-amber-600 hover:bg-amber-700 shadow-lg font-medieval text-lg px-8">
                 <Link to="/characters">
                   <Clock className="mr-2 h-5 w-5" />
                   Historical Characters
