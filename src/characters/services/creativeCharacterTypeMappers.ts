@@ -33,12 +33,14 @@ export function creativeCharacterToCharacter(creativeCharacter: CreativeCharacte
         positive_triggers: creativeCharacter.emotional_triggers.positive_triggers.map(trigger => ({
           keywords: [trigger],
           emotion_type: 'positive',
-          intensity_multiplier: 0.5
+          intensity_multiplier: 0.5,
+          description: `Positive response to ${trigger}` // Add required description field
         })),
         negative_triggers: creativeCharacter.emotional_triggers.negative_triggers.map(trigger => ({
           keywords: [trigger],
           emotion_type: 'negative',
-          intensity_multiplier: 0.5
+          intensity_multiplier: 0.5,
+          description: `Negative response to ${trigger}` // Add required description field
         }))
       }
     }),

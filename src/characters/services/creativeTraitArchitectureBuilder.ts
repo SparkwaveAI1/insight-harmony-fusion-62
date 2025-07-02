@@ -1,4 +1,3 @@
-
 import { CreativeCharacterData } from '../types/creativeCharacterTypes';
 import { CoreMotive, LatentValue, SymbolicTrait, CognitiveFilter } from '../types/creativeCharacterTypes';
 
@@ -252,27 +251,97 @@ export class CreativeTraitArchitectureBuilder {
     };
   }
 
-  // New method to extract physical appearance structure
+  // Enhanced method to extract physical appearance structure
   static extractPhysicalAppearance(data: CreativeCharacterData): any {
     const description = data.description || '';
     const physicalForm = data.physicalForm || '';
+    const environment = data.environment || '';
     
-    // Parse for non-humanoid characteristics
-    if (description.includes('3.8 meters') || description.includes('coil')) {
+    // Check for specific patterns that indicate complex physical forms
+    if (description.includes('3.8 meters') || description.includes('coil') || 
+        description.includes('translucent') || description.includes('crystalline')) {
       return {
-        length_meters: 3.8,
-        diameter_meters: 0.9,
-        composition: 'translucent_coil_with_crystalline_vertebrae',
-        emitted_effects: ['amber_pulses', 'vapor_sigils', 'acoustic_distortion'],
-        movement_style: 'serpentine_flow',
-        material_nature: 'semi_corporeal'
+        structure: 'amorphous luminescent coil',
+        material: 'translucent matter with crystalline vertebrae',
+        movement_style: 'flowing ripple-like motion',
+        emissions: ['amber bioluminescence', 'vapor-sigils'],
+        visual_effects: ['fractal glyphs', 'peripheral sigil afterimages'],
+        sensory_effects: ['distorts acoustic fields'],
+        size_estimate: {
+          length_meters: 3.8,
+          diameter_meters: 0.9
+        },
+        narrative_description: `${data.name} is a translucent, coil-like being with crystalline vertebrae and rhythmic glyphs that flicker across its body. Its movements are fluid and continuous, emitting bioluminescent pulses and residual sigils visible only in peripheral vision. It distorts the environment subtly through resonance.`
       };
     }
     
+    // For other entity types, create a structured appearance based on available data
     return {
-      primary_form: physicalForm || 'undefined',
-      composition: 'unknown',
-      scale_reference: 'human_scale'
+      structure: physicalForm || 'undefined form',
+      material: this.extractMaterialFromDescription(description),
+      movement_style: this.extractMovementFromDescription(description),
+      emissions: this.extractEmissionsFromDescription(description),
+      visual_effects: this.extractVisualEffectsFromDescription(description),
+      sensory_effects: this.extractSensoryEffectsFromDescription(description),
+      narrative_description: `${data.name} manifests as ${description || 'a unique entity'} within ${environment || 'their domain'}.`
     };
+  }
+
+  private static extractMaterialFromDescription(description: string): string {
+    if (description.includes('crystalline')) return 'crystalline structure';
+    if (description.includes('translucent')) return 'translucent matter';
+    if (description.includes('energy')) return 'energy-based composition';
+    if (description.includes('vapor')) return 'vapor-like substance';
+    return 'unknown material composition';
+  }
+
+  private static extractMovementFromDescription(description: string): string {
+    if (description.includes('flow')) return 'flowing motion';
+    if (description.includes('ripple')) return 'ripple-like movement';
+    if (description.includes('glide')) return 'gliding motion';
+    if (description.includes('pulse')) return 'pulsing rhythm';
+    return 'unknown movement pattern';
+  }
+
+  private static extractEmissionsFromDescription(description: string): string[] {
+    const emissions: string[] = [];
+    if (description.includes('bioluminescent') || description.includes('glow')) {
+      emissions.push('bioluminescent emanations');
+    }
+    if (description.includes('vapor') || description.includes('mist')) {
+      emissions.push('vapor emissions');
+    }
+    if (description.includes('pulse')) {
+      emissions.push('rhythmic pulses');
+    }
+    return emissions.length > 0 ? emissions : ['subtle energy emissions'];
+  }
+
+  private static extractVisualEffectsFromDescription(description: string): string[] {
+    const effects: string[] = [];
+    if (description.includes('glyph') || description.includes('symbol')) {
+      effects.push('symbolic manifestations');
+    }
+    if (description.includes('fractal')) {
+      effects.push('fractal patterns');
+    }
+    if (description.includes('shimmer')) {
+      effects.push('shimmering distortions');
+    }
+    return effects.length > 0 ? effects : ['subtle visual distortions'];
+  }
+
+  private static extractSensoryEffectsFromDescription(description: string): string[] {
+    const effects: string[] = [];
+    if (description.includes('acoustic') || description.includes('sound')) {
+      effects.push('acoustic field distortions');
+    }
+    if (description.includes('resonance')) {
+      effects.push('resonance effects');
+    }
+    if (description.includes('temperature')) {
+      effects.push('temperature fluctuations');
+    }
+    return effects.length > 0 ? effects : ['subtle environmental effects'];
   }
 }

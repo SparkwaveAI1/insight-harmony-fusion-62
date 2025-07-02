@@ -58,13 +58,24 @@ export interface CommunicationMethodStructure {
   expression_register: string;
 }
 
-// Enhanced physical appearance structure
+// Enhanced physical appearance structure for Character Lab
 export interface PhysicalAppearanceStructure {
+  structure?: string;
+  material?: string;
+  movement_style?: string;
+  emissions?: string[];
+  visual_effects?: string[];
+  sensory_effects?: string[];
+  size_estimate?: {
+    length_meters?: number;
+    diameter_meters?: number;
+  };
+  narrative_description?: string;
+  // Legacy fields for backward compatibility
   length_meters?: number;
   diameter_meters?: number;
   composition?: string;
   emitted_effects?: string[];
-  movement_style?: string;
   material_nature?: string;
   primary_form?: string;
   scale_reference?: string;
