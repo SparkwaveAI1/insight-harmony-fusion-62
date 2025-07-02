@@ -1,171 +1,114 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Globe, Lock, Download } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Persona } from "@/services/persona/types";
-import { deletePersona } from "@/services/persona";
-import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
-import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
+import Card from "@/components/ui-custom/Card";
 import PersonaAvatar from "./PersonaAvatar";
+import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaNameEditor from "./PersonaNameEditor";
-import PersonaActionButtons from "./PersonaActionButtons";
-import GenerateImageButton from "./GenerateImageButton";
-import PersonaCloneForm from "./PersonaCloneForm";
+import PersonaImageGenerationDialog from "./PersonaImageGenerationDialog";
+import DeletePersonaButton from "./DeletePersonaButton";
+import { Persona } from "@/services/persona/types";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
   isOwner: boolean;
   isPublic: boolean;
-  onVisibilityChange: (newVisibility: boolean) => void;
+  onVisibilityChange: (isPublic: boolean) => void;
   onDelete: () => Promise<void>;
-  onNameUpdate: (name: string) => void;
+  onNameUpdate: (name: string) => Promise<void>;
   onImageGenerated: () => Promise<string | null>;
 }
 
-export default function PersonaDetailHeader({ 
-  persona, 
-  isOwner, 
+export default function PersonaDetailHeader({
+  persona,
+  isOwner,
   isPublic,
   onVisibilityChange,
-  onDelete: onPersonaDeleted,
-  onNameUpdate: onNameUpdated,
+  onDelete,
+  onNameUpdate,
   onImageGenerated
 }: PersonaDetailHeaderProps) {
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const navigate = useNavigate();
-  
-  const handleDeletePersona = async () => {
-    try {
-      await deletePersona(persona.persona_id);
-      toast.success("Persona deleted successfully");
-      await onPersonaDeleted?.();
-      navigate("/persona-viewer");
-    } catch (error) {
-      console.error("Error deleting persona:", error);
-      toast.error("An error occurred while deleting the persona");
-    }
-  };
-  
-  const handleChatClick = () => {
-    navigate(`/persona/${persona.persona_id}/chat`);
-  };
-  
-  const handleGenerateImage = async () => {
-    if (isGeneratingImage) return;
-    
-    setIsGeneratingImage(true);
-    
-    try {
-      const imageUrl = await onImageGenerated();
-      if (!imageUrl) {
-        toast.error("Failed to generate profile image");
-      }
-    } catch (error) {
-      console.error("Error generating profile image:", error);
-      toast.error("An error occurred while generating the profile image");
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
-  const handleDownloadJSON = () => {
-    try {
-      downloadPersonaAsJSON(persona);
-      toast.success("Persona data downloaded successfully");
-    } catch (error) {
-      console.error("Error downloading persona data:", error);
-      toast.error("Failed to download persona data");
-    }
-  };
-
-  if (!persona) {
-    return (
-      <div className="flex items-center justify-between py-4">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-32 w-32 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const hasProfileImage = !!persona.profile_image_url;
-
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between py-4 gap-4">
-      <div className="flex items-center gap-4">
-        <PersonaAvatar 
-          persona={persona}
-          isOwner={isOwner}
-          isGeneratingImage={isGeneratingImage}
-          onGenerateImage={handleGenerateImage}
-        />
-        
-        <div>
-          <PersonaNameEditor 
-            personaId={persona.persona_id}
-            initialName={persona.name}
-            onNameUpdate={onNameUpdated}
+    <Card className="p-8 mb-8">
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Avatar and Image Generation */}
+        <div className="flex flex-col items-center space-y-4">
+          <PersonaAvatar 
+            persona={persona}
+            isOwner={isOwner}
+            isGeneratingImage={false}
+            onGenerateImage={() => {}}
           />
           
-          {/* Display public/private status */}
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            {isPublic ? (
-              <>
-                <Globe className="h-3 w-3" /> Public
-              </>
+          {isOwner && (
+            <PersonaImageGenerationDialog
+              persona={persona}
+              onImageGenerated={onImageGenerated}
+            />
+          )}
+        </div>
+
+        {/* Persona Details */}
+        <div className="flex-1 space-y-4">
+          <div className="space-y-2">
+            {isOwner ? (
+              <PersonaNameEditor
+                initialName={persona.name}
+                onNameUpdate={onNameUpdate}
+              />
             ) : (
-              <>
-                <Lock className="h-3 w-3" /> Private
-              </>
+              <h1 className="text-3xl font-bold">{persona.name}</h1>
             )}
-          </p>
-          
-          {/* Display Persona ID instead of Image ID */}
-          <p className="text-xs text-muted-foreground mt-1">
-            Persona ID: {persona.persona_id || 'Not available'}
-          </p>
-          
-          <PersonaVisibilityToggle 
-            personaId={persona.persona_id} 
-            isPublic={isPublic} 
-            isOwner={isOwner} 
-            onVisibilityChange={onVisibilityChange} 
-          />
-          
-          {/* Always show the generate/regenerate image button for owners */}
-          <GenerateImageButton
-            isVisible={isOwner}
-            isGenerating={isGeneratingImage}
-            onGenerate={handleGenerateImage}
-            hasImage={hasProfileImage}
-          />
+            
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">Research-Grade Persona</Badge>
+              {isPublic && <Badge variant="secondary">Public</Badge>}
+              {!isPublic && isOwner && <Badge variant="outline">Private</Badge>}
+            </div>
+          </div>
+
+          {/* Key persona information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            {persona.metadata?.age && (
+              <div>
+                <span className="font-medium">Age:</span> {persona.metadata.age}
+              </div>
+            )}
+            {persona.metadata?.location && (
+              <div>
+                <span className="font-medium">Location:</span> {persona.metadata.location}
+              </div>
+            )}
+            {persona.metadata?.occupation && (
+              <div>
+                <span className="font-medium">Occupation:</span> {persona.metadata.occupation}
+              </div>
+            )}
+            {persona.metadata?.education && (
+              <div>
+                <span className="font-medium">Education:</span> {persona.metadata.education}
+              </div>
+            )}
+          </div>
+
+          {/* Owner controls */}
+          {isOwner && (
+            <div className="flex flex-wrap gap-2 pt-4">
+              <PersonaVisibilityToggle
+                personaId={persona.persona_id}
+                isPublic={isPublic}
+                onVisibilityChange={onVisibilityChange}
+              />
+              
+              <DeletePersonaButton
+                onDelete={onDelete}
+                isOwner={isOwner}
+              />
+            </div>
+          )}
         </div>
       </div>
-      
-      <div className="flex flex-col gap-3 w-full md:w-[240px]">
-        <PersonaCloneForm persona={persona} />
-        <PersonaActionButtons
-          personaId={persona.persona_id}
-          onChatClick={handleChatClick}
-        />
-        
-        {/* Download JSON Button */}
-        <Button
-          variant="outline"
-          onClick={handleDownloadJSON}
-          className="w-full"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download JSON
-        </Button>
-      </div>
-    </div>
+    </Card>
   );
 }
