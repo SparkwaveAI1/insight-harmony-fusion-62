@@ -93,9 +93,9 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
       
       <CardFooter className="pt-0 flex-shrink-0">
         {isOwner ? (
-          // Owner can view details first, then generate images
-          <div className="flex gap-2 w-full">
-            <Link to={`/characters/${character.character_id}`} className="flex-1">
+          // Owner can view details first, then generate images - stacked vertically
+          <div className="flex flex-col gap-2 w-full">
+            <Link to={`/characters/${character.character_id}`} className="w-full">
               <Button size="sm" className="w-full text-xs">
                 View Details
               </Button>
@@ -105,7 +105,7 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
               onImageGenerated={onImageGenerated}
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="w-full"
             />
           </div>
         ) : (
