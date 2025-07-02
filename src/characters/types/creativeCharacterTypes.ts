@@ -1,6 +1,6 @@
 
 // Pure Character Lab types - completely independent from other modules
-// NO emotional triggers, NO persona service imports
+// NO emotional triggers for non-humanoid entities, enhanced entity classification
 
 export interface CreativeCharacterBehavioralModulation {
   formality?: number;
@@ -51,12 +51,31 @@ export interface CognitiveFilter {
   evolution_path: string;
 }
 
+// Enhanced communication method structure
+export interface CommunicationMethodStructure {
+  modality: string;
+  grammar: string;
+  expression_register: string;
+}
+
+// Enhanced physical appearance structure
+export interface PhysicalAppearanceStructure {
+  length_meters?: number;
+  diameter_meters?: number;
+  composition?: string;
+  emitted_effects?: string[];
+  movement_style?: string;
+  material_nature?: string;
+  primary_form?: string;
+  scale_reference?: string;
+}
+
 // Character Lab's own trait architecture
 export interface CreativeCharacterTraitProfile {
   // Core Identity
-  entity_type?: string;
+  entity_type?: string; // Enhanced: 'human' | 'non_humanoid' | 'post_biological' | 'fluid_based_consciousness'
   narrative_domain?: string;
-  functional_role?: string;
+  functional_role?: string; // Now required and auto-determined
   description?: string;
   
   // New Character Lab trait architecture
@@ -65,15 +84,15 @@ export interface CreativeCharacterTraitProfile {
   symbolic_traits?: SymbolicTrait[];
   cognitive_filters?: CognitiveFilter[];
   
-  // Character Lab Core Drives (legacy - kept for compatibility)
-  core_drives?: string[];
+  // Character Lab behavioral triggers (cleaned up)
   surface_triggers?: string[];
   change_response_style?: string;
+  // REMOVED: core_drives - was causing confusion and redundancy
   
   // Physical characteristics
   physical_form?: string;
   environment?: string;
-  communication_method?: string;
+  communication_method?: CommunicationMethodStructure; // Enhanced structure
   
   // Creative details
   background_story?: string;
@@ -85,7 +104,10 @@ export interface CreativeCharacterTraitProfile {
   primary_form?: string;
   narrative_universe?: string;
   
-  // Creative physical traits
+  // Enhanced physical appearance structure
+  physical_appearance?: PhysicalAppearanceStructure;
+  
+  // Creative physical traits (legacy - kept for compatibility)
   creative_manifestation?: {
     primary_appearance?: string;
     scale_reference?: string;
@@ -118,7 +140,7 @@ export interface CreativeCharacterTraitProfile {
     transformation_trigger?: number;
   };
   
-  // Creative personality (not psychological models)
+  // Creative personality (adjusted based on entity type)
   creative_personality?: {
     imagination_level?: number;
     expressiveness?: number;
@@ -127,7 +149,7 @@ export interface CreativeCharacterTraitProfile {
     emotional_depth?: number;
   };
   
-  // Physical appearance for humanoid creatives
+  // Physical description for humanoid creatives
   physical_description?: {
     height_category?: string;
     build_type?: string;
@@ -141,7 +163,7 @@ export interface CreativeCharacterTraitProfile {
   [key: string]: any;
 }
 
-// Pure Creative Character interface - NO emotional_triggers field
+// Pure Creative Character interface - conditional emotional_triggers field
 export interface CreativeCharacter {
   id?: string;
   character_id: string;
@@ -157,7 +179,11 @@ export interface CreativeCharacter {
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: CreativeCharacterTraitProfile;
-  // NO emotional_triggers field - Character Lab doesn't use them
+  // Conditional emotional_triggers - only for entities that process emotions
+  emotional_triggers?: {
+    positive_triggers: string[];
+    negative_triggers: string[];
+  };
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
@@ -192,7 +218,11 @@ export interface DbCreativeCharacter {
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: CreativeCharacterTraitProfile;
-  // NO emotional_triggers field
+  // Conditional emotional_triggers
+  emotional_triggers?: {
+    positive_triggers: string[];
+    negative_triggers: string[];
+  };
   prompt?: string;
   user_id?: string;
   is_public?: boolean;
@@ -219,7 +249,7 @@ export interface CreativeCharacterData {
   environment: string;
   physicalForm: string;
   communication: string;
-  coreDrives: string[];
+  // REMOVED: coreDrives - was causing confusion
   surfaceTriggers: string[];
   changeResponseStyle: string;
 }
