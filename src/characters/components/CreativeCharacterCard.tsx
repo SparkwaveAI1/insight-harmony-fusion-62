@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import CharacterAvatar from './CharacterAvatar';
-import GenerateCharacterImageWithStyleButton from './GenerateCharacterImageWithStyleButton';
 import CloneCharacterButton from './CloneCharacterButton';
 import { CreativeCharacter } from '../types/creativeCharacterTypes';
 import { useAuth } from '@/context/AuthContext';
@@ -93,21 +92,12 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
       
       <CardFooter className="pt-0 flex-shrink-0">
         {isOwner ? (
-          // Owner gets stacked buttons - view details first, then generate images
-          <div className="flex flex-col gap-2 w-full">
-            <Link to={`/characters/${character.character_id}`} className="w-full">
-              <Button size="sm" className="w-full text-xs">
-                View Details
-              </Button>
-            </Link>
-            <GenerateCharacterImageWithStyleButton
-              character={character}
-              onImageGenerated={onImageGenerated}
-              variant="outline"
-              size="sm"
-              className="w-full text-xs"
-            />
-          </div>
+          // Owner gets only view details button
+          <Link to={`/characters/${character.character_id}`} className="w-full">
+            <Button size="sm" className="w-full text-xs">
+              View Details
+            </Button>
+          </Link>
         ) : (
           // Non-owner gets stacked buttons - view details and clone
           <div className="flex flex-col gap-2 w-full">
