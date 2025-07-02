@@ -42,7 +42,7 @@ export const useFeaturedCharacterVideos = () => {
           character_id: 'b795b58e-19cb-426f-80b9-7899a1ebc3ff',
           name: 'Isabella',
           description: 'Isabella was born in 1790 in a small fishing village along the northeastern Brazilian coast. Raised amid the hardships of colonial exploitation, she learned fishing and farming from a young age, and now helps support her extended family.',
-          video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos/Isabella%20historical%207.1.25.mp4',
+          video_url: 'https://wgerdrdsuusnrdnwwelt.supabase.co/storage/v1/object/public/character-videos//Isabella%207.1.25v2%20(1).mp4',
           thumbnail_url: null,
           character_type: 'historical',
           display_order: 1,
