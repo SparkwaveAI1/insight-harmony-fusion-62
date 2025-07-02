@@ -16,6 +16,41 @@ export interface CreativeCharacterLinguisticProfile {
   cultural_speech_patterns?: string;
 }
 
+// New Character Lab trait architecture components
+export interface CoreMotive {
+  name: string;
+  intensity: number;
+  narrative_description: string;
+  failure_response: string;
+  evolution_path: string;
+}
+
+export interface LatentValue {
+  name: string;
+  intensity: number;
+  narrative_description: string;
+  failure_response: string;
+  evolution_path: string;
+}
+
+export interface SymbolicTrait {
+  name: string;
+  type: string;
+  narrative_description: string;
+  activation_context: string;
+  behavioral_effect: string;
+  evolution_path: string;
+}
+
+export interface CognitiveFilter {
+  name: string;
+  type: string;
+  narrative_description: string;
+  activation_context: string;
+  behavioral_effect: string;
+  evolution_path: string;
+}
+
 // Character Lab's own trait architecture
 export interface CreativeCharacterTraitProfile {
   // Core Identity
@@ -24,7 +59,13 @@ export interface CreativeCharacterTraitProfile {
   functional_role?: string;
   description?: string;
   
-  // Character Lab Core Drives (NOT emotional triggers)
+  // New Character Lab trait architecture
+  core_motives?: CoreMotive[];
+  latent_values?: LatentValue[];
+  symbolic_traits?: SymbolicTrait[];
+  cognitive_filters?: CognitiveFilter[];
+  
+  // Character Lab Core Drives (legacy - kept for compatibility)
   core_drives?: string[];
   surface_triggers?: string[];
   change_response_style?: string;

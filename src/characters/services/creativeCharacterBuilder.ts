@@ -1,11 +1,15 @@
 
 import { CreativeCharacterData, CreativeCharacter } from '../types/creativeCharacterTypes';
+import { CreativeTraitArchitectureBuilder } from './creativeTraitArchitectureBuilder';
 import { v4 as uuidv4 } from 'uuid';
 
 export class CreativeCharacterBuilder {
   static buildCharacter(data: CreativeCharacterData, userId: string): CreativeCharacter {
     const characterId = uuidv4();
     const creationDate = new Date().toISOString();
+    
+    // Generate the new trait architecture
+    const traitArchitecture = CreativeTraitArchitectureBuilder.buildTraitArchitecture(data);
     
     return {
       character_id: characterId,
@@ -16,7 +20,7 @@ export class CreativeCharacterBuilder {
       created_at: creationDate,
       user_id: userId,
       
-      // Character Lab's own trait profile with Core Drives (NOT emotional triggers)
+      // Character Lab's enhanced trait profile with new architecture
       trait_profile: {
         entity_type: data.entityType,
         narrative_domain: data.narrativeDomain,
@@ -26,7 +30,13 @@ export class CreativeCharacterBuilder {
         physical_form: data.physicalForm,
         communication_method: data.communication,
         
-        // Character Lab Core Drives - stored in their own trait architecture
+        // New Character Lab trait architecture
+        core_motives: traitArchitecture.core_motives,
+        latent_values: traitArchitecture.latent_values,
+        symbolic_traits: traitArchitecture.symbolic_traits,
+        cognitive_filters: traitArchitecture.cognitive_filters,
+        
+        // Legacy Character Lab Core Drives (kept for backward compatibility)
         core_drives: data.coreDrives,
         surface_triggers: data.surfaceTriggers,
         change_response_style: data.changeResponseStyle,
@@ -50,8 +60,9 @@ export class CreativeCharacterBuilder {
       // Standard required fields for database compatibility
       metadata: {
         creation_method: 'character_lab',
-        version: '3.0',
-        module: 'character_lab'
+        version: '4.0',
+        module: 'character_lab',
+        trait_architecture: 'enhanced_v4'
       },
       
       behavioral_modulation: {
@@ -73,7 +84,8 @@ export class CreativeCharacterBuilder {
       simulation_directives: {
         roleplay_style: 'immersive',
         consistency_level: 'high',
-        evolution_enabled: true
+        evolution_enabled: true,
+        trait_architecture: 'enhanced_v4'
       },
       
       // NO emotional_triggers field - Character Lab doesn't use them
@@ -81,7 +93,7 @@ export class CreativeCharacterBuilder {
       // Character-specific fields
       species_type: data.entityType === 'human' ? undefined : data.entityType,
       origin_universe: data.narrativeDomain,
-      enhanced_metadata_version: 3,
+      enhanced_metadata_version: 4,
       is_public: false
     };
   }
