@@ -93,7 +93,7 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
       
       <CardFooter className="pt-0 flex-shrink-0">
         {isOwner ? (
-          // Owner can view details first, then generate images - stacked vertically
+          // Owner gets stacked buttons - view details first, then generate images
           <div className="flex flex-col gap-2 w-full">
             <Link to={`/characters/${character.character_id}`} className="w-full">
               <Button size="sm" className="w-full text-xs">
@@ -105,20 +105,21 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
               onImageGenerated={onImageGenerated}
               variant="outline"
               size="sm"
-              className="w-full"
+              className="w-full text-xs"
             />
           </div>
         ) : (
-          // Non-owner can only view details or clone - NO image generation
-          <div className="flex gap-2 w-full">
-            <Link to={`/characters/${character.character_id}`} className="flex-1">
+          // Non-owner gets stacked buttons - view details and clone
+          <div className="flex flex-col gap-2 w-full">
+            <Link to={`/characters/${character.character_id}`} className="w-full">
               <Button size="sm" variant="outline" className="w-full text-xs">
                 View Details
               </Button>
             </Link>
             <CloneCharacterButton 
               character={character} 
-              className="flex-1"
+              className="w-full text-xs"
+              size="sm"
             />
           </div>
         )}
