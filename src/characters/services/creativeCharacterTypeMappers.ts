@@ -27,18 +27,18 @@ export function creativeCharacterToCharacter(creativeCharacter: CreativeCharacte
         ? creativeCharacter.trait_profile.communication_method?.modality || 'unknown'
         : creativeCharacter.trait_profile?.communication_method
     },
-    // Handle emotional_triggers - convert to the expected format if present
+    // Handle emotional_triggers - convert to the expected EmotionalTriggersProfile format
     ...(creativeCharacter.emotional_triggers && {
       emotional_triggers: {
         positive_triggers: creativeCharacter.emotional_triggers.positive_triggers.map(trigger => ({
-          trigger_type: 'positive',
-          description: trigger,
-          intensity: 0.5
+          keywords: [trigger],
+          emotion_type: 'positive',
+          intensity_multiplier: 0.5
         })),
         negative_triggers: creativeCharacter.emotional_triggers.negative_triggers.map(trigger => ({
-          trigger_type: 'negative', 
-          description: trigger,
-          intensity: 0.5
+          keywords: [trigger],
+          emotion_type: 'negative',
+          intensity_multiplier: 0.5
         }))
       }
     }),
