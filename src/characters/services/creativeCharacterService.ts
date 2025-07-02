@@ -20,10 +20,10 @@ export async function createCreativeCharacter(
     // Convert to database-compatible format
     const dbCharacter = creativeCharacterToDbFormat(character);
 
-    // Insert into the database
+    // Insert into the database using type assertion for compatibility
     const { data: insertedData, error } = await supabase
       .from('characters')
-      .insert(dbCharacter)
+      .insert(dbCharacter as any)
       .select()
       .single();
 

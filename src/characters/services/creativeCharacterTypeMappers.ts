@@ -27,7 +27,21 @@ export function creativeCharacterToCharacter(creativeCharacter: CreativeCharacte
         ? creativeCharacter.trait_profile.communication_method?.modality || 'unknown'
         : creativeCharacter.trait_profile?.communication_method
     },
-    emotional_triggers: creativeCharacter.emotional_triggers,
+    // Handle emotional_triggers - convert to the expected format if present
+    ...(creativeCharacter.emotional_triggers && {
+      emotional_triggers: {
+        positive_triggers: creativeCharacter.emotional_triggers.positive_triggers.map(trigger => ({
+          trigger_type: 'positive',
+          description: trigger,
+          intensity: 0.5
+        })),
+        negative_triggers: creativeCharacter.emotional_triggers.negative_triggers.map(trigger => ({
+          trigger_type: 'negative', 
+          description: trigger,
+          intensity: 0.5
+        }))
+      }
+    }),
     prompt: creativeCharacter.prompt,
     user_id: creativeCharacter.user_id,
     is_public: creativeCharacter.is_public,
@@ -101,9 +115,9 @@ export function dbResultToCreativeCharacter(dbRow: any): CreativeCharacter {
 }
 
 /**
- * Maps CreativeCharacter to database format
+ * Maps CreativeCharacter to database format with proper JSON serialization
  */
-export function creativeCharacterToDbFormat(character: CreativeCharacter): DbCreativeCharacter {
+export function creativeCharacterToDbFormat(character: CreativeCharacter): any {
   return {
     id: character.id,
     character_id: character.character_id,
@@ -113,26 +127,26 @@ export function creativeCharacterToDbFormat(character: CreativeCharacter): DbCre
     creation_date: character.creation_date,
     created_at: character.created_at,
     user_id: character.user_id,
-    metadata: character.metadata,
-    behavioral_modulation: character.behavioral_modulation,
-    interview_sections: character.interview_sections,
-    linguistic_profile: character.linguistic_profile,
-    preinterview_tags: character.preinterview_tags,
-    simulation_directives: character.simulation_directives,
-    trait_profile: character.trait_profile,
-    emotional_triggers: character.emotional_triggers,
-    prompt: character.prompt,
-    is_public: character.is_public,
-    profile_image_url: character.profile_image_url,
-    enhanced_metadata_version: character.enhanced_metadata_version,
-    age: character.age,
-    gender: character.gender,
-    historical_period: character.historical_period,
-    social_class: character.social_class,
-    region: character.region,
-    physical_appearance: character.physical_appearance,
-    origin_universe: character.origin_universe,
-    species_type: character.species_type,
-    form_factor: character.form_factor
+    metadata: character.metadata || {},
+    behavioral_modulation: character.behavioral_modulation || {},
+    interview_sections: character.interview_sections || [],
+    linguistic_profile: character.linguistic_profile || {},
+    preinterview_tags: character.preinterview_tags || [],
+    simulation_directives: character.simulation_directives || {},
+    trait_profile: character.trait_profile || {},
+    emotional_triggers: character.emotional_triggers || null,
+    prompt: character.prompt || null,
+    is_public: character.is_public || false,
+    profile_image_url: character.profile_image_url || null,
+    enhanced_metadata_version: character.enhanced_metadata_version || null,
+    age: character.age || null,
+    gender: character.gender || null,
+    historical_period: character.historical_period || null,
+    social_class: character.social_class || null,
+    region: character.region || null,
+    physical_appearance: character.physical_appearance || null,
+    origin_universe: character.origin_universe || null,
+    species_type: character.species_type || null,
+    form_factor: character.form_factor || null
   };
 }
