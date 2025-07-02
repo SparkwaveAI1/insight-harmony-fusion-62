@@ -43,7 +43,7 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" asChild>
@@ -87,18 +87,22 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
             Download JSON
           </Button>
           <Button variant="outline" asChild>
-            <Link to={`/characters/${character.character_id}/chat`}>
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Chat
-            </Link>
-          </Button>
-          <Button asChild>
             <Link to={`/characters/${character.character_id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Character
             </Link>
           </Button>
         </div>
+      </div>
+
+      {/* Prominent Chat Button Section */}
+      <div className="flex justify-center py-6">
+        <Button asChild size="lg" className="text-lg px-8 py-4 h-14">
+          <Link to={`/characters/${character.character_id}/chat`}>
+            <MessageCircle className="h-6 w-6 mr-3" />
+            Start Chatting with {character.name}
+          </Link>
+        </Button>
       </div>
 
       {/* Character ID Display */}
