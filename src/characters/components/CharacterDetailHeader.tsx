@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Edit, MessageCircle, Download, Sparkles, Copy, Users } from 'lucide-react';
+import { ArrowLeft, Edit, Download, Sparkles, Copy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -93,16 +93,6 @@ const CharacterDetailHeader = ({ character, onDownloadJSON }: CharacterDetailHea
             </Link>
           </Button>
         </div>
-      </div>
-
-      {/* Prominent Chat Button Section */}
-      <div className="flex justify-center py-6">
-        <Button asChild size="lg" className="text-lg px-8 py-4 h-14">
-          <Link to={`/characters/${character.character_id}/chat`}>
-            <MessageCircle className="h-6 w-6 mr-3" />
-            Start Chatting with {character.name}
-          </Link>
-        </Button>
       </div>
 
       {/* Character ID Display */}

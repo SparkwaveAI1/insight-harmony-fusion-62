@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -157,6 +158,17 @@ const CharacterDetail = () => {
                     {isNonHumanoidCharacter ? 'Creative Entity' : 
                      activeCharacter.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
                   </p>
+                  
+                  {/* Prominent Chat Button - positioned below the character type text */}
+                  <div className="mb-6">
+                    <Button asChild size="lg" className="text-lg px-8 py-4 h-14">
+                      <Link to={`/characters/${activeCharacter.character_id}/chat`}>
+                        <MessageCircle className="h-6 w-6 mr-3" />
+                        Start Chatting with {activeCharacter.name}
+                      </Link>
+                    </Button>
+                  </div>
+                  
                   <CharacterVisibilityToggle
                     characterId={activeCharacter.character_id}
                     isPublic={activeCharacter.is_public || false}
