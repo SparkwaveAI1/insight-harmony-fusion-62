@@ -44,9 +44,9 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
 
   return (
     <Card className={`hover:shadow-lg transition-shadow ${
-      viewMode === 'grid' ? 'flex flex-col h-full' : 'h-32'
+      viewMode === 'grid' ? 'flex flex-col h-full max-w-sm w-full' : 'h-32'
     }`}>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-start gap-4">
           <CharacterAvatar 
             character={{
@@ -56,11 +56,11 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
             size="md"
             className="flex-shrink-0"
           />
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="text-lg font-semibold line-clamp-2">{character.name}</h3>
+              <h3 className="text-lg font-semibold line-clamp-2 break-words">{character.name}</h3>
               {!isOwner && (
-                <Badge variant="outline" className="ml-2 text-xs">
+                <Badge variant="outline" className="ml-2 text-xs flex-shrink-0">
                   Public
                 </Badge>
               )}
@@ -69,34 +69,34 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 pb-3">
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+      <CardContent className="flex-1 pb-3 overflow-hidden">
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3 break-words">
           {getCharacterDescription(character)}
         </p>
         
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary">
+          <Badge variant="secondary" className="text-xs">
             {getCharacterTypeLabel(character)}
           </Badge>
           {character.trait_profile?.narrative_domain && (
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-xs">
               {character.trait_profile.narrative_domain}
             </Badge>
           )}
           {character.trait_profile?.functional_role && (
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-xs">
               {character.trait_profile.functional_role}
             </Badge>
           )}
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 flex-shrink-0">
         {isOwner ? (
           // Owner can generate images and view details
           <div className="flex gap-2 w-full">
             <Link to={`/characters/${character.character_id}`} className="flex-1">
-              <Button size="sm" className="w-full">
+              <Button size="sm" className="w-full text-xs">
                 View Details
               </Button>
             </Link>
@@ -112,7 +112,7 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
           // Non-owner can only view details or clone - NO image generation
           <div className="flex gap-2 w-full">
             <Link to={`/characters/${character.character_id}`} className="flex-1">
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full text-xs">
                 View Details
               </Button>
             </Link>

@@ -54,6 +54,7 @@ export default function PersonaDetailHeader({
           <div className="space-y-2">
             {isOwner ? (
               <PersonaNameEditor
+                personaId={persona.persona_id}
                 initialName={persona.name}
                 onNameUpdate={onNameUpdate}
               />
@@ -98,6 +99,7 @@ export default function PersonaDetailHeader({
               <PersonaVisibilityToggle
                 personaId={persona.persona_id}
                 isPublic={isPublic}
+                isOwner={isOwner}
                 onVisibilityChange={onVisibilityChange}
               />
               
