@@ -119,7 +119,6 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
             <CloneCharacterButton 
               character={character} 
               className="w-full text-xs"
-              size="sm"
             />
           </div>
         )}
