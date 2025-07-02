@@ -13,19 +13,19 @@ const Step4Environment = ({ formData, setFormData }: Step4EnvironmentProps) => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="text-center space-y-2 sm:space-y-4">
-        <h3 className="text-lg sm:text-xl font-semibold">Where—and how—does this being exist?</h3>
-        <p className="text-sm sm:text-base text-muted-foreground">Describe their environment and existence context.</p>
+        <h3 className="text-lg sm:text-xl font-semibold">Physical Form/Appearance</h3>
+        <p className="text-sm sm:text-base text-muted-foreground">Describe how this character looks and appears in their world.</p>
       </div>
       
       <div className="space-y-4">
         <div>
-          <Label className="text-xs sm:text-sm font-medium mb-2 block">Environment / Existence Context</Label>
+          <Label className="text-xs sm:text-sm font-medium mb-2 block">Physical Description</Label>
           <Textarea
             placeholder={formData.narrativeDomain === 'sci-fi' 
-              ? 'e.g., Quantum processing networks, deep space stations, digital realms...'
+              ? 'e.g., Sleek metallic form with glowing circuits, ethereal energy being, cybernetic enhancements...'
               : formData.narrativeDomain === 'fantasy'
-              ? 'e.g., Ancient groves, magical academies, elemental planes...'
-              : 'e.g., Liminal spaces, dream realms, abstract dimensions...'
+              ? 'e.g., Towering with ancient bark skin, shimmering scales, translucent wings...'
+              : 'e.g., Shifting geometric patterns, made of living shadow, crystalline structure...'
             }
             value={formData.environment}
             onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
@@ -34,9 +34,9 @@ const Step4Environment = ({ formData, setFormData }: Step4EnvironmentProps) => {
         </div>
         
         <div>
-          <Label className="text-xs sm:text-sm font-medium mb-2 block">Physical Form (Optional)</Label>
+          <Label className="text-xs sm:text-sm font-medium mb-2 block">Size/Scale (Optional)</Label>
           <Input
-            placeholder="e.g., Energy patterns, crystalline structures, living code..."
+            placeholder="e.g., Human-sized, Massive giant, Tiny fairy-like, Variable size..."
             value={formData.physicalForm}
             onChange={(e) => setFormData({ ...formData, physicalForm: e.target.value })}
             className="text-sm sm:text-base"
@@ -44,9 +44,9 @@ const Step4Environment = ({ formData, setFormData }: Step4EnvironmentProps) => {
         </div>
         
         <div>
-          <Label className="text-xs sm:text-sm font-medium mb-2 block">Communication Method (Optional)</Label>
+          <Label className="text-xs sm:text-sm font-medium mb-2 block">Notable Features (Optional)</Label>
           <Input
-            placeholder="e.g., Quantum resonance, color patterns, direct thought transfer..."
+            placeholder="e.g., Glowing eyes, Multiple limbs, Ethereal glow, Changing colors..."
             value={formData.communication}
             onChange={(e) => setFormData({ ...formData, communication: e.target.value })}
             className="text-sm sm:text-base"

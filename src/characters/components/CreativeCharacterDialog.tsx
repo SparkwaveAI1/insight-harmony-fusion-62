@@ -10,7 +10,6 @@ import Step1NameInput from './CreativeCharacterDialog/steps/Step1NameInput';
 import Step2NarrativeDomain from './CreativeCharacterDialog/steps/Step2NarrativeDomain';
 import Step3Description from './CreativeCharacterDialog/steps/Step3Description';
 import Step4Environment from './CreativeCharacterDialog/steps/Step4Environment';
-import Step5Drives from './CreativeCharacterDialog/steps/Step5Drives';
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -29,7 +28,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     changeResponseStyle: 'mutate_adapt'
   });
 
-  const totalSteps = 5;
+  const totalSteps = 4; // Changed from 5 to 4
 
   const handleNext = () => {
     console.log('handleNext called - current step:', currentStep, 'can proceed:', canProceed(currentStep, formData));
@@ -73,8 +72,6 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
         return <Step3Description formData={formData} setFormData={setFormData} />;
       case 4:
         return <Step4Environment formData={formData} setFormData={setFormData} />;
-      case 5:
-        return <Step5Drives formData={formData} setFormData={setFormData} />;
       default:
         console.log('Unknown step in renderStep:', currentStep);
         return (
