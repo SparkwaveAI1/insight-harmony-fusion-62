@@ -1,3 +1,4 @@
+
 import React from 'react';
 import BasicInformationSection from './sections/BasicInformationSection';
 import CollapsibleBackgroundSection from './sections/CollapsibleBackgroundSection';
@@ -6,7 +7,7 @@ import EmotionalTriggersSection from './sections/EmotionalTriggersSection';
 import PhysicalManifestationSection from './sections/PhysicalManifestationSection';
 import EntityProfileSection from './sections/EntityProfileSection';
 import CharacterLabEnhancedSection from './sections/CharacterLabEnhancedSection';
-import { Character } from '../../types/characterTraitTypes';
+import { Character } from '../types/characterTraitTypes';
 import EnhancedTraitArchitectureSection from './sections/EnhancedTraitArchitectureSection';
 
 interface CharacterInfoSectionsProps {
@@ -16,11 +17,32 @@ interface CharacterInfoSectionsProps {
 const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
   const isCreativeCharacter = character.creation_source === 'creative';
   const isHistoricalCharacter = character.creation_source === 'historical';
+  const isNonHumanoid = character.character_type === 'multi_species';
   const hasEnhancedTraitArchitecture = character.trait_profile?.core_motives;
+
+  // Helper functions for BasicInformationSection
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getYearFromDate = (dateString: string) => {
+    return new Date(dateString).getFullYear().toString();
+  };
+
+  const dateOfBirth = character.creation_date;
+  const nonHumanoidTraitProfile = isNonHumanoid ? character.trait_profile : null;
 
   return (
     <div className="space-y-8">
-      <BasicInformationSection character={character} />
+      <BasicInformationSection 
+        character={character}
+        dateOfBirth={dateOfBirth}
+        isNonHumanoid={isNonHumanoid}
+        isHistorical={isHistoricalCharacter}
+        nonHumanoidTraitProfile={nonHumanoidTraitProfile}
+        formatDate={formatDate}
+        getYearFromDate={getYearFromDate}
+      />
       
       {/* Enhanced Trait Architecture - only for Character Lab characters with new architecture */}
       {isCreativeCharacter && hasEnhancedTraitArchitecture && (
@@ -36,8 +58,8 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
       {isHistoricalCharacter && (
         <>
           <CollapsibleBackgroundSection character={character} />
-          <CommunicationSection character={character} />
-          <EmotionalTriggersSection character={character} />
+          <CommunicationSection character={character} isNonHumanoid={isNonHumanoid} />
+          <EmotionalTriggersSection character={character} isNonHumanoid={isNonHumanoid} />
         </>
       )}
       

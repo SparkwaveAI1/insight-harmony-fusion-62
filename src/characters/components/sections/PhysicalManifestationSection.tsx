@@ -1,111 +1,63 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Atom } from 'lucide-react';
-import { NonHumanoidTraitProfile } from '../../types/nonHumanoidTypes';
+import { Badge } from '@/components/ui/badge';
+import { Character } from '../../types/characterTraitTypes';
 
 interface PhysicalManifestationSectionProps {
-  nonHumanoidTraitProfile: NonHumanoidTraitProfile;
+  character: Character;
 }
 
-const PhysicalManifestationSection = ({ nonHumanoidTraitProfile }: PhysicalManifestationSectionProps) => {
-  const physicalManifestation = nonHumanoidTraitProfile.physical_manifestation;
+const PhysicalManifestationSection = ({ character }: PhysicalManifestationSectionProps) => {
+  const traitProfile = character.trait_profile;
   
-  if (!physicalManifestation) return null;
+  if (!traitProfile?.physical_form && !traitProfile?.creative_manifestation) {
+    return null;
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Atom className="h-5 w-5" />
-          Physical Manifestation
-        </CardTitle>
+        <CardTitle>Physical Manifestation</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border-l-4 border-purple-400">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {physicalManifestation.primary_form && (
+        {traitProfile.physical_form && (
+          <div>
+            <h4 className="font-medium mb-2">Primary Form</h4>
+            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              {traitProfile.physical_form}
+            </Badge>
+          </div>
+        )}
+        
+        {traitProfile.creative_manifestation && (
+          <div className="space-y-3">
+            {traitProfile.creative_manifestation.primary_appearance && (
               <div>
-                <span className="font-medium text-purple-800">Primary Form:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.primary_form}
-                </p>
+                <span className="font-medium">Appearance:</span>
+                <span className="ml-2 text-sm">{traitProfile.creative_manifestation.primary_appearance}</span>
               </div>
             )}
-            {physicalManifestation.scale_category && (
+            {traitProfile.creative_manifestation.scale_reference && (
               <div>
-                <span className="font-medium text-purple-800">Scale:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.scale_category}
-                </p>
+                <span className="font-medium">Scale:</span>
+                <span className="ml-2 text-sm">{traitProfile.creative_manifestation.scale_reference}</span>
               </div>
             )}
-            {physicalManifestation.material_composition && (
+            {traitProfile.creative_manifestation.material_nature && (
               <div>
-                <span className="font-medium text-purple-800">Material:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.material_composition}
-                </p>
+                <span className="font-medium">Material Nature:</span>
+                <span className="ml-2 text-sm">{traitProfile.creative_manifestation.material_nature}</span>
               </div>
             )}
-            {physicalManifestation.dimensional_properties && (
+            {traitProfile.creative_manifestation.presence_aura && (
               <div>
-                <span className="font-medium text-purple-800">Dimensions:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.dimensional_properties}
-                </p>
-              </div>
-            )}
-            {physicalManifestation.luminescence_pattern && (
-              <div>
-                <span className="font-medium text-purple-800">Luminescence:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.luminescence_pattern}
-                </p>
-              </div>
-            )}
-            {physicalManifestation.texture_quality && (
-              <div>
-                <span className="font-medium text-purple-800">Texture:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.texture_quality}
-                </p>
-              </div>
-            )}
-            {physicalManifestation.movement_characteristics && (
-              <div>
-                <span className="font-medium text-purple-800">Movement:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.movement_characteristics}
-                </p>
-              </div>
-            )}
-            {physicalManifestation.environmental_interaction && (
-              <div>
-                <span className="font-medium text-purple-800">Environmental Effect:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.environmental_interaction}
-                </p>
-              </div>
-            )}
-            {physicalManifestation.sensory_emanations && (
-              <div>
-                <span className="font-medium text-purple-800">Sensory Output:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.sensory_emanations}
-                </p>
-              </div>
-            )}
-            {physicalManifestation.structural_complexity && (
-              <div>
-                <span className="font-medium text-purple-800">Structure:</span>
-                <p className="text-purple-700 text-sm mt-1">
-                  {physicalManifestation.structural_complexity}
-                </p>
+                <span className="font-medium">Presence Aura:</span>
+                <span className="ml-2 text-sm">{traitProfile.creative_manifestation.presence_aura}</span>
               </div>
             )}
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

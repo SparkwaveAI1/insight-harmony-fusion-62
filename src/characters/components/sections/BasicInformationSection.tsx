@@ -5,16 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Atom, Calendar } from 'lucide-react';
 import { Character } from '../../types/characterTraitTypes';
-import { NonHumanoidTraitProfile } from '../../types/nonHumanoidTypes';
 
 interface BasicInformationSectionProps {
   character: Character;
   dateOfBirth: string | undefined;
   isNonHumanoid: boolean;
   isHistorical: boolean;
-  nonHumanoidTraitProfile: NonHumanoidTraitProfile | null;
+  nonHumanoidTraitProfile: any;
   formatDate: (dateString: string) => string;
-  getYearFromDate: (dateString: string) => string | null;
+  getYearFromDate: (dateString: string) => string;
 }
 
 const BasicInformationSection = ({
