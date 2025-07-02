@@ -1,12 +1,12 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { Sparkles, ArrowLeft, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
-import CreativeCharacterDialog from '../components/CreativeCharacterDialog';
-import { CreativeCharacterData } from '../types/characterTraitTypes';
+import CreativeCharacterAIChat from '../components/CreativeCharacterAIChat/CreativeCharacterAIChat';
+import { CreativeCharacterConversationParser } from '../services/creativeCharacterConversationParser';
 import { createCreativeCharacter } from '../services/creativeCharacterService';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
@@ -14,10 +14,16 @@ import { useAuth } from '@/context/AuthContext';
 const CreativeCharacterCreate = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showAIChat, setShowAIChat] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [compiledDescription, setCompiledDescription] = useState<string>('');
 
-  const handleCharacterComplete = async (data: CreativeCharacterData) => {
+  const handleCompileDescription = (description: string) => {
+    setCompiledDescription(description);
+    console.log('Compiled description received:', description);
+  };
+
+  const handleSubmitForCreation = async (description: string) => {
     if (!user) {
       toast.error('Please sign in to create characters');
       navigate('/sign-in');
@@ -27,8 +33,10 @@ const CreativeCharacterCreate = () => {
     setIsSubmitting(true);
     
     try {
-      console.log('Creating creative character with data:', data);
-      console.log('User from useAuth:', user);
+      console.log('Creating creative character from AI chat description:', description);
+      
+      // Parse the compiled description into CreativeCharacterData
+      const characterData = CreativeCharacterConversationParser.parseCharacterDescription(description);
       
       // Show loading toast
       toast.loading('Creating your character...', {
@@ -36,14 +44,14 @@ const CreativeCharacterCreate = () => {
         description: 'This may take a moment while we generate your character traits.'
       });
       
-      // Pass the user ID from the auth context to the service
-      const createdCharacter = await createCreativeCharacter(data, user.id);
+      // Create the character using existing service
+      const createdCharacter = await createCreativeCharacter(characterData, user.id);
       
       // Dismiss loading toast and show success
       toast.dismiss('character-creation');
       toast.success(`Creative character "${createdCharacter.name}" created successfully!`);
       
-      // ALL creative characters (both humanoid and non-humanoid) go to the creative character library
+      // Navigate to the creative character library
       navigate('/characters/creative');
     } catch (error) {
       console.error('Error creating creative character:', error);
@@ -52,7 +60,6 @@ const CreativeCharacterCreate = () => {
       toast.error(error instanceof Error ? error.message : 'Failed to create creative character');
     } finally {
       setIsSubmitting(false);
-      setDialogOpen(false);
     }
   };
 
@@ -129,58 +136,68 @@ const CreativeCharacterCreate = () => {
             </Button>
           </div>
 
-          <div className="max-w-2xl mx-auto">
-            <Card className="p-8 text-center">
-              <div className="space-y-6">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <Sparkles className="h-10 w-10 text-white" />
-                </div>
-                
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">Character Genesis</h2>
-                  <p className="text-muted-foreground mb-6">
-                    Step through our guided creation process to build a unique character with rich depth and personality.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="font-semibold text-blue-900 mb-1">Guided Creation Process</div>
+          <div className="max-w-4xl mx-auto">
+            {!showAIChat ? (
+              <Card className="p-8 text-center">
+                <div className="space-y-6">
+                  <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                    <MessageCircle className="h-10 w-10 text-white" />
                   </div>
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <div className="font-semibold text-purple-900 mb-1">Complex Personality System</div>
+                  
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">AI-Powered Character Creation</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Chat with our AI assistant to brainstorm and create unique characters with rich personalities and complex traits.
+                    </p>
                   </div>
-                </div>
 
-                <Button
-                  size="lg"
-                  onClick={() => setDialogOpen(true)}
-                  disabled={isSubmitting}
-                  className="w-full"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      Creating Character...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-5 w-5 mr-2" />
-                      Start Character Creation
-                    </>
-                  )}
-                </Button>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                      <div className="font-semibold text-blue-900 dark:text-blue-300 mb-1">Natural Brainstorming</div>
+                      <div className="text-blue-700 dark:text-blue-400">Explore ideas through conversation</div>
+                    </div>
+                    <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                      <div className="font-semibold text-purple-900 dark:text-purple-300 mb-1">Smart Questions</div>
+                      <div className="text-purple-700 dark:text-purple-400">AI asks targeted questions to develop traits</div>
+                    </div>
+                    <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                      <div className="font-semibold text-green-900 dark:text-green-300 mb-1">Optimized Output</div>
+                      <div className="text-green-700 dark:text-green-400">Compiled descriptions ready for creation</div>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="lg"
+                    onClick={() => setShowAIChat(true)}
+                    disabled={isSubmitting}
+                    className="w-full max-w-md"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Creating Character...
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="h-5 w-5 mr-2" />
+                        Start AI Character Chat
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <div className="h-[80vh]">
+                <CreativeCharacterAIChat
+                  onCompileDescription={handleCompileDescription}
+                  onSubmitForCreation={handleSubmitForCreation}
+                  onClose={() => setShowAIChat(false)}
+                />
               </div>
-            </Card>
+            )}
           </div>
         </Section>
       </div>
-
-      <CreativeCharacterDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onComplete={handleCharacterComplete}
-      />
     </div>
   );
 };
