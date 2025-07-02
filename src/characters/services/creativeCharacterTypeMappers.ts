@@ -1,4 +1,3 @@
-
 import { CreativeCharacter, DbCreativeCharacter } from '../types/creativeCharacterTypes';
 import { Character } from '../types/characterTraitTypes';
 
@@ -27,23 +26,8 @@ export function creativeCharacterToCharacter(creativeCharacter: CreativeCharacte
         ? creativeCharacter.trait_profile.communication_method?.modality || 'unknown'
         : creativeCharacter.trait_profile?.communication_method
     },
-    // Handle emotional_triggers - convert to the expected EmotionalTriggersProfile format
-    ...(creativeCharacter.emotional_triggers && {
-      emotional_triggers: {
-        positive_triggers: creativeCharacter.emotional_triggers.positive_triggers.map(trigger => ({
-          keywords: [trigger],
-          emotion_type: 'positive',
-          intensity_multiplier: 0.5,
-          description: `Positive response to ${trigger}` // Add required description field
-        })),
-        negative_triggers: creativeCharacter.emotional_triggers.negative_triggers.map(trigger => ({
-          keywords: [trigger],
-          emotion_type: 'negative',
-          intensity_multiplier: 0.5,
-          description: `Negative response to ${trigger}` // Add required description field
-        }))
-      }
-    }),
+    // Character Lab characters don't use the legacy emotional_triggers system
+    // They use the new trait architecture (core_motives, latent_values, etc.)
     prompt: creativeCharacter.prompt,
     user_id: creativeCharacter.user_id,
     is_public: creativeCharacter.is_public,

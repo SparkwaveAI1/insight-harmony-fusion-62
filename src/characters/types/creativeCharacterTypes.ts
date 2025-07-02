@@ -1,4 +1,3 @@
-
 // Pure Character Lab types - completely independent from other modules
 // NO emotional triggers for non-humanoid entities, enhanced entity classification
 
@@ -16,7 +15,7 @@ export interface CreativeCharacterLinguisticProfile {
   cultural_speech_patterns?: string;
 }
 
-// New Character Lab trait architecture components
+// Character Lab trait architecture components - matching your specification
 export interface CoreMotive {
   name: string;
   intensity: number;
@@ -51,45 +50,37 @@ export interface CognitiveFilter {
   evolution_path: string;
 }
 
-// Enhanced communication method structure
+// Enhanced communication method structure - matching your specification
 export interface CommunicationMethodStructure {
   modality: string;
   grammar: string;
   expression_register: string;
 }
 
-// Enhanced physical appearance structure for Character Lab
+// Enhanced physical appearance structure - matching your specification exactly
 export interface PhysicalAppearanceStructure {
-  structure?: string;
-  material?: string;
-  movement_style?: string;
-  emissions?: string[];
-  visual_effects?: string[];
-  sensory_effects?: string[];
-  size_estimate?: {
-    length_meters?: number;
-    diameter_meters?: number;
+  structure: string;
+  material: string;
+  movement_style: string;
+  emissions: string[];
+  visual_effects: string[];
+  sensory_effects: string[];
+  size_estimate: {
+    length_meters: number;
+    diameter_meters: number;
   };
-  narrative_description?: string;
-  // Legacy fields for backward compatibility
-  length_meters?: number;
-  diameter_meters?: number;
-  composition?: string;
-  emitted_effects?: string[];
-  material_nature?: string;
-  primary_form?: string;
-  scale_reference?: string;
+  narrative_description: string;
 }
 
-// Character Lab's own trait architecture
+// Character Lab's trait architecture - matching your specification
 export interface CreativeCharacterTraitProfile {
   // Core Identity
-  entity_type?: string; // Enhanced: 'human' | 'non_humanoid' | 'post_biological' | 'fluid_based_consciousness'
+  entity_type?: string;
   narrative_domain?: string;
-  functional_role?: string; // Now required and auto-determined
+  functional_role?: string;
   description?: string;
   
-  // New Character Lab trait architecture
+  // New Character Lab trait architecture - matching your specification exactly
   core_motives?: CoreMotive[];
   latent_values?: LatentValue[];
   symbolic_traits?: SymbolicTrait[];
@@ -98,12 +89,11 @@ export interface CreativeCharacterTraitProfile {
   // Character Lab behavioral triggers (cleaned up)
   surface_triggers?: string[];
   change_response_style?: string;
-  // REMOVED: core_drives - was causing confusion and redundancy
   
   // Physical characteristics
   physical_form?: string;
   environment?: string;
-  communication_method?: CommunicationMethodStructure; // Enhanced structure
+  communication_method?: CommunicationMethodStructure;
   
   // Creative details
   background_story?: string;
@@ -115,10 +105,10 @@ export interface CreativeCharacterTraitProfile {
   primary_form?: string;
   narrative_universe?: string;
   
-  // Enhanced physical appearance structure
+  // Enhanced physical appearance structure - matching your specification
   physical_appearance?: PhysicalAppearanceStructure;
   
-  // Creative physical traits (legacy - kept for compatibility)
+  // ... keep existing code (other legacy fields for backward compatibility)
   creative_manifestation?: {
     primary_appearance?: string;
     scale_reference?: string;
@@ -132,14 +122,12 @@ export interface CreativeCharacterTraitProfile {
     complexity_level?: string;
   };
   
-  // Creative decision patterns
   decision_approach?: {
     conflict_style?: string;
     adaptability?: number;
     change_threshold?: number;
   };
   
-  // Memory and growth
   experience_processing?: {
     type?: string;
     key_themes?: string[];
@@ -151,7 +139,6 @@ export interface CreativeCharacterTraitProfile {
     transformation_trigger?: number;
   };
   
-  // Creative personality (adjusted based on entity type)
   creative_personality?: {
     imagination_level?: number;
     expressiveness?: number;
@@ -160,7 +147,6 @@ export interface CreativeCharacterTraitProfile {
     emotional_depth?: number;
   };
   
-  // Physical description for humanoid creatives
   physical_description?: {
     height_category?: string;
     build_type?: string;
@@ -170,11 +156,10 @@ export interface CreativeCharacterTraitProfile {
     overall_appearance?: string;
   };
   
-  // Fallback for any additional properties
   [key: string]: any;
 }
 
-// Pure Creative Character interface - conditional emotional_triggers field
+// Pure Creative Character interface - NO emotional_triggers for Character Lab
 export interface CreativeCharacter {
   id?: string;
   character_id: string;
@@ -190,11 +175,7 @@ export interface CreativeCharacter {
   preinterview_tags: any;
   simulation_directives: any;
   trait_profile: CreativeCharacterTraitProfile;
-  // Conditional emotional_triggers - only for entities that process emotions
-  emotional_triggers?: {
-    positive_triggers: string[];
-    negative_triggers: string[];
-  };
+  // Character Lab uses the new trait architecture, not legacy emotional_triggers
   prompt?: string;
   user_id?: string;
   is_public?: boolean;

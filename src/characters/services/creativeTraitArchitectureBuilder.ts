@@ -1,5 +1,5 @@
 import { CreativeCharacterData } from '../types/creativeCharacterTypes';
-import { CoreMotive, LatentValue, SymbolicTrait, CognitiveFilter } from '../types/creativeCharacterTypes';
+import { CoreMotive, LatentValue, SymbolicTrait, CognitiveFilter, PhysicalAppearanceStructure } from '../types/creativeCharacterTypes';
 
 export class CreativeTraitArchitectureBuilder {
   static buildTraitArchitecture(data: CreativeCharacterData) {
@@ -18,13 +18,13 @@ export class CreativeTraitArchitectureBuilder {
     const cleanEnvironment = this.cleanTextReference(data.environment);
     const cleanNarrativeDomain = this.cleanTextReference(data.narrativeDomain);
     
-    // Pattern completion motive - varies based on entity type and domain
+    // Pattern completion motive - matching your specification
     motives.push({
       name: "pattern_completion",
       intensity: this.calculateIntensity(data.entityType, data.narrativeDomain, 0.8, 0.95),
-      narrative_description: `Driven to resolve incomplete or destabilized systems within ${cleanEnvironment}. Fragmentation creates internal dissonance that must be resolved through systematic reconstruction.`,
+      narrative_description: `Driven to resolve incomplete or destabilized pattern systems within ${cleanEnvironment}. Fragmentation creates internal dissonance.`,
       failure_response: data.changeResponseStyle === 'collapse_destabilize' 
-        ? "Enters recursive simulation or complete withdrawal until resolution is achieved."
+        ? "Enters recursive simulation or ritual withdrawal until resolution is achieved."
         : "Attempts systematic reconstruction or seeks alternative completion paths.",
       evolution_path: "May shift toward entropy suppression under prolonged overload."
     });
@@ -34,7 +34,7 @@ export class CreativeTraitArchitectureBuilder {
     motives.push({
       name: "domain_influence",
       intensity: influenceIntensity,
-      narrative_description: `Seeks to extend ${data.functionalRole?.toLowerCase() || 'conceptual'} control over local systems and entities within ${cleanNarrativeDomain}.`,
+      narrative_description: `Seeks to extend conceptual or symbolic control over local systems and entities within ${cleanNarrativeDomain}.`,
       failure_response: data.changeResponseStyle === 'suppress_contradiction' 
         ? "Attempts behavioral mimicry or indirect persuasion."
         : "Seeks collaborative alignment or strategic withdrawal.",
@@ -45,7 +45,7 @@ export class CreativeTraitArchitectureBuilder {
     motives.push({
       name: "signal_stability",
       intensity: this.calculateIntensity(data.communication, data.narrativeDomain, 0.4, 0.7),
-      narrative_description: `Maintains continuity and consistency of ${data.communication || 'key symbolic'} inputs and expressions across all interactions.`,
+      narrative_description: `Maintains continuity and consistency of key symbolic or sensory inputs across all interactions.`,
       failure_response: "Suppresses novelty and rejects unstable interactions to preserve signal integrity.",
       evolution_path: "Can evolve into precision-seeking or ritual rigidity."
     });
@@ -57,9 +57,8 @@ export class CreativeTraitArchitectureBuilder {
     const values: LatentValue[] = [];
     
     const cleanEnvironment = this.cleanTextReference(data.environment);
-    const cleanNarrativeDomain = this.cleanTextReference(data.narrativeDomain);
-
-    // Reciprocal continuity
+    
+    // Reciprocal continuity - matching your specification
     values.push({
       name: "reciprocal_continuity",
       intensity: 0.5,
@@ -73,7 +72,7 @@ export class CreativeTraitArchitectureBuilder {
     values.push({
       name: "non_isolation",
       intensity: isolationIntensity,
-      narrative_description: `Prefers distributed awareness and shared presence over individuation in ${cleanNarrativeDomain}.`,
+      narrative_description: `Prefers distributed awareness and shared presence over individuation.`,
       failure_response: "Seeks alignment through echoing or mirroring behavior.",
       evolution_path: "Could fracture into segmented sub-identities if violated repeatedly."
     });
@@ -84,13 +83,11 @@ export class CreativeTraitArchitectureBuilder {
   private static generateSymbolicTraits(data: CreativeCharacterData): SymbolicTrait[] {
     const traits: SymbolicTrait[] = [];
     
-    const cleanNarrativeDomain = this.cleanTextReference(data.narrativeDomain);
-
-    // Inverse glyph - based on change response style
+    // Inverse glyph - matching your specification
     traits.push({
       name: "inverse_glyph",
       type: "symbol_class",
-      narrative_description: `A ${cleanNarrativeDomain} symbol that inverts the intent of the previous signal.`,
+      narrative_description: `A ritual symbol that inverts the intent of the previous signal.`,
       activation_context: "Used during contradiction or value breach.",
       behavioral_effect: data.changeResponseStyle === 'suppress_contradiction' 
         ? "Suppresses open interaction or forces mirroring behavior."
@@ -98,21 +95,21 @@ export class CreativeTraitArchitectureBuilder {
       evolution_path: "Can evolve into total signal lockdown if repeated too often."
     });
 
-    // Loop-silence spiral
+    // Loop-silence spiral - matching your specification
     traits.push({
       name: "loop_silence_spiral",
       type: "symbol_class",
-      narrative_description: `Denotes ${data.functionalRole?.toLowerCase() || 'ritual'} closure or intentional disengagement.`,
+      narrative_description: `Denotes ritual closure or intentional disengagement.`,
       activation_context: "Used to end threads of interaction without finality.",
       behavioral_effect: "Interrupts continuity, delays memory encoding.",
       evolution_path: "Could become recursive silence or full communication aversion."
     });
 
-    // Fractal echo - based on communication style
+    // Fractal echo - matching your specification
     traits.push({
       name: "fractal_echo",
       type: "symbol_class",
-      narrative_description: `Symbolic repetition of input, modified through the character's ${data.communication || 'unique'} logic.`,
+      narrative_description: `Symbolic repetition of input, modified through the character's logic.`,
       activation_context: "Triggered by unfamiliar input or emotional ambiguity.",
       behavioral_effect: "Creates empathy mirage or deceptive resonance.",
       evolution_path: "Could evolve into identity mimicry or semantic distortion."
@@ -125,41 +122,34 @@ export class CreativeTraitArchitectureBuilder {
     const filters: CognitiveFilter[] = [];
     
     const cleanEnvironment = this.cleanTextReference(data.environment);
-    const cleanNarrativeDomain = this.cleanTextReference(data.narrativeDomain);
-
-    // Pattern-over-weighting
+    
+    // Pattern-over-weighting - matching your specification
     filters.push({
       name: "pattern_over_weighting",
       type: "perceptual_bias",
-      narrative_description: `Overemphasizes structure and expected symmetry in ${cleanNarrativeDomain} interpretation.`,
+      narrative_description: `Overemphasizes structure and expected symmetry in interpretation.`,
       activation_context: `Active in unstable or ambiguous ${cleanEnvironment}.`,
       behavioral_effect: "Rejects valid inputs that don't match internal models.",
       evolution_path: "Can calcify into rigid belief matrices under prolonged exposure."
     });
 
-    // Emotional signal suppression - based on entity type
-    const suppressionDescription = data.entityType === 'human' 
-      ? "Filters excessive affective content as noise or destabilizer."
-      : "Filters affective or emotive content as noise or destabilizer.";
-    
+    // Emotional signal suppression - matching your specification
     filters.push({
       name: "emotional_signal_suppression",
       type: "response_inhibitor",
-      narrative_description: suppressionDescription,
+      narrative_description: "Filters affective or emotive content as noise or destabilizer.",
       activation_context: "During high stimulus density or conflict.",
       behavioral_effect: "Flattens tone, disengages from emotionally charged signals.",
       evolution_path: "Could reverse into mimicry if required for survival."
     });
 
-    // Anticipatory contradiction modeling
+    // Anticipatory contradiction modeling - matching your specification
     filters.push({
       name: "anticipatory_contradiction_modeling",
       type: "conflict_logic",
       narrative_description: "Simulates future inconsistencies before commitment to action.",
       activation_context: "During decision branches or alliance formation.",
-      behavioral_effect: data.changeResponseStyle === 'seek_council' 
-        ? "Delays commitment, seeks external validation for responses."
-        : "Delays commitment, prefers provisional responses.",
+      behavioral_effect: "Delays commitment, prefers provisional responses.",
       evolution_path: "Could accelerate into recursive paralysis under cognitive overload."
     });
 
@@ -251,11 +241,10 @@ export class CreativeTraitArchitectureBuilder {
     };
   }
 
-  // Enhanced method to extract physical appearance structure
-  static extractPhysicalAppearance(data: CreativeCharacterData): any {
+  // Enhanced method to extract physical appearance structure - matching your specification exactly
+  static extractPhysicalAppearance(data: CreativeCharacterData): PhysicalAppearanceStructure {
     const description = data.description || '';
     const physicalForm = data.physicalForm || '';
-    const environment = data.environment || '';
     
     // Check for specific patterns that indicate complex physical forms
     if (description.includes('3.8 meters') || description.includes('coil') || 
@@ -283,7 +272,11 @@ export class CreativeTraitArchitectureBuilder {
       emissions: this.extractEmissionsFromDescription(description),
       visual_effects: this.extractVisualEffectsFromDescription(description),
       sensory_effects: this.extractSensoryEffectsFromDescription(description),
-      narrative_description: `${data.name} manifests as ${description || 'a unique entity'} within ${environment || 'their domain'}.`
+      size_estimate: {
+        length_meters: 1.8,
+        diameter_meters: 0.6
+      },
+      narrative_description: `${data.name} manifests as ${description || 'a unique entity'} within ${data.environment || 'their domain'}.`
     };
   }
 
