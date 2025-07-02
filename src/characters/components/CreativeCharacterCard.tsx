@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import CharacterAvatar from './CharacterAvatar';
 import CloneCharacterButton from './CloneCharacterButton';
 import { CreativeCharacter } from '../types/creativeCharacterTypes';
+import { creativeCharacterToCharacter } from '../services/creativeCharacterTypeMappers';
 import { useAuth } from '@/context/AuthContext';
 
 interface CreativeCharacterCardProps {
@@ -40,6 +41,9 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
     
     return description.length > 120 ? description.substring(0, 120) + '...' : description;
   };
+
+  // Convert CreativeCharacter to Character for CloneCharacterButton compatibility
+  const characterForCloning = creativeCharacterToCharacter(character);
 
   return (
     <Card className={`hover:shadow-lg transition-shadow ${
@@ -107,7 +111,7 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
               </Button>
             </Link>
             <CloneCharacterButton 
-              character={character} 
+              character={characterForCloning} 
               className="w-full text-xs"
             />
           </div>

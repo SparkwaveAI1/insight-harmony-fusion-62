@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CreativeCharacter, CreativeCharacterData, DbCreativeCharacter } from '../types/creativeCharacterTypes';
+import { CreativeCharacter, CreativeCharacterData } from '../types/creativeCharacterTypes';
 import { CreativeCharacterBuilder } from './creativeCharacterBuilder';
+import { dbResultToCreativeCharacter, creativeCharacterToDbFormat } from './creativeCharacterTypeMappers';
 
 export async function createCreativeCharacter(
   data: CreativeCharacterData, 
@@ -16,16 +17,8 @@ export async function createCreativeCharacter(
 
     console.log('Built Character Lab character object:', character);
 
-    // Convert to database-compatible format with proper type casting
-    const dbCharacter = {
-      ...character,
-      // Cast JSON fields to any for database compatibility
-      trait_profile: character.trait_profile as any,
-      metadata: character.metadata as any,
-      behavioral_modulation: character.behavioral_modulation as any,
-      linguistic_profile: character.linguistic_profile as any
-      // NO emotional_triggers field
-    };
+    // Convert to database-compatible format
+    const dbCharacter = creativeCharacterToDbFormat(character);
 
     // Insert into the database
     const { data: insertedData, error } = await supabase
@@ -42,14 +35,7 @@ export async function createCreativeCharacter(
     console.log('Successfully created Character Lab character:', insertedData);
     
     // Convert back to CreativeCharacter type for return
-    return {
-      ...insertedData,
-      trait_profile: insertedData.trait_profile as any,
-      metadata: insertedData.metadata as any,
-      behavioral_modulation: insertedData.behavioral_modulation as any,
-      linguistic_profile: insertedData.linguistic_profile as any
-      // NO emotional_triggers field
-    } as CreativeCharacter;
+    return dbResultToCreativeCharacter(insertedData);
 
   } catch (error) {
     console.error('Error in createCreativeCharacter:', error);
@@ -72,15 +58,7 @@ export async function getCreativeCharacter(characterId: string): Promise<Creativ
       return null;
     }
 
-    // Convert database JSON fields back to proper types
-    return {
-      ...data,
-      trait_profile: data.trait_profile as any,
-      metadata: data.metadata as any,
-      behavioral_modulation: data.behavioral_modulation as any,
-      linguistic_profile: data.linguistic_profile as any
-      // NO emotional_triggers field
-    } as CreativeCharacter;
+    return dbResultToCreativeCharacter(data);
   } catch (error) {
     console.error('Error in getCreativeCharacter:', error);
     return null;
@@ -102,15 +80,7 @@ export async function getCreativeCharacters(userId: string): Promise<CreativeCha
       return [];
     }
 
-    // Convert database JSON fields back to proper types
-    return (data || []).map(item => ({
-      ...item,
-      trait_profile: item.trait_profile as any,
-      metadata: item.metadata as any,
-      behavioral_modulation: item.behavioral_modulation as any,
-      linguistic_profile: item.linguistic_profile as any
-      // NO emotional_triggers field
-    })) as CreativeCharacter[];
+    return (data || []).map(dbResultToCreativeCharacter);
   } catch (error) {
     console.error('Error in getCreativeCharacters:', error);
     return [];

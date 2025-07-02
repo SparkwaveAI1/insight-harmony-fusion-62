@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CreativeCharacter } from '../types/creativeCharacterTypes';
+import { dbResultToCreativeCharacter } from '../services/creativeCharacterTypeMappers';
 import { useAuth } from '@/context/AuthContext';
 
 export const useUnifiedCreativeCharacters = () => {
@@ -20,14 +21,7 @@ export const useUnifiedCreativeCharacters = () => {
           .order('created_at', { ascending: false });
 
         if (publicError) throw publicError;
-        return (publicData || []).map(item => ({
-          ...item,
-          trait_profile: item.trait_profile as any,
-          metadata: item.metadata as any,
-          behavioral_modulation: item.behavioral_modulation as any,
-          linguistic_profile: item.linguistic_profile as any
-          // NO emotional_triggers mapping - Character Lab doesn't use them
-        })) as CreativeCharacter[];
+        return (publicData || []).map(dbResultToCreativeCharacter);
       }
 
       // If authenticated, fetch both user's characters and public characters
@@ -51,23 +45,8 @@ export const useUnifiedCreativeCharacters = () => {
       if (userResult.error) throw userResult.error;
       if (publicResult.error) throw publicResult.error;
 
-      const userCharacters = (userResult.data || []).map(item => ({
-        ...item,
-        trait_profile: item.trait_profile as any,
-        metadata: item.metadata as any,
-        behavioral_modulation: item.behavioral_modulation as any,
-        linguistic_profile: item.linguistic_profile as any
-        // NO emotional_triggers mapping
-      })) as CreativeCharacter[];
-      
-      const publicCharacters = (publicResult.data || []).map(item => ({
-        ...item,
-        trait_profile: item.trait_profile as any,
-        metadata: item.metadata as any,
-        behavioral_modulation: item.behavioral_modulation as any,
-        linguistic_profile: item.linguistic_profile as any
-        // NO emotional_triggers mapping
-      })) as CreativeCharacter[];
+      const userCharacters = (userResult.data || []).map(dbResultToCreativeCharacter);
+      const publicCharacters = (publicResult.data || []).map(dbResultToCreativeCharacter);
 
       // Combine and sort by creation date
       const allCharacters = [...userCharacters, ...publicCharacters];
