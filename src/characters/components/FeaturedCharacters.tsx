@@ -44,7 +44,7 @@ const FeaturedCharacters = () => {
 
   if (isLoading) {
     return (
-      <section className="py-20 relative">
+      <section className="py-32 relative min-h-screen">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-orbitron font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
@@ -55,18 +55,18 @@ const FeaturedCharacters = () => {
               each with their own unique story and personality.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
             {[...Array(4)].map((_, index) => (
-              <Card key={index} className="bg-black/40 border-purple-500/30 animate-pulse">
+              <Card key={index} className="bg-black/40 border-purple-500/30 animate-pulse w-full max-w-[280px]">
                 <CardContent className="p-0">
-                  <div className="aspect-video bg-gray-700 rounded-t-lg"></div>
+                  <div className="aspect-[9/16] bg-gray-700 rounded-t-lg"></div>
                   <div className="p-4">
                     <div className="h-6 bg-gray-700 rounded mb-3"></div>
                     <div className="h-4 bg-gray-700 rounded mb-2"></div>
                     <div className="h-4 bg-gray-700 rounded mb-4 w-3/4"></div>
-                    <div className="flex gap-3">
-                      <div className="h-8 bg-gray-700 rounded w-32"></div>
-                      <div className="h-8 bg-gray-700 rounded w-24"></div>
+                    <div className="flex flex-col gap-2">
+                      <div className="h-8 bg-gray-700 rounded"></div>
+                      <div className="h-8 bg-gray-700 rounded"></div>
                     </div>
                   </div>
                 </CardContent>
@@ -80,7 +80,7 @@ const FeaturedCharacters = () => {
 
   if (error) {
     return (
-      <section className="py-20 relative">
+      <section className="py-32 relative min-h-screen">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center">
             <h2 className="text-5xl font-orbitron font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
@@ -96,9 +96,9 @@ const FeaturedCharacters = () => {
   const videos = featuredVideos || [];
 
   return (
-    <section className="py-20 relative">
+    <section className="py-32 relative min-h-screen">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <h2 className="text-5xl font-orbitron font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
             Featured Characters
           </h2>
@@ -108,15 +108,15 @@ const FeaturedCharacters = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center">
           {videos.map((video) => {
             console.log('Rendering video:', video.name, 'URL:', video.video_url);
             const videoState = videoStates[video.id] || { isPlaying: false, isMuted: true };
             
             return (
-              <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden max-w-sm mx-auto">
+              <Card key={video.id} className="bg-black/40 border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 group overflow-hidden w-full max-w-[280px]">
                 <CardContent className="p-0">
-                  <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
+                  <div className="relative aspect-[9/16] bg-gray-900 rounded-t-lg overflow-hidden">
                     <video 
                       ref={(el) => videoRefs.current[video.id] = el}
                       src={video.video_url}
@@ -218,7 +218,7 @@ const FeaturedCharacters = () => {
         </div>
 
         {videos.length > 0 && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-16">
             <Button size="lg" variant="outline" className="border-purple-400/50 text-purple-300 hover:bg-purple-600/20 font-orbitron" asChild>
               <Link to="/characters">
                 View All Characters
