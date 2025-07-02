@@ -1,4 +1,3 @@
-
 import { CreativeCharacter } from '../types/creativeCharacterTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -95,14 +94,7 @@ export class JsonCharacterImporter {
         ...json.simulation_directives
       },
       
-      // Conditional emotional triggers
-      ...(this.shouldIncludeEmotionalTriggers(properEntityType) && {
-        emotional_triggers: json.emotional_triggers || {
-          positive_triggers: [],
-          negative_triggers: []
-        }
-      }),
-      
+      // Character Lab doesn't use emotional_triggers - they use the new trait architecture
       species_type: properEntityType === 'human' ? undefined : properEntityType,
       origin_universe: json.origin_universe || cleanedTraitProfile.narrative_domain,
       enhanced_metadata_version: 4,
@@ -210,13 +202,6 @@ export class JsonCharacterImporter {
   }
 
   /**
-   * Determines if emotional triggers should be included
-   */
-  private static shouldIncludeEmotionalTriggers(entityType: string): boolean {
-    return entityType === 'human' || entityType === 'post_biological';
-  }
-
-  /**
    * Maps CreativeCharacter to database format
    */
   private static mapToDbFormat(character: CreativeCharacter): any {
@@ -235,7 +220,8 @@ export class JsonCharacterImporter {
       preinterview_tags: character.preinterview_tags,
       simulation_directives: character.simulation_directives,
       trait_profile: character.trait_profile,
-      emotional_triggers: character.emotional_triggers,
+      // Character Lab doesn't use emotional_triggers - set to null for database compatibility
+      emotional_triggers: null,
       prompt: character.prompt,
       is_public: character.is_public,
       profile_image_url: character.profile_image_url,
@@ -272,7 +258,7 @@ export class JsonCharacterImporter {
       preinterview_tags: data.preinterview_tags,
       simulation_directives: data.simulation_directives,
       trait_profile: data.trait_profile,
-      emotional_triggers: data.emotional_triggers,
+      // Character Lab doesn't use emotional_triggers
       prompt: data.prompt,
       is_public: data.is_public,
       profile_image_url: data.profile_image_url,

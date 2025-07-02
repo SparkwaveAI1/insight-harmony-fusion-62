@@ -1,3 +1,4 @@
+
 import { CreativeCharacter, DbCreativeCharacter } from '../types/creativeCharacterTypes';
 import { Character } from '../types/characterTraitTypes';
 
@@ -69,20 +70,6 @@ export function dbResultToCreativeCharacter(dbRow: any): CreativeCharacter {
       ? dbRow.simulation_directives : {},
     trait_profile: typeof dbRow.trait_profile === 'object' && dbRow.trait_profile !== null
       ? dbRow.trait_profile : {},
-    // Handle emotional_triggers conditionally - only include if it exists and is properly structured
-    ...(dbRow.emotional_triggers && 
-        typeof dbRow.emotional_triggers === 'object' && 
-        dbRow.emotional_triggers !== null &&
-        (dbRow.emotional_triggers.positive_triggers || dbRow.emotional_triggers.negative_triggers) && {
-      emotional_triggers: {
-        positive_triggers: Array.isArray(dbRow.emotional_triggers.positive_triggers) 
-          ? dbRow.emotional_triggers.positive_triggers 
-          : [],
-        negative_triggers: Array.isArray(dbRow.emotional_triggers.negative_triggers) 
-          ? dbRow.emotional_triggers.negative_triggers 
-          : []
-      }
-    }),
     prompt: dbRow.prompt || undefined,
     is_public: dbRow.is_public || false,
     profile_image_url: dbRow.profile_image_url || undefined,
@@ -120,7 +107,8 @@ export function creativeCharacterToDbFormat(character: CreativeCharacter): any {
     preinterview_tags: character.preinterview_tags || [],
     simulation_directives: character.simulation_directives || {},
     trait_profile: character.trait_profile || {},
-    emotional_triggers: character.emotional_triggers || null,
+    // Character Lab doesn't use emotional_triggers - set to null for database compatibility
+    emotional_triggers: null,
     prompt: character.prompt || null,
     is_public: character.is_public || false,
     profile_image_url: character.profile_image_url || null,
