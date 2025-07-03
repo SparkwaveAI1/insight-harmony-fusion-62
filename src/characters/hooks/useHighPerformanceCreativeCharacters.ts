@@ -1,4 +1,5 @@
 
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -45,6 +46,12 @@ interface CharacterDetails {
   profile_image_url: string | null;
 }
 
+// Explicit result type to avoid deep type inference
+interface HighPerformanceCharactersResult {
+  characters: CharacterSummary[];
+  totalCount: number;
+}
+
 export const useHighPerformanceCreativeCharacters = (
   options: UseHighPerformanceCreativeCharactersOptions = {}
 ) => {
@@ -53,7 +60,7 @@ export const useHighPerformanceCreativeCharacters = (
   
   return useQuery({
     queryKey: ['high-perf-creative-characters', user?.id, limit, offset, searchQuery],
-    queryFn: async () => {
+    queryFn: async (): Promise<HighPerformanceCharactersResult> => {
       console.log('🚀 High-performance fetch - Limit:', limit, 'Offset:', offset, 'Search:', searchQuery);
       
       try {
@@ -110,7 +117,7 @@ export const useHighPerformanceCreativeCharacters = (
         console.log(`✅ High-performance fetch complete: ${data?.length || 0} characters (${count} total)`);
         
         // Transform to CharacterSummary objects
-        const characters = (data || []).map(row => ({
+        const characters: CharacterSummary[] = (data || []).map(row => ({
           character_id: row.character_id,
           name: row.name,
           creation_source: row.creation_source,
@@ -121,7 +128,7 @@ export const useHighPerformanceCreativeCharacters = (
           description: (row as any).description || '',
           entity_type: (row as any).entity_type || 'human',
           narrative_domain: (row as any).narrative_domain || 'modern'
-        })) as CharacterSummary[];
+        }));
 
         return {
           characters,
@@ -188,3 +195,4 @@ export const useLazyCharacterDetails = (characterId: string | null, enabled = fa
     retry: 1,
   });
 };
+
