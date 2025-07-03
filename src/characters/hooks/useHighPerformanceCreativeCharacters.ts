@@ -1,5 +1,4 @@
 
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -58,9 +57,9 @@ export const useHighPerformanceCreativeCharacters = (
   const { user, isLoading: authLoading } = useAuth();
   const { limit = 12, offset = 0, searchQuery = '', enableSearch = true } = options;
   
-  return useQuery({
+  return useQuery<HighPerformanceCharactersResult, Error>({
     queryKey: ['high-perf-creative-characters', user?.id, limit, offset, searchQuery],
-    queryFn: async (): Promise<HighPerformanceCharactersResult> => {
+    queryFn: async () => {
       console.log('🚀 High-performance fetch - Limit:', limit, 'Offset:', offset, 'Search:', searchQuery);
       
       try {
@@ -150,9 +149,9 @@ export const useHighPerformanceCreativeCharacters = (
 
 // Hook for lazy loading full character details
 export const useLazyCharacterDetails = (characterId: string | null, enabled = false) => {
-  return useQuery({
+  return useQuery<CharacterDetails | null, Error>({
     queryKey: ['character-details', characterId],
-    queryFn: async (): Promise<CharacterDetails | null> => {
+    queryFn: async () => {
       if (!characterId) return null;
       
       console.log('🔍 Lazy loading character details:', characterId);
@@ -195,4 +194,3 @@ export const useLazyCharacterDetails = (characterId: string | null, enabled = fa
     retry: 1,
   });
 };
-
