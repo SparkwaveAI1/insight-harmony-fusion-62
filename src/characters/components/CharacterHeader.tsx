@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Home, LogOut, UserRound } from 'lucide-react';
+import { Menu, X, Home, LogOut, UserRound, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/ui-custom/Logo';
 import ActionButtons from '@/components/layout/navigation/ActionButtons';
@@ -39,8 +39,9 @@ const CharacterHeader = () => {
             </Link>
             <Link 
               to="/characters/creative" 
-              className="text-gray-300 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
             >
+              <FlaskConical className="h-4 w-4" />
               Character Lab
             </Link>
             <Link 
@@ -123,9 +124,10 @@ const CharacterHeader = () => {
               </Link>
               <Link 
                 to="/characters/creative" 
-                className="block text-gray-300 hover:text-white transition-colors py-2"
+                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors py-2"
                 onClick={() => setMobileMenuOpen(false)}
               >
+                <FlaskConical className="h-4 w-4" />
                 Character Lab
               </Link>
               <Link 
