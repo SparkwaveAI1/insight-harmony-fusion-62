@@ -33,34 +33,89 @@ serve(async (req) => {
       throw new Error("Supabase configuration is missing");
     }
 
-    // Extract auth token from request headers
+    // Extract auth token from request headers with enhanced mobile support
     const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.error("No valid authorization header found");
-      throw new Error("Authentication required");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Authentication required - please sign in again",
+        }),
+        { 
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
 
     const userToken = authHeader.replace('Bearer ', '');
     console.log("User token extracted, length:", userToken.length);
 
-    // Create Supabase client with user's token for authentication
+    // Create Supabase client with enhanced error handling for mobile
     const userSupabase = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: {
         headers: { Authorization: authHeader }
+      },
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: false
       }
     });
 
-    // Verify user is authenticated
-    const { data: { user }, error: authError } = await userSupabase.auth.getUser(userToken);
-    if (authError || !user) {
-      console.error("Authentication failed:", authError);
-      throw new Error("Invalid authentication token");
+    // Enhanced user authentication with retry logic for mobile
+    let user;
+    let authAttempts = 0;
+    const maxAuthAttempts = 3;
+
+    while (authAttempts < maxAuthAttempts) {
+      try {
+        const { data: { user: authUser }, error: authError } = await userSupabase.auth.getUser(userToken);
+        
+        if (authError) {
+          console.error(`Authentication attempt ${authAttempts + 1} failed:`, authError);
+          
+          // Try refreshing the session for mobile compatibility
+          if (authAttempts < maxAuthAttempts - 1) {
+            console.log("Attempting session refresh...");
+            const { data: refreshData, error: refreshError } = await userSupabase.auth.refreshSession();
+            
+            if (!refreshError && refreshData.session) {
+              console.log("Session refreshed successfully");
+              user = refreshData.user;
+              break;
+            }
+          }
+          
+          authAttempts++;
+          if (authAttempts >= maxAuthAttempts) {
+            throw new Error("Session expired - please sign in again");
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+
+        if (!authUser) {
+          throw new Error("User not found - please sign in again");
+        }
+
+        user = authUser;
+        break;
+      } catch (error) {
+        authAttempts++;
+        if (authAttempts >= maxAuthAttempts) {
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     console.log("User authenticated:", user.id);
 
     const requestBody = await req.json();
-    console.log("Request body received:", JSON.stringify(requestBody, null, 2));
+    console.log("Request body received");
 
     const { 
       characterData, 
@@ -82,17 +137,39 @@ serve(async (req) => {
     console.log("Processing creative character:", characterData.name);
     console.log("Character ID:", characterData.character_id);
 
-    // CRITICAL: Verify character ownership using user's authenticated client
-    const { data: characterOwnership, error: ownershipError } = await userSupabase
-      .from('characters')
-      .select('user_id, name')
-      .eq('character_id', characterData.character_id)
-      .eq('creation_source', 'creative')
-      .single();
+    // Enhanced character ownership verification with retry logic
+    let characterOwnership;
+    let ownershipAttempts = 0;
+    const maxOwnershipAttempts = 3;
 
-    if (ownershipError) {
-      console.error('Character ownership verification failed:', ownershipError);
-      throw new Error('Character not found or access denied');
+    while (ownershipAttempts < maxOwnershipAttempts) {
+      try {
+        const { data, error } = await userSupabase
+          .from('characters')
+          .select('user_id, name')
+          .eq('character_id', characterData.character_id)
+          .eq('creation_source', 'creative')
+          .single();
+
+        if (error) {
+          if (ownershipAttempts < maxOwnershipAttempts - 1) {
+            console.log(`Ownership verification attempt ${ownershipAttempts + 1} failed, retrying...`);
+            ownershipAttempts++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+          throw new Error('Character not found or access denied');
+        }
+
+        characterOwnership = data;
+        break;
+      } catch (error) {
+        ownershipAttempts++;
+        if (ownershipAttempts >= maxOwnershipAttempts) {
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
     if (characterOwnership.user_id !== user.id) {
@@ -203,13 +280,35 @@ serve(async (req) => {
     console.error("Error generating creative character image:", error);
     console.error("Error stack:", error.stack);
     
+    // Enhanced error responses for mobile clients
+    let statusCode = 500;
+    let errorMessage = error.message || "Failed to generate creative character image";
+
+    if (error.message?.includes('Authentication') || 
+        error.message?.includes('Session expired') || 
+        error.message?.includes('sign in again')) {
+      statusCode = 401;
+      errorMessage = "Your session has expired. Please sign in again and try generating the image.";
+    } else if (error.message?.includes('access denied') || 
+               error.message?.includes('your own characters')) {
+      statusCode = 403;
+      errorMessage = "You can only generate images for your own characters.";
+    } else if (error.message?.includes('Character not found')) {
+      statusCode = 404;
+      errorMessage = "Character not found. Please make sure the character exists and try again.";
+    } else if (error.message?.includes('network') || error.message?.includes('timeout')) {
+      statusCode = 503;
+      errorMessage = "Network error occurred. Please check your connection and try again.";
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Failed to generate creative character image",
+        error: errorMessage,
+        code: statusCode
       }),
       { 
-        status: error.message?.includes('Authentication') || error.message?.includes('access denied') || error.message?.includes('your own characters') ? 403 : 500,
+        status: statusCode,
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );
