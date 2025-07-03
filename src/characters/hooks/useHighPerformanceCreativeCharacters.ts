@@ -1,7 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CreativeCharacter } from '../types/creativeCharacterTypes';
 import { useAuth } from '@/context/AuthContext';
 
 interface UseHighPerformanceCreativeCharactersOptions {
@@ -25,6 +24,27 @@ interface CharacterSummary {
   narrative_domain: string;
 }
 
+// Simplified character details type
+interface CharacterDetails {
+  character_id: string;
+  name: string;
+  character_type: 'fictional';
+  creation_source: 'creative';
+  creation_date: string;
+  created_at: string;
+  metadata: Record<string, any>;
+  behavioral_modulation: Record<string, any>;
+  interview_sections: any[];
+  linguistic_profile: Record<string, any>;
+  preinterview_tags: any[];
+  simulation_directives: Record<string, any>;
+  trait_profile: Record<string, any>;
+  is_public: boolean;
+  enhanced_metadata_version: number;
+  user_id: string;
+  profile_image_url: string | null;
+}
+
 export const useHighPerformanceCreativeCharacters = (
   options: UseHighPerformanceCreativeCharactersOptions = {}
 ) => {
@@ -33,7 +53,7 @@ export const useHighPerformanceCreativeCharacters = (
   
   return useQuery({
     queryKey: ['high-perf-creative-characters', user?.id, limit, offset, searchQuery],
-    queryFn: async (): Promise<{ characters: CharacterSummary[], totalCount: number }> => {
+    queryFn: async () => {
       console.log('🚀 High-performance fetch - Limit:', limit, 'Offset:', offset, 'Search:', searchQuery);
       
       try {
@@ -125,7 +145,7 @@ export const useHighPerformanceCreativeCharacters = (
 export const useLazyCharacterDetails = (characterId: string | null, enabled = false) => {
   return useQuery({
     queryKey: ['character-details', characterId],
-    queryFn: async (): Promise<CreativeCharacter | null> => {
+    queryFn: async (): Promise<CharacterDetails | null> => {
       if (!characterId) return null;
       
       console.log('🔍 Lazy loading character details:', characterId);
@@ -142,7 +162,7 @@ export const useLazyCharacterDetails = (characterId: string | null, enabled = fa
         return null;
       }
 
-      // Transform to CreativeCharacter (simplified version)
+      // Transform to CharacterDetails
       return {
         character_id: data.character_id,
         name: data.name,
@@ -161,7 +181,7 @@ export const useLazyCharacterDetails = (characterId: string | null, enabled = fa
         enhanced_metadata_version: data.enhanced_metadata_version || 2,
         user_id: data.user_id,
         profile_image_url: data.profile_image_url
-      } as CreativeCharacter;
+      } as CharacterDetails;
     },
     enabled: enabled && !!characterId,
     staleTime: 1000 * 60 * 10, // 10 minutes for detailed data
