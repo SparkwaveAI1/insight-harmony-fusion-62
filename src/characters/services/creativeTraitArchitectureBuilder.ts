@@ -82,39 +82,84 @@ export class CreativeTraitArchitectureBuilder {
 
   private static generateSymbolicTraits(data: CreativeCharacterData): SymbolicTrait[] {
     const traits: SymbolicTrait[] = [];
+    const description = data.description?.toLowerCase() || '';
+    const environment = data.environment?.toLowerCase() || '';
+    const changeStyle = data.changeResponseStyle;
     
-    // Inverse glyph - matching your specification
-    traits.push({
-      name: "inverse_glyph",
-      type: "symbol_class",
-      narrative_description: `A ritual symbol that inverts the intent of the previous signal.`,
-      activation_context: "Used during contradiction or value breach.",
-      behavioral_effect: data.changeResponseStyle === 'suppress_contradiction' 
-        ? "Suppresses open interaction or forces mirroring behavior."
-        : "Creates protective barriers or deflects conflicting inputs.",
-      evolution_path: "Can evolve into total signal lockdown if repeated too often."
-    });
-
-    // Loop-silence spiral - matching your specification
-    traits.push({
-      name: "loop_silence_spiral",
-      type: "symbol_class",
-      narrative_description: `Denotes ritual closure or intentional disengagement.`,
-      activation_context: "Used to end threads of interaction without finality.",
-      behavioral_effect: "Interrupts continuity, delays memory encoding.",
-      evolution_path: "Could become recursive silence or full communication aversion."
-    });
-
-    // Fractal echo - matching your specification
-    traits.push({
-      name: "fractal_echo",
-      type: "symbol_class",
-      narrative_description: `Symbolic repetition of input, modified through the character's logic.`,
-      activation_context: "Triggered by unfamiliar input or emotional ambiguity.",
-      behavioral_effect: "Creates empathy mirage or deceptive resonance.",
-      evolution_path: "Could evolve into identity mimicry or semantic distortion."
-    });
-
+    // Generate traits based on actual character properties
+    
+    // Contradiction/conflict handling trait
+    if (changeStyle === 'suppress_contradiction' || description.includes('conflict') || description.includes('contradict')) {
+      traits.push({
+        name: "contradiction_mirror",
+        type: "conflict_processor",
+        narrative_description: `Reflects conflicting inputs back as transformed symbolic patterns.`,
+        activation_context: "During value conflicts or logical contradictions.",
+        behavioral_effect: "Creates protective barriers while processing inconsistent information.",
+        evolution_path: "Could develop into complete contradiction avoidance or recursive loops."
+      });
+    }
+    
+    // Communication/silence patterns
+    if (data.communication?.includes('silence') || description.includes('withdrawn') || changeStyle === 'collapse_destabilize') {
+      traits.push({
+        name: "selective_void",
+        type: "communication_filter",
+        narrative_description: `Creates intentional gaps in communication to control information flow.`,
+        activation_context: "When overwhelmed or needing to process complex inputs.",
+        behavioral_effect: "Strategically withdraws from interaction while maintaining observational awareness.",
+        evolution_path: "May evolve into complete communicative isolation or selective engagement."
+      });
+    }
+    
+    // Pattern/echo behaviors based on environment
+    if (environment.includes('echo') || environment.includes('mirror') || description.includes('reflect')) {
+      traits.push({
+        name: "resonance_echo",
+        type: "adaptive_mirror",
+        narrative_description: `Amplifies and modifies received patterns through internal processing.`,
+        activation_context: "During complex social or environmental interactions.",
+        behavioral_effect: "Creates modified reflections that reveal underlying patterns.",
+        evolution_path: "Could become identity fluidity or pattern obsession."
+      });
+    }
+    
+    // Mystical/ritual traits for fantasy/surreal domains
+    if (data.narrativeDomain === 'fantasy' || data.narrativeDomain === 'surreal' || description.includes('ritual')) {
+      traits.push({
+        name: "symbol_weaving",
+        type: "mystical_processor",
+        narrative_description: `Transforms abstract concepts into concrete symbolic representations.`,
+        activation_context: "When dealing with abstract or metaphysical concepts.",
+        behavioral_effect: "Converts complex ideas into tangible symbolic forms.",
+        evolution_path: "May develop into symbolic literalism or abstract detachment."
+      });
+    }
+    
+    // Sci-fi/technological traits
+    if (data.narrativeDomain === 'sci-fi' || description.includes('data') || description.includes('system')) {
+      traits.push({
+        name: "data_crystallization",
+        type: "information_processor",
+        narrative_description: `Compresses complex information into stable, retrievable patterns.`,
+        activation_context: "During information overload or complex problem-solving.",
+        behavioral_effect: "Creates structured information hierarchies for efficient processing.",
+        evolution_path: "Could evolve into information hoarding or selective data filtering."
+      });
+    }
+    
+    // Default trait if no specific patterns match
+    if (traits.length === 0) {
+      traits.push({
+        name: "adaptive_response",
+        type: "behavioral_modifier",
+        narrative_description: `Adjusts behavioral patterns based on environmental feedback.`,
+        activation_context: "During novel or challenging situations.",
+        behavioral_effect: "Modifies approach and communication style to match situational needs.",
+        evolution_path: "May develop into behavioral instability or hyper-adaptability."
+      });
+    }
+    
     return traits;
   }
 
@@ -157,7 +202,6 @@ export class CreativeTraitArchitectureBuilder {
   }
 
   private static calculateIntensity(primary: string, secondary: string, min: number, max: number): number {
-    // Simple intensity calculation based on character traits
     let intensity = min;
     
     if (primary?.toLowerCase().includes('oracle') || primary?.toLowerCase().includes('scholar')) {
@@ -187,7 +231,6 @@ export class CreativeTraitArchitectureBuilder {
     return cleanText || 'their domain';
   }
 
-  // New method to determine proper entity type
   static determineEntityType(data: CreativeCharacterData): string {
     const description = data.description?.toLowerCase() || '';
     const physicalForm = data.physicalForm?.toLowerCase() || '';
@@ -213,7 +256,6 @@ export class CreativeTraitArchitectureBuilder {
     return data.entityType === 'human' ? 'human' : 'non_humanoid';
   }
 
-  // New method to extract communication method structure
   static extractCommunicationMethod(data: CreativeCharacterData): any {
     const communication = data.communication?.toLowerCase() || '';
     const description = data.description?.toLowerCase() || '';
@@ -241,7 +283,6 @@ export class CreativeTraitArchitectureBuilder {
     };
   }
 
-  // Enhanced method to extract physical appearance structure - matching your specification exactly
   static extractPhysicalAppearance(data: CreativeCharacterData): PhysicalAppearanceStructure {
     const description = data.description || '';
     const physicalForm = data.physicalForm || '';
@@ -331,7 +372,7 @@ export class CreativeTraitArchitectureBuilder {
     }
     if (description.includes('resonance')) {
       effects.push('resonance effects');
-    }
+    }  
     if (description.includes('temperature')) {
       effects.push('temperature fluctuations');
     }
