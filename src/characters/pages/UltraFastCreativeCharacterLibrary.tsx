@@ -106,7 +106,7 @@ const UltraFastCreativeCharacterLibrary = () => {
               <div>
                 <h1 className="text-xl md:text-3xl font-bold">Character Lab Library</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  {user ? 'Ultra-fast loading with optimized performance' : 'Public community creations'}
+                  {user ? 'Optimized performance for managing your creative characters' : 'Public community creations'}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {totalCount} total characters • Page {currentPage} of {totalPages}
@@ -129,7 +129,7 @@ const UltraFastCreativeCharacterLibrary = () => {
             <div className="relative flex-1 sm:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search characters (optimized for speed)..."
+                placeholder="Search characters..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 className="pl-10"
