@@ -1,3 +1,4 @@
+
 import { CreativeCharacterData } from '../types/creativeCharacterTypes';
 
 export class CreativeCharacterConversationParser {
@@ -7,7 +8,7 @@ export class CreativeCharacterConversationParser {
   static parseCharacterDescription(description: string): CreativeCharacterData {
     console.log('Parsing character description:', description);
 
-    // Extract key information using patterns and keywords
+    // Extract key information using improved patterns and keywords
     const name = this.extractName(description);
     const entityType = this.extractEntityType(description);
     const narrativeDomain = this.extractNarrativeDomain(description);
@@ -34,18 +35,25 @@ export class CreativeCharacterConversationParser {
   }
 
   private static extractName(description: string): string {
-    // Look for name patterns
+    // Improved name extraction patterns
     const namePatterns = [
-      /(?:named?|called?)\s+([A-Z][a-zA-Z]+)/i,
-      /^([A-Z][a-zA-Z]+)\s+is/,
-      /Character:?\s*([A-Z][a-zA-Z]+)/i,
-      /Name:?\s*([A-Z][a-zA-Z]+)/i
+      /\*\*Character Name\*\*:\s*([A-Z][a-zA-Z\s]+)/i, // **Character Name**: Lyra
+      /Character Name:\s*([A-Z][a-zA-Z\s]+)/i, // Character Name: Lyra
+      /(?:^|\n)([A-Z][a-z]+)\s+is\s+a/m, // "Lyra is a" at start of line
+      /(?:named?|called?)\s+([A-Z][a-zA-Z]+)/i, // "named Lyra" or "called Lyra"
+      /Character:?\s*([A-Z][a-zA-Z\s]+)/i, // Character: Lyra
+      /Name:?\s*([A-Z][a-zA-Z\s]+)/i // Name: Lyra
     ];
 
     for (const pattern of namePatterns) {
       const match = description.match(pattern);
       if (match && match[1]) {
-        return match[1].trim();
+        const name = match[1].trim();
+        // Validate the name (should be reasonable length and not contain common non-name words)
+        if (name.length <= 50 && !name.toLowerCase().includes('comprehensive') && 
+            !name.toLowerCase().includes('description') && !name.toLowerCase().includes('character')) {
+          return name;
+        }
       }
     }
 
@@ -55,7 +63,20 @@ export class CreativeCharacterConversationParser {
   private static extractEntityType(description: string): string {
     const desc = description.toLowerCase();
     
-    // Check for specific entity type indicators
+    // Look for explicit entity type declarations first
+    if (desc.includes('entity type**: human') || desc.includes('entity type: human')) {
+      return 'human';
+    }
+    
+    // Check for human indicators
+    if (desc.includes('human') || desc.includes('person') || desc.includes('man') || 
+        desc.includes('woman') || desc.includes('spy') || desc.includes('hero') ||
+        desc.includes('mid-20s') || desc.includes('age') || desc.includes('attractive') ||
+        desc.includes('seductive') || desc.includes('banter')) {
+      return 'human';
+    }
+    
+    // Check for non-human indicators
     if (desc.includes('coil') || desc.includes('crystalline') || 
         desc.includes('translucent') || desc.includes('vapor') ||
         desc.includes('energy being') || desc.includes('fluid') ||
@@ -69,16 +90,17 @@ export class CreativeCharacterConversationParser {
       return 'post_biological';
     }
     
-    if (desc.includes('human') || desc.includes('person') || desc.includes('character')) {
-      return 'human';
-    }
-    
-    // Default to non_humanoid for creative characters
-    return 'non_humanoid';
+    // Default to human for character descriptions that don't specify otherwise
+    return 'human';
   }
 
   private static extractNarrativeDomain(description: string): string {
     const desc = description.toLowerCase();
+    
+    // Look for explicit narrative domain declarations
+    if (desc.includes('narrative domain**: modern') || desc.includes('narrative domain: modern')) {
+      return 'modern';
+    }
     
     if (desc.includes('sci-fi') || desc.includes('science fiction') || 
         desc.includes('space') || desc.includes('future') || 
@@ -103,34 +125,64 @@ export class CreativeCharacterConversationParser {
     }
     
     if (desc.includes('modern') || desc.includes('contemporary') || 
-        desc.includes('present day')) {
+        desc.includes('present day') || desc.includes('city') || 
+        desc.includes('urban') || desc.includes('spy') || desc.includes('superhero')) {
       return 'modern';
     }
     
-    // Default to surreal for creative characters
-    return 'surreal';
+    // Default to modern for realistic character descriptions
+    return 'modern';
   }
 
   private static extractEnvironment(description: string): string {
-    // Extract physical/environmental descriptions
+    // Look for environment/setting descriptions
     const envPatterns = [
-      /(?:appears?|looks?|manifests?)\s+(?:as\s+)?([^.!?]+)/i,
-      /(?:physical|appearance|form):?\s*([^.!?]+)/i,
-      /(?:body|structure|shape):?\s*([^.!?]+)/i
+      /operating in\s+([^.,!?]+)/i, // "operating in a modern city"
+      /set in\s+([^.,!?]+)/i, // "set in a dystopian future"
+      /takes place in\s+([^.,!?]+)/i, // "takes place in..."
+      /environment[:\s]+([^.,!?]+)/i, // "Environment: urban setting"
+      /setting[:\s]+([^.,!?]+)/i, // "Setting: modern city"
+      /world[:\s]+([^.,!?]+)/i // "World: cyberpunk landscape"
     ];
 
     for (const pattern of envPatterns) {
       const match = description.match(pattern);
       if (match && match[1]) {
-        return match[1].trim();
+        const env = match[1].trim();
+        if (env.length > 5 && env.length < 200) {
+          return env;
+        }
       }
     }
 
-    return description.slice(0, 200) + '...'; // Fallback to first part of description
+    // Fallback to extracting from narrative domain context
+    const desc = description.toLowerCase();
+    if (desc.includes('city') || desc.includes('urban')) {
+      return 'Modern urban environment';
+    }
+    if (desc.includes('space') || desc.includes('future')) {
+      return 'Futuristic setting';
+    }
+    if (desc.includes('forest') || desc.includes('nature')) {
+      return 'Natural environment';
+    }
+
+    return 'Contemporary setting';
   }
 
   private static extractPhysicalForm(description: string): string {
     const desc = description.toLowerCase();
+    
+    // Look for explicit physical descriptions
+    if (desc.includes('strikingly attractive') || desc.includes('beautiful') || 
+        desc.includes('handsome') || desc.includes('appearance')) {
+      return 'Attractive human form';
+    }
+    
+    if (desc.includes('tall') || desc.includes('short') || desc.includes('athletic') ||
+        desc.includes('slender') || desc.includes('muscular')) {
+      return 'Human physical form';
+    }
     
     if (desc.includes('massive') || desc.includes('giant') || desc.includes('large')) {
       return 'Large scale entity';
@@ -140,19 +192,20 @@ export class CreativeCharacterConversationParser {
       return 'Small scale entity';
     }
     
-    if (desc.includes('human-sized') || desc.includes('person')) {
+    if (desc.includes('human') || desc.includes('person') || desc.includes('mid-20s')) {
       return 'Human-sized';
     }
     
-    return 'Variable or undefined scale';
+    return 'Human form';
   }
 
   private static extractCommunication(description: string): string {
     const desc = description.toLowerCase();
     
-    if (desc.includes('bioluminescent') || desc.includes('glowing') || 
-        desc.includes('light') || desc.includes('pulse')) {
-      return 'Bioluminescent pulses';
+    // Look for communication style descriptions
+    if (desc.includes('banter') || desc.includes('charm') || desc.includes('wit') ||
+        desc.includes('seductive') || desc.includes('empathy') || desc.includes('voice')) {
+      return 'Verbal and emotional communication';
     }
     
     if (desc.includes('telepathic') || desc.includes('psychic') || 
@@ -160,45 +213,58 @@ export class CreativeCharacterConversationParser {
       return 'Telepathic communication';
     }
     
-    if (desc.includes('speak') || desc.includes('voice') || desc.includes('talk')) {
-      return 'Verbal communication';
+    if (desc.includes('bioluminescent') || desc.includes('glowing') || 
+        desc.includes('light') || desc.includes('pulse')) {
+      return 'Bioluminescent pulses';
     }
     
     if (desc.includes('gesture') || desc.includes('movement') || desc.includes('dance')) {
       return 'Gestural communication';
     }
     
-    return 'Undefined communication method';
+    return 'Verbal communication';
   }
 
   private static extractSurfaceTriggers(description: string): string[] {
     const triggers: string[] = [];
     const desc = description.toLowerCase();
     
-    // Common trigger patterns
-    if (desc.includes('pattern') || desc.includes('order') || desc.includes('structure')) {
-      triggers.push('Pattern recognition');
+    // Look for emotional and behavioral triggers
+    if (desc.includes('paranoia') || desc.includes('fear') || desc.includes('vulnerable')) {
+      triggers.push('Paranoia and vulnerability');
     }
     
-    if (desc.includes('chaos') || desc.includes('disorder') || desc.includes('disruption')) {
-      triggers.push('System disruption');
+    if (desc.includes('guilt') || desc.includes('conscience') || desc.includes('moral')) {
+      triggers.push('Guilt and moral conflict');
     }
     
-    if (desc.includes('resonance') || desc.includes('harmony') || desc.includes('alignment')) {
-      triggers.push('Harmonic resonance');
+    if (desc.includes('isolation') || desc.includes('lonely') || desc.includes('solitude')) {
+      triggers.push('Fear of isolation');
+    }
+    
+    if (desc.includes('memory') || desc.includes('forget') || desc.includes('erase')) {
+      triggers.push('Memory manipulation concerns');
+    }
+    
+    if (desc.includes('trust') || desc.includes('betrayal') || desc.includes('manipulation')) {
+      triggers.push('Trust and betrayal issues');
     }
     
     if (desc.includes('threat') || desc.includes('danger') || desc.includes('protective')) {
       triggers.push('Threat detection');
     }
     
-    return triggers.length > 0 ? triggers : ['Undefined triggers'];
+    return triggers.length > 0 ? triggers : ['Emotional complexity'];
   }
 
   private static extractFunctionalRole(description: string): string {
     const desc = description.toLowerCase();
     
-    if (desc.includes('guardian') || desc.includes('protector') || desc.includes('defender')) {
+    if (desc.includes('spy') || desc.includes('infiltration') || desc.includes('espionage')) {
+      return 'spy_operative';
+    }
+    
+    if (desc.includes('hero') || desc.includes('protector') || desc.includes('defender')) {
       return 'guardian_entity';
     }
     
@@ -214,13 +280,14 @@ export class CreativeCharacterConversationParser {
       return 'dimensional_navigator';
     }
     
-    return 'undefined_role';
+    return 'protagonist_agent';
   }
 
   private static extractChangeResponseStyle(description: string): string {
     const desc = description.toLowerCase();
     
-    if (desc.includes('adapt') || desc.includes('flexible') || desc.includes('evolve')) {
+    if (desc.includes('adapt') || desc.includes('flexible') || desc.includes('evolve') ||
+        desc.includes('adjust') || desc.includes('change')) {
       return 'mutate_adapt';
     }
     
@@ -232,6 +299,6 @@ export class CreativeCharacterConversationParser {
       return 'suppress_contradiction';
     }
     
-    return 'mutate_adapt'; // Default
+    return 'mutate_adapt'; // Default for characters who need to adapt and survive
   }
 }
