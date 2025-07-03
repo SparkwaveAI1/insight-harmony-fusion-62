@@ -104,7 +104,7 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
                 {showDetails ? 'Less' : 'More'}
               </Button>
               <Button asChild size="sm">
-                <Link to={`/characters/creative/${character.character_id}`}>
+                <Link to={`/characters/${character.character_id}`}>
                   <Eye className="h-3 w-3 mr-1" />
                   View
                 </Link>
@@ -212,7 +212,7 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
           {showDetails ? 'Show Less' : 'Show More'}
         </Button>
         <Button asChild size="sm" className="w-full">
-          <Link to={`/characters/creative/${character.character_id}`}>
+          <Link to={`/characters/${character.character_id}`}>
             <Eye className="h-4 w-4 mr-2" />
             View Character
           </Link>
