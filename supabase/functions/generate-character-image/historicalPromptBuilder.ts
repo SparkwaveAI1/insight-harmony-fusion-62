@@ -22,9 +22,10 @@ export const HISTORICAL_STYLES = {
   }
 };
 
-export function buildHistoricalCharacterImagePrompt(characterData: any, style: string = 'photorealistic'): string {
+export function buildHistoricalCharacterImagePrompt(characterData: any, style: string = 'photorealistic', customText: string = ''): string {
   console.log("Building historical character image prompt with exact user format");
   console.log("Character data:", JSON.stringify(characterData, null, 2));
+  console.log("Custom instructions:", customText);
   
   // Extract key information from character data
   const name = characterData.name || 'Unknown';
@@ -62,8 +63,15 @@ export function buildHistoricalCharacterImagePrompt(characterData: any, style: s
     }
   }
   
+  // Start with priority custom instructions if provided
+  let prompt = '';
+  if (customText && customText.trim()) {
+    prompt = `IMPORTANT INSTRUCTIONS: ${customText.trim()}. `;
+    console.log("Added high-priority custom instructions to beginning of prompt");
+  }
+  
   // Build EXACTLY the user's format: Create: [style] historical character, [gender], [age] years old, born [year], [ethnicity], [height/build], [appearance], from [period], [region], [cultural context], [social class], working as [occupation]
-  let prompt = `Create: ${style} historical character, ${gender}, ${age} years old`;
+  prompt += `Create: ${style} historical character, ${gender}, ${age} years old`;
   
   if (yearOfBirth) {
     prompt += `, born ${yearOfBirth}`;
@@ -101,6 +109,23 @@ export function buildHistoricalCharacterImagePrompt(characterData: any, style: s
     prompt += `, working as ${occupation}`;
   }
   
-  console.log("Generated exact user format prompt:", prompt);
+  // Add composition instructions based on style to encourage full-body shots
+  if (style === 'cinematic') {
+    prompt += ', full body shot, dramatic wide angle, complete figure visible from head to toe, cinematic composition';
+  } else if (style === 'photorealistic') {
+    prompt += ', full body photograph, standing pose, entire figure visible, museum quality lighting';
+  } else if (style === 'artistic') {
+    prompt += ', full length artistic rendering, complete figure composition, classical full body pose';
+  } else if (style === 'portrait') {
+    prompt += ', formal full body portrait, standing in period-appropriate setting, head to toe composition';
+  }
+  
+  // Reinforce custom instructions at the end for emphasis
+  if (customText && customText.trim()) {
+    prompt += `. SPECIFICALLY: ${customText.trim()}`;
+    console.log("Reinforced custom instructions at end of prompt");
+  }
+  
+  console.log("Generated prioritized prompt with custom instructions:", prompt);
   return prompt;
 }
