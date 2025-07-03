@@ -57,9 +57,9 @@ export const useHighPerformanceCreativeCharacters = (
   const { user, isLoading: authLoading } = useAuth();
   const { limit = 12, offset = 0, searchQuery = '', enableSearch = true } = options;
   
-  return useQuery<HighPerformanceCharactersResult, Error>({
+  return useQuery({
     queryKey: ['high-perf-creative-characters', user?.id, limit, offset, searchQuery],
-    queryFn: async () => {
+    queryFn: async (): Promise<HighPerformanceCharactersResult> => {
       console.log('🚀 High-performance fetch - Limit:', limit, 'Offset:', offset, 'Search:', searchQuery);
       
       try {
@@ -74,9 +74,7 @@ export const useHighPerformanceCreativeCharacters = (
             user_id,
             is_public,
             profile_image_url,
-            trait_profile->description,
-            trait_profile->entity_type,
-            trait_profile->narrative_domain
+            trait_profile
           `, { count: 'exact' })
           .eq('creation_source', 'creative');
 
@@ -116,18 +114,22 @@ export const useHighPerformanceCreativeCharacters = (
         console.log(`✅ High-performance fetch complete: ${data?.length || 0} characters (${count} total)`);
         
         // Transform to CharacterSummary objects
-        const characters: CharacterSummary[] = (data || []).map(row => ({
-          character_id: row.character_id,
-          name: row.name,
-          creation_source: row.creation_source,
-          created_at: row.created_at,
-          user_id: row.user_id,
-          is_public: row.is_public || false,
-          profile_image_url: row.profile_image_url,
-          description: (row as any).description || '',
-          entity_type: (row as any).entity_type || 'human',
-          narrative_domain: (row as any).narrative_domain || 'modern'
-        }));
+        const characters: CharacterSummary[] = (data || []).map(row => {
+          const traitProfile = row.trait_profile as any || {};
+          
+          return {
+            character_id: row.character_id,
+            name: row.name,
+            creation_source: row.creation_source,
+            created_at: row.created_at,
+            user_id: row.user_id,
+            is_public: row.is_public || false,
+            profile_image_url: row.profile_image_url,
+            description: traitProfile.description || '',
+            entity_type: traitProfile.entity_type || 'human',
+            narrative_domain: traitProfile.narrative_domain || 'modern'
+          };
+        });
 
         return {
           characters,
@@ -149,9 +151,9 @@ export const useHighPerformanceCreativeCharacters = (
 
 // Hook for lazy loading full character details
 export const useLazyCharacterDetails = (characterId: string | null, enabled = false) => {
-  return useQuery<CharacterDetails | null, Error>({
+  return useQuery({
     queryKey: ['character-details', characterId],
-    queryFn: async () => {
+    queryFn: async (): Promise<CharacterDetails | null> => {
       if (!characterId) return null;
       
       console.log('🔍 Lazy loading character details:', characterId);
