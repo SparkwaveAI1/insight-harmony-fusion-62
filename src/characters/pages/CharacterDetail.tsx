@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -11,6 +10,7 @@ import CharacterAvatar from '../components/CharacterAvatar';
 import GenerateCharacterImageWithStyleButton from '../components/GenerateCharacterImageWithStyleButton';
 import CharacterVisibilityToggle from '../components/CharacterVisibilityToggle';
 import DeleteCharacterButton from '../components/DeleteCharacterButton';
+import CharacterNameEditor from '../components/CharacterNameEditor';
 import { downloadCharacterAsJSON } from '../utils/downloadUtils';
 import CharacterDetailHeader from '../components/CharacterDetailHeader';
 import CharacterInfoSections from '../components/CharacterInfoSections';
@@ -51,6 +51,13 @@ const CharacterDetail = () => {
     if (activeCharacter) {
       // This will trigger a re-render with the updated visibility status
       loadCharacter(characterId!);
+    }
+  };
+
+  const handleNameUpdated = (newName: string) => {
+    // Reload character to get updated name
+    if (characterId) {
+      loadCharacter(characterId);
     }
   };
 
@@ -151,9 +158,14 @@ const CharacterDetail = () => {
                   )}
                 </div>
 
-                {/* Character Info */}
+                {/* Character Info with Editable Name */}
                 <div className="mb-6">
-                  <h1 className="text-3xl font-bold mb-2">{activeCharacter.name}</h1>
+                  <CharacterNameEditor
+                    characterId={activeCharacter.character_id}
+                    currentName={activeCharacter.name}
+                    onNameUpdated={handleNameUpdated}
+                    className="mb-2 justify-center"
+                  />
                   <p className="text-muted-foreground mb-4">
                     {isNonHumanoidCharacter ? 'Creative Entity' : 
                      activeCharacter.character_type === 'historical' ? 'Historical' : 'Fictional'} Character
