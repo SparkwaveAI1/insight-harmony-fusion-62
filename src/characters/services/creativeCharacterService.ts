@@ -12,13 +12,15 @@ export async function createCreativeCharacter(
   console.log('User ID:', userId);
 
   try {
-    // Build the Character Lab character using the new builder
+    // Build the Character Lab character using the corrected builder
     const character = CreativeCharacterBuilder.buildCharacter(data, userId);
 
     console.log('Built Character Lab character object:', character);
+    console.log('Character user_id:', character.user_id);
 
     // Convert to database-compatible format
     const dbCharacter = creativeCharacterToDbFormat(character);
+    console.log('DB character user_id:', dbCharacter.user_id);
 
     // Insert into the database using type assertion for compatibility
     const { data: insertedData, error } = await supabase

@@ -8,6 +8,7 @@ export const buildCreativeCharacterFromData = (
   userId?: string
 ): CreativeCharacter => {
   console.log('🏗️ Building creative character with core identity:', data.name);
+  console.log('Character ID:', characterId, 'User ID:', userId);
 
   const trait_profile: CreativeCharacterTraitProfile = {
     // CORE IDENTITY - Process first and prominently
@@ -55,7 +56,8 @@ export const buildCreativeCharacterFromData = (
     ability: data.primaryAbility,
     purpose: data.corePurpose,
     activities: data.keyActivities?.length || 0,
-    knowledge: data.importantKnowledge?.length || 0
+    knowledge: data.importantKnowledge?.length || 0,
+    userId: userId
   });
 
   return character;
@@ -63,5 +65,12 @@ export const buildCreativeCharacterFromData = (
 
 // Export as CreativeCharacterBuilder for compatibility
 export const CreativeCharacterBuilder = {
-  buildCharacter: buildCreativeCharacterFromData
+  buildCharacter: (data: CreativeCharacterData, userId: string): CreativeCharacter => {
+    // Generate a unique character ID
+    const characterId = `char_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🆔 Generated character ID:', characterId, 'for user:', userId);
+    
+    // Call the main builder function with correct parameter order
+    return buildCreativeCharacterFromData(data, characterId, userId);
+  }
 };
