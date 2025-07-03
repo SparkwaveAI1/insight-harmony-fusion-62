@@ -106,7 +106,7 @@ const UltraFastCreativeCharacterLibrary = () => {
               <div>
                 <h1 className="text-xl md:text-3xl font-bold">Character Lab Library</h1>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  {user ? 'Optimized performance for managing your creative characters' : 'Public community creations'}
+                  {user ? 'Manage your creative characters' : 'Public community creations'}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {totalCount} total characters • Page {currentPage} of {totalPages}
