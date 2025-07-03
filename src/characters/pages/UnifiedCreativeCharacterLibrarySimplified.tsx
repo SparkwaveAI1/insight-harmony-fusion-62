@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 import CreativeCharacterCard from '../components/CreativeCharacterCard';
 import { useAuth } from '@/context/AuthContext';
 
-const UnifiedCreativeCharacterLibrary = () => {
+const UnifiedCreativeCharacterLibrarySimplified = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { data: characters = [], isLoading, error } = useUnifiedCreativeCharactersSimplified();
   const [searchQuery, setSearchQuery] = useState('');
@@ -210,4 +210,4 @@ const UnifiedCreativeCharacterLibrary = () => {
   );
 };
 
-export default UnifiedCreativeCharacterLibrary;
+export default UnifiedCreativeCharacterLibrarySimplified;
