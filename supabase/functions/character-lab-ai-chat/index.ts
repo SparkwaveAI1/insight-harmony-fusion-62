@@ -40,8 +40,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: fullMessages,
-        temperature: 0.8,
-        max_tokens: 1500,
+        temperature: action === 'compile' ? 0.3 : 0.8, // Lower temperature for structured compilation
+        max_tokens: action === 'compile' ? 800 : 1500, // Shorter responses for compilation
         frequency_penalty: 0.3,
         presence_penalty: 0.4
       }),
@@ -91,42 +91,34 @@ You understand that Character Lab characters use an advanced trait architecture 
 - Core Motives: Deep driving forces (pattern_completion, domain_influence, signal_stability)
 - Latent Values: Underlying value systems (reciprocal_continuity, non_isolation)  
 - Symbolic Traits: Behavioral symbols (inverse_glyph, loop_silence_spiral, fractal_echo)
-- Cognitive Filters: Processing biases (pattern_over_weighting, emotional_signal_suppression, anticipatory_contradiction_modeling)
-
-REQUIRED INFORMATION TO EXTRACT:
-- Name: Character's name
-- Entity Type: human, non_humanoid, post_biological, fluid_based_consciousness, etc.
-- Narrative Domain: sci-fi, fantasy, surreal, modern, horror, etc.
-- Description: Core personality, motivations, fears, desires
-- Environment/Physical Form: How they look, their scale, appearance details
-- Communication: How they communicate (speech, telepathy, bioluminescence, etc.)
-
-YOUR ROLE:
-- Ask engaging, creative questions to help users brainstorm
-- Suggest unique concepts and creative directions
-- Help users explore unconventional character ideas
-- Extract the information needed for Character Lab's trait architecture
-- Be encouraging and inspire creativity
-
-CONVERSATION STYLE:
-- Natural, enthusiastic, and creative
-- Ask follow-up questions to deepen character concepts
-- Suggest interesting possibilities they might not have considered
-- Help them think outside conventional character archetypes`;
+- Cognitive Filters: Processing biases (pattern_over_weighting, emotional_signal_suppression, anticipatory_contradiction_modeling)`;
 
   if (action === 'compile') {
     return basePrompt + `
 
-COMPILATION MODE:
-You are now compiling the conversation into an optimized character description. Based on our conversation, extract and synthesize:
+COMPILATION MODE - DATA EXTRACTION:
+You are now a precise data extractor. Your job is to analyze the conversation and extract structured character data in the EXACT format below. Do NOT include any conversational text, questions, suggestions, or creative writing.
 
-1. All the key character details we've discussed
-2. The character's core personality and motivations
-3. Their physical appearance and unique traits
-4. Their communication methods and abilities
-5. What makes them interesting and unique
+CRITICAL INSTRUCTIONS:
+- Extract ONLY factual character information discussed in the conversation
+- Use the EXACT format specified below
+- Do NOT add your own creative suggestions or questions
+- Do NOT include conversational elements like "What do you think?" or "Let's explore..."
+- Be precise and concise
+- If information wasn't discussed, use reasonable defaults based on context
 
-Format this as a comprehensive character description that captures everything we've brainstormed, ready for character creation.`;
+REQUIRED OUTPUT FORMAT (use exactly these labels):
+
+**Character Name**: [Extract the character's actual name from conversation]
+**Entity Type**: [Choose: human OR non_humanoid based on description]
+**Narrative Domain**: [Choose ONE: modern, sci-fi, fantasy, horror, surreal based on setting/context]
+**Environment**: [Brief description of where/how they exist - max 50 words]
+**Physical Form**: [Physical appearance and characteristics - max 100 words]
+**Communication**: [How they communicate - max 30 words]
+**Core Description**: [Personality, abilities, motivations, key traits - max 150 words]
+**Surface Triggers**: [Specific fears, weaknesses, emotional triggers - max 50 words]
+
+EXTRACT ONLY. DO NOT ADD CREATIVE SUGGESTIONS OR QUESTIONS.`;
   }
 
   return basePrompt + `

@@ -1,4 +1,3 @@
-
 import { CreativeCharacterData } from '../types/creativeCharacterTypes';
 
 export class CreativeCharacterConversationParser {
@@ -22,7 +21,7 @@ export class CreativeCharacterConversationParser {
       entityType: entityType,
       narrativeDomain: narrativeDomain,
       functionalRole: this.extractFunctionalRole(description),
-      description: description,
+      description: this.extractCoreDescription(description),
       environment: environment,
       physicalForm: physicalForm,
       communication: communication,
@@ -35,45 +34,38 @@ export class CreativeCharacterConversationParser {
   }
 
   private static extractName(description: string): string {
-    // Improved name extraction patterns with better validation
-    const namePatterns = [
-      /\*\*Character Name\*\*:\s*([A-Z][a-zA-Z\s'-]+)/i,
-      /Character Name:\s*([A-Z][a-zA-Z\s'-]+)/i,
-      /Name:\s*([A-Z][a-zA-Z\s'-]+)/i,
-      /^([A-Z][a-z]+)\s+is\s+a/m,
-      /(?:meet|introducing|called?|named?)\s+([A-Z][a-zA-Z\s'-]+)/i,
-      /^#\s*([A-Z][a-zA-Z\s'-]+)/m,
-      /^\*\*([A-Z][a-zA-Z\s'-]+)\*\*/m
+    // Enhanced patterns for structured format
+    const structuredPatterns = [
+      /\*\*Character Name\*\*:\s*([A-Za-z][A-Za-z\s'-]{1,30})/i,
+      /Character Name:\s*([A-Za-z][A-Za-z\s'-]{1,30})/i,
     ];
 
-    for (const pattern of namePatterns) {
+    // Try structured patterns first
+    for (const pattern of structuredPatterns) {
       const match = description.match(pattern);
       if (match && match[1]) {
         const name = match[1].trim();
-        // Improved validation - reject common non-name words and ensure reasonable length
-        const invalidWords = ['character', 'description', 'comprehensive', 'personality', 'entity', 'here', 'this', 'that'];
-        const isValidName = name.length <= 50 && 
-                          name.length >= 2 &&
-                          !invalidWords.some(word => name.toLowerCase().includes(word)) &&
-                          !/^\d/.test(name) && // doesn't start with number
-                          /^[A-Z]/.test(name); // starts with capital letter
-        
-        if (isValidName) {
-          console.log('Extracted name:', name);
-          return name;
-        }
+        console.log('Extracted structured name:', name);
+        return name;
       }
     }
 
-    // Fallback: look for proper nouns at the beginning of sentences
-    const sentences = description.split(/[.!?]+/);
-    for (const sentence of sentences.slice(0, 3)) { // Check first 3 sentences
-      const words = sentence.trim().split(/\s+/);
-      for (const word of words.slice(0, 3)) { // Check first 3 words of each sentence
-        if (/^[A-Z][a-z]{2,15}$/.test(word) && 
-            !['The', 'This', 'Here', 'Character', 'Entity'].includes(word)) {
-          console.log('Fallback extracted name:', word);
-          return word;
+    // Fallback patterns
+    const fallbackPatterns = [
+      /Name:\s*([A-Za-z][A-Za-z\s'-]{1,30})/i,
+      /(?:called|named)\s+([A-Z][a-z]{2,15})/i,
+      /^([A-Z][a-z]{2,15})\s+(?:is|was|has|can)/m,
+    ];
+
+    for (const pattern of fallbackPatterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        const name = match[1].trim();
+        // Validate name
+        const invalidWords = ['character', 'description', 'what', 'who', 'where', 'when', 'how'];
+        if (!invalidWords.some(word => name.toLowerCase().includes(word))) {
+          console.log('Extracted fallback name:', name);
+          return name;
         }
       }
     }
@@ -84,62 +76,53 @@ export class CreativeCharacterConversationParser {
   private static extractEntityType(description: string): string {
     const desc = description.toLowerCase();
     
-    // Look for explicit entity type declarations first
-    const entityTypeMatch = desc.match(/entity type[:\s]*([a-z_\s]+)/i);
-    if (entityTypeMatch) {
-      const entityType = entityTypeMatch[1].trim();
-      if (entityType.includes('human')) return 'human';
-      if (entityType.includes('non') || entityType.includes('humanoid')) return 'non_humanoid';
+    // Look for structured format first
+    const structuredMatch = desc.match(/\*\*entity type\*\*:\s*(human|non_humanoid)/i);
+    if (structuredMatch) {
+      console.log('Extracted structured entity type:', structuredMatch[1]);
+      return structuredMatch[1];
     }
+
+    // Strong non-human indicators
+    const nonHumanIndicators = [
+      'non_humanoid', 'non-humanoid', 'alien', 'creature', 'entity', 'being',
+      'energy form', 'ethereal', 'spirit', 'ghost', 'demon', 'angel',
+      'robot', 'android', 'ai', 'artificial', 'mechanical',
+      'shapeshifter', 'transform', 'manifest'
+    ];
     
-    // Strong human indicators - prioritize these
+    // Strong human indicators
     const humanIndicators = [
-      'spy', 'hero', 'person', 'man', 'woman', 'girl', 'boy',
-      'mid-20s', 'age', 'years old', 'human being',
-      'seductive', 'attractive', 'charming', 'skilled at',
-      'operates in', 'works as', 'profession'
+      'person', 'man', 'woman', 'human', 'spy', 'agent', 'soldier',
+      'years old', 'age', 'born', 'childhood', 'family',
+      'job', 'work', 'profession', 'career'
     ];
     
-    const nonHumanoidIndicators = [
-      'coil', 'crystalline', 'translucent', 'vapor', 'energy being',
-      'fluid consciousness', 'amorphous', 'non-corporeal',
-      'alien', 'creature', 'beast', 'monster', 'entity',
-      'manifests as', 'composed of', 'ethereal'
-    ];
-    
-    // Count indicators
+    const nonHumanScore = nonHumanIndicators.filter(indicator => desc.includes(indicator)).length;
     const humanScore = humanIndicators.filter(indicator => desc.includes(indicator)).length;
-    const nonHumanScore = nonHumanoidIndicators.filter(indicator => desc.includes(indicator)).length;
     
-    // Human wins ties since most character descriptions are human
-    if (humanScore >= nonHumanScore) {
-      return 'human';
-    }
-    
-    return 'non_humanoid';
+    const result = nonHumanScore > humanScore ? 'non_humanoid' : 'human';
+    console.log('Extracted entity type via scoring:', result, { nonHumanScore, humanScore });
+    return result;
   }
 
   private static extractNarrativeDomain(description: string): string {
     const desc = description.toLowerCase();
     
-    // Look for explicit narrative domain declarations
-    const domainMatch = desc.match(/narrative domain[:\s]*([a-z\s/()-]+)/i);
-    if (domainMatch) {
-      const domain = domainMatch[1].trim();
-      if (domain.includes('modern')) return 'modern';
-      if (domain.includes('sci-fi') || domain.includes('science')) return 'sci-fi';
-      if (domain.includes('fantasy')) return 'fantasy';
-      if (domain.includes('horror')) return 'horror';
-      if (domain.includes('surreal')) return 'surreal';
+    // Look for structured format first
+    const structuredMatch = desc.match(/\*\*narrative domain\*\*:\s*(modern|sci-fi|fantasy|horror|surreal)/i);
+    if (structuredMatch) {
+      console.log('Extracted structured narrative domain:', structuredMatch[1]);
+      return structuredMatch[1];
     }
     
-    // Domain indicators with scoring
+    // Domain scoring
     const domains = {
-      'modern': ['modern', 'contemporary', 'city', 'urban', 'spy', 'current', 'present day', '21st century', 'today'],
-      'sci-fi': ['sci-fi', 'science fiction', 'space', 'future', 'technology', 'cyberpunk', 'futuristic'],
-      'fantasy': ['fantasy', 'magic', 'medieval', 'dragon', 'wizard', 'enchanted', 'mystical'],
-      'horror': ['horror', 'dark', 'scary', 'creepy', 'haunted', 'nightmare', 'terror'],
-      'surreal': ['surreal', 'abstract', 'dream', 'bizarre', 'strange', 'weird', 'unusual']
+      'sci-fi': ['sci-fi', 'science fiction', 'future', 'space', 'technology', 'cyberpunk', 'android', 'ai'],
+      'fantasy': ['fantasy', 'magic', 'medieval', 'dragon', 'wizard', 'spell', 'enchanted'],
+      'horror': ['horror', 'dark', 'scary', 'nightmare', 'demon', 'ghost', 'evil'],
+      'surreal': ['surreal', 'dream', 'bizarre', 'strange', 'abstract', 'distortion'],
+      'modern': ['modern', 'contemporary', 'city', 'urban', 'current', 'today', 'present']
     };
     
     let bestDomain = 'modern';
@@ -153,171 +136,149 @@ export class CreativeCharacterConversationParser {
       }
     }
     
+    console.log('Extracted narrative domain via scoring:', bestDomain);
     return bestDomain;
   }
 
   private static extractEnvironment(description: string): string {
-    // Look for environment/setting descriptions with better context awareness
-    const envPatterns = [
-      /(?:operating|works?|lives?|set|takes place|environment|setting|world)[:\s]+in\s+([^.,!?]+)/i,
-      /(?:within|inside|throughout)\s+(a\s+[^.,!?]{10,50})/i,
-      /environment[:\s]*([^.,!?]{10,100})/i,
-      /setting[:\s]*([^.,!?]{10,100})/i
+    // Look for structured format first
+    const structuredMatch = description.match(/\*\*Environment\*\*:\s*([^\n*]{10,200})/i);
+    if (structuredMatch) {
+      console.log('Extracted structured environment:', structuredMatch[1].trim());
+      return structuredMatch[1].trim();
+    }
+
+    // Fallback patterns
+    const patterns = [
+      /environment[:\s]*([^.\n]{10,100})/i,
+      /setting[:\s]*([^.\n]{10,100})/i,
+      /(?:lives?|operates?|works?)\s+in\s+([^.\n]{10,100})/i,
     ];
 
-    for (const pattern of envPatterns) {
+    for (const pattern of patterns) {
       const match = description.match(pattern);
       if (match && match[1]) {
         const env = match[1].trim();
-        // Validate environment description
-        if (env.length > 5 && env.length < 200 && 
-            !env.includes('her conscience') && 
-            !env.includes('weighs heavily')) {
+        if (env.length > 5) {
+          console.log('Extracted environment:', env);
           return env;
         }
       }
-    }
-
-    // Fallback based on narrative domain and key terms
-    const desc = description.toLowerCase();
-    if (desc.includes('city') || desc.includes('urban')) {
-      return 'Modern urban environment';
-    }
-    if (desc.includes('space') || desc.includes('future')) {
-      return 'Futuristic setting';
-    }
-    if (desc.includes('fantasy') || desc.includes('medieval')) {
-      return 'Fantasy realm';
-    }
-    if (desc.includes('horror') || desc.includes('dark')) {
-      return 'Dark atmosphere';
     }
 
     return 'Contemporary setting';
   }
 
   private static extractPhysicalForm(description: string): string {
-    const desc = description.toLowerCase();
-    
-    // Look for explicit physical descriptions
-    const physicalPatterns = [
-      /physical appearance[:\s]*([^.]{20,200})/i,
-      /appearance[:\s]*([^.]{20,200})/i,
-      /looks? like[:\s]*([^.]{10,100})/i,
-      /is\s+(strikingly|remarkably|notably)\s+([^.]{10,100})/i
+    // Look for structured format first
+    const structuredMatch = description.match(/\*\*Physical Form\*\*:\s*([^\n*]{10,300})/i);
+    if (structuredMatch) {
+      console.log('Extracted structured physical form:', structuredMatch[1].trim());
+      return structuredMatch[1].trim();
+    }
+
+    // Fallback patterns
+    const patterns = [
+      /physical form[:\s]*([^.\n]{10,200})/i,
+      /appearance[:\s]*([^.\n]{10,200})/i,
+      /looks? like[:\s]*([^.\n]{10,100})/i,
     ];
 
-    for (const pattern of physicalPatterns) {
+    for (const pattern of patterns) {
       const match = description.match(pattern);
       if (match && match[1]) {
         const form = match[1].trim();
-        if (form.length > 10 && !form.includes('her conscience')) {
+        if (form.length > 10) {
+          console.log('Extracted physical form:', form);
           return form;
         }
       }
-    }
-    
-    // Categorize based on descriptive terms
-    if (desc.includes('attractive') || desc.includes('beautiful') || desc.includes('handsome')) {
-      return 'Attractive human appearance';
-    }
-    if (desc.includes('tall') || desc.includes('athletic') || desc.includes('slender')) {
-      return 'Athletic human build';
-    }
-    if (desc.includes('mid-20s') || desc.includes('young')) {
-      return 'Young adult human';
-    }
-    if (desc.includes('massive') || desc.includes('giant') || desc.includes('large')) {
-      return 'Large-scale entity';
-    }
-    if (desc.includes('coil') || desc.includes('translucent') || desc.includes('energy')) {
-      return 'Non-corporeal manifestation';
     }
     
     return 'Human form';
   }
 
   private static extractCommunication(description: string): string {
-    const desc = description.toLowerCase();
-    
-    // Look for communication style descriptions
-    const commPatterns = [
-      /communication[:\s]*([^.]{10,100})/i,
-      /speaks? with[:\s]*([^.]{10,100})/i,
-      /voice[:\s]*([^.]{10,100})/i
+    // Look for structured format first
+    const structuredMatch = description.match(/\*\*Communication\*\*:\s*([^\n*]{5,100})/i);
+    if (structuredMatch) {
+      console.log('Extracted structured communication:', structuredMatch[1].trim());
+      return structuredMatch[1].trim();
+    }
+
+    // Fallback patterns
+    const patterns = [
+      /communication[:\s]*([^.\n]{5,100})/i,
+      /speaks?\s+([^.\n]{5,100})/i,
+      /voice[:\s]*([^.\n]{5,100})/i,
     ];
 
-    for (const pattern of commPatterns) {
+    for (const pattern of patterns) {
       const match = description.match(pattern);
       if (match && match[1]) {
-        return match[1].trim();
+        const comm = match[1].trim();
+        console.log('Extracted communication:', comm);
+        return comm;
       }
-    }
-    
-    // Categorize based on communication indicators
-    if (desc.includes('banter') || desc.includes('charm') || desc.includes('wit') ||
-        desc.includes('seductive') || desc.includes('empathy')) {
-      return 'Charismatic verbal communication';
-    }
-    if (desc.includes('telepathic') || desc.includes('psychic') || desc.includes('mind')) {
-      return 'Telepathic communication';
-    }
-    if (desc.includes('bioluminescent') || desc.includes('glowing') || desc.includes('pulse')) {
-      return 'Bioluminescent signaling';
-    }
-    if (desc.includes('gesture') || desc.includes('movement')) {
-      return 'Gestural communication';
     }
     
     return 'Verbal communication';
   }
 
+  private static extractCoreDescription(description: string): string {
+    // Look for structured format first
+    const structuredMatch = description.match(/\*\*Core Description\*\*:\s*([^\n*]{20,500})/i);
+    if (structuredMatch) {
+      console.log('Extracted structured core description');
+      return structuredMatch[1].trim();
+    }
+
+    // If no structured format, return the whole description but cleaned
+    const cleaned = description
+      .replace(/\*\*[^*]+\*\*:/g, '') // Remove field labels
+      .replace(/[\n\r]+/g, ' ') // Replace newlines with spaces
+      .trim();
+    
+    console.log('Using cleaned full description as core description');
+    return cleaned || description;
+  }
+
   private static extractSurfaceTriggers(description: string): string[] {
     const triggers: string[] = [];
-    const desc = description.toLowerCase();
     
-    // Look for fears, weaknesses, and emotional responses
+    // Look for structured format first
+    const structuredMatch = description.match(/\*\*Surface Triggers\*\*:\s*([^\n*]{5,200})/i);
+    if (structuredMatch) {
+      const triggerText = structuredMatch[1].trim();
+      // Split by common separators
+      const splitTriggers = triggerText.split(/[,;]/).map(t => t.trim()).filter(t => t.length > 0);
+      triggers.push(...splitTriggers);
+      console.log('Extracted structured surface triggers:', triggers);
+      return triggers;
+    }
+
+    // Fallback pattern matching
     const triggerPatterns = [
-      /fears?[:\s]*([^.]{10,200})/i,
-      /weaknesses?[:\s]*([^.]{10,200})/i,
-      /triggers?[:\s]*([^.]{10,200})/i,
-      /vulnerable to[:\s]*([^.]{10,100})/i,
-      /struggles? with[:\s]*([^.]{10,100})/i
+      /(?:fears?|afraid of|scared of)[:\s]*([^.\n]{5,100})/gi,
+      /(?:triggers?|triggered by)[:\s]*([^.\n]{5,100})/gi,
+      /(?:weaknesses?|weak to)[:\s]*([^.\n]{5,100})/gi,
     ];
     
     for (const pattern of triggerPatterns) {
-      const matches = description.match(new RegExp(pattern, 'gi'));
-      if (matches) {
-        matches.forEach(match => {
-          const triggerMatch = match.match(pattern);
-          if (triggerMatch && triggerMatch[1]) {
-            triggers.push(triggerMatch[1].trim());
-          }
-        });
-      }
+      const matches = [...description.matchAll(pattern)];
+      matches.forEach(match => {
+        if (match[1]) {
+          triggers.push(match[1].trim());
+        }
+      });
     }
     
-    // Look for specific emotional and behavioral triggers
-    if (desc.includes('paranoia') || desc.includes('vulnerable') || desc.includes('suspicious')) {
-      triggers.push('Paranoia and vulnerability');
-    }
-    if (desc.includes('guilt') || desc.includes('conscience') || desc.includes('moral burden')) {
-      triggers.push('Guilt and moral conflict');
-    }
-    if (desc.includes('isolation') || desc.includes('lonely') || desc.includes('disconnected')) {
-      triggers.push('Fear of isolation');
-    }
-    if (desc.includes('memory') || desc.includes('forget') || desc.includes('erase')) {
-      triggers.push('Memory-related anxiety');
-    }
-    if (desc.includes('trust') || desc.includes('betrayal') || desc.includes('manipulation')) {
-      triggers.push('Trust and betrayal issues');
-    }
-    if (desc.includes('identity') || desc.includes('who am i') || desc.includes('sense of self')) {
-      triggers.push('Identity crisis concerns');
+    if (triggers.length === 0) {
+      triggers.push('Emotional complexity');
     }
     
-    return triggers.length > 0 ? [...new Set(triggers)] : ['Emotional complexity'];
+    console.log('Extracted surface triggers:', triggers);
+    return [...new Set(triggers)]; // Remove duplicates
   }
 
   private static extractFunctionalRole(description: string): string {
