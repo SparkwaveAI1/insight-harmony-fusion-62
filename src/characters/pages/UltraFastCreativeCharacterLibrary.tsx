@@ -21,6 +21,7 @@ const UltraFastCreativeCharacterLibrary = () => {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const offset = (currentPage - 1) * CHARACTERS_PER_PAGE;
   
+  // Using ONLY the optimized standardized hook to prevent contention
   const { 
     data: result, 
     isLoading, 
@@ -30,7 +31,7 @@ const UltraFastCreativeCharacterLibrary = () => {
     limit: CHARACTERS_PER_PAGE,
     offset,
     searchQuery: deferredSearchQuery,
-    enableSearch: deferredSearchQuery.length > 0
+    enableSearch: deferredSearchQuery.length >= 2
   });
 
   const characters = result?.characters || [];
@@ -73,6 +74,7 @@ const UltraFastCreativeCharacterLibrary = () => {
   }
 
   if (error) {
+    console.error('❌ Character library error:', error);
     return (
       <div className="w-full px-4 md:px-8 py-8">
         <Section>
@@ -81,9 +83,14 @@ const UltraFastCreativeCharacterLibrary = () => {
             <p className="text-muted-foreground mb-4">
               {error.message || 'Failed to load characters'}
             </p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+              <Button variant="outline" onClick={() => setCurrentPage(1)}>
+                Reset Filters
+              </Button>
+            </div>
           </Card>
         </Section>
       </div>

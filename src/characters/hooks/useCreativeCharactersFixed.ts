@@ -1,15 +1,33 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { getAllCreativeCharacters } from '../services/unifiedCharacterService';
 import { useAuth } from '@/context/AuthContext';
+import { CreativeCharacter } from '../types/creativeCharacterTypes';
 
-export const useCreativeCharactersFixed = () => {
-  const { user } = useAuth();
+interface UseCreativeCharactersFixedOptions {
+  limit?: number;
+  offset?: number;
+  searchQuery?: string;
+  enableSearch?: boolean;
+}
+
+interface CreativeCharactersResult {
+  characters: CreativeCharacter[];
+  totalCount: number;
+}
+
+export const useCreativeCharactersFixed = (
+  options: UseCreativeCharactersFixedOptions = {}
+) => {
+  const { user, isLoading: authLoading } = useAuth();
   
   return useQuery({
-    queryKey: ['creative-characters-fixed', user?.id],
-    queryFn: () => getAllCreativeCharacters(user?.id),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    enabled: !!user, // Only run query when user is authenticated
+    queryKey: ['creative-characters-fixed-disabled', user?.id],
+    queryFn: async (): Promise<CreativeCharactersResult> => {
+      // DISABLED: This hook is temporarily disabled to prevent database contention
+      // Use useStandardizedCreativeCharacters instead
+      console.log('⚠️ useCreativeCharactersFixed is disabled - use useStandardizedCreativeCharacters');
+      return { characters: [], totalCount: 0 };
+    },
+    enabled: false, // Completely disable this hook
   });
 };

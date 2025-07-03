@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ interface StandardizedCreativeCharacterCardProps {
   viewMode: 'grid' | 'list';
 }
 
-const StandardizedCreativeCharacterCard = ({ character, viewMode }: StandardizedCreativeCharacterCardProps) => {
+const StandardizedCreativeCharacterCard = React.memo(({ character, viewMode }: StandardizedCreativeCharacterCardProps) => {
   const { user } = useAuth();
   const isOwner = user?.id === character.user_id;
 
@@ -25,7 +26,7 @@ const StandardizedCreativeCharacterCard = ({ character, viewMode }: Standardized
   };
 
   // Convert to legacy format for CloneCharacterButton compatibility
-  const characterForCloning = creativeCharacterToCharacter({
+  const characterForCloning = React.useMemo(() => creativeCharacterToCharacter({
     character_id: character.character_id,
     name: character.name,
     user_id: character.user_id,
@@ -47,7 +48,7 @@ const StandardizedCreativeCharacterCard = ({ character, viewMode }: Standardized
     preinterview_tags: [],
     simulation_directives: {},
     enhanced_metadata_version: 2
-  });
+  }), [character]);
 
   return (
     <Card className={`hover:shadow-lg transition-shadow ${
@@ -118,6 +119,8 @@ const StandardizedCreativeCharacterCard = ({ character, viewMode }: Standardized
       </CardFooter>
     </Card>
   );
-};
+});
+
+StandardizedCreativeCharacterCard.displayName = 'StandardizedCreativeCharacterCard';
 
 export default StandardizedCreativeCharacterCard;

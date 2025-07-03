@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MessageCircle, Download } from 'lucide-react';
@@ -22,9 +23,10 @@ const CharacterDetail = () => {
   const navigate = useNavigate();
   const { activeCharacter, isLoading, error, loadCharacter } = useCharacter();
 
-  // Load character when component mounts
+  // Load character when component mounts - handle both character_id and id formats
   React.useEffect(() => {
     if (characterId) {
+      console.log('🔍 Loading character with ID:', characterId);
       loadCharacter(characterId);
     }
   }, [characterId]);
@@ -90,6 +92,7 @@ const CharacterDetail = () => {
   };
 
   if (error || !activeCharacter) {
+    console.error('❌ Character not found or error:', { error, characterId, activeCharacter });
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -99,12 +102,17 @@ const CharacterDetail = () => {
               <p className="text-muted-foreground mb-4">
                 {error || 'The character you are looking for could not be found.'}
               </p>
-              <Button asChild>
-                <Link to="/characters">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Library
-                </Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button asChild>
+                  <Link to="/characters">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Library
+                  </Link>
+                </Button>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  Try Again
+                </Button>
+              </div>
             </Card>
           </Section>
         </div>

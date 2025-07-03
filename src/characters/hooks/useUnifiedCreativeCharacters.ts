@@ -1,59 +1,32 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { CreativeCharacter } from '../types/creativeCharacterTypes';
-import { dbResultToCreativeCharacter } from '../services/creativeCharacterTypeMappers';
 import { useAuth } from '@/context/AuthContext';
+import { CreativeCharacter } from '../types/creativeCharacterTypes';
 
-export const useUnifiedCreativeCharacters = () => {
-  const { user } = useAuth();
+interface UseUnifiedCreativeCharactersOptions {
+  limit?: number;
+  offset?: number;
+  searchQuery?: string;
+}
+
+interface UnifiedCreativeCharactersResult {
+  characters: CreativeCharacter[];
+  totalCount: number;
+}
+
+export const useUnifiedCreativeCharacters = (
+  options: UseUnifiedCreativeCharactersOptions = {}
+) => {
+  const { user, isLoading: authLoading } = useAuth();
   
   return useQuery({
-    queryKey: ['unified-creative-characters', user?.id],
-    queryFn: async (): Promise<CreativeCharacter[]> => {
-      if (!user) {
-        // If not authenticated, only fetch public characters
-        const { data: publicData, error: publicError } = await supabase
-          .from('characters')
-          .select('*')
-          .eq('creation_source', 'creative')
-          .eq('is_public', true)
-          .order('created_at', { ascending: false });
-
-        if (publicError) throw publicError;
-        return (publicData || []).map(dbResultToCreativeCharacter);
-      }
-
-      // If authenticated, fetch both user's characters and public characters
-      const [userResult, publicResult] = await Promise.all([
-        supabase
-          .from('characters')
-          .select('*')
-          .eq('creation_source', 'creative')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false }),
-        
-        supabase
-          .from('characters')
-          .select('*')
-          .eq('creation_source', 'creative')
-          .eq('is_public', true)
-          .neq('user_id', user.id) // Exclude user's own public characters to avoid duplicates
-          .order('created_at', { ascending: false })
-      ]);
-
-      if (userResult.error) throw userResult.error;
-      if (publicResult.error) throw publicResult.error;
-
-      const userCharacters = (userResult.data || []).map(dbResultToCreativeCharacter);
-      const publicCharacters = (publicResult.data || []).map(dbResultToCreativeCharacter);
-
-      // Combine and sort by creation date
-      const allCharacters = [...userCharacters, ...publicCharacters];
-      return allCharacters.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+    queryKey: ['unified-creative-characters-disabled', user?.id],
+    queryFn: async (): Promise<UnifiedCreativeCharactersResult> => {
+      // DISABLED: This hook is temporarily disabled to prevent database contention
+      // Use useStandardizedCreativeCharacters instead
+      console.log('⚠️ useUnifiedCreativeCharacters is disabled - use useStandardizedCreativeCharacters');
+      return { characters: [], totalCount: 0 };
     },
-    enabled: true
+    enabled: false, // Completely disable this hook
   });
 };

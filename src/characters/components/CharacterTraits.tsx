@@ -13,6 +13,20 @@ interface CharacterTraitsProps {
 const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) => {
   console.log('CharacterTraits received:', { traitProfile, characterType });
   
+  // Helper function to safely render communication method
+  const renderCommunicationMethod = (communicationMethod: any) => {
+    if (!communicationMethod) return 'Creative communication style';
+    if (typeof communicationMethod === 'string') return communicationMethod;
+    if (typeof communicationMethod === 'object') {
+      // Handle object case - extract meaningful text
+      if (communicationMethod.style) return communicationMethod.style;
+      if (communicationMethod.method) return communicationMethod.method;
+      if (communicationMethod.description) return communicationMethod.description;
+      return 'Creative communication style';
+    }
+    return 'Creative communication style';
+  };
+  
   // For Character Lab (creative characters), show creative traits
   if (characterType === 'multi_species' || characterType === 'fictional') {
     return (
@@ -83,7 +97,7 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
               <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h4 className="font-medium text-gray-800 mb-2">💫 Communication</h4>
                 <p className="text-sm text-gray-600">
-                  {traitProfile.communication_method || 'Creative communication style'}
+                  {renderCommunicationMethod(traitProfile.communication_method)}
                 </p>
               </div>
             </div>
@@ -155,7 +169,7 @@ const CharacterTraits = ({ traitProfile, characterType }: CharacterTraitsProps) 
                     <p className="text-sm font-medium text-gray-800 capitalize">
                       {key.replace(/_/g, ' ')}:
                     </p>
-                    <p className="text-sm text-gray-600">{value}</p>
+                    <p className="text-sm text-gray-600">{String(value)}</p>
                   </div>
                 ))}
               </div>
