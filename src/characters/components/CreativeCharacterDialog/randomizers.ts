@@ -1,48 +1,94 @@
-
 import { CreativeCharacterData } from './types';
-import { narrativeDomains, functionalRoles, coreDriveOptions, surfaceTriggerOptions } from './constants';
 
-export const handleRandomize = (currentStep: number, formData: CreativeCharacterData, setFormData: (data: CreativeCharacterData) => void) => {
+const domainOptions = [
+  'modern', 'sci-fi', 'fantasy', 'horror', 'surreal'
+];
+
+const entityTypeOptions = [
+  'human', 'non_humanoid'
+];
+
+const changeResponseOptions = [
+  'mutate_adapt', 'resist_preserve', 'ignore_drift', 'seek_novelty'
+];
+
+const coreAbilities = [
+  'Memory Erasure', 'Time Manipulation', 'Telepathy', 'Shape-shifting', 
+  'Invisibility', 'Elemental Control', 'Precognition', 'Telekinesis',
+  'Dream Walking', 'Soul Reading', 'Reality Bending', 'Phase Shifting'
+];
+
+const corePurposes = [
+  'Secret Agent', 'Guardian', 'Explorer', 'Scholar', 'Protector',
+  'Investigator', 'Mediator', 'Rebel', 'Teacher', 'Healer',
+  'Enforcer', 'Observer', 'Creator', 'Destroyer'
+];
+
+const commonActivities = [
+  'Infiltration', 'Intelligence Gathering', 'Combat Training', 'Research',
+  'Meditation', 'Patrol Duties', 'Investigation', 'Teaching',
+  'Healing', 'Creation', 'Exploration', 'Protection'
+];
+
+const importantKnowledgeTemplates = [
+  'Knows about their abilities',
+  'Aware of their organization',
+  'Understands their mission',
+  'Remembers their training',
+  'Knows their true identity',
+  'Aware of hidden threats'
+];
+
+export const handleRandomize = (
+  currentStep: number, 
+  formData: CreativeCharacterData, 
+  setFormData: (data: CreativeCharacterData) => void
+): void => {
+  const getRandomItem = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const getRandomItems = <T>(arr: T[], count: number): T[] => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
   switch (currentStep) {
     case 1:
-      const randomNames = ['Zephyr', 'Axiom', 'Vex', 'Quill', 'Ember', 'Drift', 'Pulse', 'Void', 'Echo', 'Flux'];
-      setFormData({ ...formData, name: randomNames[Math.floor(Math.random() * randomNames.length)] });
+      setFormData({
+        ...formData,
+        name: `Random Name ${Math.floor(Math.random() * 100)}`
+      });
       break;
+      
     case 2:
-      setFormData({ ...formData, entityType: Math.random() > 0.5 ? 'human' : 'non-humanoid' });
+      setFormData({
+        ...formData,
+        narrativeDomain: getRandomItem(domainOptions),
+        entityType: getRandomItem(entityTypeOptions)
+      });
       break;
+      
     case 3:
-      const randomDomain = narrativeDomains[Math.floor(Math.random() * narrativeDomains.length)];
-      setFormData({ ...formData, narrativeDomain: randomDomain.id });
+      // Core Identity randomization
+      setFormData({
+        ...formData,
+        primaryAbility: getRandomItem(coreAbilities),
+        corePurpose: getRandomItem(corePurposes),
+        keyActivities: getRandomItems(commonActivities, Math.floor(Math.random() * 3) + 2),
+        importantKnowledge: getRandomItems(importantKnowledgeTemplates, Math.floor(Math.random() * 2) + 2)
+      });
       break;
+      
     case 4:
-      const randomRole = functionalRoles[Math.floor(Math.random() * functionalRoles.length)];
-      setFormData({ ...formData, functionalRole: randomRole });
+      setFormData({
+        ...formData,
+        description: `A ${getRandomItem(domainOptions)} character with a unique background.`
+      });
       break;
+      
     case 5:
-      const randomDescriptions = [
-        'A mysterious figure driven by an insatiable hunger for knowledge and understanding of the universe.',
-        'Someone who values freedom above all else and will fight against any form of oppression or control.',
-        'A character motivated by deep love for their family and community, willing to sacrifice everything for them.'
-      ];
-      setFormData({ ...formData, description: randomDescriptions[Math.floor(Math.random() * randomDescriptions.length)] });
-      break;
-    case 6:
-      const randomEnvironment = formData.narrativeDomain === 'sci-fi' 
-        ? 'Quantum processing networks beneath Europa\'s ice'
-        : formData.narrativeDomain === 'fantasy'
-        ? 'Ancient grove where moonlight pools into silver memory'
-        : 'Liminal space between waking and dreaming';
-      setFormData({ ...formData, environment: randomEnvironment });
-      break;
-    case 7:
-      const randomDrives = coreDriveOptions
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
-      const randomTriggers = surfaceTriggerOptions
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 2);
-      setFormData({ ...formData, coreDrives: randomDrives, surfaceTriggers: randomTriggers });
+      setFormData({
+        ...formData,
+        environment: `A ${getRandomItem(domainOptions)} setting.`
+      });
       break;
   }
 };

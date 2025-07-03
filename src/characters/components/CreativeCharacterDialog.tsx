@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, Shuffle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,18 +7,26 @@ import { canProceed } from './CreativeCharacterDialog/utils';
 import { handleRandomize } from './CreativeCharacterDialog/randomizers';
 import Step1NameInput from './CreativeCharacterDialog/steps/Step1NameInput';
 import Step2NarrativeDomain from './CreativeCharacterDialog/steps/Step2NarrativeDomain';
-import Step3Description from './CreativeCharacterDialog/steps/Step3Description';
-import Step4Environment from './CreativeCharacterDialog/steps/Step4Environment';
+import Step3CoreIdentity from './CreativeCharacterDialog/steps/Step3CoreIdentity';
+import Step4Description from './CreativeCharacterDialog/steps/Step3Description';
+import Step5Environment from './CreativeCharacterDialog/steps/Step4Environment';
 
 const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCharacterDialogProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState<CreativeCharacterData>({
     name: '',
-    entityType: 'human', // Default to human since we removed the step
+    entityType: 'human',
     narrativeDomain: '',
-    functionalRole: '', // Keep for compatibility but won't be used
+    functionalRole: '',
     description: '',
+    
+    // NEW: Core Identity Fields
+    primaryAbility: '',
+    corePurpose: '',
+    keyActivities: [],
+    importantKnowledge: [],
+    
     environment: '',
     physicalForm: '',
     communication: '',
@@ -28,7 +35,7 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
     changeResponseStyle: 'mutate_adapt'
   });
 
-  const totalSteps = 4; // Changed from 5 to 4
+  const totalSteps = 5; // Updated from 4 to 5
 
   const handleNext = () => {
     console.log('handleNext called - current step:', currentStep, 'can proceed:', canProceed(currentStep, formData));
@@ -69,9 +76,11 @@ const CreativeCharacterDialog = ({ open, onOpenChange, onComplete }: CreativeCha
       case 2:
         return <Step2NarrativeDomain formData={formData} setFormData={setFormData} />;
       case 3:
-        return <Step3Description formData={formData} setFormData={setFormData} />;
+        return <Step3CoreIdentity formData={formData} setFormData={setFormData} />;
       case 4:
-        return <Step4Environment formData={formData} setFormData={setFormData} />;
+        return <Step4Description formData={formData} setFormData={setFormData} />;
+      case 5:
+        return <Step5Environment formData={formData} setFormData={setFormData} />;
       default:
         console.log('Unknown step in renderStep:', currentStep);
         return (

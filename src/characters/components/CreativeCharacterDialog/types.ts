@@ -5,6 +5,13 @@ export interface CreativeCharacterData {
   narrativeDomain: string;
   functionalRole: string;
   description: string;
+  
+  // NEW: Core Identity Fields
+  primaryAbility: string;
+  corePurpose: string;
+  keyActivities: string[];
+  importantKnowledge: string[];
+  
   environment: string;
   physicalForm: string;
   communication: string;

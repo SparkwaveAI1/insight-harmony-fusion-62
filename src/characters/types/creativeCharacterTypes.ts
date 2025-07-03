@@ -74,6 +74,12 @@ export interface PhysicalAppearanceStructure {
 
 // Character Lab's trait architecture - matching your specification
 export interface CreativeCharacterTraitProfile {
+  // Core Identity - NEW: Front and center
+  primary_ability?: string;
+  core_purpose?: string;
+  key_activities?: string[];
+  important_knowledge?: string[];
+  
   // Core Identity
   entity_type?: string;
   narrative_domain?: string;
@@ -238,10 +244,16 @@ export interface CreativeCharacterData {
   narrativeDomain: string;
   functionalRole: string;
   description: string;
+  
+  // NEW: Core Identity Fields
+  primaryAbility: string;
+  corePurpose: string;
+  keyActivities: string[];
+  importantKnowledge: string[];
+  
   environment: string;
   physicalForm: string;
   communication: string;
-  // REMOVED: coreDrives - was causing confusion
   surfaceTriggers: string[];
   changeResponseStyle: string;
 }
