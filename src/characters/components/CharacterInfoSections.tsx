@@ -7,6 +7,7 @@ import EmotionalTriggersSection from './sections/EmotionalTriggersSection';
 import PhysicalManifestationSection from './sections/PhysicalManifestationSection';
 import EntityProfileSection from './sections/EntityProfileSection';
 import CharacterLabEnhancedSection from './sections/CharacterLabEnhancedSection';
+import CharacterTraits from './CharacterTraits';
 import { Character } from '../types/characterTraitTypes';
 import EnhancedTraitArchitectureSection from './sections/EnhancedTraitArchitectureSection';
 
@@ -43,6 +44,14 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         formatDate={formatDate}
         getYearFromDate={getYearFromDate}
       />
+      
+      {/* Character Traits Section - Always show for Character Lab characters */}
+      {isCreativeCharacter && character.trait_profile && (
+        <CharacterTraits 
+          traitProfile={character.trait_profile}
+          characterType={character.character_type as 'historical' | 'fictional' | 'multi_species'}
+        />
+      )}
       
       {/* Enhanced Trait Architecture - only for Character Lab characters with new architecture */}
       {isCreativeCharacter && hasEnhancedTraitArchitecture && (
