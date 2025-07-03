@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Sparkles, Clock, Zap } from 'lucide-react';
@@ -9,7 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import CharacterIdDisplay from '../components/CharacterIdDisplay';
 
 const NonHumanoidCharacterLibrary = () => {
-  const { data: characters, isLoading } = useCreativeCharacters();
+  const { data: result, isLoading } = useCreativeCharacters();
+  
+  // Since the hook is disabled, it returns an object with characters array
+  const characters = result?.characters || [];
 
   if (isLoading) {
     return (

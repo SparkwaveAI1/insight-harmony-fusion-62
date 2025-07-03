@@ -13,9 +13,12 @@ import { useAuth } from '@/context/AuthContext';
 
 const UnifiedCreativeCharacterLibrarySimplified = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const { data: characters = [], isLoading, error } = useUnifiedCreativeCharactersSimplified();
+  const { data: result = { characters: [], totalCount: 0 }, isLoading, error } = useUnifiedCreativeCharactersSimplified();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Extract characters array from the result object
+  const characters = result?.characters || [];
 
   // Memoized filtering for better performance
   const { userCharacters, publicCharacters, filteredCharacters } = useMemo(() => {

@@ -38,10 +38,7 @@ export const useStandardizedCreativeCharacters = (
             is_public,
             profile_image_url,
             created_at,
-            trait_profile->description,
-            trait_profile->narrative_domain,
-            trait_profile->functional_role,
-            trait_profile->entity_type
+            trait_profile
           `, { count: 'exact' })
           .eq('creation_source', 'creative');
 
@@ -55,10 +52,7 @@ export const useStandardizedCreativeCharacters = (
         // Apply search filter only if needed and query is reasonable length
         if (enableSearch && searchQuery.trim() && searchQuery.trim().length >= 2 && searchQuery.trim().length <= 50) {
           const searchTerm = searchQuery.trim();
-          query = query.or(`
-            name.ilike.%${searchTerm}%,
-            trait_profile->>description.ilike.%${searchTerm}%
-          `);
+          query = query.ilike('name', `%${searchTerm}%`);
         }
 
         const { data, error, count } = await query
@@ -73,19 +67,22 @@ export const useStandardizedCreativeCharacters = (
         console.log(`✅ Optimized fetch complete: ${data?.length || 0} characters (${count} total)`);
         
         // Transform to standardized CharacterCardData objects with minimal processing
-        const characters: CharacterCardData[] = (data || []).map(row => ({
-          character_id: row.character_id,
-          name: row.name,
-          user_id: row.user_id,
-          is_public: row.is_public || false,
-          profile_image_url: row.profile_image_url,
-          created_at: row.created_at,
-          // Use direct property access for better performance
-          description: (row as any).description || 'A creative character from Character Lab',
-          narrative_domain: (row as any).narrative_domain,
-          functional_role: (row as any).functional_role,
-          entity_type: (row as any).entity_type || 'human'
-        }));
+        const characters: CharacterCardData[] = (data || []).map(row => {
+          const traitProfile = row.trait_profile as any;
+          
+          return {
+            character_id: row.character_id,
+            name: row.name,
+            user_id: row.user_id,
+            is_public: row.is_public || false,
+            profile_image_url: row.profile_image_url,
+            created_at: row.created_at,
+            description: traitProfile?.description || 'A creative character from Character Lab',
+            narrative_domain: traitProfile?.narrative_domain,
+            functional_role: traitProfile?.functional_role,
+            entity_type: traitProfile?.entity_type || 'human'
+          };
+        });
 
         return {
           characters,

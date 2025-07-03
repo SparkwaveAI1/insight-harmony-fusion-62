@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Eye, User, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useLazyCharacterDetails } from '../hooks/useHighPerformanceCreativeCharacters';
 
 interface CharacterSummary {
   character_id: string;
@@ -29,12 +28,6 @@ interface OptimizedCharacterCardProps {
 const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: OptimizedCharacterCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
-  // Only load full details when user expands the card
-  const { data: fullCharacter, isLoading: detailsLoading } = useLazyCharacterDetails(
-    character.character_id,
-    showDetails
-  );
 
   const isOwner = currentUserId === character.user_id;
   const displayName = character.name || 'Unnamed Character';
@@ -107,23 +100,14 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
           
           {showDetails && (
             <div className="mt-4 pt-4 border-t">
-              {detailsLoading ? (
-                <div className="text-sm text-muted-foreground">Loading details...</div>
-              ) : fullCharacter ? (
-                <div className="space-y-2">
-                  <p className="text-sm">{fullCharacter.trait_profile?.description || character.description}</p>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">
-                      {fullCharacter.trait_profile?.narrative_domain || character.narrative_domain}
-                    </Badge>
-                    <Badge variant="outline">
-                      {fullCharacter.trait_profile?.primary_ability || 'No special ability'}
-                    </Badge>
-                  </div>
+              <div className="space-y-2">
+                <p className="text-sm">{character.description}</p>
+                <div className="flex gap-2">
+                  <Badge variant="secondary">
+                    {character.narrative_domain || 'Unknown Domain'}
+                  </Badge>
                 </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">Details unavailable</div>
-              )}
+              </div>
             </div>
           )}
         </CardContent>
@@ -172,22 +156,11 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
         
         {showDetails && (
           <div className="mt-4 pt-4 border-t">
-            {detailsLoading ? (
-              <div className="text-center text-sm text-muted-foreground">Loading...</div>
-            ) : fullCharacter ? (
-              <div className="space-y-2">
-                <Badge variant="secondary" className="w-full justify-center">
-                  {fullCharacter.trait_profile?.narrative_domain || character.narrative_domain}
-                </Badge>
-                {fullCharacter.trait_profile?.primary_ability && (
-                  <Badge variant="outline" className="w-full justify-center">
-                    {fullCharacter.trait_profile.primary_ability}
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-sm text-muted-foreground">Details unavailable</div>
-            )}
+            <div className="space-y-2">
+              <Badge variant="secondary" className="w-full justify-center">
+                {character.narrative_domain || 'Unknown Domain'}
+              </Badge>
+            </div>
           </div>
         )}
       </CardContent>
