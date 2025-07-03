@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { cn } from '@/lib/utils';
-import OptimizedCreativeCharacterLibrary from './OptimizedCreativeCharacterLibrary';
+import UltraFastCreativeCharacterLibrary from './UltraFastCreativeCharacterLibrary';
 import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
@@ -110,10 +110,10 @@ const CreativeCharacterDashboard = () => {
               </Select>
             </div>
 
-            {/* Show Optimized Creative Character Library when on main creative characters route */}
+            {/* Show Ultra Fast Creative Character Library when on main creative characters route */}
             {location.pathname === '/characters/creative' ? (
               <div className="w-full">
-                <OptimizedCreativeCharacterLibrary />
+                <UltraFastCreativeCharacterLibrary />
               </div>
             ) : (
               <div className="w-full px-4 md:px-8 py-8">
@@ -151,9 +151,9 @@ const CreativeCharacterDashboard = () => {
                   {/* Library Preview */}
                   <Card className="text-center py-8 md:py-12">
                     <Library className="h-12 w-12 md:h-16 md:w-16 mx-auto text-muted-foreground mb-4" />
-                    <h2 className="text-lg md:text-xl font-semibold mb-2">Unified Character Library</h2>
+                    <h2 className="text-lg md:text-xl font-semibold mb-2">Ultra-Fast Character Library</h2>
                     <p className="text-sm md:text-base text-muted-foreground mb-6">
-                      View and manage all your creative characters in one place
+                      View and manage all your creative characters with lightning-fast performance
                     </p>
                     <Button asChild>
                       <Link to="/characters/creative">
