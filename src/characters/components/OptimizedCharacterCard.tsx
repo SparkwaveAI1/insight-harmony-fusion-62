@@ -50,8 +50,10 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
     setShowDetails(prev => !prev);
   }, []);
 
-  // Only show entity_type badge if it's not "human"
-  const shouldShowEntityType = character.entity_type && character.entity_type.toLowerCase() !== 'human';
+  // Only show entity_type badge if it's not "human" or "non-humanoid"
+  const shouldShowEntityType = character.entity_type && 
+    character.entity_type.toLowerCase() !== 'human' && 
+    character.entity_type.toLowerCase() !== 'non-humanoid';
 
   if (viewMode === 'list') {
     return (
