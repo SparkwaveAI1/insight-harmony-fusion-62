@@ -49,6 +49,10 @@ const MobileOptimizedImageGenerationDialog = ({
     await onGenerate(selectedStyle, customText, selectedReference);
   };
 
+  const handleReferenceImageSelect = (image: CharacterImage | null) => {
+    setSelectedReference(image);
+  };
+
   if (!isAuthenticated) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -113,9 +117,8 @@ const MobileOptimizedImageGenerationDialog = ({
 
           <ReferenceImageSelector
             character={character}
-            selectedReference={selectedReference}
-            onReferenceChange={setSelectedReference}
-            disabled={isGenerating}
+            selectedImageId={selectedReference?.id}
+            onImageSelect={handleReferenceImageSelect}
           />
 
           <div className="flex gap-3 pt-4">
