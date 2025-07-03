@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { cn } from '@/lib/utils';
-import UnifiedCreativeCharacterLibrary from './UnifiedCreativeCharacterLibrary';
+import OptimizedCreativeCharacterLibrary from './OptimizedCreativeCharacterLibrary';
 import CharacterHeader from '../components/CharacterHeader';
 import Footer from '@/components/sections/Footer';
 import { Toaster } from 'sonner';
@@ -110,10 +110,10 @@ const CreativeCharacterDashboard = () => {
               </Select>
             </div>
 
-            {/* Show Unified Creative Character Library when on main creative characters route */}
+            {/* Show Optimized Creative Character Library when on main creative characters route */}
             {location.pathname === '/characters/creative' ? (
               <div className="w-full">
-                <UnifiedCreativeCharacterLibrary />
+                <OptimizedCreativeCharacterLibrary />
               </div>
             ) : (
               <div className="w-full px-4 md:px-8 py-8">

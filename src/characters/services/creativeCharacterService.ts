@@ -45,12 +45,14 @@ export async function createCreativeCharacter(
   }
 }
 
-// Character Lab character retrieval
+// Optimized Character Lab character retrieval with full trait profile
 export async function getCreativeCharacter(characterId: string): Promise<CreativeCharacter | null> {
   try {
+    console.log('🔍 Fetching full character details for:', characterId);
+    
     const { data, error } = await supabase
       .from('characters')
-      .select('*')
+      .select('*') // Full character data including complete trait_profile
       .eq('character_id', characterId)
       .eq('creation_source', 'creative')
       .single();
@@ -60,6 +62,7 @@ export async function getCreativeCharacter(characterId: string): Promise<Creativ
       return null;
     }
 
+    console.log('✅ Full character details loaded');
     return dbResultToCreativeCharacter(data);
   } catch (error) {
     console.error('Error in getCreativeCharacter:', error);
@@ -67,21 +70,34 @@ export async function getCreativeCharacter(characterId: string): Promise<Creativ
   }
 }
 
-// Get all Character Lab characters
+// Legacy method - kept for compatibility but now uses optimized approach
 export async function getCreativeCharacters(userId: string): Promise<CreativeCharacter[]> {
   try {
+    console.log('⚠️ Using legacy getCreativeCharacters - consider using optimized hook instead');
+    
     const { data, error } = await supabase
       .from('characters')
-      .select('*')
+      .select(`
+        character_id,
+        name,
+        creation_source,
+        created_at,
+        user_id,
+        is_public,
+        profile_image_url,
+        trait_profile
+      `)
       .eq('user_id', userId)
       .eq('creation_source', 'creative')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50); // Limit to prevent timeouts
 
     if (error) {
       console.error('Error fetching creative characters:', error);
       return [];
     }
 
+    console.log(`✅ Legacy fetch: ${data?.length || 0} characters`);
     return (data || []).map(dbResultToCreativeCharacter);
   } catch (error) {
     console.error('Error in getCreativeCharacters:', error);
