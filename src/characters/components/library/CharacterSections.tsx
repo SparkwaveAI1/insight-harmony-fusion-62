@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FlaskConical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/ui-custom/Card';
-import OptimizedCharacterCard from '../OptimizedCharacterCard';
+import CreativeCharacterCard from '../CreativeCharacterCard';
 
 interface CharacterSectionsProps {
   userCharacters: any[];
@@ -63,11 +63,10 @@ const CharacterSections = ({
           <h2 className="text-2xl font-semibold mb-4">Your Characters ({userCharacters.length})</h2>
           <div className={gridClasses}>
             {userCharacters.map((character) => (
-              <OptimizedCharacterCard
+              <CreativeCharacterCard
                 key={character.character_id}
                 character={character}
                 viewMode={viewMode}
-                currentUserId={currentUserId}
               />
             ))}
           </div>
@@ -80,11 +79,10 @@ const CharacterSections = ({
           <h2 className="text-2xl font-semibold mb-4">Community Characters ({publicCharacters.length})</h2>
           <div className={gridClasses}>
             {publicCharacters.map((character) => (
-              <OptimizedCharacterCard
+              <CreativeCharacterCard
                 key={character.character_id}
                 character={character}
                 viewMode={viewMode}
-                currentUserId={currentUserId}
               />
             ))}
           </div>
