@@ -12,13 +12,15 @@ import LibraryPagination from '../components/library/LibraryPagination';
 
 const CHARACTERS_PER_PAGE = 12;
 
-const UltraFastCreativeCharacterLibrary = () => {
+const ConsolidatedCreativeCharacterLibrary = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Use deferred value for search to prevent excessive re-renders
   const deferredSearchQuery = useDeferredValue(searchQuery);
+  
   const offset = (currentPage - 1) * CHARACTERS_PER_PAGE;
   
   const { 
@@ -37,6 +39,7 @@ const UltraFastCreativeCharacterLibrary = () => {
   const totalCount = result?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / CHARACTERS_PER_PAGE);
 
+  // Memoized character grouping
   const { userCharacters, publicCharacters } = useMemo(() => {
     const userOwned = characters.filter(char => user && char.user_id === user.id);
     const publicOwned = characters.filter(char => !user || char.user_id !== user.id);
@@ -57,6 +60,7 @@ const UltraFastCreativeCharacterLibrary = () => {
     setViewMode(mode);
   }, []);
 
+  // Loading state
   if (authLoading || (isLoading && currentPage === 1 && !deferredSearchQuery)) {
     return (
       <div className="w-full px-4 md:px-8 py-8">
@@ -72,6 +76,7 @@ const UltraFastCreativeCharacterLibrary = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="w-full px-4 md:px-8 py-8">
@@ -93,6 +98,7 @@ const UltraFastCreativeCharacterLibrary = () => {
   return (
     <div className="w-full px-4 md:px-8 py-8">
       <Section>
+        {/* Header */}
         <div className="flex flex-col gap-6 mb-8">
           <LibraryHeader 
             totalCount={totalCount}
@@ -100,6 +106,8 @@ const UltraFastCreativeCharacterLibrary = () => {
             totalPages={totalPages}
             isFetching={isFetching}
           />
+
+          {/* Search and View Controls */}
           <SearchAndControls
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
@@ -108,6 +116,8 @@ const UltraFastCreativeCharacterLibrary = () => {
             onViewModeChange={handleViewModeChange}
           />
         </div>
+
+        {/* Character Grid/List */}
         <StandardizedCharacterSections
           userCharacters={userCharacters}
           publicCharacters={publicCharacters}
@@ -116,6 +126,8 @@ const UltraFastCreativeCharacterLibrary = () => {
           user={user}
           deferredSearchQuery={deferredSearchQuery}
         />
+
+        {/* Pagination */}
         <LibraryPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -127,4 +139,4 @@ const UltraFastCreativeCharacterLibrary = () => {
   );
 };
 
-export default UltraFastCreativeCharacterLibrary;
+export default ConsolidatedCreativeCharacterLibrary;

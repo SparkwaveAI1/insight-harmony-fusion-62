@@ -6,7 +6,7 @@ import Card from '@/components/ui-custom/Card';
 import StandardizedCreativeCharacterCard from '../StandardizedCreativeCharacterCard';
 import { CharacterCardData } from '../../types/cardTypes';
 
-interface CharacterSectionsProps {
+interface StandardizedCharacterSectionsProps {
   userCharacters: CharacterCardData[];
   publicCharacters: CharacterCardData[];
   viewMode: 'grid' | 'list';
@@ -15,14 +15,14 @@ interface CharacterSectionsProps {
   deferredSearchQuery: string;
 }
 
-const CharacterSections = ({ 
+const StandardizedCharacterSections = ({ 
   userCharacters, 
   publicCharacters, 
   viewMode, 
   currentUserId, 
   user,
   deferredSearchQuery 
-}: CharacterSectionsProps) => {
+}: StandardizedCharacterSectionsProps) => {
   const totalCharacters = userCharacters.length + publicCharacters.length;
 
   if (totalCharacters === 0) {
@@ -58,6 +58,7 @@ const CharacterSections = ({
 
   return (
     <div className="space-y-8">
+      {/* User's Characters Section */}
       {user && userCharacters.length > 0 && (
         <div>
           <h2 className="text-2xl font-semibold mb-4">Your Characters ({userCharacters.length})</h2>
@@ -73,6 +74,7 @@ const CharacterSections = ({
         </div>
       )}
 
+      {/* Public Characters Section */}
       {publicCharacters.length > 0 && (
         <div>
           <h2 className="text-2xl font-semibold mb-4">Community Characters ({publicCharacters.length})</h2>
@@ -91,4 +93,4 @@ const CharacterSections = ({
   );
 };
 
-export default CharacterSections;
+export default StandardizedCharacterSections;

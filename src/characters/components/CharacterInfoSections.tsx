@@ -45,7 +45,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         getYearFromDate={getYearFromDate}
       />
       
-      {/* Character Traits Section - Always show for Character Lab characters */}
+      {/* ALWAYS show Character Traits for ALL Character Lab characters */}
       {isCreativeCharacter && character.trait_profile && (
         <CharacterTraits 
           traitProfile={character.trait_profile}
