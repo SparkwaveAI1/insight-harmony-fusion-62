@@ -4,9 +4,8 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Eye, User, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, User, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useLazyCharacterDetails } from '../hooks/useHighPerformanceCreativeCharacters';
 
 interface CharacterSummary {
   character_id: string;
@@ -27,14 +26,7 @@ interface OptimizedCharacterCardProps {
 }
 
 const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: OptimizedCharacterCardProps) => {
-  const [showDetails, setShowDetails] = useState(false);
   const [imageError, setImageError] = useState(false);
-  
-  // Only load full details when user expands the card
-  const { data: fullCharacter, isLoading: detailsLoading } = useLazyCharacterDetails(
-    character.character_id,
-    showDetails
-  );
 
   const isOwner = currentUserId === character.user_id;
   const displayName = character.name || 'Unnamed Character';
@@ -44,10 +36,6 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
 
   const handleImageError = useCallback(() => {
     setImageError(true);
-  }, []);
-
-  const toggleDetails = useCallback(() => {
-    setShowDetails(prev => !prev);
   }, []);
 
   // Only show entity_type badge if it's not "human" or "non-humanoid"
@@ -94,15 +82,6 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
             </div>
             
             <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleDetails}
-                className="flex items-center gap-1"
-              >
-                {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                {showDetails ? 'Less' : 'More'}
-              </Button>
               <Button asChild size="sm">
                 <Link to={`/characters/${character.character_id}`}>
                   <Eye className="h-3 w-3 mr-1" />
@@ -111,28 +90,6 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
               </Button>
             </div>
           </div>
-          
-          {showDetails && (
-            <div className="mt-4 pt-4 border-t">
-              {detailsLoading ? (
-                <div className="text-sm text-muted-foreground">Loading details...</div>
-              ) : fullCharacter ? (
-                <div className="space-y-2">
-                  <p className="text-sm">{fullCharacter.trait_profile?.description || character.description}</p>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">
-                      {fullCharacter.trait_profile?.narrative_domain || character.narrative_domain}
-                    </Badge>
-                    <Badge variant="outline">
-                      {fullCharacter.trait_profile?.primary_ability || 'No special ability'}
-                    </Badge>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">Details unavailable</div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     );
@@ -178,39 +135,9 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
         <p className="text-sm text-muted-foreground text-center line-clamp-3">
           {shortDescription}
         </p>
-        
-        {showDetails && (
-          <div className="mt-4 pt-4 border-t">
-            {detailsLoading ? (
-              <div className="text-center text-sm text-muted-foreground">Loading...</div>
-            ) : fullCharacter ? (
-              <div className="space-y-2">
-                <Badge variant="secondary" className="w-full justify-center">
-                  {fullCharacter.trait_profile?.narrative_domain || character.narrative_domain}
-                </Badge>
-                {fullCharacter.trait_profile?.primary_ability && (
-                  <Badge variant="outline" className="w-full justify-center">
-                    {fullCharacter.trait_profile.primary_ability}
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-sm text-muted-foreground">Details unavailable</div>
-            )}
-          </div>
-        )}
       </CardContent>
 
-      <CardFooter className="pt-0 flex flex-col gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleDetails}
-          className="w-full flex items-center gap-1"
-        >
-          {showDetails ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {showDetails ? 'Show Less' : 'Show More'}
-        </Button>
+      <CardFooter className="pt-0">
         <Button asChild size="sm" className="w-full">
           <Link to={`/characters/${character.character_id}`}>
             <Eye className="h-4 w-4 mr-2" />
