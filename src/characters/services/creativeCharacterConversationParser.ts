@@ -22,6 +22,13 @@ export class CreativeCharacterConversationParser {
       narrativeDomain: narrativeDomain,
       functionalRole: this.extractFunctionalRole(description),
       description: this.extractCoreDescription(description),
+      
+      // NEW: Core Identity Fields - Extract or provide defaults
+      primaryAbility: this.extractPrimaryAbility(description),
+      corePurpose: this.extractCorePurpose(description),
+      keyActivities: this.extractKeyActivities(description),
+      importantKnowledge: this.extractImportantKnowledge(description),
+      
       environment: environment,
       physicalForm: physicalForm,
       communication: communication,
@@ -31,6 +38,116 @@ export class CreativeCharacterConversationParser {
 
     console.log('Parsed character data:', characterData);
     return characterData;
+  }
+
+  private static extractPrimaryAbility(description: string): string {
+    const patterns = [
+      /\*\*Primary Ability\*\*:\s*([^\n*]{5,100})/i,
+      /primary ability[:\s]*([^.\n]{5,100})/i,
+      /main power[:\s]*([^.\n]{5,100})/i,
+      /special ability[:\s]*([^.\n]{5,100})/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // Default based on description content
+    if (description.toLowerCase().includes('memory')) return 'Memory Manipulation';
+    if (description.toLowerCase().includes('time')) return 'Time Control';
+    if (description.toLowerCase().includes('teleport')) return 'Teleportation';
+    
+    return 'Enhanced Abilities';
+  }
+
+  private static extractCorePurpose(description: string): string {
+    const patterns = [
+      /\*\*Core Purpose\*\*:\s*([^\n*]{5,100})/i,
+      /core purpose[:\s]*([^.\n]{5,100})/i,
+      /main role[:\s]*([^.\n]{5,100})/i,
+      /primary role[:\s]*([^.\n]{5,100})/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    // Default based on description content
+    if (description.toLowerCase().includes('spy') || description.toLowerCase().includes('agent')) return 'Secret Agent';
+    if (description.toLowerCase().includes('guard') || description.toLowerCase().includes('protect')) return 'Guardian';
+    if (description.toLowerCase().includes('explore')) return 'Explorer';
+    
+    return 'Protagonist';
+  }
+
+  private static extractKeyActivities(description: string): string[] {
+    const activities: string[] = [];
+    
+    const patterns = [
+      /\*\*Key Activities\*\*:\s*([^\n*]{10,200})/i,
+      /key activities[:\s]*([^.\n]{10,200})/i,
+      /main activities[:\s]*([^.\n]{10,200})/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        const activityText = match[1].trim();
+        activities.push(...activityText.split(/[,;]/).map(a => a.trim()).filter(a => a.length > 0));
+        break;
+      }
+    }
+    
+    if (activities.length === 0) {
+      // Generate default activities based on content
+      if (description.toLowerCase().includes('spy')) activities.push('Infiltration', 'Intelligence Gathering');
+      if (description.toLowerCase().includes('fight')) activities.push('Combat Training');
+      if (description.toLowerCase().includes('research')) activities.push('Investigation');
+      
+      if (activities.length === 0) {
+        activities.push('Mission Execution', 'Skill Development');
+      }
+    }
+    
+    return activities;
+  }
+
+  private static extractImportantKnowledge(description: string): string[] {
+    const knowledge: string[] = [];
+    
+    const patterns = [
+      /\*\*Important Knowledge\*\*:\s*([^\n*]{10,200})/i,
+      /important knowledge[:\s]*([^.\n]{10,200})/i,
+      /key knowledge[:\s]*([^.\n]{10,200})/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = description.match(pattern);
+      if (match && match[1]) {
+        const knowledgeText = match[1].trim();
+        knowledge.push(...knowledgeText.split(/[,;]/).map(k => k.trim()).filter(k => k.length > 0));
+        break;
+      }
+    }
+    
+    if (knowledge.length === 0) {
+      // Generate default knowledge based on content
+      if (description.toLowerCase().includes('memory')) knowledge.push('Knows about memory abilities');
+      if (description.toLowerCase().includes('organization')) knowledge.push('Works for secret organization');
+      if (description.toLowerCase().includes('mission')) knowledge.push('Understands their mission');
+      
+      if (knowledge.length === 0) {
+        knowledge.push('Aware of their abilities', 'Knows their purpose');
+      }
+    }
+    
+    return knowledge;
   }
 
   private static extractName(description: string): string {

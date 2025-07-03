@@ -1,3 +1,4 @@
+
 import { CreativeCharacterData, CreativeCharacter, CreativeCharacterTraitProfile } from '../types/creativeCharacterTypes';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,7 +23,11 @@ export const buildCreativeCharacterFromData = (
     description: data.description,
     physical_form: data.physicalForm,
     environment: data.environment,
-    communication_method: data.communication,
+    communication_method: {
+      modality: data.communication || 'verbal',
+      grammar: 'standard',
+      expression_register: 'casual'
+    },
     surface_triggers: data.surfaceTriggers,
     change_response_style: data.changeResponseStyle,
   };
@@ -49,9 +54,14 @@ export const buildCreativeCharacterFromData = (
   console.log('✅ Creative character built with core identity:', {
     ability: data.primaryAbility,
     purpose: data.corePurpose,
-    activities: data.keyActivities.length,
-    knowledge: data.importantKnowledge.length
+    activities: data.keyActivities?.length || 0,
+    knowledge: data.importantKnowledge?.length || 0
   });
 
   return character;
+};
+
+// Export as CreativeCharacterBuilder for compatibility
+export const CreativeCharacterBuilder = {
+  buildCharacter: buildCreativeCharacterFromData
 };
