@@ -1,14 +1,14 @@
 
 import { useState, useDeferredValue, useCallback, useMemo } from 'react';
-import { FlaskConical, Plus, Grid, List, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import Card from '@/components/ui-custom/Card';
 import Section from '@/components/ui-custom/Section';
 import { useHighPerformanceCreativeCharacters } from '../hooks/useHighPerformanceCreativeCharacters';
-import { Link } from 'react-router-dom';
-import OptimizedCharacterCard from '../components/OptimizedCharacterCard';
 import { useAuth } from '@/context/AuthContext';
+import LibraryHeader from '../components/library/LibraryHeader';
+import SearchAndControls from '../components/library/SearchAndControls';
+import CharacterSections from '../components/library/CharacterSections';
+import LibraryPagination from '../components/library/LibraryPagination';
 
 const CHARACTERS_PER_PAGE = 12;
 
@@ -100,186 +100,40 @@ const UltraFastCreativeCharacterLibrary = () => {
       <Section>
         {/* Header */}
         <div className="flex flex-col gap-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FlaskConical className="h-6 w-6 md:h-8 md:w-8 text-primary" />
-              <div>
-                <h1 className="text-xl md:text-3xl font-bold">Character Lab Library</h1>
-                <p className="text-sm md:text-base text-muted-foreground">
-                  {user ? 'Creative characters from your lab' : 'Public community creations'}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {totalCount} total characters • Page {currentPage} of {totalPages}
-                  {isFetching && ' • Loading...'}
-                </p>
-              </div>
-            </div>
-            {user && (
-              <Button asChild>
-                <Link to="/characters/create/creative">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Character
-                </Link>
-              </Button>
-            )}
-          </div>
+          <LibraryHeader 
+            totalCount={totalCount}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            isFetching={isFetching}
+          />
 
           {/* Search and View Controls */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative flex-1 sm:w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search characters..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-10"
-              />
-              {deferredSearchQuery !== searchQuery && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleViewModeChange('grid')}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleViewModeChange('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <SearchAndControls
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            deferredSearchQuery={deferredSearchQuery}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+          />
         </div>
 
         {/* Character Grid/List */}
-        {characters.length === 0 ? (
-          <Card className="text-center py-12">
-            <FlaskConical className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
-              {deferredSearchQuery ? 'No characters found' : 'No creative characters yet'}
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {deferredSearchQuery 
-                ? 'Try adjusting your search or browse different pages'
-                : user 
-                  ? 'Create your first creative character to get started'
-                  : 'Sign in to create and view your own characters'
-              }
-            </p>
-            {!deferredSearchQuery && user && (
-              <Button asChild>
-                <Link to="/characters/create/creative">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Character
-                </Link>
-              </Button>
-            )}
-          </Card>
-        ) : (
-          <div className="space-y-8">
-            {/* User's Characters Section */}
-            {user && userCharacters.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">Your Characters ({userCharacters.length})</h2>
-                <div className={viewMode === 'grid' 
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
-                  : "space-y-4"
-                }>
-                  {userCharacters.map((character) => (
-                    <OptimizedCharacterCard
-                      key={character.character_id}
-                      character={character}
-                      viewMode={viewMode}
-                      currentUserId={user.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        <CharacterSections
+          userCharacters={userCharacters}
+          publicCharacters={publicCharacters}
+          viewMode={viewMode}
+          currentUserId={user?.id}
+          user={user}
+          deferredSearchQuery={deferredSearchQuery}
+        />
 
-            {/* Public Characters Section */}
-            {publicCharacters.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">Community Characters ({publicCharacters.length})</h2>
-                <div className={viewMode === 'grid' 
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
-                  : "space-y-4"
-                }>
-                  {publicCharacters.map((character) => (
-                    <OptimizedCharacterCard
-                      key={character.character_id}
-                      character={character}
-                      viewMode={viewMode}
-                      currentUserId={user?.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Optimized Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1 || isFetching}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={pageNum === currentPage ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handlePageChange(pageNum)}
-                    disabled={isFetching}
-                    className="w-10 h-10"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || isFetching}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        {/* Pagination */}
+        <LibraryPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          isFetching={isFetching}
+        />
       </Section>
     </div>
   );
