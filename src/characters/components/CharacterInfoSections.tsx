@@ -15,21 +15,10 @@ interface CharacterInfoSectionsProps {
 }
 
 const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
-  console.log('CharacterInfoSections - character:', character);
-  console.log('Character creation_source:', character.creation_source);
-  console.log('Character trait_profile:', character.trait_profile);
-  
   const isCreativeCharacter = character.creation_source === 'creative';
   const isHistoricalCharacter = character.creation_source === 'historical';
   const isNonHumanoid = character.character_type === 'multi_species';
-  
-  // Check for enhanced trait architecture (new Character Lab architecture)
-  const hasEnhancedTraitArchitecture = character.trait_profile?.core_motives || 
-    character.trait_profile?.latent_values || 
-    character.trait_profile?.symbolic_traits || 
-    character.trait_profile?.cognitive_filters;
-
-  console.log('hasEnhancedTraitArchitecture:', hasEnhancedTraitArchitecture);
+  const hasEnhancedTraitArchitecture = character.trait_profile?.core_motives;
 
   // Helper functions for BasicInformationSection
   const formatDate = (dateString: string) => {
@@ -55,7 +44,7 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
         getYearFromDate={getYearFromDate}
       />
       
-      {/* Enhanced Trait Architecture - for Character Lab characters with new architecture */}
+      {/* Enhanced Trait Architecture - only for Character Lab characters with new architecture */}
       {isCreativeCharacter && hasEnhancedTraitArchitecture && (
         <EnhancedTraitArchitectureSection character={character} />
       )}
@@ -63,11 +52,6 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
       {/* Character Lab Enhanced Section - for Character Lab characters without new architecture */}
       {isCreativeCharacter && !hasEnhancedTraitArchitecture && (
         <CharacterLabEnhancedSection character={character} />
-      )}
-      
-      {/* Always show Entity Profile for creative characters as fallback */}
-      {isCreativeCharacter && (
-        <EntityProfileSection character={character} />
       )}
       
       {/* Historical-specific sections */}
@@ -82,6 +66,11 @@ const CharacterInfoSections = ({ character }: CharacterInfoSectionsProps) => {
       {/* Non-humanoid physical manifestation */}
       {character.character_type === 'multi_species' && (
         <PhysicalManifestationSection character={character} />
+      )}
+      
+      {/* Entity profile for creative characters */}
+      {isCreativeCharacter && (
+        <EntityProfileSection character={character} />
       )}
     </div>
   );
