@@ -11,6 +11,24 @@ interface UseOptimizedCreativeCharactersOptions {
   searchQuery?: string;
 }
 
+// Define the optimized query result type
+interface OptimizedQueryResult {
+  character_id: string;
+  name: string;
+  creation_source: string;
+  created_at: string;
+  user_id: string;
+  is_public: boolean;
+  profile_image_url: string;
+  trait_profile: {
+    description?: string;
+    narrative_domain?: string;
+    entity_type?: string;
+    primary_ability?: string;
+    core_purpose?: string;
+  };
+}
+
 export const useOptimizedCreativeCharacters = (options: UseOptimizedCreativeCharactersOptions = {}) => {
   const { user, isLoading: authLoading } = useAuth();
   const { limit = 20, offset = 0, searchQuery = '' } = options;
@@ -32,11 +50,7 @@ export const useOptimizedCreativeCharacters = (options: UseOptimizedCreativeChar
             user_id,
             is_public,
             profile_image_url,
-            trait_profile->description,
-            trait_profile->narrative_domain,
-            trait_profile->entity_type,
-            trait_profile->primary_ability,
-            trait_profile->core_purpose
+            trait_profile
           `, { count: 'exact' })
           .eq('creation_source', 'creative');
 
@@ -71,13 +85,15 @@ export const useOptimizedCreativeCharacters = (options: UseOptimizedCreativeChar
         
         // Convert to full CreativeCharacter objects with minimal trait profiles
         const characters = (data || []).map(row => {
-          // Create a minimal trait profile from selected columns
+          const traitProfile = row.trait_profile as any || {};
+          
+          // Create a minimal trait profile from the data
           const minimalTraitProfile = {
-            description: row.trait_profile?.description || '',
-            narrative_domain: row.trait_profile?.narrative_domain || 'modern',
-            entity_type: row.trait_profile?.entity_type || 'human',
-            primary_ability: row.trait_profile?.primary_ability || '',
-            core_purpose: row.trait_profile?.core_purpose || '',
+            description: traitProfile.description || '',
+            narrative_domain: traitProfile.narrative_domain || 'modern',
+            entity_type: traitProfile.entity_type || 'human',
+            primary_ability: traitProfile.primary_ability || '',
+            core_purpose: traitProfile.core_purpose || '',
             // Set defaults for other required fields
             functional_role: 'protagonist_agent',
             environment: 'Contemporary setting',
