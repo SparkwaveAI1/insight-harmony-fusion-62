@@ -50,6 +50,9 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
     setShowDetails(prev => !prev);
   }, []);
 
+  // Only show entity_type badge if it's not "human"
+  const shouldShowEntityType = character.entity_type && character.entity_type.toLowerCase() !== 'human';
+
   if (viewMode === 'list') {
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -78,9 +81,11 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
                   ) : (
                     <Globe className="h-3 w-3 text-green-500" />
                   )}
-                  <Badge variant="outline" className="text-xs">
-                    {character.entity_type}
-                  </Badge>
+                  {shouldShowEntityType && (
+                    <Badge variant="outline" className="text-xs">
+                      {character.entity_type}
+                    </Badge>
+                  )}
                 </div>
               </div>
               <p className="text-sm text-muted-foreground truncate">{shortDescription}</p>
@@ -141,9 +146,11 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
             ) : (
               <Globe className="h-4 w-4 text-green-500" />
             )}
-            <Badge variant="outline" className="text-xs">
-              {character.entity_type}
-            </Badge>
+            {shouldShowEntityType && (
+              <Badge variant="outline" className="text-xs">
+                {character.entity_type}
+              </Badge>
+            )}
           </div>
         </div>
         
