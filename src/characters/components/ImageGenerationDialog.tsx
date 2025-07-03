@@ -30,7 +30,7 @@ const ImageGenerationDialog = ({
   onGenerate
 }: ImageGenerationDialogProps) => {
   const [selectedStyle, setSelectedStyle] = useState('profile');
-  const [customText, setCustomText] = useState('');
+  const [customText, setCustomText] = useState('profile image, realistic portrait');
   const [referenceImage, setReferenceImage] = useState<CharacterImage | null>(null);
 
   const handleGenerate = () => {
@@ -38,7 +38,7 @@ const ImageGenerationDialog = ({
   };
 
   const resetForm = () => {
-    setCustomText('');
+    setCustomText('profile image, realistic portrait');
     setReferenceImage(null);
   };
 
@@ -73,7 +73,7 @@ const ImageGenerationDialog = ({
           />
           
           <div className="space-y-2">
-            <label className="text-sm font-medium">Custom Description (Optional)</label>
+            <label className="text-sm font-medium">Custom Description</label>
             <Textarea
               placeholder="Add specific details to guide the image generation..."
               value={customText}
