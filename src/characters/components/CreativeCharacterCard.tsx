@@ -25,19 +25,12 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
     characterName: character.name,
     isOwner
   });
-  
-  const getCharacterTypeLabel = (character: CreativeCharacter) => {
-    if (character.character_type === 'multi_species') {
-      return character.species_type || 'Non-Humanoid';
-    }
-    return 'Humanoid';
-  };
 
   const getCharacterDescription = (character: CreativeCharacter) => {
     const description = character.metadata?.description || 
                        character.trait_profile?.description ||
                        character.trait_profile?.background_story || 
-                       `A ${getCharacterTypeLabel(character).toLowerCase()} character`;
+                       `A creative character`;
     
     return description.length > 120 ? description.substring(0, 120) + '...' : description;
   };
@@ -78,9 +71,6 @@ const CreativeCharacterCard = ({ character, viewMode, onImageGenerated }: Creati
         </p>
         
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="text-xs">
-            {getCharacterTypeLabel(character)}
-          </Badge>
           {character.trait_profile?.narrative_domain && (
             <Badge variant="outline" className="text-xs">
               {character.trait_profile.narrative_domain}
