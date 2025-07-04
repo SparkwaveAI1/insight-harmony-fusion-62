@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Atom, Calendar } from 'lucide-react';
+import { Atom, Calendar, MapPin, Clock } from 'lucide-react';
 import { Character } from '../../types/characterTraitTypes';
 
 interface BasicInformationSectionProps {
@@ -66,6 +66,21 @@ const BasicInformationSection = ({
     return getYearFromDate(character.creation_date);
   };
 
+  // Helper function to get location information
+  const getHistoricalLocation = () => {
+    // Try various sources for location
+    if (character.metadata?.region) {
+      return character.metadata.region;
+    }
+    if (character.region) {
+      return character.region;
+    }
+    if (character.metadata?.location) {
+      return character.metadata.location;
+    }
+    return null;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -87,12 +102,26 @@ const BasicInformationSection = ({
             <span className="ml-2">{formatDate(character.creation_date)}</span>
           </div>
           
-          {/* Historical Character Year - Fixed to show actual historical year */}
+          {/* Historical Character Year and Location - Prominent display */}
           {isHistorical && (
-            <div>
-              <span className="font-medium">Historical Year:</span>
-              <span className="ml-2">{getHistoricalYear()}</span>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">Historical Year:</span>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {getHistoricalYear()}
+                </Badge>
+              </div>
+              {getHistoricalLocation() && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Location:</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    {getHistoricalLocation()}
+                  </Badge>
+                </div>
+              )}
+            </>
           )}
           
           {/* Non-Humanoid Specific Fields */}
@@ -146,7 +175,7 @@ const BasicInformationSection = ({
                   <span className="ml-2">{character.historical_period}</span>
                 </div>
               )}
-              {character.region && (
+              {character.region && !isHistorical && (
                 <div>
                   <span className="font-medium">Region:</span>
                   <span className="ml-2">{character.region}</span>
