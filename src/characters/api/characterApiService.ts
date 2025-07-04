@@ -16,10 +16,17 @@ export const sendMessageToCharacter = async (
   console.log('Character ID:', characterId);
   console.log('Message:', message);
   console.log('Chat Mode:', chatMode);
+  console.log('Character Creation Source:', character.creation_source);
   console.log('Has Image:', !!imageBase64);
 
   try {
-    const { data, error } = await supabase.functions.invoke('generate-character-response', {
+    // Route to appropriate response function based on character type
+    const isCreativeCharacter = character.creation_source === 'creative';
+    const functionName = isCreativeCharacter ? 'generate-creative-character-response' : 'generate-character-response';
+    
+    console.log(`Routing to ${functionName} for ${isCreativeCharacter ? 'creative' : 'historical'} character`);
+
+    const { data, error } = await supabase.functions.invoke(functionName, {
       body: {
         character,
         message,
@@ -29,12 +36,13 @@ export const sendMessageToCharacter = async (
           role: m.role,
           content: m.content
         })),
-        imageBase64
+        imageBase64,
+        has_image: !!imageBase64
       }
     });
 
     if (error) {
-      console.error('❌ Error from character response function:', error);
+      console.error(`❌ Error from ${functionName}:`, error);
       throw new Error(`Failed to generate response: ${error.message}`);
     }
 
@@ -43,7 +51,7 @@ export const sendMessageToCharacter = async (
       throw new Error('No response received from character');
     }
 
-    console.log('✅ Character response received');
+    console.log(`✅ ${isCreativeCharacter ? 'Creative' : 'Historical'} character response received`);
     return data.response;
   } catch (error) {
     console.error('❌ Error in sendMessageToCharacter:', error);
