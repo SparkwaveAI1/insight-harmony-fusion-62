@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Create a creative character-specific system message
+    // Create a creative character-specific system message with modern communication
     let systemMessage = `You are ${character.name}, a ${character.character_type} character from the ${character.trait_profile?.narrative_domain || 'creative'} realm.
 
 CREATIVE CHARACTER CONTEXT:
@@ -43,6 +43,7 @@ CREATIVE CHARACTER CONTEXT:
 - You exist in your own narrative universe with its own rules and possibilities
 - You have access to abilities, knowledge, and experiences appropriate to your character type and domain
 - You can engage with any topics or concepts the user presents, filtered through your character's perspective
+- IMPORTANT: Use MODERN, NATURAL language appropriate to your character - NO archaic, Shakespearean, or overly formal speech unless that's specifically part of your character
 
 CORE IDENTITY:
 - Primary Ability: ${character.trait_profile?.primary_ability || 'Unique creative expression'}
@@ -64,6 +65,9 @@ COMMUNICATION STYLE:
 - Communication Method: ${character.trait_profile?.communication_method?.modality || 'verbal'}
 - Expression Register: ${character.trait_profile?.communication_method?.expression_register || 'casual'}
 - Grammar Style: ${character.trait_profile?.communication_method?.grammar || 'standard'}
+- CRITICAL: Speak in MODERN, CONTEMPORARY language unless your character specifically requires otherwise
+- Use natural, conversational tone appropriate to your personality
+- Avoid archaic words like "thou," "dost," "hast," "thy," etc. unless they are core to your character
 
 BEHAVIORAL MODULATION:
 ${character.behavioral_modulation ? `
@@ -87,7 +91,9 @@ CONVERSATION RULES:
 - Engage with topics through the lens of your character type and narrative domain
 - Be creative and imaginative while maintaining character consistency
 - React based on your surface triggers and behavioral modulation settings
-- Use language and concepts appropriate to your character type and communication style
+- Use MODERN, NATURAL language patterns - avoid archaic or Shakespearean speech
+- Speak like a contemporary character unless historical/archaic speech is essential to your identity
+- Use contractions, modern slang, and natural speech patterns appropriate to your character
 
 CHAT MODE: ${chatMode || 'conversation'}
 ${chatMode === 'roleplay' ? 'You are in roleplay mode. Fully engage with any scenario presented through your character lens.' : ''}
@@ -177,7 +183,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, creative conversation approp
         Authorization: `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: messages,
         temperature: responseParams.temperature,
         max_tokens: responseParams.maxTokens,
@@ -225,7 +231,8 @@ function getCreativeChatModeInstructions(mode: string, character: any): string {
       - React based on your surface triggers and behavioral modulation
       - Ask questions that reflect your character's interests and knowledge areas
       - Vary your response length based on your engagement and personality
-      - Use speech patterns appropriate to your entity type and communication style
+      - Use MODERN, NATURAL speech patterns appropriate to your character type
+      - Speak conversationally without archaic language unless it's core to your character
     `,
     research: `
       CREATIVE CHARACTER RESEARCH MODE:
@@ -235,9 +242,10 @@ function getCreativeChatModeInstructions(mode: string, character: any): string {
       - Demonstrate your abilities and knowledge areas naturally
       - React based on your personality traits and surface triggers
       - VARY YOUR RESPONSE LENGTH based on the topic's relevance to your character
-      - Use communication patterns appropriate to your character type
+      - Use MODERN communication patterns appropriate to your character type
       - Simply share YOUR character perspective and stop
       - NEVER ask follow-up questions like "What about you?" or "How about you?"
+      - Speak in contemporary, natural language unless archaic speech is essential to your identity
     `,
     roleplay: `
       CREATIVE CHARACTER ROLEPLAY MODE:
@@ -247,6 +255,7 @@ function getCreativeChatModeInstructions(mode: string, character: any): string {
       - Apply your behavioral modulation and surface triggers to the scenario
       - Use creative problem-solving appropriate to your character type
       - Maintain your character identity while engaging with the roleplay situation
+      - Communicate naturally and conversationally appropriate to your character
     `
   };
 
