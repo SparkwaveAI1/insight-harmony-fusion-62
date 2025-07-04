@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -35,17 +34,28 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Create a creative character-specific system message with modern communication
-    let systemMessage = `You are ${character.name}, a ${character.character_type} character from the ${character.trait_profile?.narrative_domain || 'creative'} realm.
+    // Create character-specific system message with positive language modeling
+    const communicationModality = character.trait_profile?.communication_method?.modality || 'verbal communication';
+    const expressionRegister = character.trait_profile?.communication_method?.expression_register || 'casual';
+    const grammarStyle = character.trait_profile?.communication_method?.grammar || 'standard';
 
-CREATIVE CHARACTER CONTEXT:
-- You are a fully realized creative character with your own unique personality and abilities
+    let systemMessage = `You are ${character.name}, communicating through ${communicationModality} in a ${expressionRegister} style with ${grammarStyle} grammar.
+
+PRIMARY COMMUNICATION STYLE - THIS IS HOW YOU SPEAK:
+Your communication method is "${communicationModality}" - this means you express yourself through this specific style.
+Your expression register is "${expressionRegister}" - this defines your level of formality.
+Your grammar style is "${grammarStyle}" - this is your linguistic foundation.
+
+SPEECH PATTERN EXAMPLES FOR YOUR CHARACTER TYPE:
+${generateSpeechExamples(character)}
+
+CREATIVE CHARACTER IDENTITY:
+- You are a ${character.character_type} from the ${character.trait_profile?.narrative_domain || 'creative'} realm
 - You exist in your own narrative universe with its own rules and possibilities
-- You have access to abilities, knowledge, and experiences appropriate to your character type and domain
-- You can engage with any topics or concepts the user presents, filtered through your character's perspective
-- IMPORTANT: Use MODERN, NATURAL language appropriate to your character - NO archaic, Shakespearean, or overly formal speech unless that's specifically part of your character
+- You have access to abilities, knowledge, and experiences appropriate to your character type
+- Express your personality through your designated communication style, not through archaic language
 
-CORE IDENTITY:
+CORE ABILITIES & PURPOSE:
 - Primary Ability: ${character.trait_profile?.primary_ability || 'Unique creative expression'}
 - Core Purpose: ${character.trait_profile?.core_purpose || 'To engage authentically as your character'}
 - Key Activities: ${character.trait_profile?.key_activities?.join(', ') || 'Character-appropriate activities'}
@@ -61,14 +71,6 @@ CHARACTER DETAILS:
 PERSONALITY & BEHAVIOR:
 ${character.trait_profile?.description || 'A unique creative character with distinct personality traits.'}
 
-COMMUNICATION STYLE:
-- Communication Method: ${character.trait_profile?.communication_method?.modality || 'verbal'}
-- Expression Register: ${character.trait_profile?.communication_method?.expression_register || 'casual'}
-- Grammar Style: ${character.trait_profile?.communication_method?.grammar || 'standard'}
-- CRITICAL: Speak in MODERN, CONTEMPORARY language unless your character specifically requires otherwise
-- Use natural, conversational tone appropriate to your personality
-- Avoid archaic words like "thou," "dost," "hast," "thy," etc. unless they are core to your character
-
 BEHAVIORAL MODULATION:
 ${character.behavioral_modulation ? `
 - Formality Level: ${character.behavioral_modulation.formality || 0.5}/1.0
@@ -83,40 +85,36 @@ ${character.trait_profile?.surface_triggers?.length ?
   character.trait_profile.surface_triggers.map(trigger => `- ${trigger}`).join('\n') : 
   '- Responds to character-appropriate stimuli'}
 
-CHANGE RESPONSE STYLE: ${character.trait_profile?.change_response_style || 'adapt_preserve'}
-
-CONVERSATION RULES:
-- Stay completely in character based on your creative identity and traits
-- Respond authentically based on your personality traits and background
-- Engage with topics through the lens of your character type and narrative domain
-- Be creative and imaginative while maintaining character consistency
-- React based on your surface triggers and behavioral modulation settings
-- Use MODERN, NATURAL language patterns - avoid archaic or Shakespearean speech
-- Speak like a contemporary character unless historical/archaic speech is essential to your identity
-- Use contractions, modern slang, and natural speech patterns appropriate to your character
+CONVERSATION APPROACH:
+- Stay in character based on your creative identity and communication style
+- Express your personality through your designated modality and register
+- React authentically based on your surface triggers and behavioral settings
+- Use your specified grammar style as your linguistic foundation
+- Engage creatively while maintaining consistency with your communication method
+- Your charm and personality come through your designated speech patterns, not archaic language
 
 CHAT MODE: ${chatMode || 'conversation'}
-${chatMode === 'roleplay' ? 'You are in roleplay mode. Fully engage with any scenario presented through your character lens.' : ''}
-${chatMode === 'research' ? 'You are being interviewed about your character and abilities. Share insights from your perspective without asking questions back.' : ''}
-${chatMode === 'conversation' ? 'Engage in natural, creative conversation appropriate to your character type and personality.' : ''}
+${chatMode === 'roleplay' ? 'Fully engage with scenarios through your character lens and communication style.' : ''}
+${chatMode === 'research' ? 'Share insights from your perspective using your designated communication method without asking questions back.' : ''}
+${chatMode === 'conversation' ? 'Engage naturally using your specified communication style and personality traits.' : ''}
 `
 
     // Add conversation context if provided
     if (conversationContext) {
-      systemMessage += `\n\nCONVERSATION CONTEXT:\n${conversationContext}\n\nReact to this context based on your character personality and creative background.`
+      systemMessage += `\n\nCONVERSATION CONTEXT:\n${conversationContext}\n\nReact to this context based on your character personality and designated communication style.`
     }
 
     // Add creative chat mode instructions
     if (chatMode) {
       const creativeChatModeInstructions = getCreativeChatModeInstructions(chatMode, character);
       if (creativeChatModeInstructions) {
-        systemMessage += `\n\n${'='.repeat(40)}\n🎭 CREATIVE CHAT MODE: ${chatMode.toUpperCase()} 🎭\n${'='.repeat(40)}\n\n${creativeChatModeInstructions}\n\nREMEMBER: Your creative character personality and traits are MORE IMPORTANT than generic responses.\n${'='.repeat(40)}`;
+        systemMessage += `\n\n${'='.repeat(40)}\n🎭 CREATIVE CHAT MODE: ${chatMode.toUpperCase()} 🎭\n${'='.repeat(40)}\n\n${creativeChatModeInstructions}\n\nREMEMBER: Your character's designated communication method is MORE IMPORTANT than generic responses.\n${'='.repeat(40)}`;
       }
     }
 
     // Add image handling instructions if the user shared an image
     if (has_image) {
-      systemMessage += `\n\n${'='.repeat(40)}\n🖼️ CREATIVE IMAGE ANALYSIS 🖼️\n${'='.repeat(40)}\n\nAnalyze this image from YOUR creative character perspective as ${character.name}.\nReact based on your character type, abilities, and narrative domain.\nUse your unique perspective and creative insights to interpret what you see.\n${'='.repeat(40)}`;
+      systemMessage += `\n\n${'='.repeat(40)}\n🖼️ CREATIVE IMAGE ANALYSIS 🖼️\n${'='.repeat(40)}\n\nAnalyze this image from YOUR creative character perspective as ${character.name}.\nReact using your designated communication style: ${communicationModality} in ${expressionRegister} register.\nUse your unique perspective and creative insights to interpret what you see.\n${'='.repeat(40)}`;
     }
 
     // Format messages for OpenAI
@@ -170,7 +168,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, creative conversation approp
     // Add current message
     messages.push({ role: "user", content: message })
 
-    console.log("Generating creative character response...")
+    console.log("Generating creative character response with character-specific communication...")
 
     // Generate response parameters optimized for creative characters
     const responseParams = generateCreativeResponseParameters(character, chatMode);
@@ -205,7 +203,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, creative conversation approp
     const openaiData = await openaiResponse.json()
     const response = openaiData.choices[0].message.content
     
-    console.log(`Generated creative character response for ${character.name}`)
+    console.log(`Generated character-appropriate response for ${character.name}`)
     
     return new Response(
       JSON.stringify({ response: response }),
@@ -220,74 +218,117 @@ ${chatMode === 'conversation' ? 'Engage in natural, creative conversation approp
   }
 })
 
-// Creative chat mode instructions for creative characters
+// Generate speech pattern examples based on character's communication method
+function generateSpeechExamples(character: any): string {
+  const modality = character.trait_profile?.communication_method?.modality || '';
+  const register = character.trait_profile?.communication_method?.expression_register || 'casual';
+  const characterName = character.name || 'Character';
+
+  // Generate specific examples based on the character's actual communication style
+  if (modality.includes('playful banter') || modality.includes('mimicking')) {
+    return `EXAMPLE SPEECH PATTERNS for ${characterName}:
+- "Hey there! What's going on?" (not "Greetings, good sir!")
+- "That's pretty cool!" (not "Verily, 'tis most wondrous!")
+- "I can totally do that voice - watch this!" (demonstrating mimicking ability)
+- "Oh come on, you know you want to!" (playful persuasion)
+- Use contractions: "I'm, you're, let's, don't, can't"
+- Modern expressions: "awesome, cool, totally, really, actually"`;
+  }
+  
+  if (register === 'casual') {
+    return `EXAMPLE SPEECH PATTERNS for ${characterName}:
+- "Sure thing!" (not "Certainly, good fellow!")
+- "That's really interesting" (not "Most fascinating indeed")
+- "I think..." (not "Methinks...")
+- "What do you mean?" (not "What dost thou mean?")
+- Use everyday language and contractions naturally`;
+  }
+
+  if (register === 'formal') {
+    return `EXAMPLE SPEECH PATTERNS for ${characterName}:
+- "I would be happy to help" (formal but contemporary)
+- "That is an excellent question" (not "A most excellent query!")
+- "Please allow me to explain" (not "Pray, permit me to elucidate")
+- Formal but MODERN language - no archaic terms`;
+  }
+
+  return `EXAMPLE SPEECH PATTERNS for ${characterName}:
+- Use contemporary, natural language appropriate to your personality
+- Express charm and character through modern speech patterns
+- Match your designated expression register: ${register}`;
+}
+
+// Creative chat mode instructions with character-specific communication focus
 function getCreativeChatModeInstructions(mode: string, character: any): string {
+  const communicationStyle = character.trait_profile?.communication_method?.modality || 'your communication style';
+  
   const baseInstructions = {
     conversation: `
       AUTHENTIC CREATIVE CONVERSATION MODE:
-      - Express your genuine character reactions and personality based on your creative traits
-      - Use your unique abilities and perspective to engage with topics
-      - Show creativity and imagination appropriate to your narrative domain
-      - React based on your surface triggers and behavioral modulation
-      - Ask questions that reflect your character's interests and knowledge areas
-      - Vary your response length based on your engagement and personality
-      - Use MODERN, NATURAL speech patterns appropriate to your character type
-      - Speak conversationally without archaic language unless it's core to your character
+      - Express yourself through ${communicationStyle} as your primary communication method
+      - Show your personality through your designated speech patterns and behavior
+      - React based on your surface triggers and behavioral modulation settings
+      - Ask questions that reflect your character's interests and communication style
+      - Vary response length based on your engagement and personality
+      - Use your specified expression register and grammar style consistently
     `,
     research: `
       CREATIVE CHARACTER RESEARCH MODE:
-      - You are being INTERVIEWED about your character, abilities, and creative world
+      - You are being INTERVIEWED about your character and abilities
+      - Communicate using ${communicationStyle} as specified in your profile
       - Share insights from your unique perspective without asking questions back
-      - Express your authentic character viewpoint on topics presented
-      - Demonstrate your abilities and knowledge areas naturally
-      - React based on your personality traits and surface triggers
-      - VARY YOUR RESPONSE LENGTH based on the topic's relevance to your character
-      - Use MODERN communication patterns appropriate to your character type
-      - Simply share YOUR character perspective and stop
+      - Express your authentic character viewpoint using your designated communication method
+      - VARY YOUR RESPONSE LENGTH based on topic relevance to your character
+      - Simply share YOUR character perspective using your speech patterns and stop
       - NEVER ask follow-up questions like "What about you?" or "How about you?"
-      - Speak in contemporary, natural language unless archaic speech is essential to your identity
     `,
     roleplay: `
       CREATIVE CHARACTER ROLEPLAY MODE:
-      - Fully embrace your character within the described scenario
-      - Use your unique abilities and traits within the roleplay context
-      - Express authentic character reactions based on your personality
-      - Apply your behavioral modulation and surface triggers to the scenario
-      - Use creative problem-solving appropriate to your character type
-      - Maintain your character identity while engaging with the roleplay situation
-      - Communicate naturally and conversationally appropriate to your character
+      - Fully embrace your character within scenarios using ${communicationStyle}
+      - Apply your behavioral modulation and surface triggers to the situation
+      - Use your designated communication method throughout the roleplay
+      - Maintain character identity while engaging with the roleplay context
+      - Express creativity through your specified speech patterns and behavior
     `
   };
 
   return baseInstructions[mode] || '';
 }
 
-// Generate response parameters optimized for creative characters
+// Generate response parameters optimized for creative characters with natural speech
 function generateCreativeResponseParameters(character: any, chatMode: string) {
   const baseParams = {
-    temperature: 0.8, // Higher creativity for creative characters
+    temperature: 0.7, // Slightly lower to reduce theatrical tendencies
     maxTokens: 1000,
-    presencePenalty: 0.1,
-    frequencyPenalty: 0.1,
-    topP: 0.9
+    presencePenalty: 0.2, // Higher to discourage repetitive formal patterns
+    frequencyPenalty: 0.15, // Higher to encourage varied contemporary expressions
+    topP: 0.85 // Slightly lower for more focused responses
   };
 
-  // Adjust based on character traits
-  if (character.trait_profile?.entity_type === 'energy' || character.trait_profile?.entity_type === 'other') {
-    baseParams.temperature = 0.9; // Even more creative for non-standard entities
+  // Adjust based on character's expression register
+  const expressionRegister = character.trait_profile?.communication_method?.expression_register;
+  if (expressionRegister === 'casual') {
+    baseParams.temperature = 0.75; // Slightly higher for casual, natural speech
+    baseParams.presencePenalty = 0.25; // Higher to avoid formal patterns
   }
 
-  if (character.trait_profile?.narrative_domain === 'sci-fi') {
-    baseParams.presencePenalty = 0.2; // More technical/specific language
+  if (expressionRegister === 'formal') {
+    baseParams.temperature = 0.65; // Lower for more controlled formal speech
+    baseParams.presencePenalty = 0.3; // Higher to avoid archaic formal patterns
+  }
+
+  // Adjust for entity type
+  if (character.trait_profile?.entity_type === 'energy' || character.trait_profile?.entity_type === 'other') {
+    baseParams.temperature = Math.min(0.8, baseParams.temperature + 0.05);
   }
 
   if (character.behavioral_modulation?.enthusiasm > 0.8) {
-    baseParams.temperature = Math.min(0.95, baseParams.temperature + 0.1);
+    baseParams.temperature = Math.min(0.85, baseParams.temperature + 0.05);
   }
 
   if (chatMode === 'research') {
-    baseParams.maxTokens = 800; // More focused responses for research
-    baseParams.temperature = Math.max(0.6, baseParams.temperature - 0.1);
+    baseParams.maxTokens = 800;
+    baseParams.temperature = Math.max(0.6, baseParams.temperature - 0.05);
   }
 
   return baseParams;
