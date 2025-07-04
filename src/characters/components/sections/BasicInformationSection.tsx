@@ -25,6 +25,47 @@ const BasicInformationSection = ({
   formatDate,
   getYearFromDate
 }: BasicInformationSectionProps) => {
+  // Helper function to get the correct historical year
+  const getHistoricalYear = () => {
+    // For historical characters, try to extract year from various sources
+    if (isHistorical) {
+      // First try metadata date_of_birth
+      if (character.metadata?.date_of_birth) {
+        const year = parseInt(character.metadata.date_of_birth.toString().split('-')[0]);
+        if (year && year > 0 && year < 2100) {
+          return year.toString();
+        }
+      }
+      
+      // Try to extract year from historical_period
+      if (character.historical_period) {
+        const yearMatch = character.historical_period.match(/(\d{4})/);
+        if (yearMatch) {
+          return yearMatch[1];
+        }
+      }
+      
+      // Try metadata historical_period
+      if (character.metadata?.historical_period) {
+        const yearMatch = character.metadata.historical_period.match(/(\d{4})/);
+        if (yearMatch) {
+          return yearMatch[1];
+        }
+      }
+      
+      // Calculate from age and current date (approximation)
+      if (character.age && character.historical_period) {
+        // This is a rough approximation - could be improved with more context
+        const currentYear = new Date().getFullYear();
+        const approximateYear = currentYear - parseInt(character.age.toString());
+        return approximateYear.toString();
+      }
+    }
+    
+    // Fallback to creation date year for non-historical characters
+    return getYearFromDate(character.creation_date);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -46,11 +87,11 @@ const BasicInformationSection = ({
             <span className="ml-2">{formatDate(character.creation_date)}</span>
           </div>
           
-          {/* Historical Character Year */}
-          {isHistorical && dateOfBirth && (
+          {/* Historical Character Year - Fixed to show actual historical year */}
+          {isHistorical && (
             <div>
-              <span className="font-medium">Year:</span>
-              <span className="ml-2">{getYearFromDate(dateOfBirth)}</span>
+              <span className="font-medium">Historical Year:</span>
+              <span className="ml-2">{getHistoricalYear()}</span>
             </div>
           )}
           
