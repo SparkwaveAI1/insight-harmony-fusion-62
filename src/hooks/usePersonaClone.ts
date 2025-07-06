@@ -17,63 +17,72 @@ export function usePersonaClone(persona: Persona) {
   const form = useForm<CloneFormValues>({
     resolver: zodResolver(cloneFormSchema),
     defaultValues: {
-      name: `${persona.name} (Clone)`,
+      name: `${persona.name} (Customized)`,
       prompt: persona.prompt || "",
       customization_notes: "",
     },
   });
 
   const onSubmit = async (data: CloneFormValues) => {
-    console.log("Starting persona clone process with data:", data);
+    console.log("Starting persona customization process with data:", data);
     setIsSubmitting(true);
     try {
-      // Build an enhanced prompt that incorporates the customization notes
-      // to ensure the AI model properly applies the customizations
-      let enhancedPrompt = data.prompt;
-      
-      if (data.customization_notes && data.customization_notes.trim() !== "") {
-        // Format the customization instructions prominently to ensure they're processed
-        enhancedPrompt = `
+      // Build an enhanced prompt that preserves the original persona's core traits
+      // while incorporating the user's customization instructions
+      let enhancedPrompt = `
+Create a persona based on the following original persona, but with specific customizations applied:
+
+ORIGINAL PERSONA FOUNDATION:
 ${data.prompt}
 
-IMPORTANT CUSTOMIZATION INSTRUCTIONS:
+PRESERVE THESE CORE CHARACTERISTICS:
+- Maintain the same demographic foundation (age, location, background) unless specifically changed
+- Keep the same core personality traits and behavioral patterns unless modified
+- Retain the linguistic style and communication patterns
+- Preserve the trait profile structure and realistic trait distributions
+
+APPLY THESE SPECIFIC CUSTOMIZATIONS:
 ${data.customization_notes}
 
-Please create a persona with the above customizations applied. The customizations should significantly influence the persona's traits, behaviors, and responses.
+IMPORTANT INSTRUCTIONS:
+1. Use the original persona as the foundation and apply only the requested customizations
+2. Maintain trait realism - ensure all personality traits remain within believable ranges
+3. Preserve the psychological coherence of the original persona while integrating changes
+4. Keep the same level of detail and depth as the original
+5. Ensure the customized traits create a coherent, realistic personality profile
+6. Map existing traits accurately, only modifying those specifically requested to change
 `;
-      }
       
-      console.log("Generating customized persona with enhanced prompt:", enhancedPrompt);
+      console.log("Generating customized persona with trait-preserving prompt");
       
-      // Use generatePersona with the enhanced prompt
+      // Use generatePersona with the enhanced trait-preserving prompt
       const generatedPersona = await generatePersona(enhancedPrompt);
       
       if (generatedPersona) {
-        console.log("Original name from form:", data.name);
-        console.log("Before name update, persona has name:", generatedPersona.name);
+        console.log("Setting custom name:", data.name);
         
         // Explicitly set the name to the user-specified name from the form
         generatedPersona.name = data.name;
         
-        console.log("After name update, persona now has name:", generatedPersona.name);
-        
-        // Store the customization notes in the metadata for reference
-        if (generatedPersona.metadata && data.customization_notes) {
+        // Store the customization metadata for reference
+        if (generatedPersona.metadata) {
           generatedPersona.metadata = {
             ...generatedPersona.metadata,
             customization_notes: data.customization_notes,
-            customized_from: persona.persona_id
+            customized_from: persona.persona_id,
+            original_persona_name: persona.name,
+            customization_date: new Date().toISOString()
           };
         }
         
-        console.log("Persona generated successfully:", generatedPersona);
-        toast.success("Customized persona created successfully!");
+        console.log("Persona customized successfully with preserved traits:", generatedPersona);
+        toast.success(`"${data.name}" created successfully with your customizations!`);
         
-        // Navigate to the new persona detail page with the correct path
+        // Navigate to the new persona detail page
         navigate(`/persona/${generatedPersona.persona_id}`);
         return true;
       } else {
-        console.error("Failed to generate persona - no result returned");
+        console.error("Failed to generate customized persona - no result returned");
         toast.error("Failed to create customized persona");
         return false;
       }

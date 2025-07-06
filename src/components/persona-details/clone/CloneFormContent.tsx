@@ -39,7 +39,7 @@ const CloneFormContent = ({
               <FormItem>
                 <FormLabel>Persona Name <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter name for the new persona" {...field} />
+                  <Input placeholder="Enter name for the customized persona" {...field} />
                 </FormControl>
                 <FormDescription>
                   Give your customized persona a unique name to distinguish it from the original.
@@ -54,7 +54,7 @@ const CloneFormContent = ({
             name="prompt"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Base Prompt</FormLabel>
+                <FormLabel>Original Foundation</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Original persona generation prompt" 
@@ -64,7 +64,7 @@ const CloneFormContent = ({
                   />
                 </FormControl>
                 <FormDescription>
-                  This base prompt will be used with your customizations to generate the new persona.
+                  This is the foundation that will be preserved. Your customizations will be applied on top of this base.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -79,19 +79,35 @@ const CloneFormContent = ({
                 <FormLabel>Customization Instructions <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Examples: Make this persona more extroverted, make them more politically conservative, make them more interested in technology, make them have stronger opinions about environmental issues..." 
-                    className="min-h-[120px]"
+                    placeholder="Examples: 
+• Make them more extroverted and social
+• Increase their interest in technology and decrease interest in sports
+• Make them more politically conservative
+• Change their occupation to teacher instead of engineer
+• Make them more optimistic and less anxious
+• Adjust their communication style to be more formal" 
+                    className="min-h-[140px]"
                     {...field} 
                   />
                 </FormControl>
                 <FormDescription>
-                  Specify how this new persona should differ from the original one. Be specific and detailed in your instructions.
-                  The AI will integrate these customizations into all aspects of the persona.
+                  <strong>Trait Preservation:</strong> The system will maintain all existing personality traits, demographics, and behavioral patterns unless you specifically request changes. Be clear about what you want to modify while keeping everything else intact.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+            <h4 className="font-medium text-blue-900 mb-2">🎯 Customization Tips</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• <strong>Personality traits:</strong> "Make them more/less [trait]" (e.g., extroverted, anxious, optimistic)</li>
+              <li>• <strong>Interests:</strong> "Increase interest in [topic]" or "Change focus from X to Y"</li>
+              <li>• <strong>Demographics:</strong> "Change age to X" or "Different occupation"</li>
+              <li>• <strong>Values:</strong> "More/less conservative/liberal" or "Different priorities"</li>
+              <li>• <strong>Communication:</strong> "More formal/casual style" or "Different vocabulary"</li>
+            </ul>
+          </div>
         </div>
         
         <div className="flex justify-end space-x-2 pt-4">
@@ -109,7 +125,7 @@ const CloneFormContent = ({
             className="flex items-center gap-2"
           >
             <Copy className="h-4 w-4" />
-            {isSubmitting ? "Generating..." : "Generate Customized Persona"}
+            {isSubmitting ? "Creating Customized Persona..." : "Create Customized Persona"}
           </Button>
         </div>
       </form>
