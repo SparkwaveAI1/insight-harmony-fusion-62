@@ -13,12 +13,33 @@ export function usePersonaClone(persona: Persona) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
+  // Create a base prompt from the persona's characteristics if the original prompt is missing
+  const createBasePrompt = (persona: Persona): string => {
+    if (persona.prompt && persona.prompt.trim() !== '') {
+      return persona.prompt;
+    }
+    
+    // Fallback: create a descriptive prompt based on persona data
+    const metadata = persona.metadata || {};
+    const demographics = [];
+    
+    if (metadata.age) demographics.push(`${metadata.age} years old`);
+    if (metadata.gender) demographics.push(metadata.gender);
+    if (metadata.location) demographics.push(`from ${metadata.location}`);
+    if (metadata.occupation) demographics.push(`working as ${metadata.occupation}`);
+    if (metadata.education) demographics.push(`${metadata.education} education`);
+    
+    const demographicString = demographics.length > 0 ? demographics.join(', ') : 'individual';
+    
+    return `Create a detailed persona representing a ${demographicString} named ${persona.name}. This person should have realistic personality traits, behavioral patterns, and decision-making processes that reflect their background and life experiences.`;
+  };
+
   // Initialize form with current persona data
   const form = useForm<CloneFormValues>({
     resolver: zodResolver(cloneFormSchema),
     defaultValues: {
       name: `${persona.name} (Clone)`,
-      prompt: persona.prompt || "",
+      prompt: createBasePrompt(persona),
       customization_notes: "",
     },
   });
