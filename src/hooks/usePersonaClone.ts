@@ -13,7 +13,7 @@ export function usePersonaClone(persona: Persona) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Create a base prompt from the persona's characteristics if the original prompt is missing
+  // Create a base prompt from the persona's characteristics
   const createBasePrompt = (persona: Persona): string => {
     if (persona.prompt && persona.prompt.trim() !== '') {
       return persona.prompt;
@@ -47,40 +47,47 @@ export function usePersonaClone(persona: Persona) {
   const onSubmit = async (data: CloneFormValues) => {
     console.log("Starting persona clone process with data:", data);
     setIsSubmitting(true);
+    
     try {
-      // Build an enhanced prompt that incorporates the original persona traits
-      // and applies the user's customizations on top
-      let enhancedPrompt = `Create a persona based on the following original persona, but with specific customizations applied:
+      // Validate required fields
+      if (!data.customization_notes || data.customization_notes.trim() === '') {
+        toast.error("Please provide customization instructions to make your new persona unique");
+        return false;
+      }
+      
+      if (!data.name || data.name.trim() === '') {
+        toast.error("Please provide a name for your new persona");
+        return false;
+      }
+      
+      // Build an enhanced prompt that preserves original traits while applying customizations
+      const enhancedPrompt = `Create a persona based on the following foundation, applying the specified customizations:
 
-ORIGINAL PERSONA PROMPT:
+FOUNDATION PERSONA:
 ${data.prompt}
 
-TRAIT PRESERVATION INSTRUCTIONS:
-- Preserve the core demographic information: ${JSON.stringify(persona.metadata || {})}
-- Maintain the overall personality structure from these trait profiles: ${JSON.stringify(persona.trait_profile || {})}
-- Keep the communication style and linguistic patterns: ${JSON.stringify(persona.linguistic_profile || {})}
-- Retain positive emotional triggers: ${JSON.stringify(persona.emotional_triggers?.positive_triggers || [])}
+TRAIT PRESERVATION (maintain these core characteristics):
+- Demographics: ${JSON.stringify(persona.metadata || {})}
+- Personality traits: ${JSON.stringify(persona.trait_profile || {})}
+- Communication style: ${JSON.stringify(persona.linguistic_profile || {})}
+- Emotional patterns: ${JSON.stringify(persona.emotional_triggers || {})}
 
-CUSTOMIZATION INSTRUCTIONS (APPLY THESE CHANGES):
+CUSTOMIZATIONS TO APPLY:
 ${data.customization_notes}
 
-IMPORTANT: The resulting persona should feel like a natural evolution of the original, with the customizations seamlessly integrated into the existing personality structure. Maintain internal consistency while applying the requested changes.`;
+INSTRUCTIONS:
+Create a new persona that maintains the core foundation but incorporates the requested customizations. The result should feel like a natural evolution of the original persona with the new characteristics seamlessly integrated.`;
       
-      console.log("Generating customized persona with enhanced prompt:", enhancedPrompt);
+      console.log("Generating persona with enhanced prompt");
       
-      // Use generatePersona with the enhanced prompt that preserves traits
+      // Generate the new persona
       const generatedPersona = await generatePersona(enhancedPrompt);
       
       if (generatedPersona) {
-        console.log("Original name from form:", data.name);
-        console.log("Before name update, persona has name:", generatedPersona.name);
-        
-        // Explicitly set the name to the user-specified name from the form
+        // Override the generated name with the user-specified name
         generatedPersona.name = data.name;
         
-        console.log("After name update, persona now has name:", generatedPersona.name);
-        
-        // Store the customization metadata for reference
+        // Add metadata about the customization
         if (generatedPersona.metadata) {
           generatedPersona.metadata = {
             ...generatedPersona.metadata,
@@ -91,14 +98,14 @@ IMPORTANT: The resulting persona should feel like a natural evolution of the ori
           };
         }
         
-        console.log("Persona generated successfully:", generatedPersona);
-        toast.success("Customized persona created successfully!");
+        console.log("Persona cloned successfully:", generatedPersona.name);
+        toast.success(`"${generatedPersona.name}" created successfully!`);
         
-        // Navigate to the new persona detail page
+        // Navigate to the new persona
         navigate(`/persona/${generatedPersona.persona_id}`);
         return true;
       } else {
-        console.error("Failed to generate persona - no result returned");
+        console.error("Failed to generate persona");
         toast.error("Failed to create customized persona");
         return false;
       }

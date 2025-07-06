@@ -28,9 +28,17 @@ const CloneFormContent = ({
   isSubmitting, 
   onCancel 
 }: CloneFormContentProps) => {
+  
+  const handleFormSubmit = async (data: CloneFormValues) => {
+    console.log("Form submitted with data:", data);
+    const success = await onSubmit(data);
+    console.log("Form submission result:", success);
+    // Don't close dialog here - let the parent handle navigation
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 py-4">
         <div className="grid gap-4">
           <FormField
             control={form.control}
@@ -79,14 +87,13 @@ const CloneFormContent = ({
                 <FormLabel>Customization Instructions <span className="text-red-500">*</span></FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Examples: Make this persona more extroverted, make them more politically conservative, make them more interested in technology, make them have stronger opinions about environmental issues..." 
+                    placeholder="Examples: Make this persona more extroverted, add stronger political opinions, increase interest in technology, make them more environmentally conscious..." 
                     className="min-h-[120px]"
                     {...field} 
                   />
                 </FormControl>
                 <FormDescription>
-                  Specify how this new persona should differ from the original one. Be specific and detailed in your instructions.
-                  The AI will integrate these customizations into all aspects of the persona.
+                  Specify how this new persona should differ from the original. Be specific about the traits you want to modify while preserving the core characteristics you want to keep.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
