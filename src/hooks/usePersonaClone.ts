@@ -39,6 +39,7 @@ export const usePersonaClone = () => {
           education_level: safeMetadata.education_level || 'Unknown',
           employment_type: safeMetadata.employment_type || 'Unknown',
           income_level: safeMetadata.income_level || 'Unknown',
+          marital_status: safeMetadata.marital_status || safeMetadata.family_status || 'Unknown',
           family_status: safeMetadata.family_status || 'Unknown',
           health_status: safeMetadata.health_status || 'Unknown',
           transportation: safeMetadata.transportation || 'Unknown',

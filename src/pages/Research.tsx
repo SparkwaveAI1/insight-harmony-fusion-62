@@ -7,15 +7,15 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ResearchHeader } from "@/components/research/ResearchHeader";
 import { ResearchConversation } from "@/components/research/ResearchConversation";
-import { ResearchModeSelector } from "@/components/research/ResearchModeSelector";
+import ResearchModeSelector from "@/components/research/ResearchModeSelector";
 import { SendToPersonaSection } from "@/components/research/SendToPersonaSection";
-import { useResearchSession } from "@/components/research/hooks/types";
+import { useResearchSession } from "@/hooks/useResearchSession";
 
 const Research = () => {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('project');
   
-  // Use the original research session hook that has all the required properties
+  // Use comprehensive research session hook
   const {
     sessionId,
     loadedPersonas,
@@ -69,10 +69,12 @@ const Research = () => {
                 />
                 
                 <div className="flex-1 min-h-0 space-y-6">
-                  <ResearchModeSelector 
-                    loadedPersonas={loadedPersonas}
-                    onCreateSession={createSession}
-                  />
+                  <div className="text-center py-8">
+                    <h2 className="text-2xl font-bold mb-4">Research Session</h2>
+                    <p className="text-muted-foreground">
+                      Load personas and start your research conversation
+                    </p>
+                  </div>
                   
                   <ResearchConversation
                     messages={messages}
