@@ -27,25 +27,27 @@ export function usePersonaClone(persona: Persona) {
     console.log("Starting persona clone process with data:", data);
     setIsSubmitting(true);
     try {
-      // Build an enhanced prompt that incorporates the customization notes
-      // to ensure the AI model properly applies the customizations
-      let enhancedPrompt = data.prompt;
-      
-      if (data.customization_notes && data.customization_notes.trim() !== "") {
-        // Format the customization instructions prominently to ensure they're processed
-        enhancedPrompt = `
+      // Build an enhanced prompt that incorporates the original persona traits
+      // and applies the user's customizations on top
+      let enhancedPrompt = `Create a persona based on the following original persona, but with specific customizations applied:
+
+ORIGINAL PERSONA PROMPT:
 ${data.prompt}
 
-IMPORTANT CUSTOMIZATION INSTRUCTIONS:
+TRAIT PRESERVATION INSTRUCTIONS:
+- Preserve the core demographic information: ${JSON.stringify(persona.metadata || {})}
+- Maintain the overall personality structure from these trait profiles: ${JSON.stringify(persona.trait_profile || {})}
+- Keep the communication style and linguistic patterns: ${JSON.stringify(persona.linguistic_profile || {})}
+- Retain positive emotional triggers: ${JSON.stringify(persona.emotional_triggers?.positive_triggers || [])}
+
+CUSTOMIZATION INSTRUCTIONS (APPLY THESE CHANGES):
 ${data.customization_notes}
 
-Please create a persona with the above customizations applied. The customizations should significantly influence the persona's traits, behaviors, and responses.
-`;
-      }
+IMPORTANT: The resulting persona should feel like a natural evolution of the original, with the customizations seamlessly integrated into the existing personality structure. Maintain internal consistency while applying the requested changes.`;
       
       console.log("Generating customized persona with enhanced prompt:", enhancedPrompt);
       
-      // Use generatePersona with the enhanced prompt
+      // Use generatePersona with the enhanced prompt that preserves traits
       const generatedPersona = await generatePersona(enhancedPrompt);
       
       if (generatedPersona) {
@@ -57,19 +59,21 @@ Please create a persona with the above customizations applied. The customization
         
         console.log("After name update, persona now has name:", generatedPersona.name);
         
-        // Store the customization notes in the metadata for reference
-        if (generatedPersona.metadata && data.customization_notes) {
+        // Store the customization metadata for reference
+        if (generatedPersona.metadata) {
           generatedPersona.metadata = {
             ...generatedPersona.metadata,
             customization_notes: data.customization_notes,
-            customized_from: persona.persona_id
+            customized_from: persona.persona_id,
+            clone_source: "trait_preserving_clone",
+            original_persona_name: persona.name
           };
         }
         
         console.log("Persona generated successfully:", generatedPersona);
         toast.success("Customized persona created successfully!");
         
-        // Navigate to the new persona detail page with the correct path
+        // Navigate to the new persona detail page
         navigate(`/persona/${generatedPersona.persona_id}`);
         return true;
       } else {
