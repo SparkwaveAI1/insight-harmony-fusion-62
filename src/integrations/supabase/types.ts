@@ -599,7 +599,6 @@ export type Database = {
           behavioral_modulation: Json
           created_at: string | null
           creation_date: string
-          description: string | null
           emotional_triggers: Json | null
           enhanced_metadata_version: number | null
           id: string
@@ -620,7 +619,6 @@ export type Database = {
           behavioral_modulation: Json
           created_at?: string | null
           creation_date: string
-          description?: string | null
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
           id?: string
@@ -641,7 +639,6 @@ export type Database = {
           behavioral_modulation?: Json
           created_at?: string | null
           creation_date?: string
-          description?: string | null
           emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
           id?: string

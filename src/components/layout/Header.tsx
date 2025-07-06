@@ -78,6 +78,8 @@ const Header = () => {
                 let displayText = link.title;
                 if (link.title === "Personas") {
                   displayText = "Persona Lab";
+                } else if (link.title === "Characters") {
+                  displayText = "Character Lab";
                 }
                 
                 return (

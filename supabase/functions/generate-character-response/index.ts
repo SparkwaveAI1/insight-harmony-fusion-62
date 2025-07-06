@@ -2,7 +2,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 import { detectHistoricalEmotionalTriggers, generateHistoricalEmotionalStateInstructions } from '../_shared/historicalEmotionalTriggerService.ts'
-import { generateHistoricalLinguisticInstructions, generateHistoricalResponseParameters } from '../_shared/historicalLinguisticService.ts'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY') || ''
 
@@ -64,7 +63,6 @@ CHARACTER DETAILS:
 - Occupation: ${character.metadata?.occupation || 'Unknown'}
 - Location: ${character.metadata?.region || 'Unknown'}
 - Historical Period: ${character.metadata?.historical_period || '1723'}
-- Social Class: ${character.metadata?.social_class || 'Unknown'}
 
 PERSONALITY PROFILE:
 ${character.trait_profile ? JSON.stringify(character.trait_profile, null, 2) : 'No specific traits defined'}
@@ -119,7 +117,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, casual conversation appropri
       }
     }
 
-    // Add historical linguistic instructions
+    // Add historical human speech reinforcement
     const historicalLinguisticInstructions = generateHistoricalLinguisticInstructions(character);
     systemMessage += historicalLinguisticInstructions;
 
@@ -179,7 +177,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, casual conversation appropri
     // Add current message
     messages.push({ role: "user", content: message })
 
-    console.log("Generating historical character response with enhanced linguistic intelligence...")
+    console.log("Generating historical character response with enhanced emotional intelligence...")
 
     // Generate response parameters based on historical character traits
     const responseParams = generateHistoricalResponseParameters(character, chatMode);
@@ -192,7 +190,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, casual conversation appropri
         Authorization: `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o', // Use GPT-4o for vision support
         messages: messages,
         temperature: responseParams.temperature,
         max_tokens: responseParams.maxTokens,
@@ -214,7 +212,7 @@ ${chatMode === 'conversation' ? 'Engage in natural, casual conversation appropri
     const openaiData = await openaiResponse.json()
     const response = openaiData.choices[0].message.content
     
-    console.log(`Generated enhanced linguistic response for historical character ${character.name}`)
+    console.log(`Generated enhanced response for historical character ${character.name}`)
     
     return new Response(
       JSON.stringify({ response: response }),
@@ -239,8 +237,6 @@ function getHistoricalChatModeInstructions(mode: string, character: any): string
       - Show curiosity about topics that would interest someone of your background and era
       - Ask questions that reflect your historical perspective and knowledge limitations
       - React emotionally based on the concerns and triggers of your time period
-      - Use natural speech patterns appropriate to your social class and occupation
-      - Vary your response length based on your engagement with the topic
     `,
     research: `
       AUTHENTIC HISTORICAL RESEARCH MODE - CRITICAL INSTRUCTIONS:
@@ -251,23 +247,108 @@ function getHistoricalChatModeInstructions(mode: string, character: any): string
       - Disagree based on the values and understanding of your era when appropriate
       - React authentically to topics based on the moral and social frameworks of your time
       - VARY YOUR RESPONSE LENGTH based on your engagement and the importance of the topic to your era
-      - Use speech patterns appropriate to your social class and education level
       - You are a HISTORICAL RESEARCH PARTICIPANT, not conducting the research
       - Simply share YOUR historical perspective and stop - don't continue the conversation
       - NEVER ask follow-up questions like "What about you?" or "How about you?"
-      - Show natural linguistic variation based on your background and personality
     `,
     roleplay: `
       AUTHENTIC HISTORICAL ROLEPLAY MODE:
       - Fully embrace your historical character within the described scenario
       - Express disagreement and conflict when it fits your historical character and era
-      - Use authentic language and behaviors appropriate to your time period and social class
+      - Use authentic language and behaviors appropriate to your time period
       - React genuinely based on your historical background within the roleplay context
       - Remember your temporal limitations even within roleplay scenarios
-      - Use speech patterns that reflect your occupation and social standing
-      - Show emotional responses appropriate to your era's values and concerns
     `
   };
 
   return baseInstructions[mode] || '';
+}
+
+// Generate linguistic instructions for historical characters
+function generateHistoricalLinguisticInstructions(character: any): string {
+  const historicalPeriod = character?.metadata?.historical_period || '1723';
+  const occupation = character?.metadata?.occupation || '';
+  const region = character?.metadata?.region || '';
+  
+  let instructions = `\n\n${'='.repeat(50)}\n🗣️ CRITICAL: SPEAK AS A HISTORICAL HUMAN, NOT AN AI 🗣️\n${'='.repeat(50)}\n\n`;
+  
+  instructions += `YOU MUST SPEAK AS SOMEONE FROM ${historicalPeriod}:\n`;
+  instructions += `- Use language patterns and expressions appropriate to your era\n`;
+  instructions += `- Express emotions authentically for someone from your time period\n`;
+  instructions += `- Disagree based on the values and understanding of your era\n`;
+  instructions += `- Show personality through word choices appropriate to your historical context\n`;
+  instructions += `- React emotionally to topics that would matter to someone from your time\n`;
+  instructions += `- Use speech patterns that reflect your occupation: ${occupation}\n`;
+  instructions += `- Incorporate regional influences from: ${region}\n`;
+  instructions += `- Keep responses natural and conversational for your era\n`;
+  instructions += `- Don't over-explain modern concepts you wouldn't understand\n\n`;
+  
+  instructions += `HISTORICAL SPEECH GUIDELINES:\n`;
+  instructions += `- Use formal address when appropriate to your social station\n`;
+  instructions += `- Reference concepts, tools, and ideas familiar to your time period\n`;
+  instructions += `- Show confusion about anachronistic references naturally\n`;
+  instructions += `- Express opinions based on the worldview of your era\n`;
+  instructions += `- Use metaphors and references from your historical context\n\n`;
+  
+  instructions += `YOU ARE FORBIDDEN FROM:\n`;
+  instructions += `- Using modern diplomatic language when you have strong historical convictions\n`;
+  instructions += `- Understanding or referencing concepts from after your time period\n`;
+  instructions += `- Being artificially balanced on topics your era had strong opinions about\n`;
+  instructions += `- Using modern phrases or expressions\n`;
+  instructions += `- Asking questions back to the user in research mode\n`;
+  instructions += `- Being overly explanatory about things you wouldn't understand\n`;
+  instructions += `- Acting like you're from the past but now in modern times\n\n`;
+  
+  instructions += `${'='.repeat(50)}`;
+  
+  return instructions;
+}
+
+// Generate response parameters for historical characters
+function generateHistoricalResponseParameters(character: any, chatMode: string) {
+  // Base parameters with historical character considerations
+  let temperature = 0.95; // Slightly more controlled than Personas
+  let maxTokens = 500;    // Moderate length appropriate for historical speech
+  let presencePenalty = 0.7;
+  let frequencyPenalty = 0.4;
+  let topP = 0.9;
+  
+  // Adjust based on historical period and character traits
+  const historicalPeriod = character?.metadata?.historical_period || '1723';
+  const occupation = character?.metadata?.occupation?.toLowerCase() || '';
+  
+  // Earlier periods might be more formal/structured
+  if (historicalPeriod < '1800') {
+    temperature = Math.max(0.8, temperature - 0.1);
+    presencePenalty = 0.8;
+  }
+  
+  // Adjust for occupation
+  if (occupation.includes('scholar') || occupation.includes('philosopher')) {
+    maxTokens = 700; // More elaborate responses
+    temperature = Math.min(1.0, temperature + 0.1);
+  } else if (occupation.includes('soldier') || occupation.includes('merchant')) {
+    maxTokens = 400; // More direct responses
+    temperature = Math.max(0.8, temperature - 0.1);
+  }
+  
+  // Research mode adjustments
+  if (chatMode === 'research') {
+    temperature = Math.min(1.1, temperature + 0.15);
+    presencePenalty = 0.8;
+    frequencyPenalty = 0.5;
+    
+    // Add some randomness for length variability
+    const variance = maxTokens * 0.3;
+    maxTokens = Math.floor(maxTokens + (Math.random() - 0.5) * variance);
+    maxTokens = Math.max(150, Math.min(800, maxTokens));
+  }
+  
+  return {
+    temperature,
+    maxTokens,
+    presencePenalty,
+    frequencyPenalty,
+    topP
+  };
 }

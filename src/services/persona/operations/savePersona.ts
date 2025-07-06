@@ -1,14 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
-import { mapPersonaToDbPersona, mapDbPersonaToPersona } from "../mappers";
+import { personaToDbPersona, dbPersonaToPersona } from "../mappers";
 
-export const savePersona = async (persona: Persona): Promise<Persona> => {
+export async function savePersona(persona: Persona): Promise<Persona | null> {
   try {
-    // Convert to database format
-    const dbPersona = mapPersonaToDbPersona(persona);
+    console.log("Saving persona to Supabase:", persona.persona_id);
+    console.log("Full persona data being saved:", JSON.stringify(persona, null, 2));
     
-    // Insert the persona
+    const dbPersona = personaToDbPersona(persona);
+    
     const { data, error } = await supabase
       .from('personas')
       .insert(dbPersona)
@@ -16,22 +17,14 @@ export const savePersona = async (persona: Persona): Promise<Persona> => {
       .single();
 
     if (error) {
-      console.error('Database error when saving persona:', error);
-      throw new Error(`Failed to save persona: ${error.message}`);
-    }
-
-    if (!data) {
-      throw new Error('No data returned after saving persona');
-    }
-
-    // Convert back to application format
-    return mapDbPersonaToPersona(data);
-
-  } catch (error) {
-    console.error('Error in savePersona:', error);
-    if (error instanceof Error) {
+      console.error("Error saving persona to Supabase:", error);
       throw error;
     }
-    throw new Error('Unknown error occurred while saving persona');
+    
+    console.log("Persona successfully saved:", data);
+    return dbPersonaToPersona(data);
+  } catch (error) {
+    console.error("Error in savePersona:", error);
+    throw error;
   }
-};
+}

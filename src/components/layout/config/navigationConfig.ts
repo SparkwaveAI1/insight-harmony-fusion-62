@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Users,
@@ -27,6 +28,16 @@ export const navigationMenuItems = [
     title: "Create a Persona",
     url: "/simulated-persona",
     icon: UserPlus,
+  },
+  {
+    title: "Historical Characters",
+    url: "/characters",
+    icon: Clock,
+  },
+  {
+    title: "Character Lab",
+    url: "/characters/creative",
+    icon: Sparkles,
   },
   {
     title: "Collections",
@@ -61,6 +72,11 @@ export const headerNavItems = [
     title: "Personas",
     href: "/dashboard",
     icon: Users,
+  },
+  {
+    title: "Characters",
+    href: "/characters-home",
+    icon: Brain,
   },
   {
     title: "PRSNA",

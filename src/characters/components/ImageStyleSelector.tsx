@@ -11,14 +11,14 @@ export interface ImageStyle {
 
 export const IMAGE_STYLES: ImageStyle[] = [
   {
-    id: 'cinematic',
-    name: 'Cinematic',
-    description: 'Movie-style dramatic lighting and composition'
-  },
-  {
     id: 'profile',
     name: 'Profile',
     description: 'Profile image, front view, realistic portrait'
+  },
+  {
+    id: 'cinematic',
+    name: 'Cinematic',
+    description: 'Movie-style dramatic lighting and composition'
   },
   {
     id: 'anime',

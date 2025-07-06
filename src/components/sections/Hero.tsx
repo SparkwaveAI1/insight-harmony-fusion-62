@@ -1,5 +1,5 @@
 
-import { Users, Beaker, Search } from "lucide-react";
+import { Users, Beaker, Search, Brain } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -36,7 +36,7 @@ const Hero = () => {
           </Reveal>
           
           <Reveal delay={300}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button 
                 size="lg" 
                 className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
@@ -57,6 +57,29 @@ const Hero = () => {
               >
                 Run Research Simulations
                 <Search className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </div>
+          </Reveal>
+
+          <Reveal delay={400}>
+            <div className="text-center">
+              <div className="mb-4">
+                <span className="inline-block px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-sm font-bold rounded-full shadow-lg animate-pulse">
+                  ✨ NEW FEATURE
+                </span>
+              </div>
+              <h2 className="mb-6 text-2xl sm:text-3xl md:text-4xl font-bold text-white font-lastica tracking-wider">
+                CHARACTER GENESIS
+              </h2>
+              <Button 
+                size="lg" 
+                className="group py-6 px-8 text-lg bg-purple-600 hover:bg-purple-700 transition-all shadow-lg w-full sm:w-auto"
+                as={Link}
+                to="/characters-home"
+                variant="primary"
+              >
+                Character Lab
+                <Brain className="ml-2 h-5 w-5 transition-transform group-hover:rotate-12" />
               </Button>
             </div>
           </Reveal>

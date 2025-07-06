@@ -9,9 +9,7 @@ export const cloneFormSchema = z.object({
   prompt: z.string().min(10, {
     message: "Prompt must be at least 10 characters.",
   }),
-  customization_notes: z.string().min(10, {
-    message: "Customization instructions must be at least 10 characters.",
-  }),
+  customization_notes: z.string().optional(),
 });
 
 export type CloneFormValues = z.infer<typeof cloneFormSchema>;

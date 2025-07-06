@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Atom, Calendar, MapPin, Clock } from 'lucide-react';
+import { Atom, Calendar } from 'lucide-react';
 import { Character } from '../../types/characterTraitTypes';
 
 interface BasicInformationSectionProps {
@@ -25,62 +25,6 @@ const BasicInformationSection = ({
   formatDate,
   getYearFromDate
 }: BasicInformationSectionProps) => {
-  // Helper function to get the correct historical year
-  const getHistoricalYear = () => {
-    // For historical characters, try to extract year from various sources
-    if (isHistorical) {
-      // First try metadata date_of_birth
-      if (character.metadata?.date_of_birth) {
-        const year = parseInt(character.metadata.date_of_birth.toString().split('-')[0]);
-        if (year && year > 0 && year < 2100) {
-          return year.toString();
-        }
-      }
-      
-      // Try to extract year from historical_period
-      if (character.historical_period) {
-        const yearMatch = character.historical_period.match(/(\d{4})/);
-        if (yearMatch) {
-          return yearMatch[1];
-        }
-      }
-      
-      // Try metadata historical_period
-      if (character.metadata?.historical_period) {
-        const yearMatch = character.metadata.historical_period.match(/(\d{4})/);
-        if (yearMatch) {
-          return yearMatch[1];
-        }
-      }
-      
-      // Calculate from age and current date (approximation)
-      if (character.age && character.historical_period) {
-        // This is a rough approximation - could be improved with more context
-        const currentYear = new Date().getFullYear();
-        const approximateYear = currentYear - parseInt(character.age.toString());
-        return approximateYear.toString();
-      }
-    }
-    
-    // Fallback to creation date year for non-historical characters
-    return getYearFromDate(character.creation_date);
-  };
-
-  // Helper function to get location information
-  const getHistoricalLocation = () => {
-    // Try various sources for location
-    if (character.metadata?.region) {
-      return character.metadata.region;
-    }
-    if (character.region) {
-      return character.region;
-    }
-    if (character.metadata?.location) {
-      return character.metadata.location;
-    }
-    return null;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -102,26 +46,12 @@ const BasicInformationSection = ({
             <span className="ml-2">{formatDate(character.creation_date)}</span>
           </div>
           
-          {/* Historical Character Year and Location - Prominent display */}
-          {isHistorical && (
-            <>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-600" />
-                <span className="font-medium">Historical Year:</span>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {getHistoricalYear()}
-                </Badge>
-              </div>
-              {getHistoricalLocation() && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">Location:</span>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    {getHistoricalLocation()}
-                  </Badge>
-                </div>
-              )}
-            </>
+          {/* Historical Character Year */}
+          {isHistorical && dateOfBirth && (
+            <div>
+              <span className="font-medium">Year:</span>
+              <span className="ml-2">{getYearFromDate(dateOfBirth)}</span>
+            </div>
           )}
           
           {/* Non-Humanoid Specific Fields */}
@@ -175,7 +105,7 @@ const BasicInformationSection = ({
                   <span className="ml-2">{character.historical_period}</span>
                 </div>
               )}
-              {character.region && !isHistorical && (
+              {character.region && (
                 <div>
                   <span className="font-medium">Region:</span>
                   <span className="ml-2">{character.region}</span>

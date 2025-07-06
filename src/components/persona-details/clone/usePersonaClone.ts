@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { Persona } from "@/services/persona/types";
 import { generatePersona } from "@/services/persona";
-import { cloneFormSchema, CloneFormValues } from "../components/persona-details/clone/cloneFormSchema";
+import { cloneFormSchema, CloneFormValues } from "./cloneFormSchema";
 
 export function usePersonaClone(persona: Persona) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,44 +27,21 @@ export function usePersonaClone(persona: Persona) {
     console.log("Starting persona clone process with data:", data);
     setIsSubmitting(true);
     try {
-      // Build an enhanced prompt that incorporates the customization notes
-      // to ensure the AI model properly applies the customizations
-      let enhancedPrompt = data.prompt;
+      // Create a modified prompt with the customization notes appended
+      let fullPrompt = data.prompt;
       
-      if (data.customization_notes && data.customization_notes.trim() !== "") {
-        // Format the customization instructions prominently to ensure they're processed
-        enhancedPrompt = `
-${data.prompt}
-
-IMPORTANT CUSTOMIZATION INSTRUCTIONS:
-${data.customization_notes}
-
-Please create a persona with the above customizations applied. The customizations should significantly influence the persona's traits, behaviors, and responses.
-`;
+      if (data.customization_notes) {
+        fullPrompt = `${fullPrompt}\n\nCustomization: ${data.customization_notes}`;
       }
       
-      console.log("Generating customized persona with enhanced prompt:", enhancedPrompt);
+      console.log("Generating new customized persona with prompt:", fullPrompt);
       
-      // Use generatePersona with the enhanced prompt
-      const generatedPersona = await generatePersona(enhancedPrompt);
+      // Use generatePersona instead of clonePersona to create a truly new persona
+      const generatedPersona = await generatePersona(fullPrompt);
       
       if (generatedPersona) {
-        console.log("Original name from form:", data.name);
-        console.log("Before name update, persona has name:", generatedPersona.name);
-        
-        // Explicitly set the name to the user-specified name from the form
+        // Update the name to the user-specified name
         generatedPersona.name = data.name;
-        
-        console.log("After name update, persona now has name:", generatedPersona.name);
-        
-        // Store the customization notes in the metadata for reference
-        if (generatedPersona.metadata && data.customization_notes) {
-          generatedPersona.metadata = {
-            ...generatedPersona.metadata,
-            customization_notes: data.customization_notes,
-            customized_from: persona.persona_id
-          };
-        }
         
         console.log("Persona generated successfully:", generatedPersona);
         toast.success("Customized persona created successfully!");

@@ -28,9 +28,9 @@ const CharacterChat = () => {
             <Section className="pt-24">
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto">
-                  <h1 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">Character Chat</h1>
+                  <h1 className="text-3xl md:text-4xl font-bold mb-6 font-plasmik">Universal Translator</h1>
                   <p className="text-muted-foreground mb-6 text-lg">
-                    Engage with characters from across time, space, and imagination
+                    Communicate across time and language barriers with historical characters
                   </p>
                   <CharacterChatInterface characterId={characterId} />
                 </div>

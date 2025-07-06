@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { savePersona } from "./operations/savePersona";
 import { Persona } from "./types";
@@ -73,11 +74,10 @@ export const generatePersonaWithProgress = async (
     }
 
     // Step 3: Validation of generated persona
-    onProgress(createProgressUpdate(CREATION_STEPS.DESCRIPTION));
+    onProgress(createProgressUpdate(CREATION_STEPS.INTERVIEW));
     
     console.log("✅ Successfully generated persona:", data.persona.name);
     console.log("Generated persona ID:", data.persona.persona_id);
-    console.log("Generated description word count:", data.persona.description?.split(/\s+/).length || 0);
     
     // CRITICAL: Validate persona completeness
     console.log("=== VALIDATING PERSONA COMPLETENESS ===");

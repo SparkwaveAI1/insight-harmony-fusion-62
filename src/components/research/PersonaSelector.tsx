@@ -1,91 +1,71 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { User, Plus, Check } from "lucide-react";
-import { Persona } from "@/services/persona/types";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Persona } from '@/services/persona/types';
 
 interface PersonaSelectorProps {
   personas: Persona[];
-  selectedPersonas: string[];
-  onPersonaToggle: (personaId: string) => void;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  loading?: boolean;
+  onSelect: (personaId: string) => void;
 }
 
-const PersonaSelector = ({ 
-  personas, 
-  selectedPersonas, 
-  onPersonaToggle,
-  onLoadMore,
-  hasMore = false,
-  loading = false
-}: PersonaSelectorProps) => {
+export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
+  personas,
+  onSelect
+}) => {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3">
-        {personas.map((persona) => {
-          const isSelected = selectedPersonas.includes(persona.persona_id);
-          
-          return (
-            <Card 
-              key={persona.persona_id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-              }`}
-              onClick={() => onPersonaToggle(persona.persona_id)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={persona.profile_image_url} alt={persona.name} />
-                    <AvatarFallback>
-                      <User className="h-5 w-5" />
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900 truncate">{persona.name}</h4>
-                      <div className="flex items-center gap-2">
-                        {isSelected && <Check className="h-4 w-4 text-blue-600" />}
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      <Badge variant="secondary" className="text-xs">
-                        {persona.metadata?.age || 'N/A'} • {persona.metadata?.occupation || 'N/A'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {persona.metadata?.region || 'N/A'}
-                      </Badge>
-                    </div>
-                  </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {personas.map((persona) => (
+        <Button
+          key={persona.persona_id}
+          variant="outline"
+          onClick={() => onSelect(persona.persona_id)}
+          className="h-auto p-4 justify-start hover:bg-primary/5 hover:border-primary/30 transition-colors"
+        >
+          <div className="flex items-start gap-3 w-full">
+            {/* Avatar/Thumbnail */}
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarImage src={persona.image_url} />
+              <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
+            
+            {/* Persona Info */}
+            <div className="flex flex-col items-start gap-2 flex-1 min-w-0">
+              <div className="font-medium text-sm text-left truncate w-full">
+                {persona.name}
+              </div>
+              
+              {/* Preview Traits */}
+              <div className="flex flex-wrap gap-1">
+                {persona.metadata?.occupation && (
+                  <Badge variant="secondary" className="text-xs">
+                    {persona.metadata.occupation}
+                  </Badge>
+                )}
+                {persona.metadata?.age && (
+                  <Badge variant="outline" className="text-xs">
+                    Age {persona.metadata.age}
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Key traits preview using correct trait structure */}
+              {persona.trait_profile?.big_five && (
+                <div className="text-xs text-muted-foreground line-clamp-1 w-full text-left">
+                  {Object.entries(persona.trait_profile.big_five)
+                    .filter(([_, value]) => value !== null)
+                    .slice(0, 2)
+                    .map(([trait, score]) => `${trait}: ${score}`)
+                    .join(', ')}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {hasMore && onLoadMore && (
-        <div className="text-center">
-          <Button 
-            variant="outline" 
-            onClick={onLoadMore}
-            disabled={loading}
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {loading ? 'Loading...' : 'Load More Personas'}
-          </Button>
-        </div>
-      )}
+              )}
+            </div>
+          </div>
+        </Button>
+      ))}
     </div>
   );
 };
-
-export default PersonaSelector;

@@ -49,13 +49,19 @@ serve(async (req) => {
     console.log("Historical period:", characterData.historical_period);
     console.log("Cultural context:", characterData.trait_profile?.cultural_context);
     console.log("Style:", style);
-    console.log("Custom instructions from Additional Details field:", customText);
+    console.log("Custom text:", customText);
     console.log("Auto save:", autoSave);
 
-    // Generate historical character prompt WITH prioritized custom text integration
-    const imagePrompt = buildHistoricalCharacterImagePrompt(characterData, style, customText);
+    // Generate historical character prompt
+    let imagePrompt = buildHistoricalCharacterImagePrompt(characterData, style);
     
-    console.log("Final generated prompt with integrated custom instructions:", imagePrompt);
+    // Add custom text to the prompt if provided
+    if (customText && customText.trim()) {
+      imagePrompt += `, ${customText.trim()}`;
+      console.log("Added custom text to prompt");
+    }
+    
+    console.log("Final generated prompt:", imagePrompt);
     
     // Set up OpenAI parameters for historical accuracy
     const openaiParams = {

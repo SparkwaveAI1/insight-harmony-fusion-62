@@ -321,7 +321,6 @@ export interface PersonaTemplate {
   preinterview_tags: string[];
   simulation_directives: SimulationDirectives;
   interview_sections: InterviewSection[];
-  description?: string;
   prompt?: string;
   user_id?: string;
   enhanced_metadata_version?: number;

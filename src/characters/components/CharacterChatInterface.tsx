@@ -45,9 +45,6 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Check if this is a creative character
-  const isCreativeCharacter = activeCharacter?.creation_source === 'creative';
-
   // Auto-hide intro after 5 seconds or when first message is sent
   useEffect(() => {
     if (messages.length > 0 && showIntro) {
@@ -140,8 +137,8 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
           </Link>
         </div>
 
-        {/* Conditional intro based on character type */}
-        {showIntro && !isCreativeCharacter && (
+        {/* Universal Translator Intro */}
+        {showIntro && (
           <Alert className="bg-blue-50 border-blue-200 animate-in fade-in-0 slide-in-from-top-2">
             <Languages className="h-4 w-4 text-blue-500" />
             <AlertDescription className="text-blue-800 font-medium">
@@ -157,25 +154,8 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
             </AlertDescription>
           </Alert>
         )}
-
-        {showIntro && isCreativeCharacter && (
-          <Alert className="bg-purple-50 border-purple-200 animate-in fade-in-0 slide-in-from-top-2">
-            <MessageCircle className="h-4 w-4 text-purple-500" />
-            <AlertDescription className="text-purple-800 font-medium">
-              Creative Character Mode - engage with this character in their unique creative universe
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-2 h-auto p-0 text-purple-600 hover:text-purple-800"
-                onClick={() => setShowIntro(false)}
-              >
-                Dismiss
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
         
-        {/* Character badge with conditional context indicator */}
+        {/* Character badge with Universal Translator indicator */}
         <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-muted">
           <CharacterAvatar 
             character={activeCharacter} 
@@ -185,54 +165,27 @@ const CharacterChatInterface = ({ characterId }: CharacterChatInterfaceProps) =>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <p className="font-medium">{activeCharacter.name}</p>
-              {!isCreativeCharacter ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 border-blue-200">
-                      <Languages className="h-3 w-3 mr-1" />
-                      Universal Translator
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-sm">
-                      The Universal Translator allows you to communicate with {activeCharacter.name} 
-                      across time and language barriers. They can understand your words but remain 
-                      grounded in their historical time period of {activeCharacter.metadata?.historical_period || '1723'}.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
-                      <MessageCircle className="h-3 w-3 mr-1" />
-                      Creative Character
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-sm">
-                      {activeCharacter.name} is a creative character from the {activeCharacter.trait_profile?.narrative_domain || 'creative'} domain.
-                      They can engage with any topics through their unique character perspective and abilities.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                    <Languages className="h-3 w-3 mr-1" />
+                    Universal Translator
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">
+                    The Universal Translator allows you to communicate with {activeCharacter.name} 
+                    across time and language barriers. They can understand your words but remain 
+                    grounded in their historical time period of {activeCharacter.metadata?.historical_period || '1723'}.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <p className="text-xs text-muted-foreground">
-              {isCreativeCharacter ? (
-                <>
-                  {activeCharacter.trait_profile?.entity_type || ''} 
-                  {activeCharacter.trait_profile?.functional_role && ` • ${activeCharacter.trait_profile.functional_role}`}
-                  {activeCharacter.trait_profile?.narrative_domain && ` • ${activeCharacter.trait_profile.narrative_domain}`}
-                </>
-              ) : (
-                <>
-                  {activeCharacter.metadata?.occupation || ''} 
-                  {activeCharacter.metadata?.age && `, ${activeCharacter.metadata.age}`}
-                  {activeCharacter.metadata?.region && ` • ${activeCharacter.metadata.region}`}
-                  {activeCharacter.metadata?.historical_period && ` • ${activeCharacter.metadata.historical_period}`}
-                </>
-              )}
+              {activeCharacter.metadata?.occupation || ''} 
+              {activeCharacter.metadata?.age && `, ${activeCharacter.metadata.age}`}
+              {activeCharacter.metadata?.region && ` • ${activeCharacter.metadata.region}`}
+              {activeCharacter.metadata?.historical_period && ` • ${activeCharacter.metadata.historical_period}`}
             </p>
           </div>
           
