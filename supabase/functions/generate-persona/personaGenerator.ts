@@ -1,4 +1,3 @@
-
 import { PersonaTemplate } from "./types.ts";
 import { 
   generateCoreDemographics,
@@ -29,6 +28,7 @@ import {
   validateCompleteMetadata,
   validatePersonaUniqueness 
 } from "./validationHelpers.ts";
+import { generatePersonaDescription } from "./descriptionGenerator.ts";
 
 export async function generateBasePersona(prompt: string): Promise<PersonaTemplate> {
   console.log('=== STAGE 1: GENERATING CORE DEMOGRAPHICS ===');
@@ -279,11 +279,35 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
   }
 }
 
+export async function generatePersonaDescriptionStep(basePersona: PersonaTemplate): Promise<string> {
+  console.log('=== STAGE 11: GENERATING PERSONA DESCRIPTION ===');
+  
+  try {
+    const description = await wrapWithErrorHandling(
+      () => withRetry(
+        () => generatePersonaDescription(basePersona),
+        { maxRetries: 2 },
+        'Persona Description Generation'
+      ),
+      'description',
+      { personaName: basePersona.name }
+    );
+    
+    console.log(`✅ Generated persona description (${description.split(/\s+/).length} words)`);
+    return description;
+  } catch (error) {
+    console.warn('Description generation failed, using fallback:', error.message);
+    // Fallback description
+    return `${basePersona.name} is a ${basePersona.metadata.age || 'adult'} ${basePersona.metadata.gender || 'person'} who works as ${basePersona.metadata.occupation || 'a professional'}. They live in ${basePersona.metadata.region || 'their community'} and bring a unique perspective shaped by their life experiences, values, and personal journey.`;
+  }
+}
+
 export function finalizePersona(
   basePersona: PersonaTemplate, 
   traitData: any, 
   behavioralLinguistic: any, 
-  interviewResponses: any[]
+  interviewResponses: any[],
+  description: string
 ): PersonaTemplate {
   console.log('=== FINALIZING PERSONA ===');
   
@@ -294,7 +318,8 @@ export function finalizePersona(
     behavioral_modulation: behavioralLinguistic.behavioral_modulation,
     linguistic_profile: behavioralLinguistic.linguistic_profile,
     simulation_directives: behavioralLinguistic.simulation_directives,
-    preinterview_tags: behavioralLinguistic.preinterview_tags
+    preinterview_tags: behavioralLinguistic.preinterview_tags,
+    description: description // Add the generated description
   });
   
   basePersona.interview_sections = interviewResponses;
@@ -340,6 +365,6 @@ export function finalizePersona(
     positive_triggers: [], negative_triggers: []
   };
 
-  console.log('✅ Persona finalized and validated');
+  console.log('✅ Persona finalized and validated with description');
   return validatedPersona;
 }

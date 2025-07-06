@@ -1,6 +1,16 @@
 
+export enum CREATION_STEPS {
+  VALIDATION = 'validation',
+  DEMOGRAPHICS = 'demographics',
+  TRAITS = 'traits',
+  INTERVIEW = 'interview',
+  DESCRIPTION = 'description', // Add description step
+  SAVING = 'saving',
+  COMPLETE = 'complete'
+}
+
 export interface PersonaCreationProgress {
-  step: string;
+  step: CREATION_STEPS;
   progress: number;
   message: string;
   isComplete: boolean;
@@ -10,21 +20,37 @@ export interface PersonaCreationProgress {
 
 export type ProgressCallback = (progress: PersonaCreationProgress) => void;
 
-export const CREATION_STEPS = {
-  VALIDATION: { step: 'validation', progress: 10, message: 'Validating your prompt...', isComplete: false },
-  DEMOGRAPHICS: { step: 'demographics', progress: 30, message: 'Generating demographics and background...', isComplete: false },
-  TRAITS: { step: 'traits', progress: 60, message: 'Creating personality traits and behavioral patterns...', isComplete: false },
-  INTERVIEW: { step: 'interview', progress: 85, message: 'Generating interview responses...', isComplete: false },
-  SAVING: { step: 'saving', progress: 95, message: 'Saving your persona...', isComplete: false },
-  COMPLETE: { step: 'complete', progress: 100, message: 'Persona created successfully!', isComplete: true }
-};
-
 export const createProgressUpdate = (
-  stepInfo: typeof CREATION_STEPS[keyof typeof CREATION_STEPS],
-  hasError: boolean = false,
+  step: CREATION_STEPS, 
+  hasError: boolean = false, 
   errorMessage?: string
-): PersonaCreationProgress => ({
-  ...stepInfo,
-  hasError,
-  errorMessage
-});
+): PersonaCreationProgress => {
+  const stepMessages = {
+    [CREATION_STEPS.VALIDATION]: 'Validating input and preparing generation...',
+    [CREATION_STEPS.DEMOGRAPHICS]: 'Generating core demographics and personality...',
+    [CREATION_STEPS.TRAITS]: 'Creating detailed trait profiles and behaviors...',
+    [CREATION_STEPS.INTERVIEW]: 'Generating interview responses...',
+    [CREATION_STEPS.DESCRIPTION]: 'Creating persona description...',
+    [CREATION_STEPS.SAVING]: 'Saving persona to database...',
+    [CREATION_STEPS.COMPLETE]: 'Persona created successfully!'
+  };
+
+  const stepProgress = {
+    [CREATION_STEPS.VALIDATION]: 10,
+    [CREATION_STEPS.DEMOGRAPHICS]: 30,
+    [CREATION_STEPS.TRAITS]: 60,
+    [CREATION_STEPS.INTERVIEW]: 80,
+    [CREATION_STEPS.DESCRIPTION]: 90,
+    [CREATION_STEPS.SAVING]: 95,
+    [CREATION_STEPS.COMPLETE]: 100
+  };
+
+  return {
+    step,
+    progress: stepProgress[step],
+    message: hasError ? (errorMessage || 'An error occurred') : stepMessages[step],
+    isComplete: step === CREATION_STEPS.COMPLETE && !hasError,
+    hasError,
+    errorMessage: hasError ? errorMessage : undefined
+  };
+};

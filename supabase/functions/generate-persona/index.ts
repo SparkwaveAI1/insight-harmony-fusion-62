@@ -15,7 +15,8 @@ import {
   enhancePersonaMetadata, 
   generatePersonaTraitProfile, 
   generatePersonaBehavioralLinguistic,
-  generatePersonaInterview, 
+  generatePersonaInterview,
+  generatePersonaDescriptionStep,
   finalizePersona 
 } from "./personaGenerator.ts";
 
@@ -41,7 +42,7 @@ serve(async (req) => {
       console.warn('Prompt validation warnings:', promptValidation.warnings);
     }
 
-    console.log('=== STARTING 10-STAGE PERSONA GENERATION ===');
+    console.log('=== STARTING 11-STAGE PERSONA GENERATION ===');
     console.log(`User: ${user.id}`);
     console.log(`Prompt length: ${prompt.length} characters`);
     
@@ -74,17 +75,23 @@ serve(async (req) => {
     const interviewResponses = await generatePersonaInterview(enhancedPersona);
     console.log(`✅ Stage 10 Complete: Generated ${interviewResponses.length} interview sections`);
 
+    // STAGE 11: Generate persona description
+    console.log('🔄 Stage 11: Working on persona description...');
+    const description = await generatePersonaDescriptionStep(enhancedPersona);
+    console.log('✅ Stage 11 Complete: Generated persona description');
+
     // FINALIZATION: Validate and assemble the complete persona
     console.log('🔄 Finalizing persona...');
-    const validatedPersona = finalizePersona(enhancedPersona, traitData, behavioralLinguistic, interviewResponses);
+    const validatedPersona = finalizePersona(enhancedPersona, traitData, behavioralLinguistic, interviewResponses, description);
 
-    console.log('=== 10-STAGE PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
+    console.log('=== 11-STAGE PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
     console.log(`Final persona: ${validatedPersona.name} for user: ${user.id}`);
     console.log(`- Core demographics: ✓ (${Object.keys(validatedPersona.metadata).length} fields)`);
     console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
     console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);
     console.log(`- Behavioral profiles: ✓`);
     console.log(`- Interview sections: ✓ (${validatedPersona.interview_sections?.length || 0} sections)`);
+    console.log(`- Description: ✓ (${validatedPersona.description?.split(/\s+/).length || 0} words)`);
 
     return new Response(
       JSON.stringify({
@@ -95,7 +102,8 @@ serve(async (req) => {
           traitGenerationAttempts: attemptCount,
           hasRealisticTraits: true,
           demographicFieldsGenerated: Object.keys(validatedPersona.metadata).length,
-          generationStages: 10
+          generationStages: 11,
+          descriptionWordCount: validatedPersona.description?.split(/\s+/).length || 0
         }
       }),
       { 

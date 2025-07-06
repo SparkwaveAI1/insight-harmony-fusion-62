@@ -308,32 +308,23 @@ export interface InterviewSection {
   }[];
 }
 
-// Updated PersonaTemplate to match database constraints
-export interface PersonaTemplate {
+// Updated PersonaTemplate to include description field
+export interface Persona {
   persona_id: string;
   name: string;
   creation_date: string;
-  metadata: PersonaMetadata;
-  trait_profile: TraitProfile;
-  behavioral_modulation: BehavioralModulation;
-  linguistic_profile: LinguisticProfile;
-  emotional_triggers: EmotionalTriggers;
-  preinterview_tags: string[];
-  simulation_directives: SimulationDirectives;
-  interview_sections: InterviewSection[];
-  description?: string;
   prompt?: string;
+  metadata: PersonaMetadata;
+  trait_profile?: TraitProfile;
+  behavioral_modulation?: BehavioralModulation;
+  linguistic_profile?: LinguisticProfile;
+  emotional_triggers?: EmotionalTriggers;
+  preinterview_tags?: string[];
+  simulation_directives?: SimulationDirectives;
+  interview_sections?: InterviewSection[];
+  description?: string; // Add description field
+  is_public?: boolean;
   user_id?: string;
+  image_url?: string;
   enhanced_metadata_version?: number;
-}
-
-export interface RequestData {
-  prompt: string;
-  userId?: string;
-}
-
-export interface PersonaResponse {
-  success: boolean;
-  persona?: PersonaTemplate;
-  error?: string;
 }

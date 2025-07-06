@@ -6,6 +6,7 @@ import PersonaTraits from "./PersonaTraits";
 import InterviewResponses from "./InterviewResponses";
 import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
 import PersonaKeyInsights from "./PersonaKeyInsights";
+import PersonaDescription from "./PersonaDescription";
 
 interface PersonaContentProps {
   persona: Persona;
@@ -95,6 +96,12 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
 
   return (
     <div className="mt-8">
+      {/* Add the persona description at the top */}
+      <PersonaDescription 
+        description={persona.description} 
+        personaName={persona.name} 
+      />
+      
       <Tabs defaultValue="demographics" className="w-full">
         <TabsList className="grid grid-cols-5 w-full mb-8">
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
