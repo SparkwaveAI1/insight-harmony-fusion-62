@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, User } from "lucide-react";
 import { Persona } from "@/services/persona/types";
-import { getMetadataField } from "@/services/persona/utils/metadataUtils";
 
 interface ActivePersonasDisplayProps {
   activePersonas: Persona[];
@@ -28,25 +27,20 @@ const ActivePersonasDisplay = ({ activePersonas, className = "" }: ActivePersona
         </div>
         
         <div className="flex flex-wrap gap-2">
-          {activePersonas.map((persona) => {
-            const age = getMetadataField(persona.metadata, 'age', 'N/A');
-            const occupation = getMetadataField(persona.metadata, 'occupation', 'N/A');
-
-            return (
-              <div key={persona.persona_id} className="flex items-center gap-2 bg-white rounded-lg p-2 border">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={persona.profile_image_url} alt={persona.name} />
-                  <AvatarFallback className="text-xs">
-                    <User className="h-3 w-3" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-gray-700">{persona.name}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {age} • {occupation}
-                </Badge>
-              </div>
-            );
-          })}
+          {activePersonas.map((persona) => (
+            <div key={persona.persona_id} className="flex items-center gap-2 bg-white rounded-lg p-2 border">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={persona.profile_image_url} alt={persona.name} />
+                <AvatarFallback className="text-xs">
+                  <User className="h-3 w-3" />
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-gray-700">{persona.name}</span>
+              <Badge variant="secondary" className="text-xs">
+                {persona.metadata?.age || 'N/A'} • {persona.metadata?.occupation || 'N/A'}
+              </Badge>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

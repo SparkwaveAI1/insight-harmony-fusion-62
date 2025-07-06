@@ -2,20 +2,16 @@
 import { useSearchParams } from 'react-router-dom';
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
+import ResearchInterface from "@/components/research/ResearchInterface";
+import { useResearchSession } from "@/components/research/hooks/useResearchSession";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { ResearchHeader } from "@/components/research/ResearchHeader";
-import { ResearchConversation } from "@/components/research/ResearchConversation";
-import ResearchModeSelector from "@/components/research/ResearchModeSelector";
-import { SendToPersonaSection } from "@/components/research/SendToPersonaSection";
-import { useResearchSession } from "@/hooks/useResearchSession";
 
 const Research = () => {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('project');
   
-  // Use comprehensive research session hook
   const {
     sessionId,
     loadedPersonas,
@@ -27,20 +23,12 @@ const Research = () => {
     sendToPersona
   } = useResearchSession(projectId || undefined);
 
-  const handleExportTranscript = () => {
-    const transcript = messages.map(msg => 
-      `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-    ).join('\n\n');
-    
-    const blob = new Blob([transcript], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `research-transcript-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const sessionData = {
+    sessionId,
+    loadedPersonas,
+    projectDocuments,
+    messages,
+    isLoading
   };
 
   return (
@@ -60,36 +48,13 @@ const Research = () => {
                     </div>
                   )}
                 </div>
-                
-                <ResearchHeader
-                  loadedPersonas={loadedPersonas}
-                  messages={messages}
-                  onExportTranscript={handleExportTranscript}
-                  hasProject={Boolean(projectId)}
-                />
-                
-                <div className="flex-1 min-h-0 space-y-6">
-                  <div className="text-center py-8">
-                    <h2 className="text-2xl font-bold mb-4">Research Session</h2>
-                    <p className="text-muted-foreground">
-                      Load personas and start your research conversation
-                    </p>
-                  </div>
-                  
-                  <ResearchConversation
-                    messages={messages}
-                    loadedPersonas={loadedPersonas}
-                    isLoading={isLoading}
+                <div className="flex-1 min-h-0">
+                  <ResearchInterface 
+                    sessionData={sessionData}
+                    onCreateSession={createSession}
                     onSendMessage={sendMessage}
+                    onSendToPersona={sendToPersona}
                   />
-                  
-                  {loadedPersonas.length > 0 && (
-                    <SendToPersonaSection
-                      loadedPersonas={loadedPersonas}
-                      isLoading={isLoading}
-                      onSendToPersona={sendToPersona}
-                    />
-                  )}
                 </div>
               </div>
             </main>

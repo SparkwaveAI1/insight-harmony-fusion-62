@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Plus, Check } from "lucide-react";
 import { Persona } from "@/services/persona/types";
-import { getMetadataField, getLocationFromMetadata } from "@/services/persona/utils/metadataUtils";
 
 interface PersonaSelectorProps {
   personas: Persona[];
@@ -30,9 +29,6 @@ const PersonaSelector = ({
       <div className="grid gap-3">
         {personas.map((persona) => {
           const isSelected = selectedPersonas.includes(persona.persona_id);
-          const age = getMetadataField(persona.metadata, 'age', 'N/A');
-          const occupation = getMetadataField(persona.metadata, 'occupation', 'N/A');
-          const region = getLocationFromMetadata(persona.metadata, 'N/A');
           
           return (
             <Card 
@@ -61,10 +57,10 @@ const PersonaSelector = ({
                     
                     <div className="flex flex-wrap gap-1 mt-1">
                       <Badge variant="secondary" className="text-xs">
-                        {age} • {occupation}
+                        {persona.metadata?.age || 'N/A'} • {persona.metadata?.occupation || 'N/A'}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
-                        {region}
+                        {persona.metadata?.region || 'N/A'}
                       </Badge>
                     </div>
                   </div>
