@@ -31,11 +31,18 @@ export const usePersonaClone = () => {
         creation_date: new Date().toISOString().split('T')[0],
         metadata: {
           ...safeMetadata,
+          // Only include required fields with proper fallbacks
           age: safeMetadata.age || 'Unknown',
           gender: safeMetadata.gender || 'Unknown',
           region: safeMetadata.region || safeMetadata.location_history?.current_residence || 'Unknown',
           occupation: safeMetadata.occupation || 'Unknown',
-          education_level: safeMetadata.education_level || 'Unknown'
+          education_level: safeMetadata.education_level || 'Unknown',
+          employment_type: safeMetadata.employment_type || 'Unknown',
+          income_level: safeMetadata.income_level || 'Unknown',
+          family_status: safeMetadata.family_status || 'Unknown',
+          health_status: safeMetadata.health_status || 'Unknown',
+          transportation: safeMetadata.transportation || 'Unknown',
+          technology_usage: safeMetadata.technology_usage || 'Unknown'
         },
         is_public: false // Clones are private by default
       };
