@@ -1,9 +1,11 @@
+
 import React from "react";
 import { Persona } from "@/services/persona/types";
-import PersonaMetadata from "./PersonaMetadata";
 import PersonaTraits from "./PersonaTraits";
-import PersonaInterview from "./PersonaInterview";
 import PersonaCloneForm from "./PersonaCloneForm";
+import PersonaDemographics from "./PersonaDemographics"; 
+import PersonaKnowledgeDomains from "./PersonaKnowledgeDomains";
+import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
 
 interface PersonaContentProps {
   persona: Persona;
@@ -29,10 +31,25 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
         </div>
       </div>
 
-      {/* Existing content */}
-      <PersonaMetadata persona={persona} />
-      <PersonaTraits persona={persona} />
-      <PersonaInterview persona={persona} />
+      {/* Demographics Section */}
+      {persona.metadata && (
+        <PersonaDemographics metadata={persona.metadata} />
+      )}
+
+      {/* Knowledge Domains Section */}
+      {persona.metadata && (
+        <PersonaKnowledgeDomains metadata={persona.metadata} />
+      )}
+
+      {/* Emotional Triggers Section */}
+      {persona.emotional_triggers && (
+        <PersonaEmotionalTriggers emotionalTriggers={persona.emotional_triggers} />
+      )}
+
+      {/* Psychological Profile Section */}
+      {persona.trait_profile && (
+        <PersonaTraits traitProfile={persona.trait_profile} />
+      )}
     </div>
   );
 };
