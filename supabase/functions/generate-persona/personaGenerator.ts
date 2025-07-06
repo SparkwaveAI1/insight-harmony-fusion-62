@@ -279,26 +279,21 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
   }
 }
 
-export async function generatePersonaDescriptionStep(basePersona: PersonaTemplate): Promise<string> {
-  console.log('=== STAGE 11: GENERATING PERSONA DESCRIPTION ===');
+export async function generatePersonaDescriptionStep(persona: PersonaTemplate): Promise<string> {
+  console.log('🔄 Stage 11: Generating persona description...');
   
   try {
-    const description = await wrapWithErrorHandling(
-      () => withRetry(
-        () => generatePersonaDescription(basePersona),
-        { maxRetries: 2 },
-        'Persona Description Generation'
-      ),
-      'description',
-      { personaName: basePersona.name }
-    );
+    const { generatePersonaDescription } = await import('./descriptionGenerator.ts');
+    const description = await generatePersonaDescription(persona);
     
-    console.log(`✅ Generated persona description (${description.split(/\s+/).length} words)`);
+    console.log('✅ Stage 11 Complete: Generated persona description');
+    console.log(`Description word count: ${description.split(/\s+/).length} words`);
+    
     return description;
   } catch (error) {
-    console.warn('Description generation failed, using fallback:', error.message);
-    // Fallback description
-    return `${basePersona.name} is a ${basePersona.metadata.age || 'adult'} ${basePersona.metadata.gender || 'person'} who works as ${basePersona.metadata.occupation || 'a professional'}. They live in ${basePersona.metadata.region || 'their community'} and bring a unique perspective shaped by their life experiences, values, and personal journey.`;
+    console.error('❌ Error in Stage 11 (description generation):', error);
+    // Return a fallback description rather than failing
+    return `${persona.name} is a ${persona.metadata.age} year old ${persona.metadata.gender} from ${persona.metadata.region}. They work as ${persona.metadata.occupation} and have a ${persona.metadata.education_level} education level. This persona represents a unique individual with distinct personality traits, life experiences, and perspectives that contribute to their worldview and decision-making processes.`;
   }
 }
 

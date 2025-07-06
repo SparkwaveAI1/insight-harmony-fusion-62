@@ -18,4 +18,4 @@ export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
 
 // Re-export types
-export type { Persona, InterviewSection, InterviewQuestion } from './types';
+export type { Persona, InterviewSection } from './types';

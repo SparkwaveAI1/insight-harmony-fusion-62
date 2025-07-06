@@ -20,4 +20,5 @@ export interface DbPersona {
   is_public?: boolean;
   profile_image_url?: string;
   enhanced_metadata_version?: number;
+  description?: string; // Add description field
 }

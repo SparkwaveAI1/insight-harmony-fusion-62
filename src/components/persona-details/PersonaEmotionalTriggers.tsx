@@ -1,89 +1,53 @@
-
-import { EmotionalTriggersProfile } from "@/services/persona/types";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+import React from "react";
+import { EmotionalTriggers } from "@/services/persona/types";
 
 interface PersonaEmotionalTriggersProps {
-  emotionalTriggers?: EmotionalTriggersProfile;
+  emotionalTriggers?: EmotionalTriggers;
 }
 
 const PersonaEmotionalTriggers = ({ emotionalTriggers }: PersonaEmotionalTriggersProps) => {
-  if (!emotionalTriggers) return null;
+  if (!emotionalTriggers || (!emotionalTriggers.positive_triggers && !emotionalTriggers.negative_triggers)) {
+    return (
+      <div className="text-center p-8 bg-gray-50 border border-gray-200 rounded-lg">
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">No Emotional Triggers</h3>
+        <p className="text-gray-500">
+          This persona does not have any defined emotional triggers.
+        </p>
+      </div>
+    );
+  }
+
+  const renderTriggers = (triggers: any[], type: string) => {
+    if (!triggers || triggers.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mb-4">
+        <h4 className="text-lg font-semibold mb-2 capitalize">{type} Triggers</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {triggers.map((trigger, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-4">
+              <h5 className="font-semibold text-gray-700">{trigger.emotion_type}</h5>
+              <p className="text-gray-600 text-sm">{trigger.description}</p>
+              <div className="mt-2">
+                <span className="font-semibold text-gray-700 text-sm">Keywords:</span>
+                <p className="text-gray-600 text-xs">{trigger.keywords.join(', ')}</p>
+              </div>
+              <p className="text-gray-500 text-xs mt-1">
+                Intensity Multiplier: {trigger.intensity_multiplier}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-800 flex items-center">
-        <span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>
-        Emotional Triggers
-      </h2>
-      
-      <Accordion type="multiple" defaultValue={["positive-triggers", "negative-triggers"]}>
-        {/* Positive Triggers */}
-        {emotionalTriggers.positive_triggers && emotionalTriggers.positive_triggers.length > 0 && (
-          <AccordionItem value="positive-triggers" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-green-50 rounded-md hover:opacity-90 transition-colors">
-              Positive Triggers ({emotionalTriggers.positive_triggers.length})
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="space-y-4">
-                {emotionalTriggers.positive_triggers.map((trigger, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-green-50/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                        {trigger.emotion_type || 'Unknown'}
-                      </Badge>
-                      <span className="text-sm font-medium text-green-700">
-                        Intensity: {trigger.intensity_multiplier || 0}/10
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2">{trigger.description || 'No description available'}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {(trigger.keywords || []).map((keyword, keyIndex) => (
-                        <Badge key={keyIndex} variant="secondary" className="text-xs">
-                          {keyword}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        )}
-        
-        {/* Negative Triggers */}
-        {emotionalTriggers.negative_triggers && emotionalTriggers.negative_triggers.length > 0 && (
-          <AccordionItem value="negative-triggers" className="border-0 mb-2">
-            <AccordionTrigger className="text-lg font-semibold py-2 px-3 bg-red-50 rounded-md hover:opacity-90 transition-colors">
-              Negative Triggers ({emotionalTriggers.negative_triggers.length})
-            </AccordionTrigger>
-            <AccordionContent className="pt-4">
-              <div className="space-y-4">
-                {emotionalTriggers.negative_triggers.map((trigger, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-red-50/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                        {trigger.emotion_type || 'Unknown'}
-                      </Badge>
-                      <span className="text-sm font-medium text-red-700">
-                        Intensity: {trigger.intensity_multiplier || 0}/10
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2">{trigger.description || 'No description available'}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {(trigger.keywords || []).map((keyword, keyIndex) => (
-                        <Badge key={keyIndex} variant="secondary" className="text-xs">
-                          {keyword}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        )}
-      </Accordion>
+    <div>
+      {renderTriggers(emotionalTriggers?.positive_triggers || [], 'positive')}
+      {renderTriggers(emotionalTriggers?.negative_triggers || [], 'negative')}
     </div>
   );
 };

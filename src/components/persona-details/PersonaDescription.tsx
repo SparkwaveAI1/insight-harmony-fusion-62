@@ -6,7 +6,13 @@ interface PersonaDescriptionProps {
 
 const PersonaDescription = ({ description, personaName }: PersonaDescriptionProps) => {
   if (!description) {
-    return null;
+    return (
+      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6 mb-8 border border-gray-200">
+        <div className="text-center text-gray-500">
+          <p className="text-sm">No description available for {personaName}</p>
+        </div>
+      </div>
+    );
   }
 
   return (

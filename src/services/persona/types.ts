@@ -1,3 +1,4 @@
+
 export interface PersonaMetadata {
   // Core Demographics (Stage 1)
   age: string;
@@ -308,7 +309,12 @@ export interface InterviewSection {
   }[];
 }
 
-// Updated PersonaTemplate to include description field
+export interface InterviewQuestion {
+  question: string;
+  answer: string;
+}
+
+// Main Persona interface that matches the database structure
 export interface Persona {
   persona_id: string;
   name: string;
@@ -322,9 +328,12 @@ export interface Persona {
   preinterview_tags?: string[];
   simulation_directives?: SimulationDirectives;
   interview_sections?: InterviewSection[];
-  description?: string; // Add description field
+  description?: string; // NEW: Add description field
   is_public?: boolean;
   user_id?: string;
-  image_url?: string;
+  profile_image_url?: string; // Add this field that was missing
   enhanced_metadata_version?: number;
 }
+
+// Alias for EmotionalTriggers to fix import issues
+export type EmotionalTriggersProfile = EmotionalTriggers;
