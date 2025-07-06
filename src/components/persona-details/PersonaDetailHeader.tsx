@@ -5,7 +5,7 @@ import PersonaAvatar from "./PersonaAvatar";
 import PersonaNameEditor from "./PersonaNameEditor";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaCloneForm from "./PersonaCloneForm";
-import GenerateImageButton from "./GenerateImageButton";
+import { usePersonaImageGeneration } from "@/hooks/usePersonaImageGeneration";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
@@ -25,26 +25,31 @@ const PersonaDetailHeader = ({
   onNameUpdate,
   onImageGenerated 
 }: PersonaDetailHeaderProps) => {
+  const { generateImage, isGenerating } = usePersonaImageGeneration(persona);
+
+  const handleImageGeneration = async () => {
+    const imageUrl = await generateImage(false);
+    if (imageUrl) {
+      await onImageGenerated();
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">
       <div className="flex flex-col items-center space-y-4">
         <PersonaAvatar 
           persona={persona}
-          size="xl"
+          isOwner={isOwner}
+          isGeneratingImage={isGenerating}
+          onGenerateImage={handleImageGeneration}
         />
-        {isOwner && (
-          <GenerateImageButton 
-            persona={persona}
-            onImageGenerated={onImageGenerated}
-          />
-        )}
       </div>
       
       <div className="flex-1 space-y-6">
         <div className="space-y-4">
           <PersonaNameEditor
-            persona={persona}
-            isOwner={isOwner}
+            personaId={persona.persona_id}
+            initialName={persona.name}
             onNameUpdate={onNameUpdate}
           />
           
@@ -57,7 +62,9 @@ const PersonaDetailHeader = ({
         <div className="flex flex-col sm:flex-row gap-4">
           {isOwner && (
             <PersonaVisibilityToggle
+              personaId={persona.persona_id}
               isPublic={isPublic}
+              isOwner={isOwner}
               onVisibilityChange={onVisibilityChange}
             />
           )}
