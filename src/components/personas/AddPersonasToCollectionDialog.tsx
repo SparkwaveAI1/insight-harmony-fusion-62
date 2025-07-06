@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { User, Plus } from "lucide-react";
+import { getAllPersonas } from "@/services/persona";
+import { addPersonasToCollection } from "@/services/collections";
 import { Persona } from "@/services/persona/types";
-import { mapDbPersonaToPersona } from "@/services/persona/mappers";
+import { toast } from "sonner";
+import { getMetadataField } from "@/services/persona/utils/metadataUtils";
 
 interface AddPersonasToCollectionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   collectionId: string;
-  collectionName: string;
   onPersonasAdded: () => void;
 }
 
@@ -20,147 +24,127 @@ const AddPersonasToCollectionDialog = ({
   isOpen, 
   onClose, 
   collectionId, 
-  collectionName,
   onPersonasAdded 
 }: AddPersonasToCollectionDialogProps) => {
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
+  const [selectedPersonaIds, setSelectedPersonaIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const { toast } = useToast();
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchAvailablePersonas();
+      loadPersonas();
     }
-  }, [isOpen, collectionId]);
+  }, [isOpen]);
 
-  const fetchAvailablePersonas = async () => {
+  const loadPersonas = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Get all user's personas
-      const { data: allPersonas, error: personasError } = await supabase
-        .from('personas')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (personasError) throw personasError;
-
-      // Get personas already in this collection
-      const { data: collectionPersonas, error: collectionError } = await supabase
-        .from('collection_personas')
-        .select('persona_id')
-        .eq('collection_id', collectionId);
-
-      if (collectionError) throw collectionError;
-
-      const existingPersonaIds = new Set(collectionPersonas?.map(cp => cp.persona_id) || []);
-      
-      // Filter out personas already in collection
-      const availablePersonas = (allPersonas || [])
-        .filter(persona => !existingPersonaIds.has(persona.persona_id))
-        .map(mapDbPersonaToPersona);
-
-      setPersonas(availablePersonas);
+      const allPersonas = await getAllPersonas();
+      setPersonas(allPersonas);
     } catch (error) {
-      console.error('Error fetching personas:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch available personas",
-        variant: "destructive",
-      });
+      console.error('Error loading personas:', error);
+      toast.error('Failed to load personas');
     } finally {
       setLoading(false);
     }
   };
 
   const handlePersonaToggle = (personaId: string) => {
-    setSelectedPersonas((prevSelected) => {
-      if (prevSelected.includes(personaId)) {
-        return prevSelected.filter((id) => id !== personaId);
-      } else {
-        return [...prevSelected, personaId];
-      }
-    });
+    setSelectedPersonaIds(prev => 
+      prev.includes(personaId)
+        ? prev.filter(id => id !== personaId)
+        : [...prev, personaId]
+    );
   };
 
   const handleAddPersonas = async () => {
-    setSaving(true);
+    if (selectedPersonaIds.length === 0) {
+      toast.error('Please select at least one persona');
+      return;
+    }
+
+    setAdding(true);
     try {
-      const newCollectionPersonas = selectedPersonas.map(personaId => ({
-        collection_id: collectionId,
-        persona_id: personaId,
-      }));
-
-      const { error } = await supabase
-        .from('collection_personas')
-        .insert(newCollectionPersonas);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Successfully added personas to "${collectionName}"`,
-      });
+      await addPersonasToCollection(collectionId, selectedPersonaIds);
+      toast.success(`Added ${selectedPersonaIds.length} persona(s) to collection`);
       onPersonasAdded();
       onClose();
+      setSelectedPersonaIds([]);
     } catch (error) {
       console.error('Error adding personas to collection:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add personas to collection",
-        variant: "destructive",
-      });
+      toast.error('Failed to add personas to collection');
     } finally {
-      setSaving(false);
+      setAdding(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Add Personas to "{collectionName}"</DialogTitle>
+          <DialogTitle>Add Personas to Collection</DialogTitle>
         </DialogHeader>
         
-        {loading ? (
-          <div className="text-center py-4">Loading personas...</div>
-        ) : (
-          <ScrollArea className="h-[400px] w-full rounded-md border">
-            <div className="p-4 space-y-3">
-              {personas.length === 0 ? (
-                <div className="text-center text-gray-500">No personas available to add.</div>
-              ) : (
-                personas.map((persona) => (
-                  <div key={persona.persona_id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={persona.persona_id}
-                      checked={selectedPersonas.includes(persona.persona_id)}
-                      onCheckedChange={() => handlePersonaToggle(persona.persona_id)}
-                    />
-                    <label
-                      htmlFor={persona.persona_id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {persona.name}
-                    </label>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        )}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-8">Loading personas...</div>
+          ) : (
+            <ScrollArea className="h-96">
+              <div className="space-y-2">
+                {personas.map((persona) => {
+                  const age = getMetadataField(persona.metadata, 'age', 'N/A');
+                  const occupation = getMetadataField(persona.metadata, 'occupation', 'N/A');
+                  const isSelected = selectedPersonaIds.includes(persona.persona_id);
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleAddPersonas} disabled={saving || selectedPersonas.length === 0}>
-            {saving ? 'Adding...' : 'Add Personas'}
-          </Button>
+                  return (
+                    <div
+                      key={persona.persona_id}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => handlePersonaToggle(persona.persona_id)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={() => handlePersonaToggle(persona.persona_id)}
+                      />
+                      
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={persona.profile_image_url} alt={persona.name} />
+                        <AvatarFallback>
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">{persona.name}</h4>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {age} • {occupation}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddPersonas}
+              disabled={selectedPersonaIds.length === 0 || adding}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              {adding ? 'Adding...' : `Add ${selectedPersonaIds.length} Persona(s)`}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

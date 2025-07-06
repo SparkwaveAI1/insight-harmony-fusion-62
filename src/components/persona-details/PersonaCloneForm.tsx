@@ -4,10 +4,8 @@ import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Persona } from "@/services/persona/types";
-import { usePersonaClone } from "@/hooks/usePersonaClone";
+import { usePersonaCustomization } from "@/hooks/usePersonaCustomization";
 import CloneFormContent from "./clone/CloneFormContent";
-import { CloneFormValues } from "./clone/cloneFormSchema";
-import { toast } from "sonner";
 
 interface PersonaCloneFormProps {
   persona: Persona;
@@ -15,21 +13,11 @@ interface PersonaCloneFormProps {
 
 const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
   const [open, setOpen] = useState(false);
-  const { form, onSubmit, isSubmitting } = usePersonaClone(persona);
+  const { form, onSubmit, isSubmitting } = usePersonaCustomization(persona);
 
-  const handleSubmit = async (data: CloneFormValues) => {
+  const handleSubmit = async (data: any) => {
     try {
-      if (!data.customization_notes || data.customization_notes.trim() === '') {
-        toast.warning("Please provide customization instructions to make your new persona unique");
-        return false;
-      }
-      
-      if (!data.name || data.name.trim() === '') {
-        toast.warning("Please provide a name for your new persona");
-        return false;
-      }
-      
-      console.log("Submitting form with data:", data);
+      console.log("Submitting customization form with data:", data);
       const success = await onSubmit(data);
       if (success) {
         setOpen(false);
@@ -38,7 +26,6 @@ const PersonaCloneForm = ({ persona }: PersonaCloneFormProps) => {
       return false;
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      toast.error("Failed to generate new persona");
       return false;
     }
   };

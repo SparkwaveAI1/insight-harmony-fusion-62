@@ -12,12 +12,11 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { CloneFormValues } from "./cloneFormSchema";
 import { UseFormReturn } from "react-hook-form";
 
 interface CloneFormContentProps {
-  form: UseFormReturn<CloneFormValues>;
-  onSubmit: (data: CloneFormValues) => Promise<boolean>;
+  form: UseFormReturn<any>;
+  onSubmit: (data: any) => Promise<boolean>;
   isSubmitting: boolean;
   onCancel: () => void;
 }
@@ -29,11 +28,9 @@ const CloneFormContent = ({
   onCancel 
 }: CloneFormContentProps) => {
   
-  const handleFormSubmit = async (data: CloneFormValues) => {
+  const handleFormSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
-    const success = await onSubmit(data);
-    console.log("Form submission result:", success);
-    // Don't close dialog here - let the parent handle navigation
+    await onSubmit(data);
   };
 
   return (
