@@ -5,6 +5,7 @@ export interface DbPersona {
   id: string;
   persona_id: string;
   name: string;
+  description: string | null;
   creation_date: string;
   created_at: string;
   metadata: any;
