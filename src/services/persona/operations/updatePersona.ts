@@ -44,6 +44,27 @@ export async function updatePersonaName(personaId: string, name: string): Promis
 }
 
 /**
+ * Updates the description of a persona
+ */
+export async function updatePersonaDescription(personaId: string, description: string): Promise<boolean> {
+  try {
+    console.log(`Updating persona ${personaId} description`);
+    
+    const { error } = await supabase
+      .from('personas')
+      .update({ description: description })
+      .eq('persona_id', personaId);
+
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating persona description:", error);
+    return false;
+  }
+}
+
+/**
  * Updates the profile image URL of a persona
  */
 export async function updatePersonaProfileImageUrl(personaId: string, imageUrl: string): Promise<boolean> {

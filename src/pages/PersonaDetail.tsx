@@ -26,6 +26,7 @@ const PersonaDetail = () => {
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
+    handleDescriptionUpdate,
     handleImageGenerated
   } = usePersonaDetail();
 
@@ -59,6 +60,7 @@ const PersonaDetail = () => {
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
                     onNameUpdate={handleNameUpdate}
+                    onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
                   />
                   

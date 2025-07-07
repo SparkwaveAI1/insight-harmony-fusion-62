@@ -10,6 +10,7 @@ export {
 export { 
   updatePersonaVisibility, 
   updatePersonaName,
+  updatePersonaDescription,
   updatePersonaProfileImageUrl 
 } from './operations/updatePersona';
 export { deletePersona } from './operations/deletePersona';

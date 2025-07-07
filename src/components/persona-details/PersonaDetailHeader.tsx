@@ -6,6 +6,7 @@ import Card from "@/components/ui-custom/Card";
 import PersonaAvatar from "./PersonaAvatar";
 import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaNameEditor from "./PersonaNameEditor";
+import PersonaDescriptionEditor from "./PersonaDescriptionEditor";
 import PersonaImageGenerationDialog from "./PersonaImageGenerationDialog";
 import DeletePersonaButton from "./DeletePersonaButton";
 import { Persona } from "@/services/persona/types";
@@ -17,6 +18,7 @@ interface PersonaDetailHeaderProps {
   onVisibilityChange: (isPublic: boolean) => void;
   onDelete: () => Promise<void>;
   onNameUpdate: (name: string) => Promise<void>;
+  onDescriptionUpdate: (description: string) => Promise<void>;
   onImageGenerated: () => Promise<string | null>;
 }
 
@@ -27,6 +29,7 @@ export default function PersonaDetailHeader({
   onVisibilityChange,
   onDelete,
   onNameUpdate,
+  onDescriptionUpdate,
   onImageGenerated
 }: PersonaDetailHeaderProps) {
   return (
@@ -50,7 +53,7 @@ export default function PersonaDetailHeader({
         </div>
 
         {/* Persona Details */}
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-6">
           <div className="space-y-2">
             {isOwner ? (
               <PersonaNameEditor
@@ -69,27 +72,35 @@ export default function PersonaDetailHeader({
             </div>
           </div>
 
-          {/* Key persona information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            {persona.metadata?.age && (
-              <div>
-                <span className="font-medium">Age:</span> {persona.metadata.age}
-              </div>
-            )}
-            {persona.metadata?.location && (
-              <div>
-                <span className="font-medium">Location:</span> {persona.metadata.location}
-              </div>
-            )}
-            {persona.metadata?.occupation && (
-              <div>
-                <span className="font-medium">Occupation:</span> {persona.metadata.occupation}
-              </div>
-            )}
-            {persona.metadata?.education && (
-              <div>
-                <span className="font-medium">Education:</span> {persona.metadata.education}
-              </div>
+          {/* Key persona information in a structured layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 border-y">
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-1">Age</h3>
+              <p className="text-base">{persona.metadata?.age || 'Not specified'}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-1">Location</h3>
+              <p className="text-base">{persona.metadata?.location || persona.metadata?.region || 'Not specified'}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-1">Occupation</h3>
+              <p className="text-base">{persona.metadata?.occupation || 'Not specified'}</p>
+            </div>
+          </div>
+
+          {/* Description section */}
+          <div className="space-y-2">
+            <h3 className="font-semibold text-sm text-muted-foreground">Description</h3>
+            {isOwner ? (
+              <PersonaDescriptionEditor
+                personaId={persona.persona_id}
+                initialDescription={persona.description || ''}
+                onDescriptionUpdate={onDescriptionUpdate}
+              />
+            ) : (
+              <p className="text-muted-foreground leading-relaxed">
+                {persona.description || 'No description provided.'}
+              </p>
             )}
           </div>
 

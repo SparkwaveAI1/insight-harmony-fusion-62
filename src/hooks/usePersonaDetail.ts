@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, generatePersonaImage, deletePersona } from "@/services/persona";
+import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, updatePersonaDescription, generatePersonaImage, deletePersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 import { validatePersonaCompleteness, logPersonaValidation } from "@/services/persona/validation/personaValidation";
@@ -119,6 +119,25 @@ export function usePersonaDetail() {
     }
   };
 
+  // Handle description update
+  const handleDescriptionUpdate = async (description: string) => {
+    if (!personaId || !user) return;
+    
+    try {
+      const success = await updatePersonaDescription(personaId, description);
+      if (success) {
+        setPersona(prev => prev ? { ...prev, description } : null);
+        toast.success("Persona description updated successfully");
+      } else {
+        toast.error("Failed to update persona description");
+      }
+    } catch (error) {
+      console.error("Error updating persona description:", error);
+      toast.error("Failed to update persona description");
+      throw error;
+    }
+  };
+
   // Handle image generation
   const handleImageGenerated = async () => {
     if (!personaId || !persona || !user) return null;
@@ -168,6 +187,7 @@ export function usePersonaDetail() {
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
+    handleDescriptionUpdate,
     handleImageGenerated
   };
 }
