@@ -103,7 +103,7 @@ export default function PersonaDetailHeader({
             )}
           </div>
 
-          {/* Owner controls - removed Delete button from here */}
+          {/* Owner controls */}
           {isOwner && (
             <div className="flex flex-wrap gap-2 pt-4">
               <PersonaVisibilityToggle
