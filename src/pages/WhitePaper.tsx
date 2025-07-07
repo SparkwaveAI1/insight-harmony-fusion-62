@@ -335,6 +335,10 @@ const WhitePaper = () => {
                     <h2 className="m-0 p-0 border-0">Staking Model</h2>
                   </div>
                   
+                  <p className="mb-6">
+                    Staking available on Virtuals platform
+                  </p>
+                  
                   <Card className="overflow-hidden bg-gray-800/50 border-gray-700/50 mb-8">
                     <Table>
                       <TableHeader>
@@ -345,8 +349,8 @@ const WhitePaper = () => {
                       </TableHeader>
                       <TableBody>
                         <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Base Rewards</TableCell>
-                          <TableCell>7% APR, paid in $PRSNA.</TableCell>
+                          <TableCell className="font-medium">Virtuals Points</TableCell>
+                          <TableCell>Earn Virtuals ecosystem points to participate in project launches</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Revenue Sharing</TableCell>
@@ -354,7 +358,7 @@ const WhitePaper = () => {
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Cooldown Period</TableCell>
-                          <TableCell>7-day unstake cooldown; no forced long-term lockups.</TableCell>
+                          <TableCell>14 days</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Benefits</TableCell>
