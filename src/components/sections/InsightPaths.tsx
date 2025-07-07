@@ -6,6 +6,14 @@ import Button from "../ui-custom/Button";
 
 const pathsData = [
   {
+    icon: <Bot className="h-12 w-12 text-primary" />,
+    title: "Simulation Module",
+    subtitle: "AI Personas",
+    description: "Create behaviorally realistic personas using natural language prompts or system-generated profiles. All personas are grounded in psychological modeling and simulate authentic, testable behavior.",
+    buttonText: "Create a Simulated Persona",
+    buttonHref: "/simulated-persona"
+  },
+  {
     icon: <User className="h-12 w-12 text-primary" />,
     title: "Interview Module",
     subtitle: "Human-Derived Personas",
@@ -13,14 +21,6 @@ const pathsData = [
     note: "May be eligible for royalties in upcoming releases.",
     buttonText: "Start Persona Interview",
     buttonHref: "/interviewer"
-  },
-  {
-    icon: <Bot className="h-12 w-12 text-primary" />,
-    title: "Simulation Module",
-    subtitle: "AI Personas",
-    description: "Create behaviorally realistic personas using natural language prompts or system-generated profiles. All personas are grounded in psychological modeling and simulate authentic, testable behavior.",
-    buttonText: "Create a Simulated Persona",
-    buttonHref: "/simulated-persona"
   },
   {
     icon: <Brain className="h-12 w-12 text-primary" />,
