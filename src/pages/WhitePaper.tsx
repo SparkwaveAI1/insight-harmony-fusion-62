@@ -371,9 +371,6 @@ const WhitePaper = () => {
                   <p className="mb-6">
                     Staking $PRSNA supports the platform while earning meaningful participation rewards.
                   </p>
-                  <p className="mb-8">
-                    <strong>Timing</strong>: Implementation of staking during Q2 2025.
-                  </p>
                 </div>
                 
                 <div id="section-earning" ref={sectionRefs.earning} className="scroll-mt-24 mb-16">
