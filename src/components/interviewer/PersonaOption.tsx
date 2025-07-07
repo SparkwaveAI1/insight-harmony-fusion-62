@@ -35,17 +35,13 @@ const PersonaOption = () => {
         </div>
       </div>
       
-      <div className="mt-auto space-y-3">
+      <div className="mt-auto">
         <Button 
-          className="w-full justify-center group" 
-          disabled={true}
+          className="w-full justify-center group"
         >
           Create a Persona
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Button>
-        <p className="text-sm text-center text-amber-600 font-medium">
-          Under Construction
-        </p>
       </div>
     </Card>
   );

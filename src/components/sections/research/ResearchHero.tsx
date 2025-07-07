@@ -8,7 +8,7 @@ const ResearchHero = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
             <h1 className="mb-6 text-3xl font-bold text-primary">
-              Research Module Under Construction
+              Research Module
             </h1>
           </Reveal>
           <Reveal delay={100}>

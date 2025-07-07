@@ -35,7 +35,9 @@ const SimulatedPersona = () => {
                 <p className="text-lg text-muted-foreground">
                   Interactive Persona Preview
                 </p>
-                <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90" disabled>Coming Soon</Button>
+                <Button className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
+                  Create Persona
+                </Button>
               </div>
             </Card>
           </Reveal>

@@ -7,13 +7,12 @@ import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import { Button } from "@/components/ui/button";
 import { getUserProjectsWithCount, createProject, deleteProject, Project, ProjectWithConversationCount } from "@/services/collections";
-import { Folder, Plus, Trash2, Calendar, MessageSquare, Construction } from "lucide-react";
+import { Folder, Plus, Trash2, Calendar, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Projects = () => {
   const [projects, setProjects] = useState<ProjectWithConversationCount[]>([]);
@@ -84,14 +83,6 @@ const Projects = () => {
       <main className="flex-grow">
         <Section className="pt-24">
           <div className="container mx-auto px-4">
-            <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-              <Construction className="h-5 w-5 text-amber-500" />
-              <AlertTitle className="text-amber-600">Under Construction</AlertTitle>
-              <AlertDescription className="text-amber-600">
-                This page is still under development and may not function correctly. We're working on it!
-              </AlertDescription>
-            </Alert>
-
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-3xl font-bold mb-2 font-plasmik">Projects</h1>
