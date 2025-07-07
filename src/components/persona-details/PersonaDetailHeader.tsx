@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Card from "@/components/ui-custom/Card";
@@ -19,6 +20,7 @@ interface PersonaDetailHeaderProps {
   onNameUpdate: (name: string) => Promise<void>;
   onDescriptionUpdate: (description: string) => Promise<void>;
   onImageGenerated: () => Promise<string | null>;
+  onDownloadJSON: () => void;
 }
 
 export default function PersonaDetailHeader({
@@ -29,7 +31,8 @@ export default function PersonaDetailHeader({
   onDelete,
   onNameUpdate,
   onDescriptionUpdate,
-  onImageGenerated
+  onImageGenerated,
+  onDownloadJSON
 }: PersonaDetailHeaderProps) {
   return (
     <Card className="p-8 mb-8">
@@ -112,6 +115,10 @@ export default function PersonaDetailHeader({
                 isOwner={isOwner}
                 onVisibilityChange={onVisibilityChange}
               />
+              <Button variant="outline" onClick={onDownloadJSON}>
+                <Download className="h-4 w-4 mr-2" />
+                Download JSON
+              </Button>
             </div>
           )}
         </div>

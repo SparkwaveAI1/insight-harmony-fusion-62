@@ -13,6 +13,7 @@ import NotFoundState from "@/components/persona-details/NotFoundState";
 import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton"; 
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
+import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -38,6 +39,12 @@ const PersonaDetail = () => {
     setupStorage();
   }, []);
 
+  const handleDownloadJSON = () => {
+    if (persona) {
+      downloadPersonaAsJSON(persona);
+    }
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen flex flex-col">
@@ -62,6 +69,7 @@ const PersonaDetail = () => {
                     onNameUpdate={handleNameUpdate}
                     onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
+                    onDownloadJSON={handleDownloadJSON}
                   />
                   
                   <PersonaContent persona={persona} />
