@@ -121,15 +121,24 @@ export function usePersonaDetail() {
 
   // Handle description update
   const handleDescriptionUpdate = async (description: string) => {
-    if (!personaId || !user) return;
+    if (!personaId || !user) {
+      console.error("Missing personaId or user for description update");
+      throw new Error("Missing personaId or user");
+    }
+    
+    console.log("Attempting to update description for persona:", personaId);
+    console.log("New description:", description);
     
     try {
       const success = await updatePersonaDescription(personaId, description);
       if (success) {
+        console.log("Description update successful, updating local state");
         setPersona(prev => prev ? { ...prev, description } : null);
         toast.success("Persona description updated successfully");
       } else {
+        console.error("updatePersonaDescription returned false");
         toast.error("Failed to update persona description");
+        throw new Error("Update operation failed");
       }
     } catch (error) {
       console.error("Error updating persona description:", error);
