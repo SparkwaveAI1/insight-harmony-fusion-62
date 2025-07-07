@@ -9,6 +9,7 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
   console.log("=== CONVERTING PERSONA TO DB FORMAT ===");
   console.log("Converting persona to DB format:", persona.persona_id);
   console.log("Persona name:", persona.name);
+  console.log("Persona description:", persona.description);
   
   // Log trait profile before conversion
   if (persona.trait_profile) {
@@ -38,6 +39,7 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
   const dbPersona: Omit<DbPersona, 'id' | 'created_at'> = {
     persona_id: persona.persona_id,
     name: persona.name,
+    description: persona.description || null, // Include description field
     creation_date: persona.creation_date,
     prompt: persona.prompt || null,
     metadata: persona.metadata as unknown as Json,
@@ -57,6 +59,7 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
   console.log("DB persona ready for insert:", {
     persona_id: dbPersona.persona_id,
     name: dbPersona.name,
+    description: dbPersona.description,
     has_emotional_triggers: !!dbPersona.emotional_triggers,
     emotional_triggers_structure: emotionalTriggers,
     enhanced_metadata_version: dbPersona.enhanced_metadata_version,
@@ -72,6 +75,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
   console.log("=== CONVERTING DB PERSONA TO APP FORMAT ===");
   console.log("Converting DB persona to app format:", dbPersona.persona_id);
   console.log("DB persona name:", dbPersona.name);
+  console.log("DB persona description:", dbPersona.description);
   
   // Handle emotional triggers with proper fallback structure
   const emotionalTriggers = handleEmotionalTriggers(dbPersona.emotional_triggers as unknown as any);
@@ -118,11 +122,13 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
   }
   
   console.log("=== END DB TO PERSONA CONVERSION ===");
+  console.log("Final converted description:", dbPersona.description);
   
   return {
     id: dbPersona.id,
     persona_id: dbPersona.persona_id,
     name: dbPersona.name,
+    description: dbPersona.description || "", // Include description field with fallback
     creation_date: dbPersona.creation_date,
     prompt: dbPersona.prompt || "",
     metadata: dbPersona.metadata as unknown as PersonaMetadata,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -24,6 +23,7 @@ export function usePersonaDetail() {
       if (data) {
         console.log("Persona data loaded:", data);
         console.log("Profile image URL:", data.profile_image_url);
+        console.log("Description loaded:", data.description);
         
         // Validate the loaded persona
         console.log("=== VALIDATING LOADED PERSONA ===");
@@ -126,15 +126,42 @@ export function usePersonaDetail() {
       throw new Error("Missing personaId or user");
     }
     
+    console.log("=== DESCRIPTION UPDATE START ===");
     console.log("Attempting to update description for persona:", personaId);
     console.log("New description:", description);
+    console.log("Current persona state description:", persona?.description);
     
     try {
+      console.log("Calling updatePersonaDescription service...");
       const success = await updatePersonaDescription(personaId, description);
       if (success) {
         console.log("Description update successful, updating local state");
-        setPersona(prev => prev ? { ...prev, description } : null);
+        console.log("Previous persona description:", persona?.description);
+        
+        setPersona(prev => {
+          const updated = prev ? { ...prev, description } : null;
+          console.log("Updated persona description in state:", updated?.description);
+          return updated;
+        });
+        
         toast.success("Persona description updated successfully");
+        
+        // Reload persona to verify the update persisted
+        console.log("Reloading persona to verify description persistence...");
+        setTimeout(async () => {
+          const refreshedPersona = await getPersonaByPersonaId(personaId);
+          if (refreshedPersona) {
+            console.log("Refreshed persona description:", refreshedPersona.description);
+            if (refreshedPersona.description !== description) {
+              console.error("Description mismatch after reload!");
+              console.error("Expected:", description);
+              console.error("Actual:", refreshedPersona.description);
+            } else {
+              console.log("✅ Description successfully persisted and reloaded");
+            }
+          }
+        }, 1000);
+        
       } else {
         console.error("updatePersonaDescription returned false");
         toast.error("Failed to update persona description");
@@ -145,6 +172,8 @@ export function usePersonaDetail() {
       toast.error("Failed to update persona description");
       throw error;
     }
+    
+    console.log("=== DESCRIPTION UPDATE END ===");
   };
 
   // Handle image generation

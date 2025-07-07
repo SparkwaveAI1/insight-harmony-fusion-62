@@ -48,20 +48,37 @@ export async function updatePersonaName(personaId: string, name: string): Promis
  */
 export async function updatePersonaDescription(personaId: string, description: string): Promise<boolean> {
   try {
+    console.log("=== UPDATE PERSONA DESCRIPTION SERVICE ===");
     console.log(`Updating persona ${personaId} description to: "${description}"`);
     
     const { data, error } = await supabase
       .from('personas')
       .update({ description: description })
       .eq('persona_id', personaId)
-      .select('description');
+      .select('description, persona_id, name');
 
     if (error) {
       console.error("Supabase error updating persona description:", error);
       throw error;
     }
     
-    console.log("Successfully updated persona description:", data);
+    console.log("Successfully updated persona description in database:");
+    console.log("Updated data:", data);
+    
+    // Verify the update by checking the returned data
+    if (data && data.length > 0) {
+      const updatedRecord = data[0];
+      console.log("Verification - Description in DB:", updatedRecord.description);
+      if (updatedRecord.description === description) {
+        console.log("✅ Description successfully saved to database");
+      } else {
+        console.error("❌ Description mismatch in database!");
+        console.error("Expected:", description);
+        console.error("Actual:", updatedRecord.description);
+      }
+    }
+    
+    console.log("=== END UPDATE PERSONA DESCRIPTION SERVICE ===");
     return true;
   } catch (error) {
     console.error("Error updating persona description:", error);

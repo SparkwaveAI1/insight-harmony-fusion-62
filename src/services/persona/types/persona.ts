@@ -8,6 +8,7 @@ export interface Persona {
   persona_id: string;
   id: string;
   name: string;
+  description?: string; // Ensure description is included in the type
   creation_date: string;
   created_at: string;
   metadata: PersonaMetadata;
@@ -23,5 +24,7 @@ export interface Persona {
   user_id?: string;
   is_public?: boolean;
   profile_image_url?: string; // Ensure this field is explicitly defined
+  emotional_triggers?: any;
+  enhanced_metadata_version?: number;
   [key: string]: any;
 }
