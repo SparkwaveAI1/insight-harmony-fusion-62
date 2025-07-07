@@ -66,9 +66,9 @@ const PersonaDetail = () => {
                   
                   <PersonaContent persona={persona} />
                   
-                  {/* Add Delete button at the bottom of the page */}
+                  {/* Move Delete button to the very bottom of the page */}
                   {isOwner && (
-                    <div className="max-w-md mx-auto">
+                    <div className="max-w-md mx-auto mt-16 mb-8">
                       <DeletePersonaButton 
                         onDelete={handlePersonaDeleted} 
                         isOwner={isOwner} 

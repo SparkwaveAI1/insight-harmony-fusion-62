@@ -8,7 +8,6 @@ import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaNameEditor from "./PersonaNameEditor";
 import PersonaDescriptionEditor from "./PersonaDescriptionEditor";
 import PersonaImageGenerationDialog from "./PersonaImageGenerationDialog";
-import DeletePersonaButton from "./DeletePersonaButton";
 import { Persona } from "@/services/persona/types";
 
 interface PersonaDetailHeaderProps {
@@ -104,7 +103,7 @@ export default function PersonaDetailHeader({
             )}
           </div>
 
-          {/* Owner controls */}
+          {/* Owner controls - removed Delete button from here */}
           {isOwner && (
             <div className="flex flex-wrap gap-2 pt-4">
               <PersonaVisibilityToggle
@@ -112,11 +111,6 @@ export default function PersonaDetailHeader({
                 isPublic={isPublic}
                 isOwner={isOwner}
                 onVisibilityChange={onVisibilityChange}
-              />
-              
-              <DeletePersonaButton
-                onDelete={onDelete}
-                isOwner={isOwner}
               />
             </div>
           )}
