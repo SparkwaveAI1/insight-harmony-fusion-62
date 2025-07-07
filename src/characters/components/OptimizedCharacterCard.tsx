@@ -48,15 +48,16 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
       <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12 flex-shrink-0">
+            <Avatar className="h-12 w-12 flex-shrink-0 rounded-lg">
               {character.profile_image_url && !imageError ? (
                 <AvatarImage
                   src={character.profile_image_url}
                   alt={displayName}
                   onError={handleImageError}
+                  className="rounded-lg"
                 />
               ) : (
-                <AvatarFallback className="bg-primary/10">
+                <AvatarFallback className="bg-primary/10 rounded-lg">
                   {displayName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               )}
@@ -132,15 +133,16 @@ const OptimizedCharacterCard = memo(({ character, viewMode, currentUserId }: Opt
         </div>
         
         <div className="flex flex-col items-center text-center">
-          <Avatar className="h-16 w-16 mb-3">
+          <Avatar className="h-16 w-16 mb-3 rounded-lg">
             {character.profile_image_url && !imageError ? (
               <AvatarImage
                 src={character.profile_image_url}
                 alt={displayName}
                 onError={handleImageError}
+                className="rounded-lg"
               />
             ) : (
-              <AvatarFallback className="bg-primary/10 text-lg">
+              <AvatarFallback className="bg-primary/10 text-lg rounded-lg">
                 {displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             )}

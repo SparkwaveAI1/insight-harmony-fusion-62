@@ -28,6 +28,7 @@ export default function PersonaDescriptionEditor({
 
     setIsUpdating(true);
     try {
+      console.log("Saving description:", description.trim());
       await onDescriptionUpdate(description.trim());
       setIsEditing(false);
       toast.success("Description updated successfully");
@@ -45,6 +46,11 @@ export default function PersonaDescriptionEditor({
     setIsEditing(false);
   };
 
+  // Update local state when initialDescription changes
+  React.useEffect(() => {
+    setDescription(initialDescription);
+  }, [initialDescription]);
+
   if (isEditing) {
     return (
       <div className="space-y-2">
@@ -54,6 +60,7 @@ export default function PersonaDescriptionEditor({
           placeholder="Enter a description for this persona..."
           className="min-h-[80px] resize-none"
           maxLength={500}
+          autoFocus
         />
         <div className="flex items-center gap-2">
           <Button
@@ -63,7 +70,7 @@ export default function PersonaDescriptionEditor({
             className="h-8"
           >
             <Check className="h-3 w-3 mr-1" />
-            Save
+            {isUpdating ? "Saving..." : "Save"}
           </Button>
           <Button
             size="sm"

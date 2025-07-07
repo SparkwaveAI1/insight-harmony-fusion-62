@@ -103,13 +103,13 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
         <div className="flex items-start gap-3 flex-1">
           {/* Avatar */}
-          <Avatar className="h-12 w-12 border-2 border-border">
+          <Avatar className="h-12 w-12 border-2 border-border rounded-lg">
             <AvatarImage 
               src={persona.profile_image_url} 
               alt={persona.name}
-              className="object-cover"
+              className="object-cover rounded-lg"
             />
-            <AvatarFallback className="bg-accent text-accent-foreground font-semibold">
+            <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg">
               {initials}
             </AvatarFallback>
           </Avatar>

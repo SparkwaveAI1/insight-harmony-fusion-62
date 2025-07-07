@@ -56,14 +56,21 @@ const StandardizedCreativeCharacterCard = React.memo(({ character, viewMode }: S
     }`}>
       <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-start gap-4">
-          <CharacterAvatar 
-            character={{
-              name: character.name,
-              profile_image_url: character.profile_image_url
-            }}
-            size="md"
-            className="flex-shrink-0"
-          />
+          <div className="flex-shrink-0">
+            <div className="h-12 w-12 rounded-lg overflow-hidden bg-primary/10 flex items-center justify-center">
+              {character.profile_image_url ? (
+                <img 
+                  src={character.profile_image_url} 
+                  alt={character.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-lg font-semibold text-primary">
+                  {character.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+          </div>
           <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-start justify-between mb-2">
               <h3 className="text-lg font-semibold line-clamp-2 break-words">{character.name}</h3>
