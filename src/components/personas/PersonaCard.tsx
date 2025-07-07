@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, Tag, MapPin, DollarSign, Users } from "lucide-react";
+import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, MapPin, Briefcase, User } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -65,13 +65,6 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     navigate(`/persona-detail/${persona.persona_id}`);
   };
 
-  // Get display metadata
-  const ageRange = persona.metadata?.demographics?.age_range;
-  const region = persona.metadata?.demographics?.region;
-  const income = persona.metadata?.demographics?.income_level;
-  const sourceType = persona.metadata?.source_type || "simulated";
-  const tags = persona.metadata?.tags || [];
-
   // Generate initials for avatar fallback
   const initials = persona.name
     .split(' ')
@@ -82,7 +75,12 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
 
   // Get description with proper fallback
   const getDescription = () => {
-    // First try metadata description
+    // First try the direct description field
+    if (persona.description && persona.description.trim()) {
+      return persona.description;
+    }
+    
+    // Then try metadata description
     if (persona.metadata?.description && persona.metadata.description.trim()) {
       return persona.metadata.description;
     }
@@ -97,28 +95,31 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   };
 
   const description = getDescription();
+  const age = persona.metadata?.age || 'Not specified';
+  const location = persona.metadata?.location || persona.metadata?.region || 'Not specified';
+  const occupation = persona.metadata?.occupation || 'Not specified';
 
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-        <div className="flex items-start gap-3 flex-1">
-          {/* Avatar */}
-          <Avatar className="h-12 w-12 border-2 border-border rounded-lg">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
+        <div className="flex items-start gap-4 flex-1">
+          {/* Profile Photo */}
+          <Avatar className="h-16 w-16 border-2 border-border rounded-lg">
             <AvatarImage 
               src={persona.profile_image_url} 
               alt={persona.name}
               className="object-cover rounded-lg"
             />
-            <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg">
+            <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>
           
-          {/* Name and basic info */}
-          <div className="flex flex-col space-y-1 flex-1 min-w-0">
+          {/* Name and Owner Badge */}
+          <div className="flex flex-col space-y-2 flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <div 
-                className="font-semibold text-base hover:text-primary cursor-pointer transition-colors truncate group-hover:text-primary" 
+                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors truncate group-hover:text-primary" 
                 onClick={handleViewDetails}
                 title={persona.name}
               >
@@ -170,11 +171,6 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                     Chat with Persona
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={`/persona-detail/${persona.persona_id}`}>
-                    Clone Persona
-                  </Link>
-                </DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
@@ -182,56 +178,32 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       </CardHeader>
       
       <CardContent onClick={handleViewDetails} className="cursor-pointer pt-0 pb-4">
-        {/* Description */}
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-          {description.length > 120 ? `${description.substring(0, 120)}...` : description}
-        </p>
-        
-        {/* Metadata Grid */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {ageRange && (
-            <div className="flex items-center text-muted-foreground">
-              <Users className="h-3 w-3 mr-1.5 text-blue-500" />
-              <span>{ageRange}</span>
-            </div>
-          )}
-          {region && (
-            <div className="flex items-center text-muted-foreground">
-              <MapPin className="h-3 w-3 mr-1.5 text-green-500" />
-              <span className="capitalize">{region}</span>
-            </div>
-          )}
-          {income && (
-            <div className="flex items-center text-muted-foreground">
-              <DollarSign className="h-3 w-3 mr-1.5 text-yellow-500" />
-              <span className="capitalize">{income}</span>
-            </div>
-          )}
-          <div className="flex items-center text-muted-foreground">
-            <Tag className="h-3 w-3 mr-1.5 text-purple-500" />
-            <span className="capitalize">{sourceType.replace('-', ' ')}</span>
+        {/* Key Details Grid */}
+        <div className="grid grid-cols-1 gap-3 mb-4">
+          <div className="flex items-center text-sm">
+            <User className="h-4 w-4 mr-2 text-blue-500 flex-shrink-0" />
+            <span className="text-muted-foreground mr-2">Age:</span>
+            <span className="font-medium">{age}</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <MapPin className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
+            <span className="text-muted-foreground mr-2">Location:</span>
+            <span className="font-medium truncate">{location}</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <Briefcase className="h-4 w-4 mr-2 text-purple-500 flex-shrink-0" />
+            <span className="text-muted-foreground mr-2">Occupation:</span>
+            <span className="font-medium truncate">{occupation}</span>
           </div>
         </div>
         
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-3">
-            {tags.slice(0, 3).map((tag, index) => (
-              <Badge 
-                key={index} 
-                variant="outline" 
-                className="text-xs px-2 py-0.5 bg-accent/50 hover:bg-accent transition-colors"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {tags.length > 3 && (
-              <Badge variant="outline" className="text-xs px-2 py-0.5 bg-muted">
-                +{tags.length - 3}
-              </Badge>
-            )}
-          </div>
-        )}
+        {/* Description */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
+          <p className="text-sm text-foreground line-clamp-3 leading-relaxed">
+            {description.length > 150 ? `${description.substring(0, 150)}...` : description}
+          </p>
+        </div>
       </CardContent>
       
       <CardFooter className="flex items-center justify-between pt-0">
