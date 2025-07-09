@@ -123,7 +123,7 @@ export default function PersonaDetailHeader({
 
           {/* Owner controls */}
           {isOwner && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 justify-between">
               <PersonaVisibilityToggle
                 personaId={persona.persona_id}
                 isPublic={isPublic}
