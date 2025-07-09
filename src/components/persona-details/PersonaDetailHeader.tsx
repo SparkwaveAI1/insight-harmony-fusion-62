@@ -39,7 +39,7 @@ export default function PersonaDetailHeader({
   return (
     <Card className="p-8 mb-8">
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        {/* Avatar and Image Generation */}
+        {/* Left Column - Avatar and Controls */}
         <div className="flex flex-col items-center space-y-4 flex-shrink-0">
           <PersonaAvatar 
             persona={persona}
@@ -56,8 +56,40 @@ export default function PersonaDetailHeader({
           )}
         </div>
 
-        {/* Description - Now positioned next to avatar */}
-        <div className="flex-1 space-y-4">
+        {/* Right Column - Main Content */}
+        <div className="flex-1 space-y-6">
+          {/* Header Section with Name and Chat Button */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1">
+              {isOwner ? (
+                <PersonaNameEditor
+                  personaId={persona.persona_id}
+                  initialName={persona.name}
+                  onNameUpdate={onNameUpdate}
+                />
+              ) : (
+                <h1 className="text-3xl font-bold mb-3">{persona.name}</h1>
+              )}
+              
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline">Research-Grade Persona</Badge>
+                {isPublic && <Badge variant="secondary">Public</Badge>}
+                {!isPublic && isOwner && <Badge variant="outline">Private</Badge>}
+              </div>
+            </div>
+
+            {/* Prominent Chat Button */}
+            <Button 
+              onClick={onChatClick} 
+              size="lg"
+              className="flex-shrink-0"
+            >
+              <MessageCircle className="h-5 w-5 mr-2" />
+              Chat with {persona.name}
+            </Button>
+          </div>
+
+          {/* Description Section */}
           <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground">Description</h3>
             {isOwner ? (
@@ -72,39 +104,8 @@ export default function PersonaDetailHeader({
               </p>
             )}
           </div>
-        </div>
 
-        {/* Main Details Section */}
-        <div className="flex-1 space-y-6">
-          <div className="space-y-4">
-            {isOwner ? (
-              <PersonaNameEditor
-                personaId={persona.persona_id}
-                initialName={persona.name}
-                onNameUpdate={onNameUpdate}
-              />
-            ) : (
-              <h1 className="text-3xl font-bold">{persona.name}</h1>
-            )}
-            
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline">Research-Grade Persona</Badge>
-              {isPublic && <Badge variant="secondary">Public</Badge>}
-              {!isPublic && isOwner && <Badge variant="outline">Private</Badge>}
-            </div>
-
-            {/* Prominent Chat Button */}
-            <Button 
-              onClick={onChatClick} 
-              className="w-full sm:w-auto" 
-              size="lg"
-            >
-              <MessageCircle className="h-5 w-5 mr-2" />
-              Chat with {persona.name}
-            </Button>
-          </div>
-
-          {/* Key persona information in a structured layout */}
+          {/* Key persona information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 border-y">
             <div>
               <h3 className="font-semibold text-sm text-muted-foreground mb-1">Age</h3>
@@ -122,7 +123,7 @@ export default function PersonaDetailHeader({
 
           {/* Owner controls */}
           {isOwner && (
-            <div className="flex flex-wrap gap-2 pt-4">
+            <div className="flex flex-wrap gap-2">
               <PersonaVisibilityToggle
                 personaId={persona.persona_id}
                 isPublic={isPublic}
