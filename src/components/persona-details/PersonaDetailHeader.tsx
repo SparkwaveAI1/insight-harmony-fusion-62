@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Download } from "lucide-react";
+import { Download, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Card from "@/components/ui-custom/Card";
@@ -21,6 +21,7 @@ interface PersonaDetailHeaderProps {
   onDescriptionUpdate: (description: string) => Promise<void>;
   onImageGenerated: () => Promise<string | null>;
   onDownloadJSON: () => void;
+  onChatClick: () => void;
 }
 
 export default function PersonaDetailHeader({
@@ -32,13 +33,14 @@ export default function PersonaDetailHeader({
   onNameUpdate,
   onDescriptionUpdate,
   onImageGenerated,
-  onDownloadJSON
+  onDownloadJSON,
+  onChatClick
 }: PersonaDetailHeaderProps) {
   return (
     <Card className="p-8 mb-8">
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Avatar and Image Generation */}
-        <div className="flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center space-y-4 flex-shrink-0">
           <PersonaAvatar 
             persona={persona}
             isOwner={isOwner}
@@ -54,9 +56,27 @@ export default function PersonaDetailHeader({
           )}
         </div>
 
-        {/* Persona Details */}
-        <div className="flex-1 space-y-6">
+        {/* Description - Now positioned next to avatar */}
+        <div className="flex-1 space-y-4">
           <div className="space-y-2">
+            <h3 className="font-semibold text-sm text-muted-foreground">Description</h3>
+            {isOwner ? (
+              <PersonaDescriptionEditor
+                personaId={persona.persona_id}
+                initialDescription={persona.description || ''}
+                onDescriptionUpdate={onDescriptionUpdate}
+              />
+            ) : (
+              <p className="text-muted-foreground leading-relaxed">
+                {persona.description || 'No description provided.'}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Main Details Section */}
+        <div className="flex-1 space-y-6">
+          <div className="space-y-4">
             {isOwner ? (
               <PersonaNameEditor
                 personaId={persona.persona_id}
@@ -67,11 +87,21 @@ export default function PersonaDetailHeader({
               <h1 className="text-3xl font-bold">{persona.name}</h1>
             )}
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline">Research-Grade Persona</Badge>
               {isPublic && <Badge variant="secondary">Public</Badge>}
               {!isPublic && isOwner && <Badge variant="outline">Private</Badge>}
             </div>
+
+            {/* Prominent Chat Button */}
+            <Button 
+              onClick={onChatClick} 
+              className="w-full sm:w-auto" 
+              size="lg"
+            >
+              <MessageCircle className="h-5 w-5 mr-2" />
+              Chat with {persona.name}
+            </Button>
           </div>
 
           {/* Key persona information in a structured layout */}
@@ -88,22 +118,6 @@ export default function PersonaDetailHeader({
               <h3 className="font-semibold text-sm text-muted-foreground mb-1">Occupation</h3>
               <p className="text-base">{persona.metadata?.occupation || 'Not specified'}</p>
             </div>
-          </div>
-
-          {/* Description section */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Description</h3>
-            {isOwner ? (
-              <PersonaDescriptionEditor
-                personaId={persona.persona_id}
-                initialDescription={persona.description || ''}
-                onDescriptionUpdate={onDescriptionUpdate}
-              />
-            ) : (
-              <p className="text-muted-foreground leading-relaxed">
-                {persona.description || 'No description provided.'}
-              </p>
-            )}
           </div>
 
           {/* Owner controls */}

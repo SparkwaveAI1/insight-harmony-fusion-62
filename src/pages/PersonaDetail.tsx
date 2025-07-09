@@ -1,5 +1,6 @@
 
 import React, { useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
@@ -19,6 +20,9 @@ import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
 const queryClient = new QueryClient();
 
 const PersonaDetail = () => {
+  const { personaId } = useParams<{ personaId: string }>();
+  const navigate = useNavigate();
+  
   const {
     persona,
     isLoading,
@@ -42,6 +46,12 @@ const PersonaDetail = () => {
   const handleDownloadJSON = () => {
     if (persona) {
       downloadPersonaAsJSON(persona);
+    }
+  };
+
+  const handleChatClick = () => {
+    if (personaId) {
+      navigate(`/persona-chat/${personaId}`);
     }
   };
 
@@ -70,6 +80,7 @@ const PersonaDetail = () => {
                     onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
                     onDownloadJSON={handleDownloadJSON}
+                    onChatClick={handleChatClick}
                   />
                   
                   <PersonaContent persona={persona} />
