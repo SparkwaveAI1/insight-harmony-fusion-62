@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, User, Brain } from "lucide-react";
+import { Loader2, Sparkles, User, Brain, Upload } from "lucide-react";
 import { generatePersona } from "@/services/persona";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import JSONImportDialog from "./JSONImportDialog";
 
 interface HeroSectionProps {
   onGenerate: () => void;
@@ -16,6 +17,7 @@ interface HeroSectionProps {
 const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const navigate = useNavigate();
 
   const handleGenerate = async () => {
@@ -117,24 +119,35 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                 className="min-h-32 resize-none"
                 disabled={isLoading}
               />
-              <Button 
-                onClick={handleGenerate}
-                className="w-full" 
-                size="lg"
-                disabled={isLoading || !prompt.trim()}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Persona...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Persona
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGenerate}
+                  className="flex-1" 
+                  size="lg"
+                  disabled={isLoading || !prompt.trim()}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating Persona...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Generate Persona
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowImportDialog(true)}
+                  size="lg"
+                  disabled={isLoading}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import JSON
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -169,6 +182,11 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
           </div>
         </div>
       </div>
+      
+      <JSONImportDialog 
+        open={showImportDialog} 
+        onOpenChange={setShowImportDialog} 
+      />
     </section>
   );
 };
