@@ -1,16 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
-import { validateUserAuthentication } from "../generate-persona/authService.ts";
+import { corsHeaders } from "./corsHeaders.ts";
+import { validateUserAuthentication } from "./authService.ts";
 import { 
   handleGenerationError, 
   PersonaGenerationError 
-} from "../generate-persona/errorHandler.ts";
+} from "./errorHandler.ts";
 import { 
   generatePersonaTraitProfile,
   generatePersonaBehavioralLinguistic,
   generatePersonaInterview,
   enhancePersonaMetadata
-} from "../generate-persona/personaGenerator.ts";
+} from "./personaGenerator.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 interface EnhancementOptions {
