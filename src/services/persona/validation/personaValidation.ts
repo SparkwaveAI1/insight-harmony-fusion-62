@@ -180,7 +180,8 @@ function checkEmotionalTriggers(triggers: any): boolean {
   const hasPositive = Array.isArray(triggers.positive_triggers) && triggers.positive_triggers.length > 0;
   const hasNegative = Array.isArray(triggers.negative_triggers) && triggers.negative_triggers.length > 0;
   
-  return hasPositive && hasNegative;
+  // For imported personas, accept if either positive or negative triggers exist
+  return hasPositive || hasNegative;
 }
 
 function checkInterviewResponses(sections: any): boolean {
