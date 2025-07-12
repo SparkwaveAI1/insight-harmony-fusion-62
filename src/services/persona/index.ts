@@ -17,6 +17,7 @@ export { deletePersona } from './operations/deletePersona';
 export { clonePersona } from './operations/clonePersona';
 export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
+export { enhancePersona } from './enhancePersona';
 
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';

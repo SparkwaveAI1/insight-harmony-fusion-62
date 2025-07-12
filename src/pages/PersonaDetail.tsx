@@ -32,7 +32,8 @@ const PersonaDetail = () => {
     handlePersonaDeleted,
     handleNameUpdate,
     handleDescriptionUpdate,
-    handleImageGenerated
+    handleImageGenerated,
+    handlePersonaUpdated
   } = usePersonaDetail();
 
   // Ensure storage buckets exist when the component mounts
@@ -81,6 +82,7 @@ const PersonaDetail = () => {
                     onImageGenerated={handleImageGenerated}
                     onDownloadJSON={handleDownloadJSON}
                     onChatClick={handleChatClick}
+                    onPersonaUpdated={handlePersonaUpdated}
                   />
                   
                   <PersonaContent persona={persona} />

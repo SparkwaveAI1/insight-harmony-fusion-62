@@ -1,6 +1,6 @@
 
-import React from "react";
-import { Download, MessageCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Download, MessageCircle, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Card from "@/components/ui-custom/Card";
@@ -9,7 +9,9 @@ import PersonaVisibilityToggle from "./PersonaVisibilityToggle";
 import PersonaNameEditor from "./PersonaNameEditor";
 import PersonaDescriptionEditor from "./PersonaDescriptionEditor";
 import PersonaImageGenerationDialog from "./PersonaImageGenerationDialog";
+import PersonaEnhancementDialog from "./PersonaEnhancementDialog";
 import { Persona } from "@/services/persona/types";
+import { validatePersonaCompleteness } from "@/services/persona/validation/personaValidation";
 
 interface PersonaDetailHeaderProps {
   persona: Persona;
@@ -22,6 +24,7 @@ interface PersonaDetailHeaderProps {
   onImageGenerated: () => Promise<string | null>;
   onDownloadJSON: () => void;
   onChatClick: () => void;
+  onPersonaUpdated?: (updatedPersona: Persona) => void;
 }
 
 export default function PersonaDetailHeader({
@@ -34,8 +37,17 @@ export default function PersonaDetailHeader({
   onDescriptionUpdate,
   onImageGenerated,
   onDownloadJSON,
-  onChatClick
+  onChatClick,
+  onPersonaUpdated
 }: PersonaDetailHeaderProps) {
+  const [showEnhancementDialog, setShowEnhancementDialog] = useState(false);
+  
+  // Validate persona to determine what needs enhancement
+  const validationResult = validatePersonaCompleteness(persona);
+  const needsEnhancement = !validationResult.isValid || 
+    !validationResult.completeness.hasEmotionalTriggers ||
+    !validationResult.completeness.hasInterviewResponses ||
+    !validationResult.completeness.hasMetadata;
   return (
     <Card className="p-8 mb-8">
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -124,12 +136,24 @@ export default function PersonaDetailHeader({
           {/* Owner controls */}
           {isOwner && (
             <div className="flex flex-wrap gap-2 justify-between">
-              <PersonaVisibilityToggle
-                personaId={persona.persona_id}
-                isPublic={isPublic}
-                isOwner={isOwner}
-                onVisibilityChange={onVisibilityChange}
-              />
+              <div className="flex gap-2">
+                <PersonaVisibilityToggle
+                  personaId={persona.persona_id}
+                  isPublic={isPublic}
+                  isOwner={isOwner}
+                  onVisibilityChange={onVisibilityChange}
+                />
+                {needsEnhancement && (
+                  <Button 
+                    variant="default" 
+                    onClick={() => setShowEnhancementDialog(true)}
+                    className="bg-gradient-to-r from-primary to-primary-foreground"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Update Persona
+                  </Button>
+                )}
+              </div>
               <Button variant="outline" onClick={onDownloadJSON}>
                 <Download className="h-4 w-4 mr-2" />
                 Download JSON
@@ -138,6 +162,17 @@ export default function PersonaDetailHeader({
           )}
         </div>
       </div>
+      
+      {/* Enhancement Dialog */}
+      {isOwner && onPersonaUpdated && (
+        <PersonaEnhancementDialog
+          open={showEnhancementDialog}
+          onOpenChange={setShowEnhancementDialog}
+          persona={persona}
+          validationResult={validationResult}
+          onPersonaUpdated={onPersonaUpdated}
+        />
+      )}
     </Card>
   );
 }

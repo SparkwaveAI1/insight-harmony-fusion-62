@@ -216,6 +216,12 @@ export function usePersonaDetail() {
   // Check if current user is the owner of this persona
   const isOwner = user?.id === persona?.user_id;
 
+  const handlePersonaUpdated = async (updatedPersona: Persona) => {
+    console.log("Persona updated via enhancement:", updatedPersona.name);
+    setPersona(updatedPersona);
+    toast.success(`${updatedPersona.name} has been enhanced!`);
+  };
+
   return {
     persona,
     isLoading,
@@ -226,6 +232,7 @@ export function usePersonaDetail() {
     handlePersonaDeleted,
     handleNameUpdate,
     handleDescriptionUpdate,
-    handleImageGenerated
+    handleImageGenerated,
+    handlePersonaUpdated
   };
 }
