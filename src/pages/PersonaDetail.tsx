@@ -52,7 +52,7 @@ const PersonaDetail = () => {
 
   const handleChatClick = () => {
     if (personaId) {
-      navigate(`/persona-chat/${personaId}`);
+      navigate(`/persona/${personaId}/chat`);
     }
   };
 
