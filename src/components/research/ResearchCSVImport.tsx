@@ -126,6 +126,9 @@ export const ResearchCSVImport: React.FC<ResearchCSVImportProps> = ({
       setCsvContent('');
       setPreviewQuestions([]);
       
+      // Close dialog
+      onOpenChange(false);
+      
       toast({
         title: "Import Successful",
         description: `Successfully imported ${previewQuestions.length} questions.`,
