@@ -85,7 +85,7 @@ const PersonaDetail = () => {
                     onPersonaUpdated={handlePersonaUpdated}
                   />
                   
-                  <PersonaContent persona={persona} />
+                  <PersonaContent persona={persona} isOwner={isOwner} />
                   
                   {/* Move Delete button to the very bottom of the page */}
                   {isOwner && (

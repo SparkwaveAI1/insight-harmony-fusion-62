@@ -6,9 +6,11 @@ import PersonaTraits from "./PersonaTraits";
 import InterviewResponses from "./InterviewResponses";
 import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
 import PersonaKeyInsights from "./PersonaKeyInsights";
+import { SurveyManagement } from '../surveys/SurveyManagement';
 
 interface PersonaContentProps {
   persona: Persona;
+  isOwner?: boolean;
 }
 
 interface InterviewResponse {
@@ -21,7 +23,7 @@ interface InterviewSection {
   responses: InterviewResponse[];
 }
 
-const PersonaContent = ({ persona }: PersonaContentProps) => {
+const PersonaContent = ({ persona, isOwner = false }: PersonaContentProps) => {
   console.log("=== PERSONA CONTENT COMPONENT DEBUG ===");
   console.log("Full persona object:", persona);
   console.log("Persona name:", persona.name);
@@ -96,7 +98,7 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
   return (
     <div className="mt-8">
       <Tabs defaultValue="demographics" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full mb-8">
+        <TabsList className="grid grid-cols-6 w-full mb-8">
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
           <TabsTrigger value="traits">
             Traits
@@ -105,6 +107,7 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
           <TabsTrigger value="interview">Interview</TabsTrigger>
           <TabsTrigger value="triggers">Triggers</TabsTrigger>
           <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsTrigger value="surveys">Surveys</TabsTrigger>
         </TabsList>
 
         <TabsContent value="demographics" className="space-y-6">
@@ -140,6 +143,13 @@ const PersonaContent = ({ persona }: PersonaContentProps) => {
 
         <TabsContent value="insights" className="space-y-6">
           <PersonaKeyInsights metadata={persona} />
+        </TabsContent>
+        
+        <TabsContent value="surveys" className="space-y-6">
+          <SurveyManagement 
+            personaId={persona.persona_id} 
+            isOwner={isOwner}
+          />
         </TabsContent>
       </Tabs>
     </div>
