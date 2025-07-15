@@ -5,6 +5,9 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, CheckCircle, Download, Users, MessageSquare, Play, Pause } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
+import { getAllPersonas } from '@/services/persona';
+import { Persona } from '@/services/persona/types';
 
 interface SurveyData {
   name: string;
@@ -50,6 +53,7 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const [errorCount, setErrorCount] = useState(0);
   const [researchSurveyId, setResearchSurveyId] = useState<string | null>(null);
   const [researchSessionId, setResearchSessionId] = useState<string | null>(null);
+  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const { toast } = useToast();
 
   const totalQuestions = surveyData.questions.length;
@@ -62,7 +66,7 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const currentQuestion = surveyData.questions[currentQuestionIndex];
   const isComplete = completedInteractions === totalInteractions;
 
-  // Initialize research survey session in database
+  // Load personas and initialize research survey session in database
   useEffect(() => {
     const initializeResearchSurvey = async () => {
       if (!sessionId || !projectId) return;
@@ -70,6 +74,13 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
       try {
         const user = await supabase.auth.getUser();
         if (!user.data.user) throw new Error('No authenticated user');
+
+        // Load all personas and filter for selected ones
+        console.log('Loading personas for survey...');
+        const allPersonas = await getAllPersonas();
+        const filteredPersonas = allPersonas.filter(p => selectedPersonas.includes(p.persona_id));
+        setLoadedPersonas(filteredPersonas);
+        console.log(`Loaded ${filteredPersonas.length} personas for survey`);
 
         // First, create the research survey record
         const { data: surveyRecord, error: surveyError } = await supabase
@@ -122,30 +133,41 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
     initializeResearchSurvey();
   }, [sessionId, selectedPersonas, surveyData, projectId]);
 
-  // Generate persona response using real research session
+  // Generate persona response using the proper persona API
   const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
-    if (!sessionId) {
-      throw new Error('No research session available');
+    console.log('=== GENERATING PERSONA RESPONSE ===');
+    console.log('Persona ID:', personaId);
+    console.log('Question:', question);
+    
+    // Find the persona in our loaded personas
+    const persona = loadedPersonas.find(p => p.persona_id === personaId);
+    if (!persona) {
+      throw new Error(`Persona ${personaId} not found in loaded personas`);
     }
     
     try {
-      // Send question to the session
-      await sendMessage(question);
+      // Create survey context
+      const surveyContext = `Research Survey: ${surveyData.name}
+${surveyData.description ? `Description: ${surveyData.description}` : ''}
+Question ${currentQuestionIndex + 1} of ${surveyData.questions.length}
+Context: This is a research survey where you should provide thoughtful, authentic responses based on your demographic profile and personality traits.`;
+
+      // Generate response using the proper persona API with validation
+      const response = await sendMessageToPersona(
+        personaId,
+        question,
+        [], // No previous messages for survey questions
+        persona,
+        'research', // Use research mode for survey context
+        surveyContext,
+        undefined, // No image data
+        3 // Max 3 retries for quality responses
+      );
       
-      // Wait for response processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Send to specific persona to get response
-      await sendToPersona(personaId);
-      
-      // Wait for persona response
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // For now, return a simulated response
-      // In production, this would capture the actual conversation response
-      return `Detailed response from ${personaId} regarding: "${question}". This would contain the actual persona's thoughtful analysis and perspective on the question posed.`;
+      console.log('✅ Generated response:', response.substring(0, 100) + '...');
+      return response;
     } catch (error) {
-      console.error('Error generating response:', error);
+      console.error('❌ Error generating persona response:', error);
       throw error;
     }
   };
