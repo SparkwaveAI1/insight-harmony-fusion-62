@@ -135,17 +135,31 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
 
   // Generate persona response using the proper persona API
   const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
-    console.log('=== GENERATING PERSONA RESPONSE ===');
-    console.log('Persona ID:', personaId);
-    console.log('Question:', question);
+    console.log('🎯 === GENERATING PERSONA RESPONSE ===');
+    console.log('🔍 Persona ID requested:', personaId);
+    console.log('📝 Question:', question);
+    console.log('👥 Available personas count:', loadedPersonas.length);
+    console.log('📋 Available persona IDs:', loadedPersonas.map(p => p.persona_id));
     
     // Find the persona in our loaded personas
     const persona = loadedPersonas.find(p => p.persona_id === personaId);
+    console.log('🔍 Found persona:', persona ? `YES - ${persona.name}` : 'NO - NOT FOUND');
+    
     if (!persona) {
+      console.error('❌ Persona not found in loaded personas!');
+      console.error('❌ Requested ID:', personaId);
+      console.error('❌ Available IDs:', loadedPersonas.map(p => p.persona_id));
       throw new Error(`Persona ${personaId} not found in loaded personas`);
     }
     
     try {
+      console.log('📡 About to call sendMessageToPersona...');
+      console.log('📡 Persona data preview:', { 
+        id: persona.persona_id, 
+        name: persona.name,
+        hasTraitProfile: !!persona.trait_profile 
+      });
+      
       // Create survey context
       const surveyContext = `Research Survey: ${surveyData.name}
 ${surveyData.description ? `Description: ${surveyData.description}` : ''}
@@ -164,10 +178,16 @@ Context: This is a research survey where you should provide thoughtful, authenti
         3 // Max 3 retries for quality responses
       );
       
-      console.log('✅ Generated response:', response.substring(0, 100) + '...');
+      console.log('✅ Response received successfully!');
+      console.log('✅ Response length:', response?.length);
+      console.log('✅ Response preview:', response?.substring(0, 100) + '...');
       return response;
     } catch (error) {
-      console.error('❌ Error generating persona response:', error);
+      console.error('❌ Error in sendMessageToPersona:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       throw error;
     }
   };
@@ -177,8 +197,17 @@ Context: This is a research survey where you should provide thoughtful, authenti
     if (!isProcessing || isPaused || currentStep === 'results' || !researchSessionId || !loadedPersonas.length) return;
 
     const processNextQuestion = async () => {
+      console.log('⚡ === PROCESSING NEXT QUESTION ===');
+      console.log('⚡ Current persona index:', currentPersonaIndex);
+      console.log('⚡ Current question index:', currentQuestionIndex);
+      console.log('⚡ Current persona ID:', currentPersonaId);
+      console.log('⚡ Current question:', currentQuestion);
+      console.log('⚡ Research session ID:', researchSessionId);
+      
       try {
+        console.log('📞 About to call generatePersonaResponse...');
         const response = await generatePersonaResponse(currentPersonaId, currentQuestion);
+        console.log('📞 Got response back from generatePersonaResponse');
         
         const newResponse: PersonaResponse = {
           personaId: currentPersonaId,
@@ -188,6 +217,7 @@ Context: This is a research survey where you should provide thoughtful, authenti
           timestamp: new Date()
         };
 
+        console.log('💾 Saving to database...');
         // Save to database using research survey tables
         const { error: dbError } = await supabase
           .from('research_survey_responses')
@@ -200,25 +230,32 @@ Context: This is a research survey where you should provide thoughtful, authenti
           });
 
         if (dbError) {
-          console.error('Database error:', dbError);
+          console.error('❌ Database error:', dbError);
           toast({
             title: "Warning", 
             description: "Response generated but failed to save to database.",
             variant: "destructive"
           });
+        } else {
+          console.log('✅ Saved to database successfully');
         }
 
+        console.log('📝 Updating responses state...');
         setResponses(prev => [...prev, newResponse]);
         setErrorCount(0); // Reset error count on success
 
         // Move to next question or persona
+        console.log('➡️ Moving to next...');
         if (currentQuestionIndex < totalQuestions - 1) {
+          console.log('➡️ Moving to next question');
           setCurrentQuestionIndex(prev => prev + 1);
         } else if (currentPersonaIndex < totalPersonas - 1) {
+          console.log('➡️ Moving to next persona');
           setCurrentPersonaIndex(prev => prev + 1);
           setCurrentQuestionIndex(0);
         } else {
           // All done
+          console.log('🎉 ALL DONE! Survey complete');
           setIsProcessing(false);
           setCurrentStep('results');
           
@@ -234,10 +271,18 @@ Context: This is a research survey where you should provide thoughtful, authenti
           });
         }
       } catch (error) {
-        console.error('Error in automated processing:', error);
+        console.error('❌ Error in automated processing:', error);
+        console.error('❌ Error type:', typeof error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
         setErrorCount(prev => prev + 1);
         
         if (errorCount >= 3) {
+          console.error('❌ Too many errors, pausing processing');
           setIsProcessing(false);
           setIsPaused(true);
           toast({
@@ -246,6 +291,7 @@ Context: This is a research survey where you should provide thoughtful, authenti
             variant: "destructive"
           });
         } else {
+          console.log('🔄 Retrying after error...');
           toast({
             title: "Retry",
             description: `Error occurred, retrying... (${errorCount + 1}/3)`,
