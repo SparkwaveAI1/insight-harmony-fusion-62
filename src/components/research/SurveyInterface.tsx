@@ -4,6 +4,7 @@ import { PersonaLoader } from './PersonaLoader';
 import { ResearchSurveyBuilder } from './ResearchSurveyBuilder';
 import { ResearchCSVImport } from './ResearchCSVImport';
 import ResearchInterface from './ResearchInterface';
+import ProjectSelector from './ProjectSelector';
 import { useResearchSession } from './hooks/useResearchSession';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,15 +23,24 @@ interface SurveyInterfaceProps {
 }
 
 const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
-  const [step, setStep] = useState<'setup' | 'personas' | 'execution'>('setup');
+  const [step, setStep] = useState<'project' | 'setup' | 'personas' | 'execution'>('project');
   const [surveyData, setSurveyData] = useState<SurveyData | null>(null);
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [showCSVDialog, setShowCSVDialog] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  const projectId = searchParams.get('project');
+  // Initialize project from URL params
+  React.useEffect(() => {
+    const urlProjectId = searchParams.get('project');
+    if (urlProjectId) {
+      setProjectId(urlProjectId);
+      setStep('setup');
+    }
+  }, [searchParams]);
+  
   const hasProject = projectId !== null;
 
   // Use the existing research session hook
@@ -79,22 +89,53 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
 
   const handlePersonasSelected = async (personas: string[]): Promise<boolean> => {
     setSelectedPersonas(personas);
-    setStep('execution');
     
-    // Start research session with selected personas
-    const success = await createSession(personas);
-    if (success && surveyData?.questions.length) {
-      // Send the first question automatically
-      await sendMessage(surveyData.questions[0]);
-      setCurrentQuestionIndex(1);
+    try {
+      // Start research session with selected personas
+      const success = await createSession(personas);
+      if (!success) {
+        toast({
+          title: "Error",
+          description: "Failed to start research session",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      setStep('execution');
+      
+      // Wait a moment for session to be fully established, then send first question
+      if (surveyData?.questions.length) {
+        setTimeout(async () => {
+          try {
+            await sendMessage(surveyData.questions[0]);
+            setCurrentQuestionIndex(1);
+          } catch (error) {
+            console.error('Error sending first question:', error);
+            toast({
+              title: "Warning",
+              description: "Session started but first question failed to send. You can manually send it.",
+              variant: "destructive"
+            });
+          }
+        }, 1500); // Give session time to establish
+      }
+      
+      toast({
+        title: "Survey Started",
+        description: `Survey started with ${personas.length} personas.`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error starting survey:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start survey session",
+        variant: "destructive"
+      });
+      return false;
     }
-    
-    toast({
-      title: "Survey Started",
-      description: `Survey started with ${personas.length} personas.`,
-    });
-    
-    return success;
   };
 
   const handleSurveyMessage = async (message: string, imageFile?: File | null) => {
@@ -115,10 +156,15 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
       description: "All survey responses have been collected.",
     });
     // Reset to start a new survey
-    setStep('setup');
+    setStep('project');
     setSurveyData(null);
     setSelectedPersonas([]);
     setCurrentQuestionIndex(0);
+  };
+
+  const handleProjectSelected = (selectedProjectId: string) => {
+    setProjectId(selectedProjectId || null);
+    setStep('setup');
   };
 
   const renderSetupStep = () => (
@@ -252,8 +298,16 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
     </div>
   );
 
+  const renderProjectStep = () => (
+    <ProjectSelector 
+      onProjectSelected={handleProjectSelected}
+      showCreateOption={true}
+    />
+  );
+
   return (
     <>
+      {step === 'project' && renderProjectStep()}
       {step === 'setup' && renderSetupStep()}
       {step === 'personas' && renderPersonaStep()}
       {step === 'execution' && renderExecutionStep()}
