@@ -22,13 +22,19 @@ interface PersonaResponse {
 interface ResearchSurveyExecutionProps {
   surveyData: SurveyData;
   selectedPersonas: string[];
+  sessionId?: string;
+  sendMessage: (message: string) => Promise<void>;
+  sendToPersona: (personaId: string) => Promise<void>;
   onComplete: () => void;
   onBack: () => void;
 }
 
 export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = ({ 
   surveyData, 
-  selectedPersonas, 
+  selectedPersonas,
+  sessionId,
+  sendMessage,
+  sendToPersona,
   onComplete,
   onBack
 }) => {
@@ -49,28 +55,27 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const currentQuestion = surveyData.questions[currentQuestionIndex];
   const isComplete = completedInteractions === totalInteractions;
 
-  // Simulate persona response generation
+  // Generate persona response using real research session
   const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
-    // This would integrate with the actual persona chat system
-    // For now, we'll simulate responses
+    if (!sessionId) {
+      throw new Error('No research session available');
+    }
+    
     setIsGenerating(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+      // Send question to the session
+      await sendMessage(question);
       
-      // Mock response based on persona and question
-      const mockResponses = [
-        "That's a really interesting question. From my perspective...",
-        "I've actually thought about this quite a bit. In my experience...",
-        "This is something I feel strongly about. Let me explain why...",
-        "That depends on several factors. First, I think...",
-        "I have mixed feelings about this. On one hand...",
-        "This reminds me of a situation I encountered recently..."
-      ];
+      // Wait a moment for the message to be processed
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const baseResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-      return `${baseResponse} [Response generated for persona ${personaId} regarding: "${question.substring(0, 50)}..."]`;
+      // Send to specific persona to get response
+      await sendToPersona(personaId);
+      
+      // For now, return a placeholder until we can capture the actual response
+      // In a full implementation, you'd listen to the conversation messages
+      return `Response from ${personaId} to: "${question}"`;
     } finally {
       setIsGenerating(false);
     }

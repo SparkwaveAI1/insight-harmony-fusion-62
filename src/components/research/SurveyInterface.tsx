@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchSurveyBuilder } from './ResearchSurveyBuilder';
 import { ResearchCSVImport } from './ResearchCSVImport';
-import ResearchInterface from './ResearchInterface';
+import { ResearchSurveyExecution } from './ResearchSurveyExecution';
 import ProjectSelector from './ProjectSelector';
 import { useResearchSession } from './hooks/useResearchSession';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -267,36 +267,23 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
     </div>
   );
 
-  const renderExecutionStep = () => (
-    <div className="container h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-        <Button
-          variant="outline"
-          onClick={() => setStep('personas')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Personas
-        </Button>
-        <div className="text-center space-y-1">
-          <h2 className="text-lg font-semibold">"{surveyData?.name}"</h2>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>Question {Math.min(currentQuestionIndex, surveyData?.questions.length || 0)} / {surveyData?.questions.length}</span>
-            <span>{selectedPersonas.length} personas</span>
-          </div>
-        </div>
-        <div className="w-24"> {/* Spacer for balance */}</div>
-      </div>
-      <div className="flex-1 min-h-0">
-        <ResearchInterface 
-          sessionData={sessionData}
-          onCreateSession={handlePersonasSelected}
-          onSendMessage={handleSurveyMessage}
-          onSendToPersona={sendToPersona}
+  const renderExecutionStep = () => {
+    if (!surveyData) return null;
+    
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <ResearchSurveyExecution
+          surveyData={surveyData}
+          selectedPersonas={selectedPersonas}
+          sessionId={sessionId}
+          sendMessage={sendMessage}
+          sendToPersona={sendToPersona}
+          onComplete={handleSurveyComplete}
+          onBack={() => setStep('personas')}
         />
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderProjectStep = () => (
     <ProjectSelector 
