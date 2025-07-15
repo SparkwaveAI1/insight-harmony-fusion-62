@@ -3,11 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchSurveyBuilder } from './ResearchSurveyBuilder';
 import { ResearchCSVImport } from './ResearchCSVImport';
-import { ResearchSurveyExecution } from './ResearchSurveyExecution';
+import ResearchInterface from './ResearchInterface';
+import { useResearchSession } from './hooks/useResearchSession';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileUp, Plus, Users, FileText } from 'lucide-react';
+import { FileUp, Plus, Users, FileText, ArrowLeft, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SurveyData {
@@ -25,10 +26,32 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
   const [surveyData, setSurveyData] = useState<SurveyData | null>(null);
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [showCSVDialog, setShowCSVDialog] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  const hasProject = searchParams.get('project') !== null;
+  const projectId = searchParams.get('project');
+  const hasProject = projectId !== null;
+
+  // Use the existing research session hook
+  const {
+    sessionId,
+    loadedPersonas,
+    projectDocuments,
+    messages,
+    isLoading,
+    createSession,
+    sendMessage,
+    sendToPersona
+  } = useResearchSession(projectId || undefined);
+
+  const sessionData = {
+    sessionId,
+    loadedPersonas,
+    projectDocuments,
+    messages,
+    isLoading
+  };
 
   const handleSurveyCreated = (survey: SurveyData) => {
     setSurveyData(survey);
@@ -54,13 +77,36 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
     });
   };
 
-  const handlePersonasSelected = (personas: string[]) => {
+  const handlePersonasSelected = async (personas: string[]): Promise<boolean> => {
     setSelectedPersonas(personas);
     setStep('execution');
+    
+    // Start research session with selected personas
+    const success = await createSession(personas);
+    if (success && surveyData?.questions.length) {
+      // Send the first question automatically
+      await sendMessage(surveyData.questions[0]);
+      setCurrentQuestionIndex(1);
+    }
+    
     toast({
-      title: "Personas Selected",
-      description: `${personas.length} personas selected for the survey.`,
+      title: "Survey Started",
+      description: `Survey started with ${personas.length} personas.`,
     });
+    
+    return success;
+  };
+
+  const handleSurveyMessage = async (message: string, imageFile?: File | null) => {
+    await sendMessage(message, imageFile);
+    
+    // Auto-advance to next question if in survey mode and more questions exist
+    if (surveyData && currentQuestionIndex < surveyData.questions.length) {
+      setTimeout(async () => {
+        await sendMessage(surveyData.questions[currentQuestionIndex]);
+        setCurrentQuestionIndex(prev => prev + 1);
+      }, 3000); // Wait 3 seconds before next question
+    }
   };
 
   const handleSurveyComplete = () => {
@@ -72,6 +118,7 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
     setStep('setup');
     setSurveyData(null);
     setSelectedPersonas([]);
+    setCurrentQuestionIndex(0);
   };
 
   const renderSetupStep = () => (
@@ -175,32 +222,33 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
   );
 
   const renderExecutionStep = () => (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold">Survey Execution</h1>
-        <p className="text-muted-foreground">
-          Running survey "{surveyData?.name}" with {selectedPersonas.length} personas
-        </p>
-        <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            {surveyData?.questions.length} questions
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            {selectedPersonas.length} personas
+    <div className="container h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+        <Button
+          variant="outline"
+          onClick={() => setStep('personas')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Personas
+        </Button>
+        <div className="text-center space-y-1">
+          <h2 className="text-lg font-semibold">"{surveyData?.name}"</h2>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>Question {Math.min(currentQuestionIndex, surveyData?.questions.length || 0)} / {surveyData?.questions.length}</span>
+            <span>{selectedPersonas.length} personas</span>
           </div>
         </div>
+        <div className="w-24"> {/* Spacer for balance */}</div>
       </div>
-
-      {surveyData && (
-        <ResearchSurveyExecution
-          surveyData={surveyData}
-          selectedPersonas={selectedPersonas}
-          onComplete={handleSurveyComplete}
-          onBack={() => setStep('personas')}
+      <div className="flex-1 min-h-0">
+        <ResearchInterface 
+          sessionData={sessionData}
+          onCreateSession={handlePersonasSelected}
+          onSendMessage={handleSurveyMessage}
+          onSendToPersona={sendToPersona}
         />
-      )}
+      </div>
     </div>
   );
 
