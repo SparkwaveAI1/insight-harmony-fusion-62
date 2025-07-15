@@ -174,7 +174,7 @@ Context: This is a research survey where you should provide thoughtful, authenti
 
   // Automated processing loop
   useEffect(() => {
-    if (!isProcessing || isPaused || isComplete || !researchSessionId) return;
+    if (!isProcessing || isPaused || currentStep === 'results' || !researchSessionId || !loadedPersonas.length) return;
 
     const processNextQuestion = async () => {
       try {
@@ -258,9 +258,14 @@ Context: This is a research survey where you should provide thoughtful, authenti
     // Add delay between questions to avoid overwhelming the system
     const timer = setTimeout(processNextQuestion, 2000);
     return () => clearTimeout(timer);
-  }, [isProcessing, isPaused, isComplete, researchSessionId, currentPersonaIndex, currentQuestionIndex, errorCount]);
+  }, [isProcessing, isPaused, currentStep, researchSessionId, currentPersonaIndex, currentQuestionIndex, errorCount, loadedPersonas]);
 
   const startAutomatedProcessing = () => {
+    console.log('🚀 Starting automated processing...');
+    console.log('Research session ID:', researchSessionId);
+    console.log('Loaded personas:', loadedPersonas.length);
+    console.log('Survey questions:', surveyData.questions.length);
+    
     setIsProcessing(true);
     setIsPaused(false);
     setErrorCount(0);
