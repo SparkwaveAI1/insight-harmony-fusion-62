@@ -24,6 +24,7 @@ interface ResearchSurveyExecutionProps {
   surveyData: SurveyData;
   selectedPersonas: string[];
   sessionId?: string;
+  projectId?: string;
   sendMessage: (message: string) => Promise<void>;
   sendToPersona: (personaId: string) => Promise<void>;
   onComplete: () => void;
@@ -34,6 +35,7 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   surveyData, 
   selectedPersonas,
   sessionId,
+  projectId,
   sendMessage,
   sendToPersona,
   onComplete,
@@ -46,7 +48,8 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
-  const [surveySessionId, setSurveySessionId] = useState<string | null>(null);
+  const [researchSurveyId, setResearchSurveyId] = useState<string | null>(null);
+  const [researchSessionId, setResearchSessionId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const totalQuestions = surveyData.questions.length;
@@ -59,63 +62,65 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const currentQuestion = surveyData.questions[currentQuestionIndex];
   const isComplete = completedInteractions === totalInteractions;
 
-  // Initialize survey session in database
+  // Initialize research survey session in database
   useEffect(() => {
-    const initializeSurveySession = async () => {
-      if (!sessionId) return;
+    const initializeResearchSurvey = async () => {
+      if (!sessionId || !projectId) return;
       
       try {
         const user = await supabase.auth.getUser();
         if (!user.data.user) throw new Error('No authenticated user');
 
-        // First, create the survey record
+        // First, create the research survey record
         const { data: surveyRecord, error: surveyError } = await supabase
-          .from('surveys')
+          .from('research_surveys')
           .insert({
+            project_id: projectId,
             name: surveyData.name,
             description: surveyData.description || '',
             questions: surveyData.questions,
-            user_id: user.data.user.id
+            user_id: user.data.user.id,
+            status: 'active'
           })
           .select('id')
           .single();
           
         if (surveyError) throw surveyError;
+        setResearchSurveyId(surveyRecord.id);
 
-        // Then create the survey session
+        // Then create the research survey session
         const { data: sessionRecord, error: sessionError } = await supabase
-          .from('survey_sessions')
+          .from('research_survey_sessions')
           .insert({
-            survey_id: surveyRecord.id,
-            persona_id: selectedPersonas[0], // Will be updated per response
+            research_survey_id: surveyRecord.id,
+            conversation_id: sessionId, // Link to the conversation/research session
+            selected_personas: selectedPersonas,
             user_id: user.data.user.id,
-            status: 'running'
+            status: 'pending',
+            started_at: new Date().toISOString()
           })
           .select('id')
           .single();
           
         if (sessionError) throw sessionError;
-        setSurveySessionId(sessionRecord.id);
-        
-        // Start automated processing
-        setIsProcessing(true);
+        setResearchSessionId(sessionRecord.id);
         
         toast({
-          title: "Survey Initialized",
+          title: "Research Survey Initialized",
           description: "Ready to start automated processing.",
         });
       } catch (error) {
-        console.error('Error initializing survey session:', error);
+        console.error('Error initializing research survey:', error);
         toast({
           title: "Setup Error",
-          description: "Failed to initialize survey. Please try again.",
+          description: "Failed to initialize research survey. Please try again.",
           variant: "destructive"
         });
       }
     };
 
-    initializeSurveySession();
-  }, [sessionId, selectedPersonas, surveyData]);
+    initializeResearchSurvey();
+  }, [sessionId, selectedPersonas, surveyData, projectId]);
 
   // Generate persona response using real research session
   const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
@@ -147,7 +152,7 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
 
   // Automated processing loop
   useEffect(() => {
-    if (!isProcessing || isPaused || isComplete || !surveySessionId) return;
+    if (!isProcessing || isPaused || isComplete || !researchSessionId) return;
 
     const processNextQuestion = async () => {
       try {
@@ -161,11 +166,11 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
           timestamp: new Date()
         };
 
-        // Save to database
+        // Save to database using research survey tables
         const { error: dbError } = await supabase
-          .from('survey_responses')
+          .from('research_survey_responses')
           .insert({
-            session_id: surveySessionId,
+            session_id: researchSessionId,
             persona_id: currentPersonaId,
             question_index: currentQuestionIndex,
             question_text: currentQuestion,
@@ -195,11 +200,11 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
           setIsProcessing(false);
           setCurrentStep('results');
           
-          // Update survey session status
+          // Update research survey session status
           await supabase
-            .from('survey_sessions')
+            .from('research_survey_sessions')
             .update({ status: 'completed', completed_at: new Date().toISOString() })
-            .eq('id', surveySessionId);
+            .eq('id', researchSessionId);
             
           toast({
             title: "Survey Complete",
@@ -231,7 +236,7 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
     // Add delay between questions to avoid overwhelming the system
     const timer = setTimeout(processNextQuestion, 2000);
     return () => clearTimeout(timer);
-  }, [isProcessing, isPaused, isComplete, surveySessionId, currentPersonaIndex, currentQuestionIndex, errorCount]);
+  }, [isProcessing, isPaused, isComplete, researchSessionId, currentPersonaIndex, currentQuestionIndex, errorCount]);
 
   const startAutomatedProcessing = () => {
     setIsProcessing(true);

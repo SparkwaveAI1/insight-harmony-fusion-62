@@ -276,6 +276,7 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
           surveyData={surveyData}
           selectedPersonas={selectedPersonas}
           sessionId={sessionId}
+          projectId={projectId}
           sendMessage={sendMessage}
           sendToPersona={sendToPersona}
           onComplete={handleSurveyComplete}

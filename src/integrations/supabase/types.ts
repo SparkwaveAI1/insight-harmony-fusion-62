@@ -791,6 +791,142 @@ export type Database = {
         }
         Relationships: []
       }
+      research_survey_responses: {
+        Row: {
+          created_at: string
+          id: string
+          persona_id: string
+          question_index: number
+          question_text: string
+          response_text: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          persona_id: string
+          question_index: number
+          question_text: string
+          response_text: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          persona_id?: string
+          question_index?: number
+          question_text?: string
+          response_text?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_survey_responses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "research_survey_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_survey_sessions: {
+        Row: {
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          research_survey_id: string
+          selected_personas: string[]
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          research_survey_id: string
+          selected_personas?: string[]
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          research_survey_id?: string
+          selected_personas?: string[]
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_survey_sessions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "research_survey_sessions_research_survey_id_fkey"
+            columns: ["research_survey_id"]
+            isOneToOne: false
+            referencedRelation: "research_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      research_surveys: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          project_id: string
+          questions: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          project_id: string
+          questions?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          questions?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "research_surveys_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       structured_study_sessions: {
         Row: {
           audience_definition: Json | null
