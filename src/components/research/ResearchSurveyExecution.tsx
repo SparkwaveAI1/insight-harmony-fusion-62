@@ -65,22 +65,45 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
       if (!sessionId) return;
       
       try {
-        const { data, error } = await supabase
+        const user = await supabase.auth.getUser();
+        if (!user.data.user) throw new Error('No authenticated user');
+
+        // First, create the survey record
+        const { data: surveyRecord, error: surveyError } = await supabase
+          .from('surveys')
+          .insert({
+            name: surveyData.name,
+            description: surveyData.description || '',
+            questions: surveyData.questions,
+            user_id: user.data.user.id
+          })
+          .select('id')
+          .single();
+          
+        if (surveyError) throw surveyError;
+
+        // Then create the survey session
+        const { data: sessionRecord, error: sessionError } = await supabase
           .from('survey_sessions')
           .insert({
-            survey_id: sessionId, // Using research session as survey ID
+            survey_id: surveyRecord.id,
             persona_id: selectedPersonas[0], // Will be updated per response
-            user_id: (await supabase.auth.getUser()).data.user?.id,
+            user_id: user.data.user.id,
             status: 'running'
           })
           .select('id')
           .single();
           
-        if (error) throw error;
-        setSurveySessionId(data.id);
+        if (sessionError) throw sessionError;
+        setSurveySessionId(sessionRecord.id);
         
         // Start automated processing
         setIsProcessing(true);
+        
+        toast({
+          title: "Survey Initialized",
+          description: "Ready to start automated processing.",
+        });
       } catch (error) {
         console.error('Error initializing survey session:', error);
         toast({
@@ -92,7 +115,7 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
     };
 
     initializeSurveySession();
-  }, [sessionId, selectedPersonas]);
+  }, [sessionId, selectedPersonas, surveyData]);
 
   // Generate persona response using real research session
   const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
