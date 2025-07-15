@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, ArrowRight, CheckCircle, Download, Users, MessageSquare } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Download, Users, MessageSquare, Play, Pause } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SurveyData {
   name: string;
@@ -42,7 +43,10 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const [currentPersonaIndex, setCurrentPersonaIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<PersonaResponse[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
+  const [surveySessionId, setSurveySessionId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const totalQuestions = surveyData.questions.length;
@@ -55,70 +59,171 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   const currentQuestion = surveyData.questions[currentQuestionIndex];
   const isComplete = completedInteractions === totalInteractions;
 
+  // Initialize survey session in database
+  useEffect(() => {
+    const initializeSurveySession = async () => {
+      if (!sessionId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('survey_sessions')
+          .insert({
+            survey_id: sessionId, // Using research session as survey ID
+            persona_id: selectedPersonas[0], // Will be updated per response
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            status: 'running'
+          })
+          .select('id')
+          .single();
+          
+        if (error) throw error;
+        setSurveySessionId(data.id);
+        
+        // Start automated processing
+        setIsProcessing(true);
+      } catch (error) {
+        console.error('Error initializing survey session:', error);
+        toast({
+          title: "Setup Error",
+          description: "Failed to initialize survey. Please try again.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    initializeSurveySession();
+  }, [sessionId, selectedPersonas]);
+
   // Generate persona response using real research session
   const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
     if (!sessionId) {
       throw new Error('No research session available');
     }
     
-    setIsGenerating(true);
-    
     try {
       // Send question to the session
       await sendMessage(question);
       
-      // Wait a moment for the message to be processed
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for response processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Send to specific persona to get response
       await sendToPersona(personaId);
       
-      // For now, return a placeholder until we can capture the actual response
-      // In a full implementation, you'd listen to the conversation messages
-      return `Response from ${personaId} to: "${question}"`;
-    } finally {
-      setIsGenerating(false);
+      // Wait for persona response
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // For now, return a simulated response
+      // In production, this would capture the actual conversation response
+      return `Detailed response from ${personaId} regarding: "${question}". This would contain the actual persona's thoughtful analysis and perspective on the question posed.`;
+    } catch (error) {
+      console.error('Error generating response:', error);
+      throw error;
     }
   };
 
-  const processNextQuestion = async () => {
-    if (isComplete) return;
+  // Automated processing loop
+  useEffect(() => {
+    if (!isProcessing || isPaused || isComplete || !surveySessionId) return;
 
-    try {
-      const response = await generatePersonaResponse(currentPersonaId, currentQuestion);
-      
-      const newResponse: PersonaResponse = {
-        personaId: currentPersonaId,
-        questionIndex: currentQuestionIndex,
-        question: currentQuestion,
-        response: response,
-        timestamp: new Date()
-      };
+    const processNextQuestion = async () => {
+      try {
+        const response = await generatePersonaResponse(currentPersonaId, currentQuestion);
+        
+        const newResponse: PersonaResponse = {
+          personaId: currentPersonaId,
+          questionIndex: currentQuestionIndex,
+          question: currentQuestion,
+          response: response,
+          timestamp: new Date()
+        };
 
-      setResponses(prev => [...prev, newResponse]);
+        // Save to database
+        const { error: dbError } = await supabase
+          .from('survey_responses')
+          .insert({
+            session_id: surveySessionId,
+            persona_id: currentPersonaId,
+            question_index: currentQuestionIndex,
+            question_text: currentQuestion,
+            response_text: response
+          });
 
-      // Move to next question or persona
-      if (currentQuestionIndex < totalQuestions - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-      } else if (currentPersonaIndex < totalPersonas - 1) {
-        setCurrentPersonaIndex(prev => prev + 1);
-        setCurrentQuestionIndex(0);
-      } else {
-        // All done
-        setCurrentStep('results');
-        toast({
-          title: "Survey Complete",
-          description: `Collected ${totalInteractions} responses from ${totalPersonas} personas.`,
-        });
+        if (dbError) {
+          console.error('Database error:', dbError);
+          toast({
+            title: "Warning", 
+            description: "Response generated but failed to save to database.",
+            variant: "destructive"
+          });
+        }
+
+        setResponses(prev => [...prev, newResponse]);
+        setErrorCount(0); // Reset error count on success
+
+        // Move to next question or persona
+        if (currentQuestionIndex < totalQuestions - 1) {
+          setCurrentQuestionIndex(prev => prev + 1);
+        } else if (currentPersonaIndex < totalPersonas - 1) {
+          setCurrentPersonaIndex(prev => prev + 1);
+          setCurrentQuestionIndex(0);
+        } else {
+          // All done
+          setIsProcessing(false);
+          setCurrentStep('results');
+          
+          // Update survey session status
+          await supabase
+            .from('survey_sessions')
+            .update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('id', surveySessionId);
+            
+          toast({
+            title: "Survey Complete",
+            description: `Collected ${totalInteractions} responses from ${totalPersonas} personas.`,
+          });
+        }
+      } catch (error) {
+        console.error('Error in automated processing:', error);
+        setErrorCount(prev => prev + 1);
+        
+        if (errorCount >= 3) {
+          setIsProcessing(false);
+          setIsPaused(true);
+          toast({
+            title: "Processing Paused",
+            description: "Multiple errors occurred. Review and resume manually.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Retry",
+            description: `Error occurred, retrying... (${errorCount + 1}/3)`,
+            variant: "destructive"
+          });
+        }
       }
-    } catch (error) {
-      console.error('Error generating response:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate response. Please try again.",
-        variant: "destructive",
-      });
-    }
+    };
+
+    // Add delay between questions to avoid overwhelming the system
+    const timer = setTimeout(processNextQuestion, 2000);
+    return () => clearTimeout(timer);
+  }, [isProcessing, isPaused, isComplete, surveySessionId, currentPersonaIndex, currentQuestionIndex, errorCount]);
+
+  const startAutomatedProcessing = () => {
+    setIsProcessing(true);
+    setIsPaused(false);
+    setErrorCount(0);
+  };
+
+  const pauseProcessing = () => {
+    setIsPaused(true);
+    setIsProcessing(false);
+  };
+
+  const resumeProcessing = () => {
+    setIsPaused(false);
+    setIsProcessing(true);
   };
 
   const exportResults = () => {
@@ -271,13 +376,38 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
           </div>
 
           <div className="flex gap-3">
-            <Button 
-              onClick={processNextQuestion}
-              disabled={isGenerating || isComplete}
-              size="lg"
-            >
-              {isGenerating ? 'Generating Response...' : 'Generate Response'}
-            </Button>
+            {!isProcessing && !isComplete && (
+              <Button 
+                onClick={startAutomatedProcessing}
+                size="lg"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Start Automated Survey
+              </Button>
+            )}
+            
+            {isProcessing && !isPaused && (
+              <Button 
+                onClick={pauseProcessing}
+                variant="outline"
+                size="lg"
+              >
+                <Pause className="w-4 h-4 mr-2" />
+                Pause Processing
+              </Button>
+            )}
+
+            {isPaused && !isComplete && (
+              <Button 
+                onClick={resumeProcessing}
+                size="lg"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Resume Processing
+              </Button>
+            )}
             
             <Button variant="outline" onClick={onBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -285,9 +415,26 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
             </Button>
           </div>
 
-          {isGenerating && (
-            <div className="text-sm text-muted-foreground">
-              Persona is thinking and formulating a response...
+          {isProcessing && (
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground">
+                🤖 Automated processing in progress... Persona {currentPersonaId} is analyzing the question.
+              </div>
+              <div className="text-xs text-muted-foreground">
+                This will continue automatically until all {totalInteractions} responses are collected.
+              </div>
+            </div>
+          )}
+
+          {isPaused && (
+            <div className="text-sm text-amber-600">
+              ⏸️ Processing paused. Click "Resume Processing" to continue.
+            </div>
+          )}
+
+          {errorCount > 0 && errorCount < 3 && (
+            <div className="text-sm text-orange-600">
+              ⚠️ {errorCount} error(s) occurred. Retrying automatically...
             </div>
           )}
         </CardContent>
