@@ -1,10 +1,23 @@
 
-// Main persona service exports
-export { getAllPersonas, getPersonaById, getPersonaByPersonaId, getPersonasByCollection } from './operations/getPersonas';
+// Re-export all functions from the operations
 export { savePersona } from './operations/savePersona';
-export { updatePersonaName, updatePersonaDescription, updatePersonaVisibility, updatePersonaProfileImageUrl, updatePersona } from './operations/updatePersona';
+export { 
+  getPersonaById, 
+  getPersonaByPersonaId, 
+  getAllPersonas, 
+  getPersonasByCollection 
+} from './operations/getPersonas';
+export { 
+  updatePersonaVisibility, 
+  updatePersonaName,
+  updatePersonaDescription,
+  updatePersonaProfileImageUrl 
+} from './operations/updatePersona';
 export { deletePersona } from './operations/deletePersona';
-export { clonePersona, generatePersona, generatePersonaImage } from './operations/clonePersona';
+export { clonePersona } from './operations/clonePersona';
+export { generatePersona } from './personaGenerator';
+export { generatePersonaImage } from './operations/generatePersonaImage';
+export { enhancePersona } from './enhancePersona';
 
 // Re-export types
-export type { Persona, PersonaMetadata, TraitProfile, EmotionalTriggersProfile, PersonaCreateData, PersonaUpdateData } from './types';
+export type { Persona, InterviewSection, InterviewQuestion } from './types';
