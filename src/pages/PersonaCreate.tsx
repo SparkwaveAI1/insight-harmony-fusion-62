@@ -1,25 +1,22 @@
 
-import { useParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const PersonaDetail = () => {
-  const { personaId } = useParams();
-
+const PersonaCreate = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-1 container mx-auto py-8 px-4">
         <Card>
           <CardHeader>
-            <CardTitle>Persona Details</CardTitle>
+            <CardTitle>Create New Persona</CardTitle>
             <CardDescription>
-              Viewing persona: {personaId}
+              Build a new research persona for your studies
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Persona details interface will be implemented here.
+              Persona creation interface will be implemented here.
             </p>
           </CardContent>
         </Card>
@@ -28,4 +25,4 @@ const PersonaDetail = () => {
   );
 };
 
-export default PersonaDetail;
+export default PersonaCreate;

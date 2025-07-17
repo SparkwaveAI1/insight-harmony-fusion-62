@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const PersonaDetail = () => {
+const PersonaClone = () => {
   const { personaId } = useParams();
 
   return (
@@ -12,14 +12,14 @@ const PersonaDetail = () => {
       <div className="flex-1 container mx-auto py-8 px-4">
         <Card>
           <CardHeader>
-            <CardTitle>Persona Details</CardTitle>
+            <CardTitle>Clone Persona</CardTitle>
             <CardDescription>
-              Viewing persona: {personaId}
+              Cloning persona: {personaId}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Persona details interface will be implemented here.
+              Persona cloning interface will be implemented here.
             </p>
           </CardContent>
         </Card>
@@ -28,4 +28,4 @@ const PersonaDetail = () => {
   );
 };
 
-export default PersonaDetail;
+export default PersonaClone;
