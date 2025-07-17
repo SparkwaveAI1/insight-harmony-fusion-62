@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ export interface UseResearchSessionReturn {
   isLoading: boolean;
   createSession: (personaIds: string[], projectId?: string) => Promise<boolean>;
   sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  sendToPersona: (personaId: string) => Promise<void>;
+  sendToPersona: (personaId: string) => Promise<string>;
 }
 
 export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
@@ -220,11 +219,11 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
-  // Send current conversation to selected persona
-  const sendToPersona = async (personaId: string): Promise<void> => {
+  // Send current conversation to selected persona and return the response
+  const sendToPersona = async (personaId: string): Promise<string> => {
     if (!sessionId) {
       toast.error('No active session');
-      return;
+      throw new Error('No active session');
     }
 
     try {
@@ -241,8 +240,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       // Get the last user message
       const lastUserMessage = messages.filter(m => m.role === 'user').pop();
       if (!lastUserMessage) {
-        toast.error('No user message to send to persona');
-        return;
+        throw new Error('No user message to send to persona');
       }
 
       // Format previous messages for the API
@@ -292,10 +290,13 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         });
 
       console.log('Persona response generated and added to conversation');
+      
+      return response; // Return the actual response text
 
     } catch (error) {
       console.error('Error getting persona response:', error);
       toast.error('Failed to get persona response');
+      throw error;
     } finally {
       setIsLoading(false);
     }

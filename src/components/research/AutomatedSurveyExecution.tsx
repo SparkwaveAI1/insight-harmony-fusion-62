@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, FileText, CheckCircle, AlertCircle, Clock, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { PersonaSurveyStatus, SurveyResponse, parsePersonaResponse, formatSurveyResultsForExport } from './utils/responseUtils';
 
@@ -20,7 +22,7 @@ interface AutomatedSurveyExecutionProps {
   sessionId: string | null;
   projectDocuments: any[];
   sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  sendToPersona: (personaId: string) => Promise<void>;
+  sendToPersona: (personaId: string) => Promise<string>;
   onComplete: () => void;
   onBack: () => void;
 }
@@ -40,7 +42,6 @@ export const AutomatedSurveyExecution: React.FC<AutomatedSurveyExecutionProps> =
   const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [surveyStarted, setSurveyStarted] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]); // Track messages for response extraction
 
   // Initialize persona statuses
   useEffect(() => {
@@ -91,13 +92,6 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
     return message;
   }, [surveyData, projectDocuments]);
 
-  // Track messages to capture responses
-  useEffect(() => {
-    // Subscribe to messages from the parent component
-    // This would need to be implemented using a context or prop drilling in a real app
-    // For now, we'll simulate this by checking for new messages in props
-  }, []);
-
   // Auto-start survey when component mounts
   useEffect(() => {
     if (!surveyStarted && sessionId && selectedPersonas.length > 0) {
@@ -135,11 +129,40 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
     }
   };
 
-  // Collect responses from all personas automatically with better response tracking
+  // Store survey response in database
+  const storeSurveyResponse = async (
+    personaId: string,
+    questionIndex: number,
+    questionText: string,
+    responseText: string
+  ) => {
+    if (!sessionId) return;
+
+    try {
+      const { error } = await supabase
+        .from('research_survey_responses')
+        .insert({
+          session_id: sessionId,
+          persona_id: personaId,
+          question_index: questionIndex,
+          question_text: questionText,
+          response_text: responseText
+        });
+
+      if (error) {
+        console.error('Error storing survey response:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Failed to store survey response:', error);
+      throw error;
+    }
+  };
+
+  // Collect responses from all personas automatically
   const collectAllPersonaResponses = async () => {
     console.log('Collecting responses from all personas automatically...');
 
-    // Process personas one by one to avoid overwhelming the API
     for (const personaId of selectedPersonas) {
       try {
         // Update status to processing
@@ -149,38 +172,48 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
 
         console.log(`Requesting response from persona: ${personaId}`);
         
-        // Send to persona and wait for response
-        await sendToPersona(personaId);
+        // Get response from persona
+        const fullResponse = await sendToPersona(personaId);
+        console.log(`Raw response from ${personaId}:`, fullResponse);
 
-        // Delay to allow response to be processed - this is a workaround
-        // In a real implementation, we would wait for the actual response to be returned
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Parse the response to extract individual answers
+        const parsedAnswers = parsePersonaResponse(fullResponse, surveyData.questions);
+        console.log(`Parsed answers from ${personaId}:`, parsedAnswers);
 
-        // Find the persona in the loaded personas list
-        const persona = loadedPersonas.find(p => p.persona_id === personaId);
-        const personaName = persona?.name || `Persona ${personaId.slice(-4)}`;
+        // Create structured responses for each question
+        const structuredResponses: SurveyResponse[] = [];
+        for (let i = 0; i < surveyData.questions.length; i++) {
+          const persona = loadedPersonas.find(p => p.persona_id === personaId);
+          const response: SurveyResponse = {
+            personaId,
+            personaName: persona?.name || `Persona ${personaId.slice(-4)}`,
+            questionIndex: i,
+            questionText: surveyData.questions[i],
+            responseText: parsedAnswers[i] || `[No response found for question ${i + 1}]`,
+            timestamp: new Date()
+          };
+          
+          structuredResponses.push(response);
+          
+          // Store each response in the database
+          await storeSurveyResponse(
+            personaId,
+            i,
+            surveyData.questions[i],
+            parsedAnswers[i] || `[No response found for question ${i + 1}]`
+          );
+        }
 
-        // Create a simulated response for now
-        // In a real implementation, we would extract this from the messages array
-        const simulatedResponses: SurveyResponse[] = surveyData.questions.map((question, idx) => ({
-          personaId,
-          personaName,
-          questionIndex: idx,
-          questionText: question,
-          responseText: `This is a simulated response to question ${idx + 1} from ${personaName}. In a real implementation, this would be extracted from the actual persona response.`,
-          timestamp: new Date()
-        }));
-
-        // Update status to completed with responses
+        // Update status to completed with real responses
         setPersonaStatuses(prev => prev.map(p => 
           p.personaId === personaId ? { 
             ...p, 
             status: 'completed',
-            responses: simulatedResponses
+            responses: structuredResponses
           } : p
         ));
 
-        console.log(`Response received from persona: ${personaId}`);
+        console.log(`Response processed and stored for persona: ${personaId}`);
 
       } catch (error) {
         console.error(`Error getting response from persona ${personaId}:`, error);
@@ -311,7 +344,7 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
               <div className="text-center">
                 <h3 className="font-medium mb-2">Survey Running Automatically</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  All personas are processing the complete survey. Responses are being collected automatically.
+                  All personas are processing the complete survey. Real responses are being collected and stored.
                 </p>
               </div>
               
@@ -364,6 +397,11 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
                       <span className="font-medium text-sm">{persona.personaName}</span>
                       {getStatusIcon(persona.status)}
                     </div>
+                    {persona.status === 'completed' && (
+                      <p className="text-xs text-green-600">
+                        {persona.responses.length} responses captured
+                      </p>
+                    )}
                     {persona.error && (
                       <p className="text-xs text-red-600">{persona.error}</p>
                     )}
