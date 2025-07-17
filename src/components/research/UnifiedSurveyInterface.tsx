@@ -64,7 +64,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     sendToPersona
   } = useResearchSession(projectId || undefined);
 
-  // Question management
+  // Question management functions
   const addQuestion = () => {
     setQuestions([...questions, '']);
   };
@@ -138,23 +138,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       title: "Template Loaded",
       description: `${template_data.name} template has been loaded.`,
     });
-  };
-
-  // Question management
-  const addQuestion = () => {
-    setQuestions([...questions, '']);
-  };
-
-  const updateQuestion = (index: number, value: string) => {
-    const newQuestions = [...questions];
-    newQuestions[index] = value;
-    setQuestions(newQuestions);
-  };
-
-  const removeQuestion = (index: number) => {
-    if (questions.length > 1) {
-      setQuestions(questions.filter((_, i) => i !== index));
-    }
   };
 
   // CSV import handling

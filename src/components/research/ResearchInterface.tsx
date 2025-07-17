@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
@@ -37,6 +36,7 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
     if (success) {
       setShowPersonaLoader(false);
     }
+    return success;
   };
 
   const handleExportTranscript = () => {
