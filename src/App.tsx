@@ -25,7 +25,7 @@ import ProjectDetail from './pages/ProjectDetail';
 import ProjectCreate from './pages/ProjectCreate';
 import Settings from './pages/Settings';
 import Interview from './pages/Interview';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import './App.css';
 
 const queryClient = new QueryClient({

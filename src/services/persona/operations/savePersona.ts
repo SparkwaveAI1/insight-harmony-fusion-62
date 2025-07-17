@@ -1,11 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Persona } from '../types';
+import { PersonaCreateData } from '../types';
 
-export const savePersona = async (persona: Omit<Persona, 'id' | 'created_at'>): Promise<Persona> => {
+export const savePersona = async (persona: PersonaCreateData): Promise<string> => {
+  const personaId = `persona_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
   const { data, error } = await supabase
     .from('personas')
-    .insert([persona])
+    .insert({
+      persona_id: personaId,
+      creation_date: new Date().toISOString(),
+      ...persona
+    })
     .select()
     .single();
 
@@ -14,5 +20,5 @@ export const savePersona = async (persona: Omit<Persona, 'id' | 'created_at'>): 
     throw error;
   }
 
-  return data;
+  return data.persona_id;
 };

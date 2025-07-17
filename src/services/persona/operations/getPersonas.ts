@@ -46,6 +46,22 @@ export const getPersonaByPersonaId = async (personaId: string): Promise<Persona 
   return data;
 };
 
+export const getPersonasByCollection = async (collectionId: string): Promise<Persona[]> => {
+  const { data, error } = await supabase
+    .from('collection_personas')
+    .select(`
+      personas (*)
+    `)
+    .eq('collection_id', collectionId);
+
+  if (error) {
+    console.error('Error fetching personas by collection:', error);
+    throw error;
+  }
+
+  return data?.map(item => item.personas).filter(Boolean) || [];
+};
+
 // Hook for React Query integration
 export const usePersonas = () => {
   // This would typically use React Query, but for now just return the function

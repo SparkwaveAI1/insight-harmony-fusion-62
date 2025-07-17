@@ -48,4 +48,5 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return authChecked && user ? <>{children}</> : null;
 };
 
+export { ProtectedRoute };
 export default ProtectedRoute;
