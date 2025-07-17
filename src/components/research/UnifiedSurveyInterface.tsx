@@ -46,8 +46,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   // Initialize project from URL params
   React.useEffect(() => {
     const urlProjectId = searchParams.get('project');
+    console.log('URL Project ID detected:', urlProjectId);
     if (urlProjectId) {
       setProjectId(urlProjectId);
+      console.log('Project ID set to:', urlProjectId);
     }
   }, [searchParams]);
 
@@ -136,6 +138,23 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       title: "Template Loaded",
       description: `${template_data.name} template has been loaded.`,
     });
+  };
+
+  // Question management
+  const addQuestion = () => {
+    setQuestions([...questions, '']);
+  };
+
+  const updateQuestion = (index: number, value: string) => {
+    const newQuestions = [...questions];
+    newQuestions[index] = value;
+    setQuestions(newQuestions);
+  };
+
+  const removeQuestion = (index: number) => {
+    if (questions.length > 1) {
+      setQuestions(questions.filter((_, i) => i !== index));
+    }
   };
 
   // CSV import handling
@@ -256,10 +275,21 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
   // Survey creation
   const handleCreateSurvey = () => {
+    console.log('Creating survey with project ID:', projectId);
+    
     if (!name.trim()) {
       toast({
         title: "Survey Name Required",
         description: "Please provide a survey name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!projectId) {
+      toast({
+        title: "Project Required",
+        description: "Please select a project before creating the survey.",
         variant: "destructive",
       });
       return;
@@ -281,25 +311,44 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       questions: validQuestions
     };
 
+    console.log('Survey data created:', survey);
     setSurveyData(survey);
     setStep('personas');
   };
 
-  // Persona selection
+  // Persona selection with improved error handling
   const handlePersonasSelected = async (personas: string[]): Promise<boolean> => {
+    console.log('Starting persona selection with:', personas);
+    console.log('Current project ID:', projectId);
+    
+    if (!projectId) {
+      const errorMsg = 'No project selected. Please go back and select a project.';
+      console.error(errorMsg);
+      toast({
+        title: "Project Required",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      return false;
+    }
+
     setSelectedPersonas(personas);
     
     try {
-      const success = await createSession(personas);
+      console.log('Calling createSession with project ID:', projectId);
+      const success = await createSession(personas, projectId);
+      
       if (!success) {
+        console.error('createSession returned false');
         toast({
-          title: "Error",
-          description: "Failed to start research session",
+          title: "Session Creation Failed",
+          description: "Failed to create research session. Please try again.",
           variant: "destructive"
         });
         return false;
       }
       
+      console.log('Session created successfully, moving to execution step');
       setStep('execution');
       
       toast({
@@ -309,10 +358,11 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       
       return true;
     } catch (error) {
-      console.error('Error starting survey:', error);
+      console.error('Error in handlePersonasSelected:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
-        title: "Error",
-        description: "Failed to start survey session",
+        title: "Session Creation Error",
+        description: `Failed to start survey session: ${errorMessage}`,
         variant: "destructive"
       });
       return false;
@@ -339,12 +389,18 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
               </div>
             )}
           </div>
+          {projectId && (
+            <div className="flex items-center justify-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-md border border-green-200">
+              <FileCheck className="w-4 h-4" />
+              Project connected: {projectId}
+            </div>
+          )}
         </div>
 
         <PersonaLoader
           maxPersonas={10}
           onStartSession={handlePersonasSelected}
-          isLoading={false}
+          isLoading={isLoading}
         />
 
         <div className="flex justify-center">
@@ -409,12 +465,12 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
           {/* Project Selection */}
           <div>
-            <Label>Project Selection</Label>
+            <Label>Project Selection *</Label>
             <div className="mt-1">
               {projectId ? (
                 <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
                   <FileCheck className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-800">Project connected</span>
+                  <span className="text-sm text-green-800">Project connected: {projectId}</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -425,7 +481,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
                 </div>
               ) : (
                 <ProjectSelector
-                  onProjectSelected={(id) => setProjectId(id)}
+                  onProjectSelected={(id) => {
+                    console.log('Project selected:', id);
+                    setProjectId(id);
+                  }}
                   showCreateOption={true}
                 />
               )}
@@ -448,7 +507,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           {/* Questions Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Survey Questions</Label>
+              <Label>Survey Questions *</Label>
               <div className="flex gap-2">
                 <Dialog open={showCSVDialog} onOpenChange={setShowCSVDialog}>
                   <DialogTrigger asChild>
@@ -702,7 +761,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
                 Back
               </Button>
             )}
-            <Button onClick={handleCreateSurvey} disabled={!name.trim() || questions.filter(q => q.trim()).length === 0}>
+            <Button 
+              onClick={handleCreateSurvey} 
+              disabled={!name.trim() || questions.filter(q => q.trim()).length === 0 || !projectId}
+            >
               Create Survey
             </Button>
           </div>

@@ -30,6 +30,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
   // Load project documents when projectId changes
   useEffect(() => {
     if (projectId) {
+      console.log('Loading project documents for project:', projectId);
       loadProjectDocuments();
     }
   }, [projectId]);
@@ -38,7 +39,9 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     if (!projectId) return;
     
     try {
+      console.log('Fetching documents for project:', projectId);
       const docs = await getProjectDocuments(projectId);
+      console.log('Loaded project documents:', docs.length);
       setProjectDocuments(docs);
     } catch (error) {
       console.error('Error loading project documents:', error);
@@ -46,23 +49,61 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
   };
 
   const createSession = async (personaIds: string[], selectedProjectId?: string): Promise<boolean> => {
+    console.log('=== CREATE SESSION START ===');
+    console.log('Persona IDs:', personaIds);
+    console.log('Selected Project ID:', selectedProjectId);
+    console.log('Hook Project ID:', projectId);
+    
     try {
       setIsLoading(true);
       
       // Use provided projectId or the one from props
       const useProjectId = selectedProjectId || projectId;
+      console.log('Final Project ID to use:', useProjectId);
       
       if (!useProjectId) {
-        throw new Error('Project ID is required');
+        const error = 'Project ID is required to create a research session';
+        console.error(error);
+        toast.error(error);
+        return false;
+      }
+
+      if (!personaIds || personaIds.length === 0) {
+        const error = 'At least one persona must be selected';
+        console.error(error);
+        toast.error(error);
+        return false;
       }
 
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Auth error:', userError);
+        toast.error('Authentication error');
+        return false;
+      }
+      
       if (!user) {
-        throw new Error('User must be authenticated');
+        const error = 'User must be authenticated';
+        console.error(error);
+        toast.error(error);
+        return false;
+      }
+
+      console.log('User authenticated:', user.id);
+
+      // Verify project exists and user has access
+      try {
+        const project = await getProjectById(useProjectId);
+        console.log('Project verified:', project?.name);
+      } catch (projectError) {
+        console.error('Project verification failed:', projectError);
+        toast.error('Failed to access project. Please check your permissions.');
+        return false;
       }
 
       // Create conversation session using existing conversations table
+      console.log('Creating conversation session...');
       const { data: session, error: sessionError } = await supabase
         .from('conversations')
         .insert({
@@ -76,31 +117,51 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         .select()
         .single();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error('Session creation error:', sessionError);
+        toast.error(`Failed to create session: ${sessionError.message}`);
+        return false;
+      }
 
+      console.log('Session created:', session.id);
       setSessionId(session.id);
 
       // Load personas using the existing database query
+      console.log('Loading personas...');
       const { data: personasData, error: personasError } = await supabase
         .from('personas')
         .select('*')
         .in('persona_id', personaIds);
 
-      if (personasError) throw personasError;
+      if (personasError) {
+        console.error('Personas loading error:', personasError);
+        toast.error(`Failed to load personas: ${personasError.message}`);
+        return false;
+      }
+
+      if (!personasData || personasData.length === 0) {
+        console.error('No personas found with provided IDs');
+        toast.error('No personas found. Please check your selection.');
+        return false;
+      }
 
       // Use the existing dbPersonaToPersona mapper to ensure proper type conversion
-      const mappedPersonas: Persona[] = (personasData || []).map(dbPersona => 
+      const mappedPersonas: Persona[] = personasData.map(dbPersona => 
         dbPersonaToPersona(dbPersona)
       );
 
+      console.log('Personas loaded:', mappedPersonas.length);
       setLoadedPersonas(mappedPersonas);
       setMessages([]);
 
-      toast.success('Research session started successfully');
+      toast.success(`Research session started successfully with ${mappedPersonas.length} personas`);
+      console.log('=== CREATE SESSION SUCCESS ===');
       return true;
     } catch (error) {
       console.error('Error creating research session:', error);
-      toast.error('Failed to create research session');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to create research session: ${errorMessage}`);
+      console.log('=== CREATE SESSION FAILED ===');
       return false;
     } finally {
       setIsLoading(false);

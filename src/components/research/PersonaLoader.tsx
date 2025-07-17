@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { Collection } from '@/services/collections/types';
 
 interface PersonaLoaderProps {
   maxPersonas: number;
-  onStartSession: (selectedPersonas: string[]) => void;
+  onStartSession: (selectedPersonas: string[]) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -28,18 +29,19 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
   const [selectedCollection, setSelectedCollection] = useState<string>('all');
   const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
   const [isLoadingCollections, setIsLoadingCollections] = useState(true);
+  const [isStartingSession, setIsStartingSession] = useState(false);
 
   // Fetch collections on component mount
   useEffect(() => {
     const fetchCollections = async () => {
       try {
         setIsLoadingCollections(true);
-        console.log('Fetching collections for research session');
+        console.log('PersonaLoader: Fetching collections for research session');
         const allCollections = await getUserCollections();
-        console.log(`Loaded ${allCollections.length} collections`);
+        console.log(`PersonaLoader: Loaded ${allCollections.length} collections`);
         setCollections(allCollections);
       } catch (error) {
-        console.error('Error fetching collections:', error);
+        console.error('PersonaLoader: Error fetching collections:', error);
       } finally {
         setIsLoadingCollections(false);
       }
@@ -53,25 +55,25 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     const fetchPersonas = async () => {
       try {
         setIsLoadingPersonas(true);
-        console.log('Fetching personas for collection:', selectedCollection);
+        console.log('PersonaLoader: Fetching personas for collection:', selectedCollection);
         
         let allPersonas: Persona[] = [];
         
         if (selectedCollection === 'all') {
           // Fetch all personas
           allPersonas = await getAllPersonas();
-          console.log(`Loaded ${allPersonas.length} personas (all)`);
+          console.log(`PersonaLoader: Loaded ${allPersonas.length} personas (all)`);
         } else {
           // Fetch personas from selected collection
           allPersonas = await getPersonasByCollection(selectedCollection);
-          console.log(`Loaded ${allPersonas.length} personas from collection ${selectedCollection}`);
+          console.log(`PersonaLoader: Loaded ${allPersonas.length} personas from collection ${selectedCollection}`);
         }
         
         setPersonas(allPersonas);
         // Clear selected personas when collection changes
         setSelectedPersonas([]);
       } catch (error) {
-        console.error('Error fetching personas:', error);
+        console.error('PersonaLoader: Error fetching personas:', error);
       } finally {
         setIsLoadingPersonas(false);
       }
@@ -147,9 +149,28 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     });
   };
 
-  const handleStartSession = () => {
-    if (selectedPersonas.length > 0) {
-      onStartSession(selectedPersonas);
+  const handleStartSession = async () => {
+    if (selectedPersonas.length === 0) {
+      console.warn('PersonaLoader: No personas selected');
+      return;
+    }
+
+    console.log('PersonaLoader: Starting session with personas:', selectedPersonas);
+    setIsStartingSession(true);
+    
+    try {
+      const success = await onStartSession(selectedPersonas);
+      console.log('PersonaLoader: Session start result:', success);
+      
+      if (!success) {
+        console.error('PersonaLoader: Session creation failed');
+        setIsStartingSession(false);
+      }
+      // If successful, the parent component will handle navigation
+      // so we don't reset isStartingSession here
+    } catch (error) {
+      console.error('PersonaLoader: Error starting session:', error);
+      setIsStartingSession(false);
     }
   };
 
@@ -165,6 +186,8 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
       </Card>
     );
   }
+
+  const isSessionLoading = isLoading || isStartingSession;
 
   return (
     <Card className="w-full">
@@ -231,7 +254,7 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
                     isSelected ? 'ring-2 ring-primary bg-primary/5' : 
                     canSelect ? 'hover:bg-muted/50' : 'opacity-50 cursor-not-allowed'
                   }`}
-                  onClick={() => canSelect && handlePersonaSelect(persona.persona_id)}
+                  onClick={() => canSelect && !isSessionLoading && handlePersonaSelect(persona.persona_id)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
@@ -318,12 +341,19 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
         <div className="flex justify-center pt-4">
           <Button
             onClick={handleStartSession}
-            disabled={selectedPersonas.length === 0 || isLoading}
+            disabled={selectedPersonas.length === 0 || isSessionLoading}
             size="lg"
           >
-            {isLoading ? 'Starting Session...' : 
-             selectedPersonas.length > 0 ? `Start Research Session with ${selectedPersonas.length} Persona${selectedPersonas.length > 1 ? 's' : ''}` : 
-             'Select at least 1 Persona to Continue'}
+            {isSessionLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Starting Session...
+              </div>
+            ) : selectedPersonas.length > 0 ? (
+              `Start Research Session with ${selectedPersonas.length} Persona${selectedPersonas.length > 1 ? 's' : ''}`
+            ) : (
+              'Select at least 1 Persona to Continue'
+            )}
           </Button>
         </div>
       </CardContent>
