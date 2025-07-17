@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
@@ -9,7 +10,8 @@ import { useResearchSession } from './hooks/useResearchSession';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileUp, Plus, Users, FileText, ArrowLeft, Play } from 'lucide-react';
+import { FileUp, Plus, Users, FileText, ArrowLeft, Upload, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
 interface SurveyData {
@@ -27,7 +29,6 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
   const [surveyData, setSurveyData] = useState<SurveyData | null>(null);
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [showCSVDialog, setShowCSVDialog] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -54,14 +55,6 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
     sendMessage,
     sendToPersona
   } = useResearchSession(projectId || undefined);
-
-  const sessionData = {
-    sessionId,
-    loadedPersonas,
-    projectDocuments,
-    messages,
-    isLoading
-  };
 
   const handleSurveyCreated = (survey: SurveyData) => {
     setSurveyData(survey);
@@ -104,26 +97,9 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
       
       setStep('execution');
       
-      // Wait a moment for session to be fully established, then send first question
-      if (surveyData?.questions.length) {
-        setTimeout(async () => {
-          try {
-            await sendMessage(surveyData.questions[0]);
-            setCurrentQuestionIndex(1);
-          } catch (error) {
-            console.error('Error sending first question:', error);
-            toast({
-              title: "Warning",
-              description: "Session started but first question failed to send. You can manually send it.",
-              variant: "destructive"
-            });
-          }
-        }, 1500); // Give session time to establish
-      }
-      
       toast({
-        title: "Survey Started",
-        description: `Survey started with ${personas.length} personas.`,
+        title: "Survey Session Started",
+        description: `Survey ready to run with ${personas.length} personas.`,
       });
       
       return true;
@@ -136,30 +112,6 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
       });
       return false;
     }
-  };
-
-  const handleSurveyMessage = async (message: string, imageFile?: File | null) => {
-    await sendMessage(message, imageFile);
-    
-    // Auto-advance to next question if in survey mode and more questions exist
-    if (surveyData && currentQuestionIndex < surveyData.questions.length) {
-      setTimeout(async () => {
-        await sendMessage(surveyData.questions[currentQuestionIndex]);
-        setCurrentQuestionIndex(prev => prev + 1);
-      }, 3000); // Wait 3 seconds before next question
-    }
-  };
-
-  const handleSurveyComplete = () => {
-    toast({
-      title: "Survey Complete",
-      description: "All survey responses have been collected.",
-    });
-    // Reset to start a new survey
-    setStep('project');
-    setSurveyData(null);
-    setSelectedPersonas([]);
-    setCurrentQuestionIndex(0);
   };
 
   const handleProjectSelected = (selectedProjectId: string) => {
@@ -175,13 +127,22 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
           Create a conversational survey to gather qualitative insights from multiple personas. 
           Build questions manually or import from CSV.
         </p>
+        {hasProject && projectDocuments.length > 0 && (
+          <Alert>
+            <FileText className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Knowledge Base Available:</strong> {projectDocuments.length} document{projectDocuments.length !== 1 ? 's' : ''} will be available to personas during the survey.
+            </AlertDescription>
+          </Alert>
+        )}
         {!hasProject && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md max-w-2xl mx-auto">
-            <p className="text-sm text-amber-800">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
               <strong>No Project Connected:</strong> Survey results can be exported but not saved. 
-              To save results, connect this to a project.
-            </p>
-          </div>
+              To save results and upload supporting documents, connect this to a project.
+            </AlertDescription>
+          </Alert>
         )}
       </div>
 
@@ -231,6 +192,7 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
       {onBack && (
         <div className="flex justify-center">
           <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Research
           </Button>
         </div>
@@ -250,6 +212,12 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
             <FileText className="w-4 h-4" />
             {surveyData?.questions.length} questions
           </div>
+          {hasProject && projectDocuments.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              {projectDocuments.length} support documents
+            </div>
+          )}
         </div>
       </div>
 
@@ -261,6 +229,7 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
 
       <div className="flex justify-center">
         <Button variant="outline" onClick={() => setStep('setup')}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Questions
         </Button>
       </div>
@@ -271,7 +240,7 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
     if (!surveyData) return null;
     
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-6">
         <ResearchSurveyExecution
           surveyData={surveyData}
           selectedPersonas={selectedPersonas}
@@ -279,7 +248,12 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
           projectId={projectId}
           sendMessage={sendMessage}
           sendToPersona={sendToPersona}
-          onComplete={handleSurveyComplete}
+          onComplete={() => {
+            // Reset to start a new survey
+            setStep('project');
+            setSurveyData(null);
+            setSelectedPersonas([]);
+          }}
           onBack={() => setStep('personas')}
         />
       </div>
@@ -288,7 +262,9 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
 
   const renderProjectStep = () => (
     <ProjectSelector 
-      onProjectSelected={handleProjectSelected}
+      onProjectSelected={handleProject
+
+}
       showCreateOption={true}
     />
   );

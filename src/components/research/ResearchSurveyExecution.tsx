@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Download, Users, MessageSquare, Play, Pause } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
-import { getAllPersonas } from '@/services/persona';
-import { Persona } from '@/services/persona/types';
+import { ArrowLeft, FileText, Upload, Play, Pause, Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { uploadKnowledgeBaseDocument } from '@/services/collections';
+import { toast } from 'sonner';
 
 interface SurveyData {
   name: string;
@@ -15,27 +16,19 @@ interface SurveyData {
   questions: string[];
 }
 
-interface PersonaResponse {
-  personaId: string;
-  questionIndex: number;
-  question: string;
-  response: string;
-  timestamp: Date;
-}
-
-interface ResearchSurveyExecutionProps {
+interface SurveyExecutionProps {
   surveyData: SurveyData;
   selectedPersonas: string[];
-  sessionId?: string;
-  projectId?: string;
-  sendMessage: (message: string) => Promise<void>;
+  sessionId: string | null;
+  projectId: string | null;
+  sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
   sendToPersona: (personaId: string) => Promise<void>;
   onComplete: () => void;
   onBack: () => void;
 }
 
-export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = ({ 
-  surveyData, 
+export const ResearchSurveyExecution: React.FC<SurveyExecutionProps> = ({
+  surveyData,
   selectedPersonas,
   sessionId,
   projectId,
@@ -44,524 +37,309 @@ export const ResearchSurveyExecution: React.FC<ResearchSurveyExecutionProps> = (
   onComplete,
   onBack
 }) => {
-  const [currentStep, setCurrentStep] = useState<'running' | 'results'>('running');
-  const [currentPersonaIndex, setCurrentPersonaIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [responses, setResponses] = useState<PersonaResponse[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [responses, setResponses] = useState<Map<string, string[]>>(new Map());
+  const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [errorCount, setErrorCount] = useState(0);
-  const [researchSurveyId, setResearchSurveyId] = useState<string | null>(null);
-  const [researchSessionId, setResearchSessionId] = useState<string | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
-  const { toast } = useToast();
+  const [completedPersonas, setCompletedPersonas] = useState<Set<string>>(new Set());
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   const totalQuestions = surveyData.questions.length;
   const totalPersonas = selectedPersonas.length;
-  const totalInteractions = totalQuestions * totalPersonas;
-  const completedInteractions = responses.length;
-  const progressPercentage = (completedInteractions / totalInteractions) * 100;
+  const progress = ((currentQuestionIndex) / totalQuestions) * 100;
 
-  const currentPersonaId = selectedPersonas[currentPersonaIndex];
-  const currentQuestion = surveyData.questions[currentQuestionIndex];
-  const isComplete = completedInteractions === totalInteractions;
-
-  // Load personas and initialize research survey session in database
-  useEffect(() => {
-    const initializeResearchSurvey = async () => {
-      if (!sessionId || !projectId) return;
-      
-      try {
-        const user = await supabase.auth.getUser();
-        if (!user.data.user) throw new Error('No authenticated user');
-
-        // Load all personas and filter for selected ones
-        console.log('Loading personas for survey...');
-        const allPersonas = await getAllPersonas();
-        const filteredPersonas = allPersonas.filter(p => selectedPersonas.includes(p.persona_id));
-        setLoadedPersonas(filteredPersonas);
-        console.log(`Loaded ${filteredPersonas.length} personas for survey`);
-
-        // First, create the research survey record
-        const { data: surveyRecord, error: surveyError } = await supabase
-          .from('research_surveys')
-          .insert({
-            project_id: projectId,
-            name: surveyData.name,
-            description: surveyData.description || '',
-            questions: surveyData.questions,
-            user_id: user.data.user.id,
-            status: 'active'
-          })
-          .select('id')
-          .single();
-          
-        if (surveyError) throw surveyError;
-        setResearchSurveyId(surveyRecord.id);
-
-        // Then create the research survey session
-        const { data: sessionRecord, error: sessionError } = await supabase
-          .from('research_survey_sessions')
-          .insert({
-            research_survey_id: surveyRecord.id,
-            conversation_id: sessionId, // Link to the conversation/research session
-            selected_personas: selectedPersonas,
-            user_id: user.data.user.id,
-            status: 'pending',
-            started_at: new Date().toISOString()
-          })
-          .select('id')
-          .single();
-          
-        if (sessionError) throw sessionError;
-        setResearchSessionId(sessionRecord.id);
-        
-        toast({
-          title: "Research Survey Initialized",
-          description: "Ready to start automated processing.",
-        });
-      } catch (error) {
-        console.error('Error initializing research survey:', error);
-        toast({
-          title: "Setup Error",
-          description: "Failed to initialize research survey. Please try again.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    initializeResearchSurvey();
-  }, [sessionId, selectedPersonas, surveyData, projectId]);
-
-  // Generate persona response using the proper persona API
-  const generatePersonaResponse = async (personaId: string, question: string): Promise<string> => {
-    console.log('🎯 === GENERATING PERSONA RESPONSE ===');
-    console.log('🔍 Persona ID requested:', personaId);
-    console.log('📝 Question:', question);
-    console.log('👥 Available personas count:', loadedPersonas.length);
-    console.log('📋 Available persona IDs:', loadedPersonas.map(p => p.persona_id));
-    
-    // Find the persona in our loaded personas
-    const persona = loadedPersonas.find(p => p.persona_id === personaId);
-    console.log('🔍 Found persona:', persona ? `YES - ${persona.name}` : 'NO - NOT FOUND');
-    
-    if (!persona) {
-      console.error('❌ Persona not found in loaded personas!');
-      console.error('❌ Requested ID:', personaId);
-      console.error('❌ Available IDs:', loadedPersonas.map(p => p.persona_id));
-      throw new Error(`Persona ${personaId} not found in loaded personas`);
+  const handleFileUpload = async () => {
+    if (!projectId || !uploadFile || !uploadTitle.trim()) {
+      toast.error('Please provide a title and select a file');
+      return;
     }
+
+    try {
+      const document = await uploadKnowledgeBaseDocument(
+        projectId,
+        uploadTitle.trim(),
+        undefined,
+        uploadFile
+      );
+
+      if (document) {
+        toast.success('Document uploaded successfully');
+        setShowUploadDialog(false);
+        setUploadTitle('');
+        setUploadFile(null);
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('Failed to upload document');
+    }
+  };
+
+  const startSurvey = async () => {
+    if (!sessionId || surveyData.questions.length === 0) {
+      toast.error('Survey session not ready');
+      return;
+    }
+
+    setIsRunning(true);
+    setIsPaused(false);
     
     try {
-      console.log('📡 About to call sendMessageToPersona...');
-      console.log('📡 Persona data preview:', { 
-        id: persona.persona_id, 
-        name: persona.name,
-        hasTraitProfile: !!persona.trait_profile 
-      });
+      // Send first question to all personas
+      const firstQuestion = surveyData.questions[0];
+      await sendMessage(`Survey Question ${currentQuestionIndex + 1}/${totalQuestions}: ${firstQuestion}`);
       
-      // Create survey context
-      const surveyContext = `Research Survey: ${surveyData.name}
-${surveyData.description ? `Description: ${surveyData.description}` : ''}
-Question ${currentQuestionIndex + 1} of ${surveyData.questions.length}
-Context: This is a research survey where you should provide thoughtful, authentic responses based on your demographic profile and personality traits.`;
-
-      // Generate response using the proper persona API with validation
-      const response = await sendMessageToPersona(
-        personaId,
-        question,
-        [], // No previous messages for survey questions
-        persona,
-        'research', // Use research mode for survey context
-        surveyContext,
-        undefined, // No image data
-        3 // Max 3 retries for quality responses
-      );
-      
-      console.log('✅ Response received successfully!');
-      console.log('✅ Response length:', response?.length);
-      console.log('✅ Response preview:', response?.substring(0, 100) + '...');
-      return response;
+      // Give personas time to respond, then collect responses
+      setTimeout(() => {
+        collectPersonaResponses();
+      }, 3000);
     } catch (error) {
-      console.error('❌ Error in sendMessageToPersona:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
-      throw error;
+      console.error('Error starting survey:', error);
+      toast.error('Failed to start survey');
+      setIsRunning(false);
     }
   };
 
-  // Automated processing loop
-  useEffect(() => {
-    if (!isProcessing || isPaused || currentStep === 'results' || !researchSessionId || !loadedPersonas.length) return;
+  const collectPersonaResponses = async () => {
+    if (isPaused) return;
 
-    const processNextQuestion = async () => {
-      console.log('⚡ === PROCESSING NEXT QUESTION ===');
-      console.log('⚡ Current persona index:', currentPersonaIndex);
-      console.log('⚡ Current question index:', currentQuestionIndex);
-      console.log('⚡ Current persona ID:', currentPersonaId);
-      console.log('⚡ Current question:', currentQuestion);
-      console.log('⚡ Research session ID:', researchSessionId);
+    for (const personaId of selectedPersonas) {
+      if (completedPersonas.has(personaId)) continue;
       
       try {
-        console.log('📞 About to call generatePersonaResponse...');
-        const response = await generatePersonaResponse(currentPersonaId, currentQuestion);
-        console.log('📞 Got response back from generatePersonaResponse');
+        await sendToPersona(personaId);
         
-        const newResponse: PersonaResponse = {
-          personaId: currentPersonaId,
-          questionIndex: currentQuestionIndex,
-          question: currentQuestion,
-          response: response,
-          timestamp: new Date()
-        };
-
-        console.log('💾 Saving to database...');
-        // Save to database using research survey tables
-        const { error: dbError } = await supabase
-          .from('research_survey_responses')
-          .insert({
-            session_id: researchSessionId,
-            persona_id: currentPersonaId,
-            question_index: currentQuestionIndex,
-            question_text: currentQuestion,
-            response_text: response
-          });
-
-        if (dbError) {
-          console.error('❌ Database error:', dbError);
-          toast({
-            title: "Warning", 
-            description: "Response generated but failed to save to database.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('✅ Saved to database successfully');
-        }
-
-        console.log('📝 Updating responses state...');
-        setResponses(prev => [...prev, newResponse]);
-        setErrorCount(0); // Reset error count on success
-
-        // Move to next question or persona
-        console.log('➡️ Moving to next...');
-        if (currentQuestionIndex < totalQuestions - 1) {
-          console.log('➡️ Moving to next question');
-          setCurrentQuestionIndex(prev => prev + 1);
-        } else if (currentPersonaIndex < totalPersonas - 1) {
-          console.log('➡️ Moving to next persona');
-          setCurrentPersonaIndex(prev => prev + 1);
-          setCurrentQuestionIndex(0);
-        } else {
-          // All done
-          console.log('🎉 ALL DONE! Survey complete');
-          setIsProcessing(false);
-          setCurrentStep('results');
-          
-          // Update research survey session status
-          await supabase
-            .from('research_survey_sessions')
-            .update({ status: 'completed', completed_at: new Date().toISOString() })
-            .eq('id', researchSessionId);
-            
-          toast({
-            title: "Survey Complete",
-            description: `Collected ${totalInteractions} responses from ${totalPersonas} personas.`,
-          });
-        }
-      } catch (error) {
-        console.error('❌ Error in automated processing:', error);
-        console.error('❌ Error type:', typeof error);
-        console.error('❌ Error details:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
+        // Update responses map
+        setResponses(prev => {
+          const newMap = new Map(prev);
+          const personaResponses = newMap.get(personaId) || [];
+          personaResponses.push(`Response to Q${currentQuestionIndex + 1}`);
+          newMap.set(personaId, personaResponses);
+          return newMap;
         });
         
-        setErrorCount(prev => prev + 1);
-        
-        if (errorCount >= 3) {
-          console.error('❌ Too many errors, pausing processing');
-          setIsProcessing(false);
-          setIsPaused(true);
-          toast({
-            title: "Processing Paused",
-            description: "Multiple errors occurred. Review and resume manually.",
-            variant: "destructive"
-          });
-        } else {
-          console.log('🔄 Retrying after error...');
-          toast({
-            title: "Retry",
-            description: `Error occurred, retrying... (${errorCount + 1}/3)`,
-            variant: "destructive"
-          });
-        }
+        // Small delay between personas to avoid overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`Error getting response from persona ${personaId}:`, error);
       }
-    };
+    }
 
-    // Add delay between questions to avoid overwhelming the system
-    const timer = setTimeout(processNextQuestion, 2000);
-    return () => clearTimeout(timer);
-  }, [isProcessing, isPaused, currentStep, researchSessionId, currentPersonaIndex, currentQuestionIndex, errorCount, loadedPersonas]);
-
-  const startAutomatedProcessing = () => {
-    console.log('🚀 Starting automated processing...');
-    console.log('Research session ID:', researchSessionId);
-    console.log('Loaded personas:', loadedPersonas.length);
-    console.log('Survey questions:', surveyData.questions.length);
-    
-    setIsProcessing(true);
-    setIsPaused(false);
-    setErrorCount(0);
+    // Move to next question or complete
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setTimeout(() => {
+        nextQuestion();
+      }, 2000);
+    } else {
+      completeSurvey();
+    }
   };
 
-  const pauseProcessing = () => {
+  const nextQuestion = async () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      
+      const nextQuestion = surveyData.questions[nextIndex];
+      await sendMessage(`Survey Question ${nextIndex + 1}/${totalQuestions}: ${nextQuestion}`);
+      
+      setTimeout(() => {
+        collectPersonaResponses();
+      }, 3000);
+    }
+  };
+
+  const pauseSurvey = () => {
     setIsPaused(true);
-    setIsProcessing(false);
+    toast.info('Survey paused');
   };
 
-  const resumeProcessing = () => {
+  const resumeSurvey = () => {
     setIsPaused(false);
-    setIsProcessing(true);
+    toast.info('Survey resumed');
+    collectPersonaResponses();
+  };
+
+  const completeSurvey = () => {
+    setIsRunning(false);
+    toast.success('Survey completed successfully!');
+    
+    // Mark all personas as completed
+    setCompletedPersonas(new Set(selectedPersonas));
   };
 
   const exportResults = () => {
-    const csvContent = [
-      ['Persona ID', 'Question Index', 'Question', 'Response', 'Timestamp'],
-      ...responses.map(r => [
-        r.personaId,
-        r.questionIndex.toString(),
-        `"${r.question.replace(/"/g, '""')}"`,
-        `"${r.response.replace(/"/g, '""')}"`,
-        r.timestamp.toISOString()
-      ])
-    ].map(row => row.join(',')).join('\n');
+    const results = {
+      surveyName: surveyData.name,
+      totalQuestions: totalQuestions,
+      totalPersonas: totalPersonas,
+      responses: Object.fromEntries(responses),
+      completedAt: new Date().toISOString()
+    };
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${surveyData.name.replace(/[^a-zA-Z0-9]/g, '_')}_results.csv`;
+    a.download = `survey-results-${surveyData.name}-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
-    toast({
-      title: "Export Complete",
-      description: "Survey results have been downloaded as CSV.",
-    });
   };
-
-  if (currentStep === 'results') {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              Survey Complete
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{totalQuestions}</div>
-                <div className="text-sm text-blue-700">Questions Asked</div>
-              </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{totalPersonas}</div>
-                <div className="text-sm text-green-700">Personas Surveyed</div>
-              </div>
-              <div className="p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{responses.length}</div>
-                <div className="text-sm text-purple-700">Total Responses</div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={exportResults} className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Export Results (CSV)
-              </Button>
-              <Button variant="outline" onClick={onComplete}>
-                Create New Survey
-              </Button>
-              <Button variant="outline" onClick={onBack}>
-                Back to Persona Selection
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Response Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Response Preview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {responses.slice(-5).map((response, index) => (
-                <div key={index} className="p-3 border rounded-lg">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <Users className="w-4 h-4" />
-                    Persona {response.personaId}
-                    <MessageSquare className="w-4 h-4 ml-2" />
-                    Question {response.questionIndex + 1}
-                  </div>
-                  <div className="text-sm font-medium mb-1">{response.question}</div>
-                  <div className="text-sm text-muted-foreground">{response.response.substring(0, 200)}...</div>
-                </div>
-              ))}
-            </div>
-            {responses.length > 5 && (
-              <div className="text-sm text-muted-foreground text-center mt-2">
-                Showing last 5 responses. Download CSV for complete results.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {/* Progress Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Survey Progress</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Survey: {surveyData.name}
+            </CardTitle>
+            <div className="flex gap-2">
+              {projectId && (
+                <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Document
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Upload Supporting Document</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="upload-title">Document Title</Label>
+                        <Input
+                          id="upload-title"
+                          value={uploadTitle}
+                          onChange={(e) => setUploadTitle(e.target.value)}
+                          placeholder="e.g., Survey Requirements, Project Brief"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="upload-file">File</Label>
+                        <Input
+                          id="upload-file"
+                          type="file"
+                          onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                          accept=".pdf,.doc,.docx,.txt,.md,.csv"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={handleFileUpload} disabled={!uploadTitle.trim() || !uploadFile}>
+                          Upload
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+              <Button variant="outline" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            </div>
+          </div>
+          
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Overall Progress</span>
-              <span>{completedInteractions}/{totalInteractions} responses</span>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{totalPersonas} personas • {totalQuestions} questions</span>
+              <span>{Math.round(progress)}% complete</span>
             </div>
-            <Progress value={progressPercentage} className="w-full" />
+            <Progress value={progress} className="w-full" />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <div className="font-medium">Current Persona:</div>
-              <div className="text-muted-foreground">
-                {currentPersonaId} ({currentPersonaIndex + 1}/{totalPersonas})
-              </div>
-            </div>
-            <div>
-              <div className="font-medium">Current Question:</div>
-              <div className="text-muted-foreground">
-                Question {currentQuestionIndex + 1}/{totalQuestions}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Current Question */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Question {currentQuestionIndex + 1} of {totalQuestions}
-          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="font-medium">{currentQuestion}</div>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            Asking persona: <span className="font-medium">{currentPersonaId}</span>
-          </div>
-
-          <div className="flex gap-3">
-            {!isProcessing && !isComplete && (
-              <Button 
-                onClick={startAutomatedProcessing}
-                size="lg"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Start Automated Survey
-              </Button>
-            )}
-            
-            {isProcessing && !isPaused && (
-              <Button 
-                onClick={pauseProcessing}
-                variant="outline"
-                size="lg"
-              >
-                <Pause className="w-4 h-4 mr-2" />
-                Pause Processing
-              </Button>
-            )}
-
-            {isPaused && !isComplete && (
-              <Button 
-                onClick={resumeProcessing}
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Resume Processing
-              </Button>
-            )}
-            
-            <Button variant="outline" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </div>
-
-          {isProcessing && (
-            <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">
-                🤖 Automated processing in progress... Persona {currentPersonaId} is analyzing the question.
-              </div>
-              <div className="text-xs text-muted-foreground">
-                This will continue automatically until all {totalInteractions} responses are collected.
+        
+        <CardContent className="space-y-6">
+          {!isRunning && currentQuestionIndex === 0 && (
+            <div className="text-center space-y-4">
+              <div className="p-6 bg-muted rounded-lg">
+                <h3 className="font-medium mb-2">Ready to Start Survey</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Survey will be conducted with {totalPersonas} personas across {totalQuestions} questions.
+                  Each persona will respond to all questions in sequence.
+                </p>
+                <Button onClick={startSurvey} className="flex items-center gap-2">
+                  <Play className="w-4 h-4" />
+                  Start Survey
+                </Button>
               </div>
             </div>
           )}
 
-          {isPaused && (
-            <div className="text-sm text-amber-600">
-              ⏸️ Processing paused. Click "Resume Processing" to continue.
+          {isRunning && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium">
+                  Current Question ({currentQuestionIndex + 1}/{totalQuestions})
+                </h3>
+                <div className="flex gap-2">
+                  {!isPaused ? (
+                    <Button variant="outline" size="sm" onClick={pauseSurvey}>
+                      <Pause className="w-4 h-4 mr-2" />
+                      Pause
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={resumeSurvey}>
+                      <Play className="w-4 h-4 mr-2" />
+                      Resume
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="font-medium text-sm mb-2">Question:</p>
+                <p>{surveyData.questions[currentQuestionIndex]}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedPersonas.map(personaId => (
+                  <div key={personaId} className="p-3 border rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-sm">Persona {personaId.slice(-4)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {responses.get(personaId)?.length || 0}/{totalQuestions} responses
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {completedPersonas.has(personaId) ? 'Completed' : 'In Progress'}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          {errorCount > 0 && errorCount < 3 && (
-            <div className="text-sm text-orange-600">
-              ⚠️ {errorCount} error(s) occurred. Retrying automatically...
+          {completedPersonas.size === totalPersonas && totalPersonas > 0 && (
+            <div className="text-center space-y-4">
+              <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
+                <h3 className="font-medium mb-2 text-green-800">Survey Complete!</h3>
+                <p className="text-sm text-green-700 mb-4">
+                  All {totalPersonas} personas have completed the {totalQuestions} question survey.
+                </p>
+                <div className="flex justify-center gap-2">
+                  <Button onClick={exportResults} variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Results
+                  </Button>
+                  <Button onClick={onComplete}>
+                    View Results
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Recent Responses */}
-      {responses.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Responses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {responses.slice(-3).reverse().map((response, index) => (
-                <div key={index} className="p-3 border rounded-lg">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <Users className="w-4 h-4" />
-                    {response.personaId} - Q{response.questionIndex + 1}
-                  </div>
-                  <div className="text-sm">{response.response.substring(0, 150)}...</div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
