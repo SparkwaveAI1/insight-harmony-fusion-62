@@ -20,6 +20,7 @@ interface UnifiedSurveyInterfaceProps {
 }
 
 interface SurveyData {
+  id?: string;
   name: string;
   description: string;
   questions: string[];
@@ -103,6 +104,49 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     );
   };
 
+  const saveSurveyDefinition = async (surveyData: SurveyData): Promise<string | null> => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('Authentication error:', userError);
+        toast.error('Authentication required');
+        return null;
+      }
+
+      if (!projectId) {
+        console.error('Project ID is required');
+        toast.error('Project ID is required');
+        return null;
+      }
+
+      const { data: survey, error } = await supabase
+        .from('research_surveys')
+        .insert({
+          name: surveyData.name.trim(),
+          description: surveyData.description.trim() || null,
+          questions: surveyData.questions.filter(q => q.trim()),
+          project_id: projectId,
+          user_id: user.id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving survey:', error);
+        toast.error(`Failed to save survey: ${error.message}`);
+        return null;
+      }
+
+      console.log('Survey saved successfully:', survey.id);
+      return survey.id;
+    } catch (error) {
+      console.error('Error saving survey definition:', error);
+      toast.error('Failed to save survey definition');
+      return null;
+    }
+  };
+
   const startSurvey = async () => {
     if (!surveyData.name.trim()) {
       toast.error('Please enter a survey name');
@@ -127,6 +171,20 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     setIsLoading(true);
     
     try {
+      // Step 1: Save survey definition to database
+      console.log('Saving survey definition...');
+      const surveyId = await saveSurveyDefinition(surveyData);
+      
+      if (!surveyId) {
+        toast.error('Failed to save survey definition');
+        return;
+      }
+
+      // Update survey data with the saved ID
+      setSurveyData(prev => ({ ...prev, id: surveyId }));
+
+      // Step 2: Create research session
+      console.log('Creating research session...');
       const success = await createSession(selectedPersonas, projectId || undefined);
       
       if (success) {
@@ -324,7 +382,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           className="flex items-center gap-2"
         >
           <Play className="w-4 h-4" />
-          {isLoading ? 'Creating Session...' : 'Start Automated Survey'}
+          {isLoading ? 'Creating Survey...' : 'Start Automated Survey'}
         </Button>
       </div>
     </div>
