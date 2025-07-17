@@ -1,23 +1,24 @@
-
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Header from "@/components/layout/Header";
-import Footer from "@/components/sections/Footer";
-import ResearchInterface from "@/components/research/ResearchInterface";
-import SurveyInterface from "@/components/research/SurveyInterface";
-import { useResearchSession } from "@/components/research/hooks/useResearchSession";
-import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, FileText, ArrowLeft } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Users, FileText, BarChart3, Settings } from 'lucide-react';
+import { toast } from 'sonner';
+import { ResearchTabs } from '@/components/research/ResearchTabs';
+import { useResearchSession } from '@/components/research/hooks/useResearchSession';
+import UnifiedSurveyInterface from '@/components/research/UnifiedSurveyInterface';
 
-const Research = () => {
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const Research: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState<'select' | 'research' | 'survey'>('select');
   const projectId = searchParams.get('project');
-  
+  const [activeTab, setActiveTab] = useState<'chat' | 'personas' | 'documents' | 'survey' | 'settings'>('chat');
+  const [isSurveyVisible, setIsSurveyVisible] = useState(false);
+
   const {
     sessionId,
     loadedPersonas,
@@ -29,182 +30,101 @@ const Research = () => {
     sendToPersona
   } = useResearchSession(projectId || undefined);
 
-  const sessionData = {
-    sessionId,
-    loadedPersonas,
-    projectDocuments,
-    messages,
-    isLoading
+  const handleSendToPersona = async (personaId: string): Promise<void> => {
+    try {
+      const response = await sendToPersona(personaId);
+      console.log('Received response from persona:', response);
+      // The response is now captured and handled by the research session hook
+    } catch (error) {
+      console.error('Error getting persona response:', error);
+      toast.error('Failed to get persona response');
+    }
   };
 
-  const renderModeSelection = () => (
-    <div className="container h-full flex flex-col justify-center items-center p-6">
-      <div className="max-w-2xl w-full space-y-6">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold">Research Module</h1>
-          <p className="text-muted-foreground">
-            Choose how you'd like to conduct your research with personas
-          </p>
-          {projectDocuments.length > 0 && (
-            <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-md border border-green-200 inline-block">
-              ✅ {projectDocuments.length} knowledge base document{projectDocuments.length !== 1 ? 's' : ''} available
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105">
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'chat':
+        return (
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <MessageSquare className="w-6 h-6 text-blue-600" />
-                Research Session
-              </CardTitle>
+              <CardTitle>Chat Messages</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-muted-foreground">
-                Interactive conversation with multiple personas. Ask questions and follow up dynamically.
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Real-time conversation flow</li>
-                <li>• Follow-up questions</li>
-                <li>• Dynamic exploration</li>
-                <li>• Up to 4 personas</li>
-              </ul>
-              <Button 
-                onClick={() => setMode('research')} 
-                className="w-full"
-              >
-                Start Research Session
-              </Button>
+            <CardContent>
+              {messages.map((message, index) => (
+                <div key={index} className={`mb-2 p-3 rounded-md ${message.role === 'user' ? 'bg-gray-100' : 'bg-blue-100'}`}>
+                  <p className="font-bold">{message.role === 'user' ? 'You' : 'Persona'}</p>
+                  <p>{message.content}</p>
+                </div>
+              ))}
             </CardContent>
           </Card>
-
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105">
+        );
+      case 'personas':
+        return (
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <FileText className="w-6 h-6 text-green-600" />
-                Survey Mode
-              </CardTitle>
+              <CardTitle>Loaded Personas</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-muted-foreground">
-                Structured questionnaire with predefined questions. Collect responses from multiple personas.
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Predefined questions</li>
-                <li>• Bulk persona surveying</li>
-                <li>• CSV import/export</li>
-                <li>• Up to 10 personas</li>
-              </ul>
-              <Button 
-                onClick={() => setMode('survey')} 
-                className="w-full"
-                variant="outline"
-              >
-                Create Survey
-              </Button>
+            <CardContent>
+              {loadedPersonas.map(persona => (
+                <div key={persona.persona_id} className="mb-2 p-3 rounded-md bg-green-100">
+                  <p className="font-bold">{persona.name}</p>
+                  <p>{persona.description}</p>
+                </div>
+              ))}
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (mode === 'select') {
-    return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="relative flex min-h-svh flex-col">
-              <Header />
-              <main className="flex-1 min-h-0">
-                <div className="flex items-center justify-between mb-4 pt-24 px-6 flex-shrink-0">
-                  <SidebarTrigger className="hidden md:flex" />
+        );
+      case 'documents':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {projectDocuments.map(doc => (
+                <div key={doc.id} className="mb-2 p-3 rounded-md bg-yellow-100">
+                  <p className="font-bold">{doc.title}</p>
+                  <p>{doc.content}</p>
                 </div>
-                {renderModeSelection()}
-              </main>
-              <Footer />
-              <Toaster />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
-
-  if (mode === 'survey') {
-    return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="relative flex min-h-svh flex-col">
-              <Header />
-              <main className="flex-1 min-h-0">
-                <div className="flex items-center justify-between mb-4 pt-24 px-6 flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    onClick={() => setMode('select')}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Research
-                  </Button>
-                  <SidebarTrigger className="hidden md:flex" />
-                </div>
-                <SurveyInterface onBack={() => setMode('select')} />
-              </main>
-              <Footer />
-              <Toaster />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
+              ))}
+            </CardContent>
+          </Card>
+        );
+        case 'survey':
+          return (
+            <UnifiedSurveyInterface
+              onBack={() => setActiveTab('chat')}
+            />
+          );
+      case 'settings':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <p>Settings content here...</p>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      default:
+        return <div>Select a tab</div>;
+    }
+  };
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <SidebarInset>
-          <div className="relative flex min-h-svh flex-col">
-            <Header />
-            <main className="flex-1 min-h-0">
-              <div className="container h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4 pt-24 flex-shrink-0">
-                  <Button
-                    variant="outline"
-                    onClick={() => setMode('select')}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Research
-                  </Button>
-                  <SidebarTrigger className="hidden md:flex" />
-                  {projectDocuments.length > 0 && (
-                    <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-md border border-green-200">
-                      ✅ {projectDocuments.length} knowledge base document{projectDocuments.length !== 1 ? 's' : ''} available to research participants
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-h-0">
-                  <ResearchInterface 
-                    sessionData={sessionData}
-                    onCreateSession={createSession}
-                    onSendMessage={sendMessage}
-                    onSendToPersona={sendToPersona}
-                  />
-                </div>
-              </div>
-            </main>
-            <Footer />
-            <Toaster />
-          </div>
-        </SidebarInset>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Research Project</h1>
+      
+      <ResearchTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+      <div className="mt-4">
+        {renderTabContent()}
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
