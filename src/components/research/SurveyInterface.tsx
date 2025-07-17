@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
@@ -262,9 +261,7 @@ const SurveyInterface: React.FC<SurveyInterfaceProps> = ({ onBack }) => {
 
   const renderProjectStep = () => (
     <ProjectSelector 
-      onProjectSelected={handleProject
-
-}
+      onProjectSelected={handleProjectSelected}
       showCreateOption={true}
     />
   );
