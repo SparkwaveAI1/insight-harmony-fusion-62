@@ -51,6 +51,9 @@ import CreativeCharacterCreate from "./characters/pages/CreativeCharacterCreate"
 import CreativeCharacterDashboard from "./characters/pages/CreativeCharacterDashboard";
 import CharacterChat from "./characters/pages/CharacterChat";
 
+// Character feature unavailable component
+import CharacterFeatureUnavailable from "./components/CharacterFeatureUnavailable";
+
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 import "./App.css";
@@ -79,8 +82,20 @@ function App() {
                 <Route path="/sign-in" element={<Auth />} />
                 <Route path="/contact" element={<Contact />} />
                 
-                {/* Character Home - Public access (anyone can view) */}
-                <Route path="/characters-home" element={<CharactersHome />} />
+                {/* Character Routes - DEACTIVATED - All character routes redirect to unavailable page */}
+                <Route path="/characters-home" element={<CharacterFeatureUnavailable />} />
+                <Route path="/characters/*" element={<CharacterFeatureUnavailable />} />
+                
+                {/* Character specific routes - DEACTIVATED */}
+                {/* 
+                <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
+                <Route path="/characters/creative" element={<ProtectedRoute><CreativeCharacterDashboard /></ProtectedRoute>} />
+                <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
+                <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
+                <Route path="/characters/:characterId/chat" element={<ProtectedRoute><CharacterChat /></ProtectedRoute>} />
+                <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
+                <Route path="/characters/create/creative" element={<ProtectedRoute><CreativeCharacterCreate /></ProtectedRoute>} />
+                */}
                 
                 {/* PRSNA token routes - public access */}
                 <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
@@ -107,15 +122,6 @@ function App() {
                 {/* IMPORTANT: Add support for both URL formats to avoid breaking existing links */}
                 <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
                 <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
-                
-                {/* Character routes - ALL PROTECTED except CharactersHome */}
-                <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
-                <Route path="/characters/creative" element={<ProtectedRoute><CreativeCharacterDashboard /></ProtectedRoute>} />
-                <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
-                <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
-                <Route path="/characters/:characterId/chat" element={<ProtectedRoute><CharacterChat /></ProtectedRoute>} />
-                <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
-                <Route path="/characters/create/creative" element={<ProtectedRoute><CreativeCharacterCreate /></ProtectedRoute>} />
                 
                 {/* Research section - Protected */}
                 <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
