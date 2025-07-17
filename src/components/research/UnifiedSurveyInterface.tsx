@@ -107,10 +107,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     setSurveyName(template.name);
     setSurveyDescription(template.description);
     setQuestions(template.questions);
-    toast({
-      title: "Template Loaded",
-      description: `${template.name} template has been loaded.`,
-    });
+    toast.success(`${template.name} template has been loaded.`);
   };
 
   // CSV import handling
@@ -165,7 +162,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     setCurrentStep('personas');
   };
 
-  const handleStartSurvey = async (personas: string[]) => {
+  const handleStartSurvey = async (personas: string[]): Promise<boolean> => {
     console.log('Starting automated survey with personas:', personas);
     setSelectedPersonas(personas);
     
@@ -174,8 +171,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     if (success) {
       setCurrentStep('execution');
       toast.success('Automated survey started!');
+      return true;
     } else {
       toast.error('Failed to start survey session');
+      return false;
     }
   };
 
