@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -399,8 +398,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           maxPersonas={10}
           onStartSession={handleStartSurvey}
           isLoading={isLoading}
-          buttonText="Start Automated Survey"
-          buttonIcon={<Play className="w-4 h-4" />}
         />
       </div>
     );
