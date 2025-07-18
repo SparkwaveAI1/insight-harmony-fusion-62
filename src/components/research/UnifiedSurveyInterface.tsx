@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { useResearchSession } from './hooks/useResearchSession';
-import { AutomatedSurveyExecution } from './AutomatedSurveyExecution';
+import { SequentialSurveyExecution } from './SequentialSurveyExecution';
 import SurveyResults from './SurveyResults';
 import { createSurveySession, updateSurveySessionStatus } from './services/surveySessionService';
 import { QuestionUpload } from './QuestionUpload';
@@ -65,27 +64,27 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
   // Load available personas
   useEffect(() => {
-    const loadPersonas = async () => {
-      try {
-        const { data: personasData, error } = await supabase
-          .from('personas')
-          .select('*')
-          .or('is_public.eq.true,user_id.eq.' + (await supabase.auth.getUser()).data.user?.id);
-
-        if (error) {
-          console.error('Error loading personas:', error);
-          return;
-        }
-
-        const mappedPersonas = personasData.map(dbPersonaToPersona);
-        setAvailablePersonas(mappedPersonas);
-      } catch (error) {
-        console.error('Error loading personas:', error);
-      }
-    };
-
     loadPersonas();
   }, []);
+
+  const loadPersonas = async () => {
+    try {
+      const { data: personasData, error } = await supabase
+        .from('personas')
+        .select('*')
+        .or('is_public.eq.true,user_id.eq.' + (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) {
+        console.error('Error loading personas:', error);
+        return;
+      }
+
+      const mappedPersonas = personasData.map(dbPersonaToPersona);
+      setAvailablePersonas(mappedPersonas);
+    } catch (error) {
+      console.error('Error loading personas:', error);
+    }
+  };
 
   const handleProjectSelected = (projectId: string) => {
     setSelectedProjectId(projectId || null);
@@ -116,7 +115,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         return null;
       }
 
-      // Use selected project ID or create a default project if none selected
       let actualProjectId = selectedProjectId;
       
       if (!actualProjectId) {
@@ -193,7 +191,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     setIsLoading(true);
     
     try {
-      // Step 1: Save survey definition to database
       console.log('Saving survey definition...');
       const surveyId = await saveSurveyDefinition(surveyData);
       
@@ -202,10 +199,8 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         return;
       }
 
-      // Update survey data with the saved ID
       setSurveyData(prev => ({ ...prev, id: surveyId }));
 
-      // Step 2: Create survey session tracking record
       console.log('Creating survey session tracking...');
       const sessionTrackingId = await createSurveySession(surveyId, selectedPersonas);
       
@@ -216,12 +211,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       
       setSurveySessionId(sessionTrackingId);
 
-      // Step 3: Create research session
       console.log('Creating research session...');
       const success = await createSession(selectedPersonas, selectedProjectId || undefined);
       
       if (success) {
-        // Step 4: Link the survey session to the conversation
         if (sessionId) {
           await updateSurveySessionStatus(sessionTrackingId, 'active', sessionId);
         }
@@ -229,7 +222,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         setCurrentStep('execution');
         toast.success('Survey session created successfully');
       } else {
-        // Clean up on failure
         if (sessionTrackingId) {
           await updateSurveySessionStatus(sessionTrackingId, 'cancelled');
         }
@@ -288,7 +280,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
   if (currentStep === 'execution') {
     return (
-      <AutomatedSurveyExecution
+      <SequentialSurveyExecution
         surveyData={surveyData}
         selectedPersonas={selectedPersonas}
         loadedPersonas={loadedPersonas}
@@ -440,7 +432,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           className="flex items-center gap-2"
         >
           <Play className="w-4 h-4" />
-          {isLoading ? 'Creating Survey...' : 'Start Automated Survey'}
+          {isLoading ? 'Creating Survey...' : 'Start Sequential Survey'}
         </Button>
       </div>
     </div>
