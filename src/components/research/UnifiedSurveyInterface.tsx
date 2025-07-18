@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, FileText, Plus, Trash2, Play } from 'lucide-react';
+import { ArrowLeft, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,7 @@ import { useResearchSession } from './hooks/useResearchSession';
 import { AutomatedSurveyExecution } from './AutomatedSurveyExecution';
 import SurveyResults from './SurveyResults';
 import { createSurveySession, updateSurveySessionStatus } from './services/surveySessionService';
+import { QuestionUpload } from './QuestionUpload';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -75,35 +75,19 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     loadPersonas();
   }, []);
 
-  const addQuestion = () => {
-    setSurveyData(prev => ({
-      ...prev,
-      questions: [...prev.questions, '']
-    }));
-  };
-
-  const removeQuestion = (index: number) => {
-    if (surveyData.questions.length > 1) {
-      setSurveyData(prev => ({
-        ...prev,
-        questions: prev.questions.filter((_, i) => i !== index)
-      }));
-    }
-  };
-
-  const updateQuestion = (index: number, value: string) => {
-    setSurveyData(prev => ({
-      ...prev,
-      questions: prev.questions.map((q, i) => i === index ? value : q)
-    }));
-  };
-
   const togglePersonaSelection = (personaId: string) => {
     setSelectedPersonas(prev => 
       prev.includes(personaId) 
         ? prev.filter(id => id !== personaId)
         : [...prev, personaId]
     );
+  };
+
+  const handleQuestionsChange = (newQuestions: string[]) => {
+    setSurveyData(prev => ({
+      ...prev,
+      questions: newQuestions
+    }));
   };
 
   const saveSurveyDefinition = async (surveyData: SurveyData): Promise<string | null> => {
@@ -282,74 +266,40 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Survey Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="survey-name">Survey Name</Label>
-              <Input
-                id="survey-name"
-                value={surveyData.name}
-                onChange={(e) => setSurveyData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Product Feedback Survey"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="survey-description">Description (Optional)</Label>
-              <Textarea
-                id="survey-description"
-                value={surveyData.description}
-                onChange={(e) => setSurveyData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Brief description of the survey purpose..."
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Questions</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addQuestion}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Question
-                </Button>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Survey Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="survey-name">Survey Name</Label>
+                <Input
+                  id="survey-name"
+                  value={surveyData.name}
+                  onChange={(e) => setSurveyData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Product Feedback Survey"
+                />
               </div>
               
-              {surveyData.questions.map((question, index) => (
-                <div key={index} className="flex gap-2">
-                  <div className="flex-1">
-                    <Textarea
-                      value={question}
-                      onChange={(e) => updateQuestion(index, e.target.value)}
-                      placeholder={`Question ${index + 1}...`}
-                      rows={2}
-                    />
-                  </div>
-                  {surveyData.questions.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeQuestion(index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              <div>
+                <Label htmlFor="survey-description">Description (Optional)</Label>
+                <Textarea
+                  id="survey-description"
+                  value={surveyData.description}
+                  onChange={(e) => setSurveyData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Brief description of the survey purpose..."
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <QuestionUpload
+            questions={surveyData.questions}
+            onQuestionsChange={handleQuestionsChange}
+          />
+        </div>
 
         <Card>
           <CardHeader>
