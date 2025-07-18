@@ -1,184 +1,83 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FlaskConical, Folder, Download } from 'lucide-react';
-import { getUserProjects, Project } from '@/services/collections';
-import { useAuth } from '@/context/AuthContext';
+import { MessageSquare, Users, BarChart3, ArrowRight } from 'lucide-react';
 
 interface ResearchModeSelectorProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onSelectMode: (mode: 'interview' | 'focus-group' | 'survey') => void;
 }
 
-const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({
-  open,
-  onOpenChange
-}) => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastChoice, setLastChoice] = useState<string>('');
-
-  useEffect(() => {
-    // Load user's last choice from localStorage
-    const saved = localStorage.getItem('research-mode-last-choice');
-    if (saved) {
-      setLastChoice(saved);
-      setSelectedProject(saved);
+const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMode }) => {
+  const modes = [
+    {
+      id: 'interview' as const,
+      title: '1-on-1 Interview',
+      description: 'Conduct in-depth conversations with individual personas to explore attitudes, motivations, and decision-making processes.',
+      icon: MessageSquare,
+      features: ['Deep qualitative insights', 'Persona trait exploration', 'Contextual questioning']
+    },
+    {
+      id: 'focus-group' as const,
+      title: 'Focus Group',
+      description: 'Facilitate group discussions with multiple personas to observe social dynamics and consensus building.',
+      icon: Users,
+      features: ['Group dynamics', 'Consensus exploration', 'Multiple perspectives']
+    },
+    {
+      id: 'survey' as const,
+      title: 'Survey Study',
+      description: 'Run structured questionnaires across multiple personas for quantifiable qualitative insights.',
+      icon: BarChart3,
+      features: ['Structured data collection', 'Scalable insights', 'Comparative analysis']
     }
-  }, []);
-
-  useEffect(() => {
-    const loadProjects = async () => {
-      if (!user || !open) return;
-      
-      setIsLoading(true);
-      try {
-        const userProjects = await getUserProjects();
-        setProjects(userProjects);
-        
-        // If user has a saved choice and it's still valid, pre-select it
-        if (lastChoice && lastChoice !== 'no-project') {
-          const projectExists = userProjects.some(p => p.id === lastChoice);
-          if (projectExists) {
-            setSelectedProject(lastChoice);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading projects:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProjects();
-  }, [user, open, lastChoice]);
-
-  const handleStartResearch = () => {
-    // Save user's choice
-    localStorage.setItem('research-mode-last-choice', selectedProject);
-    
-    if (selectedProject === 'no-project') {
-      navigate('/research');
-    } else if (selectedProject) {
-      navigate(`/research?project=${selectedProject}`);
-    }
-    
-    onOpenChange(false);
-  };
-
-  const handleNoProject = () => {
-    setSelectedProject('no-project');
-    localStorage.setItem('research-mode-last-choice', 'no-project');
-    navigate('/research');
-    onOpenChange(false);
-  };
+  ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FlaskConical className="h-5 w-5" />
-            Start Research Session
-          </DialogTitle>
-          <DialogDescription>
-            Choose how you'd like to conduct your research session
-          </DialogDescription>
-        </DialogHeader>
+    <div className="container mx-auto p-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-4">Research Interface</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Choose your research methodology to begin collecting qualitative insights from AI personas.
+        </p>
+      </div>
 
-        <div className="space-y-6">
-          {/* Project Selection */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Folder className="h-4 w-4" />
-              Connect to Project
-            </div>
-            
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">Loading projects...</div>
-            ) : projects.length > 0 ? (
-              <Select value={selectedProject} onValueChange={setSelectedProject}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a project..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      <div>
-                        <div className="font-medium">{project.name}</div>
-                        {project.description && (
-                          <div className="text-xs text-muted-foreground">
-                            {project.description.length > 50 
-                              ? `${project.description.substring(0, 50)}...` 
-                              : project.description}
-                          </div>
-                        )}
-                      </div>
-                    </SelectItem>
+      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {modes.map((mode) => {
+          const Icon = mode.icon;
+          return (
+            <Card key={mode.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                  <Icon className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl">{mode.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground text-sm">
+                  {mode.description}
+                </p>
+                <ul className="space-y-2">
+                  {mode.features.map((feature, index) => (
+                    <li key={index} className="text-sm flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                      {feature}
+                    </li>
                   ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                No projects found. Create a project first to access knowledge base features.
-              </div>
-            )}
-
-            {selectedProject && selectedProject !== 'no-project' && (
-              <Button onClick={handleStartResearch} className="w-full">
-                Start Research with Project
-              </Button>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or</span>
-            </div>
-          </div>
-
-          {/* No Project Option */}
-          <div className="space-y-3">
-            <Button 
-              variant="outline" 
-              onClick={handleNoProject}
-              className="w-full flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Research Without Project
-            </Button>
-            
-            <div className="text-xs text-muted-foreground space-y-1">
-              <div>• No knowledge base access</div>
-              <div>• Export transcript only (cannot save)</div>
-              <div>• Good for general research conversations</div>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+                </ul>
+                <Button 
+                  onClick={() => onSelectMode(mode.id)}
+                  className="w-full mt-4"
+                >
+                  Start {mode.title}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
