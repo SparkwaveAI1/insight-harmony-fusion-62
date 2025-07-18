@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Play } from 'lucide-react';
 import { toast } from 'sonner';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
@@ -15,6 +16,7 @@ import { AutomatedSurveyExecution } from './AutomatedSurveyExecution';
 import SurveyResults from './SurveyResults';
 import { createSurveySession, updateSurveySessionStatus } from './services/surveySessionService';
 import { QuestionUpload } from './QuestionUpload';
+import ProjectSelector from './ProjectSelector';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -29,9 +31,11 @@ interface SurveyData {
 
 const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack }) => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const projectId = searchParams.get('project');
   
-  const [currentStep, setCurrentStep] = useState<'setup' | 'execution' | 'results'>('setup');
+  const [currentStep, setCurrentStep] = useState<'project-selection' | 'setup' | 'execution' | 'results'>('project-selection');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(projectId);
   const [surveyData, setSurveyData] = useState<SurveyData>({
     name: '',
     description: '',
@@ -49,7 +53,15 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     createSession,
     sendMessage,
     sendToPersona
-  } = useResearchSession(projectId || undefined);
+  } = useResearchSession(selectedProjectId || undefined);
+
+  // If project is already selected from URL, skip project selection
+  useEffect(() => {
+    if (projectId) {
+      setSelectedProjectId(projectId);
+      setCurrentStep('setup');
+    }
+  }, [projectId]);
 
   // Load available personas
   useEffect(() => {
@@ -75,6 +87,11 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     loadPersonas();
   }, []);
 
+  const handleProjectSelected = (projectId: string) => {
+    setSelectedProjectId(projectId || null);
+    setCurrentStep('setup');
+  };
+
   const togglePersonaSelection = (personaId: string) => {
     setSelectedPersonas(prev => 
       prev.includes(personaId) 
@@ -99,11 +116,11 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         return null;
       }
 
-      // Create a default project if none exists
-      let actualProjectId = projectId;
+      // Use selected project ID or create a default project if none selected
+      let actualProjectId = selectedProjectId;
       
       if (!actualProjectId) {
-        console.log('No project ID provided, creating default project...');
+        console.log('No project selected, creating default project...');
         const { data: defaultProject, error: projectError } = await supabase
           .from('projects')
           .insert({
@@ -201,7 +218,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
       // Step 3: Create research session
       console.log('Creating research session...');
-      const success = await createSession(selectedPersonas, projectId || undefined);
+      const success = await createSession(selectedPersonas, selectedProjectId || undefined);
       
       if (success) {
         // Step 4: Link the survey session to the conversation
@@ -236,6 +253,38 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   const handleBackToSetup = () => {
     setCurrentStep('setup');
   };
+
+  const handleBackToProjectSelection = () => {
+    setCurrentStep('project-selection');
+  };
+
+  // Project Selection Step
+  if (currentStep === 'project-selection') {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Survey Setup</h1>
+            <p className="text-muted-foreground">
+              Choose a project to save your survey results, or continue without saving
+            </p>
+          </div>
+          
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Research
+            </Button>
+          )}
+        </div>
+
+        <ProjectSelector
+          onProjectSelected={handleProjectSelected}
+          showCreateOption={true}
+        />
+      </div>
+    );
+  }
 
   if (currentStep === 'execution') {
     return (
@@ -274,14 +323,29 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           <p className="text-muted-foreground">
             Set up an automated survey to collect responses from multiple personas
           </p>
+          {selectedProjectId && (
+            <p className="text-sm text-green-600 mt-1">
+              Connected to project - results will be saved
+            </p>
+          )}
+          {!selectedProjectId && (
+            <p className="text-sm text-amber-600 mt-1">
+              No project selected - results can be exported but not saved
+            </p>
+          )}
         </div>
         
-        {onBack && (
-          <Button variant="outline" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Research
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleBackToProjectSelection}>
+            Change Project
           </Button>
-        )}
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Research
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
