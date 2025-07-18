@@ -109,7 +109,13 @@ export const getSurveySession = async (sessionId: string): Promise<SurveySession
       return null;
     }
 
-    return session;
+    // Type cast the status to ensure it matches our union type
+    const typedSession: SurveySession = {
+      ...session,
+      status: session.status as 'pending' | 'active' | 'completed' | 'cancelled'
+    };
+
+    return typedSession;
   } catch (error) {
     console.error('Error fetching survey session:', error);
     return null;
