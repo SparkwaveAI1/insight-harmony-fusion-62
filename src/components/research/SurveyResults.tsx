@@ -1,12 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, ArrowLeft } from 'lucide-react';
+import { Download, ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Persona } from '@/services/persona/types';
+import { SurveyReportGenerator } from './reports/SurveyReportGenerator';
+import { PersonaSurveyStatus } from './utils/responseUtils';
 
 interface SurveyResultsProps {
   surveyName: string;
@@ -37,6 +38,8 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
   const [activeTab, setActiveTab] = useState('by-question');
   const [responses, setResponses] = useState<StoredResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showReport, setShowReport] = useState(false);
+  const [personaStatuses, setPersonaStatuses] = useState<PersonaSurveyStatus[]>([]);
 
   // Load responses from database
   useEffect(() => {
@@ -56,6 +59,34 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
         }
 
         setResponses(data || []);
+        
+        // Convert responses to PersonaSurveyStatus format
+        const statusMap = new Map<string, PersonaSurveyStatus>();
+        
+        (data || []).forEach(response => {
+          const persona = loadedPersonas.find(p => p.persona_id === response.persona_id);
+          if (!persona) return;
+          
+          if (!statusMap.has(response.persona_id)) {
+            statusMap.set(response.persona_id, {
+              personaId: response.persona_id,
+              personaName: persona.name,
+              status: 'completed',
+              responses: []
+            });
+          }
+          
+          statusMap.get(response.persona_id)!.responses.push({
+            personaId: response.persona_id,
+            personaName: persona.name,
+            questionIndex: response.question_index,
+            questionText: response.question_text,
+            responseText: response.response_text,
+            timestamp: new Date(response.created_at)
+          });
+        });
+        
+        setPersonaStatuses(Array.from(statusMap.values()));
       } catch (error) {
         console.error('Error loading survey responses:', error);
         toast.error('Failed to load survey responses');
@@ -67,7 +98,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
     if (sessionId) {
       loadResponses();
     }
-  }, [sessionId]);
+  }, [sessionId, loadedPersonas]);
 
   // Group responses by question
   const responsesByQuestion = questions.map((questionText, qIndex) => {
@@ -151,6 +182,18 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
     );
   }
 
+  if (showReport) {
+    return (
+      <SurveyReportGenerator
+        surveyName={surveyName}
+        surveyDescription={surveyDescription}
+        questions={questions}
+        personaStatuses={personaStatuses}
+        onBack={() => setShowReport(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -170,9 +213,14 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
             Back
           </Button>
           
-          <Button onClick={exportResults}>
+          <Button variant="outline" onClick={exportResults}>
             <Download className="w-4 h-4 mr-2" />
-            Export Results
+            Export Raw Data
+          </Button>
+
+          <Button onClick={() => setShowReport(true)}>
+            <FileText className="w-4 h-4 mr-2" />
+            Generate Report
           </Button>
         </div>
       </div>
