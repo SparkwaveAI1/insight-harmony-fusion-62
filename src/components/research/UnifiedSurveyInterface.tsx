@@ -14,6 +14,7 @@ import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { useResearchSession } from './hooks/useResearchSession';
 import { AutomatedSurveyExecution } from './AutomatedSurveyExecution';
 import SurveyResults from './SurveyResults';
+import { createSurveySession, updateSurveySessionStatus } from './services/surveySessionService';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -39,6 +40,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [surveySessionId, setSurveySessionId] = useState<string | null>(null);
 
   const {
     sessionId,
@@ -183,14 +185,34 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       // Update survey data with the saved ID
       setSurveyData(prev => ({ ...prev, id: surveyId }));
 
-      // Step 2: Create research session
+      // Step 2: Create survey session tracking record
+      console.log('Creating survey session tracking...');
+      const sessionTrackingId = await createSurveySession(surveyId, selectedPersonas);
+      
+      if (!sessionTrackingId) {
+        toast.error('Failed to create survey session tracking');
+        return;
+      }
+      
+      setSurveySessionId(sessionTrackingId);
+
+      // Step 3: Create research session
       console.log('Creating research session...');
       const success = await createSession(selectedPersonas, projectId || undefined);
       
       if (success) {
+        // Step 4: Link the survey session to the conversation
+        if (sessionId) {
+          await updateSurveySessionStatus(sessionTrackingId, 'active', sessionId);
+        }
+        
         setCurrentStep('execution');
         toast.success('Survey session created successfully');
       } else {
+        // Clean up on failure
+        if (sessionTrackingId) {
+          await updateSurveySessionStatus(sessionTrackingId, 'cancelled');
+        }
         toast.error('Failed to create survey session');
       }
     } catch (error) {
@@ -201,7 +223,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     }
   };
 
-  const handleSurveyComplete = () => {
+  const handleSurveyComplete = async () => {
+    if (surveySessionId) {
+      await updateSurveySessionStatus(surveySessionId, 'completed');
+    }
     setCurrentStep('results');
   };
 
