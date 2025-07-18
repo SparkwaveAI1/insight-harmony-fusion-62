@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,9 +34,10 @@ interface SequentialSurveyExecutionProps {
   selectedPersonas: string[];
   loadedPersonas: Persona[];
   sessionId: string | null;
+  surveySessionId?: string | null;
   projectDocuments: any[];
   sendMessage: (message: string, imageFile?: File | null) => Promise<Message>;
-  sendToPersona: (personaId: string, userMessage?: Message) => Promise<string>;
+  sendToPersona: (personaId: string, userMessage: Message) => Promise<string>;
   onComplete: () => void;
   onBack: () => void;
 }
@@ -45,6 +47,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
   selectedPersonas,
   loadedPersonas,
   sessionId,
+  surveySessionId,
   projectDocuments,
   sendMessage,
   sendToPersona,
@@ -134,7 +137,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             
             console.log('Message sent, now getting persona response...');
 
-            // Get response from this persona using the exact message object
+            // Get response from this persona using the message object
             const response = await sendToPersona(currentPersona.personaId, userMessage);
             
             console.log(`Got response from ${currentPersona.personaName} for question ${questionIndex + 1}`);
@@ -155,18 +158,20 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               } : p
             ));
 
-            // Store in database
+            // Store in database - use the conversation sessionId for consistency
             if (sessionId) {
               try {
                 await supabase
                   .from('research_survey_responses')
                   .insert({
-                    session_id: sessionId,
+                    session_id: sessionId, // Use conversation session ID
                     persona_id: currentPersona.personaId,
                     question_index: questionIndex,
                     question_text: question,
                     response_text: response
                   });
+                
+                console.log(`Stored response in database for ${currentPersona.personaName}, question ${questionIndex + 1}`);
               } catch (dbError) {
                 console.error('Error storing response in database:', dbError);
                 // Continue anyway - we have the response in memory
