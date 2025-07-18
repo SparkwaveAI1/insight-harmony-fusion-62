@@ -99,10 +99,29 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         return null;
       }
 
-      if (!projectId) {
-        console.error('Project ID is required');
-        toast.error('Project ID is required');
-        return null;
+      // Create a default project if none exists
+      let actualProjectId = projectId;
+      
+      if (!actualProjectId) {
+        console.log('No project ID provided, creating default project...');
+        const { data: defaultProject, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            name: 'Survey Project',
+            description: 'Auto-created project for survey',
+            user_id: user.id
+          })
+          .select()
+          .single();
+
+        if (projectError) {
+          console.error('Error creating default project:', projectError);
+          toast.error('Failed to create project for survey');
+          return null;
+        }
+
+        actualProjectId = defaultProject.id;
+        console.log('Created default project:', actualProjectId);
       }
 
       const { data: survey, error } = await supabase
@@ -111,7 +130,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           name: surveyData.name.trim(),
           description: surveyData.description.trim() || null,
           questions: surveyData.questions.filter(q => q.trim()),
-          project_id: projectId,
+          project_id: actualProjectId,
           user_id: user.id,
           status: 'active'
         })
