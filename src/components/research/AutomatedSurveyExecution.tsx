@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { PersonaSurveyStatus, SurveyResponse, parsePersonaResponse, formatSurveyResultsForExport } from './utils/responseUtils';
+import { processPersonasInParallel, ProcessingProgress } from './utils/parallelProcessing';
 
 interface SurveyData {
   name: string;
@@ -42,6 +42,12 @@ export const AutomatedSurveyExecution: React.FC<AutomatedSurveyExecutionProps> =
   const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [surveyStarted, setSurveyStarted] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState<ProcessingProgress>({
+    total: 0,
+    completed: 0,
+    errors: 0,
+    inProgress: 0
+  });
 
   // Initialize persona statuses
   useEffect(() => {
@@ -95,39 +101,11 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
   // Auto-start survey when component mounts
   useEffect(() => {
     if (!surveyStarted && sessionId && selectedPersonas.length > 0) {
-      console.log('Auto-starting automated survey execution');
+      console.log('Auto-starting parallel survey execution');
       startAutomatedSurvey();
       setSurveyStarted(true);
     }
   }, [sessionId, selectedPersonas.length, surveyStarted]);
-
-  // Start automated survey execution
-  const startAutomatedSurvey = async () => {
-    if (!sessionId || selectedPersonas.length === 0) {
-      toast.error('Survey session not ready');
-      return;
-    }
-
-    console.log('Starting automated survey execution...');
-    setIsRunning(true);
-
-    try {
-      // Step 1: Send comprehensive survey message
-      const surveyMessage = formatSurveyMessage();
-      console.log('Sending comprehensive survey message to session');
-      await sendMessage(surveyMessage);
-
-      toast.success('Survey sent to all personas - collecting responses...');
-
-      // Step 2: Automatically trigger responses from all personas
-      await collectAllPersonaResponses();
-
-    } catch (error) {
-      console.error('Error starting automated survey:', error);
-      toast.error('Failed to start automated survey');
-      setIsRunning(false);
-    }
-  };
 
   // Store survey response in database
   const storeSurveyResponse = async (
@@ -159,94 +137,132 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
     }
   };
 
-  // Collect responses from all personas automatically
-  const collectAllPersonaResponses = async () => {
-    console.log('Collecting responses from all personas automatically...');
-
-    for (const personaId of selectedPersonas) {
-      try {
-        // Update status to processing
-        setPersonaStatuses(prev => prev.map(p => 
-          p.personaId === personaId ? { ...p, status: 'processing' } : p
-        ));
-
-        console.log(`Requesting response from persona: ${personaId}`);
-        
-        // Get response from persona
-        const fullResponse = await sendToPersona(personaId);
-        console.log(`Raw response from ${personaId}:`, fullResponse);
-
-        // Parse the response to extract individual answers
-        const parsedAnswers = parsePersonaResponse(fullResponse, surveyData.questions);
-        console.log(`Parsed answers from ${personaId}:`, parsedAnswers);
-
-        // Create structured responses for each question
-        const structuredResponses: SurveyResponse[] = [];
-        for (let i = 0; i < surveyData.questions.length; i++) {
-          const persona = loadedPersonas.find(p => p.persona_id === personaId);
-          const response: SurveyResponse = {
-            personaId,
-            personaName: persona?.name || `Persona ${personaId.slice(-4)}`,
-            questionIndex: i,
-            questionText: surveyData.questions[i],
-            responseText: parsedAnswers[i] || `[No response found for question ${i + 1}]`,
-            timestamp: new Date()
-          };
-          
-          structuredResponses.push(response);
-          
-          // Store each response in the database
-          await storeSurveyResponse(
-            personaId,
-            i,
-            surveyData.questions[i],
-            parsedAnswers[i] || `[No response found for question ${i + 1}]`
-          );
-        }
-
-        // Update status to completed with real responses
-        setPersonaStatuses(prev => prev.map(p => 
-          p.personaId === personaId ? { 
-            ...p, 
-            status: 'completed',
-            responses: structuredResponses
-          } : p
-        ));
-
-        console.log(`Response processed and stored for persona: ${personaId}`);
-
-      } catch (error) {
-        console.error(`Error getting response from persona ${personaId}:`, error);
-        
-        // Update status to error
-        setPersonaStatuses(prev => prev.map(p => 
-          p.personaId === personaId ? { 
-            ...p, 
-            status: 'error', 
-            error: error instanceof Error ? error.message : 'Unknown error'
-          } : p
-        ));
-      }
-      
-      // Small delay between personas to avoid overwhelming the system
-      await new Promise(resolve => setTimeout(resolve, 1000));
+  // Start automated survey execution with parallel processing
+  const startAutomatedSurvey = async () => {
+    if (!sessionId || selectedPersonas.length === 0) {
+      toast.error('Survey session not ready');
+      return;
     }
 
-    // Check completion
-    setPersonaStatuses(prev => {
-      const completedCount = prev.filter(p => p.status === 'completed').length;
-      const errorCount = prev.filter(p => p.status === 'error').length;
+    console.log('Starting parallel automated survey execution...');
+    setIsRunning(true);
+
+    try {
+      // Step 1: Send comprehensive survey message
+      const surveyMessage = formatSurveyMessage();
+      console.log('Sending comprehensive survey message to session');
+      await sendMessage(surveyMessage);
+
+      toast.success('Survey sent to all personas - collecting responses in parallel...');
+
+      // Step 2: Process all personas in parallel
+      await collectAllPersonaResponsesInParallel();
+
+    } catch (error) {
+      console.error('Error starting automated survey:', error);
+      toast.error('Failed to start automated survey');
+      setIsRunning(false);
+    }
+  };
+
+  // Collect responses from all personas in parallel
+  const collectAllPersonaResponsesInParallel = async () => {
+    console.log('Collecting responses from all personas in parallel...');
+
+    // Update progress callback
+    const onProgress = (progress: ProcessingProgress) => {
+      setProcessingProgress(progress);
       
-      console.log(`Survey complete: ${completedCount} completed, ${errorCount} errors`);
-      
-      if (completedCount + errorCount === prev.length) {
-        setIsRunning(false);
-        setIsComplete(true);
-        toast.success(`Survey completed! ${completedCount} personas responded successfully.`);
+      // Update persona statuses based on progress
+      setPersonaStatuses(prev => prev.map(persona => {
+        if (progress.completed > 0 || progress.errors > 0) {
+          // Keep existing status for completed/error personas
+          return persona;
+        } else if (progress.inProgress > 0) {
+          // Mark as processing if in progress
+          return { ...persona, status: 'processing' };
+        }
+        return persona;
+      }));
+    };
+
+    try {
+      // Process personas in parallel
+      const results = await processPersonasInParallel(
+        selectedPersonas,
+        sendToPersona,
+        onProgress,
+        3 // Max 3 concurrent requests
+      );
+
+      // Process results and update statuses
+      for (const result of results) {
+        if (result.success && result.response) {
+          // Parse the response to extract individual answers
+          const parsedAnswers = parsePersonaResponse(result.response, surveyData.questions);
+          console.log(`Parsed answers from ${result.personaId}:`, parsedAnswers);
+
+          // Create structured responses for each question
+          const structuredResponses: SurveyResponse[] = [];
+          for (let i = 0; i < surveyData.questions.length; i++) {
+            const persona = loadedPersonas.find(p => p.persona_id === result.personaId);
+            const response: SurveyResponse = {
+              personaId: result.personaId,
+              personaName: persona?.name || `Persona ${result.personaId.slice(-4)}`,
+              questionIndex: i,
+              questionText: surveyData.questions[i],
+              responseText: parsedAnswers[i] || `[No response found for question ${i + 1}]`,
+              timestamp: new Date()
+            };
+            
+            structuredResponses.push(response);
+            
+            // Store each response in the database
+            await storeSurveyResponse(
+              result.personaId,
+              i,
+              surveyData.questions[i],
+              parsedAnswers[i] || `[No response found for question ${i + 1}]`
+            );
+          }
+
+          // Update status to completed with real responses
+          setPersonaStatuses(prev => prev.map(p => 
+            p.personaId === result.personaId ? { 
+              ...p, 
+              status: 'completed',
+              responses: structuredResponses
+            } : p
+          ));
+
+          console.log(`Response processed and stored for persona: ${result.personaId}`);
+        } else {
+          // Update status to error
+          setPersonaStatuses(prev => prev.map(p => 
+            p.personaId === result.personaId ? { 
+              ...p, 
+              status: 'error', 
+              error: result.error || 'Unknown error'
+            } : p
+          ));
+        }
       }
+
+      // Survey completion
+      const successCount = results.filter(r => r.success).length;
+      const errorCount = results.filter(r => !r.success).length;
       
-      return prev;
-    });
+      setIsRunning(false);
+      setIsComplete(true);
+      
+      toast.success(`Parallel survey completed! ${successCount} personas responded successfully.`);
+      console.log(`Parallel survey complete: ${successCount} completed, ${errorCount} errors`);
+
+    } catch (error) {
+      console.error('Error in parallel survey execution:', error);
+      toast.error('Failed to complete parallel survey execution');
+      setIsRunning(false);
+    }
   };
 
   // Calculate progress
@@ -256,7 +272,6 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
   const totalPersonas = personaStatuses.length;
   const progress = totalPersonas > 0 ? ((completedCount + errorCount) / totalPersonas) * 100 : 0;
 
-  // Export results
   const exportResults = () => {
     const results = formatSurveyResultsForExport(
       surveyData.name,
@@ -295,7 +310,7 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Automated Survey: {surveyData.name}
+              Parallel Survey: {surveyData.name}
             </CardTitle>
             <Button variant="outline" onClick={onBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -324,6 +339,11 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
                   {errorCount} errors
                 </span>
               )}
+              {isRunning && processingProgress.inProgress > 0 && (
+                <span className="text-blue-600 font-medium">
+                  {processingProgress.inProgress} running in parallel
+                </span>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -332,9 +352,9 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
           {!isRunning && !isComplete && totalPersonas === 0 && (
             <div className="text-center py-8">
               <Clock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="font-medium mb-2">Preparing Automated Survey</h3>
+              <h3 className="font-medium mb-2">Preparing Parallel Survey</h3>
               <p className="text-sm text-muted-foreground">
-                Setting up personas and research context...
+                Setting up personas for parallel processing...
               </p>
             </div>
           )}
@@ -342,9 +362,9 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
           {isRunning && (
             <div className="space-y-4">
               <div className="text-center">
-                <h3 className="font-medium mb-2">Survey Running Automatically</h3>
+                <h3 className="font-medium mb-2">Survey Running in Parallel</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  All personas are processing the complete survey. Real responses are being collected and stored.
+                  Processing up to 3 personas simultaneously for faster completion.
                 </p>
               </div>
               
@@ -368,10 +388,12 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
             <div className="text-center space-y-4">
               <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
                 <CheckCircle className="w-12 h-12 mx-auto text-green-600 mb-4" />
-                <h3 className="font-medium mb-2 text-green-800">Automated Survey Complete!</h3>
+                <h3 className="font-medium mb-2 text-green-800">Parallel Survey Complete!</h3>
                 <p className="text-sm text-green-700 mb-4">
                   {completedCount} of {totalPersonas} personas completed the survey successfully.
                   {errorCount > 0 && ` ${errorCount} personas encountered errors.`}
+                  <br />
+                  <span className="font-medium">Processed in parallel for faster completion.</span>
                 </p>
                 <div className="flex justify-center gap-2">
                   <Button onClick={exportResults} variant="outline">
