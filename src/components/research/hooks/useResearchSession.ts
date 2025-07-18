@@ -15,8 +15,8 @@ export interface UseResearchSessionReturn {
   messages: (Message & { responding_persona_id?: string })[];
   isLoading: boolean;
   createSession: (personaIds: string[], projectId?: string) => Promise<boolean>;
-  sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  sendToPersona: (personaId: string) => Promise<string>;
+  sendMessage: (message: string, imageFile?: File | null) => Promise<Message>;
+  sendToPersona: (personaId: string, userMessage?: Message) => Promise<string>;
 }
 
 export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
@@ -167,11 +167,10 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
-  // Add user message to chat without sending to personas yet
-  const sendMessage = async (message: string, imageFile?: File | null): Promise<void> => {
+  const sendMessage = async (message: string, imageFile?: File | null): Promise<Message> => {
     if (!sessionId) {
       toast.error('No active session');
-      return;
+      throw new Error('No active session');
     }
 
     try {
@@ -180,7 +179,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       // Process the message and file
       const { content, imageData, extractedText } = await processMessageWithFile(message, imageFile);
 
-      // Add user message to UI immediately
+      // Create user message object
       const userMessage: Message = {
         role: 'user',
         content: content,
@@ -188,6 +187,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         ...(imageData && { image: imageData })
       };
 
+      // Add user message to UI immediately
       setMessages(prev => [...prev, userMessage]);
 
       // Store message in database
@@ -209,18 +209,19 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         throw error;
       }
 
-      console.log('User message added to chat, waiting for persona selection');
+      console.log('User message added to chat');
+      return userMessage;
 
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Send current conversation to selected persona and return the response
-  const sendToPersona = async (personaId: string): Promise<string> => {
+  const sendToPersona = async (personaId: string, userMessage?: Message): Promise<string> => {
     if (!sessionId) {
       toast.error('No active session');
       throw new Error('No active session');
@@ -237,11 +238,19 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       console.log('Sending conversation to persona:', activePersona.name);
 
-      // Get the last user message
-      const lastUserMessage = messages.filter(m => m.role === 'user').pop();
-      if (!lastUserMessage) {
+      // Use provided userMessage or fall back to finding the last user message from state
+      let messageToSend: Message | undefined = userMessage;
+      
+      if (!messageToSend) {
+        console.log('No userMessage provided, falling back to state lookup');
+        messageToSend = messages.filter(m => m.role === 'user').pop();
+      }
+
+      if (!messageToSend) {
         throw new Error('No user message to send to persona');
       }
+
+      console.log('Using message:', messageToSend.content.substring(0, 100) + '...');
 
       // Format previous messages for the API
       const previousMessages = messages.map(msg => ({
@@ -260,12 +269,12 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       // Get persona response using the unified conversation engine
       const response = await sendMessageToPersona(
         personaId,
-        lastUserMessage.content,
+        messageToSend.content,
         previousMessages,
         activePersona,
-        'research', // Use research mode
-        knowledgeBaseContext, // Pass the knowledge base context
-        lastUserMessage.image
+        'research',
+        knowledgeBaseContext,
+        messageToSend.image
       );
       
       // Add persona response to messages
@@ -291,7 +300,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       console.log('Persona response generated and added to conversation');
       
-      return response; // Return the actual response text
+      return response;
 
     } catch (error) {
       console.error('Error getting persona response:', error);

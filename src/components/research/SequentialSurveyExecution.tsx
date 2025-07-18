@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { ArrowLeft, FileText, CheckCircle, Clock, User, MessageSquare } from 'lu
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
+import { Message } from '@/components/persona-chat/types';
 
 interface SurveyData {
   name: string;
@@ -34,8 +34,8 @@ interface SequentialSurveyExecutionProps {
   loadedPersonas: Persona[];
   sessionId: string | null;
   projectDocuments: any[];
-  sendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  sendToPersona: (personaId: string) => Promise<string>;
+  sendMessage: (message: string, imageFile?: File | null) => Promise<Message>;
+  sendToPersona: (personaId: string, userMessage?: Message) => Promise<string>;
   onComplete: () => void;
   onBack: () => void;
 }
@@ -129,13 +129,13 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               contextualMessage += `I will ask you ${surveyData.questions.length} questions one by one. Please provide thoughtful responses based on your persona characteristics.\n\n${questionMessage}`;
             }
 
-            await sendMessage(contextualMessage);
+            // Send message and get the message object back
+            const userMessage = await sendMessage(contextualMessage);
             
-            // Small delay to ensure message is processed
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('Message sent, now getting persona response...');
 
-            // Get response from this persona
-            const response = await sendToPersona(currentPersona.personaId);
+            // Get response from this persona using the exact message object
+            const response = await sendToPersona(currentPersona.personaId, userMessage);
             
             console.log(`Got response from ${currentPersona.personaName} for question ${questionIndex + 1}`);
 
@@ -173,7 +173,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               }
             }
 
-            // Small delay between questions
+            // Small delay between questions for better UX
             await new Promise(resolve => setTimeout(resolve, 500));
           }
 
