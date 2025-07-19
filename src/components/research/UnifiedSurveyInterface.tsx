@@ -210,6 +210,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       }
       
       setSurveySessionId(sessionTrackingId);
+      console.log('Survey session ID set to:', sessionTrackingId);
 
       console.log('Creating research session...');
       const success = await createSession(selectedPersonas, selectedProjectId || undefined);
@@ -302,6 +303,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         surveyDescription={surveyData.description}
         questions={surveyData.questions}
         sessionId={sessionId!}
+        surveySessionId={surveySessionId}
         loadedPersonas={loadedPersonas}
         onBack={handleBackToSetup}
       />

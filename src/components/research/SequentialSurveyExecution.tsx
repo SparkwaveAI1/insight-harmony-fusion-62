@@ -89,6 +89,8 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
     }
 
     console.log('Starting sequential survey execution...');
+    console.log('Using survey session ID:', surveySessionId);
+    console.log('Using conversation session ID:', sessionId);
     setIsRunning(true);
     
     try {
@@ -158,24 +160,32 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               } : p
             ));
 
-            // Store in database - use the conversation sessionId for consistency
-            if (sessionId) {
+            // Store in database - use surveySessionId first, fallback to sessionId
+            const sessionIdToUse = surveySessionId || sessionId;
+            console.log(`Saving response to database with session ID: ${sessionIdToUse}`);
+            
+            if (sessionIdToUse) {
               try {
                 await supabase
                   .from('research_survey_responses')
                   .insert({
-                    session_id: sessionId, // Use conversation session ID
+                    session_id: sessionIdToUse,
                     persona_id: currentPersona.personaId,
                     question_index: questionIndex,
                     question_text: question,
                     response_text: response
                   });
                 
-                console.log(`Stored response in database for ${currentPersona.personaName}, question ${questionIndex + 1}`);
+                console.log(`Successfully stored response in database for ${currentPersona.personaName}, question ${questionIndex + 1}`);
               } catch (dbError) {
                 console.error('Error storing response in database:', dbError);
+                console.error('Session ID used:', sessionIdToUse);
+                console.error('Survey Session ID:', surveySessionId);
+                console.error('Conversation Session ID:', sessionId);
                 // Continue anyway - we have the response in memory
               }
+            } else {
+              console.warn('No session ID available for saving response');
             }
 
             // Small delay between questions for better UX

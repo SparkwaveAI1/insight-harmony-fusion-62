@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +15,7 @@ interface SurveyResultsProps {
   surveyDescription?: string;
   questions: string[];
   sessionId: string;
+  surveySessionId?: string | null;
   loadedPersonas: Persona[];
   onBack: () => void;
 }
@@ -32,6 +34,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
   surveyDescription,
   questions,
   sessionId,
+  surveySessionId,
   loadedPersonas,
   onBack
 }) => {
@@ -45,10 +48,14 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
   useEffect(() => {
     const loadResponses = async () => {
       try {
+        // Use surveySessionId first, fallback to sessionId
+        const sessionIdToUse = surveySessionId || sessionId;
+        console.log('Loading survey results with session ID:', sessionIdToUse);
+        
         const { data, error } = await supabase
           .from('research_survey_responses')
           .select('*')
-          .eq('session_id', sessionId)
+          .eq('session_id', sessionIdToUse)
           .order('persona_id', { ascending: true })
           .order('question_index', { ascending: true });
 
@@ -58,6 +65,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
           return;
         }
 
+        console.log(`Loaded ${data?.length || 0} survey responses from database`);
         setResponses(data || []);
         
         // Convert responses to PersonaSurveyStatus format
@@ -95,10 +103,10 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
       }
     };
 
-    if (sessionId) {
+    if (sessionId || surveySessionId) {
       loadResponses();
     }
-  }, [sessionId, loadedPersonas]);
+  }, [sessionId, surveySessionId, loadedPersonas]);
 
   // Group responses by question
   const responsesByQuestion = questions.map((questionText, qIndex) => {
@@ -146,6 +154,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
       timestamp: new Date().toISOString(),
       questions,
       totalResponses: responses.length,
+      sessionId: surveySessionId || sessionId,
       responsesByQuestion: responsesByQuestion.map(q => ({
         questionIndex: q.questionIndex,
         questionText: q.questionText,
