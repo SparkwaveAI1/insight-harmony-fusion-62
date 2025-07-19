@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users, BarChart3, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MessageSquare, Users, BarChart3, ArrowRight, Clock } from 'lucide-react';
 
 interface ResearchModeSelectorProps {
   onSelectMode: (mode: 'interview' | 'focus-group' | 'survey') => void;
@@ -45,33 +46,68 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
       <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {modes.map((mode) => {
           const Icon = mode.icon;
+          const isSurvey = mode.id === 'survey';
+          
           return (
-            <Card key={mode.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center">
+            <Card key={mode.id} className={`hover:shadow-lg transition-shadow flex flex-col h-full ${isSurvey ? 'relative' : ''}`}>
+              {isSurvey && (
+                <Badge variant="secondary" className="absolute -top-2 -right-2 z-10">
+                  <Clock className="h-3 w-3 mr-1" />
+                  In Development
+                </Badge>
+              )}
+              
+              <CardHeader className="text-center pb-4">
                 <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
                   <Icon className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-xl">{mode.title}</CardTitle>
+                <CardTitle className="text-xl leading-tight">{mode.title}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm">
-                  {mode.description}
-                </p>
-                <ul className="space-y-2">
-                  {mode.features.map((feature, index) => (
-                    <li key={index} className="text-sm flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  onClick={() => onSelectMode(mode.id)}
-                  className="w-full mt-4"
-                >
-                  Start {mode.title}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
+              
+              <CardContent className="flex flex-col flex-grow">
+                <div className="flex-grow space-y-4">
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {mode.description}
+                  </p>
+                  
+                  {isSurvey && (
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground text-center">
+                        Expected completion: July 2025
+                      </p>
+                    </div>
+                  )}
+                  
+                  <ul className="space-y-2">
+                    {mode.features.map((feature, index) => (
+                      <li key={index} className="text-sm flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full flex-shrink-0" />
+                        <span className="leading-relaxed">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t">
+                  <Button 
+                    onClick={() => onSelectMode(mode.id)}
+                    disabled={isSurvey}
+                    className="w-full"
+                    variant={isSurvey ? "secondary" : "default"}
+                  >
+                    {isSurvey ? (
+                      <>
+                        <Clock className="h-4 w-4 mr-2" />
+                        Coming Soon
+                      </>
+                    ) : (
+                      <>
+                        Start {mode.title}
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
