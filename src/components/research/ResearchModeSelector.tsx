@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Users, BarChart3, ArrowRight, Clock } from 'lucide-react';
+import { MessageSquare, Users, BarChart3, Clock } from 'lucide-react';
 
 interface ResearchModeSelectorProps {
   onSelectMode: (mode: 'interview' | 'focus-group' | 'survey') => void;
@@ -91,20 +91,10 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                 <div className="mt-6 pt-4 border-t">
                   <Button 
                     onClick={() => onSelectMode(mode.id)}
-                    className="w-full"
+                    className="w-full justify-center"
                     variant={isSurvey ? "secondary" : "default"}
                   >
-                    {isSurvey ? (
-                      <>
-                        Enter Beta
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
-                    ) : (
-                      <>
-                        Start {mode.title}
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
-                    )}
+                    {isSurvey ? "Enter Beta" : mode.id === 'interview' ? "Start Interview" : `Start ${mode.title}`}
                   </Button>
                 </div>
               </CardContent>
