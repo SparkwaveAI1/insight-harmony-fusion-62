@@ -91,14 +91,13 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                 <div className="mt-6 pt-4 border-t">
                   <Button 
                     onClick={() => onSelectMode(mode.id)}
-                    disabled={isSurvey}
                     className="w-full"
                     variant={isSurvey ? "secondary" : "default"}
                   >
                     {isSurvey ? (
                       <>
-                        <Clock className="h-4 w-4 mr-2" />
-                        Coming Soon
+                        Enter Beta
+                        <ArrowRight className="h-4 w-4 ml-2" />
                       </>
                     ) : (
                       <>
