@@ -791,6 +791,33 @@ export type Database = {
         }
         Relationships: []
       }
+      research_reports: {
+        Row: {
+          created_at: string
+          id: string
+          insights: Json
+          survey_session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insights?: Json
+          survey_session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insights?: Json
+          survey_session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       research_survey_responses: {
         Row: {
           created_at: string
