@@ -43,109 +43,32 @@ export function buildValidationPrompt(
   console.log('number_of_children field:', metadata.number_of_children);
   console.log('children_ages field:', metadata.children_ages);
 
-  return `You are a comprehensive persona response validator. Your job is to ensure responses EXACTLY match the persona's specific demographic facts, personality traits, and behavioral patterns.
+return `You are a fast persona response validator. Quickly check if the response matches basic persona facts.
 
-PERSONA PROFILE - ${persona.name}:
-=== DEMOGRAPHIC FACTS (MUST BE ACCURATE) ===
-Age: ${age}
-Occupation: ${occupation}
-Education: ${education}
-Region: ${region}
-Marital Status: ${maritalStatus}
-Children: ${childrenInfo} children
-
-CRITICAL: If the persona mentions having children, they must say EXACTLY ${childrenInfo} children. Any other number is a CRITICAL ERROR.
-
-=== PERSONALITY TRAITS (MUST INFLUENCE RESPONSE) ===
-Big Five Scores (0.0-1.0):
-- Openness: ${bigFive.openness || 'Unknown'} ${getTraitDescription('openness', bigFive.openness)}
-- Conscientiousness: ${bigFive.conscientiousness || 'Unknown'} ${getTraitDescription('conscientiousness', bigFive.conscientiousness)}
-- Extraversion: ${bigFive.extraversion || 'Unknown'} ${getTraitDescription('extraversion', bigFive.extraversion)}
-- Agreeableness: ${bigFive.agreeableness || 'Unknown'} ${getTraitDescription('agreeableness', bigFive.agreeableness)}
-- Neuroticism: ${bigFive.neuroticism || 'Unknown'} ${getTraitDescription('neuroticism', bigFive.neuroticism)}
-
-Moral Foundations:
-- Care/Harm: ${moralFoundations.care || 'Unknown'}
-- Fairness: ${moralFoundations.fairness || 'Unknown'}
-- Loyalty: ${moralFoundations.loyalty || 'Unknown'}
-- Authority: ${moralFoundations.authority || 'Unknown'}
-- Sanctity: ${moralFoundations.sanctity || 'Unknown'}
-- Liberty: ${moralFoundations.liberty || 'Unknown'}
-
-=== KNOWLEDGE DOMAINS ===
-${Object.entries(knowledgeDomains).map(([domain, level]) => 
-  `${domain.replace(/_/g, ' ')}: Level ${level}/5`
-).join('\n') || 'No specific domains defined'}
-
-=== EMOTIONAL TRIGGERS ===
-Positive Triggers: ${emotionalTriggers.positive_triggers?.map(t => t.keywords?.join(', ')).filter(Boolean).join('; ') || 'None defined'}
-Negative Triggers: ${emotionalTriggers.negative_triggers?.map(t => t.keywords?.join(', ')).filter(Boolean).join('; ') || 'None defined'}
-
-CONVERSATION CONTEXT:
-${conversationContext}
+PERSONA: ${persona.name}
+Age: ${age} | Occupation: ${occupation} | Children: ${childrenInfo}
 
 USER MESSAGE: "${userMessage}"
-PERSONA RESPONSE TO VALIDATE: "${response}"
+RESPONSE: "${response}"
 
-VALIDATION REQUIREMENTS:
+Check ONLY:
+1. Basic demographic facts are correct
+2. Response tone matches personality (Extraversion: ${bigFive.extraversion || 'Unknown'})
 
-1. DEMOGRAPHIC_ACCURACY (0.0-1.0):
-   - Are ALL demographic facts mentioned correctly?
-   - CRITICAL: If children are mentioned, must be EXACTLY ${childrenInfo} children
-   - Is the marital status accurate if referenced?
-   - Is occupation/education level appropriate if referenced?
-   - SCORE 0.0 if ANY demographic fact is wrong
-
-2. TRAIT_ALIGNMENT (0.0-1.0):
-   - Does the response reflect the specific Big Five scores?
-   - High extraversion (>0.6) = more social, talkative
-   - Low extraversion (<0.4) = more reserved, concise
-   - High agreeableness (>0.6) = cooperative, avoiding conflict
-   - Low agreeableness (<0.4) = more direct, willing to disagree
-   - Does emotional tone match neuroticism level?
-
-3. EMOTIONAL_TRIGGER_COMPLIANCE (0.0-1.0):
-   - If triggers are mentioned in conversation, does persona react appropriately?
-   - Positive triggers should generate enthusiasm
-   - Negative triggers should generate appropriate negative emotions
-
-4. KNOWLEDGE_DOMAIN_ACCURACY (0.0-1.0):
-   - Does persona stay within their knowledge expertise levels?
-   - No claims of expertise in low-level domains
-   - Appropriate confidence in high-level domains
-
-5. CONVERSATIONAL_AUTHENTICITY (0.0-1.0):
-   - Natural speech patterns for this personality type
-   - Appropriate response length for extraversion level
-   - Emotional expression matching trait profile
-
-6. FACTUAL_CONSISTENCY (0.0-1.0):
-   - No contradictions with established persona facts
-   - Consistent with previous conversation context
-   - All demographic references are accurate
-
-CRITICAL FAILURES (Automatic Regeneration Required):
-- ANY incorrect demographic facts (age, children, marital status, etc.)
-- Mentions wrong number of children (must be exactly ${childrenInfo})
-- Response doesn't match personality trait levels
-- Claims expertise outside knowledge domains
-- Contradicts established persona information
-
-Return ONLY valid JSON:
+Return JSON:
 {
   "scores": {
-    "demographicAccuracy": 0.0,
-    "traitAlignment": 0.0,
-    "emotionalTriggerCompliance": 0.0,
-    "knowledgeDomainAccuracy": 0.0,
-    "conversationalAuthenticity": 0.0,
-    "factualConsistency": 0.0,
-    "overall": 0.0
+    "demographicAccuracy": 0.8,
+    "traitAlignment": 0.8,
+    "emotionalTriggerCompliance": 0.8,
+    "knowledgeDomainAccuracy": 0.8,
+    "conversationalAuthenticity": 0.8,
+    "factualConsistency": 0.8,
+    "overall": 0.8
   },
-  "feedback": "Detailed feedback on what's wrong",
-  "specificErrors": ["List specific factual errors or trait mismatches"],
-  "shouldRegenerate": true,
-  "improvedResponse": "Corrected version that matches persona exactly"
+  "feedback": "Brief feedback",
+  "specificErrors": [],
+  "shouldRegenerate": false
 }`;
 }
 

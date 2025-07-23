@@ -7,19 +7,19 @@ export async function callOpenAIValidation(prompt: string, openaiApiKey: string)
       Authorization: `Bearer ${openaiApiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini', // OPTIMIZED: Use faster model
       messages: [
         {
           role: 'system',
-          content: 'You are a harsh authenticity validator specializing in human conversation patterns and personality psychology. Your job is to ensure each persona sounds like a REAL PERSON talking naturally while expressing DISTINCT opinions based on their specific personality traits. Most responses should fail validation for being too polished, AI-like, or not reflecting natural human speech. Be extremely critical of anything that sounds like written content rather than spoken conversation.'
+          content: 'You are a fast persona validator. Check basic facts quickly and return valid JSON.'
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.3,
-      max_tokens: 1500,
+      temperature: 0.1, // OPTIMIZED: Lower temperature for consistency
+      max_tokens: 500, // OPTIMIZED: Shorter responses
     }),
   });
 

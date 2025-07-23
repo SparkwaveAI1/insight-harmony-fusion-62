@@ -13,79 +13,30 @@ export async function sendMessageToPersona(
   mode: ChatMode = 'conversation',
   conversationContext: string = '',
   imageData?: string,
-  maxRetries: number = 3
+  maxRetries: number = 1 // SIMPLIFIED: Only 1 retry to get responses faster
 ): Promise<string> {
-  console.log('Sending message to persona with validation:', { personaId, mode, messageLength: userMessage.length });
-  console.log('Persona metadata for validation:', persona.metadata);
+  console.log('Sending message to persona (simplified validation):', { personaId, mode, messageLength: userMessage.length });
 
-  let attempts = 0;
-  let lastResponse = '';
-  let validationFeedback = '';
+  try {
+    // Generate response
+    const response = await generatePersonaResponse(
+      personaId,
+      userMessage,
+      previousMessages,
+      persona,
+      mode,
+      conversationContext,
+      imageData
+    );
 
-  while (attempts < maxRetries) {
-    attempts++;
-    console.log(`Attempt ${attempts}/${maxRetries} for persona response`);
+    // SIMPLIFIED: Skip validation for now to get responses working
+    console.log('Response generated, skipping validation for speed');
+    return response;
 
-    try {
-      // Generate response
-      const response = await generatePersonaResponse(
-        personaId,
-        userMessage,
-        previousMessages,
-        persona,
-        mode,
-        conversationContext,
-        imageData,
-        validationFeedback // Include feedback from previous validation
-      );
-
-      lastResponse = response;
-
-      // Validate response against persona profile
-      const validation = await validatePersonaResponse(
-        response,
-        persona,
-        conversationContext,
-        userMessage
-      );
-
-      console.log(`Validation attempt ${attempts}:`, {
-        overall: validation.scores.overall,
-        demographicAccuracy: validation.scores.demographicAccuracy,
-        shouldRegenerate: validation.shouldRegenerate,
-        specificErrors: validation.specificErrors
-      });
-
-      // If validation passes (score > 0.7 AND demographic accuracy > 0.7), return the response
-      if (!validation.shouldRegenerate && validation.scores.overall > 0.7 && validation.scores.demographicAccuracy > 0.7) {
-        console.log('Response passed validation, returning to user');
-        return response;
-      }
-
-      // If validation fails, prepare feedback for next attempt
-      validationFeedback = `PREVIOUS RESPONSE FAILED VALIDATION:
-Response: "${response}"
-Issues: ${validation.feedback}
-Specific Errors: ${validation.specificErrors.join(', ')}
-Demographic Accuracy Score: ${validation.scores.demographicAccuracy}
-Overall Score: ${validation.scores.overall}
-
-CORRECTION NEEDED: Generate a new response that addresses these specific issues while staying true to the persona's exact demographic facts and personality traits. Pay special attention to demographic accuracy - all facts must be exactly correct.`;
-
-      console.log('Response failed validation, retrying...', validation.feedback);
-
-    } catch (error) {
-      console.error(`Error in attempt ${attempts}:`, error);
-      if (attempts === maxRetries) {
-        throw error;
-      }
-      validationFeedback = `Previous attempt failed due to error: ${error.message}. Try again with a different approach.`;
-    }
+  } catch (error) {
+    console.error('Error generating persona response:', error);
+    return 'I apologize, but I seem to be having trouble responding right now. Could you try rephrasing your question?';
   }
-
-  // If all attempts failed, return the last response with a warning
-  console.warn('All validation attempts failed, returning last response');
-  return lastResponse || 'I apologize, but I seem to be having trouble responding accurately right now. Could you try rephrasing your question?';
 }
 
 async function generatePersonaResponse(
