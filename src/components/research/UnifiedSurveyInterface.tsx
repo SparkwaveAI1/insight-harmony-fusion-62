@@ -212,6 +212,46 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       setSurveySessionId(sessionTrackingId);
       console.log('Survey session ID set to:', sessionTrackingId);
 
+      // Process project documents if available
+      if (projectDocuments.length > 0) {
+        console.log('Processing project documents for research context...');
+        try {
+          const { data: contextData, error: contextError } = await supabase.functions.invoke('prepare-research-context', {
+            body: {
+              documents: projectDocuments,
+              surveyName: surveyData.name,
+              surveyDescription: surveyData.description
+            }
+          });
+
+          if (contextError) {
+            console.error('Error processing research context:', contextError);
+            toast.error('Failed to process project documents');
+            return;
+          }
+
+          if (contextData?.research_context) {
+            console.log('Storing processed research context...');
+            const { error: updateError } = await supabase
+              .from('research_survey_sessions')
+              .update({ research_context: contextData.research_context })
+              .eq('id', sessionTrackingId);
+
+            if (updateError) {
+              console.error('Error storing research context:', updateError);
+              toast.error('Failed to store research context');
+              return;
+            }
+            
+            console.log('Research context processed and stored successfully');
+          }
+        } catch (docError) {
+          console.error('Error processing documents:', docError);
+          toast.error('Failed to process project documents');
+          return;
+        }
+      }
+
       console.log('Creating research session...');
       const success = await createSession(selectedPersonas, selectedProjectId || undefined);
       

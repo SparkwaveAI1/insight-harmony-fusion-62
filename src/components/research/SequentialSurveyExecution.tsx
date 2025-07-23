@@ -91,6 +91,26 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
     console.log('Starting sequential survey execution...');
     console.log('Using survey session ID:', surveySessionId);
     console.log('Using conversation session ID:', sessionId);
+    
+    // Fetch processed research context if available
+    let researchContext = null;
+    if (surveySessionId) {
+      try {
+        const { data: sessionData, error } = await supabase
+          .from('research_survey_sessions')
+          .select('research_context')
+          .eq('id', surveySessionId)
+          .single();
+        
+        if (!error && sessionData?.research_context) {
+          researchContext = sessionData.research_context;
+          console.log('Loaded processed research context:', researchContext.summary);
+        }
+      } catch (error) {
+        console.warn('Could not load research context:', error);
+      }
+    }
+    
     setIsRunning(true);
     
     try {
@@ -130,13 +150,38 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 contextualMessage += `Description: ${surveyData.description}\n\n`;
               }
               
-              // Inject project document content as research context
-              if (projectDocuments.length > 0) {
+              // Use processed research context if available, otherwise fall back to raw documents
+              if (researchContext) {
+                contextualMessage += `RESEARCH CONTEXT:\n\n`;
+                contextualMessage += `Summary: ${researchContext.summary}\n\n`;
+                
+                if (researchContext.key_insights?.length > 0) {
+                  contextualMessage += `Key Insights:\n`;
+                  researchContext.key_insights.forEach((insight: string, i: number) => {
+                    contextualMessage += `• ${insight}\n`;
+                  });
+                  contextualMessage += `\n`;
+                }
+                
+                if (researchContext.guidelines?.length > 0) {
+                  contextualMessage += `Guidelines:\n`;
+                  researchContext.guidelines.forEach((guideline: string, i: number) => {
+                    contextualMessage += `• ${guideline}\n`;
+                  });
+                  contextualMessage += `\n`;
+                }
+                
+                if (researchContext.background_context) {
+                  contextualMessage += `Background: ${researchContext.background_context}\n\n`;
+                }
+                
+                contextualMessage += `---\n\n`;
+              } else if (projectDocuments.length > 0) {
+                // Fallback to raw documents if no processed context available
                 contextualMessage += `RESEARCH CONTEXT - Please consider the following background information when answering:\n\n`;
                 projectDocuments.forEach((doc, index) => {
                   contextualMessage += `Document ${index + 1}: ${doc.title}\n`;
                   if (doc.content) {
-                    // Truncate very long content to avoid token limits
                     const content = doc.content.length > 2000 
                       ? doc.content.substring(0, 2000) + '...[content truncated]'
                       : doc.content;
