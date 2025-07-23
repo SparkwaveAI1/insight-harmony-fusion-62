@@ -35,15 +35,22 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
   ];
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">Research Interface</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Choose your research methodology to begin collecting qualitative insights from AI personas.
-        </p>
+    <div className="min-h-screen bg-background">
+      {/* Header Section */}
+      <div className="bg-primary/5 border-b">
+        <div className="container mx-auto px-6 py-12">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4 text-foreground">Research Interface</h1>
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+              PersonaAI lets you conduct qualitative research using advanced AI personas—delivering deep insights at scale through multiple research methodologies.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      {/* Content Section */}
+      <div className="container mx-auto p-6">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {modes.map((mode) => {
           const Icon = mode.icon;
           const isSurvey = mode.id === 'survey';
@@ -102,7 +109,8 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
               </CardContent>
             </Card>
           );
-        })}
+         })}
+        </div>
       </div>
     </div>
   );
