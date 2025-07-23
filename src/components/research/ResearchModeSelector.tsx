@@ -94,7 +94,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                   <Button 
                     onClick={() => onSelectMode(mode.id)}
                     className="w-full justify-center"
-                    variant={isInDevelopment ? "secondary" : "default"}
+                    variant="default"
                   >
                     {isSurvey ? "Start Study" : mode.id === 'interview' ? "Start Interview" : `Start ${mode.title}`}
                   </Button>
