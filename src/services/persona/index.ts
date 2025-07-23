@@ -10,13 +10,13 @@ export {
 export { 
   updatePersonaVisibility, 
   updatePersonaName,
-  updatePersonaDescription,
   updatePersonaProfileImageUrl 
 } from './operations/updatePersona';
 export { deletePersona } from './operations/deletePersona';
 export { clonePersona } from './operations/clonePersona';
 export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
+export { generatePersonaDescription, updatePersonaDescription } from './operations/generatePersonaDescription';
 export { enhancePersona } from './enhancePersona';
 
 // Re-export types

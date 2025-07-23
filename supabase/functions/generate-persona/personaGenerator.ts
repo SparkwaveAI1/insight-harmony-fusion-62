@@ -287,8 +287,12 @@ export function finalizePersona(
 ): PersonaTemplate {
   console.log('=== FINALIZING PERSONA ===');
   
+  // Generate description from traits and metadata
+  const description = generatePersonaDescription(basePersona, traitData);
+  
   // Merge all components into the base persona
   Object.assign(basePersona, {
+    description: description, // Add the generated description
     trait_profile: traitData.trait_profile,
     emotional_triggers: traitData.emotional_triggers,
     behavioral_modulation: behavioralLinguistic.behavioral_modulation,
@@ -342,4 +346,57 @@ export function finalizePersona(
 
   console.log('✅ Persona finalized and validated');
   return validatedPersona;
+}
+
+function generatePersonaDescription(persona: PersonaTemplate, traits: any): string {
+  // Extract key characteristics
+  const name = persona.name;
+  const age = persona.metadata?.age;
+  const occupation = persona.metadata?.occupation;
+  const location = persona.metadata?.location;
+  
+  // Analyze traits
+  const bigFive = traits.trait_profile?.big_five || {};
+  const worldValues = traits.trait_profile?.world_values || {};
+  const moral = traits.trait_profile?.moral_foundations || {};
+  
+  const personalityTraits: string[] = [];
+  
+  // Big Five analysis
+  if (bigFive.extraversion > 0.7) personalityTraits.push("outgoing and energetic");
+  else if (bigFive.extraversion < 0.3) personalityTraits.push("reserved and thoughtful");
+  
+  if (bigFive.openness > 0.7) personalityTraits.push("creative and curious");
+  else if (bigFive.openness < 0.3) personalityTraits.push("practical and traditional");
+  
+  if (bigFive.conscientiousness > 0.7) personalityTraits.push("organized and disciplined");
+  else if (bigFive.conscientiousness < 0.3) personalityTraits.push("flexible and spontaneous");
+  
+  if (bigFive.agreeableness > 0.7) personalityTraits.push("compassionate and cooperative");
+  else if (bigFive.agreeableness < 0.3) personalityTraits.push("direct and competitive");
+  
+  // Values analysis
+  const valueTraits: string[] = [];
+  if (moral.care > 0.7) valueTraits.push("deeply caring");
+  if (moral.fairness > 0.7) valueTraits.push("justice-oriented");
+  if (moral.liberty > 0.7) valueTraits.push("freedom-loving");
+  
+  // Build description
+  let description = `${name} is`;
+  
+  if (age) description += ` a ${age}-year-old`;
+  if (occupation) description += ` ${occupation}`;
+  if (location) description += ` from ${location}`;
+  
+  description += ".";
+  
+  if (personalityTraits.length > 0) {
+    description += ` They are ${personalityTraits.slice(0, 2).join(" and ")}.`;
+  }
+  
+  if (valueTraits.length > 0) {
+    description += ` ${valueTraits.join(" and ")}.`;
+  }
+  
+  return description;
 }

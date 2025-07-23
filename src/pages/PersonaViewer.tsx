@@ -13,6 +13,7 @@ import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
 import { Persona } from "@/services/persona";
+import PersonaDescriptionUpdater from "@/components/personas/PersonaDescriptionUpdater";
 
 // Create a QueryClient with specific retry configuration
 const queryClient = new QueryClient({
@@ -121,6 +122,13 @@ const PersonaViewerContent = () => {
 
           {/* Main Grid Area */}
           <div className="space-y-12">
+            {/* Description Updater - only show for non-library view (My Personas) */}
+            {!isLibraryView && (
+              <div className="mb-6">
+                <PersonaDescriptionUpdater />
+              </div>
+            )}
+
             {/* My Personas Section */}
             <section>
               <h2 className="text-2xl font-bold mb-6">My Personas</h2>
