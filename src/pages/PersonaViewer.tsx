@@ -7,6 +7,7 @@ import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaList from "@/components/personas/PersonaList";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
@@ -120,18 +121,17 @@ const PersonaViewerContent = () => {
             onSourceTypeChange={setSelectedSourceType}
           />
 
-          {/* Main Grid Area */}
-          <div className="space-y-12">
-            {/* Description Updater - only show for non-library view (My Personas) */}
-            {!isLibraryView && (
-              <div className="mb-6">
-                <PersonaDescriptionUpdater />
-              </div>
-            )}
+          {/* Tabs Interface */}
+          <Tabs defaultValue="my-personas" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="my-personas">My Personas</TabsTrigger>
+              <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
+            </TabsList>
 
-            {/* My Personas Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-6">My Personas</h2>
+            <TabsContent value="my-personas" className="space-y-6">
+              {/* Description Updater - only show in My Personas tab */}
+              <PersonaDescriptionUpdater />
+              
               <PersonaList 
                 onPersonasLoad={setMyPersonas}
                 filterByCurrentUser={true}
@@ -143,11 +143,9 @@ const PersonaViewerContent = () => {
                 selectedSourceType={selectedSourceType}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
-            </section>
-            
-            {/* Public Personas Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-6">Public Personas</h2>
+            </TabsContent>
+
+            <TabsContent value="public-personas" className="space-y-6">
               <PersonaList 
                 onPersonasLoad={setPublicPersonas}
                 publicOnly={true}
@@ -160,8 +158,8 @@ const PersonaViewerContent = () => {
                 selectedSourceType={selectedSourceType}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
-            </section>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
