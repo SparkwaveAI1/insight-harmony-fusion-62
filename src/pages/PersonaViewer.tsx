@@ -14,7 +14,6 @@ import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
 import { Persona } from "@/services/persona";
-import PersonaDescriptionUpdater from "@/components/personas/PersonaDescriptionUpdater";
 
 // Create a QueryClient with specific retry configuration
 const queryClient = new QueryClient({
@@ -129,10 +128,7 @@ const PersonaViewerContent = () => {
             </TabsList>
 
             <TabsContent value="my-personas" className="space-y-6">
-              {/* Description Updater - only show in My Personas tab */}
-              <PersonaDescriptionUpdater />
-              
-              <PersonaList 
+              <PersonaList
                 onPersonasLoad={setMyPersonas}
                 filterByCurrentUser={true}
                 searchQuery={searchQuery}
