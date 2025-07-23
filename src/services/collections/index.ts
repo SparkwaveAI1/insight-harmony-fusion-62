@@ -27,3 +27,6 @@ export * from './conversationOperations';
 export * from './collectionsService';
 
 export { getProjectConversations } from './conversationOperations';
+
+// Export research operations
+export * from './researchOperations';

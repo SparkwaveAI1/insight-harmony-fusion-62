@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, MessageSquare, Users, FileText, AlertCircle, Play } from 'lucide-react';
-import { getProjectById, getProjectConversations } from '@/services/collections';
+import { getProjectById, getProjectConversations, getProjectResearchSessions } from '@/services/collections';
 import { Project, Conversation } from '@/services/collections/types';
+import { ResearchSurveySession } from '@/services/collections/researchOperations';
 import ProjectInformationForm from '@/components/projects/ProjectInformationForm';
 import ProjectCollectionsManager from '@/components/projects/ProjectCollectionsManager';
 import ProjectKnowledgeBase from '@/components/projects/ProjectKnowledgeBase';
@@ -25,6 +26,7 @@ const ProjectDetail = () => {
   
   const [project, setProject] = useState<Project | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [researchSessions, setResearchSessions] = useState<ResearchSurveySession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,22 +47,24 @@ const ProjectDetail = () => {
     try {
       console.log('Loading project data for ID:', projectId);
       
-      const [projectData, conversationData] = await Promise.all([
+      const [projectData, conversationData, researchData] = await Promise.all([
         getProjectById(projectId),
-        getProjectConversations(projectId)
+        getProjectConversations(projectId),
+        getProjectResearchSessions(projectId)
       ]);
       
       console.log('Project data loaded:', projectData);
       console.log('Conversations loaded:', conversationData);
+      console.log('Research sessions loaded:', researchData);
       
       if (!projectData) {
         setError("Project not found or you don't have access to it");
         setProject(null);
       } else {
         setProject(projectData);
+        setConversations(conversationData || []);
+        setResearchSessions(researchData || []);
       }
-      
-      setConversations(conversationData);
     } catch (error) {
       console.error('Error loading project data:', error);
       setError(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -71,6 +75,31 @@ const ProjectDetail = () => {
 
   const handleProjectUpdate = (updatedProject: Project) => {
     setProject(updatedProject);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'active':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (isLoading) {
@@ -210,40 +239,56 @@ const ProjectDetail = () => {
                 </div>
 
                 {/* Overview Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid gap-4 md:grid-cols-4 mb-8">
                   <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3">
-                        <MessageSquare className="h-8 w-8 text-blue-500" />
-                        <div>
-                          <p className="text-2xl font-bold">{conversations.length}</p>
-                          <p className="text-sm text-gray-500">Conversations</p>
-                        </div>
-                      </div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">1-on-1 Conversations</CardTitle>
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{conversations.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Active chat sessions
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Research Reports</CardTitle>
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{researchSessions.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Survey studies completed
+                      </p>
                     </CardContent>
                   </Card>
                   
                   <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3">
-                        <Users className="h-8 w-8 text-green-500" />
-                        <div>
-                          <p className="text-2xl font-bold">0</p>
-                          <p className="text-sm text-gray-500">Collections</p>
-                        </div>
-                      </div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Collections</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">0</div>
+                      <p className="text-xs text-muted-foreground">
+                        Persona collections attached
+                      </p>
                     </CardContent>
                   </Card>
                   
                   <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-purple-500" />
-                        <div>
-                          <p className="text-2xl font-bold">0</p>
-                          <p className="text-sm text-gray-500">Documents</p>
-                        </div>
-                      </div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Documents</CardTitle>
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">0</div>
+                      <p className="text-xs text-muted-foreground">
+                        Knowledge base documents
+                      </p>
                     </CardContent>
                   </Card>
                 </div>
@@ -264,61 +309,110 @@ const ProjectDetail = () => {
                   <div className="space-y-6">
                     <ProjectKnowledgeBase projectId={project.id} />
 
-                    {/* Recent Conversations */}
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Recent Conversations</CardTitle>
-                        <Link to={`/research?project=${project.id}`}>
-                          <Button variant="outline" size="sm" className="border-blue-200 text-blue-700 hover:bg-blue-50">
-                            <Play className="h-4 w-4 mr-2" />
-                            Start Research
-                          </Button>
-                        </Link>
+                    {/* 1-on-1 Conversations */}
+                    <Card className="mb-6">
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <MessageSquare className="h-5 w-5" />
+                          <span>1-on-1 Conversations</span>
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {conversations.length > 0 ? (
+                        {conversations.length === 0 ? (
+                          <div className="text-center py-8">
+                            <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-medium mb-2">No conversations yet</h3>
+                            <p className="text-muted-foreground mb-4">
+                              Start your first research conversation with personas
+                            </p>
+                            <Link to="/research">
+                              <Button className="flex items-center space-x-2">
+                                <Play className="h-4 w-4" />
+                                <span>Start Research</span>
+                              </Button>
+                            </Link>
+                          </div>
+                        ) : (
                           <div className="space-y-3">
                             {conversations.slice(0, 5).map((conversation) => (
-                              <div key={conversation.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div>
+                              <div key={conversation.id} className="flex items-center justify-between p-3 rounded-lg border">
+                                <div className="flex-1">
                                   <h4 className="font-medium">{conversation.title}</h4>
-                                  <p className="text-xs text-gray-500">
-                                    {new Date(conversation.created_at).toLocaleDateString()}
-                                  </p>
+                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                    <span>{formatDate(conversation.updated_at)}</span>
+                                    {conversation.persona_ids.length > 0 && (
+                                      <span>{conversation.persona_ids.length} personas</span>
+                                    )}
+                                    {conversation.tags.length > 0 && (
+                                      <div className="flex space-x-1">
+                                        {conversation.tags.slice(0, 2).map((tag, index) => (
+                                          <Badge key={index} variant="secondary" className="text-xs">
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                        {conversation.tags.length > 2 && (
+                                          <span className="text-xs">+{conversation.tags.length - 2} more</span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="flex gap-2">
-                                  {conversation.tags.map((tag) => (
-                                    <Badge key={tag} variant="secondary" className="text-xs">
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                  <Link to={`/conversations/${conversation.id}`}>
-                                    <Button variant="ghost" size="sm">
-                                      View
-                                    </Button>
-                                  </Link>
-                                </div>
-                              </div>
-                            ))}
-                            {conversations.length > 5 && (
-                              <div className="text-center pt-2">
-                                <Link to={`/projects/${project.id}/conversations`}>
-                                  <Button variant="ghost" size="sm">
-                                    View All Conversations
+                                <Link to={`/conversations/${conversation.id}`}>
+                                  <Button variant="outline" size="sm">
+                                    View
                                   </Button>
                                 </Link>
                               </div>
-                            )}
+                            ))}
                           </div>
-                        ) : (
-                          <div className="text-center py-6">
-                            <p className="text-gray-500 text-sm mb-4">No conversations yet. Start your first research session!</p>
-                            <Link to={`/research?project=${project.id}`}>
-                              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                                <Play className="h-4 w-4 mr-2" />
-                                Start Research
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Research Reports */}
+                    <Card className="mb-6">
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <FileText className="h-5 w-5" />
+                          <span>Research Reports</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {researchSessions.length === 0 ? (
+                          <div className="text-center py-8">
+                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-medium mb-2">No research reports yet</h3>
+                            <p className="text-muted-foreground mb-4">
+                              Conduct survey studies to generate research reports
+                            </p>
+                            <Link to="/research">
+                              <Button className="flex items-center space-x-2">
+                                <Play className="h-4 w-4" />
+                                <span>Start Survey Study</span>
                               </Button>
                             </Link>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {researchSessions.slice(0, 5).map((session) => (
+                              <div key={session.id} className="flex items-center justify-between p-3 rounded-lg border">
+                                <div className="flex-1">
+                                  <h4 className="font-medium">{session.survey_name || 'Research Survey'}</h4>
+                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                    <span>{formatDate(session.updated_at)}</span>
+                                    <span>{session.selected_personas.length} personas</span>
+                                    <Badge className={`text-xs ${getStatusColor(session.status)}`}>
+                                      {session.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Link to={`/research/results/${session.id}`}>
+                                  <Button variant="outline" size="sm">
+                                    View Results
+                                  </Button>
+                                </Link>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </CardContent>
