@@ -19,18 +19,18 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
       features: ['Deep qualitative insights', 'Persona trait exploration', 'Contextual questioning']
     },
     {
-      id: 'focus-group' as const,
-      title: 'Focus Group',
-      description: 'Facilitate group discussions with multiple personas to observe social dynamics and consensus building.',
-      icon: Users,
-      features: ['Group dynamics', 'Consensus exploration', 'Multiple perspectives']
-    },
-    {
       id: 'survey' as const,
       title: 'Survey Study',
       description: 'Run structured questionnaires across multiple personas for quantifiable qualitative insights.',
       icon: BarChart3,
       features: ['Structured data collection', 'Scalable insights', 'Comparative analysis']
+    },
+    {
+      id: 'focus-group' as const,
+      title: 'Focus Group',
+      description: 'Facilitate group discussions with multiple personas to observe social dynamics and consensus building.',
+      icon: Users,
+      features: ['Group dynamics', 'Consensus exploration', 'Multiple perspectives']
     }
   ];
 
@@ -47,10 +47,12 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
         {modes.map((mode) => {
           const Icon = mode.icon;
           const isSurvey = mode.id === 'survey';
+          const isFocusGroup = mode.id === 'focus-group';
+          const isInDevelopment = isSurvey || isFocusGroup;
           
           return (
-            <Card key={mode.id} className={`hover:shadow-lg transition-shadow flex flex-col h-full ${isSurvey ? 'relative' : ''}`}>
-              {isSurvey && (
+            <Card key={mode.id} className={`hover:shadow-lg transition-shadow flex flex-col h-full ${isInDevelopment ? 'relative' : ''}`}>
+              {isInDevelopment && (
                 <Badge variant="secondary" className="absolute -top-2 -right-2 z-10">
                   <Clock className="h-3 w-3 mr-1" />
                   In Development
@@ -70,7 +72,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                     {mode.description}
                   </p>
                   
-                  {isSurvey && (
+                  {isInDevelopment && (
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="text-xs text-muted-foreground text-center">
                         Expected completion: July 2025
@@ -92,9 +94,9 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                   <Button 
                     onClick={() => onSelectMode(mode.id)}
                     className="w-full justify-center"
-                    variant={isSurvey ? "secondary" : "default"}
+                    variant={isInDevelopment ? "secondary" : "default"}
                   >
-                    {isSurvey ? "Enter Beta" : mode.id === 'interview' ? "Start Interview" : `Start ${mode.title}`}
+                    {isSurvey ? "Start Study" : mode.id === 'interview' ? "Start Interview" : `Start ${mode.title}`}
                   </Button>
                 </div>
               </CardContent>
