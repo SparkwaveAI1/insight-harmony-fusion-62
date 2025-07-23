@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { PersonaProvider } from '@/context/PersonaProvider';
 import { Toaster } from 'sonner';
+import Header from '@/components/layout/Header';
 import ResearchModeSelector from '@/components/research/ResearchModeSelector';
 import InterviewMode from '@/components/research/modes/InterviewMode';
 import FocusGroupMode from '@/components/research/modes/FocusGroupMode';
@@ -39,7 +40,8 @@ const Research: React.FC = () => {
   return (
     <PersonaProvider>
       <div className="min-h-screen flex flex-col bg-background">
-        <main className="flex-grow">
+        <Header />
+        <main className="flex-grow pt-20">
           {renderCurrentMode()}
         </main>
         <Toaster />
