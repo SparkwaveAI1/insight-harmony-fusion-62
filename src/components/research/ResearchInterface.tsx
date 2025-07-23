@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { PersonaLoader } from './PersonaLoader';
 import { ResearchConversation } from './ResearchConversation';
 import { ResearchHeader } from './ResearchHeader';
-import { SendToPersonaSection } from './SendToPersonaSection';
 import { ActivePersonasDisplay } from './ActivePersonasDisplay';
 import { SessionData } from './hooks/types';
 import { exportTranscript } from './utils/exportUtils';
@@ -13,14 +12,12 @@ interface ResearchInterfaceProps {
   sessionData: SessionData;
   onCreateSession: (selectedPersonas: string[]) => Promise<boolean>;
   onSendMessage: (message: string, imageFile?: File | null) => Promise<void>;
-  onSendToPersona: (personaId: string) => Promise<void>;
 }
 
 const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
   sessionData,
   onCreateSession,
-  onSendMessage,
-  onSendToPersona
+  onSendMessage
 }) => {
   const { sessionId, loadedPersonas, messages, isLoading } = sessionData;
   const [showPersonaLoader, setShowPersonaLoader] = useState(!sessionId);
@@ -61,9 +58,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
       responding_persona_id: message.responding_persona_id
     }));
   };
-
-  // Show send to persona buttons when there are active personas and messages exist
-  const shouldShowSendButtons = loadedPersonas.length > 0 && messages.length > 0;
 
   if (showPersonaLoader || !sessionId) {
     return (
@@ -113,15 +107,6 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
           onSendMessage={onSendMessage}
         />
       </div>
-
-      {/* Send to Persona Buttons */}
-      {shouldShowSendButtons && (
-        <SendToPersonaSection
-          loadedPersonas={loadedPersonas}
-          isLoading={isLoading}
-          onSendToPersona={onSendToPersona}
-        />
-      )}
 
       {/* Loaded Personas Display */}
       <ActivePersonasDisplay loadedPersonas={loadedPersonas} />

@@ -24,8 +24,8 @@ const FocusGroupMode: React.FC<FocusGroupModeProps> = ({ onBack }) => {
   const {
     messages,
     isLoading: isSessionLoading,
-    sendMessage,
-    sendToPersona
+    createSession,
+    sendMessage
   } = useResearchSession();
 
   useEffect(() => {
@@ -55,27 +55,22 @@ const FocusGroupMode: React.FC<FocusGroupModeProps> = ({ onBack }) => {
     });
   };
 
-  const startFocusGroup = () => {
+  const startFocusGroup = async () => {
     if (selectedPersonas.length >= 2) {
-      setIsSelectionMode(false);
-    }
-  };
-
-  const handleSendToAll = async (message: string) => {
-    for (const persona of selectedPersonas) {
-      try {
-        await sendToPersona(persona.persona_id);
-      } catch (error) {
-        console.error('Error sending to persona:', persona.name, error);
+      const personaIds = selectedPersonas.map(p => p.persona_id);
+      const success = await createSession(personaIds);
+      if (success) {
+        setIsSelectionMode(false);
       }
     }
   };
 
-  const handleSendToSpecific = async (message: string, personaId: string) => {
+  const handleSendMessage = async (message: string) => {
     try {
-      await sendToPersona(personaId);
+      // sendMessage now automatically sends to all personas in parallel
+      await sendMessage(message);
     } catch (error) {
-      console.error('Error sending to specific persona:', error);
+      console.error('Error sending message:', error);
     }
   };
 
@@ -112,7 +107,7 @@ const FocusGroupMode: React.FC<FocusGroupModeProps> = ({ onBack }) => {
           </ScrollArea>
           
           <MessageInput
-            onSendMessage={(message) => handleSendToAll(message)}
+            onSendMessage={handleSendMessage}
             isResponding={isSessionLoading}
           />
         </Card>

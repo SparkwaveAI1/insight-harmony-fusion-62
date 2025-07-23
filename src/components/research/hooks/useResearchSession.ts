@@ -7,16 +7,19 @@ import { getProjectById, getProjectDocuments } from '@/services/collections';
 import { processMessageWithFile, ResearchMessage } from '../services/messageService';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 import { Message } from '@/components/persona-chat/types';
+import { processPersonasInParallel } from '../utils/parallelProcessing';
 
 export interface UseResearchSessionReturn {
   sessionId: string | null;
   loadedPersonas: Persona[];
   projectDocuments: any[];
   messages: (Message & { responding_persona_id?: string })[];
+  personaConversations: Map<string, (Message & { responding_persona_id?: string })[]>;
   isLoading: boolean;
   createSession: (personaIds: string[], projectId?: string) => Promise<boolean>;
   sendMessage: (message: string, imageFile?: File | null) => Promise<Message>;
   sendToPersona: (personaId: string, userMessage?: Message) => Promise<string>;
+  sendToAllPersonas: (userMessage: Message) => Promise<void>;
 }
 
 export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
@@ -24,6 +27,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
   const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
   const [messages, setMessages] = useState<(Message & { responding_persona_id?: string })[]>([]);
+  const [personaConversations, setPersonaConversations] = useState<Map<string, (Message & { responding_persona_id?: string })[]>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
 
   // Load project documents when projectId changes
@@ -152,6 +156,13 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       console.log('Personas loaded:', mappedPersonas.length);
       setLoadedPersonas(mappedPersonas);
       setMessages([]);
+      
+      // Initialize individual conversation maps for each persona
+      const newConversations = new Map<string, (Message & { responding_persona_id?: string })[]>();
+      mappedPersonas.forEach(persona => {
+        newConversations.set(persona.persona_id, []);
+      });
+      setPersonaConversations(newConversations);
 
       toast.success(`Research session started successfully with ${mappedPersonas.length} personas`);
       console.log('=== CREATE SESSION SUCCESS ===');
@@ -210,6 +221,18 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       }
 
       console.log('User message added to chat');
+      
+      // Automatically send to all personas in parallel
+      if (loadedPersonas.length > 0) {
+        console.log('Automatically sending to all personas');
+        try {
+          await sendToAllPersonas(userMessage);
+        } catch (error) {
+          console.error('Error sending to all personas after user message:', error);
+          // Don't throw here - the user message was successfully added
+        }
+      }
+      
       return userMessage;
 
     } catch (error) {
@@ -228,8 +251,6 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
 
     try {
-      setIsLoading(true);
-
       // Find the persona
       const activePersona = loadedPersonas.find(p => p.persona_id === personaId);
       if (!activePersona) {
@@ -238,12 +259,13 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       console.log('Sending conversation to persona:', activePersona.name);
 
-      // Use provided userMessage or fall back to finding the last user message from state
+      // Use provided userMessage or fall back to finding the last user message from this persona's conversation
       let messageToSend: Message | undefined = userMessage;
       
       if (!messageToSend) {
         console.log('No userMessage provided, falling back to state lookup');
-        messageToSend = messages.filter(m => m.role === 'user').pop();
+        const personaMessages = personaConversations.get(personaId) || [];
+        messageToSend = personaMessages.filter(m => m.role === 'user').pop();
       }
 
       if (!messageToSend) {
@@ -252,8 +274,9 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
 
       console.log('Using message:', messageToSend.content.substring(0, 100) + '...');
 
-      // Format previous messages for the API
-      const previousMessages = messages.map(msg => ({
+      // Get this persona's individual conversation history
+      const personaMessages = personaConversations.get(personaId) || [];
+      const previousMessages = personaMessages.map(msg => ({
         role: msg.role,
         content: msg.content,
         image: msg.image
@@ -266,7 +289,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
           ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
         : '';
 
-      // Get persona response using the unified conversation engine
+      // Get persona response using the unified conversation engine with isolated conversation history
       const response = await sendMessageToPersona(
         personaId,
         messageToSend.content,
@@ -277,7 +300,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         messageToSend.image
       );
       
-      // Add persona response to messages
+      // Add persona response to this persona's individual conversation
       const personaMessage: Message & { responding_persona_id: string } = {
         role: 'assistant',
         content: response,
@@ -285,6 +308,15 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         responding_persona_id: personaId
       };
 
+      // Update persona's individual conversation
+      setPersonaConversations(prev => {
+        const updated = new Map(prev);
+        const personaMessages = updated.get(personaId) || [];
+        updated.set(personaId, [...personaMessages, personaMessage]);
+        return updated;
+      });
+
+      // Also add to shared messages for UI display
       setMessages(prev => [...prev, personaMessage]);
 
       // Store persona response in database
@@ -306,6 +338,51 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       console.error('Error getting persona response:', error);
       toast.error('Failed to get persona response');
       throw error;
+    }
+  };
+
+  const sendToAllPersonas = async (userMessage: Message): Promise<void> => {
+    if (!sessionId) {
+      toast.error('No active session');
+      throw new Error('No active session');
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Sending message to all personas in parallel');
+
+      // Add user message to each persona's individual conversation
+      setPersonaConversations(prev => {
+        const updated = new Map(prev);
+        loadedPersonas.forEach(persona => {
+          const personaMessages = updated.get(persona.persona_id) || [];
+          updated.set(persona.persona_id, [...personaMessages, userMessage]);
+        });
+        return updated;
+      });
+
+      // Process all personas in parallel using the existing parallelProcessing utility
+      const personaIds = loadedPersonas.map(p => p.persona_id);
+      
+      const sendToPersonaWrapper = async (personaId: string): Promise<string> => {
+        return await sendToPersona(personaId, userMessage);
+      };
+
+      await processPersonasInParallel(
+        personaIds,
+        sendToPersonaWrapper,
+        (progress) => {
+          console.log(`Processing personas: ${progress.completed}/${progress.total}`);
+        },
+        3 // Max 3 concurrent requests
+      );
+
+      console.log('All personas processed successfully');
+      
+    } catch (error) {
+      console.error('Error sending to all personas:', error);
+      toast.error('Failed to send message to all personas');
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -316,9 +393,11 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     loadedPersonas,
     projectDocuments,
     messages,
+    personaConversations,
     isLoading,
     createSession,
     sendMessage,
-    sendToPersona
+    sendToPersona,
+    sendToAllPersonas
   };
 };

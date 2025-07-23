@@ -1,9 +1,10 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ResearchMessageInput } from './ResearchMessageInput';
 import { ResearchMessage } from './ResearchMessage';
+import { ResearchResponseGroup } from './ResearchResponseGroup';
 import { Message } from '@/components/persona-chat/types';
 import { Persona } from '@/services/persona/types';
 
@@ -37,13 +38,13 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
             <div className="p-6 flex flex-col h-full">
               <ScrollArea className="flex-1 pr-4">
                 <div className="space-y-6">
-                  {messages.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <h3 className="text-xl font-medium mb-3">Research Session Active</h3>
-                      <p className="text-base">Start your conversation by sending a message below.</p>
-                      <p className="text-sm mt-2">Your message will be added to the chat, then use "Send to Personas" to get responses.</p>
-                    </div>
-                  )}
+                   {messages.length === 0 && (
+                     <div className="text-center py-12 text-muted-foreground">
+                       <h3 className="text-xl font-medium mb-3">Research Session Active</h3>
+                       <p className="text-base">Start your conversation by sending a message below.</p>
+                       <p className="text-sm mt-2">Your message will automatically be sent to all active personas for their responses.</p>
+                     </div>
+                   )}
                   
                   {messages.map((message, index) => (
                     <ResearchMessage
@@ -53,12 +54,12 @@ export const ResearchConversation: React.FC<ResearchConversationProps> = ({
                     />
                   ))}
                   
-                  {isLoading && (
-                    <div className="flex items-center gap-2 text-muted-foreground py-4">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      <span>Generating response...</span>
-                    </div>
-                  )}
+                   {isLoading && (
+                     <div className="flex items-center gap-2 text-muted-foreground py-4">
+                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                       <span>Processing with all personas...</span>
+                     </div>
+                   )}
                   
                   <div ref={messagesEndRef} />
                 </div>
