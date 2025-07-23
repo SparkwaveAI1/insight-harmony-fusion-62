@@ -64,6 +64,27 @@ const Projects = () => {
     }
   };
 
+  const handleBulkDeleteResearchSessions = async () => {
+    const researchSessionProjects = projects.filter(p => 
+      p.name === 'Research Session' || p.name === 'Research Sessions'
+    );
+    
+    if (researchSessionProjects.length === 0) {
+      alert('No "Research Session" or "Research Sessions" projects found');
+      return;
+    }
+
+    const confirmed = confirm(`Delete ${researchSessionProjects.length} projects named "Research Session" or "Research Sessions"?`);
+    if (!confirmed) return;
+
+    for (const project of researchSessionProjects) {
+      await deleteProject(project.id);
+    }
+    
+    loadProjects();
+    alert(`Deleted ${researchSessionProjects.length} projects`);
+  };
+
   const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setProjectToDelete(null);
@@ -90,10 +111,18 @@ const Projects = () => {
                   Organize your conversations into research projects
                 </p>
               </div>
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Project
-              </Button>
+              <div className="flex gap-2">
+                {projects.some(p => p.name === 'Research Session' || p.name === 'Research Sessions') && (
+                  <Button variant="destructive" size="sm" onClick={handleBulkDeleteResearchSessions}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Research Sessions
+                  </Button>
+                )}
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Project
+                </Button>
+              </div>
             </div>
 
             {isLoading ? (
