@@ -835,6 +835,7 @@ export type Database = {
           conversation_id: string | null
           created_at: string
           id: string
+          research_context: Json | null
           research_survey_id: string
           selected_personas: string[]
           started_at: string | null
@@ -847,6 +848,7 @@ export type Database = {
           conversation_id?: string | null
           created_at?: string
           id?: string
+          research_context?: Json | null
           research_survey_id: string
           selected_personas?: string[]
           started_at?: string | null
@@ -859,6 +861,7 @@ export type Database = {
           conversation_id?: string | null
           created_at?: string
           id?: string
+          research_context?: Json | null
           research_survey_id?: string
           selected_personas?: string[]
           started_at?: string | null
