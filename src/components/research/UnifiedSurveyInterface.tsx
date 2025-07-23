@@ -16,6 +16,8 @@ import SurveyResults from './SurveyResults';
 import { createSurveySession, updateSurveySessionStatus } from './services/surveySessionService';
 import { QuestionUpload } from './QuestionUpload';
 import ProjectSelector from './ProjectSelector';
+import DocumentManager from './DocumentManager';
+import { KnowledgeBaseDocument } from '@/services/collections';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -44,6 +46,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [surveySessionId, setSurveySessionId] = useState<string | null>(null);
+  const [selectedDocuments, setSelectedDocuments] = useState<KnowledgeBaseDocument[]>([]);
 
   const {
     sessionId,
@@ -212,13 +215,14 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       setSurveySessionId(sessionTrackingId);
       console.log('Survey session ID set to:', sessionTrackingId);
 
-      // Process project documents if available
-      if (projectDocuments.length > 0) {
+      // Process selected documents for research context
+      const documentsToProcess = selectedDocuments.length > 0 ? selectedDocuments : projectDocuments;
+      if (documentsToProcess.length > 0) {
         console.log('Processing project documents for research context...');
         try {
           const { data: contextData, error: contextError } = await supabase.functions.invoke('prepare-research-context', {
             body: {
-              documents: projectDocuments,
+              documents: documentsToProcess,
               surveyName: surveyData.name,
               surveyDescription: surveyData.description
             }
@@ -438,6 +442,12 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           <QuestionUpload
             questions={surveyData.questions}
             onQuestionsChange={handleQuestionsChange}
+          />
+
+          <DocumentManager
+            projectId={selectedProjectId || undefined}
+            selectedDocuments={selectedDocuments}
+            onDocumentsChange={setSelectedDocuments}
           />
         </div>
 
