@@ -124,14 +124,29 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Add context about the survey
             let contextualMessage = questionMessage;
             if (questionIndex === 0) {
-              contextualMessage = `SURVEY: ${surveyData.name}\n\n`;
+              contextualMessage = `RESEARCH BRIEFING - SURVEY: ${surveyData.name}\n\n`;
+              
               if (surveyData.description) {
                 contextualMessage += `Description: ${surveyData.description}\n\n`;
               }
+              
+              // Inject project document content as research context
               if (projectDocuments.length > 0) {
-                contextualMessage += `You have access to project documents that may inform your responses.\n\n`;
+                contextualMessage += `RESEARCH CONTEXT - Please consider the following background information when answering:\n\n`;
+                projectDocuments.forEach((doc, index) => {
+                  contextualMessage += `Document ${index + 1}: ${doc.title}\n`;
+                  if (doc.content) {
+                    // Truncate very long content to avoid token limits
+                    const content = doc.content.length > 2000 
+                      ? doc.content.substring(0, 2000) + '...[content truncated]'
+                      : doc.content;
+                    contextualMessage += `${content}\n\n`;
+                  }
+                });
+                contextualMessage += `---\n\n`;
               }
-              contextualMessage += `I will ask you ${surveyData.questions.length} questions one by one. Please provide thoughtful responses based on your persona characteristics.\n\n${questionMessage}`;
+              
+              contextualMessage += `I will ask you ${surveyData.questions.length} questions one by one. Please provide thoughtful responses based on your persona characteristics and the research context provided above.\n\n${questionMessage}`;
             }
 
             // Send message and get the message object back
