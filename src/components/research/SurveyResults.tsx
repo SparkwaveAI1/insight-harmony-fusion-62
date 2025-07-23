@@ -20,6 +20,25 @@ interface SurveyResultsProps {
   onBack: () => void;
 }
 
+interface CompiledInsights {
+  themes: string[];
+  contradictions: string[];
+  quotes: Array<{
+    text: string;
+    persona_name: string;
+    question: string;
+  }>;
+  summary: string;
+  sentiment_analysis: {
+    overall_sentiment: string;
+    question_sentiments: Array<{
+      question: string;
+      sentiment: string;
+      confidence: number;
+    }>;
+  };
+}
+
 interface StoredResponse {
   id: string;
   persona_id: string;
@@ -43,6 +62,8 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [showReport, setShowReport] = useState(false);
   const [personaStatuses, setPersonaStatuses] = useState<PersonaSurveyStatus[]>([]);
+  const [compiledInsights, setCompiledInsights] = useState<CompiledInsights | null>(null);
+  const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
   // Load responses from database
   useEffect(() => {
@@ -95,6 +116,11 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
         });
         
         setPersonaStatuses(Array.from(statusMap.values()));
+        
+        // Load compiled insights if available
+        if (surveySessionId) {
+          loadCompiledInsights(surveySessionId);
+        }
       } catch (error) {
         console.error('Error loading survey responses:', error);
         toast.error('Failed to load survey responses');
@@ -107,6 +133,38 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
       loadResponses();
     }
   }, [sessionId, surveySessionId, loadedPersonas]);
+
+  const loadCompiledInsights = async (sessionId: string) => {
+    try {
+      setIsLoadingInsights(true);
+      const { data, error } = await supabase
+        .from('research_reports')
+        .select('insights')
+        .eq('survey_session_id', sessionId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error loading compiled insights:', error);
+        return;
+      }
+
+      if (data && data.length > 0 && data[0].insights) {
+        try {
+          // Safely cast the insights data
+          const insights = data[0].insights as unknown as CompiledInsights;
+          setCompiledInsights(insights);
+          console.log('Loaded compiled insights:', insights);
+        } catch (error) {
+          console.error('Error parsing compiled insights:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading compiled insights:', error);
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
 
   // Group responses by question
   const responsesByQuestion = questions.map((questionText, qIndex) => {
@@ -235,10 +293,136 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="insights">AI Insights</TabsTrigger>
           <TabsTrigger value="by-question">By Question</TabsTrigger>
           <TabsTrigger value="by-persona">By Persona</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="insights" className="space-y-6 mt-4">
+          {isLoadingInsights ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading AI insights...</p>
+              </div>
+            </div>
+          ) : compiledInsights ? (
+            <div className="space-y-6">
+              {/* Executive Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Executive Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="whitespace-pre-wrap">{compiledInsights.summary}</p>
+                </CardContent>
+              </Card>
+
+              {/* Key Themes */}
+              {compiledInsights.themes && compiledInsights.themes.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Key Themes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {compiledInsights.themes.map((theme, index) => (
+                        <div key={index} className="p-3 bg-muted rounded-lg">
+                          <p className="text-sm">{theme}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Notable Quotes */}
+              {compiledInsights.quotes && compiledInsights.quotes.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Notable Quotes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {compiledInsights.quotes.map((quote, index) => (
+                      <div key={index} className="p-4 border-l-4 border-blue-500 bg-muted/50">
+                        <p className="text-sm italic mb-2">"{quote.text}"</p>
+                        <p className="text-xs text-muted-foreground">
+                          — {quote.persona_name} · {quote.question}
+                        </p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Contradictions */}
+              {compiledInsights.contradictions && compiledInsights.contradictions.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contradictions & Tensions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {compiledInsights.contradictions.map((contradiction, index) => (
+                        <div key={index} className="p-3 border border-amber-200 bg-amber-50 rounded-lg">
+                          <p className="text-sm">{contradiction}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sentiment Analysis */}
+              {compiledInsights.sentiment_analysis && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sentiment Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="p-3 bg-muted rounded-lg">
+                        <p className="text-sm font-medium mb-1">Overall Sentiment</p>
+                        <p className="text-sm capitalize">{compiledInsights.sentiment_analysis.overall_sentiment}</p>
+                      </div>
+                      
+                      {compiledInsights.sentiment_analysis.question_sentiments && 
+                       compiledInsights.sentiment_analysis.question_sentiments.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Question-by-Question Sentiment</p>
+                          {compiledInsights.sentiment_analysis.question_sentiments.map((qs, index) => (
+                            <div key={index} className="p-2 border rounded">
+                              <p className="text-xs text-muted-foreground mb-1">{qs.question}</p>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm capitalize">{qs.sentiment}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {Math.round(qs.confidence * 100)}% confidence
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">
+                AI insights are not yet available for this survey.
+              </p>
+              <Button 
+                onClick={() => surveySessionId && loadCompiledInsights(surveySessionId)}
+                disabled={!surveySessionId}
+              >
+                Refresh Insights
+              </Button>
+            </div>
+          )}
+        </TabsContent>
         
         <TabsContent value="by-question" className="space-y-6 mt-4">
           {responsesByQuestion.map((questionData) => (

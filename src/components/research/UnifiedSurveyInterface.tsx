@@ -279,6 +279,28 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   const handleSurveyComplete = async () => {
     if (surveySessionId) {
       await updateSurveySessionStatus(surveySessionId, 'completed');
+      
+      // Trigger insight compilation
+      try {
+        console.log('Compiling research insights...');
+        const { data, error } = await supabase.functions.invoke('compile-research-insights', {
+          body: {
+            survey_session_id: surveySessionId,
+            user_id: (await supabase.auth.getUser()).data.user?.id
+          }
+        });
+
+        if (error) {
+          console.error('Error compiling insights:', error);
+          toast.error('Failed to compile insights, but survey results are available');
+        } else {
+          console.log('Insights compiled successfully:', data);
+          toast.success('Survey completed and insights compiled!');
+        }
+      } catch (error) {
+        console.error('Error during insight compilation:', error);
+        toast.error('Failed to compile insights, but survey results are available');
+      }
     }
     setCurrentStep('results');
   };
