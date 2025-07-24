@@ -60,17 +60,30 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
 
     console.log('Using validated conversation engine for research response with knowledge base context');
 
-    // Use the validated conversation engine from Persona Chat with project documents
-    // This will now automatically validate responses and regenerate if needed
-    const response = await sendMessageToPersona(
-      personaId,
-      userMessage,
-      chatMessages,
-      persona,
-      'research', // Use research mode
-      conversationContext, // Include full knowledge base context
-      imageData
-    );
+    // Include knowledge base context in the user message for research
+    const enhancedUserMessage = conversationContext ? 
+      `${conversationContext}\n\nUSER QUESTION/PROMPT: ${userMessage}` : 
+      userMessage;
+
+    // Use persona-quick-chat directly to ensure consistent personality behavior
+    const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+      body: {
+        personaId,
+        message: enhancedUserMessage,
+        previousMessages: chatMessages.slice(-10), // Keep recent context
+        mode: 'research'
+      }
+    });
+
+    if (error) {
+      console.error('Error from persona-quick-chat:', error);
+      throw new Error(`Failed to generate response: ${error.message}`);
+    }
+
+    const response = data?.response;
+    if (!response) {
+      throw new Error('No response received from persona');
+    }
 
     // Save the response message to database
     const messageData = {
