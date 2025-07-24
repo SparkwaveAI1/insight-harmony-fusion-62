@@ -8,8 +8,6 @@ import { ArrowLeft, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Persona } from '@/services/persona/types';
-import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { useResearchSession } from './hooks/useResearchSession';
 import { SequentialSurveyExecution } from './SequentialSurveyExecution';
 import SurveyResults from './SurveyResults';
@@ -17,6 +15,7 @@ import { createSurveySession, updateSurveySessionStatus } from './services/surve
 import { QuestionUpload } from './QuestionUpload';
 import ProjectSelector from './ProjectSelector';
 import DocumentManager from './DocumentManager';
+import { PersonaSourceSelector } from './PersonaSourceSelector';
 import { KnowledgeBaseDocument } from '@/services/collections';
 
 interface UnifiedSurveyInterfaceProps {
@@ -43,7 +42,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     questions: ['']
   });
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
-  const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [surveySessionId, setSurveySessionId] = useState<string | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<KnowledgeBaseDocument[]>([]);
@@ -65,41 +63,13 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     }
   }, [projectId]);
 
-  // Load available personas
-  useEffect(() => {
-    loadPersonas();
-  }, []);
-
-  const loadPersonas = async () => {
-    try {
-      const { data: personasData, error } = await supabase
-        .from('personas')
-        .select('*')
-        .or('is_public.eq.true,user_id.eq.' + (await supabase.auth.getUser()).data.user?.id);
-
-      if (error) {
-        console.error('Error loading personas:', error);
-        return;
-      }
-
-      const mappedPersonas = personasData.map(dbPersonaToPersona);
-      setAvailablePersonas(mappedPersonas);
-    } catch (error) {
-      console.error('Error loading personas:', error);
-    }
-  };
-
   const handleProjectSelected = (projectId: string) => {
     setSelectedProjectId(projectId || null);
     setCurrentStep('setup');
   };
 
-  const togglePersonaSelection = (personaId: string) => {
-    setSelectedPersonas(prev => 
-      prev.includes(personaId) 
-        ? prev.filter(id => id !== personaId)
-        : [...prev, personaId]
-    );
+  const handlePersonaSelectionChange = (personaIds: string[]) => {
+    setSelectedPersonas(personaIds);
   };
 
   const handleQuestionsChange = (newQuestions: string[]) => {
@@ -451,53 +421,12 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           />
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Personas</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Choose up to 10 personas to participate in this survey
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {availablePersonas.map((persona) => (
-                <div
-                  key={persona.persona_id}
-                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedPersonas.includes(persona.persona_id)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => togglePersonaSelection(persona.persona_id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{persona.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {persona.description || 'No description'}
-                      </div>
-                    </div>
-                    <div className={`w-4 h-4 rounded border-2 ${
-                      selectedPersonas.includes(persona.persona_id)
-                        ? 'bg-blue-500 border-blue-500'
-                        : 'border-gray-300'
-                    }`}>
-                      {selectedPersonas.includes(persona.persona_id) && (
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-4 text-sm text-muted-foreground">
-              {selectedPersonas.length} of 10 personas selected
-            </div>
-          </CardContent>
-        </Card>
+        <PersonaSourceSelector
+          projectId={selectedProjectId || undefined}
+          selectedPersonas={selectedPersonas}
+          onPersonaSelectionChange={handlePersonaSelectionChange}
+          maxPersonas={10}
+        />
       </div>
 
       <div className="flex justify-end">
