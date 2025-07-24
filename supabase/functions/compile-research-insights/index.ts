@@ -272,13 +272,7 @@ Please provide a comprehensive qualitative research report in JSON format:
   },
   "emotional_landscape": {
     "dominant_emotions": [
-      {
-        "emotion": "Primary emotion detected",
-        "triggers": "What prompted this emotional response",
-        "intensity": "Strength of emotional expression",
-        "examples": ["Quotes showing this emotion"],
-        "persona_patterns": "Which persona types expressed this most"
-      }
+      "Primary emotion detected in responses with brief explanation"
     ],
     "emotional_journey": "How emotions evolved across questions or topics"
   },
@@ -290,13 +284,7 @@ Please provide a comprehensive qualitative research report in JSON format:
     "recommendations": "Suggestions for future research improvements"
   },
   "actionable_recommendations": [
-    {
-      "recommendation": "Specific action based on findings",
-      "supporting_evidence": "Which insights support this recommendation",
-      "target_audience": "Who should implement this",
-      "priority": "High/Medium/Low",
-      "implementation_considerations": "Practical factors to consider"
-    }
+    "Specific actionable recommendation based on findings"
   ]
 }
 
