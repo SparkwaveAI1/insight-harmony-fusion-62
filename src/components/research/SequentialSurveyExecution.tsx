@@ -309,15 +309,56 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      // Survey completed
+      // Survey completed - mark session as completed and trigger insight generation
       setIsRunning(false);
       setIsComplete(true);
       
       const completedCount = personaProgress.filter(p => p.status === 'completed').length;
       const errorCount = personaProgress.filter(p => p.status === 'error').length;
       
-      toast.success(`Sequential survey completed! ${completedCount} personas completed successfully.`);
       console.log(`Sequential survey complete: ${completedCount} completed, ${errorCount} errors`);
+      
+      // Auto-generate insights when survey completes
+      if (surveySessionId && completedCount > 0) {
+        try {
+          console.log('Auto-generating insights for completed survey...');
+          
+          // Update session status to completed
+          const { error: updateError } = await supabase
+            .from('research_survey_sessions')
+            .update({ 
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', surveySessionId);
+            
+          if (updateError) {
+            console.error('Error updating session status:', updateError);
+          }
+          
+          // Trigger insight compilation
+          const { data, error } = await supabase.functions.invoke('compile-research-insights', {
+            body: {
+              survey_session_id: surveySessionId,
+              user_id: (await supabase.auth.getUser()).data.user?.id
+            }
+          });
+
+          if (error) {
+            console.error('Error compiling insights:', error);
+            toast.success(`Survey completed! ${completedCount} personas completed successfully. Insight generation failed - you can retry from the results page.`);
+          } else {
+            console.log('Insights auto-generated successfully:', data);
+            toast.success(`Survey completed and insights generated! ${completedCount} personas completed successfully.`);
+          }
+        } catch (error) {
+          console.error('Error during auto-insight generation:', error);
+          toast.success(`Survey completed! ${completedCount} personas completed successfully. Insight generation failed - you can retry from the results page.`);
+        }
+      } else {
+        toast.success(`Sequential survey completed! ${completedCount} personas completed successfully.`);
+      }
 
     } catch (error) {
       console.error('Error in sequential survey execution:', error);

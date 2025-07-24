@@ -215,6 +215,42 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
     }
   };
 
+  const generateInsights = async () => {
+    if (!surveySessionId) {
+      toast.error('No survey session available for insight generation');
+      return;
+    }
+
+    try {
+      setIsLoadingInsights(true);
+      console.log('Manually generating insights for survey session:', surveySessionId);
+      
+      const { data, error } = await supabase.functions.invoke('compile-research-insights', {
+        body: {
+          survey_session_id: surveySessionId,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        }
+      });
+
+      if (error) {
+        console.error('Error generating insights:', error);
+        toast.error('Failed to generate insights. Please try again.');
+        return;
+      }
+
+      console.log('Insights generated successfully:', data);
+      toast.success('Insights generated successfully!');
+      
+      // Reload the insights to display them
+      await loadCompiledInsights(surveySessionId);
+    } catch (error) {
+      console.error('Error during insight generation:', error);
+      toast.error('Failed to generate insights. Please try again.');
+    } finally {
+      setIsLoadingInsights(false);
+    }
+  };
+
   // Group responses by question
   const responsesByQuestion = questions.map((questionText, qIndex) => {
     const questionResponses = responses
@@ -334,9 +370,9 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
             Export Raw Data
           </Button>
 
-          <Button onClick={() => setShowReport(true)}>
+          <Button onClick={generateInsights} disabled={isLoadingInsights}>
             <FileText className="w-4 h-4 mr-2" />
-            Generate Report
+            {isLoadingInsights ? 'Generating...' : 'Generate Insights'}
           </Button>
         </div>
       </div>
