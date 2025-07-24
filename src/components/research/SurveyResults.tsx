@@ -68,7 +68,13 @@ interface CompiledInsights {
     }>;
   };
   emotional_landscape?: {
-    dominant_emotions: string[];
+    dominant_emotions: Array<{
+      emotion: string;
+      examples: string[];
+      triggers: string[];
+      intensity: string;
+      persona_patterns: string;
+    }> | string[];
     emotional_journey: string;
   };
   research_quality_assessment?: {
@@ -565,16 +571,55 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
                     <CardTitle>Emotional Landscape</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {compiledInsights.emotional_landscape.dominant_emotions && compiledInsights.emotional_landscape.dominant_emotions.length > 0 && (
                         <div>
-                          <h4 className="font-medium mb-2">Dominant Emotions</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {compiledInsights.emotional_landscape.dominant_emotions.map((emotion, index) => (
-                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                {emotion}
-                              </span>
-                            ))}
+                          <h4 className="font-medium mb-3">Dominant Emotions</h4>
+                          <div className="space-y-3">
+                            {compiledInsights.emotional_landscape.dominant_emotions.map((emotion, index) => {
+                              // Handle both new object format and legacy string format
+                              if (typeof emotion === 'string') {
+                                return (
+                                  <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                    {emotion}
+                                  </span>
+                                );
+                              } else {
+                                return (
+                                  <div key={index} className="p-3 border rounded-lg">
+                                    <h5 className="font-medium mb-2 text-blue-800">{emotion.emotion}</h5>
+                                    <div className="space-y-2 text-sm">
+                                      <div>
+                                        <span className="font-medium">Intensity:</span> {emotion.intensity}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">Persona Patterns:</span> {emotion.persona_patterns}
+                                      </div>
+                                      {emotion.triggers && emotion.triggers.length > 0 && (
+                                        <div>
+                                          <span className="font-medium">Triggers:</span>
+                                          <ul className="list-disc list-inside ml-2 text-muted-foreground">
+                                            {emotion.triggers.map((trigger, i) => (
+                                              <li key={i}>{trigger}</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                      {emotion.examples && emotion.examples.length > 0 && (
+                                        <div>
+                                          <span className="font-medium">Examples:</span>
+                                          <ul className="list-disc list-inside ml-2 text-muted-foreground">
+                                            {emotion.examples.map((example, i) => (
+                                              <li key={i}>"{example}"</li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            })}
                           </div>
                         </div>
                       )}
