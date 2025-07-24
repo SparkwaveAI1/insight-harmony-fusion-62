@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
+import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 
 interface SurveyData {
   name: string;
@@ -20,6 +21,7 @@ interface PersonaProgress {
   personaId: string;
   personaName: string;
   currentQuestionIndex: number;
+  conversationHistory: Message[];
   responses: Array<{
     questionIndex: number;
     questionText: string;
@@ -69,6 +71,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
         personaId,
         personaName: persona?.name || `Persona ${personaId.slice(-4)}`,
         currentQuestionIndex: 0,
+        conversationHistory: [],
         responses: [],
         status: 'pending'
       };
@@ -90,7 +93,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
       return;
     }
 
-    console.log('Starting sequential survey execution...');
+    console.log('Starting sequential survey execution with isolated conversations...');
     console.log('Using survey session ID:', surveySessionId);
     console.log('Using conversation session ID:', sessionId);
     
@@ -129,7 +132,47 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
         ));
 
         try {
-          // Process each question for this persona
+          // Find the persona object for sendMessageToPersona
+          const persona = loadedPersonas.find(p => p.persona_id === currentPersona.personaId);
+          if (!persona) {
+            throw new Error(`Persona ${currentPersona.personaId} not found`);
+          }
+
+          // Create knowledge base context from project documents
+          const knowledgeBaseContext = projectDocuments.length > 0 
+            ? `KNOWLEDGE BASE AVAILABLE - You have access to the following documents: ${projectDocuments.map(doc => `"${doc.title}"`).join(', ')}. Key information from these documents:\n\n${projectDocuments.map(doc => 
+                doc.content ? `${doc.title}:\n${doc.content.substring(0, 500)}${doc.content.length > 500 ? '...' : ''}` : `${doc.title}: [Document uploaded but content not extracted]`
+              ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
+            : '';
+
+          // Add processed research context to knowledge base context
+          let fullContext = knowledgeBaseContext;
+          if (researchContext) {
+            fullContext += `\n\nRESEARCH CONTEXT:\n\n`;
+            fullContext += `Summary: ${researchContext.summary}\n\n`;
+            
+            if (researchContext.key_insights?.length > 0) {
+              fullContext += `Key Insights:\n`;
+              researchContext.key_insights.forEach((insight: string) => {
+                fullContext += `• ${insight}\n`;
+              });
+              fullContext += `\n`;
+            }
+            
+            if (researchContext.guidelines?.length > 0) {
+              fullContext += `Guidelines:\n`;
+              researchContext.guidelines.forEach((guideline: string) => {
+                fullContext += `• ${guideline}\n`;
+              });
+              fullContext += `\n`;
+            }
+            
+            if (researchContext.background_context) {
+              fullContext += `Background: ${researchContext.background_context}\n\n`;
+            }
+          }
+
+          // Process each question for this persona using isolated conversation
           for (let questionIndex = 0; questionIndex < surveyData.questions.length; questionIndex++) {
             const question = surveyData.questions[questionIndex];
             
@@ -140,71 +183,58 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               i === personaIndex ? { ...p, currentQuestionIndex: questionIndex } : p
             ));
 
-            // Send the individual question
-            const questionMessage = `Survey Question ${questionIndex + 1}/${surveyData.questions.length}: ${question}`;
+            // Create conversational question message
+            let questionMessage = question;
             
-            // Add context about the survey
-            let contextualMessage = questionMessage;
+            // For first question, include survey briefing
             if (questionIndex === 0) {
-              contextualMessage = `RESEARCH BRIEFING - SURVEY: ${surveyData.name}\n\n`;
+              questionMessage = `I'm conducting a research survey called "${surveyData.name}".`;
               
               if (surveyData.description) {
-                contextualMessage += `Description: ${surveyData.description}\n\n`;
+                questionMessage += ` ${surveyData.description}`;
               }
               
-              // Use processed research context if available, otherwise fall back to raw documents
-              if (researchContext) {
-                contextualMessage += `RESEARCH CONTEXT:\n\n`;
-                contextualMessage += `Summary: ${researchContext.summary}\n\n`;
-                
-                if (researchContext.key_insights?.length > 0) {
-                  contextualMessage += `Key Insights:\n`;
-                  researchContext.key_insights.forEach((insight: string, i: number) => {
-                    contextualMessage += `• ${insight}\n`;
-                  });
-                  contextualMessage += `\n`;
-                }
-                
-                if (researchContext.guidelines?.length > 0) {
-                  contextualMessage += `Guidelines:\n`;
-                  researchContext.guidelines.forEach((guideline: string, i: number) => {
-                    contextualMessage += `• ${guideline}\n`;
-                  });
-                  contextualMessage += `\n`;
-                }
-                
-                if (researchContext.background_context) {
-                  contextualMessage += `Background: ${researchContext.background_context}\n\n`;
-                }
-                
-                contextualMessage += `---\n\n`;
-              } else if (projectDocuments.length > 0) {
-                // Fallback to raw documents if no processed context available
-                contextualMessage += `RESEARCH CONTEXT - Please consider the following background information when answering:\n\n`;
-                projectDocuments.forEach((doc, index) => {
-                  contextualMessage += `Document ${index + 1}: ${doc.title}\n`;
-                  if (doc.content) {
-                    const content = doc.content.length > 2000 
-                      ? doc.content.substring(0, 2000) + '...[content truncated]'
-                      : doc.content;
-                    contextualMessage += `${content}\n\n`;
-                  }
-                });
-                contextualMessage += `---\n\n`;
-              }
-              
-              contextualMessage += `I will ask you ${surveyData.questions.length} questions one by one. Please provide thoughtful responses based on your persona characteristics and the research context provided above.\n\n${questionMessage}`;
+              questionMessage += ` I'll ask you ${surveyData.questions.length} questions and would appreciate your thoughtful responses based on your perspective and experiences.\n\n`;
+              questionMessage += `Question 1: ${question}`;
+            } else {
+              questionMessage = `Question ${questionIndex + 1}: ${question}`;
             }
 
-            // Send message and get the message object back
-            const userMessage = await sendMessage(contextualMessage);
-            
-            console.log('Message sent, now getting persona response...');
+            // Create user message for conversation history
+            const userMessage: Message = {
+              role: 'user',
+              content: questionMessage,
+              timestamp: new Date()
+            };
 
-            // Get response from this persona using the message object
-            const response = await sendToPersona(currentPersona.personaId, userMessage);
+            // Get current persona's conversation history
+            const currentProgress = personaProgress[personaIndex];
+            const conversationHistory = [...currentProgress.conversationHistory];
+
+            // Add user message to this persona's conversation history
+            conversationHistory.push(userMessage);
+
+            // Get response using sendMessageToPersona with isolated conversation
+            const response = await sendMessageToPersona(
+              currentPersona.personaId,
+              questionMessage,
+              conversationHistory,
+              persona,
+              'research',
+              fullContext
+            );
             
             console.log(`Got response from ${currentPersona.personaName} for question ${questionIndex + 1}`);
+
+            // Create assistant message for conversation history
+            const assistantMessage: Message = {
+              role: 'assistant',
+              content: response,
+              timestamp: new Date()
+            };
+
+            // Add assistant message to conversation history
+            conversationHistory.push(assistantMessage);
 
             // Store the response
             const responseData = {
@@ -214,10 +244,11 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               timestamp: new Date()
             };
 
-            // Update persona progress with the new response
+            // Update persona progress with the new response and conversation history
             setPersonaProgress(prev => prev.map((p, i) => 
               i === personaIndex ? { 
                 ...p, 
+                conversationHistory,
                 responses: [...p.responses, responseData]
               } : p
             ));
