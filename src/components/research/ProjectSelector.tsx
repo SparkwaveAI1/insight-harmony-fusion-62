@@ -209,19 +209,19 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5" />
-              Create New Project
+              Create New Study Session
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full">
-                  Create New Project
+                  Create New Study Session
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Create New Project</DialogTitle>
+                  <DialogTitle>Create New Study Session</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
