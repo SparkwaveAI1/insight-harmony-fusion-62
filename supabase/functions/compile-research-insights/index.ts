@@ -334,13 +334,43 @@ Focus on providing deep, contextual insights that would be valuable for research
     const analysisResult = data.choices[0]?.message?.content || '';
 
     console.log('Received analysis from OpenAI, parsing JSON...');
+    console.log('Raw OpenAI response length:', analysisResult.length);
+    console.log('First 200 chars:', analysisResult.substring(0, 200));
+
+    // Extract JSON from markdown code blocks if present
+    function extractJSONFromMarkdown(text: string): string {
+      // Remove markdown code blocks if present
+      const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
+      const match = text.match(codeBlockRegex);
+      
+      if (match) {
+        console.log('Found JSON in markdown code blocks');
+        return match[1].trim();
+      }
+      
+      // Try to find JSON-like content between { and }
+      const jsonRegex = /(\{[\s\S]*\})/;
+      const jsonMatch = text.match(jsonRegex);
+      
+      if (jsonMatch) {
+        console.log('Found JSON-like content without code blocks');
+        return jsonMatch[1].trim();
+      }
+      
+      console.log('No JSON structure found, returning original text');
+      return text.trim();
+    }
 
     // Parse the analysis result
     let insights;
     try {
-      insights = JSON.parse(analysisResult);
+      const cleanedResult = extractJSONFromMarkdown(analysisResult);
+      console.log('Attempting to parse cleaned JSON, length:', cleanedResult.length);
+      insights = JSON.parse(cleanedResult);
+      console.log('Successfully parsed OpenAI response');
     } catch (parseError) {
       console.error('Failed to parse OpenAI response as JSON:', parseError);
+      console.error('Failed content preview:', analysisResult.substring(0, 500));
       // Fallback structure matching new format
       insights = {
         executive_summary: {
