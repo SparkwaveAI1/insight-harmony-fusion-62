@@ -18,25 +18,25 @@ export async function sendMessageToPersona(
   console.log('Using quick chat for 1-on-1:', { personaId, mode, messageLength: userMessage.length });
 
   try {
-    // Use quick-chat function for better performance in 1-on-1 mode
-    if (mode === 'conversation' && !imageData) {
-      return await generateQuickPersonaResponse(
+    // Always use full persona instructions for research mode to ensure authenticity
+    if (mode === 'research' || imageData) {
+      return await generatePersonaResponse(
         personaId,
         userMessage,
         previousMessages,
-        mode
+        persona,
+        mode,
+        conversationContext,
+        imageData
       );
     }
 
-    // Fall back to full system for research mode or image uploads
-    return await generatePersonaResponse(
+    // Use quick-chat function for better performance in casual conversation mode only
+    return await generateQuickPersonaResponse(
       personaId,
       userMessage,
       previousMessages,
-      persona,
-      mode,
-      conversationContext,
-      imageData
+      mode
     );
 
   } catch (error) {
@@ -105,10 +105,10 @@ async function generatePersonaResponse(
       conversation_context: enhancedContext,
       image_data: imageData,
       // Enhanced parameters for more authentic responses
-      temperature: 0.9,
-      top_p: 0.95,
-      frequency_penalty: 0.3,
-      presence_penalty: 0.4
+      temperature: 0.8,
+      top_p: 0.9,
+      frequency_penalty: 0.4,
+      presence_penalty: 0.5
     }
   });
 
