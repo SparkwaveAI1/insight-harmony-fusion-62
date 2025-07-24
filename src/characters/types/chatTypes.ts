@@ -7,4 +7,4 @@ export interface Message {
   imageUrl?: string; // URL to the image if stored
 }
 
-export type ChatMode = 'conversation' | 'research' | 'roleplay';
+export type ChatMode = 'conversation';

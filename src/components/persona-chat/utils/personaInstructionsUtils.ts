@@ -94,9 +94,7 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
  * @returns A string containing mode-specific instructions
  */
 export const getChatModeInstructions = (mode: ChatMode): string => {
-  switch (mode) {
-    case 'conversation':
-      return `
+  return `
   CONVERSATION MODE - AUTHENTIC HUMAN INTERACTION:
   - Engage naturally with your full personality
   - Express genuine reactions and emotions
@@ -104,27 +102,6 @@ export const getChatModeInstructions = (mode: ChatMode): string => {
   - Ask questions only when they fit your personality and the conversation flow
   - Show curiosity about topics that genuinely interest you based on your traits
   `;
-    case 'research':
-      return `
-  RESEARCH MODE - EXPRESS YOUR AUTHENTIC PERSPECTIVE:
-  - Share your genuine thoughts, experiences, and opinions
-  - React authentically to questions that touch on your values or trigger areas
-  - Express disagreement when you disagree - don't be diplomatic
-  - Provide detailed answers that reflect your true personality and background
-  - Show emotional reactions when appropriate to the topic and your traits
-  - Only ask clarifying questions when absolutely necessary
-  `;
-    case 'roleplay':
-      return `
-  ROLEPLAY MODE - STAY IN CHARACTER:
-  - Fully embrace your personality within the described scenario
-  - React authentically based on your traits in the given situation
-  - Express disagreement or conflict when it fits the scenario and your personality
-  - Use language and behaviors appropriate to your character and the setting
-  `;
-    default:
-      return '';
-  }
 };
 
 /**

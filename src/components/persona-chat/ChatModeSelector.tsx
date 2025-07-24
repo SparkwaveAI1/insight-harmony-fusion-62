@@ -3,7 +3,7 @@ import React from 'react';
 import { MessageSquare, Search, UserRound } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
-export type ChatMode = 'conversation' | 'research' | 'roleplay';
+export type ChatMode = 'conversation';
 
 interface ChatModeSelectorProps {
   selectedMode: ChatMode;
@@ -14,75 +14,24 @@ const ChatModeSelector: React.FC<ChatModeSelectorProps> = ({ selectedMode, onCha
   return (
     <div className="flex flex-col space-y-4 p-4 bg-muted/30 rounded-lg border border-muted mb-4">
       <h3 className="text-sm font-semibold">Conversation Mode</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3">
         <div 
-          className={`flex items-center gap-3 p-3 rounded-md cursor-pointer border ${
-            selectedMode === 'conversation' ? 'border-primary bg-primary/10' : 'border-muted'
-          }`}
-          onClick={() => onChange('conversation')}
+          className="flex items-center gap-3 p-3 rounded-md border border-primary bg-primary/10"
         >
-          <div className={`${selectedMode === 'conversation' ? 'text-primary' : 'text-muted-foreground'}`}>
+          <div className="text-primary">
             <MessageSquare className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <Checkbox 
-                checked={selectedMode === 'conversation'} 
-                onCheckedChange={() => onChange('conversation')}
+                checked={true} 
+                disabled={true}
                 className="data-[state=checked]:bg-primary"
               />
-              <span className="font-medium">Casual Conversation</span>
+              <span className="font-medium">Conversation</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Natural back-and-forth dialogue
-            </p>
-          </div>
-        </div>
-        
-        <div 
-          className={`flex items-center gap-3 p-3 rounded-md cursor-pointer border ${
-            selectedMode === 'research' ? 'border-primary bg-primary/10' : 'border-muted'
-          }`}
-          onClick={() => onChange('research')}
-        >
-          <div className={`${selectedMode === 'research' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <Search className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <Checkbox 
-                checked={selectedMode === 'research'} 
-                onCheckedChange={() => onChange('research')}
-                className="data-[state=checked]:bg-primary"
-              />
-              <span className="font-medium">Research Mode</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Interview style conversation
-            </p>
-          </div>
-        </div>
-        
-        <div 
-          className={`flex items-center gap-3 p-3 rounded-md cursor-pointer border ${
-            selectedMode === 'roleplay' ? 'border-primary bg-primary/10' : 'border-muted'
-          }`}
-          onClick={() => onChange('roleplay')}
-        >
-          <div className={`${selectedMode === 'roleplay' ? 'text-primary' : 'text-muted-foreground'}`}>
-            <UserRound className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <Checkbox 
-                checked={selectedMode === 'roleplay'} 
-                onCheckedChange={() => onChange('roleplay')}
-                className="data-[state=checked]:bg-primary"
-              />
-              <span className="font-medium">Role-Play</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Scenario-based conversation. Describe in chat: "Scenario: ..."
+              Natural back-and-forth dialogue with authentic persona responses
             </p>
           </div>
         </div>

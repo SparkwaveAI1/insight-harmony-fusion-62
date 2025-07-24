@@ -15,11 +15,11 @@ export async function sendMessageToPersona(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('Using quick chat for 1-on-1:', { personaId, mode, messageLength: userMessage.length });
+  console.log('Using conversation mode for all persona interactions:', { personaId, mode, messageLength: userMessage.length });
 
   try {
-    // Always use full persona instructions for research mode to ensure authenticity
-    if (mode === 'research' || imageData) {
+    // Always use quick-chat function for conversation mode
+    if (imageData) {
       return await generatePersonaResponse(
         personaId,
         userMessage,
@@ -31,7 +31,6 @@ export async function sendMessageToPersona(
       );
     }
 
-    // Use quick-chat function for better performance in casual conversation mode only
     return await generateQuickPersonaResponse(
       personaId,
       userMessage,

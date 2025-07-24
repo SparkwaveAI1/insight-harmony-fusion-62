@@ -295,7 +295,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         messageToSend.content,
         previousMessages,
         activePersona,
-        'research',
+        'conversation',
         knowledgeBaseContext,
         messageToSend.image
       );

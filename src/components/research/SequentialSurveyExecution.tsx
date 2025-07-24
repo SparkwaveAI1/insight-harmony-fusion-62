@@ -220,7 +220,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               questionMessage,
               conversationHistory,
               persona,
-              'research',
+              'conversation',
               fullContext
             );
             
