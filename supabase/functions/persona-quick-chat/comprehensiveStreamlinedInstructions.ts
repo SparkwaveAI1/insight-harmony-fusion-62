@@ -17,6 +17,7 @@ export function createComprehensiveStreamlinedInstructions(persona: any, mode: s
   const extendedTraits = persona.trait_profile?.extended_traits || {};
   const politicalCompass = persona.trait_profile?.political_compass || {};
   const emotionalTriggers = persona.emotional_triggers || { positive_triggers: [], negative_triggers: [] };
+  const linguisticProfile = persona.linguistic_profile || {};
   
   // Demographics and background
   const occupation = persona.metadata?.occupation || '';
@@ -29,7 +30,7 @@ export function createComprehensiveStreamlinedInstructions(persona: any, mode: s
   const cognitiveStyle = generateStreamlinedCognitiveStyle(education, extendedTraits);
   const valueSystem = generateStreamlinedValueSystem(moralFoundations, politicalCompass, politicalAffiliation);
   const emotionalProfile = generateStreamlinedEmotionalProfile(extendedTraits, emotionalTriggers);
-  const communicationStyle = generateStreamlinedCommunicationStyle(bigFive, education, region);
+  const communicationStyle = generateStreamlinedCommunicationStyle(bigFive, education, region, linguisticProfile);
   const occupationPerspective = generateStreamlinedOccupationPerspective(occupation, education);
   const knowledgeBoundaries = generateStreamlinedKnowledgeBoundaries(persona, birthYear, currentYear);
 
@@ -219,11 +220,80 @@ function generateStreamlinedEmotionalProfile(extendedTraits: any, emotionalTrigg
   return emotional;
 }
 
-function generateStreamlinedCommunicationStyle(bigFive: any, education: string, region: string): string {
+function generateStreamlinedCommunicationStyle(bigFive: any, education: string, region: string, linguisticProfile: any = {}): string {
   const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
   const extraversion = parseFloat(bigFive.extraversion || '0.5');
 
   let style = 'COMMUNICATION STYLE:\n';
+
+  // Linguistic Profile - Speech Register
+  const speechRegister = linguisticProfile.speech_register || '';
+  if (speechRegister === 'formal') {
+    style += `- FORMAL SPEECH: Use proper grammar, avoid slang, professional language patterns\n`;
+  } else if (speechRegister === 'casual') {
+    style += `- CASUAL SPEECH: Use informal language, contractions, relaxed grammar\n`;
+  } else if (speechRegister === 'hybrid') {
+    style += `- FLEXIBLE SPEECH: Mix formal and casual based on context\n`;
+  }
+
+  // Cultural Speech Patterns
+  const culturalPatterns = linguisticProfile.cultural_speech_patterns || '';
+  if (culturalPatterns) {
+    if (culturalPatterns.includes('gamer')) {
+      style += `- GAMER LINGO: Use gaming terms, internet slang, gaming references\n`;
+    } else if (culturalPatterns.includes('corporate')) {
+      style += `- CORPORATE JARGON: Business terminology, professional buzzwords\n`;
+    } else if (culturalPatterns.includes('academic')) {
+      style += `- ACADEMIC LANGUAGE: Scholarly terms, precise definitions, research-oriented\n`;
+    } else if (culturalPatterns.includes('polite and indirect')) {
+      style += `- POLITE & INDIRECT: Soften statements, use diplomatic language\n`;
+    } else if (culturalPatterns.includes('slang')) {
+      style += `- SLANG HEAVY: Use current slang, informal expressions, trendy language\n`;
+    }
+  }
+
+  // Sample Phrasing - Use specific phrases this persona would use
+  const samplePhrasing = linguisticProfile.sample_phrasing || [];
+  if (samplePhrasing.length > 0) {
+    const phrases = samplePhrasing.slice(0, 3).join('", "');
+    style += `- SIGNATURE PHRASES: Incorporate phrases like "${phrases}"\n`;
+  }
+
+  // Generational Influence
+  const generationalInfluence = linguisticProfile.generational_or_peer_influence || '';
+  if (generationalInfluence) {
+    if (generationalInfluence.includes('Gen Z')) {
+      style += `- GEN Z SPEECH: Use "lowkey", "highkey", "no cap", "periodt", modern slang\n`;
+    } else if (generationalInfluence.includes('millennial')) {
+      style += `- MILLENNIAL SPEECH: Use "literally", "actually", "I can't even", pop culture refs\n`;
+    } else if (generationalInfluence.includes('middle-aged')) {
+      style += `- MIDDLE-AGED SPEECH: More measured language, avoid current slang\n`;
+    }
+  }
+
+  // Professional Influence
+  const professionalInfluence = linguisticProfile.professional_or_educational_influence || '';
+  if (professionalInfluence) {
+    if (professionalInfluence.includes('tech')) {
+      style += `- TECH SPEECH: Use technical terms, programming references, innovation focus\n`;
+    } else if (professionalInfluence.includes('media')) {
+      style += `- MEDIA SPEECH: Storytelling language, engaging narratives, content-focused\n`;
+    } else if (professionalInfluence.includes('education')) {
+      style += `- EDUCATIONAL SPEECH: Explanatory tone, teaching moments, clear examples\n`;
+    }
+  }
+
+  // Speaking Style Flags
+  const speakingStyle = linguisticProfile.speaking_style || {};
+  if (speakingStyle.formal) {
+    style += `- FORMAL TENDENCY: Prefer structured, proper language\n`;
+  }
+  if (speakingStyle.storytelling) {
+    style += `- STORYTELLING: Use narratives, examples, anecdotes in responses\n`;
+  }
+  if (speakingStyle.technical) {
+    style += `- TECHNICAL LANGUAGE: Use precise, specialized terminology\n`;
+  }
 
   // Agreeableness communication patterns
   if (agreeableness < 0.3) {
