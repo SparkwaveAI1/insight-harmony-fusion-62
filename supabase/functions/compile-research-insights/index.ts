@@ -55,15 +55,30 @@ serve(async (req) => {
       });
     }
 
-    // Fetch survey details
+    // Fetch survey details and research context
     const { data: sessionData, error: sessionError } = await supabase
       .from('research_survey_sessions')
       .select(`
-        research_surveys(name, description),
-        research_context
+        research_surveys(name, description, questions, project_id),
+        research_context,
+        selected_personas
       `)
       .eq('id', survey_session_id)
       .single();
+
+    if (sessionError) {
+      throw new Error(`Failed to fetch session data: ${sessionError.message}`);
+    }
+
+    // Fetch persona details for context
+    const { data: personaData, error: personaError } = await supabase
+      .from('personas')
+      .select('id, name, basic_info, trait_profile')
+      .in('id', sessionData?.selected_personas || []);
+
+    if (personaError) {
+      console.warn('Could not fetch persona details:', personaError.message);
+    }
 
     // Group responses by persona and question
     const responsesByPersona = new Map();
@@ -83,92 +98,209 @@ serve(async (req) => {
       responsesByQuestion.get(response.question_index).push(response);
     });
 
-    // Prepare data for AI analysis
-    let analysisPrompt = `You are a research analyst tasked with analyzing survey responses from multiple personas. 
+    // Prepare enhanced qualitative analysis prompt
+    let analysisPrompt = `You are an expert qualitative research analyst conducting a comprehensive analysis of survey responses from multiple research personas. Your task is to provide deep insights that connect responses back to the original research objectives and context.
 
-SURVEY DETAILS:
-- Name: ${sessionData?.research_surveys?.name || 'Unknown Survey'}
-- Description: ${sessionData?.research_surveys?.description || 'No description provided'}
-- Total Personas: ${responsesByPersona.size}
-- Total Questions: ${responsesByQuestion.size}
-- Total Responses: ${responses.length}
+## SURVEY OVERVIEW
+**Study Name:** ${sessionData?.research_surveys?.name || 'Research Study'}
+**Study Description:** ${sessionData?.research_surveys?.description || 'No description provided'}
+**Research Scope:** ${responsesByPersona.size} unique personas, ${responsesByQuestion.size} questions, ${responses.length} total responses
 
-`;
+## RESEARCH OBJECTIVES & CONTEXT`;
 
     if (sessionData?.research_context) {
-      analysisPrompt += `RESEARCH CONTEXT:
-${sessionData.research_context.summary || 'No context summary available'}
+      const context = sessionData.research_context;
+      analysisPrompt += `
+**Research Summary:** ${context.summary || 'No summary available'}
 
+**Key Research Guidelines:**
+${context.guidelines ? context.guidelines.map((g: string) => `- ${g}`).join('\n') : '- No specific guidelines provided'}
+
+**Key Insights from Source Documents:**
+${context.key_insights ? context.key_insights.map((insight: string) => `- ${insight}`).join('\n') : '- No document insights available'}
+
+**Document Summaries:**
+${context.document_summaries ? context.document_summaries.map((doc: any) => `- ${doc.title}: ${doc.summary}`).join('\n') : '- No document summaries available'}
+`;
+    } else {
+      analysisPrompt += `
+**No research context provided - conducting analysis based solely on survey responses**
 `;
     }
 
-    analysisPrompt += `SURVEY RESPONSES:
+    // Add persona context if available
+    if (personaData && personaData.length > 0) {
+      analysisPrompt += `
 
+## PERSONA PROFILES
 `;
-
-    // Add responses organized by question
-    responsesByQuestion.forEach((questionResponses, questionIndex) => {
-      const firstResponse = questionResponses[0];
-      analysisPrompt += `Question ${questionIndex + 1}: ${firstResponse.question_text}
-
-Responses:
-`;
-      questionResponses.forEach((response, index) => {
-        analysisPrompt += `Persona ${index + 1} (ID: ${response.persona_id}): ${response.response_text}
+      personaData.forEach((persona: any) => {
+        const basicInfo = persona.basic_info || {};
+        const traits = persona.trait_profile || {};
+        analysisPrompt += `**${persona.name}** (ID: ${persona.id})
+- Demographics: Age ${basicInfo.age || 'Unknown'}, ${basicInfo.location || 'Unknown location'}
+- Background: ${basicInfo.occupation || 'Unknown occupation'}
+- Key Traits: ${traits.big_five ? Object.entries(traits.big_five).map(([trait, score]: [string, any]) => `${trait}=${score}`).join(', ') : 'No trait data'}
 
 `;
       });
-      analysisPrompt += `---
+    }
 
+    analysisPrompt += `
+
+## SURVEY QUESTIONS & RESPONSES
+`;
+
+    // Add responses organized by question with enhanced context
+    responsesByQuestion.forEach((questionResponses, questionIndex) => {
+      const firstResponse = questionResponses[0];
+      const question = sessionData?.research_surveys?.questions?.[questionIndex] || {};
+      
+      analysisPrompt += `
+**Question ${questionIndex + 1}:** ${firstResponse.question_text}
+${question.context ? `*Question Context:* ${question.context}` : ''}
+
+**Responses:**
+`;
+      questionResponses.forEach((response) => {
+        const persona = personaData?.find((p: any) => p.id === response.persona_id);
+        const personaName = persona?.name || `Persona-${response.persona_id.slice(-4)}`;
+        analysisPrompt += `
+• **${personaName}:** "${response.response_text}"
+`;
+      });
+      analysisPrompt += `
+---
 `;
     });
 
-    analysisPrompt += `Your task is to analyze these responses and provide a comprehensive research report. 
+    analysisPrompt += `
 
-Please provide a JSON response with the following structure:
+## ANALYSIS INSTRUCTIONS
+
+As a qualitative research analyst, conduct a comprehensive thematic analysis following established qualitative research methodologies:
+
+### 1. RESEARCH OBJECTIVE ALIGNMENT
+Connect findings directly to the stated research objectives and document insights. Evaluate how well the responses address the core research questions.
+
+### 2. THEMATIC ANALYSIS
+Apply systematic coding to identify patterns, themes, and sub-themes across responses. Look for:
+- Recurring concepts and meanings
+- Relationships between themes
+- Contextual factors influencing responses
+- Cultural, social, or psychological patterns
+
+### 3. COMPARATIVE ANALYSIS
+Examine differences and similarities across persona types, considering their demographic and psychological profiles.
+
+### 4. BEHAVIORAL INSIGHTS
+Leverage persona trait data to explain response patterns and predict potential real-world behaviors.
+
+### 5. DOCUMENT CORRELATION
+When research context is available, explicitly connect findings back to source documents and original research materials.
+
+Please provide a comprehensive qualitative research report in JSON format:
+
 {
-  "summary": "A 2-3 sentence executive summary of the key findings",
-  "themes": [
+  "executive_summary": {
+    "key_findings": "2-3 sentence overview of most significant discoveries",
+    "research_objective_fulfillment": "How well the study addressed its stated objectives",
+    "actionable_insights": "Primary recommendations for decision-makers"
+  },
+  "thematic_analysis": {
+    "primary_themes": [
+      {
+        "theme_name": "Main theme title",
+        "description": "Detailed explanation of the theme",
+        "prevalence": "Frequency across responses (e.g., '75% of personas')",
+        "supporting_evidence": ["Direct quotes supporting this theme"],
+        "sub_themes": ["Related sub-patterns within this theme"],
+        "implications": "What this means for the research objectives",
+        "document_connection": "How this relates to source materials (if applicable)"
+      }
+    ],
+    "emergent_themes": [
+      {
+        "theme_name": "Unexpected theme that emerged",
+        "description": "Why this was surprising or significant",
+        "supporting_evidence": ["Key quotes"],
+        "research_value": "Why this matters for the study"
+      }
+    ]
+  },
+  "behavioral_insights": {
+    "personality_driven_patterns": [
+      {
+        "trait_correlation": "Which personality traits influenced responses",
+        "behavioral_prediction": "Predicted real-world behaviors",
+        "examples": ["Specific instances showing trait influence"]
+      }
+    ],
+    "demographic_influences": [
+      {
+        "demographic_factor": "Age, location, occupation, etc.",
+        "response_pattern": "How this factor shaped responses",
+        "implications": "What this suggests about target audiences"
+      }
+    ]
+  },
+  "consensus_and_divergence": {
+    "strong_consensus": [
+      {
+        "topic": "Area of unanimous or near-unanimous agreement",
+        "description": "What personas agreed on",
+        "consensus_strength": "Percentage/level of agreement",
+        "quotes": ["Representative quotes showing consensus"]
+      }
+    ],
+    "polarizing_topics": [
+      {
+        "topic": "Issue that divided responses",
+        "viewpoint_a": {
+          "position": "First perspective",
+          "supporting_personas": "Which types of personas held this view",
+          "quotes": ["Quotes supporting this position"]
+        },
+        "viewpoint_b": {
+          "position": "Opposing perspective", 
+          "supporting_personas": "Which types of personas held this view",
+          "quotes": ["Quotes supporting this position"]
+        },
+        "underlying_factors": "Why personas differed (traits, demographics, etc.)"
+      }
+    ]
+  },
+  "emotional_landscape": {
+    "dominant_emotions": [
+      {
+        "emotion": "Primary emotion detected",
+        "triggers": "What prompted this emotional response",
+        "intensity": "Strength of emotional expression",
+        "examples": ["Quotes showing this emotion"],
+        "persona_patterns": "Which persona types expressed this most"
+      }
+    ],
+    "emotional_journey": "How emotions evolved across questions or topics"
+  },
+  "research_quality_assessment": {
+    "response_authenticity": "Assessment of how realistic/genuine responses seemed",
+    "engagement_levels": "How invested personas appeared in the topic",
+    "data_saturation": "Whether enough diverse perspectives were captured",
+    "limitations": "Any constraints or biases identified",
+    "recommendations": "Suggestions for future research improvements"
+  },
+  "actionable_recommendations": [
     {
-      "title": "Theme name",
-      "description": "Description of the theme",
-      "supporting_quotes": ["Relevant quotes from personas"],
-      "prevalence": "How common this theme was across responses"
+      "recommendation": "Specific action based on findings",
+      "supporting_evidence": "Which insights support this recommendation",
+      "target_audience": "Who should implement this",
+      "priority": "High/Medium/Low",
+      "implementation_considerations": "Practical factors to consider"
     }
-  ],
-  "contradictions": [
-    {
-      "topic": "What the contradiction is about",
-      "viewpoint_a": "First perspective",
-      "viewpoint_b": "Opposing perspective", 
-      "examples": ["Specific quotes showing the contradiction"]
-    }
-  ],
-  "persona_highlights": [
-    {
-      "persona_id": "ID of notable persona",
-      "notable_for": "What made this persona's responses interesting",
-      "key_quote": "Most representative quote from this persona"
-    }
-  ],
-  "emotional_patterns": [
-    {
-      "emotion": "Emotion detected",
-      "context": "When this emotion appeared",
-      "examples": ["Quotes showing this emotion"]
-    }
-  ],
-  "consensus_areas": [
-    {
-      "topic": "Area of agreement",
-      "description": "What personas generally agreed on",
-      "strength": "How strong the consensus was"
-    }
-  ],
-  "methodology_notes": "Any observations about response quality, engagement, or limitations"
+  ]
 }
 
-Focus on identifying genuine patterns, contradictions, and insights that would be valuable for research purposes.`;
+Focus on providing deep, contextual insights that would be valuable for research, product development, policy making, or strategic decision-making. Ensure all findings are grounded in the actual response data while connecting to broader research objectives.`;
 
     console.log('Sending analysis request to OpenAI...');
 
@@ -189,7 +321,7 @@ Focus on identifying genuine patterns, contradictions, and insights that would b
           { role: 'user', content: analysisPrompt }
         ],
         temperature: 0.3,
-        max_tokens: 3000,
+        max_tokens: 4000,
       }),
     });
 
@@ -209,15 +341,37 @@ Focus on identifying genuine patterns, contradictions, and insights that would b
       insights = JSON.parse(analysisResult);
     } catch (parseError) {
       console.error('Failed to parse OpenAI response as JSON:', parseError);
-      // Fallback structure
+      // Fallback structure matching new format
       insights = {
-        summary: `Analysis of ${responses.length} responses from ${responsesByPersona.size} personas`,
-        themes: [],
-        contradictions: [],
-        persona_highlights: [],
-        emotional_patterns: [],
-        consensus_areas: [],
-        methodology_notes: 'Analysis completed but response parsing failed'
+        executive_summary: {
+          key_findings: `Analysis of ${responses.length} responses from ${responsesByPersona.size} personas`,
+          research_objective_fulfillment: 'Unable to assess due to analysis parsing error',
+          actionable_insights: 'Analysis completed but response parsing failed'
+        },
+        thematic_analysis: {
+          primary_themes: [],
+          emergent_themes: []
+        },
+        behavioral_insights: {
+          personality_driven_patterns: [],
+          demographic_influences: []
+        },
+        consensus_and_divergence: {
+          strong_consensus: [],
+          polarizing_topics: []
+        },
+        emotional_landscape: {
+          dominant_emotions: [],
+          emotional_journey: 'Unable to analyze due to parsing error'
+        },
+        research_quality_assessment: {
+          response_authenticity: 'Unable to assess',
+          engagement_levels: 'Unable to assess',
+          data_saturation: 'Unable to assess',
+          limitations: 'Analysis parsing failed',
+          recommendations: 'Retry analysis with adjusted parameters'
+        },
+        actionable_recommendations: []
       };
     }
 
