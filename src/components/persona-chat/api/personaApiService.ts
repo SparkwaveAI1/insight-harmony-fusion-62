@@ -12,14 +12,23 @@ export async function sendMessageToPersona(
   persona: Persona,
   mode: ChatMode = 'conversation',
   conversationContext: string = '',
-  imageData?: string,
-  maxRetries: number = 1 // SIMPLIFIED: Only 1 retry to get responses faster
+  imageData?: string
 ): Promise<string> {
-  console.log('Sending message to persona (simplified validation):', { personaId, mode, messageLength: userMessage.length });
+  console.log('Using quick chat for 1-on-1:', { personaId, mode, messageLength: userMessage.length });
 
   try {
-    // Generate response
-    const response = await generatePersonaResponse(
+    // Use quick-chat function for better performance in 1-on-1 mode
+    if (mode === 'conversation' && !imageData) {
+      return await generateQuickPersonaResponse(
+        personaId,
+        userMessage,
+        previousMessages,
+        mode
+      );
+    }
+
+    // Fall back to full system for research mode or image uploads
+    return await generatePersonaResponse(
       personaId,
       userMessage,
       previousMessages,
@@ -29,14 +38,40 @@ export async function sendMessageToPersona(
       imageData
     );
 
-    // SIMPLIFIED: Skip validation for now to get responses working
-    console.log('Response generated, skipping validation for speed');
-    return response;
-
   } catch (error) {
     console.error('Error generating persona response:', error);
     return 'I apologize, but I seem to be having trouble responding right now. Could you try rephrasing your question?';
   }
+}
+
+async function generateQuickPersonaResponse(
+  personaId: string,
+  userMessage: string,
+  previousMessages: Message[],
+  mode: ChatMode
+): Promise<string> {
+  console.log('Using quick-chat function for faster responses');
+
+  const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+    body: {
+      personaId,
+      message: userMessage,
+      previousMessages,
+      mode
+    }
+  });
+
+  if (error) {
+    console.error('Error calling quick-chat function:', error);
+    throw new Error(`Failed to get response: ${error.message}`);
+  }
+
+  if (!data?.response) {
+    console.error('No response from quick-chat function:', data);
+    throw new Error('No response received from AI');
+  }
+
+  return data.response;
 }
 
 async function generatePersonaResponse(

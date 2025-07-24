@@ -69,8 +69,7 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
       persona,
       'research', // Use research mode
       conversationContext, // Include full knowledge base context
-      imageData,
-      3 // Allow up to 3 validation attempts
+      imageData
     );
 
     // Save the response message to database

@@ -84,26 +84,36 @@ export const usePersonaChat = (personaId: string, chatMode: ChatMode = 'conversa
         imageBase64
       );
       
-      // Break long responses into multiple sequential messages
-      const messageSegments = breakIntoMultipleMessages(response);
-      
-      // Add messages with slight delays to simulate typing
-      for (let i = 0; i < messageSegments.length; i++) {
-        const segment = messageSegments[i].trim();
-        if (segment) {
-          setTimeout(() => {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: segment,
-              timestamp: new Date(),
-            }]);
-            
-            // Only mark as not responding after the last message
-            if (i === messageSegments.length - 1) {
-              setIsResponding(false);
-            }
-          }, i * 1000); // Add a 1 second delay between messages
+      // For 1-on-1 chat: Return complete response immediately for better UX
+      // Only break into segments if extremely long (>800 chars)
+      if (response.length > 800) {
+        const messageSegments = breakIntoMultipleMessages(response);
+        
+        // Add messages with shorter delays for better flow
+        for (let i = 0; i < messageSegments.length; i++) {
+          const segment = messageSegments[i].trim();
+          if (segment) {
+            setTimeout(() => {
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: segment,
+                timestamp: new Date(),
+              }]);
+              
+              if (i === messageSegments.length - 1) {
+                setIsResponding(false);
+              }
+            }, i * 200); // Reduced from 1000ms to 200ms
+          }
         }
+      } else {
+        // Single message - no artificial delay
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: response,
+          timestamp: new Date(),
+        }]);
+        setIsResponding(false);
       }
     } catch (error) {
       console.error('Error getting response:', error);

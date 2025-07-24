@@ -66,6 +66,9 @@ verify_jwt = true
 [functions.enhance-persona]
 verify_jwt = true
 
+[functions.persona-quick-chat]
+verify_jwt = true
+
 [edge-runtime]
 policy = "per_worker"
 inspector_port = 8083
