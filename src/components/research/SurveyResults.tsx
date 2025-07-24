@@ -595,7 +595,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
                                       <div>
                                         <span className="font-medium">Persona Patterns:</span> {emotion.persona_patterns}
                                       </div>
-                                      {emotion.triggers && emotion.triggers.length > 0 && (
+                                      {Array.isArray(emotion.triggers) && emotion.triggers.length > 0 && (
                                         <div>
                                           <span className="font-medium">Triggers:</span>
                                           <ul className="list-disc list-inside ml-2 text-muted-foreground">
@@ -605,7 +605,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
                                           </ul>
                                         </div>
                                       )}
-                                      {emotion.examples && emotion.examples.length > 0 && (
+                                      {Array.isArray(emotion.examples) && emotion.examples.length > 0 && (
                                         <div>
                                           <span className="font-medium">Examples:</span>
                                           <ul className="list-disc list-inside ml-2 text-muted-foreground">
