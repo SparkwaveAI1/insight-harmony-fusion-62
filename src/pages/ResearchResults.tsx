@@ -9,12 +9,15 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getResearchSessionById, getResearchReport, ResearchSurveySession, ResearchReport } from '@/services/collections/researchOperations';
 import SurveyResults from '@/components/research/SurveyResults';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getPersonaByPersonaId } from '@/services/persona';
+import { Persona } from '@/services/persona/types';
 
 const ResearchResults = () => {
   const { surveySessionId } = useParams<{ surveySessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<ResearchSurveySession | null>(null);
   const [report, setReport] = useState<ResearchReport | null>(null);
+  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,8 +42,43 @@ const ResearchResults = () => {
         return;
       }
       
+      // Fetch real persona data
+      const personaDataPromises = sessionData.selected_personas.map(personaId => 
+        getPersonaByPersonaId(personaId)
+      );
+      
+      const personaDataResults = await Promise.all(personaDataPromises);
+      const validPersonas = personaDataResults.filter((persona): persona is Persona => persona !== null);
+      
+      // Create fallback personas for any that couldn't be loaded
+      const allPersonas = sessionData.selected_personas.map(personaId => {
+        const foundPersona = validPersonas.find(p => p.persona_id === personaId);
+        if (foundPersona) {
+          return foundPersona;
+        }
+        
+        // Fallback persona with ID + name format
+        return {
+          persona_id: personaId,
+          id: personaId,
+          name: `Persona ${personaId}`,
+          creation_date: '',
+          created_at: '',
+          metadata: {},
+          trait_profile: {},
+          simulation_directives: {},
+          behavioral_modulation: {},
+          interview_sections: [],
+          preinterview_tags: [],
+          linguistic_profile: {},
+          persona_context: '',
+          persona_type: 'persona'
+        } as Persona;
+      });
+      
       setSession(sessionData);
       setReport(reportData);
+      setLoadedPersonas(allPersonas);
     } catch (err) {
       console.error('Error loading research data:', err);
       setError("Failed to load research data");
@@ -135,22 +173,7 @@ const ResearchResults = () => {
               questions={session.survey_questions || []}
               sessionId={session.id}
               surveySessionId={session.id}
-              loadedPersonas={session.selected_personas.map(id => ({ 
-                persona_id: id,
-                id: id,
-                name: `Persona ${id}`,
-                creation_date: '',
-                created_at: '',
-                metadata: {},
-                trait_profile: {},
-                simulation_directives: {},
-                behavioral_modulation: {},
-                interview_sections: [],
-                preinterview_tags: [],
-                linguistic_profile: {},
-                persona_context: '',
-                persona_type: 'persona'
-              }))}
+              loadedPersonas={loadedPersonas}
               onBack={handleBackToProject}
             />
           </main>
