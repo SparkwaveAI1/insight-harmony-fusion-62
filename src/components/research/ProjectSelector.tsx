@@ -180,14 +180,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
               <SelectContent>
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{project.name}</span>
-                      {project.description && (
-                        <span className="text-xs text-muted-foreground">
-                          {project.description.slice(0, 100)}...
-                        </span>
-                      )}
-                    </div>
+                    {project.name}
                   </SelectItem>
                 ))}
               </SelectContent>
