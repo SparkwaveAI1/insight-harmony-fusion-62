@@ -21,21 +21,70 @@ interface SurveyResultsProps {
 }
 
 interface CompiledInsights {
-  themes: string[];
-  contradictions: string[];
-  quotes: Array<{
-    text: string;
-    persona_name: string;
-    question: string;
-  }>;
-  summary: string;
-  sentiment_analysis: {
-    overall_sentiment: string;
-    question_sentiments: Array<{
-      question: string;
-      sentiment: string;
-      confidence: number;
+  executive_summary?: {
+    key_findings: string;
+    research_objective_fulfillment: string;
+    actionable_insights: string;
+  };
+  thematic_analysis?: {
+    primary_themes: Array<{
+      theme_name: string;
+      description: string;
+      prevalence: string;
+      supporting_evidence: string[];
+      sub_themes: string[];
+      implications: string;
+      document_connection?: string;
     }>;
+    emergent_themes: Array<{
+      theme_name: string;
+      description: string;
+      supporting_evidence: string[];
+      research_value: string;
+    }>;
+  };
+  behavioral_insights?: {
+    personality_driven_patterns: Array<{
+      trait_correlation: string;
+      behavioral_prediction: string;
+      examples: string[];
+    }>;
+    demographic_influences: Array<{
+      demographic_factor: string;
+      response_pattern: string;
+      implications: string;
+    }>;
+  };
+  consensus_and_divergence?: {
+    strong_consensus: Array<{
+      topic: string;
+      agreement_level: string;
+      significance: string;
+    }>;
+    polarizing_topics: Array<{
+      topic: string;
+      divisions: string;
+      underlying_factors: string;
+    }>;
+  };
+  emotional_landscape?: {
+    dominant_emotions: string[];
+    emotional_journey: string;
+  };
+  research_quality_assessment?: {
+    response_authenticity: string;
+    engagement_levels: string;
+    data_saturation: string;
+    limitations: string;
+    recommendations: string;
+  };
+  actionable_recommendations?: string[];
+  metadata?: {
+    analyzed_at: string;
+    total_responses: number;
+    unique_personas: number;
+    total_questions: number;
+    model_used: string;
   };
 }
 
@@ -310,100 +359,275 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
           ) : compiledInsights ? (
             <div className="space-y-6">
               {/* Executive Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Executive Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap">{compiledInsights.summary}</p>
-                </CardContent>
-              </Card>
-
-              {/* Key Themes */}
-              {compiledInsights.themes && compiledInsights.themes.length > 0 && (
+              {compiledInsights.executive_summary && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Key Themes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {compiledInsights.themes.map((theme, index) => (
-                        <div key={index} className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm">{theme}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Notable Quotes */}
-              {compiledInsights.quotes && compiledInsights.quotes.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notable Quotes</CardTitle>
+                    <CardTitle>Executive Summary</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {compiledInsights.quotes.map((quote, index) => (
-                      <div key={index} className="p-4 border-l-4 border-blue-500 bg-muted/50">
-                        <p className="text-sm italic mb-2">"{quote.text}"</p>
-                        <p className="text-xs text-muted-foreground">
-                          — {quote.persona_name} · {quote.question}
-                        </p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Contradictions */}
-              {compiledInsights.contradictions && compiledInsights.contradictions.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contradictions & Tensions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {compiledInsights.contradictions.map((contradiction, index) => (
-                        <div key={index} className="p-3 border border-amber-200 bg-amber-50 rounded-lg">
-                          <p className="text-sm">{contradiction}</p>
-                        </div>
-                      ))}
+                    <div>
+                      <h4 className="font-medium mb-2">Key Findings</h4>
+                      <p className="text-sm text-muted-foreground">{compiledInsights.executive_summary.key_findings}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-2">Research Objective Fulfillment</h4>
+                      <p className="text-sm text-muted-foreground">{compiledInsights.executive_summary.research_objective_fulfillment}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-2">Actionable Insights</h4>
+                      <p className="text-sm text-muted-foreground">{compiledInsights.executive_summary.actionable_insights}</p>
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              {/* Sentiment Analysis */}
-              {compiledInsights.sentiment_analysis && (
+              {/* Thematic Analysis */}
+              {compiledInsights.thematic_analysis && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Sentiment Analysis</CardTitle>
+                    <CardTitle>Thematic Analysis</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="p-3 bg-muted rounded-lg">
-                        <p className="text-sm font-medium mb-1">Overall Sentiment</p>
-                        <p className="text-sm capitalize">{compiledInsights.sentiment_analysis.overall_sentiment}</p>
-                      </div>
-                      
-                      {compiledInsights.sentiment_analysis.question_sentiments && 
-                       compiledInsights.sentiment_analysis.question_sentiments.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">Question-by-Question Sentiment</p>
-                          {compiledInsights.sentiment_analysis.question_sentiments.map((qs, index) => (
-                            <div key={index} className="p-2 border rounded">
-                              <p className="text-xs text-muted-foreground mb-1">{qs.question}</p>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm capitalize">{qs.sentiment}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {Math.round(qs.confidence * 100)}% confidence
-                                </span>
+                  <CardContent className="space-y-6">
+                    {/* Primary Themes */}
+                    {compiledInsights.thematic_analysis.primary_themes && compiledInsights.thematic_analysis.primary_themes.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3">Primary Themes</h4>
+                        <div className="space-y-4">
+                          {compiledInsights.thematic_analysis.primary_themes.map((theme, index) => (
+                            <div key={index} className="p-4 border rounded-lg">
+                              <h5 className="font-medium mb-2">{theme.theme_name}</h5>
+                              <p className="text-sm text-muted-foreground mb-3">{theme.description}</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="font-medium">Prevalence:</span> {theme.prevalence}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Implications:</span> {theme.implications}
+                                </div>
                               </div>
+                              {theme.supporting_evidence && theme.supporting_evidence.length > 0 && (
+                                <div className="mt-3">
+                                  <span className="font-medium text-sm">Supporting Evidence:</span>
+                                  <ul className="list-disc list-inside mt-1 text-xs text-muted-foreground space-y-1">
+                                    {theme.supporting_evidence.map((evidence, i) => (
+                                      <li key={i}>"{evidence}"</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Emergent Themes */}
+                    {compiledInsights.thematic_analysis.emergent_themes && compiledInsights.thematic_analysis.emergent_themes.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3">Emergent Themes</h4>
+                        <div className="space-y-3">
+                          {compiledInsights.thematic_analysis.emergent_themes.map((theme, index) => (
+                            <div key={index} className="p-3 bg-muted rounded-lg">
+                              <h5 className="font-medium mb-1">{theme.theme_name}</h5>
+                              <p className="text-sm text-muted-foreground mb-2">{theme.description}</p>
+                              <p className="text-xs text-muted-foreground"><strong>Research Value:</strong> {theme.research_value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Behavioral Insights */}
+              {compiledInsights.behavioral_insights && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Behavioral Insights</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {compiledInsights.behavioral_insights.personality_driven_patterns && compiledInsights.behavioral_insights.personality_driven_patterns.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3">Personality-Driven Patterns</h4>
+                        <div className="space-y-3">
+                          {compiledInsights.behavioral_insights.personality_driven_patterns.map((pattern, index) => (
+                            <div key={index} className="p-3 border rounded-lg">
+                              <p className="text-sm mb-2"><strong>Trait Correlation:</strong> {pattern.trait_correlation}</p>
+                              <p className="text-sm mb-2"><strong>Behavioral Prediction:</strong> {pattern.behavioral_prediction}</p>
+                              {pattern.examples && pattern.examples.length > 0 && (
+                                <div className="text-xs text-muted-foreground">
+                                  <strong>Examples:</strong> {pattern.examples.join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {compiledInsights.behavioral_insights.demographic_influences && compiledInsights.behavioral_insights.demographic_influences.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3">Demographic Influences</h4>
+                        <div className="space-y-3">
+                          {compiledInsights.behavioral_insights.demographic_influences.map((influence, index) => (
+                            <div key={index} className="p-3 bg-muted rounded-lg">
+                              <p className="text-sm mb-1"><strong>{influence.demographic_factor}:</strong> {influence.response_pattern}</p>
+                              <p className="text-xs text-muted-foreground">{influence.implications}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Consensus and Divergence */}
+              {compiledInsights.consensus_and_divergence && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Consensus & Divergence</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {compiledInsights.consensus_and_divergence.strong_consensus && compiledInsights.consensus_and_divergence.strong_consensus.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3 text-green-600">Strong Consensus</h4>
+                        <div className="space-y-2">
+                          {compiledInsights.consensus_and_divergence.strong_consensus.map((consensus, index) => (
+                            <div key={index} className="p-3 border border-green-200 bg-green-50 rounded-lg">
+                              <p className="text-sm font-medium">{consensus.topic}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{consensus.agreement_level} - {consensus.significance}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {compiledInsights.consensus_and_divergence.polarizing_topics && compiledInsights.consensus_and_divergence.polarizing_topics.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3 text-amber-600">Polarizing Topics</h4>
+                        <div className="space-y-2">
+                          {compiledInsights.consensus_and_divergence.polarizing_topics.map((topic, index) => (
+                            <div key={index} className="p-3 border border-amber-200 bg-amber-50 rounded-lg">
+                              <p className="text-sm font-medium">{topic.topic}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{topic.divisions}</p>
+                              <p className="text-xs text-muted-foreground">{topic.underlying_factors}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Emotional Landscape */}
+              {compiledInsights.emotional_landscape && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Emotional Landscape</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {compiledInsights.emotional_landscape.dominant_emotions && compiledInsights.emotional_landscape.dominant_emotions.length > 0 && (
+                        <div>
+                          <h4 className="font-medium mb-2">Dominant Emotions</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {compiledInsights.emotional_landscape.dominant_emotions.map((emotion, index) => (
+                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                {emotion}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
+                      {compiledInsights.emotional_landscape.emotional_journey && (
+                        <div>
+                          <h4 className="font-medium mb-2">Emotional Journey</h4>
+                          <p className="text-sm text-muted-foreground">{compiledInsights.emotional_landscape.emotional_journey}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Actionable Recommendations */}
+              {compiledInsights.actionable_recommendations && compiledInsights.actionable_recommendations.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Actionable Recommendations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {compiledInsights.actionable_recommendations.map((recommendation, index) => (
+                        <div key={index} className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm">{recommendation}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Research Quality Assessment */}
+              {compiledInsights.research_quality_assessment && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Research Quality Assessment</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Response Authenticity:</span>
+                        <p className="text-muted-foreground">{compiledInsights.research_quality_assessment.response_authenticity}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Engagement Levels:</span>
+                        <p className="text-muted-foreground">{compiledInsights.research_quality_assessment.engagement_levels}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Data Saturation:</span>
+                        <p className="text-muted-foreground">{compiledInsights.research_quality_assessment.data_saturation}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Limitations:</span>
+                        <p className="text-muted-foreground">{compiledInsights.research_quality_assessment.limitations}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium">Recommendations:</span>
+                      <p className="text-muted-foreground text-sm">{compiledInsights.research_quality_assessment.recommendations}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Metadata */}
+              {compiledInsights.metadata && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Analysis Metadata</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium">Analyzed:</span>
+                        <p className="text-muted-foreground">{new Date(compiledInsights.metadata.analyzed_at).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Total Responses:</span>
+                        <p className="text-muted-foreground">{compiledInsights.metadata.total_responses}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Unique Personas:</span>
+                        <p className="text-muted-foreground">{compiledInsights.metadata.unique_personas}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Questions:</span>
+                        <p className="text-muted-foreground">{compiledInsights.metadata.total_questions}</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
