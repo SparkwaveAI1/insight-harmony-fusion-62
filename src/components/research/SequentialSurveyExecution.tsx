@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, FileText, CheckCircle, Clock, User, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
@@ -54,6 +55,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
   onComplete,
   onBack
 }) => {
+  const navigate = useNavigate();
   const [personaProgress, setPersonaProgress] = useState<PersonaProgress[]>([]);
   const [currentPersonaIndex, setCurrentPersonaIndex] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -401,7 +403,13 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                   <br />
                   <span className="font-medium">Total responses collected: {completedQuestions}</span>
                 </p>
-                <Button onClick={onComplete}>
+                <Button onClick={() => {
+                  if (surveySessionId) {
+                    navigate(`/research/results/${surveySessionId}`);
+                  } else {
+                    onComplete();
+                  }
+                }}>
                   View Survey Results
                 </Button>
               </div>
