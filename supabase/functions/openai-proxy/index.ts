@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { corsHeaders } from '../_shared/cors.ts';
-import { createAuthenticPersonaInstructions } from './personaInstructions.ts';
+import { createComprehensivePersonaInstructions } from '../_shared/comprehensivePersonaInstructions.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -39,8 +39,13 @@ serve(async (req) => {
 
     console.log('Processing request for persona:', persona_id, 'Mode:', mode);
 
-    // Create authentic system message that discourages formulaic responses
-    const systemMessage = createAuthenticPersonaInstructions(persona_data, mode, conversation_context);
+    // Create comprehensive system message using ALL traits for authentic responses
+    const systemMessage = createComprehensivePersonaInstructions(persona_data, {
+      mode,
+      conversationContext: conversation_context,
+      includeKnowledgeBoundaries: true,
+      enhancedAuthenticity: true
+    });
 
     console.log('Generated authentic persona instructions for:', persona_data.name);
 

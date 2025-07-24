@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { createStreamlinedPersonaInstructions } from './streamlinedPersonaInstructions.ts';
+import { createComprehensiveStreamlinedInstructions } from './comprehensiveStreamlinedInstructions.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -75,7 +75,7 @@ serve(async (req) => {
 
       persona = fetchedPersona;
       // Pre-process persona instructions once
-      systemPrompt = createStreamlinedPersonaInstructions(persona, mode);
+      systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode);
       
       // Cache for future requests
       setCachedPersona(personaId, persona, systemPrompt);
