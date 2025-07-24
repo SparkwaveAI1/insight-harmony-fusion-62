@@ -4,6 +4,7 @@ import { Persona } from '@/services/persona/types';
 import { Message } from '../types';
 import { ChatMode } from '../ChatModeSelector';
 import { validatePersonaResponse } from '@/components/research/services/personaValidatorService';
+import { ConversationOptimizer } from '../utils/conversationOptimizer';
 
 export async function sendMessageToPersona(
   personaId: string,
@@ -52,11 +53,15 @@ async function generateQuickPersonaResponse(
 ): Promise<string> {
   console.log('Using quick-chat function for faster responses');
 
+  // Optimize conversation history for performance
+  const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
+  console.log(`Optimized history: ${previousMessages.length} → ${optimizedHistory.length} messages`);
+
   const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
     body: {
       personaId,
       message: userMessage,
-      previousMessages,
+      previousMessages: optimizedHistory,
       mode
     }
   });

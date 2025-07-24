@@ -4,6 +4,7 @@ import { Persona } from "@/services/persona/types";
 import { useAuth } from "./AuthContext";
 import { PersonaContextType } from "./PersonaContext.types";
 import { getAllPersonas } from "@/services/persona"; // Updated import path
+import { personaCache } from '@/components/persona-chat/utils/personaCache';
 
 export const PersonaContext = createContext<PersonaContextType | undefined>(undefined);
 
@@ -46,8 +47,23 @@ export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) =>
   const loadPersona = async (personaId: string): Promise<Persona | null> => {
     try {
       setIsLoading(true);
+      
+      // Check cache first for faster loading
+      const cachedPersona = personaCache.get(personaId);
+      if (cachedPersona) {
+        setActivePersona(cachedPersona);
+        setIsLoading(false);
+        return cachedPersona;
+      }
+      
       // Find the persona in the current list or fetch it
       const persona = personas.find(p => p.persona_id === personaId) || null;
+      
+      if (persona) {
+        // Cache for future use
+        personaCache.set(personaId, persona);
+      }
+      
       setActivePersona(persona);
       return persona;
     } catch (err) {

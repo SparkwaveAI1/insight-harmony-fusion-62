@@ -14,6 +14,32 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Cache for persona data and processed instructions
+const personaCache = new Map<string, { 
+  persona: any, 
+  instructions: string, 
+  timestamp: number 
+}>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+function getCachedPersona(personaId: string): { persona: any, instructions: string } | null {
+  const cached = personaCache.get(personaId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log('Using cached persona data for:', personaId);
+    return { persona: cached.persona, instructions: cached.instructions };
+  }
+  return null;
+}
+
+function setCachedPersona(personaId: string, persona: any, instructions: string): void {
+  personaCache.set(personaId, {
+    persona,
+    instructions,
+    timestamp: Date.now()
+  });
+  console.log('Cached persona data for:', personaId);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,22 +50,36 @@ serve(async (req) => {
 
     console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
 
-    // Fetch persona data
-    const { data: persona, error: personaError } = await supabase
-      .from('personas')
-      .select('*')
-      .eq('persona_id', personaId)
-      .single();
+    // Check cache first
+    let persona: any;
+    let systemPrompt: string;
+    
+    const cached = getCachedPersona(personaId);
+    if (cached) {
+      persona = cached.persona;
+      systemPrompt = cached.instructions;
+    } else {
+      // Fetch persona data from database
+      const { data: fetchedPersona, error: personaError } = await supabase
+        .from('personas')
+        .select('*')
+        .eq('persona_id', personaId)
+        .single();
 
-    if (personaError || !persona) {
-      return new Response(JSON.stringify({ error: 'Persona not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      if (personaError || !fetchedPersona) {
+        return new Response(JSON.stringify({ error: 'Persona not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      persona = fetchedPersona;
+      // Pre-process persona instructions once
+      systemPrompt = createStreamlinedPersonaInstructions(persona, mode);
+      
+      // Cache for future requests
+      setCachedPersona(personaId, persona, systemPrompt);
     }
-
-    // Build streamlined persona prompt
-    const systemPrompt = createStreamlinedPersonaInstructions(persona, mode);
     
     console.log('System prompt length:', systemPrompt.length, 'characters');
 
