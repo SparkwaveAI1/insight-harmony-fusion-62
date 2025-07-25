@@ -236,19 +236,70 @@ function generateStreamlinedCommunicationStyle(bigFive: any, education: string, 
     style += `- FLEXIBLE SPEECH: Mix formal and casual based on context\n`;
   }
 
-  // Cultural Speech Patterns
-  const culturalPatterns = linguisticProfile.cultural_speech_patterns || '';
-  if (culturalPatterns) {
-    if (culturalPatterns.includes('gamer')) {
-      style += `- GAMER LINGO: Use gaming terms, internet slang, gaming references\n`;
-    } else if (culturalPatterns.includes('corporate')) {
-      style += `- CORPORATE JARGON: Business terminology, professional buzzwords\n`;
-    } else if (culturalPatterns.includes('academic')) {
-      style += `- ACADEMIC LANGUAGE: Scholarly terms, precise definitions, research-oriented\n`;
-    } else if (culturalPatterns.includes('polite and indirect')) {
-      style += `- POLITE & INDIRECT: Soften statements, use diplomatic language\n`;
-    } else if (culturalPatterns.includes('slang')) {
-      style += `- SLANG HEAVY: Use current slang, informal expressions, trendy language\n`;
+  // Cultural Linguistic Markers - Process array of markers
+  const culturalMarkers = linguisticProfile.cultural_linguistic_markers || [];
+  if (culturalMarkers.length > 0) {
+    style += `- CULTURAL MARKERS: `;
+    culturalMarkers.forEach((marker: string) => {
+      if (marker.toLowerCase().includes('pueblo') || marker.toLowerCase().includes('ceremonial')) {
+        style += `Use spiritual/ceremonial metaphors, indigenous perspectives. `;
+      } else if (marker.toLowerCase().includes('artist') || marker.toLowerCase().includes('lingo')) {
+        style += `Use creative terminology, artistic expressions. `;
+      } else if (marker.toLowerCase().includes('southwest') || marker.toLowerCase().includes('regional')) {
+        style += `Southwest regional expressions, desert imagery. `;
+      } else if (marker.toLowerCase().includes('plainspoken')) {
+        style += `Direct, no-nonsense language. `;
+      } else if (marker.toLowerCase().includes('frugal') || marker.toLowerCase().includes('off-grid')) {
+        style += `Practical, resource-conscious vocabulary. `;
+      } else if (marker.toLowerCase().includes('tech shop') || marker.toLowerCase().includes('dad sarcasm')) {
+        style += `Workshop terminology, dry humor. `;
+      } else if (marker.toLowerCase().includes('midwestern')) {
+        style += `Midwestern expressions, practical skepticism. `;
+      } else if (marker.toLowerCase().includes('cybersecurity') || marker.toLowerCase().includes('darknet')) {
+        style += `Security terminology, tech privacy focus. `;
+      } else if (marker.toLowerCase().includes('privacy-first')) {
+        style += `Data protection language, suspicious of surveillance. `;
+      } else {
+        style += `${marker} expressions. `;
+      }
+    });
+    style += `\n`;
+  }
+
+  // Additional Linguistic Traits
+  const storytellingInclination = linguisticProfile.storytelling_inclination;
+  if (storytellingInclination && storytellingInclination !== 'moderate') {
+    if (storytellingInclination === 'high') {
+      style += `- HIGH STORYTELLING: Use narratives, examples, paint vivid scenes\n`;
+    } else if (storytellingInclination === 'low') {
+      style += `- MINIMAL STORYTELLING: Stick to facts, avoid elaborate narratives\n`;
+    }
+  }
+
+  const vocabularyComplexity = linguisticProfile.vocabulary_complexity;
+  if (vocabularyComplexity) {
+    if (vocabularyComplexity === 'high') {
+      style += `- COMPLEX VOCABULARY: Use sophisticated, precise terminology\n`;
+    } else if (vocabularyComplexity === 'low') {
+      style += `- SIMPLE VOCABULARY: Use basic, everyday words\n`;
+    }
+  }
+
+  const communicationPace = linguisticProfile.communication_pace;
+  if (communicationPace) {
+    if (communicationPace === 'fast') {
+      style += `- FAST PACE: Quick responses, energetic delivery\n`;
+    } else if (communicationPace === 'slow') {
+      style += `- DELIBERATE PACE: Thoughtful, measured responses\n`;
+    }
+  }
+
+  const fillerWordUsage = linguisticProfile.filler_word_usage;
+  if (fillerWordUsage) {
+    if (fillerWordUsage === 'high') {
+      style += `- FILLER WORDS: Use "um", "like", "you know", "sort of"\n`;
+    } else if (fillerWordUsage === 'low') {
+      style += `- PRECISE SPEECH: Avoid filler words, speak clearly\n`;
     }
   }
 
