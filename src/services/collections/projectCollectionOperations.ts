@@ -66,6 +66,8 @@ export const removeCollectionFromProject = async (
  */
 export const getProjectCollections = async (projectId: string) => {
   try {
+    console.log('getProjectCollections: Fetching collections for projectId:', projectId);
+    
     const { data, error } = await supabase
       .from('project_collections')
       .select(`
@@ -75,14 +77,16 @@ export const getProjectCollections = async (projectId: string) => {
       .eq('project_id', projectId);
 
     if (error) {
-      console.error('Error getting project collections:', error);
-      return [];
+      console.error('getProjectCollections: Database error:', error);
+      throw new Error(`Failed to fetch project collections: ${error.message}`);
     }
 
-    return data.map(item => item.collections);
+    const collections = data?.map(item => item.collections) || [];
+    console.log('getProjectCollections: Found collections:', collections);
+    return collections;
   } catch (error) {
-    console.error('Error getting project collections:', error);
-    return [];
+    console.error('getProjectCollections: Exception:', error);
+    throw error; // Re-throw instead of returning empty array
   }
 };
 

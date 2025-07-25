@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, Folder, Globe, Check } from 'lucide-react';
+import { Users, Folder, Globe, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { Persona } from '@/services/persona/types';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectCollections } from '@/services/collections/projectCollectionOperations';
@@ -54,11 +55,14 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
   onPersonaSelectionChange,
   maxPersonas = 10
 }) => {
+  const { user, session } = useAuth();
   const [selectedSource, setSelectedSource] = useState<PersonaSource | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const [projectCollections, setProjectCollections] = useState<Collection[]>([]);
   const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [collectionsError, setCollectionsError] = useState<string | null>(null);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
 
   // Load project collections when component mounts
   useEffect(() => {
@@ -75,13 +79,33 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
   }, [selectedSource, selectedCollection]);
 
   const loadProjectCollections = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      console.log('PersonaSourceSelector: No projectId provided');
+      return;
+    }
+    
+    if (!user || !session) {
+      console.log('PersonaSourceSelector: No authenticated user/session');
+      setCollectionsError('Authentication required to load project collections');
+      return;
+    }
+    
+    console.log('PersonaSourceSelector: Loading project collections for projectId:', projectId);
+    setCollectionsLoading(true);
+    setCollectionsError(null);
     
     try {
       const collections = await getProjectCollections(projectId);
+      console.log('PersonaSourceSelector: Loaded collections:', collections);
       setProjectCollections(collections);
+      if (collections.length === 0) {
+        setCollectionsError('No collections found for this project');
+      }
     } catch (error) {
-      console.error('Error loading project collections:', error);
+      console.error('PersonaSourceSelector: Error loading project collections:', error);
+      setCollectionsError('Failed to load project collections');
+    } finally {
+      setCollectionsLoading(false);
     }
   };
 
@@ -100,10 +124,13 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           break;
           
         case 'my-personas':
+          if (!user?.id) {
+            throw new Error('User authentication required');
+          }
           const { data: myPersonasData, error: myError } = await supabase
             .from('personas')
             .select('*')
-            .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false });
           
           if (myError) throw myError;
@@ -154,14 +181,20 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
   };
 
   const getSourceOptionsToShow = () => {
-    const options = [...PERSONA_SOURCE_OPTIONS];
-    
-    // If no project or no collections in project, filter out project-collections option
-    if (!projectId || projectCollections.length === 0) {
-      return options.filter(opt => opt.id !== 'project-collections');
-    }
-    
-    return options;
+    // Always show all options, but we'll handle disabled state in the UI
+    return [...PERSONA_SOURCE_OPTIONS];
+  };
+
+  const isProjectCollectionsDisabled = () => {
+    return !projectId || collectionsError !== null || (projectCollections.length === 0 && !collectionsLoading);
+  };
+
+  const getProjectCollectionsDescription = () => {
+    if (!projectId) return 'No project selected';
+    if (collectionsLoading) return 'Loading collections...';
+    if (collectionsError) return collectionsError;
+    if (projectCollections.length === 0) return 'No collections found for this project';
+    return 'Choose from collections linked to this project';
   };
 
   return (
@@ -180,27 +213,42 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
         <div>
           <h4 className="text-sm font-medium mb-2">Choose Persona Source</h4>
           <div className="grid grid-cols-1 gap-2">
-            {getSourceOptionsToShow().map((option) => (
-              <Button
-                key={option.id}
-                variant={selectedSource === option.id ? "default" : "outline"}
-                onClick={() => handleSourceSelect(option.id)}
-                className="justify-start h-auto p-3"
-              >
-                <div className="flex items-start gap-3 text-left">
-                  {option.icon}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">{option.label}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {option.description}
+            {getSourceOptionsToShow().map((option) => {
+              const isDisabled = option.id === 'project-collections' && isProjectCollectionsDisabled();
+              const description = option.id === 'project-collections' 
+                ? getProjectCollectionsDescription()
+                : option.description;
+              
+              return (
+                <Button
+                  key={option.id}
+                  variant={selectedSource === option.id ? "default" : "outline"}
+                  onClick={() => !isDisabled && handleSourceSelect(option.id)}
+                  disabled={isDisabled}
+                  className="justify-start h-auto p-3"
+                >
+                  <div className="flex items-start gap-3 text-left">
+                    {option.id === 'project-collections' && collectionsError ? (
+                      <AlertCircle className="w-4 h-4 text-destructive" />
+                    ) : (
+                      option.icon
+                    )}
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{option.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {description}
+                      </div>
                     </div>
+                    {selectedSource === option.id && !isDisabled && (
+                      <Check className="w-4 h-4 text-primary" />
+                    )}
+                    {option.id === 'project-collections' && collectionsLoading && (
+                      <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />
+                    )}
                   </div>
-                  {selectedSource === option.id && (
-                    <Check className="w-4 h-4 text-primary" />
-                  )}
-                </div>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </div>
 
