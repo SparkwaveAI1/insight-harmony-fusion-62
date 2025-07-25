@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '../types';
 import { ChatMode } from '../ChatModeSelector';
-import { validatePersonaResponse } from '@/components/research/services/personaValidatorService';
 import { ConversationOptimizer } from '../utils/conversationOptimizer';
 
 export async function sendMessageToPersona(
@@ -15,27 +14,17 @@ export async function sendMessageToPersona(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('Using conversation mode for all persona interactions:', { personaId, mode, messageLength: userMessage.length });
+  console.log('Using enhanced persona-quick-chat for all interactions:', { personaId, mode, messageLength: userMessage.length });
 
   try {
-    // Always use quick-chat function for conversation mode
-    if (imageData) {
-      return await generatePersonaResponse(
-        personaId,
-        userMessage,
-        previousMessages,
-        persona,
-        mode,
-        conversationContext,
-        imageData
-      );
-    }
-
+    // Always use the enhanced quick-chat function with linguistic profiles
     return await generateQuickPersonaResponse(
       personaId,
       userMessage,
       previousMessages,
-      mode
+      mode,
+      conversationContext,
+      imageData
     );
 
   } catch (error) {
@@ -48,9 +37,11 @@ async function generateQuickPersonaResponse(
   personaId: string,
   userMessage: string,
   previousMessages: Message[],
-  mode: ChatMode
+  mode: ChatMode,
+  conversationContext: string = '',
+  imageData?: string
 ): Promise<string> {
-  console.log('Using quick-chat function for faster responses');
+  console.log('Using enhanced quick-chat function with linguistic profiles');
 
   // Optimize conversation history for performance
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
@@ -61,7 +52,9 @@ async function generateQuickPersonaResponse(
       personaId,
       message: userMessage,
       previousMessages: optimizedHistory,
-      mode
+      mode,
+      conversationContext,
+      imageData
     }
   });
 
@@ -78,48 +71,3 @@ async function generateQuickPersonaResponse(
   return data.response;
 }
 
-async function generatePersonaResponse(
-  personaId: string,
-  userMessage: string,
-  previousMessages: Message[],
-  persona: Persona,
-  mode: ChatMode,
-  conversationContext: string,
-  imageData?: string,
-  validationFeedback?: string
-): Promise<string> {
-  // Add validation feedback to conversation context if provided
-  let enhancedContext = conversationContext;
-  if (validationFeedback) {
-    enhancedContext = `${conversationContext}\n\nVALIDATION FEEDBACK FROM PREVIOUS ATTEMPT:\n${validationFeedback}`;
-  }
-
-  const { data, error } = await supabase.functions.invoke('openai-proxy', {
-    body: {
-      persona_id: personaId,
-      user_message: userMessage,
-      previous_messages: previousMessages,
-      persona_data: persona,
-      mode: mode,
-      conversation_context: enhancedContext,
-      image_data: imageData,
-      // Enhanced parameters for more authentic responses
-      temperature: 0.8,
-      top_p: 0.9,
-      frequency_penalty: 0.4,
-      presence_penalty: 0.5
-    }
-  });
-
-  if (error) {
-    console.error('Error calling OpenAI proxy:', error);
-    throw new Error(`Failed to get response: ${error.message}`);
-  }
-
-  if (!data?.response) {
-    console.error('No response from OpenAI proxy:', data);
-    throw new Error('No response received from AI');
-  }
-
-  return data.response;
-}

@@ -67,25 +67,38 @@ export const SurveyExecution: React.FC<SurveyExecutionProps> = ({
   const generatePersonaResponse = async (question: string): Promise<string> => {
     setIsGeneratingResponse(true);
     try {
-      // Use the existing persona chat API to get a response
-      const response = await fetch('/api/persona-chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personaId,
-          message: question,
-          context: 'survey_interview'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get persona response');
+      // Use the enhanced persona API service for consistent responses
+      const { sendMessageToPersona } = await import('@/components/persona-chat/api/personaApiService');
+      const { usePersona } = await import('@/hooks/usePersona');
+      
+      // Get persona data
+      const { data: personaData, error } = await supabase
+        .from('personas')
+        .select('*')
+        .eq('id', personaId)
+        .single();
+      
+      if (error || !personaData) {
+        throw new Error('Failed to load persona data');
       }
 
-      const data = await response.json();
-      return data.response || 'No response generated';
+      // Convert database persona to expected format
+      const formattedPersona = {
+        ...personaData,
+        persona_context: personaData.description || '',
+        persona_type: 'research'
+      } as any;
+
+      const response = await sendMessageToPersona(
+        personaId,
+        question,
+        [], // No previous messages for survey questions
+        formattedPersona,
+        'conversation', // Use conversation mode for surveys
+        'survey_interview' // Context
+      );
+      
+      return response || 'No response generated';
     } catch (error) {
       console.error('Error generating response:', error);
       return 'Sorry, I could not generate a response to this question.';

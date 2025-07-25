@@ -46,7 +46,14 @@ serve(async (req) => {
   }
 
   try {
-    const { personaId, message, previousMessages = [], mode = 'conversation' } = await req.json();
+    const { 
+      personaId, 
+      message, 
+      previousMessages = [], 
+      mode = 'conversation',
+      conversationContext = '',
+      imageData
+    } = await req.json();
 
     console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
 
@@ -74,10 +81,10 @@ serve(async (req) => {
       }
 
       persona = fetchedPersona;
-      // Pre-process persona instructions once
-      systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode);
+      // Pre-process persona instructions with context and mode
+      systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext);
       
-      // Cache for future requests
+      // Cache for future requests (note: context-specific, so cache key should include context)
       setCachedPersona(personaId, persona, systemPrompt);
     }
     
@@ -90,9 +97,20 @@ serve(async (req) => {
       ...recentMessages.map((msg: any) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content
-      })),
-      { role: 'user', content: message }
+      }))
     ];
+
+    // Add current user message with potential image data
+    const userMessage: any = { role: 'user' };
+    if (imageData) {
+      userMessage.content = [
+        { type: 'text', text: message },
+        { type: 'image_url', image_url: { url: imageData } }
+      ];
+    } else {
+      userMessage.content = message;
+    }
+    messages.push(userMessage);
 
     // Generate response with optimized parameters for speed
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
