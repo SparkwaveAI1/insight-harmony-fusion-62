@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
+import { updateSurveySessionStatus } from '@/components/research/services/surveySessionService';
 
 interface SurveyData {
   name: string;
@@ -83,6 +84,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
   useEffect(() => {
     if (sessionId && personaProgress.length > 0 && !isRunning && !isComplete) {
       console.log('Auto-starting sequential survey execution');
+      console.log('Session ID:', sessionId);
+      console.log('Survey Session ID:', surveySessionId);
+      console.log('Selected personas:', selectedPersonas);
       startSequentialSurvey();
     }
   }, [sessionId, personaProgress.length]);
@@ -117,6 +121,20 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
     }
     
     setIsRunning(true);
+    
+    // Update survey session status to active when starting
+    if (surveySessionId) {
+      try {
+        const sessionUpdated = await updateSurveySessionStatus(surveySessionId, 'active', sessionId);
+        if (sessionUpdated) {
+          console.log('Survey session marked as active');
+        } else {
+          console.warn('Failed to update survey session status to active');
+        }
+      } catch (error) {
+        console.error('Error updating survey session to active:', error);
+      }
+    }
     
     try {
       // Process each persona sequentially
@@ -537,6 +555,20 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               <p className="text-sm text-muted-foreground">
                 Setting up personas for sequential question processing...
               </p>
+            </div>
+          )}
+
+          {!isRunning && !isComplete && personaProgress.length > 0 && (
+            <div className="text-center py-8">
+              <MessageSquare className="w-12 h-12 mx-auto text-primary mb-4" />
+              <h3 className="font-medium mb-2">Ready to Start Survey</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                {personaProgress.length} personas are ready to answer {surveyData.questions.length} questions each.
+                {projectDocuments.length > 0 && ` They will first read ${projectDocuments.length} project document(s).`}
+              </p>
+              <Button onClick={startSequentialSurvey} size="lg">
+                Start Sequential Survey
+              </Button>
             </div>
           )}
         </CardContent>
