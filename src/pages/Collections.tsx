@@ -31,6 +31,9 @@ const Collections = () => {
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -51,12 +54,17 @@ const Collections = () => {
       return;
     }
 
-    const collection = await createCollection(name, description || null);
-    if (collection) {
-      setCreateDialogOpen(false);
-      setName("");
-      setDescription("");
-      fetchCollections();
+    setIsCreating(true);
+    try {
+      const collection = await createCollection(name, description || null);
+      if (collection) {
+        setCreateDialogOpen(false);
+        setName("");
+        setDescription("");
+        fetchCollections();
+      }
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -66,20 +74,26 @@ const Collections = () => {
       return;
     }
 
-    const result = await updateCollection(selectedCollection.id, {
-      name,
-      description: description || null
-    });
+    setIsUpdating(true);
+    try {
+      const result = await updateCollection(selectedCollection.id, {
+        name,
+        description: description || null
+      });
 
-    if (result) {
-      setEditDialogOpen(false);
-      fetchCollections();
+      if (result) {
+        setEditDialogOpen(false);
+        fetchCollections();
+      }
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleDeleteCollection = async () => {
     if (!selectedCollection) return;
 
+    setIsDeleting(true);
     try {
       const result = await deleteCollection(selectedCollection.id);
       if (result) {
@@ -90,6 +104,8 @@ const Collections = () => {
     } catch (error) {
       console.error("Error deleting collection:", error);
       toast.error("Failed to delete collection");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -229,7 +245,9 @@ const Collections = () => {
                   <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateCollection}>Create</Button>
+                  <Button onClick={handleCreateCollection} disabled={isCreating}>
+                    {isCreating ? "Creating..." : "Create"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -266,7 +284,9 @@ const Collections = () => {
                   <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleUpdateCollection}>Save Changes</Button>
+                  <Button onClick={handleUpdateCollection} disabled={isUpdating}>
+                    {isUpdating ? "Saving..." : "Save Changes"}
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -285,8 +305,8 @@ const Collections = () => {
                   <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
                     Cancel
                   </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteCollection}>
-                    Delete
+                  <AlertDialogAction onClick={handleDeleteCollection} disabled={isDeleting}>
+                    {isDeleting ? "Deleting..." : "Delete"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
