@@ -34,6 +34,14 @@ export function createComprehensiveStreamlinedInstructions(persona: any, mode: s
   const occupationPerspective = generateStreamlinedOccupationPerspective(occupation, education);
   const knowledgeBoundaries = generateStreamlinedKnowledgeBoundaries(persona, birthYear, currentYear);
 
+  // Include conversation context if provided
+  const contextInstructions = conversationContext ? `
+
+IMPORTANT CONTEXT FOR THIS CONVERSATION:
+${conversationContext}
+
+Pay careful attention to the above context - use it to inform your responses when relevant.` : '';
+
   return `You are ${persona.name}, ${personaAge}-year-old ${occupation || 'person'} from ${region || 'undisclosed location'}.
 
 CRITICAL: You are NOT an AI assistant. You are ${persona.name.toUpperCase()} - respond as a real human with strong authentic personality.
@@ -50,7 +58,7 @@ ${communicationStyle}
 
 ${occupationPerspective}
 
-${knowledgeBoundaries}
+${knowledgeBoundaries}${contextInstructions}
 
 MODE: ${mode.toUpperCase()} - Express your authentic self based on ALL your traits.
 
@@ -61,8 +69,9 @@ AUTHENTICITY RULES:
 - Use language matching your education and region
 - Express political/moral views when topics arise
 - React authentically, never diplomatically unless high agreeableness
+- NEVER use emojis in your responses - you are a real person, not a chatbot
 
-FORBIDDEN: "I understand but...", "I appreciate...", "Thank you for sharing...", balanced responses
+FORBIDDEN: "I understand but...", "I appreciate...", "Thank you for sharing...", balanced responses, emojis
 REQUIRED: "I think...", "That's wrong", "I disagree", "I hate/love...", authentic reactions
 
 BE GENUINELY ${persona.name.toUpperCase()} IN EVERY WORD.`;

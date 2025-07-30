@@ -28,7 +28,7 @@ interface PersonaProgress {
     responseText: string;
     timestamp: Date;
   }>;
-  status: 'pending' | 'in-progress' | 'completed' | 'error';
+  status: 'pending' | 'reading-docs' | 'in-progress' | 'completed' | 'error';
   error?: string;
 }
 
@@ -126,6 +126,14 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
         
         console.log(`Processing persona ${personaIndex + 1}/${personaProgress.length}: ${currentPersona.personaName}`);
         
+        // Update status to reading docs first
+        setPersonaProgress(prev => prev.map((p, i) => 
+          i === personaIndex ? { ...p, status: 'reading-docs' } : p
+        ));
+
+        // Simulate reading docs phase
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         // Update status to in-progress
         setPersonaProgress(prev => prev.map((p, i) => 
           i === personaIndex ? { ...p, status: 'in-progress' } : p
@@ -138,12 +146,14 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             throw new Error(`Persona ${currentPersona.personaId} not found`);
           }
 
-          // Create knowledge base context from project documents
+          // Create knowledge base context from project documents (FULL CONTENT)
           const knowledgeBaseContext = projectDocuments.length > 0 
             ? `KNOWLEDGE BASE AVAILABLE - You have access to the following documents: ${projectDocuments.map(doc => `"${doc.title}"`).join(', ')}. Key information from these documents:\n\n${projectDocuments.map(doc => 
-                doc.content ? `${doc.title}:\n${doc.content.substring(0, 500)}${doc.content.length > 500 ? '...' : ''}` : `${doc.title}: [Document uploaded but content not extracted]`
+                doc.content ? `${doc.title}:\n${doc.content}` : `${doc.title}: [Document uploaded but content not extracted]`
               ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
             : '';
+          
+          console.log(`Knowledge base context length: ${knowledgeBaseContext.length} characters for ${projectDocuments.length} documents`);
 
           // Add processed research context to knowledge base context
           let fullContext = knowledgeBaseContext;
@@ -429,31 +439,39 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 {personaProgress.map((persona, index) => (
                   <div 
                     key={persona.personaId} 
-                    className={`p-3 border rounded-lg ${
-                      persona.status === 'completed' ? 'bg-green-50 border-green-200' :
-                      persona.status === 'error' ? 'bg-red-50 border-red-200' :
-                      persona.status === 'in-progress' ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
+                     className={`p-3 border rounded-lg ${
+                       persona.status === 'completed' ? 'bg-green-50 border-green-200' :
+                       persona.status === 'error' ? 'bg-red-50 border-red-200' :
+                       persona.status === 'reading-docs' ? 'bg-yellow-50 border-yellow-200' :
+                       persona.status === 'in-progress' ? 'bg-blue-50 border-blue-200' : ''
+                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm">{persona.personaName}</span>
-                      <div className="flex items-center gap-1">
-                        {persona.status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" />}
-                        {persona.status === 'in-progress' && <Clock className="w-4 h-4 text-blue-600 animate-spin" />}
-                        {persona.status === 'error' && <User className="w-4 h-4 text-red-600" />}
-                        {persona.status === 'pending' && <Clock className="w-4 h-4 text-gray-400" />}
-                      </div>
+                       <div className="flex items-center gap-1">
+                         {persona.status === 'completed' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                         {persona.status === 'reading-docs' && <FileText className="w-4 h-4 text-yellow-600 animate-pulse" />}
+                         {persona.status === 'in-progress' && <Clock className="w-4 h-4 text-blue-600 animate-spin" />}
+                         {persona.status === 'error' && <User className="w-4 h-4 text-red-600" />}
+                         {persona.status === 'pending' && <Clock className="w-4 h-4 text-gray-400" />}
+                       </div>
                     </div>
                     
                     <div className="text-xs text-muted-foreground mb-2">
                       {persona.responses.length}/{surveyData.questions.length} questions answered
                     </div>
                     
-                    {persona.status === 'in-progress' && (
-                      <div className="text-xs text-blue-600">
-                        Question {persona.currentQuestionIndex + 1}: {surveyData.questions[persona.currentQuestionIndex]?.substring(0, 50)}...
-                      </div>
-                    )}
+                     {persona.status === 'reading-docs' && (
+                       <div className="text-xs text-yellow-600">
+                         Reading project documents...
+                       </div>
+                     )}
+                     
+                     {persona.status === 'in-progress' && (
+                       <div className="text-xs text-blue-600">
+                         Question {persona.currentQuestionIndex + 1}: {surveyData.questions[persona.currentQuestionIndex]?.substring(0, 50)}...
+                       </div>
+                     )}
                     
                     {persona.error && (
                       <div className="text-xs text-red-600 mt-1">{persona.error}</div>
