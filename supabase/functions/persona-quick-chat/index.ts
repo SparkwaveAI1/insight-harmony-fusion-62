@@ -22,22 +22,37 @@ const personaCache = new Map<string, {
 }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
-function getCachedPersona(personaId: string): { persona: any, instructions: string } | null {
-  const cached = personaCache.get(personaId);
+// Simple hash function for conversation context
+function hashContext(context: string): string {
+  let hash = 0;
+  for (let i = 0; i < context.length; i++) {
+    const char = context.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function getCachedPersona(personaId: string, conversationContext: string = ''): { persona: any, instructions: string } | null {
+  const contextHash = hashContext(conversationContext);
+  const cacheKey = `${personaId}-${contextHash}`;
+  const cached = personaCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log('Using cached persona data for:', personaId);
+    console.log('Using cached persona data for:', personaId, 'with context hash:', contextHash);
     return { persona: cached.persona, instructions: cached.instructions };
   }
   return null;
 }
 
-function setCachedPersona(personaId: string, persona: any, instructions: string): void {
-  personaCache.set(personaId, {
+function setCachedPersona(personaId: string, conversationContext: string = '', persona: any, instructions: string): void {
+  const contextHash = hashContext(conversationContext);
+  const cacheKey = `${personaId}-${contextHash}`;
+  personaCache.set(cacheKey, {
     persona,
     instructions,
     timestamp: Date.now()
   });
-  console.log('Cached persona data for:', personaId);
+  console.log('Cached persona data for:', personaId, 'with context hash:', contextHash);
 }
 
 serve(async (req) => {
@@ -61,7 +76,7 @@ serve(async (req) => {
     let persona: any;
     let systemPrompt: string;
     
-    const cached = getCachedPersona(personaId);
+    const cached = getCachedPersona(personaId, conversationContext);
     if (cached) {
       persona = cached.persona;
       systemPrompt = cached.instructions;
@@ -84,11 +99,12 @@ serve(async (req) => {
       // Pre-process persona instructions with context and mode
       systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext);
       
-      // Cache for future requests (note: context-specific, so cache key should include context)
-      setCachedPersona(personaId, persona, systemPrompt);
+      // Cache for future requests with context-aware cache key
+      setCachedPersona(personaId, conversationContext, persona, systemPrompt);
     }
     
     console.log('System prompt length:', systemPrompt.length, 'characters');
+    console.log('Conversation context included:', conversationContext ? 'YES' : 'NO', conversationContext ? `(${conversationContext.length} chars)` : '');
 
     // Build message history (last 8 messages only for speed)
     const recentMessages = previousMessages.slice(-8);

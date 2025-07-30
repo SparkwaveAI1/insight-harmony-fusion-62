@@ -3,7 +3,7 @@
  * Uses ALL trait data for authentic quick responses across ALL topics
  */
 
-export function createComprehensiveStreamlinedInstructions(persona: any, mode: string = 'conversation'): string {
+export function createComprehensiveStreamlinedInstructions(persona: any, mode: string = 'conversation', conversationContext: string = ''): string {
   if (!persona) return '';
 
   const currentYear = new Date().getFullYear();
