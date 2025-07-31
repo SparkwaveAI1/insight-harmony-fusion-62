@@ -49,10 +49,13 @@ const Collections = () => {
 
   const fetchCollections = async () => {
     setLoading(true);
+    console.log("Fetching collections for user:", user?.id);
     const [myData, publicData] = await Promise.all([
       getUserCollectionsWithCount(),
       getPublicCollectionsWithCount()
     ]);
+    console.log("My collections data:", myData);
+    console.log("Public collections data:", publicData);
     setMyCollections(myData);
     setPublicCollections(publicData);
     setLoading(false);
