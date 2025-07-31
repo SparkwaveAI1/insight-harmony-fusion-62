@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { BarChart3, Users, Folder, Activity, Loader2, MessageSquare, ArrowRight } from "lucide-react";
+import { BarChart3, Users, Folder, Activity, Loader2, MessageSquare, ArrowRight, Sparkles, Target, Zap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRecentActivity } from "@/hooks/useRecentActivity";
@@ -51,46 +51,84 @@ export function DashboardContent() {
         </p>
       </div>
 
-      {/* Quick Actions Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Shortcuts to common tasks</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            <Link to="/simulated-persona" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Create a New Persona</p>
-                <p className="text-sm text-muted-foreground">Generate a simulated persona for research</p>
-              </div>
-            </Link>
+      {/* Enhanced Quick Actions */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Zap className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold">Launch Your Research</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Primary Action - Create Persona */}
+          <Link to="/simulated-persona" className="group block">
+            <Card className="relative overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover-scale">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
+              <CardContent className="p-6 relative">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg group-hover:shadow-primary/30 transition-all duration-300">
+                    <Sparkles className="h-7 w-7 text-white" />
+                  </div>
+                  <div className="opacity-50 group-hover:opacity-100 transition-opacity">
+                    <ArrowRight className="h-5 w-5 text-primary" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                  Start Building Your First Persona
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                  Create a behavioral-realistic AI persona in under 5 minutes. Get started with our guided setup.
+                </p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                    5 min setup
+                  </span>
+                  <span className="text-muted-foreground">• Ready to chat instantly</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
-            <Link to="/projects" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <Folder className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Manage Projects</p>
-                <p className="text-sm text-muted-foreground">Organize and track your research projects</p>
-              </div>
-            </Link>
+          {/* Secondary Action - Manage Projects */}
+          <Link to="/projects" className="group block">
+            <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-accent/50">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-blue-600/30 transition-all duration-300">
+                    <Target className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-600 transition-colors">
+                  Organize Your Research Hub
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Manage projects, track insights, and organize your persona collections in one place.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
-            <Link to="/my-personas" className="flex items-center gap-4 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Chat with a Persona</p>
-                <p className="text-sm text-muted-foreground">Interact with your simulated personas</p>
-              </div>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Tertiary Action - Chat with Personas */}
+          <Link to="/my-personas" className="group block">
+            <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-green-500/50">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500/20 to-green-600/20 flex items-center justify-center group-hover:from-green-500/30 group-hover:to-green-600/30 transition-all duration-300">
+                    <MessageSquare className="h-6 w-6 text-green-600" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-green-600 transition-colors" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-green-600 transition-colors">
+                  Talk to Your AI Personas Now
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Jump into conversations with your existing personas. Get instant insights and feedback.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </div>
 
       {/* Projects Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
