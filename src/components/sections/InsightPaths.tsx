@@ -14,15 +14,6 @@ const pathsData = [
     buttonHref: "/simulated-persona"
   },
   {
-    icon: <User className="h-12 w-12 text-primary" />,
-    title: "Interview Module",
-    subtitle: "Human-Derived Personas",
-    description: "Build a high-fidelity AI persona through a structured interview process. Ideal for personal reflection, business tools, or future licensed use in research.",
-    note: "May be eligible for royalties in upcoming releases.",
-    buttonText: "Start Persona Interview",
-    buttonHref: "/interviewer"
-  },
-  {
     icon: <Brain className="h-12 w-12 text-primary" />,
     title: "Research Module",
     subtitle: "PersonaAI Researcher",
@@ -39,7 +30,7 @@ const InsightPaths = () => {
         <Reveal>
           <div className="max-w-2xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 font-plasmik">
-              Three Paths to Insight
+              Two Paths to Insight
             </h2>
             <p className="text-muted-foreground">
               Choose your approach to persona-based research and insights
@@ -47,7 +38,7 @@ const InsightPaths = () => {
           </div>
         </Reveal>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {pathsData.map((path, index) => (
             <Reveal key={index} delay={index * 100}>
               <Card className="p-8 h-full flex flex-col items-center text-center">
@@ -57,9 +48,6 @@ const InsightPaths = () => {
                 <h3 className="text-2xl font-bold mb-2">{path.title}</h3>
                 <p className="text-primary font-medium mb-4">{path.subtitle}</p>
                 <p className="text-muted-foreground mb-4">{path.description}</p>
-                {path.note && (
-                  <p className="text-sm text-primary/80 italic mb-6">{path.note}</p>
-                )}
                 <div className="mt-auto">
                   <Button
                     as="a"

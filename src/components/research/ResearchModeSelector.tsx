@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageSquare, Users, BarChart3, Clock } from 'lucide-react';
 
 interface ResearchModeSelectorProps {
-  onSelectMode: (mode: 'interview' | 'focus-group' | 'survey') => void;
+  onSelectMode: (mode: 'interview' | 'survey') => void;
 }
 
 const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMode }) => {
@@ -24,13 +24,6 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
       description: 'Run structured questionnaires across multiple personas for quantifiable qualitative insights.',
       icon: BarChart3,
       features: ['Structured data collection', 'Scalable insights', 'Comparative analysis']
-    },
-    {
-      id: 'focus-group' as const,
-      title: 'Focus Group',
-      description: 'Facilitate group discussions with multiple personas to observe social dynamics and consensus building.',
-      icon: Users,
-      features: ['Group dynamics', 'Consensus exploration', 'Multiple perspectives']
     }
   ];
 
@@ -50,12 +43,11 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
 
       {/* Content Section */}
       <div className="container mx-auto p-6">
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {modes.map((mode) => {
           const Icon = mode.icon;
           const isSurvey = mode.id === 'survey';
-          const isFocusGroup = mode.id === 'focus-group';
-          const isInDevelopment = isSurvey || isFocusGroup;
+          const isInDevelopment = isSurvey;
           
           return (
             <Card key={mode.id} className={`hover:shadow-lg transition-shadow flex flex-col h-full ${isInDevelopment ? 'relative' : ''}`}>
@@ -103,7 +95,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                     className="w-full justify-center"
                     variant="default"
                   >
-                    {isSurvey ? "Start Study" : mode.id === 'interview' ? "Start Interview" : `Start ${mode.title}`}
+                    {isSurvey ? "Start Study" : "Start Interview"}
                   </Button>
                 </div>
               </CardContent>
