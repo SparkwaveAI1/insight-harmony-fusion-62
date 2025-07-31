@@ -16,7 +16,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
       title: 'Insights Engine',
       description: 'Launch our advanced AI engine to generate deep insights across multiple personas with structured analysis.',
       icon: BarChart3,
-      features: ['AI-powered insights', 'Multi-persona analysis', 'Structured intelligence']
+      features: ['Use our automated researcher to conduct complex research quickly with groups of personas.']
     },
     {
       id: 'interview' as const,
