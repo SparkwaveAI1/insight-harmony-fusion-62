@@ -14,7 +14,7 @@ const steps = [
     icon: <MessageSquare className="h-8 w-8 text-white" />,
     number: "2",
     title: "AI Persona Interviews",
-    description: "Our AI personas engage in real-time discussions, simulating market behaviors."
+    description: "Create your custom personas, or select from our Public Library. Converse with them 1-on-1 or in automated research sessions."
   },
   {
     icon: <PieChart className="h-8 w-8 text-white" />,
