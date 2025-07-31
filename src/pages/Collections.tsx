@@ -48,13 +48,29 @@ const Collections = () => {
   }, [user]);
 
   const fetchCollections = async () => {
+    if (!user) {
+      console.error("No user found when fetching collections");
+      return;
+    }
+    
     setLoading(true);
-    const [myData, publicData] = await Promise.all([
-      getUserCollectionsWithCount(),
-      getPublicCollectionsWithCount()
-    ]);
-    setMyCollections(myData);
-    setPublicCollections(publicData);
+    console.log("Fetching collections for user:", user.id);
+    
+    try {
+      const [myData, publicData] = await Promise.all([
+        getUserCollectionsWithCount(),
+        getPublicCollectionsWithCount()
+      ]);
+      
+      console.log("My collections received:", myData);
+      console.log("Public collections received:", publicData);
+      
+      setMyCollections(myData);
+      setPublicCollections(publicData);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+    }
+    
     setLoading(false);
   };
 

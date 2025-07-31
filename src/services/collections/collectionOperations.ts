@@ -28,9 +28,16 @@ export const getCollectionById = async (id: string): Promise<Collection | null> 
  */
 export const getUserCollections = async (): Promise<Collection[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error("No authenticated user found");
+      return [];
+    }
+
     const { data, error } = await supabase
       .from("collections")
       .select("*")
+      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -51,6 +58,7 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
     const { data: collections, error: collectionsError } = await supabase
       .from("collections")
       .select("*")
+      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
     if (collectionsError) throw collectionsError;
