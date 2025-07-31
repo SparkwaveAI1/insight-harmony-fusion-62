@@ -49,13 +49,10 @@ const Collections = () => {
 
   const fetchCollections = async () => {
     setLoading(true);
-    console.log("Fetching collections for user:", user?.id);
     const [myData, publicData] = await Promise.all([
       getUserCollectionsWithCount(),
       getPublicCollectionsWithCount()
     ]);
-    console.log("My collections data:", myData);
-    console.log("Public collections data:", publicData);
     setMyCollections(myData);
     setPublicCollections(publicData);
     setLoading(false);
@@ -139,19 +136,6 @@ const Collections = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handlePrivacyToggle = async (collectionId: string, isPublic: boolean) => {
-    try {
-      const result = await updateCollection(collectionId, { is_public: isPublic });
-      if (result) {
-        fetchCollections(); // Refresh the collections
-        toast.success(`Collection is now ${isPublic ? 'public' : 'private'}`);
-      }
-    } catch (error) {
-      console.error("Error updating collection privacy:", error);
-      toast.error("Failed to update collection privacy");
-    }
-  };
-
   // IMPORTANT CHANGE: Update the navigation to use '/collections/' instead of '/collection/'
   const viewCollection = (collectionId: string) => {
     navigate(`/collections/${collectionId}`);
@@ -218,22 +202,9 @@ const Collections = () => {
               </p>
             </div>
             <div className="flex justify-between items-end">
-              <div className="flex items-center gap-4">
-                <p className="text-sm text-muted-foreground">
-                  {collection.persona_count} personas
-                </p>
-                {showActions && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {collection.is_public ? 'Public' : 'Private'}
-                    </span>
-                    <Switch
-                      checked={collection.is_public}
-                      onCheckedChange={(checked) => handlePrivacyToggle(collection.id, checked)}
-                    />
-                  </div>
-                )}
-              </div>
+              <p className="text-sm text-muted-foreground">
+                {collection.persona_count} personas
+              </p>
               {showActions && (
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button

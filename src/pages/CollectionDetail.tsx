@@ -9,10 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, ArrowLeft, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, X, Globe, Lock } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +29,7 @@ import {
   getCollectionById,
   deleteCollection,
   getPersonasInCollection,
+  updateCollection,
 } from "@/services/collections";
 import { removePersonaFromCollection } from "@/services/collections/personaCollectionOperations";
 import { Collection } from "@/services/collections/types";
@@ -131,6 +133,21 @@ const CollectionDetail = () => {
     }
   };
 
+  const handlePrivacyToggle = async (isPublic: boolean) => {
+    if (!collection) return;
+    
+    try {
+      const result = await updateCollection(collection.id, { is_public: isPublic });
+      if (result) {
+        setCollection({ ...collection, is_public: isPublic });
+        toast.success(`Collection is now ${isPublic ? 'public' : 'private'}`);
+      }
+    } catch (error) {
+      console.error("Error updating collection privacy:", error);
+      toast.error("Failed to update collection privacy");
+    }
+  };
+
   // Add a not found state if collection couldn't be loaded
   if (!isLoading && !collection) {
     return <NotFoundState />;
@@ -150,12 +167,39 @@ const CollectionDetail = () => {
             </Button>
           </div>
 
-          <div className="mb-8 flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
-              <p className="text-muted-foreground">
+          <div className="mb-8 flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
+                {collection && (
+                  <>
+                    {collection.is_public ? (
+                      <Globe className="h-6 w-6 text-muted-foreground" />
+                    ) : (
+                      <Lock className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </>
+                )}
+              </div>
+              <p className="text-muted-foreground mb-4">
                 {collection?.description || "No description provided"}
               </p>
+              {collection && (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {collection.is_public ? 'Public' : 'Private'}
+                    </span>
+                    <Switch
+                      checked={collection.is_public}
+                      onCheckedChange={handlePrivacyToggle}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {collection.is_public ? 'Visible to everyone' : 'Only visible to you'}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="space-x-2">
               <Button
