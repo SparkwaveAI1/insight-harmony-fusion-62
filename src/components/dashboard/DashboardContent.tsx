@@ -73,7 +73,7 @@ export function DashboardContent() {
                   </div>
                 </div>
                 <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                  Start Building Your First Persona
+                  Create a Persona
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   Create a behavioral-realistic AI persona in under 5 minutes. Get started with our guided setup.
@@ -113,7 +113,7 @@ export function DashboardContent() {
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-green-600 transition-colors" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 group-hover:text-green-600 transition-colors">
-                  Talk to Your AI Personas Now
+                  Start Your Research
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   Jump into conversations with your existing personas. Get instant insights and feedback.
