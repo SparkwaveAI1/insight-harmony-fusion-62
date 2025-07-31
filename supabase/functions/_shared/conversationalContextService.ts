@@ -26,12 +26,14 @@ export function generateNaturalConversationInstructions(
   }
   
   // Conversation flow guidelines
-  instructions += `\n**Natural Flow:**\n`;
-  instructions += `- Vary your response style and length naturally\n`;
-  instructions += `- Build on previous points rather than starting fresh each time\n`;
-  instructions += `- Show emotional continuity from earlier exchanges\n`;
-  instructions += `- Reference earlier parts of THIS conversation when relevant\n`;
-  instructions += `- Don't repeat personality descriptors you've already established\n`;
+  instructions += `\n**Natural Conversation Flow:**\n`;
+  instructions += `- Mix SHORT and longer responses naturally - not every reply needs to be a paragraph\n`;
+  instructions += `- Use 1-2 sentences for simple reactions, agreements, or quick responses\n`;
+  instructions += `- Save longer responses for complex topics or emotional moments\n`;
+  instructions += `- React naturally to what was just said before elaborating\n`;
+  instructions += `- Don't always end with questions - sometimes just respond\n`;
+  instructions += `- Use casual interjections, pauses, or brief acknowledgments\n`;
+  instructions += `- Build on previous points rather than restarting each time\n`;
   
   // Conversation stage adjustments
   if (messageCount < 5) {
