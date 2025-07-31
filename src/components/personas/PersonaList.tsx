@@ -24,6 +24,10 @@ interface PersonaListProps {
   selectedRegion?: string;
   selectedIncome?: string;
   selectedSourceType?: string;
+  selectedGender?: string;
+  selectedMaritalStatus?: string;
+  selectedHasChildren?: string;
+  selectedEducation?: string;
 }
 
 export default function PersonaList({ 
@@ -39,7 +43,11 @@ export default function PersonaList({
   selectedAge = "",
   selectedRegion = "",
   selectedIncome = "",
-  selectedSourceType = ""
+  selectedSourceType = "",
+  selectedGender = "",
+  selectedMaritalStatus = "",
+  selectedHasChildren = "",
+  selectedEducation = ""
 }: PersonaListProps) {
   const { user } = useAuth();
   
@@ -273,6 +281,31 @@ export default function PersonaList({
         if (sourceType !== selectedSourceType) return false;
       }
 
+      // Gender filter
+      if (selectedGender && persona.metadata?.gender) {
+        const genderMatch = persona.metadata.gender.toLowerCase() === selectedGender.toLowerCase();
+        if (!genderMatch) return false;
+      }
+
+      // Marital status filter
+      if (selectedMaritalStatus && persona.metadata?.marital_status) {
+        const maritalMatch = persona.metadata.marital_status.toLowerCase().includes(selectedMaritalStatus.toLowerCase());
+        if (!maritalMatch) return false;
+      }
+
+      // Has children filter
+      if (selectedHasChildren) {
+        const hasChildren = persona.metadata?.relationships_family?.has_children;
+        const childrenMatch = selectedHasChildren === "yes" ? hasChildren === true : hasChildren === false;
+        if (!childrenMatch) return false;
+      }
+
+      // Education filter
+      if (selectedEducation && persona.metadata?.education_level) {
+        const educationMatch = persona.metadata.education_level.toLowerCase().includes(selectedEducation.toLowerCase());
+        if (!educationMatch) return false;
+      }
+
       return true;
     });
   };
@@ -329,7 +362,7 @@ export default function PersonaList({
   }
 
   if (filteredPersonas.length === 0) {
-    if ((searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType) && personas.length > 0) {
+    if ((searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType || selectedGender || selectedMaritalStatus || selectedHasChildren || selectedEducation) && personas.length > 0) {
       return (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No personas found matching your filters</p>

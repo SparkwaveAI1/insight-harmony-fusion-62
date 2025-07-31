@@ -21,6 +21,14 @@ interface FilterSectionProps {
   onIncomeChange: (income: string) => void;
   selectedSourceType: string;
   onSourceTypeChange: (sourceType: string) => void;
+  selectedGender: string;
+  onGenderChange: (gender: string) => void;
+  selectedMaritalStatus: string;
+  onMaritalStatusChange: (maritalStatus: string) => void;
+  selectedHasChildren: string;
+  onHasChildrenChange: (hasChildren: string) => void;
+  selectedEducation: string;
+  onEducationChange: (education: string) => void;
 }
 
 const tagOptions = [
@@ -31,7 +39,11 @@ const tagOptions = [
 const demographicOptions = {
   age: ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"],
   region: ["urban", "suburban", "rural"],
-  income: ["low", "middle", "high"]
+  income: ["low", "middle", "high"],
+  gender: ["male", "female", "non-binary", "other"],
+  maritalStatus: ["single", "married", "divorced", "widowed", "separated"],
+  hasChildren: ["yes", "no"],
+  education: ["high school", "some college", "bachelor's", "master's", "doctorate", "vocational"]
 };
 
 const sourceTypes = ["simulated", "interview-based", "user-prompted"];
@@ -49,7 +61,15 @@ export default function FilterSection({
   selectedIncome,
   onIncomeChange,
   selectedSourceType,
-  onSourceTypeChange
+  onSourceTypeChange,
+  selectedGender,
+  onGenderChange,
+  selectedMaritalStatus,
+  onMaritalStatusChange,
+  selectedHasChildren,
+  onHasChildrenChange,
+  selectedEducation,
+  onEducationChange
 }: FilterSectionProps) {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -64,7 +84,7 @@ export default function FilterSection({
     onTagsChange(newTags);
   };
 
-  const hasActiveFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType;
+  const hasActiveFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType || selectedGender || selectedMaritalStatus || selectedHasChildren || selectedEducation;
 
   return (
     <div className="bg-card border rounded-lg p-6 mb-6">
@@ -148,6 +168,26 @@ export default function FilterSection({
                 Source: {selectedSourceType}
               </span>
             )}
+            {selectedGender && (
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
+                Gender: {selectedGender}
+              </span>
+            )}
+            {selectedMaritalStatus && (
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
+                Marital: {selectedMaritalStatus}
+              </span>
+            )}
+            {selectedHasChildren && (
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
+                Children: {selectedHasChildren}
+              </span>
+            )}
+            {selectedEducation && (
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
+                Education: {selectedEducation}
+              </span>
+            )}
           </div>
         )}
 
@@ -177,7 +217,7 @@ export default function FilterSection({
             </div>
 
             {/* Demographics Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <h4 className="text-sm font-medium mb-2">Age Range</h4>
                 <Select value={selectedAge} onValueChange={onAgeChange}>
@@ -215,6 +255,62 @@ export default function FilterSection({
                   <SelectContent>
                     {demographicOptions.income.map(income => (
                       <SelectItem key={income} value={income} className="capitalize">{income}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Gender</h4>
+                <Select value={selectedGender} onValueChange={onGenderChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demographicOptions.gender.map(gender => (
+                      <SelectItem key={gender} value={gender} className="capitalize">{gender}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Marital Status</h4>
+                <Select value={selectedMaritalStatus} onValueChange={onMaritalStatusChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select marital status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demographicOptions.maritalStatus.map(status => (
+                      <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Has Children</h4>
+                <Select value={selectedHasChildren} onValueChange={onHasChildrenChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Has children?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demographicOptions.hasChildren.map(option => (
+                      <SelectItem key={option} value={option} className="capitalize">{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Education Level</h4>
+                <Select value={selectedEducation} onValueChange={onEducationChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select education" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {demographicOptions.education.map(education => (
+                      <SelectItem key={education} value={education} className="capitalize">{education}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
