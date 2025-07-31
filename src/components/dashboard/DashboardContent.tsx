@@ -76,7 +76,7 @@ export function DashboardContent() {
                   Create a Persona
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Create a behavioral-realistic AI persona in under 5 minutes. Get started with our guided setup.
+                  Create a behavioral-realistic AI persona in under 5 minutes. Chat with your persona immediately.
                 </p>
               </CardContent>
             </Card>
