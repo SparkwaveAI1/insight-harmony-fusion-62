@@ -2,6 +2,7 @@
 import { Target, MessageSquare, PieChart, FileText } from "lucide-react";
 import Section from "../ui-custom/Section";
 import Reveal from "../ui-custom/Reveal";
+import { Card, CardContent } from "../ui/card";
 
 const steps = [
   {
@@ -46,58 +47,28 @@ const HowItWorks = () => {
           </div>
         </Reveal>
 
-        {/* Horizontal Stepper (Desktop) */}
-        <div className="hidden md:flex max-w-6xl mx-auto justify-between mb-16">
+        {/* Grid Layout with Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {steps.map((step, index) => (
             <Reveal key={index} delay={index * 100}>
-              <div className="flex flex-col items-center text-center max-w-[240px] group">
-                {/* Step number and icon */}
-                <div className="relative">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 transition-all rounded-full flex items-center justify-center flex-shrink-0 border border-white/20 mb-4 group-hover:shadow-lg group-hover:shadow-blue-500/20">
-                    {step.icon}
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-accent text-primary font-bold flex items-center justify-center">
-                    {step.number}
-                  </div>
-                </div>
-                
-                {/* Connector line */}
-                {index < steps.length - 1 && (
-                  <div className="absolute h-0.5 bg-white/20 w-24 left-[calc(50%+60px)] top-12 hidden md:block"></div>
-                )}
-                
-                <h3 className="text-2xl font-medium mb-3 text-white">{step.title}</h3>
-                <p className="text-primary-foreground/90">{step.description}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        {/* Vertical Steps (Mobile) */}
-        <div className="md:hidden max-w-md mx-auto">
-          {steps.map((step, index) => (
-            <Reveal key={index} delay={index * 100}>
-              <div className="flex items-start gap-6 mb-16 last:mb-0 relative">
-                {/* Step number and icon */}
-                <div className="relative">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center flex-shrink-0 border border-white/20">
-                    {step.icon}
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent text-primary font-bold flex items-center justify-center text-sm">
-                    {step.number}
+              <Card className="bg-white/10 border-white/20 hover:bg-white/15 transition-all h-full backdrop-blur-sm">
+                <CardContent className="p-6 flex flex-col items-center text-center h-full">
+                  {/* Step number and icon */}
+                  <div className="relative mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 transition-all rounded-full flex items-center justify-center flex-shrink-0 border border-white/20">
+                      {step.icon}
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-accent text-primary font-bold flex items-center justify-center">
+                      {step.number}
+                    </div>
                   </div>
                   
-                  {/* Connector line */}
-                  {index < steps.length - 1 && (
-                    <div className="absolute top-full left-1/2 w-0.5 h-16 bg-white/20 -translate-x-1/2"></div>
-                  )}
-                </div>
-                
-                <div className="flex-1 pt-1">
-                  <h3 className="text-xl font-medium mb-2 text-white">{step.title}</h3>
-                  <p className="text-primary-foreground/90 text-left">{step.description}</p>
-                </div>
-              </div>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <h3 className="text-xl font-medium mb-4 text-white">{step.title}</h3>
+                    <p className="text-primary-foreground/90 text-sm leading-relaxed">{step.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
             </Reveal>
           ))}
         </div>
