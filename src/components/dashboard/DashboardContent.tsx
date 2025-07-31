@@ -75,15 +75,9 @@ export function DashboardContent() {
                 <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
                   Start Building Your First Persona
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Create a behavioral-realistic AI persona in under 5 minutes. Get started with our guided setup.
                 </p>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
-                    5 min setup
-                  </span>
-                  <span className="text-muted-foreground">• Ready to chat instantly</span>
-                </div>
               </CardContent>
             </Card>
           </Link>
