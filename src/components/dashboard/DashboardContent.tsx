@@ -58,7 +58,7 @@ export function DashboardContent() {
           <h2 className="text-2xl font-bold">Launch Your Research</h2>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Primary Action - Create Persona */}
           <Link to="/simulated-persona" className="group block">
             <Card className="relative overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover-scale">
