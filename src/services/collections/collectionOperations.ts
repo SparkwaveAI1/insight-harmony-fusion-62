@@ -54,11 +54,20 @@ export const getUserCollections = async (): Promise<Collection[]> => {
  */
 export const getUserCollectionsWithCount = async (): Promise<CollectionWithPersonaCount[]> => {
   try {
+    // Get the user's ID first
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("No authenticated user found");
+      toast.error("You must be logged in to view collections");
+      return [];
+    }
+
     // Since we removed the view, we'll manually count the personas
     const { data: collections, error: collectionsError } = await supabase
       .from("collections")
       .select("*")
-      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (collectionsError) throw collectionsError;

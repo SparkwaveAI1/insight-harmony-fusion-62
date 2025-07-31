@@ -50,6 +50,7 @@ const Collections = () => {
   const fetchCollections = async () => {
     if (!user) {
       console.error("No user found when fetching collections");
+      setLoading(false);
       return;
     }
     
@@ -62,16 +63,16 @@ const Collections = () => {
         getPublicCollectionsWithCount()
       ]);
       
-      console.log("My collections received:", myData);
-      console.log("Public collections received:", publicData);
+      console.log("My collections received:", myData.length, "collections");
+      console.log("Public collections received:", publicData.length, "collections");
       
       setMyCollections(myData);
       setPublicCollections(publicData);
     } catch (error) {
       console.error("Error fetching collections:", error);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleCreateCollection = async () => {
