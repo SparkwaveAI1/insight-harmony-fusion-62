@@ -71,13 +71,6 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                     {mode.description}
                   </p>
                   
-                  {isInDevelopment && (
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground text-center">
-                        Expected completion: July 2025
-                      </p>
-                    </div>
-                  )}
                   
                   <ul className="space-y-2">
                     {mode.features.map((feature, index) => (
