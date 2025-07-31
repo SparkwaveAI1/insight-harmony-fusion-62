@@ -256,7 +256,7 @@ const CollectionDetail = () => {
                 ) : personas.length === 0 ? (
                   <p>No personas in this collection.</p>
                 ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {personas.map((persona) => (
                       <Card key={persona.persona_id} className="hover:bg-secondary relative group">
                         <Button
@@ -275,13 +275,35 @@ const CollectionDetail = () => {
                           to={`/persona/${persona.persona_id}`}
                           className="block"
                         >
-                          <CardHeader>
-                            <CardTitle className="text-sm font-medium pr-8">
-                              {persona.name}
-                            </CardTitle>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                                {persona.profile_image_url ? (
+                                  <img 
+                                    src={persona.profile_image_url} 
+                                    alt={persona.name}
+                                    className="w-12 h-12 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-white font-semibold text-sm">
+                                    {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 pr-6">
+                                <CardTitle className="text-base font-semibold leading-tight mb-1">
+                                  {persona.name}
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                                  {persona.description || "No description available"}
+                                </p>
+                              </div>
+                            </div>
                           </CardHeader>
-                          <CardContent>
-                            <Badge variant="secondary">Persona</Badge>
+                          <CardContent className="pt-0">
+                            <Badge variant="secondary" className="text-xs">
+                              Persona
+                            </Badge>
                           </CardContent>
                         </Link>
                       </Card>
