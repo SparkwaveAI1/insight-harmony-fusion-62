@@ -19,8 +19,8 @@ const steps = [
   {
     icon: <PieChart className="h-8 w-8 text-white" />,
     number: "3",
-    title: "AI-Generated Insights",
-    description: "Analyze sentiment, decision drivers, and behavioral trends."
+    title: "Insights Engine",
+    description: "Use our automated researcher to conduct complex research quickly with groups of personas."
   },
   {
     icon: <FileText className="h-8 w-8 text-white" />,
