@@ -6,6 +6,7 @@ import {
   getCollectionById,
   getUserCollections,
   getUserCollectionsWithCount,
+  getPublicCollectionsWithCount,
   createCollection,
   updateCollection,
   deleteCollection
@@ -27,6 +28,7 @@ export {
   getCollectionById,
   getUserCollections,
   getUserCollectionsWithCount,
+  getPublicCollectionsWithCount,
   createCollection,
   updateCollection,
   deleteCollection,

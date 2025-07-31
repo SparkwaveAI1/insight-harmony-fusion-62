@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/layout/Header";
 import {
   getUserCollectionsWithCount,
+  getPublicCollectionsWithCount,
   createCollection,
   deleteCollection,
   Collection,
@@ -13,24 +14,29 @@ import {
   updateCollection
 } from "@/services/collections/collectionsService";
 import Button from "@/components/ui-custom/Button";
-import { Plus, Trash2, Edit, FolderOpen } from "lucide-react";
+import { Plus, Trash2, Edit, FolderOpen, Globe, Lock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const Collections = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [collections, setCollections] = useState<CollectionWithPersonaCount[]>([]);
+  const [myCollections, setMyCollections] = useState<CollectionWithPersonaCount[]>([]);
+  const [publicCollections, setPublicCollections] = useState<CollectionWithPersonaCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("my");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -43,8 +49,12 @@ const Collections = () => {
 
   const fetchCollections = async () => {
     setLoading(true);
-    const data = await getUserCollectionsWithCount();
-    setCollections(data);
+    const [myData, publicData] = await Promise.all([
+      getUserCollectionsWithCount(),
+      getPublicCollectionsWithCount()
+    ]);
+    setMyCollections(myData);
+    setPublicCollections(publicData);
     setLoading(false);
   };
 
@@ -56,11 +66,12 @@ const Collections = () => {
 
     setIsCreating(true);
     try {
-      const collection = await createCollection(name, description || null);
+      const collection = await createCollection(name, description || null, isPublic);
       if (collection) {
         setCreateDialogOpen(false);
         setName("");
         setDescription("");
+        setIsPublic(false);
         fetchCollections();
       }
     } finally {
@@ -78,7 +89,8 @@ const Collections = () => {
     try {
       const result = await updateCollection(selectedCollection.id, {
         name,
-        description: description || null
+        description: description || null,
+        is_public: isPublic
       });
 
       if (result) {
@@ -114,6 +126,7 @@ const Collections = () => {
     setSelectedCollection(collection);
     setName(collection.name);
     setDescription(collection.description || "");
+    setIsPublic(collection.is_public);
     setEditDialogOpen(true);
   };
 
@@ -128,6 +141,95 @@ const Collections = () => {
     navigate(`/collections/${collectionId}`);
   };
 
+  const renderCollectionGrid = (collections: CollectionWithPersonaCount[], showActions: boolean) => {
+    if (loading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 rounded-lg bg-muted/30 animate-pulse"></div>
+          ))}
+        </div>
+      );
+    }
+
+    if (collections.length === 0) {
+      const message = activeTab === "my" 
+        ? "No collections yet" 
+        : "No public collections available";
+      const description = activeTab === "my" 
+        ? "Create your first collection to organize your personas"
+        : "Check back later for public collections from other users";
+      
+      return (
+        <div className="flex flex-col items-center justify-center py-20 bg-muted/10 rounded-lg">
+          <div className="rounded-full bg-muted/20 p-6">
+            <FolderOpen className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h3 className="font-medium text-lg mt-6">{message}</h3>
+          <p className="text-muted-foreground mt-2">{description}</p>
+          {activeTab === "my" && (
+            <Button 
+              className="mt-6"
+              onClick={() => setCreateDialogOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Collection
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {collections.map((collection) => (
+          <div 
+            key={collection.id}
+            className="relative border rounded-lg p-6 hover:shadow-md transition-shadow group"
+            onClick={() => viewCollection(collection.id)}
+          >
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-xl font-semibold">{collection.name}</h2>
+                {collection.is_public ? (
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2 h-10">
+                {collection.description || "No description"}
+              </p>
+            </div>
+            <div className="flex justify-between items-end">
+              <p className="text-sm text-muted-foreground">
+                {collection.persona_count} personas
+              </p>
+              {showActions && (
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => openEditDialog(collection, e)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => openDeleteDialog(collection, e)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
@@ -137,7 +239,7 @@ const Collections = () => {
           <main className="flex-1 p-6 flex flex-col mt-16">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-bold">Your Collections</h1>
+                <h1 className="text-3xl font-bold">Collections</h1>
                 <p className="text-muted-foreground mt-2">
                   Organize your personas by creating collections.
                 </p>
@@ -148,68 +250,20 @@ const Collections = () => {
               </Button>
             </div>
 
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-48 rounded-lg bg-muted/30 animate-pulse"></div>
-                ))}
-              </div>
-            ) : collections.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-muted/10 rounded-lg">
-                <div className="rounded-full bg-muted/20 p-6">
-                  <FolderOpen className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <h3 className="font-medium text-lg mt-6">No collections yet</h3>
-                <p className="text-muted-foreground mt-2">
-                  Create your first collection to organize your personas
-                </p>
-                <Button 
-                  className="mt-6"
-                  onClick={() => setCreateDialogOpen(true)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Collection
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {collections.map((collection) => (
-                  <div 
-                    key={collection.id}
-                    className="relative border rounded-lg p-6 hover:shadow-md transition-shadow group"
-                    onClick={() => viewCollection(collection.id)}
-                  >
-                    <div className="mb-4">
-                      <h2 className="text-xl font-semibold">{collection.name}</h2>
-                      <p className="text-sm text-muted-foreground line-clamp-2 h-10">
-                        {collection.description || "No description"}
-                      </p>
-                    </div>
-                    <div className="flex justify-between items-end">
-                      <p className="text-sm text-muted-foreground">
-                        {collection.persona_count} personas
-                      </p>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => openEditDialog(collection, e)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => openDeleteDialog(collection, e)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="my">My Collections</TabsTrigger>
+                <TabsTrigger value="public">Public Collections</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="my">
+                {renderCollectionGrid(myCollections, true)}
+              </TabsContent>
+
+              <TabsContent value="public">
+                {renderCollectionGrid(publicCollections, false)}
+              </TabsContent>
+            </Tabs>
 
             {/* Create Collection Dialog */}
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -238,6 +292,21 @@ const Collections = () => {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Describe your collection..."
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <label htmlFor="public" className="text-sm font-medium">
+                        Public Collection
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Make this collection visible to other users
+                      </p>
+                    </div>
+                    <Switch
+                      id="public"
+                      checked={isPublic}
+                      onCheckedChange={setIsPublic}
                     />
                   </div>
                 </div>
@@ -277,6 +346,21 @@ const Collections = () => {
                       id="edit-description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <label htmlFor="edit-public" className="text-sm font-medium">
+                        Public Collection
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Make this collection visible to other users
+                      </p>
+                    </div>
+                    <Switch
+                      id="edit-public"
+                      checked={isPublic}
+                      onCheckedChange={setIsPublic}
                     />
                   </div>
                 </div>
