@@ -107,7 +107,7 @@ export function DashboardContent() {
           </Link>
 
           {/* Tertiary Action - Chat with Personas */}
-          <Link to="/my-personas" className="group block h-full">
+          <Link to="/researcher" className="group block h-full">
             <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-green-500/50 h-full">
               <CardContent className="p-6 h-full flex flex-col">
                 <div className="flex items-start justify-between mb-4">
