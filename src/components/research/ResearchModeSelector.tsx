@@ -47,16 +47,9 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
         {modes.map((mode) => {
           const Icon = mode.icon;
           const isSurvey = mode.id === 'survey';
-          const isInDevelopment = isSurvey;
           
           return (
-            <Card key={mode.id} className={`hover:shadow-lg transition-shadow flex flex-col h-full ${isInDevelopment ? 'relative' : ''}`}>
-              {isInDevelopment && (
-                <Badge variant="secondary" className="absolute -top-2 -right-2 z-10">
-                  <Clock className="h-3 w-3 mr-1" />
-                  In Development
-                </Badge>
-              )}
+            <Card key={mode.id} className="hover:shadow-lg transition-shadow flex flex-col h-full">{}
               
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
