@@ -281,29 +281,136 @@ export default function PersonaList({
         if (sourceType !== selectedSourceType) return false;
       }
 
-      // Gender filter
-      if (selectedGender && persona.metadata?.gender) {
-        const genderMatch = persona.metadata.gender.toLowerCase() === selectedGender.toLowerCase();
-        if (!genderMatch) return false;
+      // Gender filter - improved to handle various formats
+      if (selectedGender) {
+        const personaGender = persona.metadata?.gender;
+        if (personaGender) {
+          const genderLower = personaGender.toLowerCase();
+          const selectedGenderLower = selectedGender.toLowerCase();
+          
+          // Handle common variations
+          let genderMatches = false;
+          if (selectedGenderLower === "male") {
+            genderMatches = genderLower === "male" || genderLower === "m" || genderLower === "man";
+          } else if (selectedGenderLower === "female") {
+            genderMatches = genderLower === "female" || genderLower === "f" || genderLower === "woman";
+          } else {
+            genderMatches = genderLower === selectedGenderLower;
+          }
+          
+          if (!genderMatches) return false;
+        } else {
+          return false; // No gender data, exclude
+        }
       }
 
-      // Marital status filter
-      if (selectedMaritalStatus && persona.metadata?.marital_status) {
-        const maritalMatch = persona.metadata.marital_status.toLowerCase().includes(selectedMaritalStatus.toLowerCase());
-        if (!maritalMatch) return false;
+      // Marital status filter - improved to handle various formats
+      if (selectedMaritalStatus) {
+        const personaMaritalStatus = persona.metadata?.marital_status;
+        if (personaMaritalStatus) {
+          const maritalLower = personaMaritalStatus.toLowerCase();
+          const selectedMaritalLower = selectedMaritalStatus.toLowerCase();
+          
+          // Handle common variations
+          let maritalMatches = false;
+          if (selectedMaritalLower === "single") {
+            maritalMatches = maritalLower.includes("single") || maritalLower.includes("never married");
+          } else if (selectedMaritalLower === "married") {
+            maritalMatches = maritalLower.includes("married") && !maritalLower.includes("never");
+          } else {
+            maritalMatches = maritalLower.includes(selectedMaritalLower);
+          }
+          
+          if (!maritalMatches) return false;
+        } else {
+          return false; // No marital status data, exclude
+        }
       }
 
-      // Has children filter
+      // Has children filter - improved to check multiple storage locations
       if (selectedHasChildren) {
-        const hasChildren = persona.metadata?.relationships_family?.has_children;
+        console.log(`Filtering for has children: ${selectedHasChildren}`);
+        console.log(`Persona ${persona.name} metadata:`, persona.metadata);
+        
+        // Check multiple possible locations for children data
+        let hasChildren = false;
+        
+        // Method 1: Check relationships_family.has_children
+        if (persona.metadata?.relationships_family?.has_children !== undefined) {
+          hasChildren = persona.metadata.relationships_family.has_children;
+          console.log(`Found has_children in relationships_family: ${hasChildren}`);
+        }
+        // Method 2: Check direct has_children field
+        else if (persona.metadata?.has_children !== undefined) {
+          hasChildren = persona.metadata.has_children;
+          console.log(`Found has_children in metadata: ${hasChildren}`);
+        }
+        // Method 3: Check for children array or count
+        else if (persona.metadata?.children || persona.metadata?.number_of_children) {
+          const children = persona.metadata.children || persona.metadata.number_of_children;
+          hasChildren = Boolean(children && (Array.isArray(children) ? children.length > 0 : children > 0));
+          console.log(`Inferred has_children from children data: ${hasChildren}`);
+        }
+        // Method 4: Check for family_members containing children
+        else if (persona.metadata?.family_members) {
+          hasChildren = persona.metadata.family_members.some((member: any) => 
+            member.relationship?.toLowerCase().includes('child') || 
+            member.relationship?.toLowerCase().includes('son') || 
+            member.relationship?.toLowerCase().includes('daughter')
+          );
+          console.log(`Inferred has_children from family_members: ${hasChildren}`);
+        }
+        else {
+          console.log(`No children data found for persona ${persona.name}, excluding from filter`);
+          return false; // No children data found, exclude from filtered results
+        }
+        
         const childrenMatch = selectedHasChildren === "yes" ? hasChildren === true : hasChildren === false;
+        console.log(`Children match result: ${childrenMatch} (looking for ${selectedHasChildren}, found ${hasChildren})`);
+        
         if (!childrenMatch) return false;
       }
 
-      // Education filter
-      if (selectedEducation && persona.metadata?.education_level) {
-        const educationMatch = persona.metadata.education_level.toLowerCase().includes(selectedEducation.toLowerCase());
-        if (!educationMatch) return false;
+      // Education filter - improved to handle various formats
+      if (selectedEducation) {
+        const personaEducation = persona.metadata?.education_level || persona.metadata?.education;
+        if (personaEducation) {
+          const educationLower = personaEducation.toLowerCase();
+          const selectedEducationLower = selectedEducation.toLowerCase();
+          
+          // Handle common variations
+          let educationMatches = false;
+          if (selectedEducationLower === "high school") {
+            educationMatches = educationLower.includes("high school") || 
+                              educationLower.includes("hs") || 
+                              educationLower.includes("secondary");
+          } else if (selectedEducationLower === "some college") {
+            educationMatches = educationLower.includes("some college") || 
+                              educationLower.includes("partial");
+          } else if (selectedEducationLower === "bachelor's") {
+            educationMatches = educationLower.includes("bachelor") || 
+                              educationLower.includes("ba") || 
+                              educationLower.includes("bs");
+          } else if (selectedEducationLower === "master's") {
+            educationMatches = educationLower.includes("master") || 
+                              educationLower.includes("ma") || 
+                              educationLower.includes("ms");
+          } else if (selectedEducationLower === "doctorate") {
+            educationMatches = educationLower.includes("doctorate") || 
+                              educationLower.includes("phd") || 
+                              educationLower.includes("ph.d");
+          } else if (selectedEducationLower === "vocational") {
+            educationMatches = educationLower.includes("vocational") || 
+                              educationLower.includes("trade") || 
+                              educationLower.includes("technical");
+          } else {
+            educationMatches = educationLower.includes(selectedEducationLower);
+          }
+          
+          if (!educationMatches) return false;
+        } else {
+          return false; // No education data, exclude
+        }
       }
 
       return true;
