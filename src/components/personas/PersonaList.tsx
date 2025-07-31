@@ -164,20 +164,107 @@ export default function PersonaList({
         if (!hasMatchingTag) return false;
       }
 
-      // Demographics filters - check metadata
+      // Age filter - convert age number to range check
       if (selectedAge) {
-        const personaAge = persona.metadata?.demographics?.age_range;
-        if (personaAge !== selectedAge) return false;
+        const personaAge = persona.metadata?.age;
+        if (personaAge) {
+          const age = parseInt(personaAge.toString());
+          let ageInRange = false;
+          
+          switch (selectedAge) {
+            case "18-24":
+              ageInRange = age >= 18 && age <= 24;
+              break;
+            case "25-34":
+              ageInRange = age >= 25 && age <= 34;
+              break;
+            case "35-44":
+              ageInRange = age >= 35 && age <= 44;
+              break;
+            case "45-54":
+              ageInRange = age >= 45 && age <= 54;
+              break;
+            case "55-64":
+              ageInRange = age >= 55 && age <= 64;
+              break;
+            case "65+":
+              ageInRange = age >= 65;
+              break;
+          }
+          
+          if (!ageInRange) return false;
+        } else {
+          return false; // No age data, exclude from filtered results
+        }
       }
 
+      // Region filter - check both region field and location data
       if (selectedRegion) {
-        const personaRegion = persona.metadata?.demographics?.region;
-        if (personaRegion !== selectedRegion) return false;
+        const personaRegion = persona.metadata?.region || 
+                            persona.metadata?.location_history?.current_residence ||
+                            persona.metadata?.urban_rural_context;
+        
+        if (personaRegion) {
+          const regionLower = personaRegion.toLowerCase();
+          let regionMatches = false;
+          
+          switch (selectedRegion) {
+            case "urban":
+              regionMatches = regionLower.includes("urban") || 
+                            regionLower.includes("city") ||
+                            regionLower.includes("san francisco") ||
+                            regionLower.includes("new york") ||
+                            regionLower.includes("chicago");
+              break;
+            case "suburban":
+              regionMatches = regionLower.includes("suburban") ||
+                            regionLower.includes("suburb");
+              break;
+            case "rural":
+              regionMatches = regionLower.includes("rural") ||
+                            regionLower.includes("countryside");
+              break;
+          }
+          
+          if (!regionMatches) return false;
+        } else {
+          return false;
+        }
       }
 
+      // Income filter - handle various income formats
       if (selectedIncome) {
-        const personaIncome = persona.metadata?.demographics?.income_level;
-        if (personaIncome !== selectedIncome) return false;
+        const personaIncome = persona.metadata?.income_level;
+        
+        if (personaIncome) {
+          const incomeLower = personaIncome.toLowerCase();
+          let incomeMatches = false;
+          
+          switch (selectedIncome) {
+            case "low":
+              incomeMatches = incomeLower.includes("low") ||
+                            incomeLower.includes("$20,000") ||
+                            incomeLower.includes("$30,000") ||
+                            incomeLower.includes("under");
+              break;
+            case "middle":
+              incomeMatches = incomeLower.includes("middle") ||
+                            incomeLower.includes("$50,000") ||
+                            incomeLower.includes("$60,000") ||
+                            incomeLower.includes("$70,000");
+              break;
+            case "high":
+              incomeMatches = incomeLower.includes("high") ||
+                            incomeLower.includes("$80,000") ||
+                            incomeLower.includes("$100,000") ||
+                            incomeLower.includes("above");
+              break;
+          }
+          
+          if (!incomeMatches) return false;
+        } else {
+          return false;
+        }
       }
 
       // Source type filter
