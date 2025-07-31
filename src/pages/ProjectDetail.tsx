@@ -383,12 +383,12 @@ const ProjectDetail = () => {
                             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                             <h3 className="text-lg font-medium mb-2">No research reports yet</h3>
                             <p className="text-muted-foreground mb-4">
-                              Conduct survey studies to generate research reports
+                              Launch Insights Engine to generate research reports
                             </p>
                             <Link to="/research">
                               <Button className="flex items-center space-x-2">
                                 <Play className="h-4 w-4" />
-                                <span>Start Survey Study</span>
+                                <span>Launch Insights Engine</span>
                               </Button>
                             </Link>
                           </div>

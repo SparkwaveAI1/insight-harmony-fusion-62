@@ -12,18 +12,18 @@ interface ResearchModeSelectorProps {
 const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMode }) => {
   const modes = [
     {
+      id: 'survey' as const,
+      title: 'Insights Engine',
+      description: 'Launch our advanced AI engine to generate deep insights across multiple personas with structured analysis.',
+      icon: BarChart3,
+      features: ['AI-powered insights', 'Multi-persona analysis', 'Structured intelligence']
+    },
+    {
       id: 'interview' as const,
       title: '1-on-1 Interview',
       description: 'Conduct in-depth conversations with individual personas to explore attitudes, motivations, and decision-making processes.',
       icon: MessageSquare,
       features: ['Deep qualitative insights', 'Persona trait exploration', 'Contextual questioning']
-    },
-    {
-      id: 'survey' as const,
-      title: 'Survey Study',
-      description: 'Run structured questionnaires across multiple personas for quantifiable qualitative insights.',
-      icon: BarChart3,
-      features: ['Structured data collection', 'Scalable insights', 'Comparative analysis']
     }
   ];
 
@@ -95,7 +95,7 @@ const ResearchModeSelector: React.FC<ResearchModeSelectorProps> = ({ onSelectMod
                     className="w-full justify-center"
                     variant="default"
                   >
-                    {isSurvey ? "Start Study" : "Start Interview"}
+                    {isSurvey ? "Launch Insights Engine" : "Start Interview"}
                   </Button>
                 </div>
               </CardContent>
