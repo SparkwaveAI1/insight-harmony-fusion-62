@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +28,8 @@ import {
   getCollectionById,
   deleteCollection,
   getPersonasInCollection,
-} from "@/services/collections"; 
+} from "@/services/collections";
+import { removePersonaFromCollection } from "@/services/collections/personaCollectionOperations";
 import { Collection } from "@/services/collections/types";
 import { Persona } from "@/services/persona/types";
 import { getAllPersonas } from "@/services/persona";
@@ -110,6 +111,23 @@ const CollectionDetail = () => {
     // Reload personas after adding
     if (collectionId) {
       loadPersonas(collectionId);
+    }
+  };
+
+  const handleRemovePersona = async (personaId: string) => {
+    if (!collectionId) return;
+    
+    try {
+      const success = await removePersonaFromCollection(collectionId, personaId);
+      if (success) {
+        toast.success("Persona removed from collection");
+        loadPersonas(collectionId); // Reload the personas list
+      } else {
+        toast.error("Failed to remove persona from collection");
+      }
+    } catch (error) {
+      console.error("Error removing persona from collection:", error);
+      toast.error("Failed to remove persona from collection");
     }
   };
 
@@ -196,22 +214,33 @@ const CollectionDetail = () => {
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {personas.map((persona) => (
-                      <Link
-                        to={`/persona/${persona.persona_id}`}
-                        key={persona.persona_id}
-                        className="block"
-                      >
-                        <Card className="hover:bg-secondary">
+                      <Card key={persona.persona_id} className="hover:bg-secondary relative group">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 z-10"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemovePersona(persona.persona_id);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                        <Link
+                          to={`/persona/${persona.persona_id}`}
+                          className="block"
+                        >
                           <CardHeader>
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitle className="text-sm font-medium pr-8">
                               {persona.name}
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
                             <Badge variant="secondary">Persona</Badge>
                           </CardContent>
-                        </Card>
-                      </Link>
+                        </Link>
+                      </Card>
                     ))}
                   </div>
                 )}
