@@ -35,6 +35,7 @@ import { getAllPersonas } from "@/services/persona";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import NotFoundState from "@/components/persona-details/NotFoundState";
+import Footer from "@/components/sections/Footer";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
@@ -118,121 +119,126 @@ const CollectionDetail = () => {
   }
 
   return (
-    <div className="container py-6">
-      {/* Back Navigation */}
-      <div className="mb-6">
-        <Button variant="ghost" asChild className="p-0">
-          <Link to="/collections" className="flex items-center text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Collections
-          </Link>
-        </Button>
-      </div>
-
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
-          <p className="text-muted-foreground">
-            {collection?.description || "No description provided"}
-          </p>
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowEditCollectionDialog(true)}
-          >
-            <Pencil className="w-4 h-4 mr-2" />
-            Edit Collection
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Collection
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  collection and remove all personas from it.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteCollection}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Personas in this Collection</CardTitle>
-          <CardDescription>
-            Manage personas associated with this collection.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <Button onClick={() => setShowAddPersonasDialog(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Personas
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex-grow">
+        <div className="container py-6">
+          {/* Back Navigation */}
+          <div className="mb-6">
+            <Button variant="ghost" asChild className="p-0">
+              <Link to="/collections" className="flex items-center text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Collections
+              </Link>
             </Button>
           </div>
-          <Separator />
-          <ScrollArea className="h-[400px] mt-4">
-            {isLoading ? (
-              <p>Loading personas...</p>
-            ) : personas.length === 0 ? (
-              <p>No personas in this collection.</p>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {personas.map((persona) => (
-                  <Link
-                    to={`/persona/${persona.persona_id}`}
-                    key={persona.persona_id}
-                    className="block"
-                  >
-                    <Card className="hover:bg-secondary">
-                      <CardHeader>
-                        <CardTitle className="text-sm font-medium">
-                          {persona.name}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Badge variant="secondary">Persona</Badge>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
+              <p className="text-muted-foreground">
+                {collection?.description || "No description provided"}
+              </p>
+            </div>
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowEditCollectionDialog(true)}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Collection
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Collection
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the
+                      collection and remove all personas from it.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteCollection}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Personas in this Collection</CardTitle>
+              <CardDescription>
+                Manage personas associated with this collection.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <Button onClick={() => setShowAddPersonasDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Personas
+                </Button>
               </div>
-            )}
-          </ScrollArea>
-        </CardContent>
-      </Card>
+              <Separator />
+              <ScrollArea className="h-[400px] mt-4">
+                {isLoading ? (
+                  <p>Loading personas...</p>
+                ) : personas.length === 0 ? (
+                  <p>No personas in this collection.</p>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    {personas.map((persona) => (
+                      <Link
+                        to={`/persona/${persona.persona_id}`}
+                        key={persona.persona_id}
+                        className="block"
+                      >
+                        <Card className="hover:bg-secondary">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">
+                              {persona.name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Badge variant="secondary">Persona</Badge>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
 
-      {showAddPersonasDialog && (
-        <AddPersonasToCollectionDialog
-          open={showAddPersonasDialog}
-          onOpenChange={setShowAddPersonasDialog}
-          collectionId={collectionId || ""}
-          onPersonasAdded={handlePersonasAdded}
-        />
-      )}
+          {showAddPersonasDialog && (
+            <AddPersonasToCollectionDialog
+              open={showAddPersonasDialog}
+              onOpenChange={setShowAddPersonasDialog}
+              collectionId={collectionId || ""}
+              onPersonasAdded={handlePersonasAdded}
+            />
+          )}
 
-      {showEditCollectionDialog && (
-        <EditCollectionDialog
-          open={showEditCollectionDialog}
-          onOpenChange={setShowEditCollectionDialog}
-          collection={collection}
-          onCollectionUpdate={loadCollection}
-        />
-      )}
+          {showEditCollectionDialog && (
+            <EditCollectionDialog
+              open={showEditCollectionDialog}
+              onOpenChange={setShowEditCollectionDialog}
+              collection={collection}
+              onCollectionUpdate={loadCollection}
+            />
+          )}
+        </div>
+      </div>
+      <Footer />
     </div>
   );
 };

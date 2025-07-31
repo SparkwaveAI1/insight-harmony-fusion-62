@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { PersonaProvider } from '@/context/PersonaProvider';
 import { Toaster } from 'sonner';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/sections/Footer';
 import ResearchModeSelector from '@/components/research/ResearchModeSelector';
 import InterviewMode from '@/components/research/modes/InterviewMode';
 import FocusGroupMode from '@/components/research/modes/FocusGroupMode';
@@ -44,6 +45,7 @@ const Research: React.FC = () => {
         <main className="flex-grow pt-20">
           {renderCurrentMode()}
         </main>
+        <Footer />
         <Toaster />
       </div>
     </PersonaProvider>
