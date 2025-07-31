@@ -72,7 +72,7 @@ export function DashboardContent() {
                     <ArrowRight className="h-5 w-5 text-primary" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
                   Create a Persona
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
