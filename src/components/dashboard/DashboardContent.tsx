@@ -60,10 +60,10 @@ export function DashboardContent() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Primary Action - Create Persona */}
-          <Link to="/simulated-persona" className="group block">
-            <Card className="relative overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover-scale">
+          <Link to="/simulated-persona" className="group block h-full">
+            <Card className="relative overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover-scale h-full">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
-              <CardContent className="p-6 relative">
+              <CardContent className="p-6 relative h-full flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg group-hover:shadow-primary/30 transition-all duration-300">
                     <Sparkles className="h-7 w-7 text-white" />
@@ -72,52 +72,58 @@ export function DashboardContent() {
                     <ArrowRight className="h-5 w-5 text-primary" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
-                  Create a Persona
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Create a behavioral-realistic AI persona in under 5 minutes. Chat with your persona immediately.
-                </p>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                    Create a Persona
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Create a behavioral-realistic AI persona in under 5 minutes. Chat with your persona immediately.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </Link>
 
           {/* Secondary Action - Manage Projects */}
-          <Link to="/projects" className="group block">
-            <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-accent/50">
-              <CardContent className="p-6">
+          <Link to="/projects" className="group block h-full">
+            <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-accent/50 h-full">
+              <CardContent className="p-6 h-full flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-blue-600/30 transition-all duration-300">
                     <Target className="h-6 w-6 text-blue-600" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-600 transition-colors">
-                  Organize Your Research Hub
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Manage projects, track insights, and organize your persona collections in one place.
-                </p>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-2 group-hover:text-blue-600 transition-colors">
+                    Organize Your Research Hub
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Manage projects, track insights, and organize your persona collections in one place.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </Link>
 
           {/* Tertiary Action - Chat with Personas */}
-          <Link to="/my-personas" className="group block">
-            <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-green-500/50">
-              <CardContent className="p-6">
+          <Link to="/my-personas" className="group block h-full">
+            <Card className="hover:shadow-md transition-all duration-300 hover-scale border hover:border-green-500/50 h-full">
+              <CardContent className="p-6 h-full flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500/20 to-green-600/20 flex items-center justify-center group-hover:from-green-500/30 group-hover:to-green-600/30 transition-all duration-300">
                     <MessageSquare className="h-6 w-6 text-green-600" />
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-green-600 transition-colors" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-green-600 transition-colors">
-                  Start Your Research
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Jump into conversations with your existing personas. Get instant insights and feedback.
-                </p>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-2 group-hover:text-green-600 transition-colors">
+                    Start Your Research
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Jump into conversations with your existing personas. Get instant insights and feedback.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </Link>
