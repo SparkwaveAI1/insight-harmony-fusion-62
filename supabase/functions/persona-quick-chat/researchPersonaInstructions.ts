@@ -3,7 +3,6 @@
  * Designed to maximize personality trait expression and opinion diversity
  */
 
-import { generateConflictInstructions, generateOpinionModifiers } from '../../../src/services/persona/conflictGeneration.ts';
 import { generateNaturalConversationInstructions } from '../_shared/conversationalContextService.ts';
 
 export function createResearchPersonaInstructions(persona: any, conversationContext: string = '', conversationHistory: any[] = []): string {
@@ -312,4 +311,99 @@ function generateKnowledgeFiltering(persona: any, traitProfile: any): string {
   }
 
   return filtering;
+}
+
+/**
+ * Generate conflict instructions for a persona (implemented inline for edge function)
+ */
+function generateConflictInstructions(persona: any): string {
+  const traitProfile = persona.trait_profile || {};
+  
+  const conflictTriggers = [
+    // Economic/Financial Topics
+    {
+      topic: 'tokenomics',
+      condition: () => parseFloat(traitProfile.political_compass?.economic || 0.5) > 0.6,
+      modifier: 'Express skepticism about government regulation and favor free market solutions'
+    },
+    {
+      topic: 'tokenomics',
+      condition: () => parseFloat(traitProfile.political_compass?.economic || 0.5) < 0.4,
+      modifier: 'Express concern about speculation, inequality, and lack of regulation'
+    },
+    // Authority/Hierarchy Topics
+    {
+      topic: 'decentralization',
+      condition: () => parseFloat(traitProfile.moral_foundations?.authority || 0.5) > 0.7,
+      modifier: 'Favor hierarchical structures and express concern about lack of oversight'
+    },
+    {
+      topic: 'decentralization',
+      condition: () => parseFloat(traitProfile.moral_foundations?.authority || 0.5) < 0.3,
+      modifier: 'Enthusiastic about removing hierarchical control and traditional institutions'
+    },
+    // Technology/Innovation Topics
+    {
+      topic: 'innovation',
+      condition: () => parseFloat(traitProfile.big_five?.openness || 0.5) < 0.4,
+      modifier: 'Skeptical of new technology, prefer proven traditional methods'
+    },
+    {
+      topic: 'innovation',
+      condition: () => parseFloat(traitProfile.big_five?.openness || 0.5) > 0.7,
+      modifier: 'Extremely enthusiastic about cutting-edge innovation and possibilities'
+    }
+  ];
+
+  const applicableConflicts = conflictTriggers.filter(trigger => trigger.condition());
+
+  if (applicableConflicts.length === 0) {
+    return '';
+  }
+
+  let instructions = '\nPERSONALITY-DRIVEN CONFLICT PATTERNS:\n';
+  applicableConflicts.forEach(conflict => {
+    instructions += `- When discussing ${conflict.topic}: ${conflict.modifier}\n`;
+  });
+
+  return instructions;
+}
+
+/**
+ * Generate opinion modifiers based on personality traits (implemented inline for edge function)
+ */
+function generateOpinionModifiers(persona: any): string[] {
+  const modifiers: string[] = [];
+  const traitProfile = persona.trait_profile || {};
+  
+  // Big Five modifiers
+  const agreeableness = parseFloat(traitProfile.big_five?.agreeableness || 0.5);
+  const neuroticism = parseFloat(traitProfile.big_five?.neuroticism || 0.5);
+  const openness = parseFloat(traitProfile.big_five?.openness || 0.5);
+  
+  if (agreeableness < 0.3) {
+    modifiers.push('Express disagreement bluntly and confrontationally');
+  }
+  
+  if (neuroticism > 0.7) {
+    modifiers.push('Show emotional stress and anxiety in responses');
+  }
+  
+  if (openness < 0.3) {
+    modifiers.push('Resist new ideas and favor traditional approaches');
+  }
+  
+  // Moral foundation modifiers
+  const fairness = parseFloat(traitProfile.moral_foundations?.fairness || 0.5);
+  const authority = parseFloat(traitProfile.moral_foundations?.authority || 0.5);
+  
+  if (fairness > 0.7) {
+    modifiers.push('React strongly to any perceived unfairness or inequality');
+  }
+  
+  if (authority < 0.3) {
+    modifiers.push('Challenge hierarchies and question authority figures');
+  }
+  
+  return modifiers;
 }
