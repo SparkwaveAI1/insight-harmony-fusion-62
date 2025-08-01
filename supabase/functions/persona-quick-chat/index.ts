@@ -71,6 +71,12 @@ serve(async (req) => {
     } = await req.json();
 
     console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
+    console.log('IMAGE DEBUG - Image data received:', imageData ? 'YES' : 'NO');
+    if (imageData) {
+      console.log('IMAGE DEBUG - Type:', typeof imageData);
+      console.log('IMAGE DEBUG - Length:', imageData.length);
+      console.log('IMAGE DEBUG - Starts with:', imageData.substring(0, 50));
+    }
 
     // Check cache first
     let persona: any;
@@ -119,14 +125,18 @@ serve(async (req) => {
     // Add current user message with potential image data
     const userMessage: any = { role: 'user' };
     if (imageData) {
+      console.log('IMAGE DEBUG - Constructing user message with image');
       userMessage.content = [
         { type: 'text', text: message },
         { type: 'image_url', image_url: { url: imageData } }
       ];
     } else {
+      console.log('IMAGE DEBUG - Constructing text-only user message');
       userMessage.content = message;
     }
     messages.push(userMessage);
+    
+    console.log('IMAGE DEBUG - Final message structure:', JSON.stringify(userMessage, null, 2).substring(0, 200));
 
     // Generate response with optimized parameters for speed
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
