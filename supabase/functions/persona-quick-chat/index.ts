@@ -2,7 +2,6 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { createComprehensiveStreamlinedInstructions } from './comprehensiveStreamlinedInstructions.ts';
-import { createResearchPersonaInstructions } from './researchPersonaInstructions.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -72,12 +71,6 @@ serve(async (req) => {
     } = await req.json();
 
     console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
-    console.log('IMAGE DEBUG - Image data received:', imageData ? 'YES' : 'NO');
-    if (imageData) {
-      console.log('IMAGE DEBUG - Type:', typeof imageData);
-      console.log('IMAGE DEBUG - Length:', imageData.length);
-      console.log('IMAGE DEBUG - Starts with:', imageData.substring(0, 50));
-    }
 
     // Check cache first
     let persona: any;
@@ -104,16 +97,7 @@ serve(async (req) => {
 
       persona = fetchedPersona;
       // Pre-process persona instructions with context and mode
-      // Use research-focused instructions if we have substantial context (indicating research use)
-      const isResearchContext = (conversationContext && conversationContext.length > 200);
-      
-      if (isResearchContext) {
-        console.log('Using research-focused instructions due to research context or keywords');
-        systemPrompt = createResearchPersonaInstructions(persona, conversationContext, previousMessages || []);
-      } else {
-        console.log('Using standard instructions');
-        systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext, previousMessages || []);
-      }
+      systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext);
       
       // Cache for future requests with context-aware cache key
       setCachedPersona(personaId, conversationContext, persona, systemPrompt);
@@ -135,42 +119,14 @@ serve(async (req) => {
     // Add current user message with potential image data
     const userMessage: any = { role: 'user' };
     if (imageData) {
-      console.log('IMAGE DEBUG - Constructing user message with image');
-      
-      // Format image data for OpenAI Vision API
-      let formattedImageUrl: string;
-      
-      try {
-        // Check if imageData already has data URL prefix
-        if (imageData.startsWith('data:image/')) {
-          formattedImageUrl = imageData;
-          console.log('IMAGE DEBUG - Image already has data URL prefix');
-        } else {
-          // Assume it's base64 and add proper data URL prefix
-          // Default to jpeg, but could be enhanced to detect actual format
-          formattedImageUrl = `data:image/jpeg;base64,${imageData}`;
-          console.log('IMAGE DEBUG - Added data URL prefix to base64 image');
-        }
-        
-        console.log('IMAGE DEBUG - Formatted image URL length:', formattedImageUrl.length);
-        console.log('IMAGE DEBUG - Formatted image URL starts with:', formattedImageUrl.substring(0, 50));
-        
-        userMessage.content = [
-          { type: 'text', text: message },
-          { type: 'image_url', image_url: { url: formattedImageUrl } }
-        ];
-      } catch (error) {
-        console.error('IMAGE DEBUG - Error formatting image data:', error);
-        // Fall back to text-only message if image processing fails
-        userMessage.content = `${message}\n\n[Note: There was an error processing the uploaded image]`;
-      }
+      userMessage.content = [
+        { type: 'text', text: message },
+        { type: 'image_url', image_url: { url: imageData } }
+      ];
     } else {
-      console.log('IMAGE DEBUG - Constructing text-only user message');
       userMessage.content = message;
     }
     messages.push(userMessage);
-    
-    console.log('IMAGE DEBUG - Final message structure:', JSON.stringify(userMessage, null, 2).substring(0, 300));
 
     // Generate response with optimized parameters for speed
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

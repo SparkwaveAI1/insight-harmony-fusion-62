@@ -28,16 +28,9 @@ export const getCollectionById = async (id: string): Promise<Collection | null> 
  */
 export const getUserCollections = async (): Promise<Collection[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error("No authenticated user found");
-      return [];
-    }
-
     const { data, error } = await supabase
       .from("collections")
       .select("*")
-      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -54,20 +47,10 @@ export const getUserCollections = async (): Promise<Collection[]> => {
  */
 export const getUserCollectionsWithCount = async (): Promise<CollectionWithPersonaCount[]> => {
   try {
-    // Get the user's ID first
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error("No authenticated user found");
-      toast.error("You must be logged in to view collections");
-      return [];
-    }
-
     // Since we removed the view, we'll manually count the personas
     const { data: collections, error: collectionsError } = await supabase
       .from("collections")
       .select("*")
-      .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
     if (collectionsError) throw collectionsError;
@@ -106,7 +89,7 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
 /**
  * Creates a new collection
  */
-export const createCollection = async (name: string, description: string | null = null, isPublic: boolean = false): Promise<Collection | null> => {
+export const createCollection = async (name: string, description: string | null = null): Promise<Collection | null> => {
   try {
     // Get the user's ID
     const { data: { user } } = await supabase.auth.getUser();
@@ -119,7 +102,7 @@ export const createCollection = async (name: string, description: string | null 
     // Insert with the user_id
     const { data, error } = await supabase
       .from("collections")
-      .insert({ name, description, user_id: user.id, is_public: isPublic })
+      .insert({ name, description, user_id: user.id })
       .select()
       .single();
 
@@ -138,7 +121,7 @@ export const createCollection = async (name: string, description: string | null 
  */
 export const updateCollection = async (
   id: string,
-  updates: { name?: string; description?: string | null; is_public?: boolean }
+  updates: { name?: string; description?: string | null }
 ): Promise<Collection | null> => {
   try {
     const { data, error } = await supabase
@@ -172,50 +155,5 @@ export const deleteCollection = async (id: string): Promise<boolean> => {
     console.error("Error deleting collection:", error);
     toast.error("Failed to delete collection");
     return false;
-  }
-};
-
-/**
- * Fetches all public collections with persona count
- */
-export const getPublicCollectionsWithCount = async (): Promise<CollectionWithPersonaCount[]> => {
-  try {
-    // Get public collections
-    const { data: collections, error: collectionsError } = await supabase
-      .from("collections")
-      .select("*")
-      .eq("is_public", true)
-      .order("updated_at", { ascending: false });
-
-    if (collectionsError) throw collectionsError;
-
-    // Get persona counts for each collection
-    const collectionsWithCount = await Promise.all(
-      (collections || []).map(async (collection) => {
-        const { count, error: countError } = await supabase
-          .from("collection_personas")
-          .select("*", { count: "exact", head: true })
-          .eq("collection_id", collection.id);
-
-        if (countError) {
-          console.error("Error counting personas for collection:", countError);
-          return {
-            ...collection,
-            persona_count: 0
-          };
-        }
-
-        return {
-          ...collection,
-          persona_count: count || 0
-        };
-      })
-    );
-    
-    return collectionsWithCount;
-  } catch (error) {
-    console.error("Error fetching public collections with count:", error);
-    toast.error("Failed to fetch public collections");
-    return [];
   }
 };

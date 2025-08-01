@@ -5,11 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Upload, Trash2, Plus, Check, X, File, Image, Eye } from 'lucide-react';
+import { FileText, Upload, Trash2, Plus, Check, X, File } from 'lucide-react';
 import { 
   uploadKnowledgeBaseDocument, 
   getProjectDocuments, 
-  deleteKnowledgeBaseDocument,
   KnowledgeBaseDocument 
 } from '@/services/collections';
 import { extractTextFromFile } from '@/services/collections/textExtractionService';
@@ -138,30 +137,14 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
     }
   };
 
-  const handleDeleteDocument = async (documentId: string, documentTitle: string) => {
-    if (window.confirm(`Are you sure you want to delete "${documentTitle}"? This action cannot be undone.`)) {
-      const success = await deleteKnowledgeBaseDocument(documentId);
-      if (success) {
-        // Remove from project documents list
-        setProjectDocuments(prev => prev.filter(doc => doc.id !== documentId));
-        // Remove from selected documents if it was selected
-        onDocumentsChange(selectedDocuments.filter(doc => doc.id !== documentId));
-      }
-    }
-  };
-
-  const getFileTypeIcon = (fileType: string | null, isImage?: boolean) => {
-    if (!fileType) return <FileText className="h-4 w-4 text-gray-500" />;
+  const getFileTypeIcon = (fileType: string | null) => {
+    if (!fileType) return <FileText className="w-4 h-4" />;
     
-    if (fileType.includes('pdf')) {
-      return <FileText className="h-4 w-4 text-red-500" />;
-    } else if (fileType.includes('image') || isImage) {
-      return <Image className="h-4 w-4 text-blue-500" />;
-    } else if (fileType.includes('text') || fileType.includes('csv')) {
-      return <FileText className="h-4 w-4 text-green-500" />;
-    } else {
-      return <File className="h-4 w-4 text-gray-500" />;
-    }
+    if (fileType.includes('image/')) return <File className="w-4 h-4" />;
+    if (fileType.includes('pdf')) return <FileText className="w-4 h-4" />;
+    if (fileType.includes('text/')) return <FileText className="w-4 h-4" />;
+    
+    return <File className="w-4 h-4" />;
   };
 
   const formatFileSize = (bytes: number | null): string => {
@@ -312,62 +295,33 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                   {projectDocuments.map((doc) => {
                     const isSelected = selectedDocuments.some(selected => selected.id === doc.id);
                     
-                     return (
+                    return (
                       <div
                         key={doc.id}
-                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                           isSelected
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
+                        onClick={() => toggleDocumentSelection(doc)}
                       >
-                         <div 
-                           className="flex items-center gap-3 flex-1 cursor-pointer"
-                           onClick={() => toggleDocumentSelection(doc)}
-                         >
-                           <div className="relative">
-                             {getFileTypeIcon(doc.file_type, doc.is_image)}
-                             {doc.is_image && (
-                               <Eye className="h-2 w-2 text-blue-600 absolute -top-1 -right-1" />
-                             )}
-                           </div>
-                           <div>
-                             <div className="font-medium text-sm">
-                               {doc.title}
-                               {doc.is_image && (
-                                 <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
-                                   Visual Analysis
-                                 </span>
-                               )}
-                             </div>
-                             <div className="text-xs text-muted-foreground">
-                               {doc.file_size ? formatFileSize(doc.file_size) : 'Text content'} • {new Date(doc.created_at).toLocaleDateString()}
-                               {doc.is_image && <span className="ml-2 text-blue-600">• Can be visually analyzed by AI</span>}
-                             </div>
-                           </div>
-                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteDocument(doc.id, doc.title)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Delete document"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                          <div 
-                            className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer ${
-                              isSelected
-                                ? 'bg-blue-500 border-blue-500'
-                                : 'border-gray-300'
-                            }`}
-                            onClick={() => toggleDocumentSelection(doc)}
-                          >
-                            {isSelected && (
-                              <Check className="w-3 h-3 text-white" />
-                            )}
+                        <div className="flex items-center gap-3">
+                          {getFileTypeIcon(doc.file_type)}
+                          <div>
+                            <div className="font-medium text-sm">{doc.title}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {doc.file_size ? formatFileSize(doc.file_size) : 'Text content'} • {new Date(doc.created_at).toLocaleDateString()}
+                            </div>
                           </div>
+                        </div>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                          isSelected
+                            ? 'bg-blue-500 border-blue-500'
+                            : 'border-gray-300'
+                        }`}>
+                          {isSelected && (
+                            <Check className="w-3 h-3 text-white" />
+                          )}
                         </div>
                       </div>
                     );

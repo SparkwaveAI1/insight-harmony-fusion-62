@@ -9,11 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, ArrowLeft, X, Globe, Lock } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +28,7 @@ import {
   getCollectionById,
   deleteCollection,
   getPersonasInCollection,
-  updateCollection,
-} from "@/services/collections";
-import { removePersonaFromCollection } from "@/services/collections/personaCollectionOperations";
+} from "@/services/collections"; 
 import { Collection } from "@/services/collections/types";
 import { Persona } from "@/services/persona/types";
 import { getAllPersonas } from "@/services/persona";
@@ -116,38 +113,6 @@ const CollectionDetail = () => {
     }
   };
 
-  const handleRemovePersona = async (personaId: string) => {
-    if (!collectionId) return;
-    
-    try {
-      const success = await removePersonaFromCollection(collectionId, personaId);
-      if (success) {
-        toast.success("Persona removed from collection");
-        loadPersonas(collectionId); // Reload the personas list
-      } else {
-        toast.error("Failed to remove persona from collection");
-      }
-    } catch (error) {
-      console.error("Error removing persona from collection:", error);
-      toast.error("Failed to remove persona from collection");
-    }
-  };
-
-  const handlePrivacyToggle = async (isPublic: boolean) => {
-    if (!collection) return;
-    
-    try {
-      const result = await updateCollection(collection.id, { is_public: isPublic });
-      if (result) {
-        setCollection({ ...collection, is_public: isPublic });
-        toast.success(`Collection is now ${isPublic ? 'public' : 'private'}`);
-      }
-    } catch (error) {
-      console.error("Error updating collection privacy:", error);
-      toast.error("Failed to update collection privacy");
-    }
-  };
-
   // Add a not found state if collection couldn't be loaded
   if (!isLoading && !collection) {
     return <NotFoundState />;
@@ -167,39 +132,12 @@ const CollectionDetail = () => {
             </Button>
           </div>
 
-          <div className="mb-8 flex justify-between items-start">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
-                {collection && (
-                  <>
-                    {collection.is_public ? (
-                      <Globe className="h-6 w-6 text-muted-foreground" />
-                    ) : (
-                      <Lock className="h-6 w-6 text-muted-foreground" />
-                    )}
-                  </>
-                )}
-              </div>
-              <p className="text-muted-foreground mb-4">
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">{collection?.name || "Loading..."}</h1>
+              <p className="text-muted-foreground">
                 {collection?.description || "No description provided"}
               </p>
-              {collection && (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">
-                      {collection.is_public ? 'Public' : 'Private'}
-                    </span>
-                    <Switch
-                      checked={collection.is_public}
-                      onCheckedChange={handlePrivacyToggle}
-                    />
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {collection.is_public ? 'Visible to everyone' : 'Only visible to you'}
-                  </span>
-                </div>
-              )}
             </div>
             <div className="space-x-2">
               <Button
@@ -256,57 +194,24 @@ const CollectionDetail = () => {
                 ) : personas.length === 0 ? (
                   <p>No personas in this collection.</p>
                 ) : (
-                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     {personas.map((persona) => (
-                      <Card key={persona.persona_id} className="hover:bg-secondary relative group">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 z-10"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleRemovePersona(persona.persona_id);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                        <Link
-                          to={`/persona/${persona.persona_id}`}
-                          className="block"
-                        >
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start gap-3">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center flex-shrink-0">
-                                {persona.profile_image_url ? (
-                                  <img 
-                                    src={persona.profile_image_url} 
-                                    alt={persona.name}
-                                    className="w-12 h-12 rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-white font-semibold text-sm">
-                                    {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 pr-6">
-                                <CardTitle className="text-base font-semibold leading-tight mb-1">
-                                  {persona.name}
-                                </CardTitle>
-                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                  {persona.description || "No description available"}
-                                </p>
-                              </div>
-                            </div>
+                      <Link
+                        to={`/persona/${persona.persona_id}`}
+                        key={persona.persona_id}
+                        className="block"
+                      >
+                        <Card className="hover:bg-secondary">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium">
+                              {persona.name}
+                            </CardTitle>
                           </CardHeader>
-                          <CardContent className="pt-0">
-                            <Badge variant="secondary" className="text-xs">
-                              Persona
-                            </Badge>
+                          <CardContent>
+                            <Badge variant="secondary">Persona</Badge>
                           </CardContent>
-                        </Link>
-                      </Card>
+                        </Card>
+                      </Link>
                     ))}
                   </div>
                 )}

@@ -27,39 +27,22 @@ export const generatePersonaResponse = async (
 
     // Create comprehensive knowledge base context with full document contents
     let conversationContext = '';
-    const imageDocuments: KnowledgeBaseDocument[] = [];
-    
     if (projectDocuments.length > 0) {
-      // Separate image documents for special handling
-      projectDocuments.forEach(doc => {
-        if (doc.is_image && doc.image_data) {
-          imageDocuments.push(doc);
-        }
-      });
-
       conversationContext = `
-PROJECT KNOWLEDGE BASE - INTERPRET THROUGH YOUR PERSONALITY:
-The following documents are provided for context, but you should interpret and react to them based on YOUR individual personality, values, and beliefs:
+PROJECT KNOWLEDGE BASE CONTEXT:
+You have access to the following project documents. Use this information to inform your responses:
 
 ${projectDocuments.map(doc => `
 DOCUMENT: ${doc.title}
 ${doc.content ? `CONTENT: ${doc.content}` : ''}
 ${doc.file_type ? `FILE TYPE: ${doc.file_type}` : ''}
-${doc.is_image ? `NOTE: This is an image document that you can visually analyze.` : ''}
 ---
 `).join('\n')}
 
-CRITICAL RESEARCH INSTRUCTIONS:
-- DO NOT just accept everything in these documents as truth
-- React based on YOUR personality traits, moral foundations, and political views
-- If something conflicts with your values, EXPRESS DISAGREEMENT
-- If you have expertise in related areas, show confidence; if not, show appropriate uncertainty
-- Use information selectively based on what aligns with your worldview
-- Express emotional reactions based on your triggers and personality traits
-${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.length} image document(s) for visual analysis. React to what you see through your personality lens.` : ''}
+IMPORTANT: Reference these documents when relevant to the conversation. When you use information from the documents, mention which document you're referencing. These documents contain the full context for this research project.
 `;
 
-      console.log('Created personality-filtered knowledge base context with', projectDocuments.length, 'documents');
+      console.log('Created knowledge base context with', projectDocuments.length, 'documents');
     }
 
     // Convert research messages to persona chat format
@@ -73,20 +56,9 @@ ${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.lengt
     // Get the last message to extract user input and image
     const lastMessage = conversationHistory[conversationHistory.length - 1];
     const userMessage = lastMessage?.role === 'user' ? lastMessage.content : '';
-    let imageData = lastMessage?.image;
-
-    // If no image in the conversation but we have image documents, use the first one for visual analysis
-    if (!imageData && imageDocuments.length > 0) {
-      imageData = imageDocuments[0].image_data;
-      console.log('Using image from knowledge base for visual analysis:', imageDocuments[0].title);
-    }
+    const imageData = lastMessage?.image;
 
     console.log('Using validated conversation engine for research response with knowledge base context');
-    console.log('Image data available for analysis:', !!imageData);
-    if (imageData) {
-      console.log('Image data format check:', imageData.substring(0, 50));
-      console.log('Image data length:', imageData.length);
-    }
 
     // Use the same conversation engine as individual persona chat
     const response = await sendMessageToPersona(
@@ -95,8 +67,7 @@ ${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.lengt
       chatMessages,
       persona,
       'conversation', // Use conversation mode everywhere
-      conversationContext, // Include knowledge base context
-      imageData // Pass image data for visual analysis
+      conversationContext // Include knowledge base context
     );
 
     // Save the response message to database

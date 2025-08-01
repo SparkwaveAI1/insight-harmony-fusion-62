@@ -34,20 +34,24 @@ export const extractDocumentText = async (fileData: string, fileType: string, fi
  */
 export const extractImageText = async (imageData: string, fileName: string): Promise<string | null> => {
   try {
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    const { data, error } = await supabase.functions.invoke('extract-image-text', {
-      body: {
+    const response = await fetch('/api/extract-image-text', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         imageData,
         fileName
-      },
+      }),
     });
 
-    if (error) {
-      throw new Error(error.message || 'Failed to extract image text');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to extract image text');
     }
 
-    return data?.extractedText || null;
+    const result = await response.json();
+    return result.extractedText;
   } catch (error) {
     console.error('Error in image text extraction API:', error);
     throw error;

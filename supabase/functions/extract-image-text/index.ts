@@ -9,7 +9,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageData, fileName, fileType } = await req.json()
+    const { imageData, fileName } = await req.json()
 
     if (!imageData) {
       return new Response(
@@ -29,10 +29,6 @@ serve(async (req) => {
 
     console.log(`Extracting text from image: ${fileName}`)
 
-    // Determine the correct MIME type for the image data URL
-    const mimeType = fileType || 'image/jpeg'
-    console.log(`Using MIME type: ${mimeType}`)
-
     // Use OpenAI's vision model to extract text from images
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -41,7 +37,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'user',
@@ -53,7 +49,7 @@ serve(async (req) => {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:${mimeType};base64,${imageData}`
+                  url: `data:image/jpeg;base64,${imageData}`
                 }
               }
             ]

@@ -40,10 +40,6 @@ const PersonaViewerContent = () => {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedIncome, setSelectedIncome] = useState("");
   const [selectedSourceType, setSelectedSourceType] = useState("");
-  const [selectedGender, setSelectedGender] = useState("");
-  const [selectedMaritalStatus, setSelectedMaritalStatus] = useState("");
-  const [selectedHasChildren, setSelectedHasChildren] = useState("");
-  const [selectedEducation, setSelectedEducation] = useState("");
   
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -64,10 +60,6 @@ const PersonaViewerContent = () => {
     setSelectedRegion("");
     setSelectedIncome("");
     setSelectedSourceType("");
-    setSelectedGender("");
-    setSelectedMaritalStatus("");
-    setSelectedHasChildren("");
-    setSelectedEducation("");
   };
 
   // If viewing a specific persona, show the detail view
@@ -126,14 +118,6 @@ const PersonaViewerContent = () => {
             onIncomeChange={setSelectedIncome}
             selectedSourceType={selectedSourceType}
             onSourceTypeChange={setSelectedSourceType}
-            selectedGender={selectedGender}
-            onGenderChange={setSelectedGender}
-            selectedMaritalStatus={selectedMaritalStatus}
-            onMaritalStatusChange={setSelectedMaritalStatus}
-            selectedHasChildren={selectedHasChildren}
-            onHasChildrenChange={setSelectedHasChildren}
-            selectedEducation={selectedEducation}
-            onEducationChange={setSelectedEducation}
           />
 
           {/* Tabs Interface */}
@@ -153,10 +137,6 @@ const PersonaViewerContent = () => {
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
-                selectedGender={selectedGender}
-                selectedMaritalStatus={selectedMaritalStatus}
-                selectedHasChildren={selectedHasChildren}
-                selectedEducation={selectedEducation}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
@@ -172,10 +152,6 @@ const PersonaViewerContent = () => {
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
-                selectedGender={selectedGender}
-                selectedMaritalStatus={selectedMaritalStatus}
-                selectedHasChildren={selectedHasChildren}
-                selectedEducation={selectedEducation}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>

@@ -17,8 +17,7 @@ export * from './projectCollectionOperations';
 export { 
   uploadKnowledgeBaseDocument,
   getProjectDocuments,
-  deleteKnowledgeBaseDocument,
-  type KnowledgeBaseDocument
+  deleteKnowledgeBaseDocument 
 } from './knowledgeBaseOperations';
 
 // Export conversation operations

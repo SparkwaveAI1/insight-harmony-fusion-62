@@ -3,16 +3,6 @@ import { createDefaultTraitProfile } from './defaultTraitProfile';
 
 export function validateAndPreserveTraitProfile(traitProfile: Record<string, any>) {
   console.log("=== VALIDATING AND PRESERVING TRAIT PROFILE ===");
-  console.log("Original trait profile keys:", Object.keys(traitProfile));
-  
-  // Check if we have meaningful trait data
-  const hasRealTraits = checkForMeaningfulTraits(traitProfile);
-  console.log("Has meaningful traits:", hasRealTraits);
-  
-  if (!hasRealTraits) {
-    console.warn("CRITICAL: Trait profile contains mostly default values - this will reduce persona diversity!");
-  }
-  
   const defaultProfile = createDefaultTraitProfile();
   
   // Only fill in missing categories, don't overwrite existing valid values
@@ -63,22 +53,4 @@ export function validateAndPreserveTraitProfile(traitProfile: Record<string, any
   
   console.log("=== END TRAIT PROFILE VALIDATION AND PRESERVATION ===");
   return traitProfile;
-}
-
-function checkForMeaningfulTraits(traitProfile: Record<string, any>): boolean {
-  const coreCategories = ['big_five', 'moral_foundations', 'world_values', 'political_compass'];
-  let validCategories = 0;
-  
-  for (const category of coreCategories) {
-    if (traitProfile[category] && typeof traitProfile[category] === 'object') {
-      const values = Object.values(traitProfile[category]);
-      const nonDefaultValues = values.filter(v => typeof v === 'number' && v !== 0.5);
-      
-      if (nonDefaultValues.length > values.length * 0.3) { // At least 30% non-default
-        validCategories++;
-      }
-    }
-  }
-  
-  return validCategories >= 2; // At least 2 categories should have meaningful data
 }

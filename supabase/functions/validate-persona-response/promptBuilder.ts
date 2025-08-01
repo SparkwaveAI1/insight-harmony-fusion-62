@@ -43,42 +43,30 @@ export function buildValidationPrompt(
   console.log('number_of_children field:', metadata.number_of_children);
   console.log('children_ages field:', metadata.children_ages);
 
-return `You are a persona response validator focused on personality expression and opinion diversity.
+return `You are a fast persona response validator. Quickly check if the response matches basic persona facts.
 
 PERSONA: ${persona.name}
-Age: ${age} | Occupation: ${occupation} | Education: ${education} | Children: ${childrenInfo}
-
-PERSONALITY TRAITS:
-- Agreeableness: ${bigFive.agreeableness || 'Unknown'} ${getTraitDescription('agreeableness', parseFloat(bigFive.agreeableness || '0.5'))}
-- Openness: ${bigFive.openness || 'Unknown'} ${getTraitDescription('openness', parseFloat(bigFive.openness || '0.5'))}
-- Neuroticism: ${bigFive.neuroticism || 'Unknown'} ${getTraitDescription('neuroticism', parseFloat(bigFive.neuroticism || '0.5'))}
-
-MORAL FOUNDATIONS: ${Object.entries(moralFoundations).map(([k, v]) => `${k}: ${v}`).join(', ')}
+Age: ${age} | Occupation: ${occupation} | Children: ${childrenInfo}
 
 USER MESSAGE: "${userMessage}"
 RESPONSE: "${response}"
 
-VALIDATION PRIORITIES (in order of importance):
-1. TRAIT ALIGNMENT: Does the response authentically express this persona's personality traits?
-2. OPINION DIVERSITY: Does the persona express individual opinions rather than consensus views?
-3. EMOTIONAL AUTHENTICITY: Are emotional reactions consistent with personality and triggers?
-4. CONVERSATIONAL STYLE: Does language/tone match education and personality?
-5. DEMOGRAPHIC ACCURACY: Basic facts correct (but allow personality-driven interpretations)
-
-CRITICAL: Reward responses that show DISAGREEMENT, STRONG OPINIONS, and PERSONALITY-DRIVEN INTERPRETATIONS over diplomatic consensus.
+Check ONLY:
+1. Basic demographic facts are correct
+2. Response tone matches personality (Extraversion: ${bigFive.extraversion || 'Unknown'})
 
 Return JSON:
 {
   "scores": {
-    "traitAlignment": 0.8,
-    "conversationalAuthenticity": 0.8,
-    "emotionalTriggerCompliance": 0.8,
     "demographicAccuracy": 0.8,
-    "factualConsistency": 0.8,
+    "traitAlignment": 0.8,
+    "emotionalTriggerCompliance": 0.8,
     "knowledgeDomainAccuracy": 0.8,
+    "conversationalAuthenticity": 0.8,
+    "factualConsistency": 0.8,
     "overall": 0.8
   },
-  "feedback": "Focus on personality expression and opinion diversity",
+  "feedback": "Brief feedback",
   "specificErrors": [],
   "shouldRegenerate": false
 }`;

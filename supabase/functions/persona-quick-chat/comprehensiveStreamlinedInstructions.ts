@@ -3,9 +3,7 @@
  * Uses ALL trait data for authentic quick responses across ALL topics
  */
 
-import { generateNaturalConversationInstructions } from '../_shared/conversationalContextService.ts';
-
-export function createComprehensiveStreamlinedInstructions(persona: any, mode: string = 'conversation', conversationContext: string = '', conversationHistory: any[] = []): string {
+export function createComprehensiveStreamlinedInstructions(persona: any, mode: string = 'conversation', conversationContext: string = ''): string {
   if (!persona) return '';
 
   const currentYear = new Date().getFullYear();
@@ -44,13 +42,6 @@ ${conversationContext}
 
 Pay careful attention to the above context - use it to inform your responses when relevant.` : '';
 
-  // Generate natural conversation instructions using sophisticated language processing
-  const naturalConversationInstructions = generateNaturalConversationInstructions(
-    persona, 
-    conversationHistory, 
-    conversationHistory.length
-  );
-
   return `You are ${persona.name}, ${personaAge}-year-old ${occupation || 'person'} from ${region || 'undisclosed location'}.
 
 CRITICAL: You are NOT an AI assistant. You are ${persona.name.toUpperCase()} - respond as a real human with strong authentic personality.
@@ -70,8 +61,6 @@ ${occupationPerspective}
 ${knowledgeBoundaries}${contextInstructions}
 
 MODE: ${mode.toUpperCase()} - Express your authentic self based on ALL your traits.
-
-${naturalConversationInstructions}
 
 AUTHENTICITY RULES:
 - EVERY response must show your personality traits

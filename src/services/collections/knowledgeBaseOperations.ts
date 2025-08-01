@@ -13,9 +13,6 @@ export interface KnowledgeBaseDocument {
   uploaded_by: string;
   created_at: string;
   updated_at: string;
-  image_url?: string | null;
-  image_data?: string | null;
-  is_image?: boolean;
 }
 
 // 5MB file size limit
@@ -51,16 +48,10 @@ export const uploadKnowledgeBaseDocument = async (
     let fileUrl = null;
     let fileType = null;
     let fileSize = null;
-    let imageUrl = null;
-    let imageData = null;
-    let isImage = false;
 
     // If a file is provided, upload it to storage
     if (file) {
       console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
-      
-      // Check if it's an image file
-      isImage = file.type.startsWith('image/');
       
       // Create a unique filename with user ID and timestamp
       const fileExtension = file.name.split('.').pop();
@@ -93,30 +84,6 @@ export const uploadKnowledgeBaseDocument = async (
       fileUrl = publicUrl;
       fileType = file.type;
       fileSize = file.size;
-
-      // If it's an image, store the URL and base64 data for AI vision
-      if (isImage) {
-        imageUrl = publicUrl;
-        
-        // Convert image to base64 for AI analysis
-        try {
-          const reader = new FileReader();
-          imageData = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => {
-              const result = reader.result as string;
-              // Remove the data URL prefix to get just the base64 data
-              const base64 = result.split(',')[1];
-              resolve(base64);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          console.log('Image converted to base64 for AI analysis');
-        } catch (error) {
-          console.error('Error converting image to base64:', error);
-          // Continue without base64 data if conversion fails
-        }
-      }
     }
 
     // Insert the document record
@@ -130,10 +97,7 @@ export const uploadKnowledgeBaseDocument = async (
         file_url: fileUrl,
         file_type: fileType,
         file_size: fileSize,
-        uploaded_by: user.id,
-        image_url: imageUrl,
-        image_data: imageData,
-        is_image: isImage
+        uploaded_by: user.id
       })
       .select()
       .single();

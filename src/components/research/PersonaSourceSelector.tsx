@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Users, Folder, Globe, Check, AlertCircle, Search } from 'lucide-react';
+import { Users, Folder, Globe, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Persona } from '@/services/persona/types';
@@ -64,7 +63,6 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [collectionsError, setCollectionsError] = useState<string | null>(null);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Load project collections when component mounts
   useEffect(() => {
@@ -165,41 +163,6 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
     setSelectedCollection('');
     setAvailablePersonas([]);
     onPersonaSelectionChange([]); // Clear current selection
-  };
-
-  // Enhanced search function
-  const searchPersonas = (personas: Persona[], query: string) => {
-    if (!query.trim()) return personas;
-    
-    const searchTerm = query.toLowerCase().trim();
-    
-    return personas.filter((persona) => {
-      // Search in name
-      if (persona.name.toLowerCase().includes(searchTerm)) return true;
-      
-      // Search in prompt/description
-      if (persona.prompt?.toLowerCase().includes(searchTerm)) return true;
-      
-      // Search in trait profile
-      if (persona.trait_profile) {
-        const traitString = JSON.stringify(persona.trait_profile).toLowerCase();
-        if (traitString.includes(searchTerm)) return true;
-      }
-      
-      // Search in metadata
-      if (persona.metadata) {
-        const metadataString = JSON.stringify(persona.metadata).toLowerCase();
-        if (metadataString.includes(searchTerm)) return true;
-      }
-      
-      // Search in interview sections
-      if (persona.interview_sections) {
-        const interviewString = JSON.stringify(persona.interview_sections).toLowerCase();
-        if (interviewString.includes(searchTerm)) return true;
-      }
-      
-      return false;
-    });
   };
 
   const togglePersonaSelection = (personaId: string) => {
@@ -325,19 +288,6 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
               </Badge>
             </div>
             
-            {/* Search Input */}
-            {availablePersonas.length > 0 && (
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search personas..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            )}
-            
             {isLoading ? (
               <div className="text-center py-4">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
@@ -353,60 +303,46 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
                   }
                 </p>
               </div>
-            ) : (() => {
-              const filteredPersonas = searchPersonas(availablePersonas, searchQuery);
-              
-              if (filteredPersonas.length === 0 && searchQuery) {
-                return (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No personas found matching "{searchQuery}"</p>
-                    <p className="text-xs mt-1">Try a different search term</p>
-                  </div>
-                );
-              }
-              
-              return (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {filteredPersonas.map((persona) => {
-                    const isSelected = selectedPersonas.includes(persona.persona_id);
-                    const canSelect = selectedPersonas.length < maxPersonas || isSelected;
-                    
-                    return (
-                      <div
-                        key={persona.persona_id}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary/5'
-                            : canSelect
-                            ? 'border-border hover:border-primary/50'
-                            : 'border-border opacity-50 cursor-not-allowed'
-                        }`}
-                        onClick={() => canSelect && togglePersonaSelection(persona.persona_id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">{persona.name}</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {persona.description || 'No description'}
-                            </div>
-                          </div>
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                            isSelected
-                              ? 'bg-primary border-primary'
-                              : 'border-border'
-                          }`}>
-                            {isSelected && (
-                              <Check className="w-3 h-3 text-primary-foreground" />
-                            )}
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {availablePersonas.map((persona) => {
+                  const isSelected = selectedPersonas.includes(persona.persona_id);
+                  const canSelect = selectedPersonas.length < maxPersonas || isSelected;
+                  
+                  return (
+                    <div
+                      key={persona.persona_id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/5'
+                          : canSelect
+                          ? 'border-border hover:border-primary/50'
+                          : 'border-border opacity-50 cursor-not-allowed'
+                      }`}
+                      onClick={() => canSelect && togglePersonaSelection(persona.persona_id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{persona.name}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {persona.description || 'No description'}
                           </div>
                         </div>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                          isSelected
+                            ? 'bg-primary border-primary'
+                            : 'border-border'
+                        }`}>
+                          {isSelected && (
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          )}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -32,120 +32,32 @@ serve(async (req) => {
     // Extract and combine document content
     let combinedContent = '';
     const documentSummaries = [];
-    const imageDocuments = [];
 
     for (const doc of documents) {
       console.log(`Processing document: ${doc.title}`);
       
-      // Handle text content
       if (doc.content && doc.content.trim()) {
         combinedContent += `\n\n=== ${doc.title} ===\n${doc.content}`;
         documentSummaries.push({
           title: doc.title,
           content_length: doc.content.length,
-          file_type: doc.file_type || 'unknown',
-          type: 'text'
-        });
-      }
-      
-      // Handle image documents
-      if (doc.is_image && doc.image_data) {
-        console.log(`Found image document: ${doc.title} with visual data`);
-        imageDocuments.push({
-          title: doc.title,
-          image_data: doc.image_data,
-          file_type: doc.file_type || 'image',
-          image_url: doc.image_url
-        });
-        documentSummaries.push({
-          title: doc.title,
-          content_length: 0,
-          file_type: doc.file_type || 'image',
-          type: 'image'
+          file_type: doc.file_type || 'unknown'
         });
       }
     }
 
-    if (!combinedContent.trim() && imageDocuments.length === 0) {
+    if (!combinedContent.trim()) {
       console.log('No document content found, returning empty context');
       return new Response(JSON.stringify({
         research_context: {
           summary: 'No project documents provided.',
           key_insights: [],
           guidelines: [],
-          document_summaries: [],
-          has_images: false
+          document_summaries: []
         }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    }
-
-    // Handle image analysis if we have images
-    let imageAnalysis = '';
-    if (imageDocuments.length > 0) {
-      console.log(`Analyzing ${imageDocuments.length} image document(s)...`);
-      
-      // For now, we'll analyze the first image (can be extended to handle multiple)
-      const firstImage = imageDocuments[0];
-      
-      const imageAnalysisPrompt = `You are analyzing an image document titled "${firstImage.title}" as part of a research project.
-
-SURVEY DETAILS:
-- Name: ${surveyName}
-- Description: ${surveyDescription || 'Not provided'}
-
-Please analyze this image and provide insights that would be relevant for survey respondents. Focus on:
-1. What you see in the image
-2. Key visual elements, themes, or concepts
-3. How this relates to the survey context
-4. Important details that personas should consider when responding
-
-Provide a detailed description of what you observe in this image.`;
-
-      const imageResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            { 
-              role: 'system', 
-              content: 'You are a research assistant that analyzes images for research projects. Provide detailed, objective descriptions.' 
-            },
-            { 
-              role: 'user', 
-              content: [
-                { type: 'text', text: imageAnalysisPrompt },
-                { 
-                  type: 'image_url', 
-                  image_url: { 
-                    url: `data:image/jpeg;base64,${firstImage.image_data}` 
-                  } 
-                }
-              ]
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 1000,
-        }),
-      });
-
-      if (imageResponse.ok) {
-        const imageData = await imageResponse.json();
-        imageAnalysis = imageData.choices[0]?.message?.content || '';
-        console.log('Image analysis completed successfully');
-        
-        // Add image analysis to combined content
-        combinedContent += `\n\n=== IMAGE ANALYSIS: ${firstImage.title} ===\n${imageAnalysis}`;
-      } else {
-        console.error('Failed to analyze image with OpenAI');
-        imageAnalysis = `Image document "${firstImage.title}" is available for visual analysis but could not be processed at this time.`;
-        combinedContent += `\n\n=== IMAGE DOCUMENT: ${firstImage.title} ===\n${imageAnalysis}`;
-      }
     }
 
     // Create AI prompt for document analysis
@@ -155,7 +67,7 @@ SURVEY DETAILS:
 - Name: ${surveyName}
 - Description: ${surveyDescription || 'Not provided'}
 
-PROJECT DOCUMENTS${imageDocuments.length > 0 ? ' (including visual content)' : ''}:
+PROJECT DOCUMENTS:
 ${combinedContent}
 
 Your task is to analyze these documents and create a structured research context that will help personas provide informed responses to survey questions.
@@ -171,7 +83,7 @@ Please provide a JSON response with the following structure:
       "title": "document title",
       "key_points": ["main points from this document"]
     }
-  ]${imageDocuments.length > 0 ? ',\n  "visual_elements": "Description of key visual elements and their significance"' : ''}
+  ]
 }
 
 Focus on information that would be relevant for survey respondents to understand the context, objectives, and any constraints or guidelines for their responses.`;
@@ -227,9 +139,7 @@ Focus on information that would be relevant for survey respondents to understand
       processed_at: new Date().toISOString(),
       document_count: documents.length,
       total_content_length: combinedContent.length,
-      model_used: 'gpt-4.1-2025-04-14',
-      has_images: imageDocuments.length > 0,
-      image_count: imageDocuments.length
+      model_used: 'gpt-4.1-2025-04-14'
     };
 
     console.log('Document processing completed successfully');

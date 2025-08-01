@@ -24,10 +24,6 @@ interface PersonaListProps {
   selectedRegion?: string;
   selectedIncome?: string;
   selectedSourceType?: string;
-  selectedGender?: string;
-  selectedMaritalStatus?: string;
-  selectedHasChildren?: string;
-  selectedEducation?: string;
 }
 
 export default function PersonaList({ 
@@ -43,11 +39,7 @@ export default function PersonaList({
   selectedAge = "",
   selectedRegion = "",
   selectedIncome = "",
-  selectedSourceType = "",
-  selectedGender = "",
-  selectedMaritalStatus = "",
-  selectedHasChildren = "",
-  selectedEducation = ""
+  selectedSourceType = ""
 }: PersonaListProps) {
   const { user } = useAuth();
   
@@ -172,245 +164,26 @@ export default function PersonaList({
         if (!hasMatchingTag) return false;
       }
 
-      // Age filter - convert age number to range check
+      // Demographics filters - check metadata
       if (selectedAge) {
-        const personaAge = persona.metadata?.age;
-        if (personaAge) {
-          const age = parseInt(personaAge.toString());
-          let ageInRange = false;
-          
-          switch (selectedAge) {
-            case "18-24":
-              ageInRange = age >= 18 && age <= 24;
-              break;
-            case "25-34":
-              ageInRange = age >= 25 && age <= 34;
-              break;
-            case "35-44":
-              ageInRange = age >= 35 && age <= 44;
-              break;
-            case "45-54":
-              ageInRange = age >= 45 && age <= 54;
-              break;
-            case "55-64":
-              ageInRange = age >= 55 && age <= 64;
-              break;
-            case "65+":
-              ageInRange = age >= 65;
-              break;
-          }
-          
-          if (!ageInRange) return false;
-        } else {
-          return false; // No age data, exclude from filtered results
-        }
+        const personaAge = persona.metadata?.demographics?.age_range;
+        if (personaAge !== selectedAge) return false;
       }
 
-      // Region filter - check both region field and location data
       if (selectedRegion) {
-        const personaRegion = persona.metadata?.region || 
-                            persona.metadata?.location_history?.current_residence ||
-                            persona.metadata?.urban_rural_context;
-        
-        if (personaRegion) {
-          const regionLower = personaRegion.toLowerCase();
-          let regionMatches = false;
-          
-          switch (selectedRegion) {
-            case "urban":
-              regionMatches = regionLower.includes("urban") || 
-                            regionLower.includes("city") ||
-                            regionLower.includes("san francisco") ||
-                            regionLower.includes("new york") ||
-                            regionLower.includes("chicago");
-              break;
-            case "suburban":
-              regionMatches = regionLower.includes("suburban") ||
-                            regionLower.includes("suburb");
-              break;
-            case "rural":
-              regionMatches = regionLower.includes("rural") ||
-                            regionLower.includes("countryside");
-              break;
-          }
-          
-          if (!regionMatches) return false;
-        } else {
-          return false;
-        }
+        const personaRegion = persona.metadata?.demographics?.region;
+        if (personaRegion !== selectedRegion) return false;
       }
 
-      // Income filter - handle various income formats
       if (selectedIncome) {
-        const personaIncome = persona.metadata?.income_level;
-        
-        if (personaIncome) {
-          const incomeLower = personaIncome.toLowerCase();
-          let incomeMatches = false;
-          
-          switch (selectedIncome) {
-            case "low":
-              incomeMatches = incomeLower.includes("low") ||
-                            incomeLower.includes("$20,000") ||
-                            incomeLower.includes("$30,000") ||
-                            incomeLower.includes("under");
-              break;
-            case "middle":
-              incomeMatches = incomeLower.includes("middle") ||
-                            incomeLower.includes("$50,000") ||
-                            incomeLower.includes("$60,000") ||
-                            incomeLower.includes("$70,000");
-              break;
-            case "high":
-              incomeMatches = incomeLower.includes("high") ||
-                            incomeLower.includes("$80,000") ||
-                            incomeLower.includes("$100,000") ||
-                            incomeLower.includes("above");
-              break;
-          }
-          
-          if (!incomeMatches) return false;
-        } else {
-          return false;
-        }
+        const personaIncome = persona.metadata?.demographics?.income_level;
+        if (personaIncome !== selectedIncome) return false;
       }
 
       // Source type filter
       if (selectedSourceType) {
         const sourceType = persona.metadata?.source_type || "simulated";
         if (sourceType !== selectedSourceType) return false;
-      }
-
-      // Gender filter - improved to handle various formats
-      if (selectedGender) {
-        const personaGender = persona.metadata?.gender;
-        if (personaGender) {
-          const genderLower = personaGender.toLowerCase();
-          const selectedGenderLower = selectedGender.toLowerCase();
-          
-          // Handle common variations
-          let genderMatches = false;
-          if (selectedGenderLower === "male") {
-            genderMatches = genderLower === "male" || genderLower === "m" || genderLower === "man";
-          } else if (selectedGenderLower === "female") {
-            genderMatches = genderLower === "female" || genderLower === "f" || genderLower === "woman";
-          } else {
-            genderMatches = genderLower === selectedGenderLower;
-          }
-          
-          if (!genderMatches) return false;
-        } else {
-          return false; // No gender data, exclude
-        }
-      }
-
-      // Marital status filter - improved to handle various formats
-      if (selectedMaritalStatus) {
-        const personaMaritalStatus = persona.metadata?.marital_status;
-        if (personaMaritalStatus) {
-          const maritalLower = personaMaritalStatus.toLowerCase();
-          const selectedMaritalLower = selectedMaritalStatus.toLowerCase();
-          
-          // Handle common variations
-          let maritalMatches = false;
-          if (selectedMaritalLower === "single") {
-            maritalMatches = maritalLower.includes("single") || maritalLower.includes("never married");
-          } else if (selectedMaritalLower === "married") {
-            maritalMatches = maritalLower.includes("married") && !maritalLower.includes("never");
-          } else {
-            maritalMatches = maritalLower.includes(selectedMaritalLower);
-          }
-          
-          if (!maritalMatches) return false;
-        } else {
-          return false; // No marital status data, exclude
-        }
-      }
-
-      // Has children filter - improved to check multiple storage locations
-      if (selectedHasChildren) {
-        console.log(`Filtering for has children: ${selectedHasChildren}`);
-        console.log(`Persona ${persona.name} metadata:`, persona.metadata);
-        
-        // Check multiple possible locations for children data
-        let hasChildren = false;
-        
-        // Method 1: Check relationships_family.has_children
-        if (persona.metadata?.relationships_family?.has_children !== undefined) {
-          hasChildren = persona.metadata.relationships_family.has_children;
-          console.log(`Found has_children in relationships_family: ${hasChildren}`);
-        }
-        // Method 2: Check direct has_children field
-        else if (persona.metadata?.has_children !== undefined) {
-          hasChildren = persona.metadata.has_children;
-          console.log(`Found has_children in metadata: ${hasChildren}`);
-        }
-        // Method 3: Check for children array or count
-        else if (persona.metadata?.children || persona.metadata?.number_of_children) {
-          const children = persona.metadata.children || persona.metadata.number_of_children;
-          hasChildren = Boolean(children && (Array.isArray(children) ? children.length > 0 : children > 0));
-          console.log(`Inferred has_children from children data: ${hasChildren}`);
-        }
-        // Method 4: Check for family_members containing children
-        else if (persona.metadata?.family_members) {
-          hasChildren = persona.metadata.family_members.some((member: any) => 
-            member.relationship?.toLowerCase().includes('child') || 
-            member.relationship?.toLowerCase().includes('son') || 
-            member.relationship?.toLowerCase().includes('daughter')
-          );
-          console.log(`Inferred has_children from family_members: ${hasChildren}`);
-        }
-        else {
-          console.log(`No children data found for persona ${persona.name}, excluding from filter`);
-          return false; // No children data found, exclude from filtered results
-        }
-        
-        const childrenMatch = selectedHasChildren === "yes" ? hasChildren === true : hasChildren === false;
-        console.log(`Children match result: ${childrenMatch} (looking for ${selectedHasChildren}, found ${hasChildren})`);
-        
-        if (!childrenMatch) return false;
-      }
-
-      // Education filter - improved to handle various formats
-      if (selectedEducation) {
-        const personaEducation = persona.metadata?.education_level || persona.metadata?.education;
-        if (personaEducation) {
-          const educationLower = personaEducation.toLowerCase();
-          const selectedEducationLower = selectedEducation.toLowerCase();
-          
-          // Handle common variations
-          let educationMatches = false;
-          if (selectedEducationLower === "high school") {
-            educationMatches = educationLower.includes("high school") || 
-                              educationLower.includes("hs") || 
-                              educationLower.includes("secondary");
-          } else if (selectedEducationLower === "some college") {
-            educationMatches = educationLower.includes("some college") || 
-                              educationLower.includes("partial");
-          } else if (selectedEducationLower === "bachelor's") {
-            educationMatches = educationLower.includes("bachelor") || 
-                              educationLower.includes("ba") || 
-                              educationLower.includes("bs");
-          } else if (selectedEducationLower === "master's") {
-            educationMatches = educationLower.includes("master") || 
-                              educationLower.includes("ma") || 
-                              educationLower.includes("ms");
-          } else if (selectedEducationLower === "doctorate") {
-            educationMatches = educationLower.includes("doctorate") || 
-                              educationLower.includes("phd") || 
-                              educationLower.includes("ph.d");
-          } else if (selectedEducationLower === "vocational") {
-            educationMatches = educationLower.includes("vocational") || 
-                              educationLower.includes("trade") || 
-                              educationLower.includes("technical");
-          } else {
-            educationMatches = educationLower.includes(selectedEducationLower);
-          }
-          
-          if (!educationMatches) return false;
-        } else {
-          return false; // No education data, exclude
-        }
       }
 
       return true;
@@ -469,7 +242,7 @@ export default function PersonaList({
   }
 
   if (filteredPersonas.length === 0) {
-    if ((searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType || selectedGender || selectedMaritalStatus || selectedHasChildren || selectedEducation) && personas.length > 0) {
+    if ((searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType) && personas.length > 0) {
       return (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No personas found matching your filters</p>
