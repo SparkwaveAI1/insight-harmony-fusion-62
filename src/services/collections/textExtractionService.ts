@@ -126,24 +126,22 @@ const extractTextFromPDF = async (file: File): Promise<string | null> => {
 const extractTextFromImage = async (file: File): Promise<string | null> => {
   try {
     const base64 = await fileToBase64(file);
+    const { supabase } = await import('@/integrations/supabase/client');
     
-    const response = await fetch('/api/extract-image-text', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('extract-image-text', {
+      body: {
         imageData: base64,
-        fileName: file.name
-      }),
+        fileName: file.name,
+        fileType: file.type
+      },
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to extract text from image');
+    if (error) {
+      console.error('Supabase function error:', error);
+      throw new Error(error.message || 'Failed to extract image text');
     }
 
-    const result = await response.json();
-    return result.extractedText || null;
+    return data?.extractedText || null;
   } catch (error) {
     console.error('Error extracting text from image:', error);
     return null;
