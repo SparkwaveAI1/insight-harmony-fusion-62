@@ -126,17 +126,41 @@ serve(async (req) => {
     const userMessage: any = { role: 'user' };
     if (imageData) {
       console.log('IMAGE DEBUG - Constructing user message with image');
-      userMessage.content = [
-        { type: 'text', text: message },
-        { type: 'image_url', image_url: { url: imageData } }
-      ];
+      
+      // Format image data for OpenAI Vision API
+      let formattedImageUrl: string;
+      
+      try {
+        // Check if imageData already has data URL prefix
+        if (imageData.startsWith('data:image/')) {
+          formattedImageUrl = imageData;
+          console.log('IMAGE DEBUG - Image already has data URL prefix');
+        } else {
+          // Assume it's base64 and add proper data URL prefix
+          // Default to jpeg, but could be enhanced to detect actual format
+          formattedImageUrl = `data:image/jpeg;base64,${imageData}`;
+          console.log('IMAGE DEBUG - Added data URL prefix to base64 image');
+        }
+        
+        console.log('IMAGE DEBUG - Formatted image URL length:', formattedImageUrl.length);
+        console.log('IMAGE DEBUG - Formatted image URL starts with:', formattedImageUrl.substring(0, 50));
+        
+        userMessage.content = [
+          { type: 'text', text: message },
+          { type: 'image_url', image_url: { url: formattedImageUrl } }
+        ];
+      } catch (error) {
+        console.error('IMAGE DEBUG - Error formatting image data:', error);
+        // Fall back to text-only message if image processing fails
+        userMessage.content = `${message}\n\n[Note: There was an error processing the uploaded image]`;
+      }
     } else {
       console.log('IMAGE DEBUG - Constructing text-only user message');
       userMessage.content = message;
     }
     messages.push(userMessage);
     
-    console.log('IMAGE DEBUG - Final message structure:', JSON.stringify(userMessage, null, 2).substring(0, 200));
+    console.log('IMAGE DEBUG - Final message structure:', JSON.stringify(userMessage, null, 2).substring(0, 300));
 
     // Generate response with optimized parameters for speed
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
