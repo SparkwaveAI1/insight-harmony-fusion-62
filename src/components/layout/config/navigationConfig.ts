@@ -61,11 +61,6 @@ export const headerNavItems = [
     icon: Users,
   },
   {
-    title: "PRSNA",
-    href: "/prsna",
-    icon: Coins,
-  },
-  {
     title: "Contact",
     href: "/contact",
     icon: Mail,
