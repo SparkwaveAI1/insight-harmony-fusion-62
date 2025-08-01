@@ -11,7 +11,7 @@ import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import { usePersonaChat } from '@/components/persona-chat/hooks/usePersonaChat';
+import { useResearchSession } from '@/components/research/hooks/useResearchSession';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
 import { toast } from 'sonner';
@@ -23,15 +23,15 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const [conversationContext, setConversationContext] = useState<string>('');
+  const [sessionStarted, setSessionStarted] = useState(false);
   const {
+    sessionId,
+    loadedPersonas,
     messages,
-    isResponding,
     isLoading,
-    error,
-    activePersona,
-    handleSendMessage,
-    setConversationContext: updateConversationContext
-  } = usePersonaChat(personaId, chatMode);
+    createSession,
+    sendMessage
+  } = useResearchSession();
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,7 +39,25 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  if (isLoading) {
+  const activePersona = loadedPersonas.find(p => p.persona_id === personaId);
+  const isResponding = isLoading;
+
+  // Initialize session on mount  
+  useEffect(() => {
+    const initSession = async () => {
+      if (!sessionStarted) {
+        // Create a temporary project for persona chats
+        const success = await createSession([personaId]);
+        if (success) {
+          setSessionStarted(true);
+        }
+      }
+    };
+
+    initSession();
+  }, [personaId, sessionStarted, createSession]);
+
+  if (isLoading && !sessionStarted) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -47,7 +65,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     );
   }
 
-  if (error || !activePersona) {
+  if (!activePersona && sessionStarted) {
     return <ErrorDisplay personaId={personaId} />;
   }
   
@@ -68,15 +86,17 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
   const handleContextChange = (newContext: string) => {
     setConversationContext(newContext);
-    updateConversationContext(newContext);
     if (newContext) {
       toast.success("Conversation context updated");
     }
   };
 
   const handleSendMessageWithImage = async (message: string, imageFile: File | null) => {
-    // Call the hook's handleSendMessage directly with the File object
-    await handleSendMessage(message, imageFile);
+    if (!sessionId) {
+      toast.error("Session not ready");
+      return;
+    }
+    await sendMessage(message, imageFile);
   };
 
   // Generate a default title from the conversation content
@@ -140,7 +160,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </div>
         
         {/* Save Conversation Button */}
-        {messages.length > 0 && (
+        {messages.length > 1 && sessionId && (
           <Button 
             variant="outline" 
             size="sm" 
@@ -197,18 +217,20 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       />
       
       {/* Save Conversation Modal */}
-      <SaveConversationModal
-        open={saveModalOpen}
-        onOpenChange={setSaveModalOpen}
-        messages={messages.map(m => ({
-          role: m.role,
-          content: m.content,
-          persona_id: personaId
-        }))}
-        personaIds={[personaId]}
-        defaultTitle={generateDefaultTitle()}
-        onSaved={handleConversationSaved}
-      />
+      {sessionId && (
+        <SaveConversationModal
+          open={saveModalOpen}
+          onOpenChange={setSaveModalOpen}
+          messages={messages.map(m => ({
+            role: m.role,
+            content: m.content,
+            persona_id: personaId
+          }))}
+          personaIds={[personaId]}
+          defaultTitle={generateDefaultTitle()}
+          onSaved={handleConversationSaved}
+        />
+      )}
     </div>
   );
 };
