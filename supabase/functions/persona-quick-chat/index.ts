@@ -105,16 +105,14 @@ serve(async (req) => {
       persona = fetchedPersona;
       // Pre-process persona instructions with context and mode
       // Use research-focused instructions if we have substantial context (indicating research use)
-      // OR if this looks like a research question (contains "tokenomics", "plan", "opinion", etc.)
-      const isResearchContext = (conversationContext && conversationContext.length > 200) || 
-                               /tokenomics|plan|opinion|survey|research|study|think|feel|like|dislike/i.test(message + ' ' + (conversationContext || ''));
+      const isResearchContext = (conversationContext && conversationContext.length > 200);
       
       if (isResearchContext) {
         console.log('Using research-focused instructions due to research context or keywords');
-        systemPrompt = createResearchPersonaInstructions(persona, conversationContext);
+        systemPrompt = createResearchPersonaInstructions(persona, conversationContext, previousMessages || []);
       } else {
         console.log('Using standard instructions');
-        systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext);
+        systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext, previousMessages || []);
       }
       
       // Cache for future requests with context-aware cache key

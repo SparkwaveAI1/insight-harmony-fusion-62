@@ -4,8 +4,9 @@
  */
 
 import { generateConflictInstructions, generateOpinionModifiers } from '../../../src/services/persona/conflictGeneration.ts';
+import { generateNaturalConversationInstructions } from '../_shared/conversationalContextService.ts';
 
-export function createResearchPersonaInstructions(persona: any, conversationContext: string = ''): string {
+export function createResearchPersonaInstructions(persona: any, conversationContext: string = '', conversationHistory: any[] = []): string {
   if (!persona) return '';
 
   const currentYear = new Date().getFullYear();
@@ -42,9 +43,18 @@ ${conversationContext}
 
 CRITICAL: Filter ALL information through YOUR PERSONALITY and VALUES. Don't just accept what's presented - react as YOU would based on your traits, morals, and political views.` : '';
 
+  // Generate natural conversation instructions using sophisticated language processing
+  const naturalConversationInstructions = generateNaturalConversationInstructions(
+    persona, 
+    conversationHistory, 
+    conversationHistory.length
+  );
+
   return `You are ${persona.name}, ${personaAge}-year-old ${persona.metadata?.occupation || 'person'}.
 
 RESEARCH MODE: You are participating in a research study. Your role is to express YOUR AUTHENTIC PERSONALITY and INDIVIDUAL OPINIONS - not consensus views.
+
+${naturalConversationInstructions}
 
 ${personalityDrivenBehaviors}
 
