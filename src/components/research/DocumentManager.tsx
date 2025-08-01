@@ -9,6 +9,7 @@ import { FileText, Upload, Trash2, Plus, Check, X, File } from 'lucide-react';
 import { 
   uploadKnowledgeBaseDocument, 
   getProjectDocuments, 
+  deleteKnowledgeBaseDocument,
   KnowledgeBaseDocument 
 } from '@/services/collections';
 import { extractTextFromFile } from '@/services/collections/textExtractionService';
@@ -134,6 +135,18 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
       onDocumentsChange(selectedDocuments.filter(doc => doc.id !== document.id));
     } else {
       onDocumentsChange([...selectedDocuments, document]);
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: string, documentTitle: string) => {
+    if (window.confirm(`Are you sure you want to delete "${documentTitle}"? This action cannot be undone.`)) {
+      const success = await deleteKnowledgeBaseDocument(documentId);
+      if (success) {
+        // Remove from project documents list
+        setProjectDocuments(prev => prev.filter(doc => doc.id !== documentId));
+        // Remove from selected documents if it was selected
+        onDocumentsChange(selectedDocuments.filter(doc => doc.id !== documentId));
+      }
     }
   };
 
@@ -295,17 +308,19 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                   {projectDocuments.map((doc) => {
                     const isSelected = selectedDocuments.some(selected => selected.id === doc.id);
                     
-                    return (
+                     return (
                       <div
                         key={doc.id}
-                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
                           isSelected
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        onClick={() => toggleDocumentSelection(doc)}
                       >
-                        <div className="flex items-center gap-3">
+                        <div 
+                          className="flex items-center gap-3 flex-1 cursor-pointer"
+                          onClick={() => toggleDocumentSelection(doc)}
+                        >
                           {getFileTypeIcon(doc.file_type)}
                           <div>
                             <div className="font-medium text-sm">{doc.title}</div>
@@ -314,14 +329,28 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                             </div>
                           </div>
                         </div>
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                          isSelected
-                            ? 'bg-blue-500 border-blue-500'
-                            : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <Check className="w-3 h-3 text-white" />
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Delete document"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <div 
+                            className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer ${
+                              isSelected
+                                ? 'bg-blue-500 border-blue-500'
+                                : 'border-gray-300'
+                            }`}
+                            onClick={() => toggleDocumentSelection(doc)}
+                          >
+                            {isSelected && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
