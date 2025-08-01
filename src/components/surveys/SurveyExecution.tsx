@@ -69,7 +69,6 @@ export const SurveyExecution: React.FC<SurveyExecutionProps> = ({
     try {
       // Use the enhanced persona API service for consistent responses
       const { sendMessageToPersona } = await import('@/components/persona-chat/api/personaApiService');
-      const { usePersona } = await import('@/hooks/usePersona');
       
       // Get persona data
       const { data: personaData, error } = await supabase
