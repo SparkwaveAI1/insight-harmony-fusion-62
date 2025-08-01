@@ -77,6 +77,10 @@ ${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.lengt
 
     console.log('Using validated conversation engine for research response with knowledge base context');
     console.log('Image data available for analysis:', !!imageData);
+    if (imageData) {
+      console.log('Image data format check:', imageData.substring(0, 50));
+      console.log('Image data length:', imageData.length);
+    }
 
     // Use the same conversation engine as individual persona chat
     const response = await sendMessageToPersona(
