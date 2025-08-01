@@ -38,8 +38,8 @@ export const generatePersonaResponse = async (
       });
 
       conversationContext = `
-PROJECT KNOWLEDGE BASE CONTEXT:
-You have access to the following project documents. Use this information to inform your responses:
+PROJECT KNOWLEDGE BASE - INTERPRET THROUGH YOUR PERSONALITY:
+The following documents are provided for context, but you should interpret and react to them based on YOUR individual personality, values, and beliefs:
 
 ${projectDocuments.map(doc => `
 DOCUMENT: ${doc.title}
@@ -49,11 +49,17 @@ ${doc.is_image ? `NOTE: This is an image document that you can visually analyze.
 ---
 `).join('\n')}
 
-IMPORTANT: Reference these documents when relevant to the conversation. When you use information from the documents, mention which document you're referencing. These documents contain the full context for this research project.
-${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.length} image document(s) available for visual analysis. Provide insights based on what you see in the images.` : ''}
+CRITICAL RESEARCH INSTRUCTIONS:
+- DO NOT just accept everything in these documents as truth
+- React based on YOUR personality traits, moral foundations, and political views
+- If something conflicts with your values, EXPRESS DISAGREEMENT
+- If you have expertise in related areas, show confidence; if not, show appropriate uncertainty
+- Use information selectively based on what aligns with your worldview
+- Express emotional reactions based on your triggers and personality traits
+${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.length} image document(s) for visual analysis. React to what you see through your personality lens.` : ''}
 `;
 
-      console.log('Created knowledge base context with', projectDocuments.length, 'documents');
+      console.log('Created personality-filtered knowledge base context with', projectDocuments.length, 'documents');
     }
 
     // Convert research messages to persona chat format

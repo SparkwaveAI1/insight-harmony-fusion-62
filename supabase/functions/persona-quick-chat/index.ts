@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { createComprehensiveStreamlinedInstructions } from './comprehensiveStreamlinedInstructions.ts';
+import { createResearchPersonaInstructions } from './researchPersonaInstructions.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -103,7 +104,13 @@ serve(async (req) => {
 
       persona = fetchedPersona;
       // Pre-process persona instructions with context and mode
-      systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext);
+      // Use research-focused instructions if we have substantial context (indicating research use)
+      if (conversationContext && conversationContext.length > 200) {
+        console.log('Using research-focused instructions due to substantial context');
+        systemPrompt = createResearchPersonaInstructions(persona, conversationContext);
+      } else {
+        systemPrompt = createComprehensiveStreamlinedInstructions(persona, mode, conversationContext);
+      }
       
       // Cache for future requests with context-aware cache key
       setCachedPersona(personaId, conversationContext, persona, systemPrompt);
