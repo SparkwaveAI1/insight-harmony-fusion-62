@@ -7,17 +7,17 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
 import ResearchModeSelector from '@/components/research/ResearchModeSelector';
 import InterviewMode from '@/components/research/modes/InterviewMode';
-import FocusGroupMode from '@/components/research/modes/FocusGroupMode';
+
 import SurveyMode from '@/components/research/modes/SurveyMode';
 
-type ResearchMode = 'selector' | 'interview' | 'focus-group' | 'survey';
+type ResearchMode = 'selector' | 'interview' | 'survey';
 
 const Research: React.FC = () => {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('project');
   const [currentMode, setCurrentMode] = useState<ResearchMode>('selector');
 
-  const handleModeSelect = (mode: 'interview' | 'focus-group' | 'survey') => {
+  const handleModeSelect = (mode: 'interview' | 'survey') => {
     setCurrentMode(mode);
   };
 
@@ -29,8 +29,6 @@ const Research: React.FC = () => {
     switch (currentMode) {
       case 'interview':
         return <InterviewMode onBack={handleBackToSelector} />;
-      case 'focus-group':
-        return <FocusGroupMode onBack={handleBackToSelector} />;
       case 'survey':
         return <SurveyMode onBack={handleBackToSelector} />;
       default:

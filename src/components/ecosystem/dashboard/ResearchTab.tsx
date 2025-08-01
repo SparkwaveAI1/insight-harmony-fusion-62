@@ -31,22 +31,6 @@ const ResearchTab = () => {
             </Link>
           </Card>
           
-          <Card className="p-4 border border-gray-700 hover:border-primary hover:shadow-md hover:shadow-primary/10 transition-all bg-gray-800/80">
-            <div className="flex items-start mb-3">
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-3">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h4 className="font-semibold">AI Focus Groups</h4>
-                <p className="text-sm text-gray-400">
-                  Run moderated discussions with diverse AI personas
-                </p>
-              </div>
-            </div>
-            <Link to="/ai-focus-groups">
-              <Button className="bg-gray-700 hover:bg-gray-600 border-none">Launch Tool</Button>
-            </Link>
-          </Card>
           
           <Card className="p-4 border border-gray-700 hover:border-primary hover:shadow-md hover:shadow-primary/10 transition-all bg-gray-800/80">
             <div className="flex items-start mb-3">

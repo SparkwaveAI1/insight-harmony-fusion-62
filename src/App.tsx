@@ -21,7 +21,7 @@ import PRSNAEcosystem from "./pages/PRSNAEcosystem";
 import Collections from "./pages/Collections";
 import CollectionDetail from "./pages/CollectionDetail";
 import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
-import AIFocusGroups from "./pages/AIFocusGroups";
+
 import SimulatedPersona from "./pages/SimulatedPersona";
 import CustomResearch from "./pages/CustomResearch";
 import InsightConductor from "./pages/InsightConductor";
@@ -127,7 +127,7 @@ function App() {
                 {/* Research section - Protected */}
                 <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
                 <Route path="/persona-ai-interviewer" element={<ProtectedRoute><PersonaAIInterviewer /></ProtectedRoute>} />
-                <Route path="/ai-focus-groups" element={<ProtectedRoute><AIFocusGroups /></ProtectedRoute>} />
+                
                 <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
                 <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
                 <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />

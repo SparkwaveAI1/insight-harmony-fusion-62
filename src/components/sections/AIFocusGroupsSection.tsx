@@ -12,26 +12,26 @@ const AIFocusGroupsSection = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
             <h2 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
-              AI-Powered Focus Groups—Scalable, Instant, and Always Available.
+              AI-Powered Research—Scalable, Instant, and Always Available.
             </h2>
             <div className="w-32 h-1 bg-accent mx-auto mb-6"></div>
           </Reveal>
           
           <Reveal delay={100}>
             <p className="text-white/80 text-pretty max-w-2xl mx-auto mb-10">
-              Test branding, messaging, and product ideas in real-time with AI-driven focus groups. 
-              Get qualitative insights at the speed of AI—no scheduling, no delays, just instant answers.
+              Conduct deep research with AI personas and generate insights at scale. 
+              Get qualitative data at the speed of AI—no scheduling, no delays, just instant answers.
             </p>
           </Reveal>
           
           <Reveal delay={200}>
-            <Link to="/ai-focus-groups">
+            <Link to="/research">
               <Button 
                 variant="secondary" 
                 size="lg" 
                 className="group"
               >
-                Run an AI Focus Group
+                Start AI Research
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
