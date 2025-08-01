@@ -27,7 +27,16 @@ export const generatePersonaResponse = async (
 
     // Create comprehensive knowledge base context with full document contents
     let conversationContext = '';
+    const imageDocuments: KnowledgeBaseDocument[] = [];
+    
     if (projectDocuments.length > 0) {
+      // Separate image documents for special handling
+      projectDocuments.forEach(doc => {
+        if (doc.is_image && doc.image_data) {
+          imageDocuments.push(doc);
+        }
+      });
+
       conversationContext = `
 PROJECT KNOWLEDGE BASE CONTEXT:
 You have access to the following project documents. Use this information to inform your responses:
@@ -36,10 +45,12 @@ ${projectDocuments.map(doc => `
 DOCUMENT: ${doc.title}
 ${doc.content ? `CONTENT: ${doc.content}` : ''}
 ${doc.file_type ? `FILE TYPE: ${doc.file_type}` : ''}
+${doc.is_image ? `NOTE: This is an image document that you can visually analyze.` : ''}
 ---
 `).join('\n')}
 
 IMPORTANT: Reference these documents when relevant to the conversation. When you use information from the documents, mention which document you're referencing. These documents contain the full context for this research project.
+${imageDocuments.length > 0 ? `\nIMAGE ANALYSIS: You have ${imageDocuments.length} image document(s) available for visual analysis. Provide insights based on what you see in the images.` : ''}
 `;
 
       console.log('Created knowledge base context with', projectDocuments.length, 'documents');
@@ -56,9 +67,16 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
     // Get the last message to extract user input and image
     const lastMessage = conversationHistory[conversationHistory.length - 1];
     const userMessage = lastMessage?.role === 'user' ? lastMessage.content : '';
-    const imageData = lastMessage?.image;
+    let imageData = lastMessage?.image;
+
+    // If no image in the conversation but we have image documents, use the first one for visual analysis
+    if (!imageData && imageDocuments.length > 0) {
+      imageData = imageDocuments[0].image_data;
+      console.log('Using image from knowledge base for visual analysis:', imageDocuments[0].title);
+    }
 
     console.log('Using validated conversation engine for research response with knowledge base context');
+    console.log('Image data available for analysis:', !!imageData);
 
     // Use the same conversation engine as individual persona chat
     const response = await sendMessageToPersona(
@@ -67,7 +85,8 @@ IMPORTANT: Reference these documents when relevant to the conversation. When you
       chatMessages,
       persona,
       'conversation', // Use conversation mode everywhere
-      conversationContext // Include knowledge base context
+      conversationContext, // Include knowledge base context
+      imageData // Pass image data for visual analysis
     );
 
     // Save the response message to database

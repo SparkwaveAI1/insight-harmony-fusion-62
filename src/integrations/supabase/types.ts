@@ -349,6 +349,9 @@ export type Database = {
           file_type: string | null
           file_url: string | null
           id: string
+          image_data: string | null
+          image_url: string | null
+          is_image: boolean | null
           project_id: string
           title: string
           updated_at: string
@@ -361,6 +364,9 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          image_data?: string | null
+          image_url?: string | null
+          is_image?: boolean | null
           project_id: string
           title: string
           updated_at?: string
@@ -373,6 +379,9 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          image_data?: string | null
+          image_url?: string | null
+          is_image?: boolean | null
           project_id?: string
           title?: string
           updated_at?: string

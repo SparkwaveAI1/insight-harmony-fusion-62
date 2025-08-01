@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Upload, Trash2, Plus, Check, X, File } from 'lucide-react';
+import { FileText, Upload, Trash2, Plus, Check, X, File, Image, Eye } from 'lucide-react';
 import { 
   uploadKnowledgeBaseDocument, 
   getProjectDocuments, 
@@ -150,14 +150,18 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
     }
   };
 
-  const getFileTypeIcon = (fileType: string | null) => {
-    if (!fileType) return <FileText className="w-4 h-4" />;
+  const getFileTypeIcon = (fileType: string | null, isImage?: boolean) => {
+    if (!fileType) return <FileText className="h-4 w-4 text-gray-500" />;
     
-    if (fileType.includes('image/')) return <File className="w-4 h-4" />;
-    if (fileType.includes('pdf')) return <FileText className="w-4 h-4" />;
-    if (fileType.includes('text/')) return <FileText className="w-4 h-4" />;
-    
-    return <File className="w-4 h-4" />;
+    if (fileType.includes('pdf')) {
+      return <FileText className="h-4 w-4 text-red-500" />;
+    } else if (fileType.includes('image') || isImage) {
+      return <Image className="h-4 w-4 text-blue-500" />;
+    } else if (fileType.includes('text') || fileType.includes('csv')) {
+      return <FileText className="h-4 w-4 text-green-500" />;
+    } else {
+      return <File className="h-4 w-4 text-gray-500" />;
+    }
   };
 
   const formatFileSize = (bytes: number | null): string => {
@@ -317,18 +321,31 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <div 
-                          className="flex items-center gap-3 flex-1 cursor-pointer"
-                          onClick={() => toggleDocumentSelection(doc)}
-                        >
-                          {getFileTypeIcon(doc.file_type)}
-                          <div>
-                            <div className="font-medium text-sm">{doc.title}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {doc.file_size ? formatFileSize(doc.file_size) : 'Text content'} • {new Date(doc.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
+                         <div 
+                           className="flex items-center gap-3 flex-1 cursor-pointer"
+                           onClick={() => toggleDocumentSelection(doc)}
+                         >
+                           <div className="relative">
+                             {getFileTypeIcon(doc.file_type, doc.is_image)}
+                             {doc.is_image && (
+                               <Eye className="h-2 w-2 text-blue-600 absolute -top-1 -right-1" />
+                             )}
+                           </div>
+                           <div>
+                             <div className="font-medium text-sm">
+                               {doc.title}
+                               {doc.is_image && (
+                                 <span className="ml-2 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
+                                   Visual Analysis
+                                 </span>
+                               )}
+                             </div>
+                             <div className="text-xs text-muted-foreground">
+                               {doc.file_size ? formatFileSize(doc.file_size) : 'Text content'} • {new Date(doc.created_at).toLocaleDateString()}
+                               {doc.is_image && <span className="ml-2 text-blue-600">• Can be visually analyzed by AI</span>}
+                             </div>
+                           </div>
+                         </div>
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
