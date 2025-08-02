@@ -12,7 +12,7 @@ export async function sendMessageToPersona(
   persona: Persona,
   mode: ChatMode = 'conversation',
   conversationContext: string = '',
-  imageData?: string
+  imageData?: string | string[]
 ): Promise<string> {
   console.log('Using enhanced persona-quick-chat for all interactions:', { personaId, mode, messageLength: userMessage.length });
 
@@ -40,7 +40,7 @@ async function generateQuickPersonaResponse(
   previousMessages: Message[],
   mode: ChatMode,
   conversationContext: string = '',
-  imageData?: string
+  imageData?: string | string[]
 ): Promise<string> {
   console.log('Using enhanced quick-chat function with linguistic profiles');
 
@@ -62,7 +62,7 @@ async function generateQuickPersonaResponse(
           previousMessages: optimizedHistory,
           mode,
           conversationContext,
-          imageData
+          imageData: Array.isArray(imageData) ? imageData.join(',') : imageData
         }
       });
 
