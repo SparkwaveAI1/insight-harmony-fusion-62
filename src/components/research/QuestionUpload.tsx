@@ -5,19 +5,37 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, Plus, Trash2 } from 'lucide-react';
+import { Upload, FileText, Plus, Trash2, Image, X } from 'lucide-react';
 import { toast } from 'sonner';
+
+export interface SurveyQuestion {
+  text: string;
+  image?: string; // base64 image data
+  imageFile?: File; // for temporary storage during editing
+}
 
 interface QuestionUploadProps {
   questions: string[];
   onQuestionsChange: (questions: string[]) => void;
+  surveyQuestions?: SurveyQuestion[];
+  onSurveyQuestionsChange?: (questions: SurveyQuestion[]) => void;
 }
 
 export const QuestionUpload: React.FC<QuestionUploadProps> = ({
   questions,
-  onQuestionsChange
+  onQuestionsChange,
+  surveyQuestions = [],
+  onSurveyQuestionsChange
 }) => {
   const [uploadMode, setUploadMode] = useState<'manual' | 'file'>('manual');
+  
+  // Initialize survey questions from text questions if not provided
+  React.useEffect(() => {
+    if (onSurveyQuestionsChange && surveyQuestions.length === 0 && questions.length > 0) {
+      const initialSurveyQuestions = questions.map(text => ({ text }));
+      onSurveyQuestionsChange(initialSurveyQuestions);
+    }
+  }, [questions, surveyQuestions, onSurveyQuestionsChange]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,18 +85,63 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
   };
 
   const addQuestion = () => {
-    onQuestionsChange([...questions, '']);
+    const newQuestions = [...questions, ''];
+    onQuestionsChange(newQuestions);
+    
+    if (onSurveyQuestionsChange) {
+      const newSurveyQuestions = [...surveyQuestions, { text: '' }];
+      onSurveyQuestionsChange(newSurveyQuestions);
+    }
   };
 
   const removeQuestion = (index: number) => {
     if (questions.length > 1) {
-      onQuestionsChange(questions.filter((_, i) => i !== index));
+      const newQuestions = questions.filter((_, i) => i !== index);
+      onQuestionsChange(newQuestions);
+      
+      if (onSurveyQuestionsChange) {
+        const newSurveyQuestions = surveyQuestions.filter((_, i) => i !== index);
+        onSurveyQuestionsChange(newSurveyQuestions);
+      }
     }
   };
 
   const updateQuestion = (index: number, value: string) => {
     const updatedQuestions = questions.map((q, i) => i === index ? value : q);
     onQuestionsChange(updatedQuestions);
+    
+    if (onSurveyQuestionsChange) {
+      const updatedSurveyQuestions = surveyQuestions.map((q, i) => 
+        i === index ? { ...q, text: value } : q
+      );
+      onSurveyQuestionsChange(updatedSurveyQuestions);
+    }
+  };
+
+  const handleImageUpload = async (index: number, file: File) => {
+    if (!onSurveyQuestionsChange) return;
+    
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      const updatedSurveyQuestions = surveyQuestions.map((q, i) => 
+        i === index ? { ...q, image: base64, imageFile: file } : q
+      );
+      onSurveyQuestionsChange(updatedSurveyQuestions);
+      toast.success('Image attached to question');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (index: number) => {
+    if (!onSurveyQuestionsChange) return;
+    
+    const updatedSurveyQuestions = surveyQuestions.map((q, i) => 
+      i === index ? { text: q.text } : q
+    );
+    onSurveyQuestionsChange(updatedSurveyQuestions);
+    toast.success('Image removed from question');
   };
 
   return (
@@ -176,28 +239,93 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
               </Button>
             </div>
             
-            {questions.map((question, index) => (
-              <div key={index} className="flex gap-2">
-                <div className="flex-1">
-                  <Textarea
-                    value={question}
-                    onChange={(e) => updateQuestion(index, e.target.value)}
-                    placeholder={`Question ${index + 1}...`}
-                    rows={2}
-                  />
+            {questions.map((question, index) => {
+              const surveyQuestion = surveyQuestions[index];
+              
+              return (
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Textarea
+                        value={question}
+                        onChange={(e) => updateQuestion(index, e.target.value)}
+                        placeholder={`Question ${index + 1}...`}
+                        rows={2}
+                      />
+                    </div>
+                    
+                    {/* Image upload button */}
+                    {onSurveyQuestionsChange && (
+                      <div className="flex flex-col gap-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(index, file);
+                          }}
+                          className="hidden"
+                          id={`image-upload-${index}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById(`image-upload-${index}`)?.click()}
+                          title="Attach image to question"
+                        >
+                          <Image className="w-4 h-4" />
+                        </Button>
+                        
+                        {questions.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeQuestion(index)}
+                            title="Remove question"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {!onSurveyQuestionsChange && questions.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeQuestion(index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Show attached image if present */}
+                  {surveyQuestion?.image && (
+                    <div className="relative w-32 h-20 border rounded overflow-hidden">
+                      <img 
+                        src={surveyQuestion.image} 
+                        alt="Question attachment" 
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-1 right-1 h-6 w-6 p-0"
+                        onClick={() => removeImage(index)}
+                        title="Remove image"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {questions.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeQuestion(index)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

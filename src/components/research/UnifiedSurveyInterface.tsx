@@ -12,7 +12,7 @@ import { useResearchSession } from './hooks/useResearchSession';
 import { SequentialSurveyExecution } from './SequentialSurveyExecution';
 import SurveyResults from './SurveyResults';
 import { createSurveySession, updateSurveySessionStatus } from './services/surveySessionService';
-import { QuestionUpload } from './QuestionUpload';
+import { QuestionUpload, SurveyQuestion } from './QuestionUpload';
 import ProjectSelector from './ProjectSelector';
 import DocumentManager from './DocumentManager';
 import { PersonaSourceSelector } from './PersonaSourceSelector';
@@ -27,6 +27,7 @@ interface SurveyData {
   name: string;
   description: string;
   questions: string[];
+  surveyQuestions?: SurveyQuestion[];
 }
 
 const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack }) => {
@@ -39,7 +40,8 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   const [surveyData, setSurveyData] = useState<SurveyData>({
     name: '',
     description: '',
-    questions: ['']
+    questions: [''],
+    surveyQuestions: [{ text: '' }]
   });
   const [selectedPersonas, setSelectedPersonas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +86,14 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     setSurveyData(prev => ({
       ...prev,
       questions: newQuestions
+    }));
+  };
+
+  const handleSurveyQuestionsChange = (newSurveyQuestions: SurveyQuestion[]) => {
+    setSurveyData(prev => ({
+      ...prev,
+      surveyQuestions: newSurveyQuestions,
+      questions: newSurveyQuestions.map(q => q.text)
     }));
   };
 
@@ -420,6 +430,8 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           <QuestionUpload
             questions={surveyData.questions}
             onQuestionsChange={handleQuestionsChange}
+            surveyQuestions={surveyData.surveyQuestions}
+            onSurveyQuestionsChange={handleSurveyQuestionsChange}
           />
 
           <DocumentManager

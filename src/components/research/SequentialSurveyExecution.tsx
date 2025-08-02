@@ -11,11 +11,13 @@ import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 import { updateSurveySessionStatus } from '@/components/research/services/surveySessionService';
+import { SurveyQuestion } from './QuestionUpload';
 
 interface SurveyData {
   name: string;
   description?: string;
   questions: string[];
+  surveyQuestions?: SurveyQuestion[];
 }
 
 interface PersonaProgress {
@@ -164,17 +166,17 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             throw new Error(`Persona ${currentPersona.personaId} not found`);
           }
 
-          // Create knowledge base context from project documents (FULL CONTENT)
-          const knowledgeBaseContext = projectDocuments.length > 0 
-            ? `KNOWLEDGE BASE AVAILABLE - You have access to the following documents: ${projectDocuments.map(doc => `"${doc.title}"`).join(', ')}. Key information from these documents:\n\n${projectDocuments.map(doc => 
-                doc.content ? `${doc.title}:\n${doc.content}` : `${doc.title}: [Document uploaded but content not extracted]`
-              ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
+          // Create material review context from project documents
+          const materialContext = projectDocuments.length > 0 
+            ? `MATERIAL FOR REVIEW - I'd like your authentic perspective on these materials I'm sharing with you:\n\n${projectDocuments.map(doc => 
+                doc.content ? `"${doc.title}":\n${doc.content}` : `"${doc.title}": [Document uploaded - visual/file content]`
+              ).join('\n\n')}\n\nPlease give me your authentic reaction and analysis from your personal perspective. There are no predetermined answers - I want YOUR genuine opinion.`
             : '';
           
-          console.log(`Knowledge base context length: ${knowledgeBaseContext.length} characters for ${projectDocuments.length} documents`);
+          console.log(`Material context length: ${materialContext.length} characters for ${projectDocuments.length} documents`);
 
-          // Add processed research context to knowledge base context
-          let fullContext = knowledgeBaseContext;
+          // Add processed research context to material context
+          let fullContext = materialContext;
           if (researchContext) {
             fullContext += `\n\nRESEARCH CONTEXT:\n\n`;
             fullContext += `Summary: ${researchContext.summary}\n\n`;
@@ -203,6 +205,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
           // Process each question for this persona using isolated conversation
           for (let questionIndex = 0; questionIndex < surveyData.questions.length; questionIndex++) {
             const question = surveyData.questions[questionIndex];
+            const surveyQuestion = surveyData.surveyQuestions?.[questionIndex];
             
             console.log(`Asking question ${questionIndex + 1}/${surveyData.questions.length} to ${currentPersona.personaName}`);
             
@@ -228,6 +231,11 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               questionMessage = `Question ${questionIndex + 1}: ${question}`;
             }
 
+            // Add image context if present
+            if (surveyQuestion?.image) {
+              questionMessage += '\n\nVISUAL MATERIAL FOR REVIEW: I\'m sharing an image with this question. Please analyze it and give me your authentic perspective based on your values, background, and personal viewpoint.';
+            }
+
             // Create user message for conversation history
             const userMessage: Message = {
               role: 'user',
@@ -249,7 +257,8 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               conversationHistory,
               persona,
               'conversation',
-              fullContext
+              fullContext,
+              surveyQuestion?.image // Pass image data if present
             );
             
             console.log(`Got response from ${currentPersona.personaName} for question ${questionIndex + 1}`);
