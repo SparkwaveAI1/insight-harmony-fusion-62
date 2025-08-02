@@ -194,7 +194,7 @@ const Docs = () => {
                               <h3 className="font-semibold">Research Tools</h3>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Conduct 1-on-1 interviews or large-scale surveys with automated insights generation.
+                              Use our Insight Engine for automated qualitative research. Submit multiple queries simultaneously to a group of personas, or conduct 1-on-1 real time chats to gain insights.
                             </p>
                           </Card>
                         </div>
