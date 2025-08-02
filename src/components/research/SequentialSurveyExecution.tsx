@@ -231,16 +231,23 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               questionMessage = `Question ${questionIndex + 1}: ${question}`;
             }
 
-            // Add image context if present
-            if (surveyQuestion?.image) {
-              questionMessage += '\n\nVISUAL MATERIAL FOR REVIEW: I\'m sharing an image with this question. Please analyze it and give me your authentic perspective based on your values, background, and personal viewpoint.';
+            // Add image context if present (handle both single and multiple images)
+            const imageCount = surveyQuestion?.images?.length || (surveyQuestion?.image ? 1 : 0);
+            if (imageCount > 0) {
+              if (imageCount === 1) {
+                questionMessage += '\n\nVISUAL MATERIAL FOR REVIEW: I\'m sharing an image with this question. Please analyze it and give me your authentic perspective based on your values, background, and personal viewpoint.';
+              } else {
+                questionMessage += `\n\nVISUAL MATERIALS FOR REVIEW: I\'m sharing ${imageCount} images with this question. Please analyze all of them and give me your authentic perspective based on your values, background, and personal viewpoint.`;
+              }
             }
 
             // Create user message for conversation history
             const userMessage: Message = {
               role: 'user',
               content: questionMessage,
-              timestamp: new Date()
+              timestamp: new Date(),
+              // Include image data for conversation context
+              ...(surveyQuestion?.image && { image: surveyQuestion.image })
             };
 
             // Get current persona's conversation history
@@ -250,15 +257,63 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Add user message to this persona's conversation history
             conversationHistory.push(userMessage);
 
-            // Get response using sendMessageToPersona with isolated conversation
+            // Prepare images for the persona (handle both new and legacy formats)
+            let imagesToSend: string | undefined;
+            let imageContext = '';
+            
+            if (surveyQuestion?.images?.length) {
+              if (surveyQuestion.images.length === 1) {
+                imagesToSend = surveyQuestion.images[0];
+                imageContext = 'You are viewing 1 image with this question.';
+              } else {
+                try {
+                  // Create image collage for multiple images
+                  const { data: collageData, error: collageError } = await supabase.functions.invoke('create-image-collage', {
+                    body: {
+                      images: surveyQuestion.images,
+                      maxWidth: 1024,
+                      maxHeight: 1024
+                    }
+                  });
+                  
+                  if (collageError || !collageData) {
+                    console.warn('Failed to create image collage, using first image:', collageError);
+                    imagesToSend = surveyQuestion.images[0];
+                    imageContext = `You are viewing ${surveyQuestion.images.length} images with this question. Due to technical limitations, only the first image is displayed, but please consider that there are ${surveyQuestion.images.length} total images to review.`;
+                  } else {
+                    imagesToSend = collageData.collageImage;
+                    imageContext = collageData.message || `You are viewing a collage of ${surveyQuestion.images.length} images arranged in a grid.`;
+                  }
+                } catch (error) {
+                  console.warn('Error creating collage:', error);
+                  imagesToSend = surveyQuestion.images[0];
+                  imageContext = `You are viewing ${surveyQuestion.images.length} images with this question. Due to technical limitations, only the first image is displayed, but please consider that there are ${surveyQuestion.images.length} total images to review.`;
+                }
+              }
+            } else if (surveyQuestion?.image) {
+              imagesToSend = surveyQuestion.image;
+              imageContext = 'You are viewing 1 image with this question.';
+            }
+            
+            // Add image context to the question if images are present
+            let finalQuestionMessage = questionMessage;
+            if (imagesToSend && imageContext) {
+              finalQuestionMessage += `\n\nIMAGE CONTEXT: ${imageContext}`;
+            }
+            
+            // Get response using sendMessageToPersona with conversation memory
             const response = await sendMessageToPersona(
               currentPersona.personaId,
-              questionMessage,
-              conversationHistory,
+              finalQuestionMessage,
+              conversationHistory.map(msg => ({
+                role: msg.role,
+                content: msg.content,
+                image: msg.image
+              })),
               persona,
               'conversation',
               fullContext,
-              surveyQuestion?.image // Pass image data if present
+              imagesToSend // Pass processed image data
             );
             
             console.log(`Got response from ${currentPersona.personaName} for question ${questionIndex + 1}`);

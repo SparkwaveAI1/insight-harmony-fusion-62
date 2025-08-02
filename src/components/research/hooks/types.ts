@@ -5,6 +5,7 @@ import { KnowledgeBaseDocument } from '@/services/collections';
 
 export interface ResearchMessage extends Message {
   responding_persona_id?: string;
+  images?: string[]; // Support for multiple images
 }
 
 export interface SessionData {

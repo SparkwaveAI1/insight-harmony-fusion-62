@@ -10,8 +10,11 @@ import { toast } from 'sonner';
 
 export interface SurveyQuestion {
   text: string;
-  image?: string; // base64 image data
-  imageFile?: File; // for temporary storage during editing
+  images?: string[]; // array of base64 image data
+  imageFiles?: File[]; // for temporary storage during editing
+  // Keep legacy fields for backward compatibility
+  image?: string;
+  imageFile?: File;
 }
 
 interface QuestionUploadProps {
@@ -118,48 +121,85 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
     }
   };
 
-  const handleImageUpload = async (index: number, file: File) => {
+  const handleImageUpload = async (index: number, files: FileList) => {
     if (!onSurveyQuestionsChange) return;
     
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
-      return;
-    }
-
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image file must be less than 10MB');
-      return;
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+    
+    // Validate each file
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        invalidFiles.push(`${file.name} (invalid type)`);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        invalidFiles.push(`${file.name} (too large)`);
+        return;
+      }
+      validFiles.push(file);
+    });
+    
+    if (invalidFiles.length > 0) {
+      toast.error(`Invalid files: ${invalidFiles.join(', ')}`);
     }
     
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const base64 = e.target?.result as string;
-        const updatedSurveyQuestions = surveyQuestions.map((q, i) => 
-          i === index ? { ...q, image: base64, imageFile: file } : q
-        );
-        onSurveyQuestionsChange(updatedSurveyQuestions);
-        toast.success(`Image "${file.name}" attached to question ${index + 1}`);
-      } catch (error) {
-        console.error('Error processing image:', error);
-        toast.error('Failed to process image');
-      }
-    };
-    reader.onerror = () => {
-      toast.error('Failed to read image file');
-    };
-    reader.readAsDataURL(file);
+    if (validFiles.length === 0) return;
+    
+    // Convert files to base64
+    const base64Promises = validFiles.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+    });
+    
+    try {
+      const base64Images = await Promise.all(base64Promises);
+      
+      const updatedSurveyQuestions = surveyQuestions.map((q, i) => {
+        if (i === index) {
+          const existingImages = q.images || [];
+          const existingFiles = q.imageFiles || [];
+          return { 
+            ...q, 
+            images: [...existingImages, ...base64Images],
+            imageFiles: [...existingFiles, ...validFiles]
+          };
+        }
+        return q;
+      });
+      
+      onSurveyQuestionsChange(updatedSurveyQuestions);
+      toast.success(`${validFiles.length} image(s) attached to question ${index + 1}`);
+    } catch (error) {
+      console.error('Error processing images:', error);
+      toast.error('Failed to process some images');
+    }
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = (index: number, imageIndex?: number) => {
     if (!onSurveyQuestionsChange) return;
     
-    const updatedSurveyQuestions = surveyQuestions.map((q, i) => 
-      i === index ? { text: q.text } : q
-    );
+    const updatedSurveyQuestions = surveyQuestions.map((q, i) => {
+      if (i === index) {
+        if (typeof imageIndex === 'number') {
+          // Remove specific image
+          const newImages = [...(q.images || [])];
+          const newFiles = [...(q.imageFiles || [])];
+          newImages.splice(imageIndex, 1);
+          newFiles.splice(imageIndex, 1);
+          return { ...q, images: newImages, imageFiles: newFiles };
+        } else {
+          // Remove all images (legacy support)
+          return { text: q.text };
+        }
+      }
+      return q;
+    });
+    
     onSurveyQuestionsChange(updatedSurveyQuestions);
     toast.success(`Image removed from question ${index + 1}`);
   };
@@ -280,23 +320,28 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(index, file);
+                            const files = e.target.files;
+                            if (files && files.length > 0) handleImageUpload(index, files);
                           }}
                           className="hidden"
                           id={`image-upload-${index}`}
                         />
                         <Button
                           type="button"
-                          variant={surveyQuestion?.image ? "default" : "outline"}
+                          variant={(surveyQuestion?.images?.length || surveyQuestion?.image) ? "default" : "outline"}
                           size="sm"
                           onClick={() => document.getElementById(`image-upload-${index}`)?.click()}
-                          title="Attach image to question"
-                          className={surveyQuestion?.image ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200" : ""}
+                          title="Attach images to question (multiple allowed)"
+                          className={(surveyQuestion?.images?.length || surveyQuestion?.image) ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200" : ""}
                         >
                           <Image className="w-4 h-4" />
-                          {surveyQuestion?.image ? "✓" : ""}
+                          {(surveyQuestion?.images?.length || (surveyQuestion?.image ? 1 : 0)) > 0 && (
+                            <span className="ml-1 text-xs">
+                              {surveyQuestion?.images?.length || 1}
+                            </span>
+                          )}
                         </Button>
                         
                         {questions.length > 1 && (
@@ -325,27 +370,56 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
                     )}
                   </div>
                   
-                   {/* Show attached image if present */}
-                   {surveyQuestion?.image && (
-                     <div className="relative w-40 h-24 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
-                       <img 
-                         src={surveyQuestion.image} 
-                         alt={`Question ${index + 1} attachment`}
-                         className="w-full h-full object-cover"
-                       />
-                       <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
-                         Q{index + 1}
-                       </div>
-                       <Button
-                         type="button"
-                         variant="destructive"
-                         size="sm"
-                         className="absolute top-1 right-1 h-6 w-6 p-0 opacity-80 hover:opacity-100"
-                         onClick={() => removeImage(index)}
-                         title="Remove image"
-                       >
-                         <X className="w-3 h-3" />
-                       </Button>
+                   {/* Show attached images if present */}
+                   {((surveyQuestion?.images?.length || 0) > 0 || surveyQuestion?.image) && (
+                     <div className="flex flex-wrap gap-2">
+                       {/* Show new multi-image format */}
+                       {surveyQuestion?.images?.map((image, imageIndex) => (
+                         <div key={imageIndex} className="relative w-20 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                           <img 
+                             src={image} 
+                             alt={`Question ${index + 1} attachment ${imageIndex + 1}`}
+                             className="w-full h-full object-cover"
+                           />
+                           <div className="absolute top-0.5 left-0.5 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+                             {imageIndex + 1}
+                           </div>
+                           <Button
+                             type="button"
+                             variant="destructive"
+                             size="sm"
+                             className="absolute top-0.5 right-0.5 h-4 w-4 p-0 opacity-80 hover:opacity-100"
+                             onClick={() => removeImage(index, imageIndex)}
+                             title="Remove image"
+                           >
+                             <X className="w-2 h-2" />
+                           </Button>
+                         </div>
+                       ))}
+                       
+                       {/* Show legacy single image format */}
+                       {surveyQuestion?.image && !surveyQuestion?.images?.length && (
+                         <div className="relative w-20 h-16 border-2 border-green-200 rounded-lg overflow-hidden bg-green-50">
+                           <img 
+                             src={surveyQuestion.image} 
+                             alt={`Question ${index + 1} attachment`}
+                             className="w-full h-full object-cover"
+                           />
+                           <div className="absolute top-0.5 left-0.5 bg-green-500 text-white text-xs px-1 py-0.5 rounded">
+                             1
+                           </div>
+                           <Button
+                             type="button"
+                             variant="destructive"
+                             size="sm"
+                             className="absolute top-0.5 right-0.5 h-4 w-4 p-0 opacity-80 hover:opacity-100"
+                             onClick={() => removeImage(index)}
+                             title="Remove image"
+                           >
+                             <X className="w-2 h-2" />
+                           </Button>
+                         </div>
+                       )}
                      </div>
                    )}
                 </div>
