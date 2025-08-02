@@ -272,12 +272,14 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         image: msg.image
       }));
 
-      // Create knowledge base context from project documents
-      const knowledgeBaseContext = projectDocuments.length > 0 
-        ? `KNOWLEDGE BASE AVAILABLE - You have access to the following documents: ${projectDocuments.map(doc => `"${doc.title}"`).join(', ')}. Key information from these documents:\n\n${projectDocuments.map(doc => 
-            doc.content ? `${doc.title}:\n${doc.content.substring(0, 500)}${doc.content.length > 500 ? '...' : ''}` : `${doc.title}: [Document uploaded but content not extracted]`
-          ).join('\n\n')}\n\nUse this information to inform your responses when relevant to the conversation.`
-        : '';
+      // Create material review context from project documents
+      const materialContext = projectDocuments.length > 0 
+        ? `MATERIAL FOR REVIEW - I'd like your authentic perspective on these materials I'm sharing with you:\n\n${projectDocuments.map(doc => 
+            doc.content ? `"${doc.title}":\n${doc.content.substring(0, 500)}${doc.content.length > 500 ? '...' : ''}` : `"${doc.title}": [Document uploaded - visual/file content]`
+          ).join('\n\n')}\n\n${messageToSend.image ? 'VISUAL MATERIAL: There is also an image I\'m sharing for you to review and give your perspective on.' : ''}\n\nPlease give me your authentic reaction and analysis from your personal perspective. There are no predetermined answers - I want YOUR genuine opinion.`
+        : messageToSend.image 
+          ? 'VISUAL MATERIAL FOR REVIEW: I\'m sharing an image with you. Please analyze it and give me your authentic perspective based on your values, background, and personal viewpoint.'
+          : '';
 
       // Get persona response using the unified conversation engine with isolated conversation history
       const response = await sendMessageToPersona(
@@ -286,7 +288,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         previousMessages,
         activePersona,
         'conversation',
-        knowledgeBaseContext,
+        materialContext,
         messageToSend.image
       );
       
