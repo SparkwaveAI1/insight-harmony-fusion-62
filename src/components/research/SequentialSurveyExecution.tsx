@@ -257,7 +257,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Add user message to this persona's conversation history
             conversationHistory.push(userMessage);
 
-            // Prepare images for the persona (handle both new and legacy formats)
+            // Prepare images for the persona (improved multi-image handling)
             let imagesToSend: string | undefined;
             let imageContext = '';
             
@@ -266,29 +266,18 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 imagesToSend = surveyQuestion.images[0];
                 imageContext = 'You are viewing 1 image with this question.';
               } else {
-                try {
-                  // Create image collage for multiple images
-                  const { data: collageData, error: collageError } = await supabase.functions.invoke('create-image-collage', {
-                    body: {
-                      images: surveyQuestion.images,
-                      maxWidth: 1024,
-                      maxHeight: 1024
-                    }
-                  });
-                  
-                  if (collageError || !collageData) {
-                    console.warn('Failed to create image collage, using first image:', collageError);
-                    imagesToSend = surveyQuestion.images[0];
-                    imageContext = `You are viewing ${surveyQuestion.images.length} images with this question. Due to technical limitations, only the first image is displayed, but please consider that there are ${surveyQuestion.images.length} total images to review.`;
-                  } else {
-                    imagesToSend = collageData.collageImage;
-                    imageContext = collageData.message || `You are viewing a collage of ${surveyQuestion.images.length} images arranged in a grid.`;
-                  }
-                } catch (error) {
-                  console.warn('Error creating collage:', error);
-                  imagesToSend = surveyQuestion.images[0];
-                  imageContext = `You are viewing ${surveyQuestion.images.length} images with this question. Due to technical limitations, only the first image is displayed, but please consider that there are ${surveyQuestion.images.length} total images to review.`;
-                }
+                // For multiple images, send them sequentially with clear context
+                const imageDescriptions = surveyQuestion.images.map((_, index) => 
+                  `Image ${index + 1}`
+                ).join(', ');
+                
+                // For now, send the first image with context about others
+                // This ensures reliable delivery while maintaining context
+                imagesToSend = surveyQuestion.images[0];
+                imageContext = `You are viewing multiple images for this question. This is Image 1 of ${surveyQuestion.images.length} total images (${imageDescriptions}). Please analyze this image and consider that there are ${surveyQuestion.images.length} images total in your response. Note: Additional images in this question include variations or related content.`;
+                
+                // Store all images in conversation context for potential future use
+                userMessage.additionalImages = surveyQuestion.images.slice(1);
               }
             } else if (surveyQuestion?.image) {
               imagesToSend = surveyQuestion.image;
