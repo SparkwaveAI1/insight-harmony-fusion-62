@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Persona } from '@/services/persona/types';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectCollections } from '@/services/collections/projectCollectionOperations';
-import { getPersonasByCollection } from '@/services/persona/operations/getPersonas';
+import { getPersonasByCollectionForListing, getPersonasForListing } from '@/services/persona/operations/getPersonas';
 import { Collection } from '@/services/collections/types';
 
 interface PersonaSourceSelectorProps {
@@ -119,7 +119,7 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
       switch (selectedSource) {
         case 'project-collections':
           if (selectedCollection) {
-            personas = await getPersonasByCollection(selectedCollection);
+            personas = await getPersonasByCollectionForListing(selectedCollection);
           }
           break;
           
@@ -129,23 +129,34 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           }
           const { data: myPersonasData, error: myError } = await supabase
             .from('personas')
-            .select('*')
+            .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
           
           if (myError) throw myError;
-          personas = myPersonasData ? myPersonasData.map(dbPersonaToPersona) : [];
+          personas = myPersonasData ? myPersonasData.map(item => ({
+            id: item.id,
+            persona_id: item.persona_id,
+            name: item.name,
+            description: `Created on ${item.creation_date}`,
+            creation_date: item.creation_date,
+            user_id: item.user_id,
+            is_public: item.is_public,
+            created_at: item.created_at,
+            metadata: {},
+            trait_profile: {},
+            behavioral_modulation: {},
+            linguistic_profile: {},
+            emotional_triggers: null,
+            preinterview_tags: [],
+            simulation_directives: {},
+            interview_sections: [],
+            prompt: null
+          } as Persona)) : [];
           break;
           
         case 'public-personas':
-          const { data: publicPersonasData, error: publicError } = await supabase
-            .from('personas')
-            .select('*')
-            .eq('is_public', true)
-            .order('created_at', { ascending: false });
-          
-          if (publicError) throw publicError;
-          personas = publicPersonasData ? publicPersonasData.map(dbPersonaToPersona) : [];
+          personas = await getPersonasForListing();
           break;
       }
       

@@ -60,6 +60,47 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
   }
 }
 
+// Lightweight version for listing personas (without heavy metadata)
+export async function getPersonasForListing(): Promise<Persona[]> {
+  try {
+    console.log("Fetching personas for listing from Supabase");
+    const { data, error } = await supabase
+      .from('personas')
+      .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching personas for listing:", error);
+      throw error;
+    }
+    
+    console.log(`Retrieved ${data?.length || 0} personas for listing`);
+    return data ? data.map(item => ({
+      id: item.id,
+      persona_id: item.persona_id,
+      name: item.name,
+      description: `Created on ${item.creation_date}`,
+      creation_date: item.creation_date,
+      user_id: item.user_id,
+      is_public: item.is_public,
+      created_at: item.created_at,
+      // Placeholder values for required fields
+      metadata: {},
+      trait_profile: {},
+      behavioral_modulation: {},
+      linguistic_profile: {},
+      emotional_triggers: null,
+      preinterview_tags: [],
+      simulation_directives: {},
+      interview_sections: [],
+      prompt: null
+    } as Persona)) : [];
+  } catch (error) {
+    console.error("Error getting personas for listing:", error);
+    return [];
+  }
+}
+
 export async function getAllPersonas(): Promise<Persona[]> {
   try {
     console.log("Fetching all personas from Supabase");
@@ -77,6 +118,59 @@ export async function getAllPersonas(): Promise<Persona[]> {
     return data ? data.map(dbPersonaToPersona) : [];
   } catch (error) {
     console.error("Error getting all personas:", error);
+    return [];
+  }
+}
+
+// Lightweight version for collection personas
+export async function getPersonasByCollectionForListing(collectionId: string): Promise<Persona[]> {
+  try {
+    // First get the persona_ids from the collection_personas table
+    const { data: collectionPersonas, error: collectionError } = await supabase
+      .from('collection_personas')
+      .select('persona_id')
+      .eq('collection_id', collectionId);
+
+    if (collectionError) throw collectionError;
+    
+    if (!collectionPersonas || collectionPersonas.length === 0) {
+      return [];
+    }
+    
+    // Extract the persona_ids
+    const personaIds = collectionPersonas.map(cp => cp.persona_id);
+    
+    // Then fetch the actual personas (lightweight)
+    const { data: personas, error: personasError } = await supabase
+      .from('personas')
+      .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
+      .in('persona_id', personaIds)
+      .order('created_at', { ascending: false });
+    
+    if (personasError) throw personasError;
+    
+    return personas ? personas.map(item => ({
+      id: item.id,
+      persona_id: item.persona_id,
+      name: item.name,
+      description: `Created on ${item.creation_date}`,
+      creation_date: item.creation_date,
+      user_id: item.user_id,
+      is_public: item.is_public,
+      created_at: item.created_at,
+      // Placeholder values for required fields
+      metadata: {},
+      trait_profile: {},
+      behavioral_modulation: {},
+      linguistic_profile: {},
+      emotional_triggers: null,
+      preinterview_tags: [],
+      simulation_directives: {},
+      interview_sections: [],
+      prompt: null
+    } as Persona)) : [];
+  } catch (error) {
+    console.error("Error getting personas by collection for listing:", error);
     return [];
   }
 }

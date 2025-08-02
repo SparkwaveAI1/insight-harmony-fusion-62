@@ -173,7 +173,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <Select value={selectedProjectId} onValueChange={handleProjectSelect}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose a project..." />
               </SelectTrigger>
@@ -185,14 +185,6 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {selectedProjectId && (
-              <Button 
-                onClick={() => handleProjectSelect(selectedProjectId)}
-                className="w-full"
-              >
-                Connect to Project
-              </Button>
-            )}
           </CardContent>
         </Card>
       )}
