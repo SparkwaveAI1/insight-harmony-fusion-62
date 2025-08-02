@@ -24,6 +24,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const [conversationContext, setConversationContext] = useState<string>('');
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [initializationAttempts, setInitializationAttempts] = useState(0);
   const {
     sessionId,
     loadedPersonas,
@@ -45,22 +47,63 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   // Initialize session on mount  
   useEffect(() => {
     const initSession = async () => {
-      if (!sessionStarted) {
-        // Create a temporary project for persona chats
-        const success = await createSession([personaId]);
-        if (success) {
-          setSessionStarted(true);
+      if (!sessionStarted && !sessionError && initializationAttempts < 3) {
+        console.log(`🔄 Persona Chat: Initializing session for persona ${personaId} (attempt ${initializationAttempts + 1})`);
+        setInitializationAttempts(prev => prev + 1);
+        
+        try {
+          // Create a temporary project for persona chats
+          console.log('🔄 Persona Chat: Creating session...');
+          const success = await createSession([personaId]);
+          
+          if (success) {
+            console.log('✅ Persona Chat: Session created successfully');
+            setSessionStarted(true);
+            setSessionError(null);
+          } else {
+            console.error('❌ Persona Chat: Session creation returned false');
+            setSessionError('Failed to create chat session. Please try again.');
+          }
+        } catch (error) {
+          console.error('❌ Persona Chat: Session creation error:', error);
+          setSessionError(`Session initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     };
 
     initSession();
-  }, [personaId, sessionStarted, createSession]);
+  }, [personaId, sessionStarted, createSession, sessionError, initializationAttempts]);
+
+  // Show session error if initialization failed
+  if (sessionError) {
+    return (
+      <div className="space-y-4">
+        <Alert className="bg-red-50 border-red-200">
+          <AlertDescription className="text-red-800">
+            {sessionError}
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => {
+            setSessionError(null);
+            setInitializationAttempts(0);
+            setSessionStarted(false);
+          }}
+          className="w-full"
+        >
+          Retry Initialization
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading && !sessionStarted) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-sm text-muted-foreground">
+          Initializing chat session... (Attempt {initializationAttempts}/3)
+        </p>
       </div>
     );
   }
@@ -93,10 +136,19 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
   const handleSendMessageWithImage = async (message: string, imageFile: File | null) => {
     if (!sessionId) {
+      console.error('❌ Persona Chat: No session ID available for sending message');
       toast.error("Session not ready");
       return;
     }
-    await sendMessage(message, imageFile);
+    
+    try {
+      console.log('📤 Persona Chat: Sending message:', { message, hasImage: !!imageFile });
+      await sendMessage(message, imageFile);
+      console.log('✅ Persona Chat: Message sent successfully');
+    } catch (error) {
+      console.error('❌ Persona Chat: Error sending message:', error);
+      toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   // Generate a default title from the conversation content
