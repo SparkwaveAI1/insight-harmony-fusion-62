@@ -36,6 +36,7 @@ import InterviewProcess from "./pages/InterviewProcess";
 import WhitePaper from "./pages/WhitePaper";
 import Roadmap from "./pages/Roadmap";
 import EarnPRSNA from "./pages/EarnPRSNA";
+import Docs from "./pages/Docs";
 
 // Pages - Persona Creation
 import ConsentForm from "./pages/persona-creation/ConsentForm";
@@ -82,6 +83,9 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/sign-in" element={<Auth />} />
                 <Route path="/contact" element={<Contact />} />
+                
+                {/* Documentation - Protected Route */}
+                <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
                 
                 {/* Character Routes - DEACTIVATED - All character routes redirect to unavailable page */}
                 <Route path="/characters-home" element={<CharacterFeatureUnavailable />} />
