@@ -283,7 +283,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                   persona,
                   'conversation',
                   fullContext,
-                  Array.isArray(imagesToSend) ? imagesToSend[0] : imagesToSend // Send first image for now
+                  Array.isArray(imagesToSend) ? imagesToSend.join(',') : imagesToSend
                 );
             } catch (personaResponseError) {
               console.error(`Error getting response from persona ${currentPersona.personaName}:`, personaResponseError);
@@ -301,7 +301,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                   persona,
                   'conversation',
                   fullContext,
-                  Array.isArray(imagesToSend) ? imagesToSend[0] : imagesToSend
+                  Array.isArray(imagesToSend) ? imagesToSend.join(',') : imagesToSend
                 );
               } catch (retryError) {
                 console.error(`Retry failed for persona ${currentPersona.personaName}:`, retryError);
