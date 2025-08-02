@@ -9,6 +9,7 @@ import { FileText, Upload, Trash2, Plus, Check, X, File } from 'lucide-react';
 import { 
   uploadKnowledgeBaseDocument, 
   getProjectDocuments, 
+  deleteKnowledgeBaseDocument,
   KnowledgeBaseDocument 
 } from '@/services/collections';
 import { extractTextFromFile } from '@/services/collections/textExtractionService';
@@ -125,6 +126,27 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
     // Reset file input
     const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
+  };
+
+  const handleDeleteDocument = async (documentId: string, documentTitle: string) => {
+    if (window.confirm(`Are you sure you want to delete "${documentTitle}"? This action cannot be undone.`)) {
+      try {
+        console.log('Deleting document:', documentId, documentTitle);
+        const success = await deleteKnowledgeBaseDocument(documentId);
+        if (success) {
+          // Remove from project documents list
+          setProjectDocuments(prev => prev.filter(doc => doc.id !== documentId));
+          // Remove from selected documents if it was selected
+          onDocumentsChange(selectedDocuments.filter(doc => doc.id !== documentId));
+          toast.success(`Document "${documentTitle}" deleted successfully`);
+        } else {
+          toast.error('Failed to delete document');
+        }
+      } catch (error) {
+        console.error('Error deleting document:', error);
+        toast.error('Failed to delete document');
+      }
+    }
   };
 
   const toggleDocumentSelection = (document: KnowledgeBaseDocument) => {
@@ -298,14 +320,16 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                     return (
                       <div
                         key={doc.id}
-                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
                           isSelected
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        onClick={() => toggleDocumentSelection(doc)}
                       >
-                        <div className="flex items-center gap-3">
+                        <div 
+                          className="flex items-center gap-3 cursor-pointer flex-1"
+                          onClick={() => toggleDocumentSelection(doc)}
+                        >
                           {getFileTypeIcon(doc.file_type)}
                           <div>
                             <div className="font-medium text-sm">{doc.title}</div>
@@ -314,14 +338,27 @@ const DocumentManager: React.FC<DocumentManagerProps> = ({
                             </div>
                           </div>
                         </div>
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                          isSelected
-                            ? 'bg-blue-500 border-blue-500'
-                            : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <Check className="w-3 h-3 text-white" />
-                          )}
+                        
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                            isSelected
+                              ? 'bg-blue-500 border-blue-500'
+                              : 'border-gray-300'
+                          }`}>
+                            {isSelected && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                            className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                            title="Delete document"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     );
