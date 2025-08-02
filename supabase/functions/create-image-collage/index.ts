@@ -28,25 +28,10 @@ serve(async (req) => {
       });
     }
 
-    if (images.length === 1) {
-      // If only one image, return it as-is
-      return new Response(JSON.stringify({ collageImage: images[0] }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-async function createImageGrid(images: string[], maxWidth: number, maxHeight: number): Promise<string[]> {
-  // Return all images individually with clear numbering
-  return images;
-}
-
-    // Return all images with context information
-    const allImages = await createImageGrid(images, maxWidth, maxHeight);
-    
+    // Return all images with proper structure
     return new Response(JSON.stringify({ 
-      images: allImages,
-      imageCount: images.length,
-      message: `You are viewing ${images.length} images. Each image is numbered for reference (Image 1, Image 2, etc.).`
+      images: images,
+      imageCount: images.length
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

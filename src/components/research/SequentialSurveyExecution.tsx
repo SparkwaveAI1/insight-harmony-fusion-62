@@ -202,7 +202,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             }
           }
 
-          // Process each question for this persona using isolated conversation
+          // Process each question for this persona with cumulative conversation context
+          const conversationHistory: any[] = [];
+          
           for (let questionIndex = 0; questionIndex < surveyData.questions.length; questionIndex++) {
             const question = surveyData.questions[questionIndex];
             const surveyQuestion = surveyData.surveyQuestions?.[questionIndex];
@@ -250,74 +252,39 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               ...(surveyQuestion?.image && { image: surveyQuestion.image })
             };
 
-            // Get current persona's conversation history
-            const currentProgress = personaProgress[personaIndex];
-            const conversationHistory = [...currentProgress.conversationHistory];
-
-            // Add user message to this persona's conversation history
+            // Add user message to cumulative conversation history
             conversationHistory.push(userMessage);
 
-            // Prepare images for the persona (FIXED multi-image handling)
-            let imagesToSend: string | undefined;
-            let imageContext = '';
+            // Send ALL images to persona using OpenAI native multi-image support
+            let imagesToSend: string[] | string | undefined;
             
             if (surveyQuestion?.images?.length) {
-              if (surveyQuestion.images.length === 1) {
-                imagesToSend = surveyQuestion.images[0];
-                imageContext = 'You are viewing 1 image with this question.';
-              } else {
-                // For multiple images, create a collage and send all images together
-                try {
-                  const { data: collageData } = await supabase.functions.invoke('create-image-collage', {
-                    body: { images: surveyQuestion.images }
-                  });
-                  
-                  if (collageData?.images) {
-                    // Send all images with proper context
-                    imagesToSend = collageData.images[0]; // Primary image for OpenAI
-                    imageContext = `You are viewing ${surveyQuestion.images.length} images for this question. ${collageData.message || ''} Please analyze all images shown and provide your perspective on what you observe.`;
-                    
-                    // Store all images in user message for conversation history
-                    userMessage.allImages = surveyQuestion.images;
-                  } else {
-                    // Fallback: send first image with context about others
-                    imagesToSend = surveyQuestion.images[0];
-                    imageContext = `You are viewing ${surveyQuestion.images.length} images for this question. I'm showing you the first image, and there are ${surveyQuestion.images.length - 1} additional related images. Please analyze what you can see and provide your perspective.`;
-                  }
-                } catch (collageError) {
-                  console.error('Error creating image collage:', collageError);
-                  // Fallback: send first image with context
-                  imagesToSend = surveyQuestion.images[0];
-                  imageContext = `You are viewing ${surveyQuestion.images.length} images for this question. I'm showing you the first image, and there are ${surveyQuestion.images.length - 1} additional related images. Please analyze what you can see and provide your perspective.`;
-                }
-              }
+              // Send all images directly to OpenAI
+              imagesToSend = surveyQuestion.images;
+              userMessage.allImages = surveyQuestion.images;
             } else if (surveyQuestion?.image) {
               imagesToSend = surveyQuestion.image;
-              imageContext = 'You are viewing 1 image with this question.';
             }
             
-            // Add image context to the question if images are present
+            // Just use the question message as-is for multi-image support
             let finalQuestionMessage = questionMessage;
-            if (imagesToSend && imageContext) {
-              finalQuestionMessage += `\n\nIMAGE CONTEXT: ${imageContext}`;
-            }
             
             // Get response using sendMessageToPersona with conversation memory
             let response: string;
             try {
-              response = await sendMessageToPersona(
-                currentPersona.personaId,
-                finalQuestionMessage,
-                conversationHistory.map(msg => ({
-                  role: msg.role,
-                  content: msg.content,
-                  image: msg.image
-                })),
-                persona,
-                'conversation',
-                fullContext,
-                imagesToSend // Pass processed image data
-              );
+                response = await sendMessageToPersona(
+                  currentPersona.personaId,
+                  finalQuestionMessage,
+                  conversationHistory.map(msg => ({
+                    role: msg.role,
+                    content: msg.content,
+                    image: msg.image
+                  })),
+                  persona,
+                  'conversation',
+                  fullContext,
+                  Array.isArray(imagesToSend) ? imagesToSend[0] : imagesToSend // Send first image for now
+                );
             } catch (personaResponseError) {
               console.error(`Error getting response from persona ${currentPersona.personaName}:`, personaResponseError);
               // Retry once after a short delay
@@ -334,7 +301,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                   persona,
                   'conversation',
                   fullContext,
-                  imagesToSend
+                  Array.isArray(imagesToSend) ? imagesToSend[0] : imagesToSend
                 );
               } catch (retryError) {
                 console.error(`Retry failed for persona ${currentPersona.personaName}:`, retryError);
