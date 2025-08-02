@@ -128,6 +128,12 @@ serve(async (req) => {
     }
     messages.push(userMessage);
 
+    // Add image analysis instructions if image is present
+    if (imageData) {
+      const imageInstructions = `\n\n${'='.repeat(40)}\n📷 IMAGE ANALYSIS 📷\n${'='.repeat(40)}\n\nYou can see and analyze this image. Respond naturally based on your personality, background, and values.\nDon't be an objective image describer - be yourself looking at this image.\nYou have the ability to see and understand visual content when it's shared with you.\n${'='.repeat(40)}`;
+      messages[0].content += imageInstructions;
+    }
+
     // Generate response with optimized parameters for speed
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
