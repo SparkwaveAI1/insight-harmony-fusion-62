@@ -47,27 +47,72 @@ async function generateQuickPersonaResponse(
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
   console.log(`Optimized history: ${previousMessages.length} → ${optimizedHistory.length} messages`);
 
-  const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
-    body: {
-      personaId,
-      message: userMessage,
-      previousMessages: optimizedHistory,
-      mode,
-      conversationContext,
-      imageData
+  const maxRetries = 3;
+  const baseDelay = 1000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
+      
+      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+        body: {
+          personaId,
+          message: userMessage,
+          previousMessages: optimizedHistory,
+          mode,
+          conversationContext,
+          imageData
+        }
+      });
+
+      if (error) {
+        console.error(`Attempt ${attempt} error:`, error);
+        
+        // If it's a timeout or server error, retry
+        if (attempt < maxRetries && (
+          error.message?.includes('timeout') || 
+          error.message?.includes('canceling statement') ||
+          error.message?.includes('503') ||
+          error.message?.includes('502')
+        )) {
+          const delay = baseDelay * attempt;
+          console.log(`Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        throw new Error(`Failed to get response: ${error.message}`);
+      }
+
+      if (!data?.response) {
+        console.error('No response from quick-chat function:', data);
+        
+        if (attempt < maxRetries) {
+          const delay = baseDelay * attempt;
+          console.log(`No response received, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        throw new Error('No response received from AI');
+      }
+
+      console.log(`Successfully got response for persona ${personaId} on attempt ${attempt}`);
+      return data.response;
+      
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed:`, error);
+      
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      const delay = baseDelay * attempt;
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-  });
-
-  if (error) {
-    console.error('Error calling quick-chat function:', error);
-    throw new Error(`Failed to get response: ${error.message}`);
   }
 
-  if (!data?.response) {
-    console.error('No response from quick-chat function:', data);
-    throw new Error('No response received from AI');
-  }
-
-  return data.response;
+  throw new Error(`Failed after ${maxRetries} attempts`);
 }
 
