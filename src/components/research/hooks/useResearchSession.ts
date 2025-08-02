@@ -60,46 +60,10 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     try {
       setIsLoading(true);
       
-      // Use provided projectId or the one from props
-      let useProjectId = selectedProjectId || projectId;
+      // Use provided projectId or the one from props (can be null for persona chats)
+      const useProjectId = selectedProjectId || projectId || null;
       
-      // For persona chats without a specific project, create a temporary project
-      if (!useProjectId) {
-        console.log('Creating temporary project for persona chat...');
-        
-        // Get current user first
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-          console.error('Auth error:', userError);
-          toast.error('Authentication required');
-          return false;
-        }
-
-        // Create a temporary project for this persona chat
-        const { data: tempProject, error: projectError } = await supabase
-          .from('projects')
-          .insert({
-            name: `Persona Chat - ${new Date().toLocaleDateString()}`,
-            description: 'Temporary project for persona conversation',
-            user_id: user.id,
-            methodology: 'Individual conversation',
-            research_objectives: 'Personal interaction with persona',
-            information: 'Auto-generated project for persona chat'
-          })
-          .select()
-          .single();
-
-        if (projectError || !tempProject) {
-          console.error('Failed to create temporary project:', projectError);
-          toast.error('Failed to initialize chat session');
-          return false;
-        }
-
-        useProjectId = tempProject.id;
-        console.log('Created temporary project:', useProjectId);
-      }
-      
-      console.log('Final Project ID to use:', useProjectId);
+      console.log('Final Project ID to use:', useProjectId || 'null (persona chat)');
 
       if (!personaIds || personaIds.length === 0) {
         const error = 'At least one persona must be selected';
@@ -108,43 +72,26 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         return false;
       }
 
-      // Get current user (if not already retrieved above)
-      let user;
-      if (!useProjectId) {
-        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          console.error('Auth error:', userError);
-          toast.error('Authentication error');
-          return false;
-        }
-        user = authUser;
-      } else {
-        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          console.error('Auth error:', userError);
-          toast.error('Authentication error');
-          return false;
-        }
-        user = authUser;
-      }
-      
-      if (!user) {
-        const error = 'User must be authenticated';
-        console.error(error);
-        toast.error(error);
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('Auth error:', userError);
+        toast.error('Authentication required');
         return false;
       }
 
       console.log('User authenticated:', user.id);
 
-      // Verify project exists and user has access
-      try {
-        const project = await getProjectById(useProjectId);
-        console.log('Project verified:', project?.name);
-      } catch (projectError) {
-        console.error('Project verification failed:', projectError);
-        toast.error('Failed to access project. Please check your permissions.');
-        return false;
+      // Verify project exists and user has access (only if projectId is provided)
+      if (useProjectId) {
+        try {
+          const project = await getProjectById(useProjectId);
+          console.log('Project verified:', project?.name);
+        } catch (projectError) {
+          console.error('Project verification failed:', projectError);
+          toast.error('Failed to access project. Please check your permissions.');
+          return false;
+        }
       }
 
       // Create conversation session using existing conversations table
@@ -154,9 +101,9 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         .insert({
           project_id: useProjectId,
           persona_ids: personaIds,
-          title: `Research Session - ${new Date().toLocaleDateString()}`,
+          title: useProjectId ? `Research Session - ${new Date().toLocaleDateString()}` : `Persona Chat - ${new Date().toLocaleDateString()}`,
           user_id: user.id,
-          session_type: 'research',
+          session_type: useProjectId ? 'research' : 'chat',
           active_persona_ids: personaIds
         })
         .select()
@@ -206,7 +153,8 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       });
       setPersonaConversations(newConversations);
 
-      toast.success(`Research session started successfully with ${mappedPersonas.length} personas`);
+      const sessionType = useProjectId ? 'research session' : 'persona chat';
+      toast.success(`${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} started successfully with ${mappedPersonas.length} personas`);
       console.log('=== CREATE SESSION SUCCESS ===');
       return true;
     } catch (error) {

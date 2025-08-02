@@ -256,7 +256,7 @@ export type Database = {
           created_at: string
           id: string
           persona_ids: string[]
-          project_id: string
+          project_id: string | null
           session_type: string | null
           tags: string[]
           title: string
@@ -269,7 +269,7 @@ export type Database = {
           created_at?: string
           id?: string
           persona_ids?: string[]
-          project_id: string
+          project_id?: string | null
           session_type?: string | null
           tags?: string[]
           title: string
@@ -282,7 +282,7 @@ export type Database = {
           created_at?: string
           id?: string
           persona_ids?: string[]
-          project_id?: string
+          project_id?: string | null
           session_type?: string | null
           tags?: string[]
           title?: string
