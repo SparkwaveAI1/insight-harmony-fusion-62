@@ -134,10 +134,19 @@ serve(async (req) => {
     // Add current user message with potential image data
     const userMessage: any = { role: 'user' };
     if (imageData) {
-      userMessage.content = [
-        { type: 'text', text: message },
-        { type: 'image_url', image_url: { url: imageData } }
-      ];
+      // Handle both single images and comma-separated multiple images
+      const images = imageData.includes(',') ? imageData.split(',') : [imageData];
+      const contentArray = [{ type: 'text', text: message }];
+      
+      // Add each image as a separate image_url object
+      images.forEach(img => {
+        const trimmedImg = img.trim();
+        if (trimmedImg) {
+          contentArray.push({ type: 'image_url', image_url: { url: trimmedImg } });
+        }
+      });
+      
+      userMessage.content = contentArray;
     } else {
       userMessage.content = message;
     }
