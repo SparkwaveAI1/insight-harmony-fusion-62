@@ -255,20 +255,18 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Add user message to cumulative conversation history
             conversationHistory.push(userMessage);
 
-            // Handle multi-image data properly for OpenAI
+            // Send ALL images to persona using OpenAI native multi-image support
             let imagesToSend: string[] | string | undefined;
             
             if (surveyQuestion?.images?.length) {
-              console.log(`Sending ${surveyQuestion.images.length} images to persona ${currentPersona.personaName}`);
-              // Store all images in conversation history for proper context preservation
-              userMessage.allImages = surveyQuestion.images;
-              userMessage.image = surveyQuestion.images[0]; // First image for backward compatibility
+              // Send all images directly to OpenAI
               imagesToSend = surveyQuestion.images;
+              userMessage.allImages = surveyQuestion.images;
             } else if (surveyQuestion?.image) {
-              console.log(`Sending single image to persona ${currentPersona.personaName}`);
               imagesToSend = surveyQuestion.image;
             }
             
+            // Just use the question message as-is for multi-image support
             let finalQuestionMessage = questionMessage;
             
             // Get response using sendMessageToPersona with conversation memory
@@ -280,13 +278,12 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                   conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content,
-                    image: msg.image,
-                    allImages: msg.allImages
+                    image: msg.image
                   })),
                   persona,
                   'conversation',
                   fullContext,
-                  imagesToSend // Send array directly, not comma-joined
+                  Array.isArray(imagesToSend) ? imagesToSend.join(',') : imagesToSend
                 );
             } catch (personaResponseError) {
               console.error(`Error getting response from persona ${currentPersona.personaName}:`, personaResponseError);
@@ -304,7 +301,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                   persona,
                   'conversation',
                   fullContext,
-                  imagesToSend // Send array directly, not comma-joined
+                  Array.isArray(imagesToSend) ? imagesToSend.join(',') : imagesToSend
                 );
               } catch (retryError) {
                 console.error(`Retry failed for persona ${currentPersona.personaName}:`, retryError);
