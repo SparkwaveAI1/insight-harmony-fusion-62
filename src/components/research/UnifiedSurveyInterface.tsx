@@ -65,6 +65,14 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
   const handleProjectSelected = (projectId: string) => {
     setSelectedProjectId(projectId || null);
+    
+    // Update URL to reflect project selection
+    if (projectId) {
+      navigate(`/research?project=${projectId}`, { replace: true });
+    } else {
+      navigate('/research', { replace: true });
+    }
+    
     setCurrentStep('setup');
   };
 
