@@ -4,10 +4,13 @@
  */
 export const extractDocumentText = async (fileData: string, fileType: string, fileName: string): Promise<string | null> => {
   try {
-    const response = await fetch('/api/extract-document-text', {
+    console.log('Extracting document text:', { fileType, fileName, dataLength: fileData.length });
+    
+    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-document-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
       },
       body: JSON.stringify({
         fileData,
@@ -17,11 +20,21 @@ export const extractDocumentText = async (fileData: string, fileType: string, fi
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to extract document text');
+      const errorText = await response.text();
+      console.error('Document extraction API error:', response.status, errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || 'Failed to extract document text' };
+      }
+      
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log('Document extraction successful:', { extractedLength: result.extractedText?.length || 0 });
     return result.extractedText;
   } catch (error) {
     console.error('Error in document text extraction API:', error);
@@ -34,10 +47,13 @@ export const extractDocumentText = async (fileData: string, fileType: string, fi
  */
 export const extractImageText = async (imageData: string, fileName: string): Promise<string | null> => {
   try {
-    const response = await fetch('/api/extract-image-text', {
+    console.log('Extracting image text:', { fileName, dataLength: imageData.length });
+    
+    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-image-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
       },
       body: JSON.stringify({
         imageData,
@@ -46,11 +62,21 @@ export const extractImageText = async (imageData: string, fileName: string): Pro
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to extract image text');
+      const errorText = await response.text();
+      console.error('Image extraction API error:', response.status, errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || 'Failed to extract image text' };
+      }
+      
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log('Image extraction successful:', { extractedLength: result.extractedText?.length || 0 });
     return result.extractedText;
   } catch (error) {
     console.error('Error in image text extraction API:', error);
