@@ -8,6 +8,7 @@ import {
   Folder,
   FlaskConical,
   Mail,
+  BookOpen,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -40,6 +41,11 @@ export const navigationMenuItems = [
     title: "Researcher",
     url: "/research",
     icon: FlaskConical,
+  },
+  {
+    title: "User Guide",
+    url: "/docs",
+    icon: BookOpen,
   },
   {
     title: "PRSNA Token",
