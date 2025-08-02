@@ -106,15 +106,30 @@ serve(async (req) => {
     console.log('System prompt length:', systemPrompt.length, 'characters');
     console.log('Conversation context included:', conversationContext ? 'YES' : 'NO', conversationContext ? `(${conversationContext.length} chars)` : '');
 
-    // Build message history (last 8 messages only for speed)
+    // Build message history with proper image context preservation
+    console.log('Building message history from', previousMessages.length, 'previous messages');
     const recentMessages = previousMessages.slice(-8);
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...recentMessages.map((msg: any) => ({
-        role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.content
-      }))
+      ...recentMessages.map((msg: any) => {
+        const messageContent: any = { 
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content 
+        };
+        
+        // Preserve image context in conversation history
+        if (msg.image && msg.role === 'user') {
+          messageContent.content = [
+            { type: 'text', text: msg.content },
+            { type: 'image_url', image_url: { url: msg.image } }
+          ];
+        }
+        
+        return messageContent;
+      })
     ];
+    
+    console.log('Message history built with', messages.length, 'messages including system prompt');
 
     // Add current user message with potential image data
     const userMessage: any = { role: 'user' };

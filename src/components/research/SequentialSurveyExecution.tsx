@@ -257,7 +257,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Add user message to this persona's conversation history
             conversationHistory.push(userMessage);
 
-            // Prepare images for the persona (improved multi-image handling)
+            // Prepare images for the persona (FIXED multi-image handling)
             let imagesToSend: string | undefined;
             let imageContext = '';
             
@@ -266,18 +266,30 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 imagesToSend = surveyQuestion.images[0];
                 imageContext = 'You are viewing 1 image with this question.';
               } else {
-                // For multiple images, send them sequentially with clear context
-                const imageDescriptions = surveyQuestion.images.map((_, index) => 
-                  `Image ${index + 1}`
-                ).join(', ');
-                
-                // For now, send the first image with context about others
-                // This ensures reliable delivery while maintaining context
-                imagesToSend = surveyQuestion.images[0];
-                imageContext = `You are viewing multiple images for this question. This is Image 1 of ${surveyQuestion.images.length} total images (${imageDescriptions}). Please analyze this image and consider that there are ${surveyQuestion.images.length} images total in your response. Note: Additional images in this question include variations or related content.`;
-                
-                // Store all images in conversation context for potential future use
-                userMessage.additionalImages = surveyQuestion.images.slice(1);
+                // For multiple images, create a collage and send all images together
+                try {
+                  const { data: collageData } = await supabase.functions.invoke('create-image-collage', {
+                    body: { images: surveyQuestion.images }
+                  });
+                  
+                  if (collageData?.images) {
+                    // Send all images with proper context
+                    imagesToSend = collageData.images[0]; // Primary image for OpenAI
+                    imageContext = `You are viewing ${surveyQuestion.images.length} images for this question. ${collageData.message || ''} Please analyze all images shown and provide your perspective on what you observe.`;
+                    
+                    // Store all images in user message for conversation history
+                    userMessage.allImages = surveyQuestion.images;
+                  } else {
+                    // Fallback: send first image with context about others
+                    imagesToSend = surveyQuestion.images[0];
+                    imageContext = `You are viewing ${surveyQuestion.images.length} images for this question. I'm showing you the first image, and there are ${surveyQuestion.images.length - 1} additional related images. Please analyze what you can see and provide your perspective.`;
+                  }
+                } catch (collageError) {
+                  console.error('Error creating image collage:', collageError);
+                  // Fallback: send first image with context
+                  imagesToSend = surveyQuestion.images[0];
+                  imageContext = `You are viewing ${surveyQuestion.images.length} images for this question. I'm showing you the first image, and there are ${surveyQuestion.images.length - 1} additional related images. Please analyze what you can see and provide your perspective.`;
+                }
               }
             } else if (surveyQuestion?.image) {
               imagesToSend = surveyQuestion.image;
@@ -291,19 +303,44 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             }
             
             // Get response using sendMessageToPersona with conversation memory
-            const response = await sendMessageToPersona(
-              currentPersona.personaId,
-              finalQuestionMessage,
-              conversationHistory.map(msg => ({
-                role: msg.role,
-                content: msg.content,
-                image: msg.image
-              })),
-              persona,
-              'conversation',
-              fullContext,
-              imagesToSend // Pass processed image data
-            );
+            let response: string;
+            try {
+              response = await sendMessageToPersona(
+                currentPersona.personaId,
+                finalQuestionMessage,
+                conversationHistory.map(msg => ({
+                  role: msg.role,
+                  content: msg.content,
+                  image: msg.image
+                })),
+                persona,
+                'conversation',
+                fullContext,
+                imagesToSend // Pass processed image data
+              );
+            } catch (personaResponseError) {
+              console.error(`Error getting response from persona ${currentPersona.personaName}:`, personaResponseError);
+              // Retry once after a short delay
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              try {
+                response = await sendMessageToPersona(
+                  currentPersona.personaId,
+                  finalQuestionMessage,
+                  conversationHistory.map(msg => ({
+                    role: msg.role,
+                    content: msg.content,
+                    image: msg.image
+                  })),
+                  persona,
+                  'conversation',
+                  fullContext,
+                  imagesToSend
+                );
+              } catch (retryError) {
+                console.error(`Retry failed for persona ${currentPersona.personaName}:`, retryError);
+                throw new Error(`Failed to get response after retry: ${retryError.message}`);
+              }
+            }
             
             console.log(`Got response from ${currentPersona.personaName} for question ${questionIndex + 1}`);
 

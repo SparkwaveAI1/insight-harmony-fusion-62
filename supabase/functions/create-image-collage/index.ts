@@ -35,47 +35,18 @@ serve(async (req) => {
       });
     }
 
-async function createImageGrid(images: string[], maxWidth: number, maxHeight: number): Promise<string> {
-  // For server-side image processing, we'll create a simple text-based description
-  // and concatenate images vertically or side by side for now
-  
-  // Calculate grid layout
-  const imageCount = images.length;
-  const cols = Math.min(imageCount, 2); // Max 2 columns for readability
-  const rows = Math.ceil(imageCount / cols);
-  
-  // Create a simple concatenated view by joining images with separators
-  const separatedImages = images.map((img, index) => {
-    // Add image number prefix to help AI identify each image
-    const imageNumber = `IMAGE ${index + 1}`;
-    return { data: img, label: imageNumber };
-  });
-  
-  // For now, return the first image with clear context about others
-  // This is a simplified approach until we implement proper server-side image processing
-  return images[0];
+async function createImageGrid(images: string[], maxWidth: number, maxHeight: number): Promise<string[]> {
+  // Return all images individually with clear numbering
+  return images;
 }
 
-    // Simple server-side approach: create a basic grid layout description
-    // Since we can't run browser canvas on server, we'll return a composite description
-    const collageInfo = {
-      type: 'multi-image',
-      imageCount: images.length,
-      layout: {
-        cols: Math.ceil(Math.sqrt(images.length)),
-        rows: Math.ceil(images.length / Math.ceil(Math.sqrt(images.length)))
-      },
-      images: images,
-      description: `A collage of ${images.length} images arranged in a grid layout`
-    };
-
-    // Create a concatenated image with all images and clear descriptions
-    const concatenatedImageData = await createImageGrid(images, maxWidth, maxHeight);
+    // Return all images with context information
+    const allImages = await createImageGrid(images, maxWidth, maxHeight);
     
     return new Response(JSON.stringify({ 
-      collageImage: concatenatedImageData,
-      multiImageContext: collageInfo,
-      message: `You are viewing ${images.length} images arranged in a grid. Each image is numbered (1, 2, 3, etc.) in the top-left corner for reference.`
+      images: allImages,
+      imageCount: images.length,
+      message: `You are viewing ${images.length} images. Each image is numbered for reference (Image 1, Image 2, etc.).`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

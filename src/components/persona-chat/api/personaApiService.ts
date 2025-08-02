@@ -29,7 +29,8 @@ export async function sendMessageToPersona(
 
   } catch (error) {
     console.error('Error generating persona response:', error);
-    return 'I apologize, but I seem to be having trouble responding right now. Could you try rephrasing your question?';
+    // Don't suppress the error - let it bubble up for proper handling
+    throw error;
   }
 }
 
