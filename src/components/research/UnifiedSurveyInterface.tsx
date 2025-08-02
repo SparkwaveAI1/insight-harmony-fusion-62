@@ -433,12 +433,6 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
             surveyQuestions={surveyData.surveyQuestions}
             onSurveyQuestionsChange={handleSurveyQuestionsChange}
           />
-
-          <DocumentManager
-            projectId={selectedProjectId || undefined}
-            selectedDocuments={selectedDocuments}
-            onDocumentsChange={setSelectedDocuments}
-          />
         </div>
 
         <PersonaSourceSelector
