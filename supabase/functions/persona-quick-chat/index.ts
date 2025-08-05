@@ -34,25 +34,30 @@ function hashContext(context: string): string {
 }
 
 function getCachedPersona(personaId: string, conversationContext: string = ''): { persona: any, instructions: string } | null {
-  const contextHash = hashContext(conversationContext);
+  // Include personaId in the context hash to prevent cross-contamination between personas
+  // This ensures each persona gets unique cache entries even with identical material contexts
+  const contextWithPersona = `${conversationContext}-persona:${personaId}`;
+  const contextHash = hashContext(contextWithPersona);
   const cacheKey = `${personaId}-${contextHash}`;
   const cached = personaCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log('Using cached persona data for:', personaId, 'with context hash:', contextHash);
+    console.log('Using cached persona data for:', personaId, 'with unique context hash:', contextHash);
     return { persona: cached.persona, instructions: cached.instructions };
   }
   return null;
 }
 
 function setCachedPersona(personaId: string, conversationContext: string = '', persona: any, instructions: string): void {
-  const contextHash = hashContext(conversationContext);
+  // Include personaId in the context hash to prevent cross-contamination between personas
+  const contextWithPersona = `${conversationContext}-persona:${personaId}`;
+  const contextHash = hashContext(contextWithPersona);
   const cacheKey = `${personaId}-${contextHash}`;
   personaCache.set(cacheKey, {
     persona,
     instructions,
     timestamp: Date.now()
   });
-  console.log('Cached persona data for:', personaId, 'with context hash:', contextHash);
+  console.log('Cached persona data for:', personaId, 'with unique context hash:', contextHash);
 }
 
 serve(async (req) => {
