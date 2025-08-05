@@ -6,6 +6,7 @@ export interface EnhancementOptions {
   enhanceInterviewResponses?: boolean;
   enhanceTraitProfile?: boolean;
   enhanceMetadata?: boolean;
+  enhanceKnowledgeDomains?: boolean;
 }
 
 export interface EnhancementResult {

@@ -18,6 +18,7 @@ export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
 export { generatePersonaDescription, updatePersonaDescription } from './operations/generatePersonaDescription';
 export { enhancePersona } from './enhancePersona';
+export { bulkEnhancePersonas } from './bulkEnhancePersonas';
 
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';

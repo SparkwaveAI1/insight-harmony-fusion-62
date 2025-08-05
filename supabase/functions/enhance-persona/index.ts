@@ -9,7 +9,8 @@ import {
   generatePersonaTraitProfile,
   generatePersonaBehavioralLinguistic,
   generatePersonaInterview,
-  enhancePersonaMetadata
+  enhancePersonaMetadata,
+  generateKnowledgeDomains
 } from "./personaGenerator.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
@@ -18,6 +19,7 @@ interface EnhancementOptions {
   enhanceInterviewResponses?: boolean;
   enhanceTraitProfile?: boolean;
   enhanceMetadata?: boolean;
+  enhanceKnowledgeDomains?: boolean;
 }
 
 serve(async (req) => {
@@ -124,6 +126,26 @@ serve(async (req) => {
       } catch (error) {
         console.warn('⚠️ Failed to enhance metadata:', error);
         enhancementLog.push('Failed to enhance metadata');
+      }
+    }
+
+    // Enhancement Phase 5: Knowledge Domains (CRITICAL FIX)
+    if (options.enhanceKnowledgeDomains) {
+      console.log('🔄 Enhancing knowledge domains...');
+      try {
+        const knowledgeResult = await generateKnowledgeDomains(enhancedPersona);
+        
+        if (knowledgeResult.knowledge_domains) {
+          enhancedPersona.metadata = { 
+            ...enhancedPersona.metadata, 
+            knowledge_domains: knowledgeResult.knowledge_domains 
+          };
+          enhancementLog.push('Enhanced knowledge domains');
+          console.log('✅ Knowledge domains enhanced');
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to enhance knowledge domains:', error);
+        enhancementLog.push('Failed to enhance knowledge domains');
       }
     }
 

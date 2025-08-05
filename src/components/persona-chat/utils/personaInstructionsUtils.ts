@@ -27,9 +27,17 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
   let knowledgeDomainsList = '';
   const knowledgeDomains = persona.metadata?.knowledge_domains;
   
-  if (knowledgeDomains) {
+  // FALLBACK LOGIC: If no knowledge_domains, infer from occupation/education
+  let inferredDomains = null;
+  if (!knowledgeDomains) {
+    inferredDomains = inferKnowledgeFromOccupationEducation(persona);
+  }
+  
+  const domainsToUse = knowledgeDomains || inferredDomains;
+  
+  if (domainsToUse) {
     // Sort domains by knowledge level (highest to lowest)
-    const sortedDomains = Object.entries(knowledgeDomains)
+    const sortedDomains = Object.entries(domainsToUse)
       .filter(([_, value]) => typeof value === 'number' && value !== null)
       .sort((a, b) => (b[1] as number) - (a[1] as number));
       
@@ -121,4 +129,75 @@ export const createContextInstructions = (context: string): string => {
   RESPOND AS YOUR AUTHENTIC SELF WITHIN THIS CONTEXT.
   EXPRESS YOUR GENUINE REACTIONS AND OPINIONS BASED ON YOUR PERSONALITY.
   `;
+};
+
+/**
+ * Infers knowledge domains from occupation and education when not present
+ * @param persona The persona object
+ * @returns Inferred knowledge domains object
+ */
+const inferKnowledgeFromOccupationEducation = (persona: Persona): Record<string, number> | null => {
+  const occupation = persona.metadata?.occupation?.toLowerCase() || '';
+  const education = persona.metadata?.education_level?.toLowerCase() || persona.metadata?.education?.toLowerCase() || '';
+  
+  // Base knowledge levels (most people start here)
+  const baseKnowledge = {
+    technology: 2,
+    finance: 1,
+    science: 2,
+    arts: 2,
+    sports: 2,
+    politics: 2,
+    history: 2,
+    health: 2,
+    business: 2,
+    entertainment: 3
+  };
+  
+  // Education level adjustments
+  if (education.includes('college') || education.includes('university') || education.includes('bachelor')) {
+    baseKnowledge.science += 1;
+    baseKnowledge.history += 1;
+    baseKnowledge.business += 1;
+  } else if (education.includes('phd') || education.includes('doctorate') || education.includes('master')) {
+    baseKnowledge.science += 2;
+    baseKnowledge.history += 1;
+    baseKnowledge.business += 1;
+  } else if (education.includes('ged') || education.includes('high school')) {
+    // Keep base levels
+  }
+  
+  // Occupation-based adjustments
+  if (occupation.includes('warehouse') || occupation.includes('labor') || occupation.includes('worker')) {
+    baseKnowledge.technology = 1;
+    baseKnowledge.finance = 1;
+    baseKnowledge.science = 1;
+    baseKnowledge.business = 1;
+    baseKnowledge.politics = 1;
+  } else if (occupation.includes('teacher') || occupation.includes('professor')) {
+    baseKnowledge.science += 1;
+    baseKnowledge.history += 1;
+    baseKnowledge.arts += 1;
+  } else if (occupation.includes('engineer') || occupation.includes('programmer') || occupation.includes('tech')) {
+    baseKnowledge.technology += 2;
+    baseKnowledge.science += 1;
+  } else if (occupation.includes('finance') || occupation.includes('accounting') || occupation.includes('bank')) {
+    baseKnowledge.finance += 2;
+    baseKnowledge.business += 1;
+  } else if (occupation.includes('artist') || occupation.includes('musician') || occupation.includes('design')) {
+    baseKnowledge.arts += 2;
+    baseKnowledge.entertainment += 1;
+  } else if (occupation.includes('health') || occupation.includes('medical') || occupation.includes('nurse')) {
+    baseKnowledge.health += 2;
+    baseKnowledge.science += 1;
+  }
+  
+  // Cap at reasonable levels (1-5 scale)
+  Object.keys(baseKnowledge).forEach(key => {
+    baseKnowledge[key] = Math.min(5, Math.max(1, baseKnowledge[key]));
+  });
+  
+  console.log(`Inferred knowledge domains for ${persona.name} (${occupation}, ${education}):`, baseKnowledge);
+  
+  return baseKnowledge;
 };
