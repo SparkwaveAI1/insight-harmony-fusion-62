@@ -9,9 +9,9 @@ import {
   generatePersonaTraitProfile,
   generatePersonaBehavioralLinguistic,
   generatePersonaInterview,
-  enhancePersonaMetadata,
-  generateKnowledgeDomains
+  enhancePersonaMetadata
 } from "./personaGenerator.ts";
+import { generateKnowledgeDomains } from "../_shared/knowledgeDomains.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 interface EnhancementOptions {
