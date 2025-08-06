@@ -9,6 +9,7 @@ import {
   FlaskConical,
   Mail,
   BookOpen,
+  Shield,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -51,6 +52,15 @@ export const navigationMenuItems = [
     title: "PRSNA Token",
     url: "/prsna",
     icon: Coins,
+  },
+];
+
+// Admin navigation items - only shown to admin users
+export const adminNavItems = [
+  {
+    title: "Admin",
+    url: "/admin",
+    icon: Shield,
   },
 ];
 

@@ -72,6 +72,9 @@ verify_jwt = true
 [functions.create-image-collage]
 verify_jwt = true
 
+[functions.bulk-enhance-personas]
+verify_jwt = true
+
 [edge-runtime]
 policy = "per_worker"
 inspector_port = 8083

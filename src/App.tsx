@@ -31,6 +31,7 @@ import Auth from "./pages/Auth";
 import UserProfile from "./pages/UserProfile";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import InterviewProcess from "./pages/InterviewProcess";
 import WhitePaper from "./pages/WhitePaper";
@@ -111,6 +112,9 @@ function App() {
                 
                 {/* User Profile Route */}
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                
+                {/* Admin Route */}
+                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
                 
                 {/* Protected Routes - Require authentication */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
