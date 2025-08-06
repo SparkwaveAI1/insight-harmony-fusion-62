@@ -6,7 +6,8 @@ import { Shield, Users, Database, Zap } from "lucide-react";
 
 // Admin emails - add yours here
 const ADMIN_EMAILS = [
-  "your-email@example.com", // Replace with actual admin emails
+  "cumbucotrader@gmail.com",
+  "scott@sparkwave-ai.com",
 ];
 
 export function AdminDashboard() {

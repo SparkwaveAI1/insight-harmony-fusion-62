@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const ADMIN_EMAILS = ["your-email@example.com"]; // Replace with actual admin emails
+const ADMIN_EMAILS = ["cumbucotrader@gmail.com", "scott@sparkwave-ai.com"]; // Replace with actual admin emails
 
 export function NavigationMenu() {
   const location = useLocation();
