@@ -240,32 +240,6 @@ export const PersonaEnhancementTools: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>📊 Current Status</CardTitle>
-          <CardDescription>Overview of persona data completeness</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Missing Demographics:</span>
-              <span className="font-mono text-red-600">~75 personas</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Missing Knowledge Domains:</span>
-              <span className="font-mono text-orange-600">~75 personas</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Missing Education:</span>
-              <span className="font-mono text-yellow-600">~100 personas</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Brief Descriptions:</span>
-              <span className="font-mono text-blue-600">~35 personas</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
