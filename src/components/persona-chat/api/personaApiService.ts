@@ -4,6 +4,8 @@ import { Persona } from '@/services/persona/types';
 import { Message } from '../types';
 import { ChatMode } from '../ChatModeSelector';
 import { ConversationOptimizer } from '../utils/conversationOptimizer';
+import { validatePersonaResponse } from '@/components/research/services/personaValidatorService';
+import { dbPersonaToPersona } from '@/services/persona/mappers';
 
 export async function sendMessageToPersona(
   personaId: string,
@@ -42,14 +44,29 @@ async function generateQuickPersonaResponse(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('Using enhanced quick-chat function with linguistic profiles');
+  console.log('Using enhanced quick-chat function with linguistic profiles and validation');
 
   // Optimize conversation history for performance
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
   console.log(`Optimized history: ${previousMessages.length} → ${optimizedHistory.length} messages`);
 
   const maxRetries = 3;
+  const maxValidationRetries = 2;
   const baseDelay = 1000;
+
+  // Get persona data for validation
+  const { data: dbPersonaData, error: personaError } = await supabase
+    .from('personas')
+    .select('*')
+    .eq('persona_id', personaId)
+    .single();
+
+  if (personaError || !dbPersonaData) {
+    throw new Error('Failed to load persona for validation');
+  }
+
+  // Convert to proper Persona type
+  const personaData = dbPersonaToPersona(dbPersonaData);
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -98,8 +115,45 @@ async function generateQuickPersonaResponse(
         throw new Error('No response received from AI');
       }
 
-      console.log(`Successfully got response for persona ${personaId} on attempt ${attempt}`);
-      return data.response;
+      const response = data.response;
+      console.log(`Got response for persona ${personaId} on attempt ${attempt}, validating authenticity...`);
+
+      // Validate response authenticity
+      try {
+        const validation = await validatePersonaResponse(
+          response,
+          personaData,
+          conversationContext,
+          userMessage
+        );
+
+        console.log(`Validation scores for ${personaData.name}: Overall=${validation.scores.overall}, Demographics=${validation.scores.demographicAccuracy}, Traits=${validation.scores.traitAlignment}`);
+
+        // If validation fails and we haven't exhausted validation retries
+        if (validation.shouldRegenerate && attempt <= maxValidationRetries) {
+          console.log(`🔄 AUTHENTICITY CHECK FAILED for ${personaData.name} (score: ${validation.scores.overall}) - Regenerating response...`);
+          console.log(`Issues found: ${validation.specificErrors.join(', ')}`);
+          
+          // Continue to next attempt for regeneration
+          const delay = baseDelay * attempt;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        // Accept response (either passed validation or we're out of validation retries)
+        if (validation.shouldRegenerate) {
+          console.warn(`⚠️ Response for ${personaData.name} still failed validation after ${maxValidationRetries} retries (score: ${validation.scores.overall}), accepting to prevent infinite loops`);
+        } else {
+          console.log(`✅ Authenticity validated for ${personaData.name} (score: ${validation.scores.overall})`);
+        }
+
+        return response;
+
+      } catch (validationError) {
+        console.error('Validation service failed, accepting response:', validationError);
+        // If validation service fails, accept the response rather than failing entirely
+        return response;
+      }
       
     } catch (error) {
       console.error(`Attempt ${attempt} failed:`, error);
