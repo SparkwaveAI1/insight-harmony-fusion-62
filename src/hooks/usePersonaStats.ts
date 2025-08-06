@@ -50,6 +50,9 @@ export function usePersonaStats() {
       let missingEducation = 0;
       let briefDescriptions = 0;
 
+      console.log('Total personas found:', totalPersonas);
+      console.log('Sample persona metadata:', personas[0]?.metadata);
+
       personas.forEach(persona => {
         // Check for missing demographics in metadata
         const metadata = persona.metadata as any || {};
