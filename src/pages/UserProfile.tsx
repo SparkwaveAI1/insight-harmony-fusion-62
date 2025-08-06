@@ -1,15 +1,29 @@
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import ProfileForm from "@/components/profile/ProfileForm";
 import ProfileSummary from "@/components/profile/ProfileSummary";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
+// Admin emails - keep in sync with AdminDashboard
+const ADMIN_EMAILS = [
+  "cumbucotrader@gmail.com", 
+  "scott@sparkwave-ai.com",
+];
 
 const UserProfile = () => {
   const { profile, loading, updateProfile } = useUserProfile();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Check if user is admin
+  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
 
   if (loading) {
     return (
@@ -36,6 +50,20 @@ const UserProfile = () => {
                 </CardHeader>
                 <CardContent>
                   <ProfileSummary profile={profile} />
+                  
+                  {/* Admin Dashboard Button */}
+                  {isAdmin && (
+                    <div className="mt-4 pt-4 border-t">
+                      <Button 
+                        onClick={() => navigate("/admin")}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
