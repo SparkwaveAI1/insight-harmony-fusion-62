@@ -15,7 +15,8 @@ export const PersonaEnhancementTools: React.FC = () => {
     targetCount: 75,
     enhanceKnowledgeDomains: true,
     enhanceEducation: true,
-    enhanceDescriptions: false
+    enhanceDescriptions: false,
+    enhanceDemographics: true
   });
 
   const handleBulkEnhancement = async () => {
@@ -73,6 +74,19 @@ export const PersonaEnhancementTools: React.FC = () => {
             
             <div className="flex items-center space-x-2">
               <Checkbox 
+                id="demographics"
+                checked={options.enhanceDemographics}
+                onCheckedChange={(checked) => 
+                  setOptions(prev => ({ ...prev, enhanceDemographics: !!checked }))
+                }
+              />
+              <label htmlFor="demographics" className="text-sm font-medium">
+                👥 Fix Missing Demographics (Priority Fix)
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
                 id="knowledge-domains"
                 checked={options.enhanceKnowledgeDomains}
                 onCheckedChange={(checked) => 
@@ -80,7 +94,7 @@ export const PersonaEnhancementTools: React.FC = () => {
                 }
               />
               <label htmlFor="knowledge-domains" className="text-sm font-medium">
-                🧠 Generate Knowledge Domains (Critical Fix)
+                🧠 Generate Knowledge Domains
               </label>
             </div>
             
@@ -234,8 +248,12 @@ export const PersonaEnhancementTools: React.FC = () => {
         <CardContent>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>Missing Knowledge Domains:</span>
+              <span>Missing Demographics:</span>
               <span className="font-mono text-red-600">~75 personas</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Missing Knowledge Domains:</span>
+              <span className="font-mono text-orange-600">~75 personas</span>
             </div>
             <div className="flex justify-between">
               <span>Missing Education:</span>

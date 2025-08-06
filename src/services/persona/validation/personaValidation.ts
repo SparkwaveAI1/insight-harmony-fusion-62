@@ -43,11 +43,11 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
     errors.push("Missing or empty interview responses");
   }
   
-  // Check metadata completeness
+  // Check metadata completeness - make this an ERROR not warning
   const hasMetadata = checkMetadata(persona.metadata);
   console.log("Has complete metadata:", hasMetadata);
   if (!hasMetadata) {
-    warnings.push("Incomplete demographic metadata");
+    errors.push("Missing required demographic metadata - persona creation incomplete");
   }
   
   console.log("=== END DETAILED VALIDATION ===");
@@ -201,10 +201,35 @@ function checkInterviewResponses(sections: any): boolean {
 }
 
 function checkMetadata(metadata: any): boolean {
-  if (!metadata || typeof metadata !== 'object') return false;
+  if (!metadata || typeof metadata !== 'object') {
+    console.warn("❌ Metadata is missing or invalid");
+    return false;
+  }
   
-  const requiredFields = ['name', 'age', 'gender', 'occupation'];
-  return requiredFields.every(field => metadata[field] && metadata[field] !== 'Not specified');
+  // Required core demographic fields based on actual generation structure
+  const requiredDemographicFields = [
+    'age',
+    'gender', 
+    'race_ethnicity',
+    'education_level',
+    'occupation',
+    'employment_type',
+    'income_level',
+    'social_class_identity',
+    'marital_status'
+  ];
+  
+  const missingFields = requiredDemographicFields.filter(field => 
+    !metadata[field] || metadata[field] === 'Not specified' || metadata[field] === ''
+  );
+  
+  if (missingFields.length > 0) {
+    console.warn(`❌ Missing required demographic fields: ${missingFields.join(', ')}`);
+    return false;
+  }
+  
+  console.log("✅ All required demographic metadata fields present");
+  return true;
 }
 
 export function logPersonaValidation(persona: any, validationResult: PersonaValidationResult) {

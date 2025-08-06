@@ -6,6 +6,7 @@ export interface BulkEnhanceOptions {
   enhanceKnowledgeDomains?: boolean;
   enhanceEducation?: boolean;
   enhanceDescriptions?: boolean;
+  enhanceDemographics?: boolean;
 }
 
 export interface BulkEnhanceResult {

@@ -39,6 +39,21 @@ export function PersonaCompletenessAnalysis() {
     fetchPersonaCompleteness();
   }, []);
 
+  // Helper function to check if required demographic fields are present
+  const hasRequiredDemographicFields = (metadata: any): boolean => {
+    if (!metadata || typeof metadata !== 'object') return false;
+    
+    const requiredFields = [
+      'age', 'gender', 'race_ethnicity', 'education_level', 
+      'occupation', 'employment_type', 'income_level', 
+      'social_class_identity', 'marital_status'
+    ];
+    
+    return requiredFields.every(field => 
+      metadata[field] && metadata[field] !== 'Not specified' && metadata[field] !== ''
+    );
+  };
+
   const analyzePersonaCompleteness = (persona: any): PersonaCompleteness => {
     const missingComponents: string[] = [];
     let completionScore = 0;
@@ -67,10 +82,10 @@ export function PersonaCompletenessAnalysis() {
       missingComponents.push("Interview Sections");
     }
 
-    // Check metadata completeness
+    // Check metadata completeness - use proper demographic validation
     const metadataComplete = persona.metadata && 
       Object.keys(persona.metadata).length > 0 &&
-      persona.metadata.demographics;
+      hasRequiredDemographicFields(persona.metadata);
     
     if (metadataComplete) {
       completionScore++;

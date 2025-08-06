@@ -19,6 +19,7 @@ interface BulkEnhanceRequest {
   enhanceKnowledgeDomains?: boolean;
   enhanceEducation?: boolean;
   enhanceDescriptions?: boolean;
+  enhanceDemographics?: boolean;
 }
 
 serve(async (req) => {
@@ -35,16 +36,24 @@ serve(async (req) => {
       targetCount = 75,
       enhanceKnowledgeDomains = true,
       enhanceEducation = true,
-      enhanceDescriptions = false
+      enhanceDescriptions = false,
+      enhanceDemographics = true
     }: BulkEnhanceRequest = await req.json();
 
-    // Get personas missing knowledge domains
-    console.log('🔍 Finding personas missing knowledge domains...');
-    const { data: personas, error: fetchError } = await supabase
-      .from('personas')
-      .select('*')
-      .is('metadata->knowledge_domains', null)
-      .limit(targetCount);
+    // Get personas missing required demographic metadata or knowledge domains
+    console.log('🔍 Finding personas missing knowledge domains or demographic metadata...');
+    
+    let query = supabase.from('personas').select('*');
+    
+    if (enhanceDemographics) {
+      // Find personas missing required demographic fields
+      query = query.or('metadata->race_ethnicity.is.null,metadata->employment_type.is.null,metadata->income_level.is.null,metadata->social_class_identity.is.null,metadata->marital_status.is.null');
+    } else if (enhanceKnowledgeDomains) {
+      // Find personas missing knowledge domains
+      query = query.is('metadata->knowledge_domains', null);
+    }
+    
+    const { data: personas, error: fetchError } = await query.limit(targetCount);
 
     if (fetchError) {
       throw new Error(`Failed to fetch personas: ${fetchError.message}`);
@@ -53,7 +62,7 @@ serve(async (req) => {
     if (!personas || personas.length === 0) {
       return new Response(JSON.stringify({
         success: true,
-        message: 'No personas found missing knowledge domains',
+        message: 'No personas found missing required metadata',
         processed: 0,
         errors: []
       }), {
@@ -61,7 +70,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`📊 Found ${personas.length} personas missing knowledge domains`);
+    console.log(`📊 Found ${personas.length} personas missing required metadata`);
 
     const results = {
       processed: 0,
@@ -98,7 +107,56 @@ serve(async (req) => {
             }
           }
 
-          // 2. Add education field if missing
+          // 2. Add missing demographic metadata (critical fix)
+          if (enhanceDemographics) {
+            try {
+              const existingMetadata = persona.metadata || {};
+              const demographicUpdates: any = {};
+              
+              // Add missing required demographic fields with defaults based on existing data
+              if (!existingMetadata.race_ethnicity) {
+                demographicUpdates.race_ethnicity = 'Prefer not to say';
+              }
+              if (!existingMetadata.employment_type) {
+                demographicUpdates.employment_type = existingMetadata.occupation ? 'Full-time' : 'Unemployed';
+              }
+              if (!existingMetadata.income_level) {
+                demographicUpdates.income_level = '$40,000-$60,000';
+              }
+              if (!existingMetadata.social_class_identity) {
+                demographicUpdates.social_class_identity = 'Middle class';
+              }
+              if (!existingMetadata.marital_status) {
+                demographicUpdates.marital_status = 'Single';
+              }
+              if (!existingMetadata.parenting_role) {
+                demographicUpdates.parenting_role = 'No children';
+              }
+              if (!existingMetadata.relationship_history) {
+                demographicUpdates.relationship_history = 'Previous relationships';
+              }
+              if (!existingMetadata.sexual_orientation) {
+                demographicUpdates.sexual_orientation = 'Heterosexual';
+              }
+              if (!existingMetadata.military_service) {
+                demographicUpdates.military_service = 'None';
+              }
+              
+              if (Object.keys(demographicUpdates).length > 0) {
+                updates.metadata = { 
+                  ...updates.metadata,
+                  ...demographicUpdates
+                };
+                enhancementLog.push(`Added ${Object.keys(demographicUpdates).length} demographic fields`);
+                console.log(`👥 Added demographic fields for ${persona.name}: ${Object.keys(demographicUpdates).join(', ')}`);
+              }
+            } catch (error) {
+              console.error(`❌ Failed to enhance demographics for ${persona.name}:`, error);
+              throw error;
+            }
+          }
+
+          // 3. Add education field if missing
           if (enhanceEducation && !persona.metadata?.education && !persona.metadata?.education_level) {
             const occupation = persona.metadata?.occupation?.toLowerCase() || '';
             let education = 'High school diploma';
@@ -120,7 +178,7 @@ serve(async (req) => {
             enhancementLog.push('Added education field');
           }
 
-          // 3. Enhance brief descriptions if requested
+          // 4. Enhance brief descriptions if requested
           if (enhanceDescriptions && (!persona.description || persona.description.length < 50)) {
             const briefDesc = `${persona.metadata?.age || 'Adult'} ${persona.metadata?.occupation || 'person'} from ${persona.metadata?.location || 'unknown location'}`;
             updates.description = briefDesc;

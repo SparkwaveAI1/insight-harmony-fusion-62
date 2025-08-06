@@ -83,19 +83,25 @@ export function validateDemographicStructure(metadata: any): { isValid: boolean;
     return { isValid: false, errors: ["Metadata is missing or invalid"] };
   }
 
-  // Check for required core demographic fields (Stage 1 only)
-  const requiredCoreFields = ['age', 'gender', 'education_level', 'occupation'];
-  const missingCoreFields = requiredCoreFields.filter(field => !metadata[field]);
+  // Check for required core demographic fields - expanded to ensure completeness
+  const requiredCoreFields = [
+    'age', 'gender', 'race_ethnicity', 'education_level', 'occupation', 
+    'employment_type', 'income_level', 'social_class_identity', 'marital_status'
+  ];
+  
+  const missingCoreFields = requiredCoreFields.filter(field => 
+    !metadata[field] || metadata[field] === 'Not specified' || metadata[field] === ''
+  );
   
   if (missingCoreFields.length > 0) {
-    console.warn(`Missing required core demographic fields: ${missingCoreFields.join(', ')}`);
+    console.error(`❌ Missing or invalid required demographic fields: ${missingCoreFields.join(', ')}`);
     return { 
       isValid: false, 
-      errors: [`Missing required core demographic fields: ${missingCoreFields.join(', ')}`] 
+      errors: [`Missing required demographic fields: ${missingCoreFields.join(', ')}`] 
     };
   }
   
-  console.log("✅ Core demographic structure validation passed");
+  console.log("✅ Complete demographic structure validation passed");
   return { isValid: true, errors: [] };
 }
 
