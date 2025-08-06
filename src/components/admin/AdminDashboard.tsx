@@ -1,6 +1,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PersonaEnhancementTools } from "./PersonaEnhancementTools";
+import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, Users, Database, Zap } from "lucide-react";
 
@@ -79,6 +80,9 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Persona Completeness Analysis */}
+      <PersonaCompletenessAnalysis />
 
       {/* Enhancement Tools */}
       <PersonaEnhancementTools />
