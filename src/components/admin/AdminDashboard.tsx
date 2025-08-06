@@ -2,8 +2,9 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PersonaEnhancementTools } from "./PersonaEnhancementTools";
 import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
+import { PersonaStatusCard } from "./PersonaStatusCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Shield, Users, Database, Zap } from "lucide-react";
+import { Shield } from "lucide-react";
 
 // Admin emails - add yours here
 const ADMIN_EMAILS = [
@@ -45,6 +46,8 @@ export function AdminDashboard() {
         </CardHeader>
       </Card>
 
+      {/* Current Status */}
+      <PersonaStatusCard />
 
       {/* Persona Completeness Analysis */}
       <PersonaCompletenessAnalysis />
