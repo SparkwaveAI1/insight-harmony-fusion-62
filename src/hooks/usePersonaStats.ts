@@ -55,24 +55,29 @@ export function usePersonaStats() {
         const metadata = persona.metadata as any || {};
         const demographics = metadata.demographics || {};
         
-        const hasDemographics = demographics.age && 
-                              demographics.gender && 
-                              demographics.location && 
-                              demographics.occupation;
+        // Check if ANY required demographic field is missing or empty
+        const hasAge = demographics.age && demographics.age !== "";
+        const hasGender = demographics.gender && demographics.gender !== "";
+        const hasLocation = demographics.location && demographics.location !== "";
+        const hasOccupation = demographics.occupation && demographics.occupation !== "";
         
-        if (!hasDemographics) {
+        if (!hasAge || !hasGender || !hasLocation || !hasOccupation) {
           missingDemographics++;
         }
 
-        // Check for missing knowledge domains in metadata
-        const knowledgeDomains = metadata.knowledge_domains || [];
-        if (!Array.isArray(knowledgeDomains) || knowledgeDomains.length === 0) {
+        // Check for missing knowledge domains - more comprehensive check
+        const knowledgeDomains = metadata.knowledge_domains || metadata.knowledgeDomains || [];
+        if (!Array.isArray(knowledgeDomains) || knowledgeDomains.length === 0 || 
+            (knowledgeDomains.length === 1 && (!knowledgeDomains[0] || knowledgeDomains[0] === ""))) {
           missingKnowledgeDomains++;
         }
 
-        // Check for missing education in metadata
+        // Check for missing education - more comprehensive check
         const education = metadata.education || {};
-        if (!education.level || !education.field) {
+        const hasLevel = education.level && education.level !== "";
+        const hasField = education.field && education.field !== "";
+        
+        if (!hasLevel || !hasField) {
           missingEducation++;
         }
 
