@@ -187,12 +187,13 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
     };
 
     try {
-      // Process personas in parallel
+      // Process personas in parallel with optimized concurrency
       const results = await processPersonasInParallel(
         selectedPersonas,
         sendToPersona,
         onProgress,
-        3 // Max 3 concurrent requests
+        8, // Increased max concurrent requests
+        true // Enable adaptive concurrency
       );
 
       // Process results and update statuses
@@ -362,9 +363,9 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
           {isRunning && (
             <div className="space-y-4">
               <div className="text-center">
-                <h3 className="font-medium mb-2">Survey Running in Parallel</h3>
+                  <h3 className="font-medium mb-2">Optimized Parallel Processing</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Processing up to 3 personas simultaneously for faster completion.
+                  Processing up to 8 personas simultaneously with adaptive concurrency for maximum speed.
                 </p>
               </div>
               
