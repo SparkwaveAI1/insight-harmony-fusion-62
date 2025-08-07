@@ -111,67 +111,112 @@ serve(async (req) => {
 });
 
 function buildSystemPrompt(persona: any, conversationContext: string): string {
-  let prompt = `You are ${persona.name}, embodying this persona completely and authentically.\n\n`;
+  const age = persona.age || persona.metadata?.age || 30;
+  const education = persona.education || persona.metadata?.education_level || persona.metadata?.education || 'high school';
+  const occupation = persona.occupation || persona.metadata?.occupation || 'unknown';
   
-  // Add demographic information
-  if (persona.age || persona.gender || persona.location) {
-    prompt += `DEMOGRAPHICS:\n`;
-    if (persona.age) prompt += `Age: ${persona.age}\n`;
-    if (persona.gender) prompt += `Gender: ${persona.gender}\n`;
-    if (persona.location) prompt += `Location: ${persona.location}\n`;
-    prompt += `\n`;
-  }
+  // Extract personality traits
+  const bigFive = persona.trait_profile?.big_five || {
+    openness: persona.openness,
+    conscientiousness: persona.conscientiousness,
+    extraversion: persona.extraversion,
+    agreeableness: persona.agreeableness,
+    neuroticism: persona.neuroticism
+  };
 
-  // Add personality traits (Big Five)
-  if (persona.openness !== undefined || persona.conscientiousness !== undefined || 
-      persona.extraversion !== undefined || persona.agreeableness !== undefined || 
-      persona.neuroticism !== undefined) {
-    prompt += `PERSONALITY TRAITS (Big Five):\n`;
-    if (persona.openness !== undefined) prompt += `Openness: ${persona.openness}/100 - ${getTraitDescription('openness', persona.openness)}\n`;
-    if (persona.conscientiousness !== undefined) prompt += `Conscientiousness: ${persona.conscientiousness}/100 - ${getTraitDescription('conscientiousness', persona.conscientiousness)}\n`;
-    if (persona.extraversion !== undefined) prompt += `Extraversion: ${persona.extraversion}/100 - ${getTraitDescription('extraversion', persona.extraversion)}\n`;
-    if (persona.agreeableness !== undefined) prompt += `Agreeableness: ${persona.agreeableness}/100 - ${getTraitDescription('agreeableness', persona.agreeableness)}\n`;
-    if (persona.neuroticism !== undefined) prompt += `Neuroticism: ${persona.neuroticism}/100 - ${getTraitDescription('neuroticism', persona.neuroticism)}\n`;
-    prompt += `\n`;
-  }
+  // Extract knowledge domains and education level
+  const knowledgeDomains = persona.metadata?.knowledge_domains || {};
+  const educationLevel = getEducationLevel(education);
 
-  // Add values and beliefs
-  if (persona.moral_foundations || persona.political_compass) {
-    prompt += `VALUES & BELIEFS:\n`;
-    if (persona.moral_foundations) {
-      try {
-        const morals = typeof persona.moral_foundations === 'string' 
-          ? JSON.parse(persona.moral_foundations) 
-          : persona.moral_foundations;
-        Object.entries(morals).forEach(([foundation, value]) => {
-          prompt += `${foundation}: ${value}/10\n`;
-        });
-      } catch (e) {
-        console.warn('Could not parse moral foundations');
-      }
+  let prompt = `You are ${persona.name}. Respond naturally as this person would.\n\n`;
+  
+  // Core identity
+  prompt += `WHO YOU ARE:\n`;
+  if (age) prompt += `${age} years old\n`;
+  if (persona.gender) prompt += `${persona.gender}\n`;
+  if (persona.location) prompt += `From ${persona.location}\n`;
+  if (occupation) prompt += `Work: ${occupation}\n`;
+  if (education) prompt += `Education: ${education}\n`;
+  prompt += '\n';
+
+  // Personality-driven behavior
+  prompt += `YOUR PERSONALITY DRIVES YOUR RESPONSES:\n`;
+  if (bigFive.extraversion !== undefined) {
+    const ext = parseFloat(bigFive.extraversion) || 0.5;
+    if (ext > 0.7) prompt += `• You're talkative and social\n`;
+    else if (ext < 0.3) prompt += `• You're reserved, prefer brief responses\n`;
+  }
+  if (bigFive.agreeableness !== undefined) {
+    const agr = parseFloat(bigFive.agreeableness) || 0.5;
+    if (agr > 0.7) prompt += `• You avoid conflict, find common ground\n`;
+    else if (agr < 0.3) prompt += `• You readily disagree, can be blunt\n`;
+  }
+  if (bigFive.neuroticism !== undefined) {
+    const neu = parseFloat(bigFive.neuroticism) || 0.5;
+    if (neu > 0.7) prompt += `• You react emotionally, show stress\n`;
+    else if (neu < 0.3) prompt += `• You stay calm, don't get worked up\n`;
+  }
+  if (bigFive.conscientiousness !== undefined) {
+    const con = parseFloat(bigFive.conscientiousness) || 0.5;
+    if (con > 0.7) prompt += `• You're organized, detail-oriented\n`;
+    else if (con < 0.3) prompt += `• You're spontaneous, don't overthink\n`;
+  }
+  if (bigFive.openness !== undefined) {
+    const ope = parseFloat(bigFive.openness) || 0.5;
+    if (ope > 0.7) prompt += `• You're curious about new ideas\n`;
+    else if (ope < 0.3) prompt += `• You stick with what you know\n`;
+  }
+  prompt += '\n';
+
+  // Knowledge boundaries based on education and background
+  prompt += `YOUR KNOWLEDGE BOUNDARIES:\n`;
+  if (educationLevel === 'basic') {
+    prompt += `• Your vocabulary is straightforward, no academic jargon\n`;
+    prompt += `• If you don't understand something complex, say so naturally\n`;
+  } else if (educationLevel === 'advanced') {
+    prompt += `• You can discuss complex topics in your field\n`;
+    prompt += `• Still acknowledge when things are outside your expertise\n`;
+  }
+  
+  // Topic-specific knowledge
+  if (Object.keys(knowledgeDomains).length > 0) {
+    const topDomains = Object.entries(knowledgeDomains)
+      .filter(([, level]) => (level as number) > 3)
+      .map(([domain]) => domain.replace(/_/g, ' '));
+    if (topDomains.length > 0) {
+      prompt += `• You know about: ${topDomains.join(', ')}\n`;
     }
-    prompt += `\n`;
   }
+  prompt += '\n';
 
-  // Add background and context
+  // Background context
   if (persona.description) {
     prompt += `BACKGROUND:\n${persona.description}\n\n`;
   }
 
-  // Add conversation context if provided
   if (conversationContext.trim()) {
-    prompt += `CONTEXT FOR THIS CONVERSATION:\n${conversationContext}\n\n`;
+    prompt += `CONVERSATION CONTEXT:\n${conversationContext}\n\n`;
   }
 
-  prompt += `INSTRUCTIONS:
-- Respond authentically as ${persona.name} based on your personality, values, and background
-- Use natural, conversational language that reflects your character
-- Draw from your traits, experiences, and worldview when forming opinions
-- Be genuine in your reactions and emotional responses
-- Stay consistent with your established characteristics throughout the conversation
-- If discussing topics outside your direct experience, respond based on how your personality would approach them`;
+  // Critical behavioral instructions
+  prompt += `CRITICAL - RESPOND AUTHENTICALLY:\n`;
+  prompt += `• Never organize thoughts with headings or bullet points\n`;
+  prompt += `• Never say "here's my take" or "I'll be honest" or "that's a good question"\n`;
+  prompt += `• Never reference yourself as if you're an AI playing a role\n`;
+  prompt += `• Go off on tangents, contradict yourself, be human\n`;
+  prompt += `• If you don't know something, just say you don't know\n`;
+  prompt += `• Use your education level vocabulary - don't sound too smart or too simple\n`;
+  prompt += `• Show your personality through how you respond, not what you say about responding\n`;
 
   return prompt;
+}
+
+function getEducationLevel(education: string): string {
+  const ed = education.toLowerCase();
+  if (ed.includes('phd') || ed.includes('doctorate') || ed.includes('graduate')) return 'advanced';
+  if (ed.includes('college') || ed.includes('bachelor') || ed.includes('university')) return 'college';
+  if (ed.includes('high school') || ed.includes('ged') || ed.includes('diploma')) return 'basic';
+  return 'basic'; // default to basic if unclear
 }
 
 function getTraitDescription(trait: string, score: number): string {

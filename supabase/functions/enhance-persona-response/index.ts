@@ -129,58 +129,106 @@ function buildEnhancementPrompt(
   contextualTraits: string[],
   conversationContext: string = ''
 ): string {
-  const demographics = extractDemographics(persona);
-  const traits = extractTraits(persona);
-  const values = extractValues(persona);
-  const knowledgeBoundaries = extractKnowledgeBoundaries(persona);
-  const antiPatterns = getKnowledgeAntiPatterns(persona);
+  const age = persona.metadata?.age || persona.age || 30;
+  const education = persona.metadata?.education_level || persona.metadata?.education || 'high school';
+  const occupation = persona.metadata?.occupation || persona.occupation || 'unknown';
   
-  return `You are a Persona Output Generator creating authentic responses that match a specific person's voice and knowledge boundaries.
+  // Determine education level for vocabulary constraints
+  const educationLevel = getEducationLevel(education);
+  const knowledgeConstraints = getKnowledgeConstraints(age, education, occupation);
+  
+  return `SURGICAL AUTHENTICITY CORRECTION - Fix only specific violations, keep everything else unchanged.
 
-**INITIAL RESPONSE TO ENHANCE:**
+ORIGINAL RESPONSE:
 "${initialResponse}"
 
-**USER MESSAGE CONTEXT:**
-"${userMessage}"
+USER MESSAGE: "${userMessage}"
 
-**CONVERSATION CONTEXT:**
-${conversationContext || 'First interaction'}
+PERSONA: ${persona.name}, ${age}, ${occupation}, ${education}
 
-**PERSONA PROFILE:**
-${demographics}
+KNOWLEDGE VIOLATIONS TO FIX:
+${knowledgeConstraints.join('\n')}
 
-**KEY PERSONALITY TRAITS:**
-${traits}
+AUTHENTICITY VIOLATIONS TO FIX:
+• Remove any AI-speak: "I'll be honest", "that's a good question", "here's my take"
+• Remove self-referential phrases: "as [name]", "here's how it strikes me"
+• Remove organized formatting: no headings, bullet points, or structured sections
+• Fix vocabulary that's too advanced for education level
+• Add natural confusion for unfamiliar topics
 
-**VALUES & BELIEFS:**
-${values}
+PERSONALITY ADJUSTMENTS NEEDED:
+${getPersonalityAdjustments(persona)}
 
-**KNOWLEDGE BOUNDARIES:**
-${knowledgeBoundaries}
+INSTRUCTIONS:
+- Make MINIMAL changes - only fix specific violations
+- Keep the core response intact
+- Make it sound like natural human speech
+- Ensure knowledge stays within persona's boundaries
+- Remove all formatting and AI-like organization
 
-**ANTI-PATTERNS - NEVER DO THESE:**
-${antiPatterns}
+Return the corrected response with minimal changes, focusing only on authenticity violations.`;
+}
 
-**CONTEXTUALLY PRIORITIZED TRAITS FOR THIS RESPONSE:**
-${contextualTraits.join(', ')}
+function getEducationLevel(education: string): string {
+  const ed = education.toLowerCase();
+  if (ed.includes('phd') || ed.includes('doctorate') || ed.includes('graduate')) return 'advanced';
+  if (ed.includes('college') || ed.includes('bachelor') || ed.includes('university')) return 'college';
+  return 'basic'; // high school or less
+}
 
-**ENHANCEMENT INSTRUCTIONS:**
-1. Remove any knowledge claims beyond the persona's education/occupation/age
-2. Adjust vocabulary to match education level appropriately
-3. Filter out generic AI phrases like "I understand your perspective, but..."
-4. Apply personality traits more authentically (especially agreeableness/neuroticism)
-5. Ensure opinions reflect personal values and background
-6. Add appropriate uncertainty for topics outside expertise
-7. Make language patterns match the persona's natural communication style
+function getKnowledgeConstraints(age: number, education: string, occupation: string): string[] {
+  const constraints = [];
+  const educationLevel = getEducationLevel(education);
+  
+  if (educationLevel === 'basic') {
+    constraints.push('• NO academic jargon or complex theoretical concepts');
+    constraints.push('• NO detailed financial, medical, or legal knowledge');
+    constraints.push('• Express genuine confusion about complex topics');
+  }
+  
+  if (age < 25) {
+    constraints.push('• NO deep historical knowledge or "back in my day" references');
+    constraints.push('• NO professional expertise beyond entry-level');
+  }
+  
+  const occLower = occupation.toLowerCase();
+  if (occLower.includes('retail') || occLower.includes('warehouse') || occLower.includes('service')) {
+    constraints.push('• NO expertise in finance, technology, medicine, or law');
+    constraints.push('• NO academic or professional jargon');
+  }
+  
+  // Universal constraints
+  constraints.push('• If unfamiliar with a topic, express genuine ignorance');
+  constraints.push('• Use vocabulary appropriate to education level');
+  constraints.push('• Avoid explaining concepts beyond your background');
+  
+  return constraints;
+}
 
-**SPECIFIC FOCUS AREAS:**
-- Does the response demonstrate knowledge the persona shouldn't have?
-- Is the vocabulary appropriate for their education level?
-- Are opinions expressed with conviction matching their personality?
-- Does uncertainty show appropriately for unfamiliar topics?
-- Is the communication style authentic to their background?
-
-Return the enhanced response that respects knowledge boundaries while maintaining authentic personality expression.`;
+function getPersonalityAdjustments(persona: any): string {
+  const bigFive = persona.trait_profile?.big_five || {};
+  const adjustments = [];
+  
+  const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
+  if (agreeableness > 0.7) {
+    adjustments.push('• More agreeable - find common ground, avoid direct confrontation');
+  } else if (agreeableness < 0.3) {
+    adjustments.push('• More disagreeable - be more direct, willing to challenge');
+  }
+  
+  const neuroticism = parseFloat(bigFive.neuroticism || '0.5');
+  if (neuroticism > 0.7) {
+    adjustments.push('• Show more emotional reaction, stress, or worry');
+  } else if (neuroticism < 0.3) {
+    adjustments.push('• Stay calmer, less emotional reaction');
+  }
+  
+  const extraversion = parseFloat(bigFive.extraversion || '0.5');
+  if (extraversion < 0.3) {
+    adjustments.push('• Keep response shorter, more reserved');
+  }
+  
+  return adjustments.length > 0 ? adjustments.join('\n') : '• No major personality adjustments needed';
 }
 
 function extractDemographics(persona: any): string {
@@ -254,37 +302,4 @@ function extractKnowledgeBoundaries(persona: any): string {
   }
   
   return boundaries;
-}
-
-function getKnowledgeAntiPatterns(persona: any): string {
-  const age = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
-  const occupation = persona.metadata?.occupation?.toLowerCase() || '';
-  const education = persona.metadata?.education_level?.toLowerCase() || persona.metadata?.education?.toLowerCase() || '';
-  
-  let antiPatterns = [];
-  
-  // Age-based restrictions
-  if (age < 25) {
-    antiPatterns.push("❌ Don't reference experiences from before your time");
-    antiPatterns.push("❌ Don't demonstrate deep historical knowledge");
-  }
-  
-  // Education-based restrictions
-  if (education.includes('high school') || education.includes('ged')) {
-    antiPatterns.push("❌ Don't use academic jargon or cite scholarly research");
-    antiPatterns.push("❌ Don't explain complex theoretical concepts");
-  }
-  
-  // Occupation-based restrictions
-  if (occupation.includes('warehouse') || occupation.includes('retail') || occupation.includes('service')) {
-    antiPatterns.push("❌ Don't demonstrate expertise in finance, law, or medicine");
-    antiPatterns.push("❌ Don't use professional jargon from other fields");
-  }
-  
-  // Universal restrictions
-  antiPatterns.push("❌ Don't use phrases like 'I understand your perspective, but...'");
-  antiPatterns.push("❌ Don't suddenly become expert on unfamiliar topics");
-  antiPatterns.push("❌ Don't use vocabulary above education level");
-  
-  return antiPatterns.join('\n');
 }
