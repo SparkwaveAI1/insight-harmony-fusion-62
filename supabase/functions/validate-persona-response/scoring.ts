@@ -36,29 +36,39 @@ export function createDefaultValidationResult(): any {
 
 export function parseValidationResponse(rawResponse: string): any {
   try {
-    const cleanedResponse = rawResponse.replace(/```json\n?|\n?```/g, '').trim();
-    const validationResult = JSON.parse(cleanedResponse);
-    
-    // Calculate overall score with proper weighting and demographic accuracy check
-    validationResult.scores.overall = calculateOverallScore(validationResult.scores);
-    
-    // Force regeneration if demographic accuracy is too low
-    if (validationResult.scores.demographicAccuracy < 0.5) {
-      validationResult.shouldRegenerate = true;
-      if (!validationResult.specificErrors) {
-        validationResult.specificErrors = [];
-      }
-      validationResult.specificErrors.push('Critical demographic accuracy failure');
+    // Clean up the response to extract JSON
+    const jsonMatch = rawResponse.match(/\{.*\}/s);
+    if (!jsonMatch) {
+      console.warn('No JSON found in response, using default');
+      return createDefaultValidationResult();
     }
     
-    // Ensure we have specificErrors array
-    if (!validationResult.specificErrors) {
-      validationResult.specificErrors = [];
-    }
+    const parsed = JSON.parse(jsonMatch[0]);
     
-    return validationResult;
-  } catch (parseError) {
-    console.error('Failed to parse validation JSON:', parseError);
+    // Ensure required fields exist with new structure
+    return {
+      final_response: parsed.final_response || 'No enhanced response provided',
+      style_score: parsed.style_score || 0.8,
+      adjustments_made: parsed.adjustments_made || [],
+      violations_found: parsed.violations_found || [],
+      // Legacy compatibility for old validation calls
+      scores: {
+        overall: parsed.style_score || 0.8,
+        consistency: parsed.style_score || 0.8,
+        authenticity: parsed.style_score || 0.8,
+        demographicAccuracy: parsed.style_score || 0.8,
+        traitAlignment: parsed.style_score || 0.8,
+        emotionalTriggerCompliance: parsed.style_score || 0.8,
+        knowledgeDomainAccuracy: parsed.style_score || 0.8,
+        conversationalAuthenticity: parsed.style_score || 0.8,
+        factualConsistency: parsed.style_score || 0.8
+      },
+      feedback: (parsed.adjustments_made || []).join(', ') || 'No adjustments needed',
+      specificErrors: parsed.violations_found || [],
+      shouldRegenerate: false
+    };
+  } catch (error) {
+    console.error('Failed to parse validation response:', error);
     return createDefaultValidationResult();
   }
 }

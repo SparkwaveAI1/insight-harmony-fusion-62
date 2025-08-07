@@ -1,87 +1,112 @@
-
-import { PersonaTraits } from './types.ts';
-
 export function buildValidationPrompt(
   persona: any,
-  conversationContext: string,
+  conversationContext: string = '',
   userMessage: string,
   response: string
 ): string {
-  const metadata = persona.metadata || {};
-  const traitProfile = persona.trait_profile || {};
-  const bigFive = traitProfile.big_five || {};
-  const moralFoundations = traitProfile.moral_foundations || {};
-  const knowledgeDomains = metadata.knowledge_domains || {};
-  const emotionalTriggers = persona.emotional_triggers || {};
-
-  // Extract specific demographic facts with better parsing
-  const age = metadata.age || 'Unknown';
-  const occupation = metadata.occupation || 'Unknown';
-  const education = metadata.education_level || 'Unknown';
-  const region = metadata.region || 'Unknown';
-  const maritalStatus = metadata.marital_status || 'Unknown';
+  // Extract key persona information
+  const age = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+  const currentYear = new Date().getFullYear();
+  const birthYear = currentYear - age;
+  const occupation = persona.metadata?.occupation || 'unspecified';
+  const education = persona.metadata?.education_level || persona.metadata?.education || 'unspecified';
   
-  // FIXED: Better children parsing - prioritize number_of_children first
-  let childrenInfo = 'Unknown';
-  if (metadata.number_of_children !== undefined && metadata.number_of_children !== null) {
-    childrenInfo = metadata.number_of_children.toString();
-  } else if (metadata.children_ages && Array.isArray(metadata.children_ages)) {
-    childrenInfo = metadata.children_ages.length.toString();
-  } else if (metadata.relationships_family?.number_of_children !== undefined) {
-    childrenInfo = metadata.relationships_family.number_of_children.toString();
-  } else if (metadata.relationships_family?.children_ages && Array.isArray(metadata.relationships_family.children_ages)) {
-    childrenInfo = metadata.relationships_family.children_ages.length.toString();
-  } else if (metadata.has_children === true) {
-    childrenInfo = "children (number unknown)";
-  } else if (metadata.has_children === false) {
-    childrenInfo = "0";
-  }
+  // Extract personality traits for behavioral validation
+  const agreeableness = parseFloat(persona.trait_profile?.big_five?.agreeableness || '0.5');
+  const neuroticism = parseFloat(persona.trait_profile?.big_five?.neuroticism || '0.5');
+  const openness = parseFloat(persona.trait_profile?.big_five?.openness || '0.5');
+  const conscientiousness = parseFloat(persona.trait_profile?.big_five?.conscientiousness || '0.5');
+  const extraversion = parseFloat(persona.trait_profile?.big_five?.extraversion || '0.5');
+  
+  // Extract knowledge domains
+  const knowledgeDomains = persona.metadata?.knowledge_domains || {};
+  const domainsList = Object.entries(knowledgeDomains)
+    .map(([domain, level]) => `${domain}: ${level}/5`)
+    .join(', ');
 
-  console.log('DEBUGGING PERSONA METADATA FOR VALIDATION:');
-  console.log('Full metadata:', JSON.stringify(metadata, null, 2));
-  console.log('Children info extracted:', childrenInfo);
-  console.log('number_of_children field:', metadata.number_of_children);
-  console.log('children_ages field:', metadata.children_ages);
+  return `You are a Voice Integrity Reviewer for persona-based AI responses. Your job is to evaluate if the response authentically matches the persona's voice, knowledge boundaries, and communication style.
 
-return `You are a fast persona response validator. Quickly check if the response matches basic persona facts.
+PERSONA TO VALIDATE AGAINST:
+Name: ${persona.name}
+Age: ${age} (born ${birthYear})
+Occupation: ${occupation}
+Education: ${education}
+Knowledge Domains: ${domainsList || 'None specified'}
 
-PERSONA: ${persona.name}
-Age: ${age} | Occupation: ${occupation} | Children: ${childrenInfo}
+PERSONALITY TRAITS:
+- Agreeableness: ${agreeableness} (${getTraitDescription('agreeableness', agreeableness)})
+- Neuroticism: ${neuroticism} (${getTraitDescription('neuroticism', neuroticism)})
+- Openness: ${openness} (${getTraitDescription('openness', openness)})
+- Conscientiousness: ${conscientiousness} (${getTraitDescription('conscientiousness', conscientiousness)})
+- Extraversion: ${extraversion} (${getTraitDescription('extraversion', extraversion)})
+
+CONVERSATION CONTEXT: ${conversationContext || 'General conversation'}
 
 USER MESSAGE: "${userMessage}"
-RESPONSE: "${response}"
 
-Check ONLY:
-1. Basic demographic facts are correct
-2. Response tone matches personality (Extraversion: ${bigFive.extraversion || 'Unknown'})
+AI RESPONSE TO VALIDATE: "${response}"
 
-Return JSON:
+VALIDATION CRITERIA - CHECK FOR VOICE INTEGRITY VIOLATIONS:
+
+1. KNOWLEDGE BOUNDARY VIOLATIONS:
+   - Does the response demonstrate knowledge beyond the persona's education/occupation?
+   - Does it reference events after ${currentYear - 5} (beyond persona's knowledge cutoff)?
+   - Does it use vocabulary above the persona's education level?
+   - Does it show expertise in areas outside their knowledge domains?
+
+2. STYLE VIOLATIONS:
+   - Does the response sound too formal/diplomatic for the persona's traits?
+   - Does it use generic AI phrases like "I understand your perspective, but..."?
+   - Does the vocabulary match the education level?
+   - Does the communication style reflect the personality traits?
+
+3. TONE VIOLATIONS:
+   - Does the emotional tone match the persona's traits (especially neuroticism/agreeableness)?
+   - Is the level of confidence appropriate for the persona's self-awareness?
+   - Does the response show appropriate uncertainty when outside expertise?
+
+4. CHARACTER CONSISTENCY:
+   - Would this response sound natural coming from this specific person?
+   - Does it maintain the persona's authentic voice throughout?
+
+RESPONSE FORMAT (JSON only):
 {
-  "scores": {
-    "demographicAccuracy": 0.8,
-    "traitAlignment": 0.8,
-    "emotionalTriggerCompliance": 0.8,
-    "knowledgeDomainAccuracy": 0.8,
-    "conversationalAuthenticity": 0.8,
-    "factualConsistency": 0.8,
-    "overall": 0.8
-  },
-  "feedback": "Brief feedback",
-  "specificErrors": [],
-  "shouldRegenerate": false
-}`;
+  "final_response": "[Minimally edited response that fixes only voice/style violations]",
+  "style_score": [0.0-1.0],
+  "adjustments_made": ["List of specific changes made"],
+  "violations_found": ["List of specific violations identified"]
 }
 
-function getTraitDescription(trait: string, value: number | undefined): string {
-  if (value === undefined) return '';
+EDITING GUIDELINES:
+- Make MINIMAL changes - only fix clear voice/style violations
+- Preserve the content and structure unless it breaks character
+- Don't change responses that are already authentic to the persona
+- Focus on removing generic AI language and ensuring appropriate knowledge boundaries
+- Maintain the persona's natural communication patterns
+
+Evaluate the response and provide the JSON output.`;
+}
+
+function getTraitDescription(trait: string, score: number): string {
+  const level = score > 0.7 ? 'High' : score < 0.3 ? 'Low' : 'Moderate';
   
-  const descriptions = {
-    openness: value > 0.6 ? '(HIGH - creative, open to new experiences)' : value < 0.4 ? '(LOW - traditional, practical)' : '(MODERATE)',
-    conscientiousness: value > 0.6 ? '(HIGH - organized, disciplined)' : value < 0.4 ? '(LOW - spontaneous, flexible)' : '(MODERATE)',
-    extraversion: value > 0.6 ? '(HIGH - social, energetic)' : value < 0.4 ? '(LOW - reserved, quiet)' : '(MODERATE)',
-    agreeableness: value > 0.6 ? '(HIGH - cooperative, trusting)' : value < 0.4 ? '(LOW - competitive, skeptical)' : '(MODERATE)',
-    neuroticism: value > 0.6 ? '(HIGH - anxious, emotionally reactive)' : value < 0.4 ? '(LOW - calm, stable)' : '(MODERATE)'
-  };
-  
-  return descriptions[trait as keyof typeof descriptions] || '';
+  switch (trait) {
+    case 'agreeableness':
+      return score > 0.7 ? 'High - Cooperative, trusting' : 
+             score < 0.3 ? 'Low - Skeptical, competitive' : 'Moderate';
+    case 'neuroticism':
+      return score > 0.7 ? 'High - Emotionally reactive, anxious' : 
+             score < 0.3 ? 'Low - Calm, stable' : 'Moderate';
+    case 'openness':
+      return score > 0.7 ? 'High - Creative, curious' : 
+             score < 0.3 ? 'Low - Conventional, practical' : 'Moderate';
+    case 'conscientiousness':
+      return score > 0.7 ? 'High - Organized, disciplined' : 
+             score < 0.3 ? 'Low - Spontaneous, flexible' : 'Moderate';
+    case 'extraversion':
+      return score > 0.7 ? 'High - Outgoing, energetic' : 
+             score < 0.3 ? 'Low - Reserved, quiet' : 'Moderate';
+    default:
+      return level;
+  }
 }

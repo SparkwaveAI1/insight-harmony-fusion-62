@@ -132,8 +132,10 @@ function buildEnhancementPrompt(
   const demographics = extractDemographics(persona);
   const traits = extractTraits(persona);
   const values = extractValues(persona);
+  const knowledgeBoundaries = extractKnowledgeBoundaries(persona);
+  const antiPatterns = getKnowledgeAntiPatterns(persona);
   
-  return `You are enhancing an AI response to make it more authentic and accurate for a specific persona.
+  return `You are a Persona Output Generator creating authentic responses that match a specific person's voice and knowledge boundaries.
 
 **INITIAL RESPONSE TO ENHANCE:**
 "${initialResponse}"
@@ -153,31 +155,41 @@ ${traits}
 **VALUES & BELIEFS:**
 ${values}
 
+**KNOWLEDGE BOUNDARIES:**
+${knowledgeBoundaries}
+
+**ANTI-PATTERNS - NEVER DO THESE:**
+${antiPatterns}
+
 **CONTEXTUALLY PRIORITIZED TRAITS FOR THIS RESPONSE:**
 ${contextualTraits.join(', ')}
 
 **ENHANCEMENT INSTRUCTIONS:**
-1. Analyze the initial response against this persona's profile
-2. Identify opportunities to make the response more authentic and contextually accurate
-3. Apply the prioritized traits more strongly based on the conversation context
-4. Enhance vocabulary and communication style to match education/background
-5. Strengthen opinion expression based on values and beliefs
-6. Improve behavioral consistency with personality traits
-7. Make the response feel more genuinely human and less AI-generated
+1. Remove any knowledge claims beyond the persona's education/occupation/age
+2. Adjust vocabulary to match education level appropriately
+3. Filter out generic AI phrases like "I understand your perspective, but..."
+4. Apply personality traits more authentically (especially agreeableness/neuroticism)
+5. Ensure opinions reflect personal values and background
+6. Add appropriate uncertainty for topics outside expertise
+7. Make language patterns match the persona's natural communication style
 
 **SPECIFIC FOCUS AREAS:**
-- Does the response reflect the persona's decision-making style?
-- Are opinions expressed with appropriate conviction based on values?
-- Is the communication style authentic to education/background?
-- Do emotional reactions align with neuroticism and emotional patterns?
-- Are social interactions consistent with agreeableness and extraversion?
+- Does the response demonstrate knowledge the persona shouldn't have?
+- Is the vocabulary appropriate for their education level?
+- Are opinions expressed with conviction matching their personality?
+- Does uncertainty show appropriately for unfamiliar topics?
+- Is the communication style authentic to their background?
 
-Return the enhanced response that feels authentically written by this specific person. Keep similar length but improve authenticity, accuracy, and personality expression.`;
+Return the enhanced response that respects knowledge boundaries while maintaining authentic personality expression.`;
 }
 
 function extractDemographics(persona: any): string {
-  const demo = persona.demographic_profile || {};
-  return `Age: ${demo.age || 'Unknown'}, Occupation: ${demo.occupation || 'Unknown'}, Education: ${demo.education_level || 'Unknown'}, Location: ${demo.location || 'Unknown'}`;
+  const demo = persona.metadata || persona.demographic_profile || {};
+  const age = demo.age || 'Unknown';
+  const currentYear = new Date().getFullYear();
+  const birthYear = age !== 'Unknown' ? currentYear - parseInt(age) : 'Unknown';
+  
+  return `Age: ${age} (born ${birthYear}), Occupation: ${demo.occupation || 'Unknown'}, Education: ${demo.education_level || demo.education || 'Unknown'}, Location: ${demo.location || 'Unknown'}`;
 }
 
 function extractTraits(persona: any): string {
@@ -222,4 +234,57 @@ function extractValues(persona: any): string {
   }
   
   return valueStr || 'Values not specified';
+}
+
+function extractKnowledgeBoundaries(persona: any): string {
+  const age = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+  const currentYear = new Date().getFullYear();
+  const occupation = persona.metadata?.occupation || 'unspecified';
+  const education = persona.metadata?.education_level || persona.metadata?.education || 'unspecified';
+  const domains = persona.metadata?.knowledge_domains || {};
+  
+  let boundaries = `Time Cutoff: Born ${currentYear - age}, no knowledge after ${currentYear - 5}\n`;
+  boundaries += `Expertise: ${occupation} with ${education} education\n`;
+  
+  if (Object.keys(domains).length > 0) {
+    const domainsList = Object.entries(domains)
+      .map(([domain, level]) => `${domain}: ${level}/5`)
+      .join(', ');
+    boundaries += `Knowledge Domains: ${domainsList}`;
+  }
+  
+  return boundaries;
+}
+
+function getKnowledgeAntiPatterns(persona: any): string {
+  const age = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+  const occupation = persona.metadata?.occupation?.toLowerCase() || '';
+  const education = persona.metadata?.education_level?.toLowerCase() || persona.metadata?.education?.toLowerCase() || '';
+  
+  let antiPatterns = [];
+  
+  // Age-based restrictions
+  if (age < 25) {
+    antiPatterns.push("❌ Don't reference experiences from before your time");
+    antiPatterns.push("❌ Don't demonstrate deep historical knowledge");
+  }
+  
+  // Education-based restrictions
+  if (education.includes('high school') || education.includes('ged')) {
+    antiPatterns.push("❌ Don't use academic jargon or cite scholarly research");
+    antiPatterns.push("❌ Don't explain complex theoretical concepts");
+  }
+  
+  // Occupation-based restrictions
+  if (occupation.includes('warehouse') || occupation.includes('retail') || occupation.includes('service')) {
+    antiPatterns.push("❌ Don't demonstrate expertise in finance, law, or medicine");
+    antiPatterns.push("❌ Don't use professional jargon from other fields");
+  }
+  
+  // Universal restrictions
+  antiPatterns.push("❌ Don't use phrases like 'I understand your perspective, but...'");
+  antiPatterns.push("❌ Don't suddenly become expert on unfamiliar topics");
+  antiPatterns.push("❌ Don't use vocabulary above education level");
+  
+  return antiPatterns.join('\n');
 }

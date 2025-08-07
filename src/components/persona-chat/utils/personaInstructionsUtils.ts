@@ -75,25 +75,109 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
     }
   }
   
+  // Create education-appropriate vocabulary and complexity instructions
+  const vocabularyInstructions = getVocabularyInstructions(education);
+  
+  // Create anti-pattern knowledge filters
+  const knowledgeAntiPatterns = getKnowledgeAntiPatterns(persona);
+  
   // Create chat mode specific instructions
   const chatModeInstructions = getChatModeInstructions('conversation');
   
   return `
-  KNOWLEDGE BOUNDARIES - ENFORCE BUT DON'T LET THEM OVERRIDE PERSONALITY:
+  KNOWLEDGE BOUNDARIES - ENFORCE STRICTLY:
   
   1. TIME LIMITATION: You were born in ${birthYear} and have NO KNOWLEDGE of events after ${currentYear - 5}.
+     - Do not reference technology, events, people, or concepts that emerged after this date
+     - If asked about recent events, express genuine ignorance
   
   2. EXPERTISE LIMITATION: Your expertise is limited to ${expertise} with ${education} level education.${knowledgeDomainsList}
   
-  3. When faced with questions outside your knowledge boundaries:
+  3. EDUCATION-APPROPRIATE LANGUAGE:
+  ${vocabularyInstructions}
+  
+  4. KNOWLEDGE ANTI-PATTERNS - NEVER DO THESE:
+  ${knowledgeAntiPatterns}
+  
+  5. When faced with questions outside your knowledge boundaries:
      - Express uncertainty in a way that matches your personality
      - ${selfAwareness < 0.4 ? "You may guess or speculate despite uncertainty" : "Acknowledge knowledge limits appropriately"}
      - ${overconfidence > 0.7 ? "You might express confident opinions even when unsure" : "Show appropriate uncertainty when needed"}
+     - Use phrases like "I don't know much about that" or "That's not really my area"
   
   ${chatModeInstructions}
   
   REMEMBER: Even with knowledge limits, you still have strong opinions based on your personality and values.
   `;
+};
+
+/**
+ * Gets vocabulary and complexity instructions based on education level
+ */
+const getVocabularyInstructions = (education: string): string => {
+  const educationLower = education.toLowerCase();
+  
+  if (educationLower.includes('phd') || educationLower.includes('doctorate')) {
+    return `- Use sophisticated vocabulary and complex sentence structures
+     - Reference academic concepts and theoretical frameworks
+     - Express nuanced thoughts with precision`;
+  } else if (educationLower.includes('master') || educationLower.includes('graduate')) {
+    return `- Use college-level vocabulary with some technical terms
+     - Express ideas clearly with moderate complexity
+     - Show analytical thinking patterns`;
+  } else if (educationLower.includes('college') || educationLower.includes('bachelor') || educationLower.includes('university')) {
+    return `- Use standard educated vocabulary
+     - Express ideas clearly but not overly complex
+     - Avoid highly technical jargon unless in your expertise area`;
+  } else if (educationLower.includes('high school') || educationLower.includes('ged')) {
+    return `- Use straightforward, everyday language
+     - Keep explanations simple and direct
+     - Avoid academic jargon or overly complex concepts`;
+  } else {
+    return `- Use practical, common language
+     - Express ideas simply and directly
+     - Focus on concrete examples over abstract concepts`;
+  }
+};
+
+/**
+ * Gets knowledge anti-patterns based on persona characteristics
+ */
+const getKnowledgeAntiPatterns = (persona: Persona): string => {
+  const age = persona.metadata?.age ? parseInt(persona.metadata.age) : 30;
+  const occupation = persona.metadata?.occupation?.toLowerCase() || '';
+  const education = persona.metadata?.education_level?.toLowerCase() || persona.metadata?.education?.toLowerCase() || '';
+  
+  let antiPatterns = [];
+  
+  // Age-based knowledge restrictions
+  if (age < 25) {
+    antiPatterns.push("❌ Don't reference experiences from before your time");
+    antiPatterns.push("❌ Don't have deep knowledge of historical events you weren't alive for");
+  }
+  
+  if (age < 35) {
+    antiPatterns.push("❌ Don't reference 80s/90s culture as personal memories");
+  }
+  
+  // Education-based restrictions
+  if (education.includes('high school') || education.includes('ged')) {
+    antiPatterns.push("❌ Don't use academic terminology or cite scholarly research");
+    antiPatterns.push("❌ Don't explain complex theoretical concepts");
+  }
+  
+  // Occupation-based restrictions
+  if (occupation.includes('warehouse') || occupation.includes('retail') || occupation.includes('service')) {
+    antiPatterns.push("❌ Don't demonstrate detailed knowledge of finance, law, or medicine");
+    antiPatterns.push("❌ Don't use professional jargon from fields you don't work in");
+  }
+  
+  // Universal restrictions
+  antiPatterns.push("❌ Don't suddenly become an expert on topics outside your background");
+  antiPatterns.push("❌ Don't reference information that requires specialized training you don't have");
+  antiPatterns.push("❌ Don't use vocabulary significantly above your education level");
+  
+  return antiPatterns.join('\n     ');
 };
 
 /**
