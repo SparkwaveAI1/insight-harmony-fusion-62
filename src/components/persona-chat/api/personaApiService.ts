@@ -4,7 +4,6 @@ import { Persona } from '@/services/persona/types';
 import { Message } from '../types';
 import { ChatMode } from '../ChatModeSelector';
 import { ConversationOptimizer } from '../utils/conversationOptimizer';
-import { validatePersonaResponse } from '@/components/research/services/personaValidatorService';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
 
 export async function sendMessageToPersona(
@@ -116,42 +115,29 @@ async function generateQuickPersonaResponse(
       }
 
       const response = data.response;
-      console.log(`Got response for persona ${personaId} on attempt ${attempt}, validating authenticity...`);
+      console.log(`Got response for persona ${personaId} on attempt ${attempt}, enhancing authenticity...`);
 
-      // Validate response authenticity
+      // Enhance response for authenticity and accuracy
       try {
-        const validation = await validatePersonaResponse(
-          response,
-          personaData,
-          conversationContext,
-          userMessage
-        );
+        const { data: enhancementData, error: enhancementError } = await supabase.functions.invoke('enhance-persona-response', {
+          body: {
+            initial_response: response,
+            persona: dbPersonaData,
+            user_message: userMessage,
+            conversation_context: conversationContext
+          }
+        });
 
-        console.log(`Validation scores for ${personaData.name}: Overall=${validation.scores.overall}, Demographics=${validation.scores.demographicAccuracy}, Traits=${validation.scores.traitAlignment}`);
-
-        // If validation fails and we haven't exhausted validation retries
-        if (validation.shouldRegenerate && attempt <= maxValidationRetries) {
-          console.log(`🔄 AUTHENTICITY CHECK FAILED for ${personaData.name} (score: ${validation.scores.overall}) - Regenerating response...`);
-          console.log(`Issues found: ${validation.specificErrors.join(', ')}`);
-          
-          // Continue to next attempt for regeneration
-          const delay = baseDelay * attempt;
-          await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
+        if (enhancementError || !enhancementData?.enhanced_response) {
+          console.warn('⚠️ Enhancement failed, using initial response:', enhancementError);
+          return response;
         }
 
-        // Accept response (either passed validation or we're out of validation retries)
-        if (validation.shouldRegenerate) {
-          console.warn(`⚠️ Response for ${personaData.name} still failed validation after ${maxValidationRetries} retries (score: ${validation.scores.overall}), accepting to prevent infinite loops`);
-        } else {
-          console.log(`✅ Authenticity validated for ${personaData.name} (score: ${validation.scores.overall})`);
-        }
+        console.log(`✨ Response enhanced successfully for ${personaData.name}`);
+        return enhancementData.enhanced_response;
 
-        return response;
-
-      } catch (validationError) {
-        console.error('Validation service failed, accepting response:', validationError);
-        // If validation service fails, accept the response rather than failing entirely
+      } catch (enhancementError) {
+        console.warn('⚠️ Enhancement service failed, using initial response:', enhancementError);
         return response;
       }
       
