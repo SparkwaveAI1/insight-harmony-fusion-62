@@ -162,10 +162,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Fast model
+        model: 'gpt-4.1-2025-04-14', // Quality model for authentic responses
         messages,
         temperature: 0.9, // High for personality
-        max_tokens: 600, // Shorter responses for speed
+        max_tokens: 1000, // Allow richer responses
         top_p: 0.95,
         frequency_penalty: 0.2,
         presence_penalty: 0.3,
