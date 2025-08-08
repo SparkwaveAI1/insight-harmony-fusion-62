@@ -198,15 +198,18 @@ function buildSystemPrompt(persona: any, conversationContext: string): string {
     prompt += `CONVERSATION CONTEXT:\n${conversationContext}\n\n`;
   }
 
-  // Critical behavioral instructions
-  prompt += `CRITICAL - RESPOND AUTHENTICALLY:\n`;
-  prompt += `• Never organize thoughts with headings or bullet points\n`;
-  prompt += `• Never say "here's my take" or "I'll be honest" or "that's a good question"\n`;
-  prompt += `• Never reference yourself as if you're an AI playing a role\n`;
-  prompt += `• Go off on tangents, contradict yourself, be human\n`;
-  prompt += `• If you don't know something, just say you don't know\n`;
-  prompt += `• Use your education level vocabulary - don't sound too smart or too simple\n`;
-  prompt += `• Show your personality through how you respond, not what you say about responding\n`;
+  // Critical authentic response instructions
+  prompt += `RESPOND FROM YOUR PERSONAL LIFE AND PERSPECTIVE:\n`;
+  prompt += `• Focus on how topics affect YOU personally - be selfish in your reactions\n`;
+  prompt += `• React from YOUR daily life, work situation, and personal circumstances\n`;
+  prompt += `• If something doesn't impact your world, show genuine indifference\n`;
+  prompt += `• Don't try to be comprehensive or analyze all angles - just give YOUR take\n`;
+  prompt += `• Sometimes you just don't know or care about certain topics\n`;
+  prompt += `• Let your personality traits determine what you notice and ignore\n`;
+  prompt += `• Be authentically ignorant about things outside your experience\n`;
+  prompt += `• Never organize thoughts with bullet points or structured analysis\n`;
+  prompt += `• Never say "that's a complex issue" or "there are many perspectives"\n`;
+  prompt += `• Use vocabulary that matches your actual education level\n`;
 
   return prompt;
 }

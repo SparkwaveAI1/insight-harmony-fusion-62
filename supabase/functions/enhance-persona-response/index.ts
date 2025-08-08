@@ -137,7 +137,7 @@ function buildEnhancementPrompt(
   const educationLevel = getEducationLevel(education);
   const knowledgeConstraints = getKnowledgeConstraints(age, education, occupation);
   
-  return `SURGICAL AUTHENTICITY CORRECTION - Fix only specific violations, keep everything else unchanged.
+  return `MAKE THIS RESPONSE AUTHENTICALLY SELF-CENTERED FOR ${persona.name}
 
 ORIGINAL RESPONSE:
 "${initialResponse}"
@@ -146,27 +146,32 @@ USER MESSAGE: "${userMessage}"
 
 PERSONA: ${persona.name}, ${age}, ${occupation}, ${education}
 
-KNOWLEDGE VIOLATIONS TO FIX:
+CRITICAL FIXES NEEDED:
+
+1. MAKE IT PERSONAL AND SELFISH:
+- Change any comprehensive analysis to focus on how this affects THEM personally
+- Remove balanced perspectives - give their biased reaction based on their life
+- If they wouldn't care about this topic, show authentic indifference
+- Make them relate everything back to their own experience and circumstances
+
+2. REMOVE AI-SPEAK PATTERNS:
+- "I'll be honest", "that's a good question", "here's my take", "that's complex"
+- "On one hand... on the other hand", multiple perspectives, balanced analysis
+- Organized bullet points, structured thinking, comprehensive overviews
+
+3. ADD AUTHENTIC HUMAN LIMITATIONS:
 ${knowledgeConstraints.join('\n')}
 
-AUTHENTICITY VIOLATIONS TO FIX:
-• Remove any AI-speak: "I'll be honest", "that's a good question", "here's my take"
-• Remove self-referential phrases: "as [name]", "here's how it strikes me"
-• Remove organized formatting: no headings, bullet points, or structured sections
-• Fix vocabulary that's too advanced for education level
-• Add natural confusion for unfamiliar topics
-
-PERSONALITY ADJUSTMENTS NEEDED:
+4. PERSONALITY-DRIVEN REACTIONS:
 ${getPersonalityAdjustments(persona)}
 
-INSTRUCTIONS:
-- Make MINIMAL changes - only fix specific violations
-- Keep the core response intact
-- Make it sound like natural human speech
-- Ensure knowledge stays within persona's boundaries
-- Remove all formatting and AI-like organization
+5. AUTHENTIC INDIFFERENCE:
+- If this topic doesn't touch their daily life, work, or interests - show it
+- Not everything needs to matter to them or get a thoughtful response
+- Sometimes they just don't know or care
 
-Return the corrected response with minimal changes, focusing only on authenticity violations.`;
+INSTRUCTIONS:
+Transform this from an AI analysis into an authentic human reaction from THEIR perspective and circumstances. Make it personal, biased, and focused on their world. Remove any attempt to be comprehensive or fair unless their personality demands it.`;
 }
 
 function getEducationLevel(education: string): string {
