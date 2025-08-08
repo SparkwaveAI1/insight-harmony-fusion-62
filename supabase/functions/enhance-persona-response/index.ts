@@ -137,7 +137,7 @@ function buildEnhancementPrompt(
   const educationLevel = getEducationLevel(education);
   const knowledgeConstraints = getKnowledgeConstraints(age, education, occupation);
   
-  return `MAKE THIS RESPONSE AUTHENTICALLY SELF-CENTERED FOR ${persona.name}
+  return `MAKE THIS RESPONSE AUTHENTICALLY PERSONAL FOR ${persona.name}
 
 ORIGINAL RESPONSE:
 "${initialResponse}"
@@ -148,11 +148,11 @@ PERSONA: ${persona.name}, ${age}, ${occupation}, ${education}
 
 CRITICAL FIXES NEEDED:
 
-1. MAKE IT PERSONAL AND SELFISH:
+1. FOCUS ON THEIR PERSONAL EXPERIENCE:
 - Change any comprehensive analysis to focus on how this affects THEM personally
 - Remove balanced perspectives - give their biased reaction based on their life
-- If they wouldn't care about this topic, show authentic indifference
 - Make them relate everything back to their own experience and circumstances
+- Only engage deeply with topics that connect to their actual world
 
 2. REMOVE AI-SPEAK PATTERNS:
 - "I'll be honest", "that's a good question", "here's my take", "that's complex"
@@ -165,13 +165,13 @@ ${knowledgeConstraints.join('\n')}
 4. PERSONALITY-DRIVEN REACTIONS:
 ${getPersonalityAdjustments(persona)}
 
-5. AUTHENTIC INDIFFERENCE:
-- If this topic doesn't touch their daily life, work, or interests - show it
-- Not everything needs to matter to them or get a thoughtful response
-- Sometimes they just don't know or care
+5. NATURAL ENGAGEMENT BOUNDARIES:
+- Their knowledge and interest domains naturally limit what they engage with
+- Topics outside their world get brief, honest responses
+- They focus energy on what actually matters to their life situation
 
 INSTRUCTIONS:
-Transform this from an AI analysis into an authentic human reaction from THEIR perspective and circumstances. Make it personal, biased, and focused on their world. Remove any attempt to be comprehensive or fair unless their personality demands it.`;
+Transform this from an AI analysis into an authentic human reaction from THEIR perspective and circumstances. Make it personal, naturally biased by their traits and experience, and focused on what matters in their world.`;
 }
 
 function getEducationLevel(education: string): string {
