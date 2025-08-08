@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, Save, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +17,7 @@ import ProjectSelector from './ProjectSelector';
 import DocumentManager from './DocumentManager';
 import { PersonaSourceSelector } from './PersonaSourceSelector';
 import { KnowledgeBaseDocument } from '@/services/collections';
+import { getProjectQuestionSets, saveQuestionSet, ProjectQuestionSet } from '@/services/questionSets/questionSetService';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -47,6 +48,9 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
   const [isLoading, setIsLoading] = useState(false);
   const [surveySessionId, setSurveySessionId] = useState<string | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<KnowledgeBaseDocument[]>([]);
+  const [availableQuestionSets, setAvailableQuestionSets] = useState<ProjectQuestionSet[]>([]);
+  const [showSaveQuestionSet, setShowSaveQuestionSet] = useState(false);
+  const [questionSetName, setQuestionSetName] = useState('');
 
   const {
     sessionId,
@@ -64,6 +68,21 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       setCurrentStep('setup');
     }
   }, [projectId]);
+
+  // Load question sets when project changes
+  useEffect(() => {
+    if (selectedProjectId) {
+      loadQuestionSets();
+    } else {
+      setAvailableQuestionSets([]);
+    }
+  }, [selectedProjectId]);
+
+  const loadQuestionSets = async () => {
+    if (!selectedProjectId) return;
+    const questionSets = await getProjectQuestionSets(selectedProjectId);
+    setAvailableQuestionSets(questionSets);
+  };
 
   const handleProjectSelected = (projectId: string) => {
     setSelectedProjectId(projectId || null);
@@ -305,6 +324,34 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
     setCurrentStep('project-selection');
   };
 
+  const handleSaveQuestionSet = async () => {
+    if (!selectedProjectId || !questionSetName.trim()) {
+      toast.error('Please enter a name for the question set');
+      return;
+    }
+
+    const result = await saveQuestionSet(
+      selectedProjectId,
+      questionSetName.trim(),
+      surveyData.questions.filter(q => q.trim())
+    );
+
+    if (result) {
+      setQuestionSetName('');
+      setShowSaveQuestionSet(false);
+      await loadQuestionSets();
+    }
+  };
+
+  const handleLoadQuestionSet = (questionSet: ProjectQuestionSet) => {
+    setSurveyData(prev => ({
+      ...prev,
+      questions: questionSet.questions,
+      surveyQuestions: questionSet.questions.map(text => ({ text }))
+    }));
+    toast.success(`Loaded question set: ${questionSet.name}`);
+  };
+
   // Project Selection Step
   if (currentStep === 'project-selection') {
     return (
@@ -433,6 +480,77 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
             surveyQuestions={surveyData.surveyQuestions}
             onSurveyQuestionsChange={handleSurveyQuestionsChange}
           />
+
+          {selectedProjectId && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bookmark className="w-4 h-4" />
+                  Question Sets
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {availableQuestionSets.length > 0 && (
+                  <div>
+                    <Label>Load Saved Question Set</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {availableQuestionSets.map((questionSet) => (
+                        <Button
+                          key={questionSet.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleLoadQuestionSet(questionSet)}
+                          className="justify-start"
+                        >
+                          <Bookmark className="w-3 h-3 mr-2" />
+                          {questionSet.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!showSaveQuestionSet && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSaveQuestionSet(true)}
+                    disabled={surveyData.questions.filter(q => q.trim()).length === 0}
+                  >
+                    <Save className="w-3 h-3 mr-2" />
+                    Save Current Questions
+                  </Button>
+                )}
+
+                {showSaveQuestionSet && (
+                  <div className="space-y-2">
+                    <Label>Question Set Name</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={questionSetName}
+                        onChange={(e) => setQuestionSetName(e.target.value)}
+                        placeholder="e.g., Product Feedback Questions"
+                        className="flex-1"
+                      />
+                      <Button size="sm" onClick={handleSaveQuestionSet}>
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setShowSaveQuestionSet(false);
+                          setQuestionSetName('');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <PersonaSourceSelector
