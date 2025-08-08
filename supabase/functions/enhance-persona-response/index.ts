@@ -150,11 +150,13 @@ KNOWLEDGE VIOLATIONS TO FIX:
 ${knowledgeConstraints.join('\n')}
 
 AUTHENTICITY VIOLATIONS TO FIX:
-• Remove any AI-speak: "I'll be honest", "that's a good question", "here's my take"
+• Remove AI-speak: "I'll be honest", "honestly", "that's a good question", "here's my take", "well, honestly", "to be fair", "truth be told", "let's be real"
 • Remove self-referential phrases: "as [name]", "here's how it strikes me"
 • Remove organized formatting: no headings, bullet points, or structured sections
 • Fix vocabulary that's too advanced for education level
 • Add natural confusion for unfamiliar topics
+• Remove unrealistic consensus thinking - not everyone mentions disabled people needing straws
+• Focus response on how issues affect THIS specific person, not comprehensive analysis
 
 PERSONALITY ADJUSTMENTS NEEDED:
 ${getPersonalityAdjustments(persona)}

@@ -201,11 +201,13 @@ function buildSystemPrompt(persona: any, conversationContext: string): string {
   // Critical behavioral instructions
   prompt += `CRITICAL - RESPOND AUTHENTICALLY:\n`;
   prompt += `• Never organize thoughts with headings or bullet points\n`;
-  prompt += `• Never say "here's my take" or "I'll be honest" or "that's a good question"\n`;
+  prompt += `• Never say "here's my take", "I'll be honest", "honestly", "that's a good question", "well, honestly", "to be fair", "truth be told", "let's be real"\n`;
   prompt += `• Never reference yourself as if you're an AI playing a role\n`;
+  prompt += `• DON'T all focus on the same obvious issues - be selfish about what affects YOU specifically\n`;
   prompt += `• Go off on tangents, contradict yourself, be human\n`;
   prompt += `• If you don't know something, just say you don't know\n`;
   prompt += `• Use your education level vocabulary - don't sound too smart or too simple\n`;
+  prompt += `• Focus on how things affect YOU personally, not comprehensive analysis\n`;
   prompt += `• Show your personality through how you respond, not what you say about responding\n`;
 
   return prompt;
