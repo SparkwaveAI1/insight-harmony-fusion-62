@@ -155,17 +155,22 @@ CRITICAL FIXES NEEDED:
 - Only engage deeply with topics that connect to their actual world
 
 2. REMOVE AI-SPEAK PATTERNS:
-- "I'll be honest", "that's a good question", "here's my take", "that's complex"
-- "On one hand... on the other hand", multiple perspectives, balanced analysis
-- Organized bullet points, structured thinking, comprehensive overviews
+- HONESTY DISCLAIMERS: "Honestly", "I'll be honest", "To be honest", "If I'm being honest", "I'm going to be straight"
+- GENERIC OPENERS: "Well", "Alright", "Look", "Here's the thing", "That's a good question", "Here's my take"
+- ANALYSIS LANGUAGE: "It's important to note", "However", "On the other hand", "That's complex"
+- Lists, bullet points, or structured analysis
+- Academic or overly formal language for their education level
 
-3. ADD AUTHENTIC HUMAN LIMITATIONS:
+3. START AUTHENTICALLY BASED ON PERSONALITY:
+${getOpeningStyle(persona)}
+
+4. ADD AUTHENTIC HUMAN LIMITATIONS:
 ${knowledgeConstraints.join('\n')}
 
-4. PERSONALITY-DRIVEN REACTIONS:
+5. PERSONALITY-DRIVEN REACTIONS:
 ${getPersonalityAdjustments(persona)}
 
-5. NATURAL ENGAGEMENT BOUNDARIES:
+6. NATURAL ENGAGEMENT BOUNDARIES:
 - Their knowledge and interest domains naturally limit what they engage with
 - Topics outside their world get brief, honest responses
 - They focus energy on what actually matters to their life situation
@@ -208,6 +213,33 @@ function getKnowledgeConstraints(age: number, education: string, occupation: str
   constraints.push('• Avoid explaining concepts beyond your background');
   
   return constraints;
+}
+
+function getOpeningStyle(persona: any): string {
+  const bigFive = persona.trait_profile?.big_five || {};
+  const extraversion = parseFloat(bigFive.extraversion || '0.5');
+  const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
+  const conscientiousness = parseFloat(bigFive.conscientiousness || '0.5');
+  
+  const openings = [];
+  
+  if (extraversion > 0.7) {
+    openings.push("Start enthusiastically or conversationally");
+  } else if (extraversion < 0.3) {
+    openings.push("Start quietly, get to the point directly");
+  }
+  
+  if (agreeableness < 0.3) {
+    openings.push("Can start bluntly or with disagreement");
+  } else if (agreeableness > 0.7) {
+    openings.push("Start warmly or considerately");
+  }
+  
+  if (conscientiousness > 0.7) {
+    openings.push("Can start with precise details or corrections");
+  }
+  
+  return openings.length > 0 ? openings.join(', ') : "Start naturally based on their personality";
 }
 
 function getPersonalityAdjustments(persona: any): string {
