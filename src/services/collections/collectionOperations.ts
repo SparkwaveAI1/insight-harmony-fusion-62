@@ -24,20 +24,41 @@ export const getCollectionById = async (id: string): Promise<Collection | null> 
 };
 
 /**
- * Fetches all collections for the current user
+ * Fetches all collections for the current user (both public and private)
  */
 export const getUserCollections = async (): Promise<Collection[]> => {
   try {
     const { data, error } = await supabase
       .from("collections")
       .select("*")
+      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error("Error fetching collections:", error);
+    console.error("Error fetching user collections:", error);
     toast.error("Failed to fetch collections");
+    return [];
+  }
+};
+
+/**
+ * Fetches all public collections (from all users)
+ */
+export const getPublicCollections = async (): Promise<Collection[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("is_public", true)
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching public collections:", error);
+    toast.error("Failed to fetch public collections");
     return [];
   }
 };
@@ -48,33 +69,28 @@ export const getUserCollections = async (): Promise<Collection[]> => {
 export const getUserCollectionsWithCount = async (): Promise<CollectionWithPersonaCount[]> => {
   try {
     // Since we removed the view, we'll manually count the personas
-    const { data: collections, error: collectionsError } = await supabase
+    const { data: collections, error } = await supabase
       .from("collections")
       .select("*")
+      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
-    if (collectionsError) throw collectionsError;
+    if (error) throw error;
 
     // Get persona counts for each collection
     const collectionsWithCount = await Promise.all(
       (collections || []).map(async (collection) => {
-        const { count, error: countError } = await supabase
+        const { data: personaData, error: personaError } = await supabase
           .from("collection_personas")
-          .select("*", { count: "exact", head: true })
+          .select("id")
           .eq("collection_id", collection.id);
 
-        if (countError) {
-          console.error("Error counting personas for collection:", countError);
-          return {
-            ...collection,
-            persona_count: 0
-          };
+        if (personaError) {
+          console.error("Error fetching persona count:", personaError);
+          return { ...collection, persona_count: 0 };
         }
 
-        return {
-          ...collection,
-          persona_count: count || 0
-        };
+        return { ...collection, persona_count: personaData?.length || 0 };
       })
     );
     
@@ -87,9 +103,47 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
 };
 
 /**
+ * Fetches all public collections with persona count
+ */
+export const getPublicCollectionsWithCount = async (): Promise<CollectionWithPersonaCount[]> => {
+  try {
+    const { data: collections, error } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("is_public", true)
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Get persona counts for each collection
+    const collectionsWithCount = await Promise.all(
+      (collections || []).map(async (collection) => {
+        const { data: personaData, error: personaError } = await supabase
+          .from("collection_personas")
+          .select("id")
+          .eq("collection_id", collection.id);
+
+        if (personaError) {
+          console.error("Error fetching persona count:", personaError);
+          return { ...collection, persona_count: 0 };
+        }
+
+        return { ...collection, persona_count: personaData?.length || 0 };
+      })
+    );
+
+    return collectionsWithCount;
+  } catch (error) {
+    console.error("Error fetching public collections with count:", error);
+    toast.error("Failed to fetch public collections");
+    return [];
+  }
+};
+
+/**
  * Creates a new collection
  */
-export const createCollection = async (name: string, description: string | null = null): Promise<Collection | null> => {
+export const createCollection = async (name: string, description?: string | null, isPublic: boolean = false): Promise<Collection | null> => {
   try {
     // Get the user's ID
     const { data: { user } } = await supabase.auth.getUser();
@@ -99,10 +153,9 @@ export const createCollection = async (name: string, description: string | null 
       return null;
     }
     
-    // Insert with the user_id
     const { data, error } = await supabase
       .from("collections")
-      .insert({ name, description, user_id: user.id })
+      .insert({ name, description, is_public: isPublic, user_id: user.id })
       .select()
       .single();
 
@@ -121,7 +174,7 @@ export const createCollection = async (name: string, description: string | null 
  */
 export const updateCollection = async (
   id: string,
-  updates: { name?: string; description?: string | null }
+  updates: { name?: string; description?: string | null; is_public?: boolean }
 ): Promise<Collection | null> => {
   try {
     const { data, error } = await supabase

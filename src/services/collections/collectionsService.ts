@@ -5,7 +5,9 @@
 import { 
   getCollectionById,
   getUserCollections,
+  getPublicCollections,
   getUserCollectionsWithCount,
+  getPublicCollectionsWithCount,
   createCollection,
   updateCollection,
   deleteCollection
@@ -26,7 +28,9 @@ export type { Collection, CollectionWithPersonaCount };
 export {
   getCollectionById,
   getUserCollections,
+  getPublicCollections,
   getUserCollectionsWithCount,
+  getPublicCollectionsWithCount,
   createCollection,
   updateCollection,
   deleteCollection,
