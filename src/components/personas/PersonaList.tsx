@@ -9,6 +9,7 @@ import PersonaCard from "./PersonaCard";
 import { Persona } from "@/services/persona/types";
 import { getPersonasByCollection } from "@/services/persona";
 import { cn } from "@/lib/utils";
+import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
 interface PersonaListProps {
   onPersonasLoad?: (personas: Persona[]) => void;
@@ -115,40 +116,6 @@ export default function PersonaList({
     }
   }, [allPersonas]);
 
-  // Enhanced search function
-  const searchPersonas = (personas: Persona[], query: string) => {
-    if (!query.trim()) return personas;
-    
-    const searchTerm = query.toLowerCase().trim();
-    
-    return personas.filter((persona) => {
-      // Search in name
-      if (persona.name.toLowerCase().includes(searchTerm)) return true;
-      
-      // Search in prompt/description
-      if (persona.prompt?.toLowerCase().includes(searchTerm)) return true;
-      
-      // Search in trait profile
-      if (persona.trait_profile) {
-        const traitString = JSON.stringify(persona.trait_profile).toLowerCase();
-        if (traitString.includes(searchTerm)) return true;
-      }
-      
-      // Search in metadata
-      if (persona.metadata) {
-        const metadataString = JSON.stringify(persona.metadata).toLowerCase();
-        if (metadataString.includes(searchTerm)) return true;
-      }
-      
-      // Search in interview sections
-      if (persona.interview_sections) {
-        const interviewString = JSON.stringify(persona.interview_sections).toLowerCase();
-        if (interviewString.includes(searchTerm)) return true;
-      }
-      
-      return false;
-    });
-  };
 
   // New filter function for advanced filters
   const applyAdvancedFilters = (personas: Persona[]) => {
@@ -190,8 +157,8 @@ export default function PersonaList({
     });
   };
 
-  // Apply both search and advanced filters
-  const searchedPersonas = searchPersonas(personas, searchQuery);
+  // Use shared search hook and apply advanced filters
+  const searchedPersonas = usePersonaSearch(personas, searchQuery);
   const filteredPersonas = applyAdvancedFilters(searchedPersonas);
 
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {

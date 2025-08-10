@@ -22,6 +22,7 @@ import { Persona } from "@/services/persona/types";
 import { Collection } from "@/services/collections/types";
 import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
 import { dbPersonaToPersona } from "@/services/persona/mappers";
+import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
 interface AddPersonasToCollectionDialogProps {
   collectionId: string;
@@ -96,61 +97,13 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
     }
   };
 
-  // Enhanced search function
-  const searchPersonas = (personas: Persona[], searchTerm: string): Persona[] => {
-    if (!searchTerm.trim()) return personas;
+  // Use shared search hook
+  const searchedPersonas = usePersonaSearch(personas, searchTerm);
 
-    const searchLower = searchTerm.toLowerCase();
-    
-    return personas.filter(persona => {
-      // Search in name
-      if (persona.name.toLowerCase().includes(searchLower)) return true;
-      
-      // Search in demographics
-      const metadata = persona.metadata;
-      if (!metadata) return false;
-      
-      // Search across various demographic fields
-      const searchFields = [
-        metadata.age,
-        metadata.gender,
-        metadata.occupation,
-        metadata.region,
-        metadata.location_history?.current_residence,
-        metadata.education_level,
-        metadata.income_level,
-        metadata.race_ethnicity
-      ];
-      
-      if (searchFields.some(field => 
-        field && field.toLowerCase().includes(searchLower)
-      )) return true;
-      
-      // Search in tags
-      if (persona.preinterview_tags && Array.isArray(persona.preinterview_tags)) {
-        return persona.preinterview_tags.some(tag => 
-          tag.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      return false;
-    });
-  };
-
-  // Filter personas by collection
-  const filterByCollection = (personas: Persona[], collectionFilter: string): Persona[] => {
-    if (collectionFilter === 'none') return personas;
-    // This is a placeholder - in a real implementation, you'd need to track which personas belong to which collections
-    return personas;
-  };
-
-  // Combine search and collection filtering
+  // Filter personas by collection (simplified - collection filtering removed as it wasn't implemented)
   const filteredPersonas = useMemo(() => {
-    let filtered = personas;
-    filtered = searchPersonas(filtered, searchTerm);
-    filtered = filterByCollection(filtered, selectedCollection);
-    return filtered;
-  }, [personas, searchTerm, selectedCollection]);
+    return searchedPersonas;
+  }, [searchedPersonas]);
 
   const handleCheckboxChange = (personaId: string) => {
     setSelectedPersonaIds((prevSelected) => {

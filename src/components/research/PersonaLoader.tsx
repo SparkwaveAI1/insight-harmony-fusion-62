@@ -10,6 +10,7 @@ import { getAllPersonas, getPersonasByCollection } from '@/services/persona';
 import { getUserCollections } from '@/services/collections';
 import { Persona } from '@/services/persona/types';
 import { Collection } from '@/services/collections/types';
+import { usePersonaSearch } from '@/hooks/usePersonaSearch';
 
 interface PersonaLoaderProps {
   maxPersonas: number;
@@ -85,55 +86,8 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     }
   }, [selectedCollection, isLoadingCollections]);
 
-  // Enhanced search function that searches across multiple demographic fields
-  const searchPersonas = (personas: Persona[], searchTerm: string): Persona[] => {
-    if (!searchTerm.trim()) return personas;
-
-    const searchLower = searchTerm.toLowerCase();
-    
-    return personas.filter(persona => {
-      // Search in name
-      if (persona.name.toLowerCase().includes(searchLower)) return true;
-      
-      // Search in demographics
-      const metadata = persona.metadata;
-      if (!metadata) return false;
-      
-      // Age search
-      if (metadata.age && metadata.age.toLowerCase().includes(searchLower)) return true;
-      
-      // Gender search
-      if (metadata.gender && metadata.gender.toLowerCase().includes(searchLower)) return true;
-      
-      // Occupation search
-      if (metadata.occupation && metadata.occupation.toLowerCase().includes(searchLower)) return true;
-      
-      // Location/Region search
-      if (metadata.region && metadata.region.toLowerCase().includes(searchLower)) return true;
-      if (metadata.location_history?.current_residence && 
-          metadata.location_history.current_residence.toLowerCase().includes(searchLower)) return true;
-      
-      // Education search
-      if (metadata.education_level && metadata.education_level.toLowerCase().includes(searchLower)) return true;
-      
-      // Income search
-      if (metadata.income_level && metadata.income_level.toLowerCase().includes(searchLower)) return true;
-      
-      // Race/Ethnicity search
-      if (metadata.race_ethnicity && metadata.race_ethnicity.toLowerCase().includes(searchLower)) return true;
-      
-      // Tags search
-      if (persona.preinterview_tags && Array.isArray(persona.preinterview_tags)) {
-        return persona.preinterview_tags.some(tag => 
-          tag.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      return false;
-    });
-  };
-
-  const filteredPersonas = searchPersonas(personas, searchTerm);
+  // Use shared search hook
+  const filteredPersonas = usePersonaSearch(personas, searchTerm);
 
   const handlePersonaSelect = (personaId: string) => {
     setSelectedPersonas(prev => {
