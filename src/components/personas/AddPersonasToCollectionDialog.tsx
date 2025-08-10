@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Persona } from "@/services/persona/types";
-import { addPersonasToCollection, getPersonasNotInCollection } from "@/services/collections";
+import { Collection } from "@/services/collections/types";
+import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
 import { dbPersonaToPersona } from "@/services/persona/mappers";
 
 interface AddPersonasToCollectionDialogProps {
@@ -32,14 +38,42 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
 }) => {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersonaIds, setSelectedPersonaIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCollection, setSelectedCollection] = useState<string>('none');
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
   const { user } = useAuth();
 
+  // Fetch collections when dialog opens
   useEffect(() => {
     if (open && user) {
+      fetchCollections();
       fetchAvailablePersonas();
     }
   }, [open, user, collectionId]);
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setSearchTerm('');
+      setSelectedCollection('none');
+      setSelectedPersonaIds([]);
+    }
+  }, [open]);
+
+  const fetchCollections = async () => {
+    setIsLoadingCollections(true);
+    try {
+      if (!user) return;
+      const allCollections = await getUserCollections();
+      setCollections(allCollections);
+    } catch (error) {
+      console.error("Error fetching collections:", error);
+    } finally {
+      setIsLoadingCollections(false);
+    }
+  };
 
   const fetchAvailablePersonas = async () => {
     setIsLoading(true);
@@ -62,6 +96,62 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
     }
   };
 
+  // Enhanced search function
+  const searchPersonas = (personas: Persona[], searchTerm: string): Persona[] => {
+    if (!searchTerm.trim()) return personas;
+
+    const searchLower = searchTerm.toLowerCase();
+    
+    return personas.filter(persona => {
+      // Search in name
+      if (persona.name.toLowerCase().includes(searchLower)) return true;
+      
+      // Search in demographics
+      const metadata = persona.metadata;
+      if (!metadata) return false;
+      
+      // Search across various demographic fields
+      const searchFields = [
+        metadata.age,
+        metadata.gender,
+        metadata.occupation,
+        metadata.region,
+        metadata.location_history?.current_residence,
+        metadata.education_level,
+        metadata.income_level,
+        metadata.race_ethnicity
+      ];
+      
+      if (searchFields.some(field => 
+        field && field.toLowerCase().includes(searchLower)
+      )) return true;
+      
+      // Search in tags
+      if (persona.preinterview_tags && Array.isArray(persona.preinterview_tags)) {
+        return persona.preinterview_tags.some(tag => 
+          tag.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return false;
+    });
+  };
+
+  // Filter personas by collection
+  const filterByCollection = (personas: Persona[], collectionFilter: string): Persona[] => {
+    if (collectionFilter === 'none') return personas;
+    // This is a placeholder - in a real implementation, you'd need to track which personas belong to which collections
+    return personas;
+  };
+
+  // Combine search and collection filtering
+  const filteredPersonas = useMemo(() => {
+    let filtered = personas;
+    filtered = searchPersonas(filtered, searchTerm);
+    filtered = filterByCollection(filtered, selectedCollection);
+    return filtered;
+  }, [personas, searchTerm, selectedCollection]);
+
   const handleCheckboxChange = (personaId: string) => {
     setSelectedPersonaIds((prevSelected) => {
       if (prevSelected.includes(personaId)) {
@@ -70,6 +160,15 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
         return [...prevSelected, personaId];
       }
     });
+  };
+
+  const handleSelectAll = () => {
+    const allIds = filteredPersonas.map(p => p.persona_id);
+    setSelectedPersonaIds(allIds);
+  };
+
+  const handleClearAll = () => {
+    setSelectedPersonaIds([]);
   };
 
   const handleAddPersonas = async () => {
@@ -96,48 +195,237 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Add Personas to Collection</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            Add Personas to Collection
+            <Badge variant="secondary">
+              {selectedPersonaIds.length} selected
+            </Badge>
+          </DialogTitle>
           <DialogDescription>
-            Choose the personas you want to add to this collection.
+            Search and select personas to add to this collection. Use the search bar to filter by name, demographics, or tags.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <ScrollArea className="h-[300px] w-full rounded-md border">
-            {isLoading ? (
-              <div className="p-4">Loading personas...</div>
-            ) : personas.length === 0 ? (
-              <div className="p-4 text-center">
-                <p className="text-muted-foreground">No available personas to add</p>
-                <p className="text-sm">All your personas are already in this collection</p>
+        
+        <div className="flex-1 space-y-4 py-4">
+          {/* Search and Controls */}
+          <div className="space-y-3">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, demographics, occupation, location, education, tags..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {/* Collection Filter */}
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by collection" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All Available</SelectItem>
+                    {collections.map((collection) => (
+                      <SelectItem key={collection.id} value={collection.id}>
+                        {collection.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            ) : (
-              personas.map((persona) => (
-                <div key={persona.persona_id} className="flex items-center space-x-2 p-2">
-                  <Checkbox
-                    id={persona.persona_id}
-                    checked={selectedPersonaIds.includes(persona.persona_id)}
-                    onCheckedChange={() => handleCheckboxChange(persona.persona_id)}
-                  />
-                  <label
-                    htmlFor={persona.persona_id}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              
+              {/* Bulk Selection Controls */}
+              {filteredPersonas.length > 0 && (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleSelectAll}
+                    disabled={isLoading}
                   >
-                    {persona.name}
-                  </label>
+                    <CheckSquare className="h-4 w-4 mr-1" />
+                    Select All
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleClearAll}
+                    disabled={isLoading || selectedPersonaIds.length === 0}
+                  >
+                    <Square className="h-4 w-4 mr-1" />
+                    Clear All
+                  </Button>
                 </div>
-              ))
-            )}
-          </ScrollArea>
+              )}
+            </div>
+            
+            {/* Search Help Text */}
+            <p className="text-xs text-muted-foreground">
+              Search across name, age, gender, occupation, location, education, income, ethnicity, and tags
+            </p>
+          </div>
+
+          {/* Persona List */}
+          <div className="flex-1">
+            <ScrollArea className="h-[400px] w-full rounded-md border">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                  <p className="text-muted-foreground">Loading personas...</p>
+                </div>
+              ) : filteredPersonas.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-muted-foreground mb-2">
+                    {searchTerm ? 
+                      `No personas found matching "${searchTerm}".` :
+                      personas.length === 0 ?
+                        'No available personas to add' :
+                        'No personas match your current filters.'
+                    }
+                  </p>
+                  {personas.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      All your personas are already in this collection
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                  {filteredPersonas.map((persona) => {
+                    const isSelected = selectedPersonaIds.includes(persona.persona_id);
+                    const metadata = persona.metadata || {};
+
+                    return (
+                      <Card
+                        key={persona.persona_id}
+                        className={`cursor-pointer transition-all duration-200 ${
+                          isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => handleCheckboxChange(persona.persona_id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div className={`w-5 h-5 rounded border-2 mt-1 flex items-center justify-center ${
+                              isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'
+                            }`}>
+                              {isSelected && (
+                                <div className="w-2 h-2 bg-white rounded-sm" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm mb-2 truncate">{persona.name}</h3>
+                              
+                              {/* Enhanced Demographics Display */}
+                              <div className="space-y-2">
+                                {/* Primary Demographics */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {metadata.age && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
+                                      Age: {metadata.age}
+                                    </Badge>
+                                  )}
+                                  {metadata.gender && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 border-purple-200">
+                                      {metadata.gender}
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                {/* Occupation */}
+                                {metadata.occupation && (
+                                  <p className="text-xs font-medium text-foreground">
+                                    {metadata.occupation}
+                                  </p>
+                                )}
+                                
+                                {/* Secondary Demographics */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {metadata.education_level && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5 bg-green-50 text-green-700 border-green-200">
+                                      {metadata.education_level}
+                                    </Badge>
+                                  )}
+                                  {metadata.income_level && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-700 border-yellow-200">
+                                      {metadata.income_level}
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                {/* Location */}
+                                {(metadata.region || metadata.location_history?.current_residence) && (
+                                  <div className="flex items-center gap-1">
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                      📍 {metadata.region || metadata.location_history?.current_residence}
+                                    </Badge>
+                                  </div>
+                                )}
+                                
+                                {/* Ethnicity */}
+                                {metadata.race_ethnicity && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {metadata.race_ethnicity}
+                                  </p>
+                                )}
+                                
+                                {/* Tags */}
+                                {persona.preinterview_tags && Array.isArray(persona.preinterview_tags) && persona.preinterview_tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {persona.preinterview_tags.slice(0, 3).map((tag, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs px-1.5 py-0.5">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                    {persona.preinterview_tags.length > 3 && (
+                                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                                        +{persona.preinterview_tags.length - 3}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
         </div>
-        <DialogFooter>
-          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleAddPersonas} disabled={selectedPersonaIds.length === 0 || isLoading}>
-            Add Selected Personas
-          </Button>
+        
+        <DialogFooter className="border-t pt-4">
+          <div className="flex items-center justify-between w-full">
+            <p className="text-sm text-muted-foreground">
+              {selectedPersonaIds.length} persona{selectedPersonaIds.length !== 1 ? 's' : ''} selected
+            </p>
+            <div className="flex gap-2">
+              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddPersonas} 
+                disabled={selectedPersonaIds.length === 0 || isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Adding...
+                  </div>
+                ) : (
+                  `Add ${selectedPersonaIds.length} Persona${selectedPersonaIds.length !== 1 ? 's' : ''}`
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
