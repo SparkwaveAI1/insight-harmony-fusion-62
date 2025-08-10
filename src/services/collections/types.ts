@@ -4,6 +4,7 @@ export interface Collection {
   id: string;
   name: string;
   description: string | null;
+  is_public: boolean;
   user_id: string;
   created_at: string;
   updated_at: string;
