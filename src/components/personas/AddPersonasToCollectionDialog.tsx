@@ -226,7 +226,7 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
 
           {/* Persona List */}
           <div className="flex-1 min-h-0">
-            <ScrollArea className="h-full w-full rounded-md border">
+            <ScrollArea className="h-[500px] w-full rounded-md border">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
