@@ -18,51 +18,6 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Cache for persona data and processed instructions - DISABLED FOR TESTING
-const personaCache = new Map<string, { 
-  persona: any, 
-  instructions: string, 
-  timestamp: number 
-}>();
-const CACHE_TTL = 0; // Cache disabled - forcing fresh analysis each time
-
-// Simple hash function for conversation context
-function hashContext(context: string): string {
-  let hash = 0;
-  for (let i = 0; i < context.length; i++) {
-    const char = context.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(36);
-}
-
-function getCachedPersona(personaId: string, conversationContext: string = ''): { persona: any, instructions: string } | null {
-  // Include personaId in the context hash to prevent cross-contamination between personas
-  // This ensures each persona gets unique cache entries even with identical material contexts
-  const contextWithPersona = `${conversationContext}-persona:${personaId}`;
-  const contextHash = hashContext(contextWithPersona);
-  const cacheKey = `${personaId}-${contextHash}`;
-  const cached = personaCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log('Using cached persona data for:', personaId, 'with unique context hash:', contextHash);
-    return { persona: cached.persona, instructions: cached.instructions };
-  }
-  return null;
-}
-
-function setCachedPersona(personaId: string, conversationContext: string = '', persona: any, instructions: string): void {
-  // Include personaId in the context hash to prevent cross-contamination between personas
-  const contextWithPersona = `${conversationContext}-persona:${personaId}`;
-  const contextHash = hashContext(contextWithPersona);
-  const cacheKey = `${personaId}-${contextHash}`;
-  personaCache.set(cacheKey, {
-    persona,
-    instructions,
-    timestamp: Date.now()
-  });
-  console.log('Cached persona data for:', personaId, 'with unique context hash:', contextHash);
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -81,74 +36,65 @@ serve(async (req) => {
 
     console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
 
-    // Check cache first
-    let persona: any;
-    let systemPrompt: string;
-    
-    const cached = getCachedPersona(personaId, conversationContext);
-    if (cached) {
-      persona = cached.persona;
-      systemPrompt = cached.instructions;
-    } else {
-      // Fetch persona data from database
-      const { data: fetchedPersona, error: personaError } = await supabase
-        .from('personas')
-        .select('*')
-        .eq('persona_id', personaId)
-        .single();
+    // Fetch persona data from database
+    const { data: persona, error: personaError } = await supabase
+      .from('personas')
+      .select('*')
+      .eq('persona_id', personaId)
+      .single();
 
-      if (personaError || !fetchedPersona) {
-        return new Response(JSON.stringify({ error: 'Persona not found' }), {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      persona = fetchedPersona;
-      
-      // TRAIT-FIRST RESPONSE SYSTEM
-      console.log('🚀 Starting trait-first response generation...');
-      
-      // DEBUG: Log trait profile structure to understand what we're working with
-      console.log('🔍 DEBUG: Trait profile keys:', persona.trait_profile ? Object.keys(persona.trait_profile) : 'null');
-      if (persona.trait_profile?.big_five) {
-        console.log('🔍 DEBUG: Big Five values:', {
-          openness: persona.trait_profile.big_five.openness,
-          conscientiousness: persona.trait_profile.big_five.conscientiousness,
-          extraversion: persona.trait_profile.big_five.extraversion,
-          agreeableness: persona.trait_profile.big_five.agreeableness,
-          neuroticism: persona.trait_profile.big_five.neuroticism
-        });
-      }
-      
-      // Step 1: Comprehensive trait relevance analysis
-      const traitScanResult = await TraitRelevanceAnalyzer.analyzeTraitRelevance(
-        message,
-        conversationContext || '',
-        persona.trait_profile
-      );
-      
-      console.log(`📊 Trait scan: ${traitScanResult.totalScanned} traits, ${traitScanResult.highPriorityTraits.length} high-priority`);
-      
-      // Step 2: Synthesize driving traits from high-priority candidates
-      const drivingTraitsProfile = await DrivingTraitsSynthesizer.synthesizeDrivingTraits(
-        traitScanResult.highPriorityTraits,
-        persona.trait_profile,
-        message
-      );
-      
-      console.log(`🎯 Driving traits: ${drivingTraitsProfile.primaryTraits.map(t => t.subcategory).join(', ')}`);
-      
-      // Step 3: Generate focused instructions using only driving traits
-      systemPrompt = FocusedInstructions.buildFocusedPersonaInstructions(
-        persona,
-        drivingTraitsProfile,
-        conversationContext || ''
-      );
-      
-      // Cache for future requests with context-aware cache key
-      setCachedPersona(personaId, conversationContext, persona, systemPrompt);
+    if (personaError || !persona) {
+      return new Response(JSON.stringify({ error: 'Persona not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+    
+    // TRAIT-FIRST RESPONSE SYSTEM
+    console.log('🚀 Starting trait-first response generation...');
+    
+    // DEBUG: Log trait profile structure to understand what we're working with
+    console.log('🔍 DEBUG: Trait profile keys:', persona.trait_profile ? Object.keys(persona.trait_profile) : 'null');
+    if (persona.trait_profile?.big_five) {
+      console.log('🔍 DEBUG: Big Five values:', {
+        openness: persona.trait_profile.big_five.openness,
+        conscientiousness: persona.trait_profile.big_five.conscientiousness,
+        extraversion: persona.trait_profile.big_five.extraversion,
+        agreeableness: persona.trait_profile.big_five.agreeableness,
+        neuroticism: persona.trait_profile.big_five.neuroticism
+      });
+    }
+    
+    // Step 1: Comprehensive trait relevance analysis
+    console.log('🔍 Starting comprehensive trait relevance analysis...');
+    const traitScanResult = await TraitRelevanceAnalyzer.analyzeTraitRelevance(
+      message,
+      conversationContext || '',
+      persona.trait_profile
+    );
+    
+    console.log(`📊 Trait analysis complete: ${traitScanResult.totalScanned} traits analyzed, ${traitScanResult.highPriorityTraits.length} high-priority`);
+    console.log(`📊 Trait scan: ${traitScanResult.totalScanned} traits, ${traitScanResult.highPriorityTraits.length} high-priority`);
+    
+    // Step 2: Synthesize driving traits from high-priority candidates
+    console.log('🎯 Synthesizing driving traits from high-priority candidates...');
+    const drivingTraitsProfile = await DrivingTraitsSynthesizer.synthesizeDrivingTraits(
+      traitScanResult.highPriorityTraits,
+      persona.trait_profile,
+      message
+    );
+    
+    console.log(`✅ Driving traits synthesized: ${drivingTraitsProfile.primaryTraits.length} primary traits with ${drivingTraitsProfile.traitInteractions.length} interactions`);
+    console.log(`🎯 Driving traits: ${drivingTraitsProfile.primaryTraits.map(t => t.subcategory).join(', ')}`);
+    
+    // Step 3: Generate focused instructions using only driving traits
+    console.log('📝 Building focused persona instructions with driving traits...');
+    const systemPrompt = FocusedInstructions.buildFocusedPersonaInstructions(
+      persona,
+      drivingTraitsProfile,
+      conversationContext || ''
+    );
+    console.log('✅ Focused instructions built with trait-driven behavior');
     
     console.log('System prompt length:', systemPrompt.length, 'characters');
     console.log('Conversation context included:', conversationContext ? 'YES' : 'NO', conversationContext ? `(${conversationContext.length} chars)` : '');
