@@ -37,6 +37,8 @@ import { EditCollectionDialog } from "@/components/collections/EditCollectionDia
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import Footer from "@/components/sections/Footer";
 import PersonaCard from "@/components/personas/PersonaCard";
+import CollectionVisibilityToggle from "@/components/collections/CollectionVisibilityToggle";
+import { supabase } from "@/integrations/supabase/client";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
@@ -45,6 +47,7 @@ const CollectionDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPersonasDialog, setShowAddPersonasDialog] = useState(false);
   const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,6 +63,9 @@ const CollectionDetail = () => {
       const data = await getCollectionById(id);
       if (data) {
         setCollection(data);
+        // Check if current user is the owner
+        const { data: { user } } = await supabase.auth.getUser();
+        setIsOwner(user?.id === data.user_id);
       } else {
         toast.error("Collection not found");
       }
@@ -114,6 +120,12 @@ const CollectionDetail = () => {
     }
   };
 
+  const handleVisibilityChange = (isPublic: boolean) => {
+    if (collection) {
+      setCollection({ ...collection, is_public: isPublic });
+    }
+  };
+
   // Add a not found state if collection couldn't be loaded
   if (!isLoading && !collection) {
     return <NotFoundState />;
@@ -157,11 +169,19 @@ const CollectionDetail = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
+              <div className="mb-4 flex items-center justify-between">
                 <Button onClick={() => setShowAddPersonasDialog(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Personas
                 </Button>
+                {collection && (
+                  <CollectionVisibilityToggle
+                    collectionId={collection.id}
+                    isPublic={collection.is_public}
+                    isOwner={isOwner}
+                    onVisibilityChange={handleVisibilityChange}
+                  />
+                )}
               </div>
               <Separator />
               <div className="mt-4">

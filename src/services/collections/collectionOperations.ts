@@ -195,6 +195,26 @@ export const updateCollection = async (
 };
 
 /**
+ * Updates collection visibility
+ */
+export const updateCollectionVisibility = async (id: string, isPublic: boolean): Promise<Collection | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("collections")
+      .update({ is_public: isPublic })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error updating collection visibility:", error);
+    throw error;
+  }
+};
+
+/**
  * Deletes a collection
  */
 export const deleteCollection = async (id: string): Promise<boolean> => {
