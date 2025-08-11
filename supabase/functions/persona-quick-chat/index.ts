@@ -159,7 +159,20 @@ serve(async (req) => {
       messages[0].content += imageInstructions;
     }
 
-    // Generate response with optimized parameters for speed
+    // Dynamic generation parameters based on persona traits
+    const bigFive = persona.trait_profile?.big_five || {};
+    const neuroticism = parseFloat(bigFive.neuroticism || '0.5');
+    const conscientiousness = parseFloat(bigFive.conscientiousness || '0.5');
+    const extraversion = parseFloat(bigFive.extraversion || '0.5');
+    
+    // Trait-responsive parameters
+    const temperature = Math.min(0.9, 0.7 + (1 - conscientiousness) * 0.3); // Less organized = more random
+    const maxTokens = extraversion > 0.7 ? 1200 : extraversion < 0.3 ? 600 : 1000; // Extraverts talk more
+    const frequencyPenalty = neuroticism > 0.7 ? 0.1 : 0.2; // Neurotic personas repeat concerns
+    
+    console.log(`Trait-responsive parameters: temp=${temperature}, tokens=${maxTokens}, neuroticism=${neuroticism}`);
+
+    // Generate response with trait-driven parameters
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -169,10 +182,10 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14', // Quality model for authentic responses
         messages,
-        temperature: 0.9, // High for personality
-        max_tokens: 1000, // Allow richer responses
+        temperature,
+        max_tokens: maxTokens,
         top_p: 0.95,
-        frequency_penalty: 0.2,
+        frequency_penalty: frequencyPenalty,
         presence_penalty: 0.3,
       }),
     });

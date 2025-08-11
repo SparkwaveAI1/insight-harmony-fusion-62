@@ -15,7 +15,7 @@ export async function sendMessageToPersona(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('Using enhanced persona-quick-chat for all interactions:', { personaId, mode, messageLength: userMessage.length });
+  console.log('Using trait-first persona-quick-chat for authentic responses:', { personaId, mode, messageLength: userMessage.length });
 
   try {
     // Always use the enhanced quick-chat function with linguistic profiles
@@ -43,7 +43,7 @@ async function generateQuickPersonaResponse(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('🚀 Using streamlined enhanced chat pipeline');
+  console.log('🚀 Using trait-first chat pipeline for authentic persona responses');
 
   // Optimize conversation history for performance
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
@@ -56,8 +56,8 @@ async function generateQuickPersonaResponse(
     try {
       console.log(`🎯 Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
-      // Use the new enhanced chat function that combines generation + enhancement
-      const { data, error } = await supabase.functions.invoke('persona-enhanced-chat', {
+      // Use the trait-first quick chat function for authentic persona responses
+      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
         body: {
           personaId,
           message: userMessage,

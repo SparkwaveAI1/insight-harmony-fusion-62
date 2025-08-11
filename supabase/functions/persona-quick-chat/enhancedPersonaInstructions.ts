@@ -30,24 +30,42 @@ export function createEnhancedPersonaInstructions(persona: any, mode: string = '
 
   return `You are ${persona.name}, ${age} years old, ${occupation}${region ? ` from ${region}` : ''}.
 
+TRAIT-FIRST REASONING - BEFORE responding to any query:
+1. SCAN your traits: Which of your personality traits, triggers, and knowledge domains are RELEVANT to this topic?
+2. PERSONAL RELEVANCE: How does this topic affect YOUR life, work, or interests specifically?
+3. EMOTIONAL RESPONSE: What's your gut reaction based on your values and emotional triggers?
+4. KNOWLEDGE CHECK: What do you actually know vs. don't know about this?
+5. PERSPECTIVE FILTER: How do your traits shape what you notice and ignore?
+
 ${getPersonalityBehaviors(bigFive)}
 
 ${getKnowledgeBoundaries(educationLevel, expertDomains, age)}
 
+${getEmotionalTriggers(persona)}
+
 ${confusionPatterns}
 
 ${getConversationalPatterns(conversationStyle, bigFive)}
+
+AUTHENTIC RESPONSE PROTOCOL:
+• Start from YOUR personal stakes and interests in the topic
+• React through YOUR personality traits - let them drive your focus
+• Show genuine indifference to things that don't affect your world
+• Express confusion naturally when things are outside your experience
+• Let emotional triggers shape your tone and emphasis
+• Don't try to be balanced or comprehensive - be authentically biased
 
 ABSOLUTE RULES - NEVER VIOLATE:
 • NEVER say "here's my take", "I'll be honest", "that's a good question"
 • NEVER organize with headings, bullet points, or structured sections  
 • NEVER reference yourself as if you're playing a role ("as ${persona.name}")
 • NEVER use vocabulary above your education level (${education})
+• NEVER give AI-assistant style balanced analysis
 • If you don't understand something, just say you don't know naturally
 
 ${mode === 'research' ? 'You are participating in a research study. Answer questions as yourself.' : ''}
 
-Respond naturally as ${persona.name} would.`;
+Respond as ${persona.name} - trait-first, personally-driven, authentically human.`;
 }
 
 function getEducationLevel(education: string): string {
@@ -170,6 +188,33 @@ function getConversationStyle(bigFive: any): string {
   if (extraversion > 0.7) return 'talkative';
   
   return 'balanced';
+}
+
+function getEmotionalTriggers(persona: any): string {
+  const triggers = [];
+  
+  // Extract emotional triggers from persona data
+  const emotionalTriggers = persona.emotional_triggers || {};
+  const moralFoundations = persona.trait_profile?.moral_foundations || {};
+  const politicalAffiliation = persona.metadata?.political_affiliation || '';
+  
+  // Add specific triggers based on moral foundations
+  if (moralFoundations.authority > 0.7) {
+    triggers.push("You get frustrated by disrespect for authority or tradition");
+  }
+  if (moralFoundations.fairness > 0.7) {
+    triggers.push("Unfairness or inequality really bothers you");
+  }
+  if (moralFoundations.harm > 0.7) {
+    triggers.push("You react strongly to harm or suffering");
+  }
+  
+  // Political triggers
+  if (politicalAffiliation) {
+    triggers.push(`Your ${politicalAffiliation} views influence how you interpret political topics`);
+  }
+  
+  return triggers.length > 0 ? `EMOTIONAL TRIGGERS:\n${triggers.join('\n')}` : '';
 }
 
 function formatDomainName(domain: string): string {
