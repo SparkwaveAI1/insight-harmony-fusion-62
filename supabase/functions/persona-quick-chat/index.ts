@@ -50,51 +50,24 @@ serve(async (req) => {
       });
     }
     
-    // TRAIT-FIRST RESPONSE SYSTEM
-    console.log('🚀 Starting trait-first response generation...');
+    // TRAIT-FIRST RESPONSE SYSTEM - COMPLETE TRAIT PROCESSING
+    console.log('🚀 Starting traits-first response generation with ALL traits...');
     
-    // DEBUG: Log trait profile structure to understand what we're working with
-    console.log('🔍 DEBUG: Trait profile keys:', persona.trait_profile ? Object.keys(persona.trait_profile) : 'null');
-    if (persona.trait_profile?.big_five) {
-      console.log('🔍 DEBUG: Big Five values:', {
-        openness: persona.trait_profile.big_five.openness,
-        conscientiousness: persona.trait_profile.big_five.conscientiousness,
-        extraversion: persona.trait_profile.big_five.extraversion,
-        agreeableness: persona.trait_profile.big_five.agreeableness,
-        neuroticism: persona.trait_profile.big_five.neuroticism
-      });
-    }
+    // Extract complete trait profiles
+    const completeTraitProfile = persona.trait_profile || {};
+    const linguisticProfile = persona.linguistic_profile || {};
     
-    // Step 1: Comprehensive trait relevance analysis
-    console.log('🔍 Starting comprehensive trait relevance analysis...');
-    const traitScanResult = await TraitRelevanceAnalyzer.analyzeTraitRelevance(
-      message,
-      conversationContext || '',
-      persona.trait_profile
-    );
+    console.log('🔍 Complete trait profile categories:', Object.keys(completeTraitProfile));
     
-    console.log(`📊 Trait analysis complete: ${traitScanResult.totalScanned} traits analyzed, ${traitScanResult.highPriorityTraits.length} high-priority`);
-    console.log(`📊 Trait scan: ${traitScanResult.totalScanned} traits, ${traitScanResult.highPriorityTraits.length} high-priority`);
-    
-    // Step 2: Synthesize driving traits from high-priority candidates
-    console.log('🎯 Synthesizing driving traits from high-priority candidates...');
-    const drivingTraitsProfile = await DrivingTraitsSynthesizer.synthesizeDrivingTraits(
-      traitScanResult.highPriorityTraits,
-      persona.trait_profile,
-      message
-    );
-    
-    console.log(`✅ Driving traits synthesized: ${drivingTraitsProfile.primaryTraits.length} primary traits with ${drivingTraitsProfile.traitInteractions.length} interactions`);
-    console.log(`🎯 Driving traits: ${drivingTraitsProfile.primaryTraits.map(t => t.subcategory).join(', ')}`);
-    
-    // Step 3: Generate focused instructions using only driving traits
-    console.log('📝 Building focused persona instructions with driving traits...');
-    const systemPrompt = FocusedInstructions.buildFocusedPersonaInstructions(
+    // Generate system prompt from complete personality matrix
+    console.log('📝 Building comprehensive persona instructions from complete trait profile...');
+    const systemPrompt = FocusedInstructions.buildComprehensivePersonaInstructions(
       persona,
-      drivingTraitsProfile,
+      completeTraitProfile,
+      linguisticProfile,
       conversationContext || ''
     );
-    console.log('✅ Focused instructions built with trait-driven behavior');
+    console.log('✅ Complete personality-driven instructions built');
     
     console.log('System prompt length:', systemPrompt.length, 'characters');
     console.log('Conversation context included:', conversationContext ? 'YES' : 'NO', conversationContext ? `(${conversationContext.length} chars)` : '');
@@ -142,17 +115,12 @@ serve(async (req) => {
       messages[0].content += imageInstructions;
     }
 
-    // Get complete trait profile from persona data
-    const traitProfile = persona.trait_profile || {};
-    const linguisticProfile = persona.linguistic_profile || {};
-    const dynamicState = traitProfile.dynamic_state || {};
-    
     // Generate AI parameters from complete personality matrix
     const aiParameters = TraitsFirstParameterEngine.synthesizeAIParameters(
-      traitProfile,
+      completeTraitProfile,
       linguisticProfile,
-      drivingTraitsProfile.primaryTraits,
-      dynamicState
+      null, // No filtered traits - use complete profile
+      completeTraitProfile.dynamic_state || {}
     );
     
     console.log(`Complete personality-driven parameters: temp=${aiParameters.temperature}, tokens=${aiParameters.max_tokens}`);

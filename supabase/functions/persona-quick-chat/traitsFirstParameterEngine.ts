@@ -18,7 +18,7 @@ export class TraitsFirstParameterEngine {
   public static synthesizeAIParameters(
     traitProfile: any,
     linguisticProfile: any,
-    allTraits: any[],
+    _unused: any, // Parameter kept for backward compatibility but not used
     dynamicState: any
   ): AIParameterConfiguration {
     console.log('🎛️ Synthesizing AI parameters from complete personality matrix...');
