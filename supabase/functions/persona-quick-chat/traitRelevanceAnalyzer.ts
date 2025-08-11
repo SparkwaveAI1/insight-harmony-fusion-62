@@ -150,22 +150,22 @@ Rate relevance on 1-10 scale:
     let relevanceScore = 0;
     let reasoning = '';
     
-    // Strong trait values (high or low) are more likely to influence responses
-    if (traitValue >= 0.8) {
+    // Only extreme trait values should be high priority - be much more selective
+    if (traitValue >= 0.85) {
       relevanceScore = 8;
-      reasoning = `Strong ${traitDef.subcategory} (${traitValue.toFixed(2)}) will significantly shape response`;
-    } else if (traitValue >= 0.6) {
-      relevanceScore = 7;
-      reasoning = `Moderate-high ${traitDef.subcategory} (${traitValue.toFixed(2)}) will influence response`;
-    } else if (traitValue <= 0.2) {
-      relevanceScore = 7;
-      reasoning = `Very low ${traitDef.subcategory} (${traitValue.toFixed(2)}) creates notable absence effect`;
-    } else if (traitValue <= 0.4) {
+      reasoning = `Very strong ${traitDef.subcategory} (${traitValue.toFixed(2)}) will significantly shape response`;
+    } else if (traitValue >= 0.75) {
       relevanceScore = 6;
-      reasoning = `Low ${traitDef.subcategory} (${traitValue.toFixed(2)}) will influence response style`;
-    } else {
+      reasoning = `Strong ${traitDef.subcategory} (${traitValue.toFixed(2)}) will influence response`;
+    } else if (traitValue <= 0.15) {
+      relevanceScore = 7;
+      reasoning = `Extremely low ${traitDef.subcategory} (${traitValue.toFixed(2)}) creates notable absence effect`;
+    } else if (traitValue <= 0.25) {
       relevanceScore = 5;
-      reasoning = `Moderate ${traitDef.subcategory} (${traitValue.toFixed(2)}) provides baseline influence`;
+      reasoning = `Low ${traitDef.subcategory} (${traitValue.toFixed(2)}) may influence response`;
+    } else {
+      relevanceScore = 3;
+      reasoning = `Moderate ${traitDef.subcategory} (${traitValue.toFixed(2)}) provides minimal influence`;
     }
     
     // Add context-specific boost for topic relevance
