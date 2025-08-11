@@ -2,6 +2,9 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { createEnhancedPersonaInstructions } from './enhancedPersonaInstructions.ts';
+import { TraitRelevanceAnalyzer } from './traitRelevanceAnalyzer.ts';
+import { DrivingTraitsSynthesizer } from './drivingTraitsSynthesizer.ts';
+import { FocusedInstructions } from './focusedInstructions.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -101,13 +104,34 @@ serve(async (req) => {
       }
 
       persona = fetchedPersona;
-      // Pre-process persona instructions with enhanced authenticity
-      systemPrompt = createEnhancedPersonaInstructions(persona, mode);
       
-      // Add conversation context if provided
-      if (conversationContext.trim()) {
-        systemPrompt += `\n\nCONVERSATION CONTEXT:\n${conversationContext}`;
-      }
+      // TRAIT-FIRST RESPONSE SYSTEM
+      console.log('🚀 Starting trait-first response generation...');
+      
+      // Step 1: Comprehensive trait relevance analysis
+      const traitScanResult = await TraitRelevanceAnalyzer.analyzeTraitRelevance(
+        message,
+        conversationContext || '',
+        persona.trait_profile
+      );
+      
+      console.log(`📊 Trait scan: ${traitScanResult.totalScanned} traits, ${traitScanResult.highPriorityTraits.length} high-priority`);
+      
+      // Step 2: Synthesize driving traits from high-priority candidates
+      const drivingTraitsProfile = await DrivingTraitsSynthesizer.synthesizeDrivingTraits(
+        traitScanResult.highPriorityTraits,
+        persona.trait_profile,
+        message
+      );
+      
+      console.log(`🎯 Driving traits: ${drivingTraitsProfile.primaryTraits.map(t => t.subcategory).join(', ')}`);
+      
+      // Step 3: Generate focused instructions using only driving traits
+      systemPrompt = FocusedInstructions.buildFocusedPersonaInstructions(
+        persona,
+        drivingTraitsProfile,
+        conversationContext || ''
+      );
       
       // Cache for future requests with context-aware cache key
       setCachedPersona(personaId, conversationContext, persona, systemPrompt);
