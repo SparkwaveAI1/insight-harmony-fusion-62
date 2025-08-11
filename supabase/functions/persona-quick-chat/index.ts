@@ -17,13 +17,13 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Cache for persona data and processed instructions
+// Cache for persona data and processed instructions - DISABLED FOR TESTING
 const personaCache = new Map<string, { 
   persona: any, 
   instructions: string, 
   timestamp: number 
 }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_TTL = 0; // Cache disabled - forcing fresh analysis each time
 
 // Simple hash function for conversation context
 function hashContext(context: string): string {
