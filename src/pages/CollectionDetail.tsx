@@ -36,6 +36,7 @@ import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCo
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import Footer from "@/components/sections/Footer";
+import PersonaCard from "@/components/personas/PersonaCard";
 
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
@@ -188,34 +189,22 @@ const CollectionDetail = () => {
                 </Button>
               </div>
               <Separator />
-              <ScrollArea className="h-[400px] mt-4">
+              <div className="mt-4">
                 {isLoading ? (
                   <p>Loading personas...</p>
                 ) : personas.length === 0 ? (
                   <p>No personas in this collection.</p>
                 ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {personas.map((persona) => (
-                      <Link
-                        to={`/persona/${persona.persona_id}`}
+                      <PersonaCard 
                         key={persona.persona_id}
-                        className="block"
-                      >
-                        <Card className="hover:bg-secondary">
-                          <CardHeader>
-                            <CardTitle className="text-sm font-medium">
-                              {persona.name}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <Badge variant="secondary">Persona</Badge>
-                          </CardContent>
-                        </Card>
-                      </Link>
+                        persona={persona}
+                      />
                     ))}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             </CardContent>
           </Card>
 
