@@ -24,13 +24,42 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
 };
 
 /**
- * Fetches all projects for the current user - OPTIMIZED
+ * Fetches minimal project data for selection UI - OPTIMIZED
+ * Only loads id, name, and created_at for better performance
+ */
+export const getUserProjectsForSelection = async (): Promise<{ id: string; name: string; created_at: string }[]> => {
+  const startTime = performance.now();
+  
+  try {
+    console.log('🔍 Fetching user projects for selection (lightweight)...');
+    
+    const { data, error } = await supabase
+      .from("projects")
+      .select("id, name, created_at")
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+    
+    const endTime = performance.now();
+    console.log(`✅ Projects for selection loaded in ${(endTime - startTime).toFixed(2)}ms - Found ${data?.length || 0} projects`);
+    
+    return data || [];
+  } catch (error) {
+    const endTime = performance.now();
+    console.error(`❌ Projects selection loading failed after ${(endTime - startTime).toFixed(2)}ms:`, error);
+    toast.error("Failed to fetch projects");
+    return [];
+  }
+};
+
+/**
+ * Fetches all projects for the current user - FULL DATA
  */
 export const getUserProjects = async (): Promise<Project[]> => {
   const startTime = performance.now();
   
   try {
-    console.log('🔍 Fetching user projects...');
+    console.log('🔍 Fetching user projects (full data)...');
     
     const { data, error } = await supabase
       .from("projects")

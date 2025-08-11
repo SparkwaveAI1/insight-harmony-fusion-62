@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getUserProjects, createProject } from '@/services/collections/projectOperations';
+import { getUserProjectsForSelection, createProject } from '@/services/collections/projectOperations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,10 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, FolderOpen, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface Project {
+interface ProjectForSelection {
   id: string;
   name: string;
-  description: string | null;
   created_at: string;
 }
 
@@ -42,15 +41,15 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Optimized query with React Query caching
+  // Optimized query for selection - only loads minimal data
   const { 
     data: projects = [], 
     isLoading, 
     error,
     refetch 
   } = useQuery({
-    queryKey: ['user-projects'],
-    queryFn: getUserProjects,
+    queryKey: ['user-projects-selection'],
+    queryFn: getUserProjectsForSelection,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
