@@ -121,8 +121,8 @@ export class TraitRelevanceAnalyzer {
       scores.push(...knowledgeScores);
     }
     
-    // Filter high priority traits (score >= 6)
-    const highPriorityTraits = scores.filter(score => score.relevanceScore >= 6);
+    // Filter high priority traits with lower threshold for more personality diversity
+    const highPriorityTraits = scores.filter(score => score.relevanceScore >= 3);
     
     console.log(`📊 Trait analysis complete: ${scores.length} traits analyzed, ${highPriorityTraits.length} high-priority`);
     

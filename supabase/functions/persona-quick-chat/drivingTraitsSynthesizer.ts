@@ -26,9 +26,9 @@ export interface TraitInteraction {
 }
 
 export class DrivingTraitsSynthesizer {
-  private static readonly MIN_DRIVING_TRAITS = 3;
-  private static readonly MAX_DRIVING_TRAITS = 7;
-  private static readonly MIN_RELEVANCE_THRESHOLD = 6;
+  private static readonly MIN_DRIVING_TRAITS = 5;
+  private static readonly MAX_DRIVING_TRAITS = 12;
+  private static readonly MIN_RELEVANCE_THRESHOLD = 2;
 
   public static async synthesizeDrivingTraits(
     highPriorityTraits: TraitRelevanceScore[],
@@ -37,9 +37,18 @@ export class DrivingTraitsSynthesizer {
   ): Promise<DrivingTraitsProfile> {
     console.log('🎯 Synthesizing driving traits from high-priority candidates...');
     
-    // Sort by relevance score and select top traits
+    // Sort by combined relevance and trait value for better personality diversity
     const sortedTraits = highPriorityTraits
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .sort((a, b) => {
+        const aTraitValue = this.getTraitValue(traitProfile, a.traitPath) || 0;
+        const bTraitValue = this.getTraitValue(traitProfile, b.traitPath) || 0;
+        
+        // Score combines relevance + trait extremity (high or low values are more defining)
+        const aScore = b.relevanceScore + (Math.abs(aTraitValue - 0.5) * 4);
+        const bScore = a.relevanceScore + (Math.abs(bTraitValue - 0.5) * 4);
+        
+        return bScore - aScore;
+      })
       .slice(0, this.MAX_DRIVING_TRAITS);
     
     // Ensure we have minimum number of traits
@@ -107,10 +116,12 @@ export class DrivingTraitsSynthesizer {
     value: number,
     relevance: number
   ): string {
-    const intensity = value >= 0.8 ? 'very high' : value >= 0.6 ? 'high' : 
-                     value >= 0.4 ? 'moderate' : value >= 0.2 ? 'low' : 'very low';
+    // More nuanced intensity mapping that emphasizes extremes
+    const intensity = value >= 0.85 ? 'extremely high' : value >= 0.7 ? 'very high' : value >= 0.55 ? 'high' : 
+                     value >= 0.45 ? 'moderate' : value >= 0.3 ? 'low' : value >= 0.15 ? 'very low' : 'extremely low';
     
-    const influenceStrength = relevance >= 8 ? 'strongly' : relevance >= 6 ? 'moderately' : 'somewhat';
+    const influenceStrength = relevance >= 7 ? 'dominantly' : relevance >= 5 ? 'strongly' : 
+                             relevance >= 3 ? 'noticeably' : 'subtly';
     
     const behaviorMappings = {
       'Openness': {
