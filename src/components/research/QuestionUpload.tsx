@@ -274,7 +274,7 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
                     </p>
                     <input
                       type="file"
-                      accept="text/csv,text/plain,application/pdf,image/*,.csv,.txt,.pdf"
+                      accept=".csv,.txt,.pdf,image/*"
                       onChange={handleFileUpload}
                       className="hidden"
                       id="question-file-upload"
