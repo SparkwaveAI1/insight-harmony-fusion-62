@@ -14,60 +14,75 @@ export interface TraitScanResult {
 
 export class TraitRelevanceAnalyzer {
   private static TRAIT_PATHS = [
-    // Big Five
+    // Big Five - THESE MATCH
     { category: 'Big Five', path: 'big_five.openness', subcategory: 'Openness' },
     { category: 'Big Five', path: 'big_five.conscientiousness', subcategory: 'Conscientiousness' },
     { category: 'Big Five', path: 'big_five.extraversion', subcategory: 'Extraversion' },
     { category: 'Big Five', path: 'big_five.agreeableness', subcategory: 'Agreeableness' },
     { category: 'Big Five', path: 'big_five.neuroticism', subcategory: 'Neuroticism' },
     
-    // Moral Foundations
-    { category: 'Moral Foundations', path: 'moral_foundations.care_harm', subcategory: 'Care/Harm' },
-    { category: 'Moral Foundations', path: 'moral_foundations.fairness_cheating', subcategory: 'Fairness/Cheating' },
-    { category: 'Moral Foundations', path: 'moral_foundations.loyalty_betrayal', subcategory: 'Loyalty/Betrayal' },
-    { category: 'Moral Foundations', path: 'moral_foundations.authority_subversion', subcategory: 'Authority/Subversion' },
-    { category: 'Moral Foundations', path: 'moral_foundations.sanctity_degradation', subcategory: 'Sanctity/Degradation' },
-    { category: 'Moral Foundations', path: 'moral_foundations.liberty_oppression', subcategory: 'Liberty/Oppression' },
+    // Moral Foundations - FIXED TO MATCH ACTUAL DATA
+    { category: 'Moral Foundations', path: 'moral_foundations.care', subcategory: 'Care' },
+    { category: 'Moral Foundations', path: 'moral_foundations.fairness', subcategory: 'Fairness' },
+    { category: 'Moral Foundations', path: 'moral_foundations.loyalty', subcategory: 'Loyalty' },
+    { category: 'Moral Foundations', path: 'moral_foundations.authority', subcategory: 'Authority' },
+    { category: 'Moral Foundations', path: 'moral_foundations.sanctity', subcategory: 'Sanctity' },
+    { category: 'Moral Foundations', path: 'moral_foundations.liberty', subcategory: 'Liberty' },
     
-    // World Values Survey
-    { category: 'World Values', path: 'world_values.traditional_secular_rational', subcategory: 'Traditional vs Secular-Rational' },
-    { category: 'World Values', path: 'world_values.survival_self_expression', subcategory: 'Survival vs Self-Expression' },
+    // World Values - FIXED TO MATCH ACTUAL DATA
+    { category: 'World Values', path: 'world_values.traditional_vs_secular', subcategory: 'Traditional vs Secular' },
+    { category: 'World Values', path: 'world_values.survival_vs_self_expression', subcategory: 'Survival vs Self-Expression' },
+    { category: 'World Values', path: 'world_values.materialist_vs_postmaterialist', subcategory: 'Materialist vs Post-Materialist' },
     
-    // Political Compass
-    { category: 'Political Compass', path: 'political_compass.economic_left_right', subcategory: 'Economic Left-Right' },
-    { category: 'Political Compass', path: 'political_compass.social_libertarian_authoritarian', subcategory: 'Social Libertarian-Authoritarian' },
+    // Political Compass - FIXED TO MATCH ACTUAL DATA
+    { category: 'Political Compass', path: 'political_compass.economic', subcategory: 'Economic Left-Right' },
+    { category: 'Political Compass', path: 'political_compass.authoritarian_libertarian', subcategory: 'Authoritarian-Libertarian' },
+    { category: 'Political Compass', path: 'political_compass.cultural_conservative_progressive', subcategory: 'Cultural Conservative-Progressive' },
     
-    // Behavioral Economics
-    { category: 'Behavioral Economics', path: 'behavioral_economics.risk_tolerance', subcategory: 'Risk Tolerance' },
-    { category: 'Behavioral Economics', path: 'behavioral_economics.time_preference', subcategory: 'Time Preference' },
+    // Behavioral Economics - FIXED TO MATCH ACTUAL DATA
+    { category: 'Behavioral Economics', path: 'behavioral_economics.risk_sensitivity', subcategory: 'Risk Sensitivity' },
     { category: 'Behavioral Economics', path: 'behavioral_economics.loss_aversion', subcategory: 'Loss Aversion' },
-    { category: 'Behavioral Economics', path: 'behavioral_economics.social_proof_susceptibility', subcategory: 'Social Proof' },
+    { category: 'Behavioral Economics', path: 'behavioral_economics.present_bias', subcategory: 'Present Bias' },
+    { category: 'Behavioral Economics', path: 'behavioral_economics.overconfidence', subcategory: 'Overconfidence' },
+    { category: 'Behavioral Economics', path: 'behavioral_economics.scarcity_sensitivity', subcategory: 'Scarcity Sensitivity' },
     
-    // Cultural Dimensions
-    { category: 'Cultural Dimensions', path: 'cultural_dimensions.individualism_collectivism', subcategory: 'Individualism/Collectivism' },
+    // Cultural Dimensions - FIXED TO MATCH ACTUAL DATA
+    { category: 'Cultural Dimensions', path: 'cultural_dimensions.individualism_vs_collectivism', subcategory: 'Individualism vs Collectivism' },
     { category: 'Cultural Dimensions', path: 'cultural_dimensions.power_distance', subcategory: 'Power Distance' },
     { category: 'Cultural Dimensions', path: 'cultural_dimensions.uncertainty_avoidance', subcategory: 'Uncertainty Avoidance' },
-    { category: 'Cultural Dimensions', path: 'cultural_dimensions.masculinity_femininity', subcategory: 'Masculinity/Femininity' },
-    { category: 'Cultural Dimensions', path: 'cultural_dimensions.long_short_term_orientation', subcategory: 'Long/Short Term Orientation' },
+    { category: 'Cultural Dimensions', path: 'cultural_dimensions.masculinity_vs_femininity', subcategory: 'Masculinity vs Femininity' },
+    { category: 'Cultural Dimensions', path: 'cultural_dimensions.long_term_orientation', subcategory: 'Long Term Orientation' },
+    { category: 'Cultural Dimensions', path: 'cultural_dimensions.indulgence_vs_restraint', subcategory: 'Indulgence vs Restraint' },
     
-    // Social Identity
-    { category: 'Social Identity', path: 'social_identity.in_group_loyalty', subcategory: 'In-group Loyalty' },
+    // Social Identity - FIXED TO MATCH ACTUAL DATA
     { category: 'Social Identity', path: 'social_identity.social_dominance_orientation', subcategory: 'Social Dominance' },
     { category: 'Social Identity', path: 'social_identity.system_justification', subcategory: 'System Justification' },
+    { category: 'Social Identity', path: 'social_identity.ingroup_bias_tendency', subcategory: 'Ingroup Bias' },
+    { category: 'Social Identity', path: 'social_identity.cultural_intelligence', subcategory: 'Cultural Intelligence' },
+    { category: 'Social Identity', path: 'social_identity.identity_strength', subcategory: 'Identity Strength' },
     
-    // Extended Traits (Key ones)
-    { category: 'Extended Traits', path: 'truth_orientation', subcategory: 'Truth Orientation' },
-    { category: 'Extended Traits', path: 'self_awareness', subcategory: 'Self Awareness' },
-    { category: 'Extended Traits', path: 'manipulativeness', subcategory: 'Manipulativeness' },
-    { category: 'Extended Traits', path: 'emotional_regulation', subcategory: 'Emotional Regulation' },
-    { category: 'Extended Traits', path: 'social_adaptability', subcategory: 'Social Adaptability' },
-    { category: 'Extended Traits', path: 'intellectual_humility', subcategory: 'Intellectual Humility' },
-    { category: 'Extended Traits', path: 'conflict_resolution_style', subcategory: 'Conflict Resolution' },
+    // Extended Traits - FIXED TO MATCH ACTUAL DATA
+    { category: 'Extended Traits', path: 'extended_traits.empathy', subcategory: 'Empathy' },
+    { category: 'Extended Traits', path: 'extended_traits.self_awareness', subcategory: 'Self Awareness' },
+    { category: 'Extended Traits', path: 'extended_traits.manipulativeness', subcategory: 'Manipulativeness' },
+    { category: 'Extended Traits', path: 'extended_traits.emotional_regulation', subcategory: 'Emotional Regulation' },
+    { category: 'Extended Traits', path: 'extended_traits.cognitive_flexibility', subcategory: 'Cognitive Flexibility' },
+    { category: 'Extended Traits', path: 'extended_traits.truth_orientation', subcategory: 'Truth Orientation' },
+    { category: 'Extended Traits', path: 'extended_traits.impulse_control', subcategory: 'Impulse Control' },
+    { category: 'Extended Traits', path: 'extended_traits.self_efficacy', subcategory: 'Self Efficacy' },
+    { category: 'Extended Traits', path: 'extended_traits.conflict_avoidance', subcategory: 'Conflict Avoidance' },
+    { category: 'Extended Traits', path: 'extended_traits.conformity_tendency', subcategory: 'Conformity Tendency' },
+    { category: 'Extended Traits', path: 'extended_traits.moral_consistency', subcategory: 'Moral Consistency' },
+    { category: 'Extended Traits', path: 'extended_traits.cognitive_load_resilience', subcategory: 'Cognitive Load Resilience' },
+    { category: 'Extended Traits', path: 'extended_traits.need_for_cognitive_closure', subcategory: 'Need for Cognitive Closure' },
+    { category: 'Extended Traits', path: 'extended_traits.institutional_trust', subcategory: 'Institutional Trust' },
+    { category: 'Extended Traits', path: 'extended_traits.emotional_intensity', subcategory: 'Emotional Intensity' },
     
-    // Dynamic State Modifiers
-    { category: 'Dynamic State', path: 'stress_level', subcategory: 'Stress Level' },
-    { category: 'Dynamic State', path: 'emotional_stability', subcategory: 'Emotional Stability' },
-    { category: 'Dynamic State', path: 'trigger_threshold', subcategory: 'Trigger Threshold' }
+    // Dynamic State - FIXED TO MATCH ACTUAL DATA
+    { category: 'Dynamic State', path: 'dynamic_state.current_stress_level', subcategory: 'Current Stress Level' },
+    { category: 'Dynamic State', path: 'dynamic_state.emotional_stability_context', subcategory: 'Emotional Stability' },
+    { category: 'Dynamic State', path: 'dynamic_state.trigger_threshold', subcategory: 'Trigger Threshold' },
+    { category: 'Dynamic State', path: 'dynamic_state.motivation_orientation', subcategory: 'Motivation Orientation' }
   ];
 
   public static async analyzeTraitRelevance(
