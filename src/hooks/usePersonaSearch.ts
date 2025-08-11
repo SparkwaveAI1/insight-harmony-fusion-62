@@ -11,16 +11,37 @@ export const usePersonaSearch = (personas: Persona[], searchTerm: string) => {
 
     const searchLower = searchTerm.toLowerCase().trim();
     
-    return personas.filter(persona => {
-      // Search in name
-      if (persona.name.toLowerCase().includes(searchLower)) return true;
+    // Separate matches by priority for better relevance
+    const nameMatches: Persona[] = [];
+    const descriptionMatches: Persona[] = [];
+    const metadataMatches: Persona[] = [];
+    
+    personas.forEach(persona => {
+      let matched = false;
       
-      // Search in prompt/description (for PersonaList compatibility)
-      if (persona.prompt?.toLowerCase().includes(searchLower)) return true;
+      // Priority 1: Search in name
+      if (persona.name?.toLowerCase().includes(searchLower)) {
+        nameMatches.push(persona);
+        matched = true;
+        return;
+      }
       
-      // Search in metadata demographics
+      // Priority 2: Search in description
+      if (persona.description?.toLowerCase().includes(searchLower)) {
+        descriptionMatches.push(persona);
+        matched = true;
+        return;
+      }
+      
+      // Priority 3: Search in metadata
       const metadata = persona.metadata;
-      if (metadata) {
+      if (metadata && !matched) {
+        // Search in metadata description
+        if (metadata.description?.toLowerCase().includes(searchLower)) {
+          metadataMatches.push(persona);
+          return;
+        }
+        
         // Search across demographic fields
         const searchFields = [
           metadata.age,
@@ -28,34 +49,44 @@ export const usePersonaSearch = (personas: Persona[], searchTerm: string) => {
           metadata.occupation,
           metadata.region,
           metadata.location_history?.current_residence,
+          metadata.location_history?.grew_up_in,
           metadata.education_level,
           metadata.income_level,
-          metadata.race_ethnicity
+          metadata.race_ethnicity,
+          metadata.physical_health_status,
+          metadata.mental_health_status,
+          metadata.religious_affiliation,
+          metadata.cultural_background
         ];
         
         if (searchFields.some(field => 
-          field && field.toLowerCase().includes(searchLower)
-        )) return true;
+          field && typeof field === 'string' && field.toLowerCase().includes(searchLower)
+        )) {
+          metadataMatches.push(persona);
+          return;
+        }
         
-        // Fallback: search entire metadata as JSON string (for PersonaList compatibility)
-        const metadataString = JSON.stringify(metadata).toLowerCase();
-        if (metadataString.includes(searchLower)) return true;
-      }
-      
-      // Search in trait profile (for PersonaList compatibility)
-      if (persona.trait_profile) {
-        const traitString = JSON.stringify(persona.trait_profile).toLowerCase();
-        if (traitString.includes(searchLower)) return true;
+        // Search in knowledge domains
+        if (metadata.knowledge_domains && typeof metadata.knowledge_domains === 'object') {
+          const domainKeys = Object.keys(metadata.knowledge_domains);
+          if (domainKeys.some(key => key.toLowerCase().includes(searchLower))) {
+            metadataMatches.push(persona);
+            return;
+          }
+        }
       }
       
       // Search in tags
       if (persona.preinterview_tags && Array.isArray(persona.preinterview_tags)) {
-        return persona.preinterview_tags.some(tag => 
-          tag.toLowerCase().includes(searchLower)
-        );
+        if (persona.preinterview_tags.some(tag => 
+          tag && typeof tag === 'string' && tag.toLowerCase().includes(searchLower)
+        )) {
+          metadataMatches.push(persona);
+        }
       }
-      
-      return false;
     });
+    
+    // Return results prioritized by relevance
+    return [...nameMatches, ...descriptionMatches, ...metadataMatches];
   }, [personas, searchTerm]);
 };
