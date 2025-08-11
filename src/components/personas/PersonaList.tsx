@@ -11,6 +11,73 @@ import { getPersonasByCollection } from "@/services/persona";
 import { cn } from "@/lib/utils";
 import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
+// Helper function to detect if a persona is from the US
+const isUSPersona = (persona: Persona): boolean => {
+  const region = persona.metadata?.demographics?.region?.toLowerCase() || '';
+  const usIndicators = [
+    // States
+    'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware', 'florida', 'georgia',
+    'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana', 'maine', 'maryland',
+    'massachusetts', 'michigan', 'minnesota', 'mississippi', 'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire', 'new jersey',
+    'new mexico', 'new york', 'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'rhode island', 'south carolina',
+    'south dakota', 'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming',
+    // Abbreviations
+    'al', 'ak', 'az', 'ar', 'ca', 'co', 'ct', 'de', 'fl', 'ga', 'hi', 'id', 'il', 'in', 'ia', 'ks', 'ky', 'la', 'me', 'md',
+    'ma', 'mi', 'mn', 'ms', 'mo', 'mt', 'ne', 'nv', 'nh', 'nj', 'nm', 'ny', 'nc', 'nd', 'oh', 'ok', 'or', 'pa', 'ri', 'sc',
+    'sd', 'tn', 'tx', 'ut', 'vt', 'va', 'wa', 'wv', 'wi', 'wy',
+    // Common US identifiers
+    'usa', 'united states', 'us', 'america', 'american',
+    // Major cities
+    'new york', 'los angeles', 'chicago', 'houston', 'philadelphia', 'phoenix', 'san antonio', 'san diego', 'dallas', 'san jose',
+    'austin', 'jacksonville', 'fort worth', 'columbus', 'charlotte', 'san francisco', 'indianapolis', 'seattle', 'denver', 'washington',
+    'boston', 'el paso', 'detroit', 'nashville', 'memphis', 'portland', 'oklahoma city', 'las vegas', 'baltimore', 'milwaukee'
+  ];
+  
+  return usIndicators.some(indicator => region.includes(indicator));
+};
+
+// Helper function to check if persona has complete profile
+const hasCompleteProfile = (persona: Persona): boolean => {
+  const hasImage = !!persona.profile_image_url;
+  const hasDescription = !!persona.description;
+  return hasImage && hasDescription;
+};
+
+// Helper function to check if persona has partial profile
+const hasPartialProfile = (persona: Persona): boolean => {
+  const hasImage = !!persona.profile_image_url;
+  const hasDescription = !!persona.description;
+  return hasImage || hasDescription;
+};
+
+// Priority scoring function for sorting
+const getPersonaPriority = (persona: Persona): number => {
+  const isUS = isUSPersona(persona);
+  const hasComplete = hasCompleteProfile(persona);
+  const hasPartial = hasPartialProfile(persona);
+  
+  // Higher numbers = higher priority
+  if (isUS && hasComplete) return 5; // Tier 1
+  if (isUS && hasPartial) return 4;  // Tier 2
+  if (!isUS && hasComplete) return 3; // Tier 3
+  if (!isUS && hasPartial) return 2;  // Tier 4
+  return 1; // Tier 5 - missing both image and description
+};
+
+// Function to sort personas by priority (for public personas only)
+const sortPersonasByPriority = (personas: Persona[]): Persona[] => {
+  return personas.sort((a, b) => {
+    // First sort by priority score (highest first)
+    const priorityDiff = getPersonaPriority(b) - getPersonaPriority(a);
+    if (priorityDiff !== 0) return priorityDiff;
+    
+    // Within same priority tier, sort by most recent first
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return dateB - dateA;
+  });
+};
+
 interface PersonaListProps {
   onPersonasLoad?: (personas: Persona[]) => void;
   filterByCurrentUser?: boolean;
@@ -159,7 +226,12 @@ export default function PersonaList({
 
   // Use shared search hook and apply advanced filters
   const searchedPersonas = usePersonaSearch(personas, searchQuery);
-  const filteredPersonas = applyAdvancedFilters(searchedPersonas);
+  let filteredPersonas = applyAdvancedFilters(searchedPersonas);
+  
+  // Apply priority sorting only for public personas (not user's own personas)
+  if (publicOnly && filterByOtherUsers) {
+    filteredPersonas = sortPersonasByPriority(filteredPersonas);
+  }
 
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
     // Update local state when visibility changes
