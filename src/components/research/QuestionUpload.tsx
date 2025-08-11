@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, Plus, Trash2, Image, X } from 'lucide-react';
+import { Upload, FileText, Plus, Trash2, Image, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractTextFromFile } from '@/services/collections/textExtractionService';
 
 export interface SurveyQuestion {
   text: string;
@@ -31,6 +32,7 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
   onSurveyQuestionsChange
 }) => {
   const [uploadMode, setUploadMode] = useState<'manual' | 'file'>('manual');
+  const [isExtracting, setIsExtracting] = useState(false);
   
   // Initialize survey questions from text questions if not provided
   React.useEffect(() => {
@@ -40,21 +42,27 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
     }
   }, [questions, surveyQuestions, onSurveyQuestionsChange]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
-      toast.error('Please upload a CSV or TXT file');
-      return;
+    setIsExtracting(true);
+    
+    try {
+      const extractedText = await extractTextFromFile(file);
+      
+      if (!extractedText) {
+        toast.error('Could not extract text from this file type');
+        return;
+      }
+      
+      parseFileContent(extractedText);
+    } catch (error) {
+      console.error('Error extracting text from file:', error);
+      toast.error('Failed to extract text from file');
+    } finally {
+      setIsExtracting(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      parseFileContent(content);
-    };
-    reader.readAsText(file);
   };
 
   const parseFileContent = (content: string) => {
@@ -63,14 +71,32 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
       const parsedQuestions: string[] = [];
 
       lines.forEach(line => {
-        // Handle CSV format (comma-separated)
-        if (line.includes(',')) {
-          const parts = line.split(',').map(part => part.trim().replace(/"/g, ''));
-          parsedQuestions.push(...parts.filter(part => part.length > 0));
-        } else {
-          // Handle simple line-by-line format
-          const trimmed = line.trim().replace(/"/g, '');
-          if (trimmed) parsedQuestions.push(trimmed);
+        const trimmed = line.trim().replace(/"/g, '');
+        if (trimmed) {
+          // Handle numbered lists (1. Question, 2. Question, etc.)
+          const numberedMatch = trimmed.match(/^\d+[\.\)]\s*(.+)/);
+          if (numberedMatch) {
+            parsedQuestions.push(numberedMatch[1].trim());
+            return;
+          }
+          
+          // Handle bullet points (• Question, - Question, * Question)
+          const bulletMatch = trimmed.match(/^[•\-\*]\s*(.+)/);
+          if (bulletMatch) {
+            parsedQuestions.push(bulletMatch[1].trim());
+            return;
+          }
+          
+          // Handle CSV format (comma-separated)
+          if (trimmed.includes(',')) {
+            const parts = trimmed.split(',').map(part => part.trim().replace(/"/g, ''));
+            parsedQuestions.push(...parts.filter(part => part.length > 10)); // Only add meaningful questions
+          } else {
+            // Handle simple line-by-line format
+            if (trimmed.length > 10) { // Only add meaningful questions
+              parsedQuestions.push(trimmed);
+            }
+          }
         }
       });
 
@@ -234,33 +260,45 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
         {uploadMode === 'file' ? (
           <div className="space-y-4">
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-              <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Upload a CSV or TXT file with your questions
-                </p>
-                <input
-                  type="file"
-                  accept=".csv,.txt"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="question-file-upload"
-                />
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => document.getElementById('question-file-upload')?.click()}
-                >
-                  Choose File
-                </Button>
-              </div>
+              {isExtracting ? (
+                <div className="flex flex-col items-center space-y-2">
+                  <Loader2 className="w-8 h-8 mx-auto text-muted-foreground animate-spin" />
+                  <p className="text-sm text-muted-foreground">Extracting text from file...</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Upload a file with your questions
+                    </p>
+                    <input
+                      type="file"
+                      accept=".csv,.txt,.pdf,image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="question-file-upload"
+                      disabled={isExtracting}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => document.getElementById('question-file-upload')?.click()}
+                      disabled={isExtracting}
+                    >
+                      Choose File
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
             
             <div className="p-3 bg-muted rounded-lg text-sm">
-              <p className="font-medium mb-2">File Format Guidelines:</p>
+              <p className="font-medium mb-2">Supported File Types:</p>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• One question per line, or comma-separated questions</li>
-                <li>• CSV and TXT formats supported</li>
+                <li>• <strong>PDF</strong> - Automatically extracts text and parses questions</li>
+                <li>• <strong>Images</strong> - Uses OCR to extract text from screenshots or photos</li>
+                <li>• <strong>CSV/TXT</strong> - One question per line or comma-separated</li>
                 <li>• Questions should be clear and specific</li>
                 <li>• Example: "What do you think about this product?"</li>
               </ul>
