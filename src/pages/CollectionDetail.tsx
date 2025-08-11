@@ -140,38 +140,13 @@ const CollectionDetail = () => {
                 {collection?.description || "No description provided"}
               </p>
             </div>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowEditCollectionDialog(true)}
-              >
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Collection
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Collection
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the
-                      collection and remove all personas from it.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteCollection}>
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditCollectionDialog(true)}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Collection
+            </Button>
           </div>
 
           <Card>
@@ -225,6 +200,39 @@ const CollectionDetail = () => {
               onCollectionUpdate={loadCollection}
             />
           )}
+
+          {/* Delete Collection Section - Moved to bottom */}
+          <div className="mt-12 pt-6 border-t">
+            <div className="max-w-2xl">
+              <h3 className="text-lg font-medium text-destructive mb-2">Danger Zone</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Once you delete a collection, there is no going back. This will permanently delete the collection and remove all personas from it.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Collection
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the
+                      collection and remove all personas from it.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteCollection}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

@@ -444,15 +444,24 @@ const Collections = () => {
                 placeholder="Describe your collection..."
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="public"
-                checked={isPublic}
-                onCheckedChange={setIsPublic}
-              />
-              <label htmlFor="public" className="text-sm font-medium cursor-pointer">
-                Make this collection public
-              </label>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <label htmlFor="public" className="text-sm font-medium cursor-pointer">
+                  Collection Visibility
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  {isPublic ? "Anyone can view this collection" : "Only you can view this collection"}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Private</span>
+                <Switch
+                  id="public"
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                />
+                <span className="text-sm text-muted-foreground">Public</span>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -493,15 +502,24 @@ const Collections = () => {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="edit-public"
-                checked={isPublic}
-                onCheckedChange={setIsPublic}
-              />
-              <label htmlFor="edit-public" className="text-sm font-medium cursor-pointer">
-                Make this collection public
-              </label>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <label htmlFor="edit-public" className="text-sm font-medium cursor-pointer">
+                  Collection Visibility
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  {isPublic ? "Anyone can view this collection" : "Only you can view this collection"}
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">Private</span>
+                <Switch
+                  id="edit-public"
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                />
+                <span className="text-sm text-muted-foreground">Public</span>
+              </div>
             </div>
           </div>
           <DialogFooter>
