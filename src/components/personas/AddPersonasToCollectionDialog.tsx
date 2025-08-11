@@ -148,8 +148,8 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center justify-between">
             Add Personas to Collection
             <Badge variant="secondary">
@@ -161,9 +161,9 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 space-y-4 py-4">
+        <div className="flex-1 space-y-4 py-4 overflow-hidden">
           {/* Search and Controls */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex-shrink-0">
             {/* Search Input */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -225,8 +225,8 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
           </div>
 
           {/* Persona List */}
-          <div className="flex-1">
-            <ScrollArea className="h-[400px] w-full rounded-md border">
+          <div className="flex-1 min-h-0">
+            <ScrollArea className="h-full w-full rounded-md border">
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
