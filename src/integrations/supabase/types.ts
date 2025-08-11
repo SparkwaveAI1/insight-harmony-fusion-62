@@ -297,13 +297,6 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "conversations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects_with_counts"
-            referencedColumns: ["id"]
-          },
         ]
       }
       featured_character_videos: {
@@ -400,13 +393,6 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "knowledge_base_documents_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects_with_counts"
             referencedColumns: ["id"]
           },
         ]
@@ -752,13 +738,6 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "project_collections_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects_with_counts"
-            referencedColumns: ["id"]
-          },
         ]
       }
       project_question_sets: {
@@ -1027,13 +1006,6 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "research_surveys_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects_with_counts"
-            referencedColumns: ["id"]
-          },
         ]
       }
       structured_study_sessions: {
@@ -1231,21 +1203,7 @@ export type Database = {
       }
     }
     Views: {
-      projects_with_counts: {
-        Row: {
-          conversation_count: number | null
-          created_at: string | null
-          description: string | null
-          id: string | null
-          information: string | null
-          methodology: string | null
-          name: string | null
-          research_objectives: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       generate_participant_identifier: {
@@ -1255,6 +1213,21 @@ export type Database = {
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_projects_with_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string
+          description: string
+          information: string
+          research_objectives: string
+          methodology: string
+          user_id: string
+          created_at: string
+          updated_at: string
+          conversation_count: number
+        }[]
       }
     }
     Enums: {

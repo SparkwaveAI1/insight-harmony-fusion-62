@@ -24,67 +24,60 @@ export const getProjectById = async (id: string): Promise<Project | null> => {
 };
 
 /**
- * Fetches all projects for the current user
+ * Fetches all projects for the current user - OPTIMIZED
  */
 export const getUserProjects = async (): Promise<Project[]> => {
+  const startTime = performance.now();
+  
   try {
+    console.log('🔍 Fetching user projects...');
+    
     const { data, error } = await supabase
       .from("projects")
       .select("*")
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
+    
+    const endTime = performance.now();
+    console.log(`✅ Projects loaded in ${(endTime - startTime).toFixed(2)}ms - Found ${data?.length || 0} projects`);
+    
     return data as Project[] || [];
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    const endTime = performance.now();
+    console.error(`❌ Projects loading failed after ${(endTime - startTime).toFixed(2)}ms:`, error);
     toast.error("Failed to fetch projects");
     return [];
   }
 };
 
 /**
- * Fetches all projects with conversation count for the current user
+ * Fetches all projects with conversation count for the current user - OPTIMIZED
  */
 export const getUserProjectsWithCount = async (): Promise<ProjectWithConversationCount[]> => {
+  const startTime = performance.now();
+  
   try {
-    // First fetch the projects
-    const { data: projects, error: projectsError } = await supabase
-      .from("projects")
-      .select("*")
-      .order("updated_at", { ascending: false });
-
-    if (projectsError) throw projectsError;
+    console.log('🔍 Fetching projects with conversation counts...');
     
-    if (!projects || projects.length === 0) {
-      return [];
+    // Use the optimized database function for a single query
+    const { data, error } = await supabase.rpc('get_user_projects_with_counts');
+
+    if (error) {
+      console.error('Database error:', error);
+      throw error;
     }
-    
-    // Manually count conversations for each project
-    const projectsWithCount = await Promise.all(
-      projects.map(async (project) => {
-        const { count, error: countError } = await supabase
-          .from("conversations")
-          .select("*", { count: "exact", head: true })
-          .eq("project_id", project.id);
 
-        if (countError) {
-          console.error("Error counting conversations for project:", countError);
-          return {
-            ...project,
-            conversation_count: 0
-          };
-        }
-
-        return {
-          ...project,
-          conversation_count: count || 0
-        };
-      })
-    );
+    const endTime = performance.now();
+    console.log(`✅ Projects loaded in ${(endTime - startTime).toFixed(2)}ms - Found ${data?.length || 0} projects`);
     
-    return projectsWithCount;
+    return (data || []).map(project => ({
+      ...project,
+      conversation_count: Number(project.conversation_count) || 0
+    }));
   } catch (error) {
-    console.error("Error fetching projects with count:", error);
+    const endTime = performance.now();
+    console.error(`❌ Projects loading failed after ${(endTime - startTime).toFixed(2)}ms:`, error);
     toast.error("Failed to fetch projects");
     return [];
   }
