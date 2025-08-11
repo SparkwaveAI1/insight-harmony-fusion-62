@@ -108,6 +108,18 @@ serve(async (req) => {
       // TRAIT-FIRST RESPONSE SYSTEM
       console.log('🚀 Starting trait-first response generation...');
       
+      // DEBUG: Log trait profile structure to understand what we're working with
+      console.log('🔍 DEBUG: Trait profile keys:', persona.trait_profile ? Object.keys(persona.trait_profile) : 'null');
+      if (persona.trait_profile?.big_five) {
+        console.log('🔍 DEBUG: Big Five values:', {
+          openness: persona.trait_profile.big_five.openness,
+          conscientiousness: persona.trait_profile.big_five.conscientiousness,
+          extraversion: persona.trait_profile.big_five.extraversion,
+          agreeableness: persona.trait_profile.big_five.agreeableness,
+          neuroticism: persona.trait_profile.big_five.neuroticism
+        });
+      }
+      
       // Step 1: Comprehensive trait relevance analysis
       const traitScanResult = await TraitRelevanceAnalyzer.analyzeTraitRelevance(
         message,
