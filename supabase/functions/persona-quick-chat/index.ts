@@ -147,7 +147,7 @@ serve(async (req) => {
     const linguisticProfile = persona.linguistic_profile || {};
     const dynamicState = traitProfile.dynamic_state || {};
     
-    // Generate AI parameters from ALL traits (not just Big Five)
+    // Generate AI parameters from complete personality matrix
     const aiParameters = TraitsFirstParameterEngine.synthesizeAIParameters(
       traitProfile,
       linguisticProfile,

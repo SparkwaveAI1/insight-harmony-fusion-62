@@ -26,7 +26,7 @@ export interface TraitInteraction {
 }
 
 export class DrivingTraitsSynthesizer {
-  // Removed trait limits - use ALL traits for complete personality influence
+  // Use ALL traits - no limits or filtering for complete personality influence
 
   public static async synthesizeDrivingTraits(
     highPriorityTraits: TraitRelevanceScore[],
@@ -48,7 +48,7 @@ export class DrivingTraitsSynthesizer {
         return bScore - aScore;
       });
     
-    // Use ALL traits - no artificial limits
+    // Use ALL traits - no artificial limits or filtering
     
     // Convert to driving traits with behavioral influence
     const drivingTraits = await this.createDrivingTraits(sortedTraits, traitProfile);

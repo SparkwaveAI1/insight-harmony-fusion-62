@@ -18,35 +18,42 @@ export class TraitsFirstParameterEngine {
   public static synthesizeAIParameters(
     traitProfile: any,
     linguisticProfile: any,
-    drivingTraits: any[],
+    allTraits: any[],
     dynamicState: any
   ): AIParameterConfiguration {
-    console.log('🎛️ Synthesizing AI parameters from ALL traits...');
+    console.log('🎛️ Synthesizing AI parameters from complete personality matrix...');
     
     // Start with baseline parameters
     let config: AIParameterConfiguration = {
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 1500,
       frequency_penalty: 0.0,
       presence_penalty: 0.0,
       top_p: 0.9
     };
     
-    // Apply ALL trait category influences
-    config = this.applyBigFiveInfluence(config, traitProfile.big_five);
-    config = this.applyMoralFoundationsInfluence(config, traitProfile.moral_foundations);
-    config = this.applyCulturalDimensionsInfluence(config, traitProfile.cultural_dimensions);
-    config = this.applyPoliticalCompassInfluence(config, traitProfile.political_compass);
-    config = this.applyBehavioralEconomicsInfluence(config, traitProfile.behavioral_economics);
-    config = this.applySocialIdentityInfluence(config, traitProfile.social_identity);
-    config = this.applyExtendedTraitsInfluence(config, traitProfile.extended_traits);
-    config = this.applyLinguisticProfileInfluence(config, linguisticProfile);
-    config = this.applyDynamicStateModifiers(config, dynamicState);
+    // Apply ALL trait category influences simultaneously
+    if (traitProfile) {
+      config = this.applyBigFiveInfluence(config, traitProfile.big_five || {});
+      config = this.applyMoralFoundationsInfluence(config, traitProfile.moral_foundations || {});
+      config = this.applyCulturalDimensionsInfluence(config, traitProfile.cultural_dimensions || {});
+      config = this.applyPoliticalCompassInfluence(config, traitProfile.political_compass || {});
+      config = this.applyBehavioralEconomicsInfluence(config, traitProfile.behavioral_economics || {});
+      config = this.applySocialIdentityInfluence(config, traitProfile.social_identity || {});
+      config = this.applyExtendedTraitsInfluence(config, traitProfile.extended_traits || {});
+      config = this.applyWorldValuesInfluence(config, traitProfile.world_values || {});
+    }
+    
+    // Apply linguistic profile influence
+    config = this.applyLinguisticProfileInfluence(config, linguisticProfile || {});
+    
+    // Apply dynamic state modifiers last (they override base traits)
+    config = this.applyDynamicStateModifiers(config, dynamicState || {});
     
     // Ensure parameters stay within valid ranges
     config = this.normalizeParameters(config);
     
-    console.log('✅ AI parameters synthesized from complete personality matrix');
+    console.log(`🎛️ Complete AI parameter synthesis: temp=${config.temperature.toFixed(2)}, tokens=${config.max_tokens}, fp=${config.frequency_penalty.toFixed(2)}, pp=${config.presence_penalty.toFixed(2)}`);
     return config;
   }
   
@@ -145,21 +152,21 @@ export class TraitsFirstParameterEngine {
   private static applyPoliticalCompassInfluence(config: AIParameterConfiguration, political: any): AIParameterConfiguration {
     if (!political) return config;
     
-    // Political salience affects engagement level
-    if (political.political_salience) {
-      config.max_tokens += Math.floor(political.political_salience * 400);
-      config.presence_penalty += political.political_salience * 0.1;
+    // Economic left-right affects response focus
+    if (political.economic !== undefined) {
+      const rightLeaning = political.economic;
+      config.temperature -= rightLeaning * 0.05; // Right = more structured economics talk
     }
     
     // Authoritarian vs libertarian affects response structure
-    if (political.authoritarian_libertarian) {
-      const libertarian = 1 - political.authoritarian_libertarian;
+    if (political.authoritarian_libertarian !== undefined) {
+      const libertarian = political.authoritarian_libertarian;
       config.temperature += libertarian * 0.15;
       config.presence_penalty += libertarian * 0.1;
     }
     
-    // Cultural progressivism affects openness
-    if (political.cultural_conservative_progressive) {
+    // Cultural conservative-progressive affects openness
+    if (political.cultural_conservative_progressive !== undefined) {
       config.temperature += political.cultural_conservative_progressive * 0.1;
       config.frequency_penalty += political.cultural_conservative_progressive * 0.1;
     }
@@ -261,40 +268,76 @@ export class TraitsFirstParameterEngine {
   private static applyLinguisticProfileInfluence(config: AIParameterConfiguration, linguistic: any): AIParameterConfiguration {
     if (!linguistic) return config;
     
-    // Speech register affects formality
+    // Speech register affects formality and temperature
     if (linguistic.speech_register) {
       const formalityMap = {
-        'formal': -0.2,
-        'professional': -0.1,
-        'casual': 0.1,
-        'informal': 0.2,
-        'slang': 0.3
+        'formal': { temp: -0.2, tokens: 100 },
+        'professional': { temp: -0.1, tokens: 50 },
+        'casual': { temp: 0.1, tokens: -100 },
+        'informal': { temp: 0.2, tokens: -150 },
+        'slang': { temp: 0.3, tokens: -200 }
       };
-      const adjustment = formalityMap[linguistic.speech_register] || 0;
-      config.temperature += adjustment;
+      const adjustment = formalityMap[linguistic.speech_register];
+      if (adjustment) {
+        config.temperature += adjustment.temp;
+        config.max_tokens += adjustment.tokens;
+      }
     }
     
-    // Default output length affects token limits
+    // Default output length affects token limits significantly
     if (linguistic.default_output_length) {
       const lengthMap = {
-        'brief': -500,
-        'concise': -250,
+        'brief': -600,
+        'concise': -300,
         'moderate': 0,
-        'detailed': 300,
-        'extensive': 600
+        'detailed': 400,
+        'extensive': 800
       };
       const adjustment = lengthMap[linguistic.default_output_length] || 0;
       config.max_tokens += adjustment;
     }
     
-    // Regional influence affects vocabulary variety
-    if (linguistic.regional_influence) {
-      config.frequency_penalty += 0.1; // Encourage regional expressions
+    // Regional influence affects vocabulary variety and naturalness
+    if (linguistic.regional_influence && linguistic.regional_influence !== 'none') {
+      config.frequency_penalty += 0.15; // Encourage regional expressions
+      config.temperature += 0.05; // More natural variation
     }
     
-    // Response length variability
+    // Response length variability affects consistency
     if (linguistic.response_length_variability) {
       config.temperature += 0.1;
+      config.presence_penalty += 0.05;
+    }
+    
+    // Cultural speech patterns affect expression style
+    if (linguistic.cultural_speech_patterns && linguistic.cultural_speech_patterns.length > 0) {
+      config.frequency_penalty += 0.1; // Encourage cultural expressions
+    }
+    
+    return config;
+  }
+  
+  private static applyWorldValuesInfluence(config: AIParameterConfiguration, worldValues: any): AIParameterConfiguration {
+    if (!worldValues) return config;
+    
+    // Traditional vs Secular affects response structure
+    if (worldValues.traditional_vs_secular !== undefined) {
+      const traditional = 1 - worldValues.traditional_vs_secular;
+      config.temperature -= traditional * 0.1; // Traditional = more structured
+      config.frequency_penalty -= traditional * 0.1;
+    }
+    
+    // Survival vs Self-Expression affects communication openness
+    if (worldValues.survival_vs_self_expression !== undefined) {
+      config.temperature += worldValues.survival_vs_self_expression * 0.15;
+      config.presence_penalty += worldValues.survival_vs_self_expression * 0.1;
+    }
+    
+    // Materialist vs Post-Materialist affects response focus
+    if (worldValues.materialist_vs_postmaterialist !== undefined) {
+      const postMaterialist = worldValues.materialist_vs_postmaterialist;
+      config.presence_penalty += postMaterialist * 0.15;
+      config.max_tokens += Math.floor(postMaterialist * 200);
     }
     
     return config;

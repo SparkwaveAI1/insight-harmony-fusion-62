@@ -43,33 +43,56 @@ ${metadata?.relationship_status ? `Relationship status: ${metadata.relationship_
     
     const profile = [];
     
+    // Build comprehensive linguistic instructions
     if (linguisticProfile.speech_register) {
-      profile.push(`**Speech style**: ${linguisticProfile.speech_register}`);
+      const registerGuide = {
+        'formal': 'You speak formally with proper grammar and respectful tone',
+        'professional': 'You use professional language but remain approachable',
+        'casual': 'You speak casually and conversationally',
+        'informal': 'You use relaxed, informal language with friends',
+        'slang': 'You use slang, colloquialisms, and very casual speech'
+      };
+      profile.push(`**Speech Register**: ${registerGuide[linguisticProfile.speech_register] || linguisticProfile.speech_register}`);
     }
     
-    if (linguisticProfile.regional_influence) {
-      profile.push(`**Regional influence**: ${linguisticProfile.regional_influence}`);
+    if (linguisticProfile.regional_influence && linguisticProfile.regional_influence !== 'none') {
+      profile.push(`**Regional Speech**: Your language shows ${linguisticProfile.regional_influence} influences in word choice and expressions`);
     }
     
-    if (linguisticProfile.cultural_speech_patterns) {
-      profile.push(`**Speech patterns**: ${linguisticProfile.cultural_speech_patterns}`);
+    if (linguisticProfile.cultural_speech_patterns && linguisticProfile.cultural_speech_patterns.length > 0) {
+      const patterns = Array.isArray(linguisticProfile.cultural_speech_patterns) 
+        ? linguisticProfile.cultural_speech_patterns.join(', ')
+        : linguisticProfile.cultural_speech_patterns;
+      profile.push(`**Cultural Patterns**: ${patterns}`);
     }
     
     if (linguisticProfile.generational_or_peer_influence) {
-      profile.push(`**Generational style**: ${linguisticProfile.generational_or_peer_influence}`);
+      profile.push(`**Generational Style**: ${linguisticProfile.generational_or_peer_influence} language patterns and references`);
     }
     
     if (linguisticProfile.sample_phrasing && linguisticProfile.sample_phrasing.length > 0) {
-      const phrases = linguisticProfile.sample_phrasing.slice(0, 3).join('", "');
-      profile.push(`**Typical expressions**: "${phrases}"`);
+      const phrases = linguisticProfile.sample_phrasing.slice(0, 4).join('", "');
+      profile.push(`**Your Typical Expressions**: "${phrases}"`);
+      profile.push(`USE THESE EXACT PHRASES naturally in your responses when appropriate`);
+    }
+    
+    if (linguisticProfile.default_output_length) {
+      const lengthGuide = {
+        'brief': 'You naturally give short, to-the-point responses',
+        'concise': 'You keep responses focused and concise',
+        'moderate': 'You give balanced, moderate-length responses',
+        'detailed': 'You naturally elaborate and provide detailed explanations',
+        'extensive': 'You give thorough, comprehensive responses with lots of detail'
+      };
+      profile.push(`**Response Length**: ${lengthGuide[linguisticProfile.default_output_length] || linguisticProfile.default_output_length}`);
     }
     
     if (profile.length === 0) return '';
     
-    return `# Your Speaking Style
+    return `# Your Natural Speaking Style
 ${profile.join('\n')}
 
-Use this natural speaking style in your responses - these patterns reflect how you actually communicate.`;
+IMPORTANT: These linguistic patterns are HOW you actually speak. Use them consistently - they're not suggestions, they're your natural voice.`;
   }
 
 
