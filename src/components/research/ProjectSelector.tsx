@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getUserProjects, createProject } from '@/services/collections/projectOperations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -27,8 +29,6 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   onProjectSelected, 
   showCreateOption = true 
 }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newProject, setNewProject] = useState({
@@ -42,30 +42,32 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Optimized query with React Query caching
+  const { 
+    data: projects = [], 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['user-projects'],
+    queryFn: getUserProjects,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Handle query error
   useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, description, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
+    if (error) {
       console.error('Error loading projects:', error);
       toast({
         title: "Error",
         description: "Failed to load projects",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [error, toast]);
+
 
   const handleCreateProject = async () => {
     if (!newProject.name.trim()) {
@@ -79,22 +81,15 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
 
     setIsCreating(true);
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Not authenticated');
+      const project = await createProject(
+        newProject.name,
+        newProject.description || null,
+        null, // information
+        newProject.research_objectives || null,
+        newProject.methodology || null
+      );
 
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          name: newProject.name,
-          description: newProject.description || null,
-          research_objectives: newProject.research_objectives || null,
-          methodology: newProject.methodology || null,
-          user_id: user.user.id
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
+      if (!project) throw new Error('Failed to create project');
 
       toast({
         title: "Success",
@@ -103,12 +98,12 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
 
       setShowCreateDialog(false);
       setNewProject({ name: '', description: '', research_objectives: '', methodology: '' });
-      await loadProjects();
+      
+      // Refetch projects to update the list
+      await refetch();
       
       // Auto-select the new project
-      if (data?.id) {
-        handleProjectSelect(data.id);
-      }
+      handleProjectSelect(project.id);
     } catch (error) {
       console.error('Error creating project:', error);
       toast({
@@ -144,13 +139,44 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = ({
     onProjectSelected('');
   };
 
+  // Show skeleton loading state for better UX
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="max-w-2xl mx-auto p-6 space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading projects...</p>
+          <h2 className="text-2xl font-bold">Select Project</h2>
+          <p className="text-muted-foreground">
+            Connect your survey to a project to save results, or continue without saving.
+          </p>
         </div>
+        
+        {/* Skeleton for existing projects */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5" />
+              Existing Projects
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-10 bg-muted animate-pulse rounded-md" />
+          </CardContent>
+        </Card>
+        
+        {/* Skeleton for create option */}
+        {showCreateOption && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Create New Study Session
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-10 bg-muted animate-pulse rounded-md" />
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
