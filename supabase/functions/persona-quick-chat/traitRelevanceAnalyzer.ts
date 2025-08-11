@@ -145,16 +145,21 @@ Rate relevance on 1-10 scale:
     traitValue: number,
     analysisPrompt: string
   ): Promise<TraitRelevanceScore> {
-    // For now, use heuristic scoring based on trait type and value
-    // In production, this could call an AI service for more sophisticated analysis
+    // Much more generous scoring to ensure traits actually drive responses
     
-    let baseRelevance = 3; // Default low relevance
-    let reasoning = `${traitDef.subcategory} shows moderate expression`;
+    let baseRelevance = 6; // Start high so traits are actually considered relevant
+    let reasoning = `${traitDef.subcategory} influences response style`;
     
-    // Extreme values (very high/low) are more likely to be relevant
-    if (traitValue >= 0.8 || traitValue <= 0.2) {
-      baseRelevance += 2;
-      reasoning = `${traitDef.subcategory} shows extreme ${traitValue >= 0.8 ? 'high' : 'low'} expression`;
+    // High trait values get even higher scores
+    if (traitValue >= 0.7) {
+      baseRelevance = 8;
+      reasoning = `${traitDef.subcategory} shows strong expression (${traitValue.toFixed(2)})`;
+    } else if (traitValue >= 0.5) {
+      baseRelevance = 7;
+      reasoning = `${traitDef.subcategory} shows notable expression (${traitValue.toFixed(2)})`;
+    } else if (traitValue <= 0.3) {
+      baseRelevance = 7;
+      reasoning = `${traitDef.subcategory} shows low expression (${traitValue.toFixed(2)}) - significant absence`;
     }
     
     // Add topic-specific relevance heuristics
