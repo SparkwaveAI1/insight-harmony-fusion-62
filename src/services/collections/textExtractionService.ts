@@ -1,5 +1,6 @@
 
 import { toast } from 'sonner';
+import * as pdfjsLib from 'pdfjs-dist';
 
 /**
  * Extract text content from uploaded files using OpenAI's processing capabilities
@@ -90,30 +91,51 @@ const extractTextFromCSVFile = async (file: File): Promise<string> => {
 };
 
 /**
- * Extract text from PDF files using OpenAI
+ * Extract text from PDF files by converting to images first
  */
 const extractTextFromPDF = async (file: File): Promise<string | null> => {
   try {
-    const base64 = await fileToBase64(file);
+    // Set up PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
     
-    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-document-text', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fileData: base64,
-        fileType: file.type,
-        fileName: file.name
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to extract text from PDF');
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    let extractedText = '';
+    const maxPages = Math.min(pdf.numPages, 5); // Limit to first 5 pages
+    
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2.0 });
+      
+      // Create canvas to render PDF page
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      // Render page to canvas
+      await page.render({
+        canvasContext: context,
+        viewport: viewport,
+        canvas: canvas
+      }).promise;
+      
+      // Convert canvas to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob!), 'image/png');
+      });
+      
+      // Convert blob to base64 and extract text
+      const base64 = await blobToBase64(blob);
+      const pageText = await extractTextFromImageData(base64, `${file.name}_page_${pageNum}`);
+      
+      if (pageText) {
+        extractedText += `Page ${pageNum}:\n${pageText}\n\n`;
+      }
     }
-
-    const result = await response.json();
-    return result.extractedText || null;
+    
+    return extractedText || null;
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
     return null;
@@ -126,7 +148,18 @@ const extractTextFromPDF = async (file: File): Promise<string | null> => {
 const extractTextFromImage = async (file: File): Promise<string | null> => {
   try {
     const base64 = await fileToBase64(file);
-    
+    return await extractTextFromImageData(base64, file.name);
+  } catch (error) {
+    console.error('Error extracting text from image:', error);
+    return null;
+  }
+};
+
+/**
+ * Extract text from image data using OpenAI Vision
+ */
+const extractTextFromImageData = async (base64: string, fileName: string): Promise<string | null> => {
+  try {
     const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-image-text', {
       method: 'POST',
       headers: {
@@ -134,7 +167,7 @@ const extractTextFromImage = async (file: File): Promise<string | null> => {
       },
       body: JSON.stringify({
         imageData: base64,
-        fileName: file.name
+        fileName: fileName
       }),
     });
 
@@ -162,6 +195,21 @@ const fileToBase64 = (file: File): Promise<string> => {
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
+  });
+};
+
+/**
+ * Convert blob to base64
+ */
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
 };
 
