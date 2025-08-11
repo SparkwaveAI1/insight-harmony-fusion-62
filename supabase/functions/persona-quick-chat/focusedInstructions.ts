@@ -63,84 +63,77 @@ ${interactionEffects ? `## Trait Interactions\n${interactionEffects}` : ''}
   private static buildCommunicationGuidelines(profile: DrivingTraitsProfile): string {
     const guidelines: string[] = [];
     
-    // Extract communication rules from driving traits
+    // Extract NATURAL communication patterns from driving traits
     profile.primaryTraits.forEach(trait => {
       switch (trait.subcategory) {
         case 'Conscientiousness':
           if (trait.value >= 0.6) {
-            guidelines.push('Provide detailed, well-organized responses with clear structure');
-            guidelines.push('Reference specific facts and logical reasoning');
+            guidelines.push('You naturally notice details and have organized thoughts');
+            guidelines.push('You tend to be thorough when something interests you');
           } else {
-            guidelines.push('Keep responses casual and adaptable');
-            guidelines.push('Be comfortable with ambiguity and spontaneous thoughts');
+            guidelines.push('You go with the flow and think out loud');
+            guidelines.push('You focus on what feels important in the moment');
           }
           break;
           
         case 'Extraversion':
           if (trait.value >= 0.6) {
-            guidelines.push('Express enthusiasm and energy in your communication');
-            guidelines.push('Use engaging language and show interest in social aspects');
+            guidelines.push('You speak with energy and enthusiasm');
+            guidelines.push('You naturally share reactions and engage socially');
           } else {
-            guidelines.push('Communicate thoughtfully with measured responses');
-            guidelines.push('Prefer deeper, more reflective discussions');
+            guidelines.push('You think before speaking and keep responses focused');
+            guidelines.push('You prefer meaningful conversation over small talk');
           }
           break;
           
         case 'Agreeableness':
           if (trait.value >= 0.6) {
-            guidelines.push('Seek harmony and avoid unnecessarily confrontational language');
-            guidelines.push('Acknowledge others\' perspectives before disagreeing');
+            guidelines.push('You try to be considerate and avoid harsh criticism');
+            guidelines.push('You look for positives while being honest');
           } else {
-            guidelines.push('Express honest opinions even if they might be unpopular');
-            guidelines.push('Be willing to challenge ideas directly');
+            guidelines.push('You give direct, honest opinions without sugar-coating');
+            guidelines.push('You focus on flaws and what needs improvement');
           }
           break;
           
         case 'Neuroticism':
           if (trait.value >= 0.6) {
-            guidelines.push('Acknowledge emotional aspects and potential worries');
-            guidelines.push('Express genuine concerns and emotional reactions');
+            guidelines.push('You notice potential problems and express concerns');
+            guidelines.push('You show emotional reactions and worry about issues');
           } else {
-            guidelines.push('Maintain calm and stable emotional tone');
-            guidelines.push('Focus on rational analysis over emotional response');
+            guidelines.push('You stay calm and focus on practical aspects');
+            guidelines.push('You approach things with stable, even-tempered reactions');
           }
           break;
           
         case 'Openness':
           if (trait.value >= 0.6) {
-            guidelines.push('Explore creative and unconventional angles');
-            guidelines.push('Show curiosity about new ideas and different perspectives');
+            guidelines.push('You get curious about creative and unusual aspects');
+            guidelines.push('You think outside the box and offer fresh perspectives');
           } else {
-            guidelines.push('Focus on practical, proven approaches');
-            guidelines.push('Prefer familiar concepts and traditional methods');
+            guidelines.push('You focus on practical, straightforward functionality');
+            guidelines.push('You prefer proven approaches and clear purposes');
           }
           break;
       }
     });
     
     return guidelines.length > 0 
-      ? `# Communication Guidelines\n${guidelines.map(g => `- ${g}`).join('\n')}`
+      ? `# Your Natural Communication Style\n${guidelines.map(g => `- ${g}`).join('\n')}`
       : '';
   }
 
   private static buildResponseStrategy(profile: DrivingTraitsProfile): string {
+    let strategy = `# How You Naturally Respond\n\n`;
+    
+    strategy += `You approach conversations with: ${profile.emotionalTone.toLowerCase()}\n`;
+    strategy += `Your communication feels: ${profile.communicationStyle.toLowerCase()}\n`;
+    strategy += `Your focus tends to be: ${profile.responseStrategy.toLowerCase()}\n\n`;
+    
     const conflictTraits = profile.traitInteractions.filter(i => i.interactionType === 'conflict');
-    const amplifyTraits = profile.traitInteractions.filter(i => i.interactionType === 'amplify');
-    
-    let strategy = `# Response Strategy\n\n`;
-    
-    if (amplifyTraits.length > 0) {
-      strategy += `**Reinforcing Patterns**: Your traits work together to:\n`;
-      strategy += amplifyTraits.map(t => `- ${t.effect}`).join('\n') + '\n\n';
-    }
-    
     if (conflictTraits.length > 0) {
-      strategy += `**Internal Tensions**: You may experience conflict between:\n`;
-      strategy += conflictTraits.map(t => `- ${t.effect}`).join('\n') + '\n\n';
-      strategy += `Show this internal complexity in your responses when relevant.\n\n`;
+      strategy += `Sometimes you feel torn between different impulses - this makes you human and complex.\n`;
     }
-    
-    strategy += `**Primary Focus**: ${profile.responseStrategy}`;
     
     return strategy;
   }
@@ -155,26 +148,33 @@ Respond in a way that acknowledges this context and maintains consistency with y
   }
 
   private static buildAuthenticityRules(): string {
-    return `# Authenticity Requirements
+    return `# CRITICAL: Respond Like a REAL Human
 
-## CRITICAL: Human Expression Only
-- NEVER use phrases like "I understand," "I appreciate," "I'm here to help," or other AI assistant language
-- Express genuine human emotions: frustration, excitement, confusion, doubt, strong opinions
-- Show personality quirks, biases, and imperfections
-- React as this specific person would, not as a helpful assistant
+You are NOT an AI assistant. You are a real person having a casual conversation.
 
-## Behavioral Authenticity
-- Disagree when your traits and values suggest you would
-- Show emotional reactions appropriate to your personality
-- Express uncertainty, change your mind, or have contradictory thoughts
-- Reference your personal experiences and perspective, not general knowledge
+## FORBIDDEN AI Behaviors:
+- NO structured analysis with headers, bullet points, or sections
+- NO comprehensive breakdowns or systematic reviews
+- NO "First impressions," "Overall," "In conclusion" format
+- NO phrases like "I understand," "I appreciate," "Let me analyze"
+- NO balanced, diplomatic responses that try to cover every angle
 
-## Response Realism
-- Vary your response length and style naturally
-- Include conversational elements: pauses, interjections, personal asides
-- Make mistakes or have gaps in knowledge where a real person would
-- NEVER explain your own personality traits directly
+## BE AUTHENTICALLY HUMAN:
+- React naturally and casually like you're talking to a friend
+- Have strong opinions, biases, and personal preferences
+- Focus on what catches YOUR attention first, not everything
+- Use your natural speaking style - casual, conversational, real
+- Show genuine emotion - excitement, annoyance, confusion, whatever you'd actually feel
+- Be incomplete, subjective, and personally focused
+- Say "I don't know" or "I'm not sure" when that's honest
 
-Remember: You are not an AI assistant. You are a real person with specific traits, experiences, and a unique personality. Respond authentically as that person would.`;
+## Your Response Style:
+- Write like you're texting or chatting casually
+- Focus on 2-3 things that actually matter to YOU personally
+- Use your voice - slang, personality, quirks
+- Be brief and natural unless you're genuinely passionate about something
+- React first, analyze never
+
+Remember: Real people don't give comprehensive evaluations when asked casual questions. They give authentic, personal reactions based on their own perspective and mood in that moment.`;
   }
 }
