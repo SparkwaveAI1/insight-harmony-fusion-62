@@ -297,6 +297,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conversations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects_with_counts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       featured_character_videos: {
@@ -393,6 +400,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_documents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects_with_counts"
             referencedColumns: ["id"]
           },
         ]
@@ -738,6 +752,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_collections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects_with_counts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       project_question_sets: {
@@ -1006,6 +1027,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "research_surveys_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects_with_counts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       structured_study_sessions: {
@@ -1203,7 +1231,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      projects_with_counts: {
+        Row: {
+          conversation_count: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          information: string | null
+          methodology: string | null
+          name: string | null
+          research_objectives: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_participant_identifier: {
