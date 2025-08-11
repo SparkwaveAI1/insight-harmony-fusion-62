@@ -159,16 +159,32 @@ serve(async (req) => {
       messages[0].content += imageInstructions;
     }
 
-    // Dynamic generation parameters based on persona traits
+    // AGGRESSIVE trait-driven generation parameters
     const bigFive = persona.trait_profile?.big_five || {};
     const neuroticism = parseFloat(bigFive.neuroticism || '0.5');
     const conscientiousness = parseFloat(bigFive.conscientiousness || '0.5');
     const extraversion = parseFloat(bigFive.extraversion || '0.5');
+    const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
+    const openness = parseFloat(bigFive.openness || '0.5');
     
-    // Trait-responsive parameters
-    const temperature = Math.min(0.9, 0.7 + (1 - conscientiousness) * 0.3); // Less organized = more random
-    const maxTokens = extraversion > 0.7 ? 1200 : extraversion < 0.3 ? 600 : 1000; // Extraverts talk more
-    const frequencyPenalty = neuroticism > 0.7 ? 0.1 : 0.2; // Neurotic personas repeat concerns
+    // MUCH more aggressive trait-responsive parameters
+    let temperature = 0.8; // Base temperature
+    if (conscientiousness < 0.3) temperature = 1.1; // Very disorganized = very random
+    if (conscientiousness > 0.7) temperature = 0.6; // Very organized = more focused
+    if (neuroticism > 0.7) temperature += 0.2; // Neurotic = more erratic
+    if (openness > 0.7) temperature += 0.15; // Open = more creative
+    if (openness < 0.3) temperature -= 0.15; // Closed = more predictable
+    temperature = Math.max(0.4, Math.min(1.2, temperature));
+    
+    // Much more aggressive token limits
+    let maxTokens = 800; // Base limit
+    if (extraversion < 0.3) maxTokens = 150; // Very introverted = very brief
+    if (extraversion > 0.7) maxTokens = 1500; // Very extraverted = very verbose
+    if (conscientiousness < 0.3) maxTokens = Math.min(maxTokens, 400); // Disorganized = shorter
+    
+    // Personality-driven penalties
+    const frequencyPenalty = neuroticism > 0.7 ? 0.05 : 0.25; // Neurotic = repeat concerns
+    const presencePenalty = agreeableness < 0.3 ? 0.6 : 0.2; // Disagreeable = focus on problems
     
     console.log(`Trait-responsive parameters: temp=${temperature}, tokens=${maxTokens}, neuroticism=${neuroticism}`);
 
@@ -186,7 +202,7 @@ serve(async (req) => {
         max_tokens: maxTokens,
         top_p: 0.95,
         frequency_penalty: frequencyPenalty,
-        presence_penalty: 0.3,
+        presence_penalty: presencePenalty,
       }),
     });
 
