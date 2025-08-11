@@ -16,8 +16,7 @@ import StakingTab from "@/components/ecosystem/dashboard/StakingTab";
 import ResearchTab from "@/components/ecosystem/dashboard/ResearchTab";
 import AIAgentTab from "@/components/ecosystem/dashboard/AIAgentTab";
 import StakingPreview from "@/components/ecosystem/StakingPreview";
-import QualitativeAnalysis from "@/components/sections/QualitativeAnalysis"; 
-import ResearchAgentSection from "@/components/ecosystem/ResearchAgentSection"; 
+import ResearchAgentSection from "@/components/ecosystem/ResearchAgentSection";
 import AvatarFeature from "@/components/ecosystem/AvatarFeature";
 
 const PRSNAEcosystem = () => {
@@ -122,13 +121,6 @@ const PRSNAEcosystem = () => {
         {/* For non-connected wallet users, show these sections */}
         {!isWalletConnected && (
           <>
-            {/* Insights Conductor Section with proper background and spacing */}
-            <div className="bg-gray-800 text-gray-100">
-              <Section className="pt-8 pb-16" reducedPadding>
-                <QualitativeAnalysis />
-              </Section>
-            </div>
-            
             {/* Staking Dashboard Preview */}
             <StakingPreview connectWallet={connectWallet} />
             

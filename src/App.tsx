@@ -2,7 +2,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { PersonaProvider } from "./context/PersonaProvider";
-import { CharacterProvider } from "./context/CharacterProvider";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -24,7 +23,6 @@ import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
 
 import SimulatedPersona from "./pages/SimulatedPersona";
 import CustomResearch from "./pages/CustomResearch";
-import InsightConductor from "./pages/InsightConductor";
 import Research from "./pages/Research";
 import ResearchResults from "./pages/ResearchResults";
 import Auth from "./pages/Auth";
@@ -45,14 +43,6 @@ import PersonaCreationLanding from "./pages/persona-creation/PersonaCreationLand
 import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScreener";
 import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
 import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
-
-// Character pages
-import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
-import CharactersHome from "./characters/pages/CharactersHome";
-// Historical character creation removed
-import CreativeCharacterCreate from "./characters/pages/CreativeCharacterCreate";
-import CreativeCharacterDashboard from "./characters/pages/CreativeCharacterDashboard";
-import CharacterChat from "./characters/pages/CharacterChat";
 
 // Character feature unavailable component
 import CharacterFeatureUnavailable from "./components/CharacterFeatureUnavailable";
@@ -77,8 +67,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <PersonaProvider>
-            <CharacterProvider>
-              <Routes>
+            <Routes>
                 {/* Public Routes - Accessible without login */}
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
@@ -138,7 +127,6 @@ function App() {
                 
                 <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
                 <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
-                <Route path="/insight-conductor" element={<ProtectedRoute><InsightConductor /></ProtectedRoute>} />
                 <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
                 <Route path="/research/results/:surveySessionId" element={<ProtectedRoute><ResearchResults /></ProtectedRoute>} />
                 <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
@@ -153,9 +141,8 @@ function App() {
                 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster position="top-right" />
-            </CharacterProvider>
+            </Routes>
+            <Toaster position="top-right" />
           </PersonaProvider>
         </AuthProvider>
       </BrowserRouter>
