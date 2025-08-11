@@ -1206,6 +1206,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_participant_identifier: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
