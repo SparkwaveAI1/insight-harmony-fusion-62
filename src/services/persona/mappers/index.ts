@@ -100,7 +100,7 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
   } else {
     console.log("✅ Trait profile exists with valid structure, preserving original data");
     
-    // Log some sample values before validation
+    // Log some sample values to verify we're preserving actual data
     if (traitProfile.big_five) {
       console.log("DB Big Five sample:", {
         openness: traitProfile.big_five.openness,
@@ -108,8 +108,8 @@ export function dbPersonaToPersona(dbPersona: DbPersona): Persona {
       });
     }
     
-    // Only validate structure, don't replace valid data with defaults
-    traitProfile = validateAndPreserveTraitProfile(traitProfile);
+    // Don't validate - just use the existing data as-is
+    // The validator was replacing real data with defaults
   }
   
   console.log("=== FINAL TRAIT PROFILE CHECK ===");
