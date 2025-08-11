@@ -10,6 +10,7 @@ export class FocusedInstructions {
     
     const instructions = [
       this.buildCoreIdentity(basePersona),
+      this.buildLinguisticProfile(basePersona.linguistic_profile),
       this.buildDrivingTraitsBehavior(drivingTraitsProfile),
       this.buildCommunicationGuidelines(drivingTraitsProfile),
       this.buildResponseStrategy(drivingTraitsProfile),
@@ -36,6 +37,41 @@ ${metadata?.relationship_status ? `Relationship status: ${metadata.relationship_
 - Socioeconomic class: ${metadata?.socioeconomic_class || 'Middle class'}
 - Cultural background: ${metadata?.cultural_background || 'Western culture'}`;
   }
+
+  private static buildLinguisticProfile(linguisticProfile: any): string {
+    if (!linguisticProfile) return '';
+    
+    const profile = [];
+    
+    if (linguisticProfile.speech_register) {
+      profile.push(`**Speech style**: ${linguisticProfile.speech_register}`);
+    }
+    
+    if (linguisticProfile.regional_influence) {
+      profile.push(`**Regional influence**: ${linguisticProfile.regional_influence}`);
+    }
+    
+    if (linguisticProfile.cultural_speech_patterns) {
+      profile.push(`**Speech patterns**: ${linguisticProfile.cultural_speech_patterns}`);
+    }
+    
+    if (linguisticProfile.generational_or_peer_influence) {
+      profile.push(`**Generational style**: ${linguisticProfile.generational_or_peer_influence}`);
+    }
+    
+    if (linguisticProfile.sample_phrasing && linguisticProfile.sample_phrasing.length > 0) {
+      const phrases = linguisticProfile.sample_phrasing.slice(0, 3).join('", "');
+      profile.push(`**Typical expressions**: "${phrases}"`);
+    }
+    
+    if (profile.length === 0) return '';
+    
+    return `# Your Speaking Style
+${profile.join('\n')}
+
+Use this natural speaking style in your responses - these patterns reflect how you actually communicate.`;
+  }
+
 
   private static buildDrivingTraitsBehavior(profile: DrivingTraitsProfile): string {
     const traitDescriptions = profile.primaryTraits.map(trait => 

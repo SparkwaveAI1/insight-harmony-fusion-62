@@ -5,6 +5,7 @@ import { createEnhancedPersonaInstructions } from './enhancedPersonaInstructions
 import { TraitRelevanceAnalyzer } from './traitRelevanceAnalyzer.ts';
 import { DrivingTraitsSynthesizer } from './drivingTraitsSynthesizer.ts';
 import { FocusedInstructions } from './focusedInstructions.ts';
+import { TraitsFirstParameterEngine } from './traitsFirstParameterEngine.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -195,36 +196,22 @@ serve(async (req) => {
       messages[0].content += imageInstructions;
     }
 
-    // AGGRESSIVE trait-driven generation parameters
-    const bigFive = persona.trait_profile?.big_five || {};
-    const neuroticism = parseFloat(bigFive.neuroticism || '0.5');
-    const conscientiousness = parseFloat(bigFive.conscientiousness || '0.5');
-    const extraversion = parseFloat(bigFive.extraversion || '0.5');
-    const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
-    const openness = parseFloat(bigFive.openness || '0.5');
+    // Get complete trait profile from persona data
+    const traitProfile = persona.trait_profile || {};
+    const linguisticProfile = persona.linguistic_profile || {};
+    const dynamicState = traitProfile.dynamic_state || {};
     
-    // MUCH more aggressive trait-responsive parameters
-    let temperature = 0.8; // Base temperature
-    if (conscientiousness < 0.3) temperature = 1.1; // Very disorganized = very random
-    if (conscientiousness > 0.7) temperature = 0.6; // Very organized = more focused
-    if (neuroticism > 0.7) temperature += 0.2; // Neurotic = more erratic
-    if (openness > 0.7) temperature += 0.15; // Open = more creative
-    if (openness < 0.3) temperature -= 0.15; // Closed = more predictable
-    temperature = Math.max(0.4, Math.min(1.2, temperature));
+    // Generate AI parameters from ALL traits (not just Big Five)
+    const aiParameters = TraitsFirstParameterEngine.synthesizeAIParameters(
+      traitProfile,
+      linguisticProfile,
+      drivingTraitsProfile.primaryTraits,
+      dynamicState
+    );
     
-    // Much more aggressive token limits
-    let maxTokens = 800; // Base limit
-    if (extraversion < 0.3) maxTokens = 150; // Very introverted = very brief
-    if (extraversion > 0.7) maxTokens = 1500; // Very extraverted = very verbose
-    if (conscientiousness < 0.3) maxTokens = Math.min(maxTokens, 400); // Disorganized = shorter
-    
-    // Personality-driven penalties
-    const frequencyPenalty = neuroticism > 0.7 ? 0.05 : 0.25; // Neurotic = repeat concerns
-    const presencePenalty = agreeableness < 0.3 ? 0.6 : 0.2; // Disagreeable = focus on problems
-    
-    console.log(`Trait-responsive parameters: temp=${temperature}, tokens=${maxTokens}, neuroticism=${neuroticism}`);
+    console.log(`Complete personality-driven parameters: temp=${aiParameters.temperature}, tokens=${aiParameters.max_tokens}`);
 
-    // Generate response with trait-driven parameters
+    // Generate response with complete personality-driven parameters
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -234,11 +221,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14', // Quality model for authentic responses
         messages,
-        temperature,
-        max_tokens: maxTokens,
-        top_p: 0.95,
-        frequency_penalty: frequencyPenalty,
-        presence_penalty: presencePenalty,
+        temperature: aiParameters.temperature,
+        max_tokens: aiParameters.max_tokens,
+        top_p: aiParameters.top_p,
+        frequency_penalty: aiParameters.frequency_penalty,
+        presence_penalty: aiParameters.presence_penalty,
       }),
     });
 
