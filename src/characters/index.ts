@@ -12,11 +12,7 @@ export {
 } from './services/characterService';
 export { deleteCharacter } from './services/characterService';
 export { cloneCharacter } from './services/characterService';
-export { 
-  generateCharacter, 
-  generateHistoricalCharacter,
-  generateCharacterFromFormData 
-} from './services/characterGenerator';
+// Character generation removed
 export { generateCharacterImage } from './services/characterImageService';
 
 // Re-export image gallery functions

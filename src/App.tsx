@@ -49,7 +49,7 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 // Character pages
 import { CharacterDashboard, CharacterDetail, CharacterEdit } from "./characters";
 import CharactersHome from "./characters/pages/CharactersHome";
-import HistoricalCharacterCreate from "./characters/pages/HistoricalCharacterCreate";
+// Historical character creation removed
 import CreativeCharacterCreate from "./characters/pages/CreativeCharacterCreate";
 import CreativeCharacterDashboard from "./characters/pages/CreativeCharacterDashboard";
 import CharacterChat from "./characters/pages/CharacterChat";

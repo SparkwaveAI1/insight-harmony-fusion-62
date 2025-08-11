@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { Character } from "../../types/characterTraitTypes";
 import { createCreativeCharacter } from "../../services/creativeCharacterService";
-import { generateCharacterTraits } from "../../services/characterTraitService";
+// Character trait generation removed
 import { saveCharacter } from "../../services/characterService";
 import { cloneFormSchema, CloneFormValues } from "./cloneFormSchema";
 import { useAuth } from "@/context/AuthContext";
@@ -130,7 +130,8 @@ const cloneHistoricalCharacter = async (
     historical_context: character.metadata?.historical_context || ''
   };
   
-  const newTraits = await generateCharacterTraits(historicalData);
+  // Character trait generation removed - use existing traits
+  const newTraits = character.trait_profile;
   
   // Create new historical character
   const clonedCharacter: Character = {
