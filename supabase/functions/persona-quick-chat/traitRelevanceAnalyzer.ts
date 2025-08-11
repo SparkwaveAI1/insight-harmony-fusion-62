@@ -145,33 +145,42 @@ Rate relevance on 1-10 scale:
     traitValue: number,
     analysisPrompt: string
   ): Promise<TraitRelevanceScore> {
-    // Much more generous scoring to ensure traits actually drive responses
+    // Calculate actual relevance score based on trait strength and context
     
-    let baseRelevance = 6; // Start high so traits are actually considered relevant
-    let reasoning = `${traitDef.subcategory} influences response style`;
+    let relevanceScore = 0;
+    let reasoning = '';
     
-    // High trait values get even higher scores
-    if (traitValue >= 0.7) {
-      baseRelevance = 8;
-      reasoning = `${traitDef.subcategory} shows strong expression (${traitValue.toFixed(2)})`;
-    } else if (traitValue >= 0.5) {
-      baseRelevance = 7;
-      reasoning = `${traitDef.subcategory} shows notable expression (${traitValue.toFixed(2)})`;
-    } else if (traitValue <= 0.3) {
-      baseRelevance = 7;
-      reasoning = `${traitDef.subcategory} shows low expression (${traitValue.toFixed(2)}) - significant absence`;
+    // Strong trait values (high or low) are more likely to influence responses
+    if (traitValue >= 0.8) {
+      relevanceScore = 8;
+      reasoning = `Strong ${traitDef.subcategory} (${traitValue.toFixed(2)}) will significantly shape response`;
+    } else if (traitValue >= 0.6) {
+      relevanceScore = 7;
+      reasoning = `Moderate-high ${traitDef.subcategory} (${traitValue.toFixed(2)}) will influence response`;
+    } else if (traitValue <= 0.2) {
+      relevanceScore = 7;
+      reasoning = `Very low ${traitDef.subcategory} (${traitValue.toFixed(2)}) creates notable absence effect`;
+    } else if (traitValue <= 0.4) {
+      relevanceScore = 6;
+      reasoning = `Low ${traitDef.subcategory} (${traitValue.toFixed(2)}) will influence response style`;
+    } else {
+      relevanceScore = 5;
+      reasoning = `Moderate ${traitDef.subcategory} (${traitValue.toFixed(2)}) provides baseline influence`;
     }
     
-    // Add topic-specific relevance heuristics
-    const relevanceBoost = this.getTopicRelevanceBoost(traitDef, analysisPrompt);
-    const finalScore = Math.min(10, baseRelevance + relevanceBoost);
+    // Add context-specific boost for topic relevance
+    const topicBoost = this.getTopicRelevanceBoost(traitDef, analysisPrompt);
+    if (topicBoost > 0) {
+      relevanceScore = Math.min(10, relevanceScore + topicBoost);
+      reasoning += ` (topic relevance +${topicBoost})`;
+    }
     
     return {
       category: traitDef.category,
       subcategory: traitDef.subcategory,
       traitPath: traitDef.path,
-      relevanceScore: finalScore,
-      reasoning: reasoning + (relevanceBoost > 0 ? ` (topic relevance +${relevanceBoost})` : '')
+      relevanceScore,
+      reasoning
     };
   }
 
