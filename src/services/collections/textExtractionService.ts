@@ -96,7 +96,7 @@ const extractTextFromPDF = async (file: File): Promise<string | null> => {
   try {
     const base64 = await fileToBase64(file);
     
-    const response = await fetch('/api/extract-document-text', {
+    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-document-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ const extractTextFromImage = async (file: File): Promise<string | null> => {
   try {
     const base64 = await fileToBase64(file);
     
-    const response = await fetch('/api/extract-image-text', {
+    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-image-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
