@@ -548,6 +548,54 @@ export type Database = {
         }
         Relationships: []
       }
+      personas_v2: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          persona_data: Json
+          persona_id: string
+          persona_type: string
+          profile_image_url: string | null
+          updated_at: string
+          user_id: string
+          voicepack_hash: string | null
+          voicepack_runtime: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          persona_data: Json
+          persona_id: string
+          persona_type?: string
+          profile_image_url?: string | null
+          updated_at?: string
+          user_id: string
+          voicepack_hash?: string | null
+          voicepack_runtime?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          persona_data?: Json
+          persona_id?: string
+          persona_type?: string
+          profile_image_url?: string | null
+          updated_at?: string
+          user_id?: string
+          voicepack_hash?: string | null
+          voicepack_runtime?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

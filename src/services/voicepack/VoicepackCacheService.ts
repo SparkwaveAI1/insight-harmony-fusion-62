@@ -23,33 +23,59 @@ export class VoicepackCacheService {
         return cached.voicepack;
       }
 
-      // Check database for cached voicepack
-      const { data: persona, error } = await supabase
-        .from('personas')
-        .select('*')
-        .eq('id', personaId)
-        .single();
+      // Try PersonaV2 first, fallback to V1
+      let persona: any = null;
+      let isV2 = false;
 
-      if (error) {
-        throw new Error(`Failed to fetch persona: ${error.message}`);
+      // Check PersonaV2 table first
+      const { data: personaV2, error: v2Error } = await supabase
+        .from('personas_v2')
+        .select('persona_data, voicepack_runtime, voicepack_hash, updated_at')
+        .eq('persona_id', personaId)
+        .maybeSingle();
+
+      if (!v2Error && personaV2) {
+        console.log('VoicepackCacheService: Found PersonaV2');
+        isV2 = true;
+        
+        // Check if we have cached voicepack
+        if (personaV2.voicepack_runtime) {
+          console.log('VoicepackCacheService: Found voicepack in PersonaV2 cache');
+          const voicepack = personaV2.voicepack_runtime as unknown as VoicepackRuntime;
+          this.cache.set(personaId, { voicepack, timestamp: Date.now() });
+          return voicepack;
+        }
+        
+        persona = personaV2.persona_data;
+      } else {
+        // Fallback to V1 personas table
+        console.log('VoicepackCacheService: Falling back to V1 persona');
+        const { data: personaV1, error: v1Error } = await supabase
+          .from('personas')
+          .select('*')
+          .eq('persona_id', personaId)
+          .maybeSingle();
+
+        if (v1Error) {
+          console.error('VoicepackCacheService: Error fetching persona:', v1Error);
+          throw new Error(`Failed to fetch persona: ${v1Error.message}`);
+        }
+
+        if (!personaV1) {
+          throw new Error(`Persona not found: ${personaId}`);
+        }
+
+        if (personaV1.voicepack_runtime) {
+          console.log('VoicepackCacheService: Found voicepack in V1 cache');
+          const voicepack = personaV1.voicepack_runtime as unknown as VoicepackRuntime;
+          this.cache.set(personaId, { voicepack, timestamp: Date.now() });
+          return voicepack;
+        }
+
+        persona = personaV1;
       }
 
-      if (!persona) {
-        throw new Error(`Persona not found: ${personaId}`);
-      }
-
-      // If voicepack exists and persona hasn't been updated, return cached version
-      if (persona.voicepack_runtime) {
-        const voicepack = persona.voicepack_runtime as unknown as VoicepackRuntime;
-        this.cache.set(personaId, { voicepack, timestamp: Date.now() });
-        return voicepack;
-      }
-
-      // Compile new voicepack
-      console.log(`Compiling voicepack for persona ${personaId}`);
-      const voicepack = await this.compileAndCache(persona, personaId);
-      
-      return voicepack;
+      return this.compileAndCache(persona, personaId, isV2);
     } catch (error) {
       console.error('VoicepackCacheService error:', error);
       throw error;
@@ -85,34 +111,56 @@ export class VoicepackCacheService {
   /**
    * Compile voicepack and save to database
    */
-  private async compileAndCache(persona: any, personaId: string): Promise<VoicepackRuntime> {
+  private async compileAndCache(persona: any, personaId: string, isV2: boolean = false): Promise<VoicepackRuntime> {
     try {
-      // Convert database persona to PersonaV2 format if needed
-      const personaV2 = this.convertToPersonaV2(persona);
+      // Convert to PersonaV2 format if needed
+      const personaV2 = isV2 ? persona : this.convertToPersonaV2(persona);
       
       // Compile voicepack
       const voicepack = await this.compiler.compile(personaV2);
+      const voicepackHash = this.generateVoicepackHash(voicepack);
       
-      // Save to database
-      const { error: updateError } = await supabase
-        .from('personas')
-        .update({ voicepack_runtime: voicepack as any })
-        .eq('id', personaId);
-
-      if (updateError) {
-        console.warn(`Failed to cache voicepack: ${updateError.message}`);
-        // Continue anyway - we can still return the compiled voicepack
-      }
-
       // Cache in memory
       this.cache.set(personaId, { voicepack, timestamp: Date.now() });
       
-      console.log(`Voicepack compiled and cached for persona ${personaId}`);
+      // Save to appropriate database table
+      if (isV2) {
+        const { error } = await supabase
+          .from('personas_v2')
+          .update({ 
+            voicepack_runtime: voicepack as any,
+            voicepack_hash: voicepackHash 
+          })
+          .eq('persona_id', personaId);
+        
+        if (error) {
+          console.error('VoicepackCacheService: Error saving voicepack to PersonaV2:', error);
+        } else {
+          console.log('VoicepackCacheService: Saved voicepack to PersonaV2 cache');
+        }
+      } else {
+        const { error } = await supabase
+          .from('personas')
+          .update({ voicepack_runtime: voicepack as any })
+          .eq('persona_id', personaId);
+        
+        if (error) {
+          console.error('VoicepackCacheService: Error saving voicepack to V1:', error);
+        } else {
+          console.log('VoicepackCacheService: Saved voicepack to V1 cache');
+        }
+      }
+      
       return voicepack;
     } catch (error) {
       console.error('Compilation failed:', error);
       throw new Error(`Voicepack compilation failed: ${error.message}`);
     }
+  }
+
+  private generateVoicepackHash(voicepack: VoicepackRuntime): string {
+    // Simple hash of voicepack content for cache invalidation
+    return btoa(JSON.stringify(voicepack)).slice(0, 16);
   }
 
   /**
