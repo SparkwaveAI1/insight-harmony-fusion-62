@@ -76,26 +76,27 @@ serve(async (req) => {
 
     // FINALIZATION: Validate and assemble the complete persona
     console.log('🔄 Finalizing persona...');
-    const validatedPersona = finalizePersona(enhancedPersona, traitData, behavioralLinguistic, interviewResponses);
+    const personaV2 = finalizePersona(enhancedPersona, traitData, behavioralLinguistic, interviewResponses);
 
-    console.log('=== 10-STAGE PERSONA GENERATION COMPLETED SUCCESSFULLY ===');
-    console.log(`Final persona: ${validatedPersona.name} for user: ${user.id}`);
-    console.log(`- Core demographics: ✓ (${Object.keys(validatedPersona.metadata).length} fields)`);
-    console.log(`- Trait profile: ✓ (${Object.keys(validatedPersona.trait_profile).length} categories)`);
-    console.log(`- Emotional triggers: ✓ (${validatedPersona.emotional_triggers?.positive_triggers?.length || 0}+${validatedPersona.emotional_triggers?.negative_triggers?.length || 0} triggers)`);
-    console.log(`- Behavioral profiles: ✓`);
-    console.log(`- Interview sections: ✓ (${validatedPersona.interview_sections?.length || 0} sections)`);
+    console.log('=== 10-STAGE PersonaV2 GENERATION COMPLETED SUCCESSFULLY ===');
+    console.log(`Final PersonaV2: ${personaV2.identity.name} for user: ${user.id}`);
+    console.log(`- Identity: ✓ (age: ${personaV2.identity.age}, gender: ${personaV2.identity.gender})`);
+    console.log(`- Life context: ✓ (${personaV2.life_context.occupation.title})`);
+    console.log(`- Cognitive profile: ✓ (Big Five traits set)`);
+    console.log(`- Social cognition: ✓`);
+    console.log(`- Health profile: ✓`);
+    console.log(`- Sexuality profile: ✓`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        persona: validatedPersona,
+        persona: personaV2,
         warnings: [],
         metadata: {
           traitGenerationAttempts: attemptCount,
           hasRealisticTraits: true,
-          demographicFieldsGenerated: Object.keys(validatedPersona.metadata).length,
-          generationStages: 10
+          generationStages: 10,
+          format: "PersonaV2"
         }
       }),
       { 

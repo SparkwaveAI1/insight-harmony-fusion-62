@@ -117,7 +117,7 @@ export const generatePersonaWithProgress = async (
       if (savedPersona) {
         console.log("✅ Persona saved to database successfully with ID:", savedPersona.persona_id);
         
-        // Step 4.5: Compile voicepack
+        // Step 4.5: Compile voicepack (PersonaV2 uses persona_id from savedPersona)
         console.log("=== COMPILING VOICEPACK ===");
         try {
           const voicepack = await getOrCompileVoicepack(savedPersona.persona_id);

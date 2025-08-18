@@ -215,7 +215,11 @@ serve(async (req) => {
 
         // Generate PersonaV2 using the existing generate-persona function
         const generateResponse = await supabase.functions.invoke('generate-persona', {
-          body: { prompt }
+          body: { prompt },
+          headers: {
+            Authorization: authHeader,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (generateResponse.error) {

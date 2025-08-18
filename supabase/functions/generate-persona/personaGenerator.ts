@@ -284,68 +284,313 @@ export function finalizePersona(
   traitData: any, 
   behavioralLinguistic: any, 
   interviewResponses: any[]
-): PersonaTemplate {
-  console.log('=== FINALIZING PERSONA ===');
+): any {
+  console.log('=== FINALIZING PERSONA AS PersonaV2 ===');
   
   // Generate description from traits and metadata
   const description = generatePersonaDescription(basePersona, traitData);
   
-  // Merge all components into the base persona
-  Object.assign(basePersona, {
-    description: description, // Add the generated description
-    trait_profile: traitData.trait_profile,
-    emotional_triggers: traitData.emotional_triggers,
-    behavioral_modulation: behavioralLinguistic.behavioral_modulation,
-    linguistic_profile: behavioralLinguistic.linguistic_profile,
-    simulation_directives: behavioralLinguistic.simulation_directives,
-    preinterview_tags: behavioralLinguistic.preinterview_tags
-  });
-  
-  basePersona.interview_sections = interviewResponses;
+  // Map PersonaTemplate to PersonaV2 structure
+  const personaV2 = mapToPersonaV2(basePersona, traitData, behavioralLinguistic, interviewResponses, description);
 
-  // Final validation before saving
-  const finalValidation = validateGeneratedPersona(basePersona);
-  if (!finalValidation.isValid) {
-    console.error('Final persona validation failed:', finalValidation.errors);
-    throw new PersonaGenerationError(
-      'validation', 
-      `Generated persona is incomplete: ${finalValidation.errors.join(', ')}`,
-      undefined,
-      { personaName: basePersona.name, errors: finalValidation.errors }
-    );
-  }
+  console.log('✅ Persona finalized as PersonaV2 format');
+  return personaV2;
+}
 
-  // Clean and validate traits
-  const validatedPersona = validateAndCleanTraits(basePersona);
-  
-  // Ensure all required fields have proper defaults
-  validatedPersona.behavioral_modulation = validatedPersona.behavioral_modulation || {
-    communication_style: { formality_level: 0.5, emotional_expressiveness: 0.6, directness: 0.7, humor_usage: 0.4 },
-    response_patterns: { elaboration_tendency: 0.6, example_usage: 0.7, personal_anecdote_frequency: 0.5, technical_depth_preference: 0.4 },
-    contextual_adaptability: { topic_sensitivity: 0.6, audience_awareness: 0.7, emotional_responsiveness: 0.6 }
+function mapToPersonaV2(
+  basePersona: PersonaTemplate,
+  traitData: any,
+  behavioralLinguistic: any,
+  interviewResponses: any[],
+  description: string
+): any {
+  // Map trait_profile to Big Five format
+  const bigFive = traitData.trait_profile?.big_five || {};
+  const moralFoundations = traitData.trait_profile?.moral_foundations || {};
+  const worldValues = traitData.trait_profile?.world_values || {};
+  const politicalCompass = traitData.trait_profile?.political_compass || {};
+
+  return {
+    identity: {
+      name: basePersona.name,
+      age: basePersona.metadata.age || 30,
+      gender: basePersona.metadata.gender || "non-binary",
+      sexual_orientation: basePersona.metadata.sexual_orientation || "heterosexual",
+      race_ethnicity: basePersona.metadata.race_ethnicity || "mixed",
+      nationality: basePersona.metadata.region || "American",
+      languages: basePersona.metadata.language_proficiency || ["English"],
+      core_identity_narrative: description
+    },
+    
+    life_context: {
+      current_location: {
+        country: basePersona.metadata.region || "United States",
+        city: basePersona.metadata.location || "Unknown",
+        neighborhood_type: basePersona.metadata.urban_rural_context || "suburban",
+        living_situation: basePersona.metadata.relationships_family?.living_situation || "apartment"
+      },
+      occupation: {
+        title: basePersona.metadata.occupation || "Professional",
+        industry: "Unknown",
+        employment_status: basePersona.metadata.employment_type || "full_time",
+        work_setting: "office",
+        experience_years: 5,
+        income_bracket: basePersona.metadata.income_level || "middle"
+      },
+      education: {
+        highest_degree: basePersona.metadata.education_level || "bachelor",
+        field_of_study: "General Studies",
+        continuing_education: false
+      },
+      family_structure: {
+        marital_status: basePersona.metadata.marital_status || "single",
+        children: basePersona.metadata.relationships_family?.has_children || false,
+        household_size: 1,
+        caregiver_responsibilities: basePersona.metadata.relationships_family?.primary_caregiver_responsibilities || "none"
+      },
+      health_status: {
+        physical_health: basePersona.metadata.physical_health_status || "good",
+        mental_health: basePersona.metadata.mental_health_status || "stable",
+        chronic_conditions: basePersona.metadata.chronic_conditions || [],
+        healthcare_access: basePersona.metadata.healthcare_access || "good"
+      },
+      financial_situation: {
+        income_stability: "stable",
+        debt_level: basePersona.metadata.debt_load || "moderate",
+        financial_stress: basePersona.metadata.financial_pressure || "low",
+        economic_outlook: "optimistic"
+      }
+    },
+
+    cognitive_profile: {
+      big_five: {
+        openness: bigFive.openness || 0.5,
+        conscientiousness: bigFive.conscientiousness || 0.5,
+        extraversion: bigFive.extraversion || 0.5,
+        agreeableness: bigFive.agreeableness || 0.5,
+        neuroticism: bigFive.neuroticism || 0.5
+      },
+      moral_foundations: {
+        care_harm: moralFoundations.care || 0.5,
+        fairness_cheating: moralFoundations.fairness || 0.5,
+        loyalty_betrayal: moralFoundations.loyalty || 0.5,
+        authority_subversion: moralFoundations.authority || 0.5,
+        sanctity_degradation: moralFoundations.sanctity || 0.5,
+        liberty_oppression: moralFoundations.liberty || 0.5
+      },
+      cognitive_style: {
+        analytical_intuitive: 0.5,
+        detail_big_picture: 0.5,
+        concrete_abstract: 0.5,
+        systematic_flexible: bigFive.conscientiousness || 0.5
+      },
+      decision_making: {
+        risk_tolerance: traitData.trait_profile?.behavioral_economics?.risk_sensitivity || 0.5,
+        time_horizon: "medium_term",
+        information_processing: "balanced",
+        uncertainty_comfort: 0.5
+      },
+      learning_style: {
+        preferred_modalities: ["visual", "auditory"],
+        information_depth: "moderate",
+        feedback_sensitivity: bigFive.neuroticism || 0.5
+      }
+    },
+
+    social_cognition: {
+      social_orientation: {
+        introversion_extraversion: bigFive.extraversion || 0.5,
+        cooperation_competition: bigFive.agreeableness || 0.5,
+        trust_suspicion: 0.5,
+        empathy_level: bigFive.agreeableness || 0.5
+      },
+      communication_style: {
+        directness: 0.5,
+        emotional_expressiveness: bigFive.extraversion || 0.5,
+        formality_preference: 0.5,
+        conflict_approach: "collaborative"
+      },
+      group_dynamics: {
+        leadership_style: "collaborative",
+        followership_style: "engaged",
+        team_role_preference: "contributor",
+        social_influence_susceptibility: 0.5
+      },
+      cultural_adaptation: {
+        cultural_intelligence: 0.5,
+        adaptability: bigFive.openness || 0.5,
+        cross_cultural_comfort: 0.5
+      }
+    },
+
+    health_profile: {
+      physical_status: {
+        overall_health: basePersona.metadata.physical_health_status || "good",
+        fitness_level: basePersona.metadata.fitness_activity_level || "moderate",
+        chronic_conditions: basePersona.metadata.chronic_conditions || [],
+        health_priorities: ["general_wellness"]
+      },
+      mental_wellness: {
+        stress_management: basePersona.metadata.stress_management || "moderate",
+        emotional_regulation: bigFive.neuroticism ? (1 - bigFive.neuroticism) : 0.5,
+        support_systems: "adequate",
+        mental_health_awareness: 0.7
+      },
+      lifestyle_factors: {
+        sleep_quality: basePersona.metadata.sleep_patterns || "good",
+        exercise_habits: "moderate",
+        nutrition_approach: "balanced",
+        substance_use: basePersona.metadata.substance_use || "minimal"
+      }
+    },
+
+    sexuality_profile: {
+      orientation: {
+        romantic_orientation: basePersona.metadata.sexual_orientation || "heterosexual",
+        sexual_orientation: basePersona.metadata.sexual_orientation || "heterosexual",
+        relationship_style: "monogamous"
+      },
+      intimacy_approach: {
+        emotional_intimacy_comfort: bigFive.agreeableness || 0.5,
+        physical_intimacy_comfort: 0.5,
+        vulnerability_sharing: bigFive.openness || 0.5,
+        boundary_communication: 0.7
+      },
+      relationship_patterns: {
+        attachment_style: "secure",
+        jealousy_tendency: bigFive.neuroticism || 0.3,
+        commitment_approach: "gradual",
+        past_relationship_impact: "low"
+      },
+      sexuality_expression: {
+        comfort_with_sexuality_topics: 0.5,
+        sexual_communication_style: "open",
+        sexual_confidence: 0.5,
+        exploration_openness: bigFive.openness || 0.5
+      },
+      privacy_boundaries: {
+        disclosure_comfort: 0.5,
+        topic_boundaries: ["personal_details"],
+        context_adaptation: 0.7
+      }
+    },
+
+    knowledge_base: {
+      formal_education: basePersona.metadata.knowledge_domains || {},
+      professional_expertise: {
+        primary_domain: basePersona.metadata.occupation || "general",
+        skill_level: "intermediate",
+        years_experience: 5
+      },
+      interests_hobbies: ["reading", "technology"],
+      cultural_knowledge: {
+        pop_culture_awareness: 0.6,
+        historical_knowledge: 0.5,
+        current_events_following: 0.6
+      }
+    },
+
+    emotional_triggers: {
+      positive_activators: traitData.emotional_triggers?.positive_triggers || ["achievement", "connection"],
+      negative_activators: traitData.emotional_triggers?.negative_triggers || ["criticism", "conflict"],
+      stress_responses: ["withdrawal", "problem_solving"],
+      comfort_mechanisms: ["social_support", "routine"],
+      emotional_volatility: bigFive.neuroticism || 0.3
+    },
+
+    memory_profile: {
+      autobiographical_anchors: [
+        `Growing up in ${basePersona.metadata.location || 'their hometown'}`,
+        `Their career as a ${basePersona.metadata.occupation || 'professional'}`
+      ],
+      emotional_memories: {
+        formative_positive: ["educational_achievement"],
+        formative_negative: ["academic_pressure"],
+        recent_significant: ["career_transition"]
+      },
+      knowledge_organization: {
+        memory_style: "episodic_semantic_blend",
+        detail_retention: "moderate",
+        pattern_recognition: 0.6
+      }
+    },
+
+    linguistic_style: {
+      vocabulary: {
+        complexity_level: "moderate",
+        domain_specific_terms: [basePersona.metadata.occupation || "general"],
+        colloquialisms: ["modern_casual"],
+        formal_register_comfort: 0.6
+      },
+      syntax_patterns: {
+        sentence_structure: "varied",
+        clause_complexity: "moderate",
+        passive_voice_usage: 0.3,
+        question_formation_style: "direct"
+      },
+      discourse_markers: {
+        transition_usage: "moderate",
+        hedging_patterns: bigFive.agreeableness ? ["I think", "perhaps"] : ["definitely", "clearly"],
+        emphasis_strategies: ["repetition", "intensifiers"],
+        politeness_markers: bigFive.agreeableness || 0.5
+      },
+      cultural_linguistic_features: {
+        regional_markers: [],
+        generational_markers: ["millennial"],
+        professional_jargon: [basePersona.metadata.occupation || "general"],
+        code_switching_patterns: "context_appropriate"
+      }
+    },
+
+    group_behavior: {
+      ingroup_outgroup: {
+        identity_strength: 0.6,
+        ingroup_loyalty: moralFoundations.loyalty || 0.5,
+        outgroup_tolerance: bigFive.openness || 0.5,
+        tribal_thinking_susceptibility: 0.4
+      },
+      leadership_followership: {
+        natural_leadership: bigFive.extraversion || 0.5,
+        authority_deference: moralFoundations.authority || 0.5,
+        initiative_taking: 0.5,
+        collaborative_preference: bigFive.agreeableness || 0.5
+      },
+      social_influence: {
+        conformity_tendency: 0.5,
+        persuasion_susceptibility: 0.5,
+        social_proof_influence: 0.5,
+        authority_influence: moralFoundations.authority || 0.5
+      }
+    },
+
+    reasoning_modifiers: {
+      cognitive_biases: {
+        confirmation_bias: 0.5,
+        availability_heuristic: 0.5,
+        anchoring_bias: 0.5,
+        overconfidence_bias: traitData.trait_profile?.behavioral_economics?.overconfidence || 0.5
+      },
+      emotional_reasoning: {
+        affect_heuristic: bigFive.neuroticism || 0.3,
+        mood_congruent_thinking: 0.5,
+        emotional_override_logic: 0.3
+      },
+      motivated_reasoning: {
+        belief_preservation: 0.5,
+        dissonance_reduction: 0.5,
+        selective_attention: 0.5
+      }
+    },
+
+    runtime_controls: {
+      response_length_preference: "moderate",
+      topic_engagement_variability: 0.3,
+      consistency_vs_authenticity: 0.7,
+      emotional_range_expression: 0.6,
+      knowledge_boundary_respect: 0.9,
+      personality_drift_resistance: 0.8
+    }
   };
-
-  validatedPersona.linguistic_profile = validatedPersona.linguistic_profile || {
-    vocabulary_complexity: 0.6, sentence_structure_preference: 0.5, cultural_linguistic_markers: [],
-    communication_pace: 0.6, filler_word_usage: 0.3, interruption_tendency: 0.4,
-    question_asking_frequency: 0.5, storytelling_inclination: 0.6
-  };
-
-  validatedPersona.simulation_directives = validatedPersona.simulation_directives || {
-    authenticity_level: 0.9, consistency_enforcement: 0.8, emotional_range_limit: 0.7,
-    response_variability: 0.6, knowledge_boundary_respect: 0.9, personality_drift_prevention: 0.8
-  };
-
-  validatedPersona.preinterview_tags = validatedPersona.preinterview_tags || [
-    "demographic_match", "trait_validated", "behavioral_profiled"
-  ];
-
-  validatedPersona.emotional_triggers = validatedPersona.emotional_triggers || {
-    positive_triggers: [], negative_triggers: []
-  };
-
-  console.log('✅ Persona finalized and validated');
-  return validatedPersona;
 }
 
 function generatePersonaDescription(persona: PersonaTemplate, traits: any): string {

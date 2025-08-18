@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { logTraitValidation } from "./traitValidation";
 import { validatePersonaCompleteness, logPersonaValidation } from "./validation/personaValidation";
 
-// Keep the original function for backward compatibility
+// Now generates PersonaV2 format and saves to personas_v2 table
 export const generatePersona = async (prompt: string): Promise<Persona | null> => {
   try {
     toast.info("Generating persona...", {
@@ -13,8 +13,8 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
       duration: 10000,
     });
     
-    console.log("=== STARTING PERSONA GENERATION ===");
-    console.log("Starting persona generation for prompt:", prompt);
+    console.log("=== STARTING PersonaV2 GENERATION ===");
+    console.log("Starting PersonaV2 generation for prompt:", prompt);
 
     // Get the current user ID
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -33,7 +33,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
       return null;
     }
 
-    console.log("Calling generate-persona edge function...");
+    console.log("Calling generate-persona edge function (PersonaV2)...");
     const { data, error } = await supabase.functions.invoke('generate-persona', {
       body: { prompt }
     });
@@ -47,107 +47,131 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     console.log("Edge function response received:", data);
 
     if (!data.success || !data.persona) {
-      console.error("❌ Persona generation failed:", data.error || "Unknown error");
+      console.error("❌ PersonaV2 generation failed:", data.error || "Unknown error");
       toast.error(`Failed to generate persona: ${data.error || "Unknown error"}`, { id: "persona-generation" });
       return null;
     }
 
-    console.log("✅ Successfully generated persona:", data.persona.name);
-    console.log("Generated persona ID:", data.persona.persona_id);
+    const personaV2 = data.persona;
+    console.log("✅ Successfully generated PersonaV2:", personaV2.identity.name);
     
-    // CRITICAL: Validate persona completeness before saving
-    console.log("=== VALIDATING PERSONA COMPLETENESS ===");
-    const validationResult = validatePersonaCompleteness(data.persona);
-    logPersonaValidation(data.persona, validationResult);
-    
-    if (!validationResult.isValid) {
-      console.error("❌ PERSONA FAILED VALIDATION");
-      const errorMsg = `Persona generation incomplete: ${validationResult.errors.join(', ')}`;
-      toast.error(errorMsg, { id: "persona-generation", duration: 8000 });
-      
-      // Still attempt to save but warn user of issues
-      toast.warning("Saving incomplete persona - please regenerate for better results", { 
-        duration: 5000 
-      });
-    }
-    
-    // Validate the enhanced traits
-    console.log("=== VALIDATING ENHANCED TRAITS ===");
-    logTraitValidation(data.persona);
-    
-    // Log specific enhanced trait values for verification
-    console.log("=== ENHANCED TRAIT VALUES ===");
-    const traitProfile = data.persona.trait_profile;
-    
-    if (traitProfile?.world_values) {
-      console.log("World Values:", {
-        traditional_vs_secular: traitProfile.world_values.traditional_vs_secular,
-        survival_vs_self_expression: traitProfile.world_values.survival_vs_self_expression,
-        materialist_vs_postmaterialist: traitProfile.world_values.materialist_vs_postmaterialist
-      });
-    }
-    
-    if (traitProfile?.political_compass) {
-      console.log("Enhanced Political Compass:", {
-        political_salience: traitProfile.political_compass.political_salience,
-        group_fusion_level: traitProfile.political_compass.group_fusion_level,
-        outgroup_threat_sensitivity: traitProfile.political_compass.outgroup_threat_sensitivity,
-        commons_orientation: traitProfile.political_compass.commons_orientation,
-        cultural_conservative_progressive: traitProfile.political_compass.cultural_conservative_progressive,
-        political_motivations: traitProfile.political_compass.political_motivations
-      });
-    }
-    
-    // Add the user_id to the persona before saving
-    data.persona.user_id = userId;
-    console.log("✅ Assigned user ID to persona:", userId);
-    
-    // Save the persona to the database
-    console.log("=== SAVING PERSONA TO DATABASE ===");
+    console.log("=== SAVING PersonaV2 TO DATABASE ===");
     try {
-      const savedPersona = await savePersona(data.persona);
+      // Create the personas_v2 record
+      const v2Record = {
+        persona_id: `persona_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        user_id: userId,
+        name: personaV2.identity.name,
+        description: personaV2.identity.core_identity_narrative,
+        persona_data: personaV2,
+        persona_type: 'humanoid',
+        is_public: false
+      };
       
-      if (savedPersona) {
-        console.log("✅ Persona saved to database successfully with ID:", savedPersona.persona_id);
-        console.log("✅ Saved persona user_id:", savedPersona.user_id);
-        console.log("✅ Saved persona name:", savedPersona.name);
-        
-        // Final validation of saved persona
-        const finalValidation = validatePersonaCompleteness(savedPersona);
-        if (finalValidation.isValid) {
-          toast.success(`"${savedPersona.name}" created successfully!`, { id: "persona-generation" });
-        } else {
-          toast.warning(`"${savedPersona.name}" created but may be incomplete. Check details page.`, { 
-            id: "persona-generation",
-            duration: 6000
-          });
-        }
-        
-        console.log("=== PERSONA GENERATION COMPLETED ===");
-        return savedPersona;
-      } else {
-        console.error("❌ Failed to save persona to database - savePersona returned null");
-        toast.error("Failed to save persona to database", { id: "persona-generation" });
+      console.log("Saving PersonaV2 to personas_v2 table...");
+      const { data: savedV2, error: saveV2Error } = await supabase
+        .from('personas_v2')
+        .insert(v2Record)
+        .select()
+        .single();
+      
+      if (saveV2Error) {
+        console.error("❌ Failed to save PersonaV2:", saveV2Error);
+        toast.error(`Failed to save persona: ${saveV2Error.message}`, { id: "persona-generation" });
         return null;
       }
+      
+      console.log("✅ PersonaV2 saved successfully with ID:", savedV2.persona_id);
+      
+      // Convert PersonaV2 to V1 format for backward compatibility
+      const v1Persona = convertV2ToV1(savedV2, personaV2);
+      
+      toast.success(`"${v1Persona.name}" created successfully!`, { id: "persona-generation" });
+      console.log("=== PersonaV2 GENERATION COMPLETED ===");
+      return v1Persona;
+      
     } catch (saveError: any) {
-      console.error("❌ Error saving persona to database:", saveError);
-      console.error("Save error details:", {
-        message: saveError.message,
-        stack: saveError.stack,
-        cause: saveError.cause
-      });
+      console.error("❌ Error saving PersonaV2 to database:", saveError);
       toast.error(`Error saving persona: ${saveError.message || "Unknown database error"}`, { id: "persona-generation" });
       return null;
     }
   } catch (error: any) {
     console.error("❌ Unexpected error in generatePersona:", error);
-    console.error("Error details:", {
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause
-    });
     toast.error(`An unexpected error occurred: ${error.message || "Unknown error"}`, { id: "persona-generation" });
     return null;
   }
 };
+
+// Convert PersonaV2 to V1 format for backward compatibility
+function convertV2ToV1(savedV2: any, personaV2: any): Persona {
+  return {
+    persona_id: savedV2.persona_id,
+    id: savedV2.id,
+    name: savedV2.name,
+    description: savedV2.description,
+    creation_date: savedV2.created_at,
+    created_at: savedV2.created_at,
+    user_id: savedV2.user_id,
+    is_public: savedV2.is_public,
+    profile_image_url: savedV2.profile_image_url,
+    persona_type: savedV2.persona_type,
+    persona_version: "2.0",
+    metadata: {
+      age: personaV2.identity.age,
+      gender: personaV2.identity.gender,
+      occupation: personaV2.life_context.occupation.title,
+      location: personaV2.life_context.current_location.city,
+      education_level: personaV2.life_context.education.highest_degree,
+      income_level: personaV2.life_context.financial_situation.income_stability,
+      enhanced_metadata_version: 2
+    },
+    trait_profile: {
+      big_five: personaV2.cognitive_profile.big_five,
+      moral_foundations: personaV2.cognitive_profile.moral_foundations,
+      world_values: {
+        traditional_vs_secular: 0.5,
+        survival_vs_self_expression: 0.5,
+        materialist_vs_postmaterialist: 0.5
+      }
+    },
+    behavioral_modulation: {
+      communication_style: {
+        formality_level: personaV2.social_cognition.communication_style.formality_preference,
+        emotional_expressiveness: personaV2.social_cognition.communication_style.emotional_expressiveness,
+        directness: personaV2.social_cognition.communication_style.directness
+      }
+    },
+    linguistic_profile: {
+      default_output_length: "moderate",
+      speech_register: "hybrid",
+      speaking_style: {
+        uses_neutral_fillers: true,
+        sentence_revisions: true,
+        topic_length_variability: true,
+        contradiction_tolerance: true,
+        trust_modulated_tone: true,
+        mirroring_tendency: true
+      },
+      sample_phrasing: []
+    },
+    interview_sections: [{
+      section_title: "Personal Background",
+      responses: [{
+        question: "Tell me about yourself",
+        answer: personaV2.identity.core_identity_narrative
+      }]
+    }],
+    emotional_triggers: {
+      positive_triggers: personaV2.emotional_triggers.positive_activators,
+      negative_triggers: personaV2.emotional_triggers.negative_activators
+    },
+    simulation_directives: {
+      encourage_contradiction: true,
+      emotional_asymmetry: true,
+      stress_behavior_expected: true,
+      inconsistency_is_valid: true,
+      response_length_variability: true
+    },
+    preinterview_tags: ["PersonaV2", "demographic_match", "trait_validated"]
+  };
+}
