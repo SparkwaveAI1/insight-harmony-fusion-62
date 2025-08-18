@@ -25,4 +25,5 @@ export interface PersonaContextType {
   loadMultiplePersonas: (personaIds: string[]) => Promise<Persona[]>;
   clearPersona: () => void;
   clearPersonas: () => void;
+  refreshPersonas?: () => Promise<void>; // Optional refresh method
 }

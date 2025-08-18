@@ -14,6 +14,7 @@ import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
 import { Persona } from "@/services/persona";
+import { PersonaMigrationDialog } from "@/components/migration/PersonaMigrationDialog";
 
 // Create a QueryClient with specific retry configuration
 const queryClient = new QueryClient({
@@ -91,16 +92,23 @@ const PersonaViewerContent = () => {
           <ViewerHeader isLoading={isLoading} />
           
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
-              {isLibraryView ? "Persona Library" : "My Personas"}
-            </h1>
-            {isLibraryView && (
-              <p className="text-muted-foreground mb-2">
-                Browse publicly shared personas from our community
-              </p>
+          <div className="mb-8 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
+                {isLibraryView ? "Persona Library" : "My Personas"}
+              </h1>
+              {isLibraryView && (
+                <p className="text-muted-foreground mb-2">
+                  Browse publicly shared personas from our community
+                </p>
+              )}
+              <div className="w-32 h-1 bg-accent mb-6"></div>
+            </div>
+            
+            {/* Migration Dialog - only show on My Personas tab */}
+            {!isLibraryView && (
+              <PersonaMigrationDialog />
             )}
-            <div className="w-32 h-1 bg-accent mb-6"></div>
           </div>
 
           {/* Filter Section - Now with enhanced functionality */}

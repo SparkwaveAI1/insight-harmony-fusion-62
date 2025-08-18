@@ -20,5 +20,20 @@ export { generatePersonaDescription, updatePersonaDescription } from './operatio
 export { enhancePersona } from './enhancePersona';
 export { bulkEnhancePersonas } from './bulkEnhancePersonas';
 
+// PersonaV2 operations
+export { 
+  getPersonaV2ById,
+  getAllPersonasV2,
+  getPublicPersonasV2,
+  savePersonaV2,
+  updatePersonaV2,
+  deletePersonaV2,
+  updatePersonaV2Voicepack
+} from './operations/personaV2Operations';
+
+// Migration utilities
+export { samplePersonaTraits, generatePersonaV2Prompt } from './migration/traitSampler';
+
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';
+export type { CreatePersonaV2Request, UpdatePersonaV2Request } from './types/persona-v2-db';
