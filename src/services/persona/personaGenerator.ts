@@ -116,6 +116,11 @@ function convertV2ToV1(savedV2: any, personaV2: any): Persona {
     profile_image_url: savedV2.profile_image_url,
     persona_type: savedV2.persona_type,
     persona_version: "2.0",
+    persona_context: {
+      source: "PersonaV2",
+      generation_method: "AI-generated",
+      conversion_timestamp: new Date().toISOString()
+    },
     metadata: {
       age: personaV2.identity.age,
       gender: personaV2.identity.gender,
@@ -155,11 +160,13 @@ function convertV2ToV1(savedV2: any, personaV2: any): Persona {
       sample_phrasing: []
     },
     interview_sections: [{
-      section_title: "Personal Background",
-      responses: [{
+      section: "Personal Background",
+      notes: "Generated from PersonaV2",
+      questions: [{
         question: "Tell me about yourself",
-        answer: personaV2.identity.core_identity_narrative
-      }]
+        response: personaV2.identity.core_identity_narrative
+      }],
+      responses: [personaV2.identity.core_identity_narrative]
     }],
     emotional_triggers: {
       positive_triggers: personaV2.emotional_triggers.positive_activators,
