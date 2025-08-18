@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { voicepackCache } from "../../voicepack";
 
 /**
  * Updates the visibility (public/private) status of a persona
@@ -14,6 +15,9 @@ export async function updatePersonaVisibility(personaId: string, isPublic: boole
       .eq('persona_id', personaId);
 
     if (error) throw error;
+    
+    // Invalidate voicepack cache since traits may have changed
+    voicepackCache.invalidateCache(personaId);
     
     return true;
   } catch (error) {

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "./types";
+import { voicepackCache } from "../voicepack";
 
 export interface EnhancementOptions {
   enhanceEmotionalTriggers?: boolean;
@@ -49,6 +50,19 @@ export const enhancePersona = async (
     }
 
     console.log('Enhancement successful:', data.enhancementLog);
+    
+    // Invalidate voicepack cache and recompile after enhancement
+    if (data.persona?.persona_id) {
+      console.log('=== RECOMPILING VOICEPACK AFTER ENHANCEMENT ===');
+      try {
+        voicepackCache.invalidateCache(data.persona.persona_id);
+        await voicepackCache.recompileVoicepack(data.persona.persona_id);
+        console.log('✅ Voicepack recompiled after enhancement');
+      } catch (voicepackError) {
+        console.warn('⚠️ Voicepack recompilation failed:', voicepackError);
+      }
+    }
+    
     return {
       success: true,
       persona: data.persona,

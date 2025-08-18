@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { logTraitValidation } from "./traitValidation";
 import { validatePersonaCompleteness, logPersonaValidation } from "./validation/personaValidation";
 import { ProgressCallback, CREATION_STEPS, createProgressUpdate } from "./progressService";
+import { getOrCompileVoicepack } from "../voicepack";
 
 export const generatePersonaWithProgress = async (
   prompt: string, 
@@ -115,6 +116,15 @@ export const generatePersonaWithProgress = async (
       
       if (savedPersona) {
         console.log("✅ Persona saved to database successfully with ID:", savedPersona.persona_id);
+        
+        // Step 4.5: Compile voicepack
+        console.log("=== COMPILING VOICEPACK ===");
+        try {
+          const voicepack = await getOrCompileVoicepack(savedPersona.persona_id);
+          console.log("✅ Voicepack compiled successfully");
+        } catch (voicepackError) {
+          console.warn("⚠️ Voicepack compilation failed (continuing anyway):", voicepackError);
+        }
         
         // Step 5: Complete
         onProgress(createProgressUpdate(CREATION_STEPS.COMPLETE));
