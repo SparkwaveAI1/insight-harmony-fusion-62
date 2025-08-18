@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -491,12 +491,14 @@ export type Database = {
           metadata: Json
           name: string
           persona_id: string
+          persona_version: string | null
           preinterview_tags: Json
           profile_image_url: string | null
           prompt: string | null
           simulation_directives: Json
           trait_profile: Json
           user_id: string | null
+          voicepack_runtime: Json | null
         }
         Insert: {
           behavioral_modulation: Json
@@ -512,12 +514,14 @@ export type Database = {
           metadata: Json
           name: string
           persona_id: string
+          persona_version?: string | null
           preinterview_tags: Json
           profile_image_url?: string | null
           prompt?: string | null
           simulation_directives: Json
           trait_profile: Json
           user_id?: string | null
+          voicepack_runtime?: Json | null
         }
         Update: {
           behavioral_modulation?: Json
@@ -533,12 +537,14 @@ export type Database = {
           metadata?: Json
           name?: string
           persona_id?: string
+          persona_version?: string | null
           preinterview_tags?: Json
           profile_image_url?: string | null
           prompt?: string | null
           simulation_directives?: Json
           trait_profile?: Json
           user_id?: string | null
+          voicepack_runtime?: Json | null
         }
         Relationships: []
       }
@@ -1082,16 +1088,16 @@ export type Database = {
       get_user_projects_with_counts: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          name: string
-          description: string
-          information: string
-          research_objectives: string
-          methodology: string
-          user_id: string
-          created_at: string
-          updated_at: string
           conversation_count: number
+          created_at: string
+          description: string
+          id: string
+          information: string
+          methodology: string
+          name: string
+          research_objectives: string
+          updated_at: string
+          user_id: string
         }[]
       }
     }
