@@ -2,6 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PersonaEnhancementTools } from "./PersonaEnhancementTools";
 import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
+import { AdminPersonaV2Migration } from "./AdminPersonaV2Migration";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -46,6 +47,9 @@ export function AdminDashboard() {
         </CardHeader>
       </Card>
 
+
+      {/* PersonaV2 Migration Tools */}
+      <AdminPersonaV2Migration />
 
       {/* Persona Completeness Analysis */}
       <PersonaCompletenessAnalysis />
