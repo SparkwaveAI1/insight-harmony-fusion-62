@@ -8,7 +8,8 @@ export { LinguisticCompiler } from './engines/LinguisticCompiler';
 export { StateHookEngine } from './engines/StateHookEngine';
 export { SignatureEngine } from './engines/SignatureEngine';
 
-// Create singleton instance for easy use
+// Create singleton instance for easy use  
+import { VoicepackCacheService } from './VoicepackCacheService';
 const voicepackCacheService = new VoicepackCacheService();
 export const voicepackCache = voicepackCacheService;
 

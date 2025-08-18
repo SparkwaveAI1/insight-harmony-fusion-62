@@ -40,7 +40,7 @@ export class VoicepackCacheService {
 
       // If voicepack exists and persona hasn't been updated, return cached version
       if (persona.voicepack_runtime) {
-        const voicepack = persona.voicepack_runtime as VoicepackRuntime;
+        const voicepack = persona.voicepack_runtime as unknown as VoicepackRuntime;
         this.cache.set(personaId, { voicepack, timestamp: Date.now() });
         return voicepack;
       }
