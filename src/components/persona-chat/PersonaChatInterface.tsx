@@ -14,6 +14,7 @@ import SaveConversationModal from '@/components/persona-chat/SaveConversationMod
 import { useResearchSession } from '@/components/research/hooks/useResearchSession';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
+import { VoicepackToggle } from '@/components/persona-chat/VoicepackToggle';
 import { toast } from 'sonner';
 
 interface PersonaChatInterfaceProps {
@@ -23,6 +24,15 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const [conversationContext, setConversationContext] = useState<string>('');
+  const [voicepackEnabled, setVoicepackEnabled] = useState<boolean>(true);
+  const [conversationState, setConversationState] = useState<Record<string, any>>({
+    stress: 0.3,
+    fatigue: 0.3,
+    mood_valence: 0.5,
+    time_pressure: 0.3,
+    social_safety: 0.7,
+    sexual_tension: 0.2
+  });
   const [sessionStarted, setSessionStarted] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [initializationAttempts, setInitializationAttempts] = useState(0);
@@ -153,8 +163,18 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     }
     
     try {
-      console.log('📤 Persona Chat: Sending message:', { message, hasImage: !!imageFile });
-      await sendMessage(message, imageFile);
+      console.log('📤 Persona Chat: Sending message:', { 
+        message, 
+        hasImage: !!imageFile,
+        voicepackEnabled,
+        conversationState
+      });
+      
+      await sendMessage(message, imageFile, {
+        useVoicepack: voicepackEnabled,
+        state: conversationState
+      });
+      
       console.log('✅ Persona Chat: Message sent successfully');
     } catch (error) {
       console.error('❌ Persona Chat: Error sending message:', error);
@@ -235,6 +255,13 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           </Button>
         )}
       </div>
+
+      {/* Voicepack Toggle */}
+      <VoicepackToggle 
+        enabled={voicepackEnabled} 
+        onToggle={setVoicepackEnabled}
+        className="mb-4"
+      />
 
       {/* Conversation Context */}
       <ConversationContext 
