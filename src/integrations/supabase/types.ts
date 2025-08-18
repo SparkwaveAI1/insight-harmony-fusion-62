@@ -1072,6 +1072,63 @@ export type Database = {
         }
         Relationships: []
       }
+      voicepack_chat_telemetry: {
+        Row: {
+          avg_sentence_length: number | null
+          banned_frame_hits: number | null
+          classification: Json | null
+          conversation_id: string | null
+          created_at: string
+          estimated_tokens: number | null
+          id: string
+          latency_ms: number | null
+          must_include_satisfied: boolean | null
+          persona_id: string
+          plan: Json | null
+          response_shape: string | null
+          rhetorical_q_count: number | null
+          signature_token_count: number | null
+          user_id: string
+          voicepack_hash: string | null
+        }
+        Insert: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          classification?: Json | null
+          conversation_id?: string | null
+          created_at?: string
+          estimated_tokens?: number | null
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id: string
+          plan?: Json | null
+          response_shape?: string | null
+          rhetorical_q_count?: number | null
+          signature_token_count?: number | null
+          user_id: string
+          voicepack_hash?: string | null
+        }
+        Update: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          classification?: Json | null
+          conversation_id?: string | null
+          created_at?: string
+          estimated_tokens?: number | null
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id?: string
+          plan?: Json | null
+          response_shape?: string | null
+          rhetorical_q_count?: number | null
+          signature_token_count?: number | null
+          user_id?: string
+          voicepack_hash?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

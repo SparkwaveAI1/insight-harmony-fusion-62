@@ -69,6 +69,9 @@ verify_jwt = true
 [functions.persona-quick-chat]
 verify_jwt = true
 
+[functions.persona-voicepack-chat]
+verify_jwt = true
+
 [functions.create-image-collage]
 verify_jwt = true
 

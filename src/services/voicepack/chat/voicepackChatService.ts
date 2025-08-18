@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
-import { Message } from '../types';
+import { Message } from '@/components/persona-chat/types';
+import { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import { 
   getOrCompileVoicepack, 
   classifyTurn, 
@@ -15,7 +16,8 @@ import {
   pickMaxTokens,
   postProcess,
   analyzeResponse
-} from '../../../services/voicepack/testing';
+} from '../testing';
+import { sendMessageToPersona as sendMessageToPersonaOriginal } from '@/components/persona-chat/api/personaApiService';
 
 export interface VoicepackChatOptions {
   useVoicepack?: boolean;
@@ -31,7 +33,7 @@ export async function sendMessageToPersonaWithVoicepack(
   userMessage: string,
   conversationHistory: Message[],
   persona: Persona,
-  mode: string = 'conversation',
+  mode: ChatMode = 'conversation',
   additionalContext: string = '',
   imageData: string | null = null,
   options: VoicepackChatOptions = {}
@@ -56,7 +58,7 @@ export async function sendMessageToPersonaWithVoicepack(
       );
     } else {
       // Fallback to traditional persona chat
-      const response = await sendMessageToPersona(
+      const response = await sendMessageToPersonaOriginal(
         personaId,
         userMessage,
         conversationHistory,
@@ -71,7 +73,7 @@ export async function sendMessageToPersonaWithVoicepack(
     console.error('❌ Enhanced persona chat failed:', error);
     // Fallback to traditional chat on error
     console.log('🔄 Falling back to traditional persona chat');
-    const response = await sendMessageToPersona(
+    const response = await sendMessageToPersonaOriginal(
       personaId,
       userMessage,
       conversationHistory,
@@ -263,14 +265,14 @@ function hashVoicepack(voicepack: any): string {
 }
 
 /**
- * Traditional persona chat (fallback)
+ * Traditional persona chat (fallback) - wrapper for the original function
  */
 export async function sendMessageToPersona(
   personaId: string,
   message: string,
   conversationHistory: Message[],
   persona: Persona,
-  mode: string = 'conversation',
+  mode: ChatMode = 'conversation',
   additionalContext: string = '',
   imageData: string | null = null
 ): Promise<string> {
@@ -283,31 +285,17 @@ export async function sendMessageToPersona(
   console.log('Additional context length:', additionalContext.length);
 
   try {
-    const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
-      body: {
-        persona,
-        message,
-        conversation_history: conversationHistory,
-        mode,
-        additional_context: additionalContext,
-        image_data: imageData
-      }
-    });
+    // Delegate to the original implementation
+    return await sendMessageToPersonaOriginal(
+      personaId,
+      message,
+      conversationHistory,
+      persona,
+      mode,
+      additionalContext,
+      imageData
+    );
 
-    if (error) {
-      console.error('❌ Traditional chat API error:', error);
-      throw new Error(`API Error: ${error.message}`);
-    }
-
-    if (!data || !data.response) {
-      console.error('❌ Invalid response from traditional chat API:', data);
-      throw new Error('Invalid response from chat API');
-    }
-
-    console.log('✅ Traditional chat API success');
-    console.log('Response preview:', data.response.substring(0, 100) + '...');
-
-    return data.response;
   } catch (error) {
     console.error('❌ Traditional persona chat failed:', error);
     throw error;

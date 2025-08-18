@@ -1,3 +1,6 @@
+// Export voicepack services
+export { getOrCompileVoicepack } from '../index';
+
 // Export test suite for easy access
 export { VoicepackTestSuite } from './VoicepackTestSuite';
 export type { TestResult } from './VoicepackTestSuite';

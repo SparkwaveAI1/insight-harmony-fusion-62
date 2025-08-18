@@ -295,10 +295,13 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         messageToSend.content,
         previousMessages,
         activePersona,
+        'conversation',
+        materialContext,
+        messageToSend.image,
         {
           useVoicepack: options.useVoicepack,
           state: options.state,
-          conversationContext: materialContext
+          conversationContext: ''
         }
       );
       
