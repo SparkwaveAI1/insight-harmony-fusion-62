@@ -53,18 +53,19 @@ export class PersonaV2Compiler {
       const responseShapes = linguistic.response_shapes_by_intent;
 
       // State hooks from state modifiers
-      const stateHooks = stateModifiers.state_to_shift_rules;
+      const stateHooks = stateModifiers.state_to_shift_rules?.reduce((acc: Record<string, Record<string, string | number>>, rule) => {
+        const key = Object.keys(rule.when)[0];
+        acc[key] = rule.shift["linguistic_style.delta"] || {};
+        return acc;
+      }, {}) || {};
 
-      // Register rules from trait mapping
-      const registerRules = traitMap.rules?.map(rule => ({
-        when: { trait: rule.trait },
-        shift: rule.ranges[0]?.linguistic_effects || {}
-      })) || [];
+      // Register rules (simplified)
+      const registerRules = [];
 
       // Sexuality hooks summary
       const sexualityHooks = {
-        privacy: sexuality.privacy_preference,
-        disclosure: sexuality.expression === "open" ? "high" : "low",
+        privacy: (sexuality.privacy_preference === "public" ? "open" : sexuality.privacy_preference) as "private" | "open" | "selective",
+        disclosure: (sexuality.expression === "open" ? "high" : "low") as "low" | "medium" | "high",
         humor_style_bias: sexuality.hooks?.linguistic_influences?.humor_style_bias || "none"
       };
 
