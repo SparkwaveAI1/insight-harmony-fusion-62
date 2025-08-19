@@ -130,10 +130,20 @@ export async function generatePersonaV2(prompt: string, userId: string, supabase
   // Generate unique persona ID
   const personaId = await validatePersonaUniqueness(supabase, { name: identity.name });
 
-  // Generate description
-  const description = await generatePersonaV2Description(identity, cognitiveProfile, lifeContext);
+  // Stage 9: Generate AI Description
+  console.log('🔄 Stage 9: Generating AI description...');
+  const description = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generatePersonaV2Description(identity, cognitiveProfile, lifeContext),
+      { maxRetries: 1 },
+      'Description Generation'
+    ),
+    'description',
+    { personaName: identity.name }
+  );
+  console.log(`✅ Stage 9 Complete: Generated description (${description.length} chars)`);
 
-  // Assemble final PersonaV2 - PROPER V2 FORMAT
+  // Assemble final PersonaV2 - PROPER V2 FORMAT WITH DESCRIPTION
   const personaV2: PersonaV2 = {
     id: personaId,
     version: "2.1",
@@ -147,7 +157,8 @@ export async function generatePersonaV2(prompt: string, userId: string, supabase
     health_profile: healthProfile,
     sexuality_profile: sexualityProfile,
     knowledge_profile: knowledgeProfile,
-    emotional_triggers: emotionalTriggers
+    emotional_triggers: emotionalTriggers,
+    description: description // Include AI-generated description in persona data
   };
 
   console.log('=== PersonaV2 GENERATION COMPLETED SUCCESSFULLY ===');
@@ -161,6 +172,7 @@ export async function generatePersonaV2(prompt: string, userId: string, supabase
   console.log(`- Sexuality profile: ✓`);
   console.log(`- Knowledge profile: ✓`);
   console.log(`- Emotional triggers: ✓`);
+  console.log(`- AI Description: ✓ (${description.length} characters)`);
 
   return personaV2;
 }
