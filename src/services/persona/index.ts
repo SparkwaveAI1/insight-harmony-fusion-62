@@ -9,9 +9,7 @@ export {
 } from './operations/personaOperations';
 
 // V1 operations removed - use V2 operations instead
-export { clonePersona } from './operations/clonePersona';
 export { generatePersonaImage } from './operations/generatePersonaImage';
-export { generatePersonaDescription, updatePersonaDescription } from './operations/generatePersonaDescription';
 export { enhancePersona } from './enhancePersona';
 export { bulkEnhancePersonas } from './bulkEnhancePersonas';
 

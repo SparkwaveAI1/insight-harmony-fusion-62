@@ -236,9 +236,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         <div>
           <p className="font-medium">{activePersona.name}</p>
           <p className="text-xs text-muted-foreground">
-            {activePersona.metadata?.occupation || ''} 
-            {activePersona.metadata?.age && `, ${activePersona.metadata.age}`}
-            {activePersona.metadata?.region && ` • ${activePersona.metadata.region}`}
+            {activePersona.description || 'Persona'}
           </p>
         </div>
         

@@ -16,7 +16,7 @@ export async function getPersonaById(personaId: string): Promise<DbPersonaV2 | n
       throw error;
     }
 
-    return data;
+    return data as unknown as DbPersonaV2;
   } catch (error) {
     console.error('Error fetching persona by ID:', error);
     throw error;
@@ -36,7 +36,7 @@ export async function getAllPersonas(userId?: string): Promise<DbPersonaV2[]> {
     const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as unknown as DbPersonaV2[];
   } catch (error) {
     console.error('Error fetching personas:', error);
     throw error;

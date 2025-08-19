@@ -84,7 +84,7 @@ export const prefetchPersonaData = async (personaIds: string[]) => {
 
   try {
     const { data, error } = await supabase
-      .from('personas')
+      .from('personas_v2')
       .select('persona_id, name, description')
       .in('persona_id', personaIds);
 

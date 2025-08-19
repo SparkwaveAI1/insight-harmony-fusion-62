@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Persona } from '@/services/persona/types';
-import { dbPersonaToPersona } from '@/services/persona/mappers';
+import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
 import { getProjectById, getProjectDocuments } from '@/services/collections';
 import { processMessageWithFile, ResearchMessage } from '../services/messageService';
 import { sendMessageToPersonaWithVoicepack } from '../../../services/voicepack/chat/voicepackChatService';
@@ -11,7 +10,7 @@ import { processPersonasInParallel } from '../utils/parallelProcessing';
 
 export interface UseResearchSessionReturn {
   sessionId: string | null;
-  loadedPersonas: Persona[];
+  loadedPersonas: DbPersonaV2[];
   projectDocuments: any[];
   messages: (Message & { responding_persona_id?: string })[];
   personaConversations: Map<string, (Message & { responding_persona_id?: string })[]>;
@@ -24,7 +23,7 @@ export interface UseResearchSessionReturn {
 
 export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
+  const [loadedPersonas, setLoadedPersonas] = useState<DbPersonaV2[]>([]);
   const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
   const [messages, setMessages] = useState<(Message & { responding_persona_id?: string })[]>([]);
   const [personaConversations, setPersonaConversations] = useState<Map<string, (Message & { responding_persona_id?: string })[]>>(new Map());
@@ -121,7 +120,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       // Load personas using the existing database query
       console.log('Loading personas...');
       const { data: personasData, error: personasError } = await supabase
-        .from('personas')
+        .from('personas_v2')
         .select('*')
         .in('persona_id', personaIds);
 
@@ -137,10 +136,8 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         return false;
       }
 
-      // Use the existing dbPersonaToPersona mapper to ensure proper type conversion
-      const mappedPersonas: Persona[] = personasData.map(dbPersona => 
-        dbPersonaToPersona(dbPersona)
-      );
+      // Use personasData directly as it's already DbPersonaV2
+      const mappedPersonas = personasData as unknown as DbPersonaV2[];
 
       console.log('Personas loaded:', mappedPersonas.length);
       setLoadedPersonas(mappedPersonas);
@@ -294,7 +291,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         personaId,
         messageToSend.content,
         previousMessages,
-        activePersona,
+        activePersona as any,
         'conversation',
         materialContext,
         messageToSend.image,

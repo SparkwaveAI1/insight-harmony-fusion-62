@@ -48,31 +48,7 @@ export class VoicepackCacheService {
         
         persona = personaV2.persona_data;
       } else {
-        // Fallback to V1 personas table
-        console.log('VoicepackCacheService: Falling back to V1 persona');
-        const { data: personaV1, error: v1Error } = await supabase
-          .from('personas')
-          .select('*')
-          .eq('persona_id', personaId)
-          .maybeSingle();
-
-        if (v1Error) {
-          console.error('VoicepackCacheService: Error fetching persona:', v1Error);
-          throw new Error(`Failed to fetch persona: ${v1Error.message}`);
-        }
-
-        if (!personaV1) {
-          throw new Error(`Persona not found: ${personaId}`);
-        }
-
-        if (personaV1.voicepack_runtime) {
-          console.log('VoicepackCacheService: Found voicepack in V1 cache');
-          const voicepack = personaV1.voicepack_runtime as unknown as VoicepackRuntime;
-          this.cache.set(personaId, { voicepack, timestamp: Date.now() });
-          return voicepack;
-        }
-
-        persona = personaV1;
+        throw new Error(`Persona not found: ${personaId}`);
       }
 
       return this.compileAndCache(persona, personaId, isV2);
@@ -92,9 +68,9 @@ export class VoicepackCacheService {
 
       // Fetch fresh persona data
       const { data: persona, error } = await supabase
-        .from('personas')
+        .from('personas_v2')
         .select('*')
-        .eq('id', personaId)
+        .eq('persona_id', personaId)
         .single();
 
       if (error || !persona) {
@@ -137,17 +113,6 @@ export class VoicepackCacheService {
           console.error('VoicepackCacheService: Error saving voicepack to PersonaV2:', error);
         } else {
           console.log('VoicepackCacheService: Saved voicepack to PersonaV2 cache');
-        }
-      } else {
-        const { error } = await supabase
-          .from('personas')
-          .update({ voicepack_runtime: voicepack as any })
-          .eq('persona_id', personaId);
-        
-        if (error) {
-          console.error('VoicepackCacheService: Error saving voicepack to V1:', error);
-        } else {
-          console.log('VoicepackCacheService: Saved voicepack to V1 cache');
         }
       }
       

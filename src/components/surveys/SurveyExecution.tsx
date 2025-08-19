@@ -72,9 +72,9 @@ export const SurveyExecution: React.FC<SurveyExecutionProps> = ({
       
       // Get persona data
       const { data: personaData, error } = await supabase
-        .from('personas')
+        .from('personas_v2')
         .select('*')
-        .eq('id', personaId)
+        .eq('persona_id', personaId)
         .single();
       
       if (error || !personaData) {

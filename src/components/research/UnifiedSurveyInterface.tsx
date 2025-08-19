@@ -385,7 +385,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       <SequentialSurveyExecution
         surveyData={surveyData}
         selectedPersonas={selectedPersonas}
-        loadedPersonas={loadedPersonas}
+        loadedPersonas={loadedPersonas as any}
         sessionId={sessionId}
         surveySessionId={surveySessionId}
         projectDocuments={projectDocuments}

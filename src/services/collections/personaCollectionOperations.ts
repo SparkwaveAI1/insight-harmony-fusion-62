@@ -151,7 +151,7 @@ export const getPersonasNotInCollection = async (collectionId: string, userId: s
 
     // Now, get all personas that don't have their IDs in the collection
     let query = supabase
-      .from('personas')
+      .from('personas_v2')
       .select('*')
       .eq('user_id', userId);
 
