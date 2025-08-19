@@ -26,9 +26,12 @@ const ResearchTab = () => {
                 </p>
               </div>
             </div>
-            <Link to="/persona-ai-interviewer">
-              <Button className="bg-gray-700 hover:bg-gray-600 border-none">Launch Tool</Button>
-            </Link>
+            <Button 
+              className="bg-gray-700 hover:bg-gray-600 border-none opacity-50 cursor-not-allowed" 
+              disabled
+            >
+              Coming Soon
+            </Button>
           </Card>
           
           

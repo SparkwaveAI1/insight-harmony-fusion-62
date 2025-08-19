@@ -24,15 +24,14 @@ const PersonaAIInterviewerSection = () => {
           </Reveal>
           
           <Reveal delay={200}>
-            <Link to="/persona-ai-interviewer">
-              <Button 
-                className="group bg-accent text-accent-foreground hover:bg-accent/90"
-                size="lg" 
-              >
-                Try the PersonaAI Interviewer
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
+            <Button 
+              className="group bg-accent text-accent-foreground opacity-50 cursor-not-allowed"
+              size="lg" 
+              disabled
+            >
+              Coming Soon
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </Reveal>
         </div>
       </div>
