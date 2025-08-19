@@ -33,7 +33,7 @@ export function buildTraitMapping(options: TraitMapBuilderOptions): TraitMapResu
   const rng = createSeededRNG(hashSeed(seed));
 
   // Build topic-based stance biases
-  const stance_biases = buildStanceBiases(identity, cognitive, social, health, sexuality, rng);
+  const stance_biases = buildStanceBiases(identity, cognitive, social, health, rng, sexuality);
   
   // Topic salience (alias for stance_biases with different weighting)
   const topic_salience = buildTopicSalience(stance_biases, rng);
@@ -61,8 +61,8 @@ function buildStanceBiases(
   cognitive: PersonaV2['cognitive_profile'],
   social: PersonaV2['social_cognition'],
   health: PersonaV2['health_profile'],
-  sexuality?: PersonaV2['sexuality_profile'],
-  rng: () => number
+  rng: () => number,
+  sexuality?: PersonaV2['sexuality_profile']
 ): Array<{ topic: string; w: number }> {
   
   const stances = [];
