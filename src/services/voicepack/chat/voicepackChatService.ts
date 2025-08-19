@@ -88,14 +88,12 @@ async function productionVoicepackChat(
   // Call the production edge function that handles the entire voicepack pipeline
   const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
     body: {
-      persona_id: personaId,
-      user_message: userMessage,
-      conversation_history: conversationHistory,
+      personaId: personaId,
+      message: userMessage,
+      previousMessages: conversationHistory,
       mode: 'conversation',
-      conversation_context: conversationContext,
-      additional_context: additionalContext,
-      image_data: imageData,
-      use_voicepack: true
+      conversationContext: conversationContext,
+      imageData: imageData
     }
   });
   

@@ -197,7 +197,7 @@ serve(async (req) => {
     const { data: personaV2, error: v2Error } = await supabase
       .from('personas_v2')
       .select('*')
-      .eq('id', personaId)
+      .eq('persona_id', personaId)
       .single();
 
     if (personaV2) {
