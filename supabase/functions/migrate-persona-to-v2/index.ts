@@ -7,146 +7,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface TraitSample {
-  demographics: {
-    age?: number;
-    location?: string;
-    occupation?: string;
-    income_level?: string;
-    education?: string;
-  };
-  bigFive: {
-    openness?: number;
-    conscientiousness?: number;
-    extraversion?: number;
-    agreeableness?: number;
-    neuroticism?: number;
-  };
-  behavioral: {
-    communication_style?: string;
-    decision_making?: string;
-    stress_response?: string;
-    social_orientation?: string;
-  };
-  essence: string;
-}
-
-function samplePersonaTraits(persona: any): TraitSample {
-  const sample: TraitSample = {
-    demographics: {},
-    bigFive: {},
-    behavioral: {},
-    essence: ''
-  };
-
-  // Extract demographics from metadata
-  if (persona.metadata) {
-    sample.demographics = {
-      age: persona.metadata.age,
-      location: persona.metadata.location || persona.metadata.region,
-      occupation: persona.metadata.occupation || persona.metadata.profession,
-      income_level: persona.metadata.income_level,
-      education: persona.metadata.education
-    };
-  }
-
-  // Extract Big Five traits from trait_profile
-  if (persona.trait_profile) {
-    const traits = persona.trait_profile;
-    sample.bigFive = {
-      openness: traits.openness || traits.curiosity || traits.creativity,
-      conscientiousness: traits.conscientiousness || traits.discipline || traits.organization,
-      extraversion: traits.extraversion || traits.sociability || traits.assertiveness,
-      agreeableness: traits.agreeableness || traits.empathy || traits.cooperation,
-      neuroticism: traits.neuroticism || traits.anxiety || traits.emotional_stability
-    };
-  }
-
-  // Extract behavioral patterns
-  if (persona.linguistic_profile || persona.simulation_directives) {
-    const linguistic = persona.linguistic_profile || {};
-    const simulation = persona.simulation_directives || {};
-    
-    sample.behavioral = {
-      communication_style: linguistic.communication_style || simulation.communication_style,
-      decision_making: simulation.decision_making_style || linguistic.decision_approach,
-      stress_response: simulation.stress_response || linguistic.conflict_approach,
-      social_orientation: linguistic.social_context_adaptation || simulation.social_behavior
-    };
-  }
-
-  // Generate natural language essence
-  sample.essence = generatePersonaEssence(persona, sample);
-  return sample;
-}
-
-function generatePersonaEssence(persona: any, sample: TraitSample): string {
-  const parts: string[] = [];
-
-  if (persona.name) {
-    parts.push(`A person named ${persona.name}`);
-  }
-
-  if (sample.demographics.age) {
-    parts.push(`aged ${sample.demographics.age}`);
-  }
-  if (sample.demographics.occupation) {
-    parts.push(`working as a ${sample.demographics.occupation}`);
-  }
-  if (sample.demographics.location) {
-    parts.push(`living in ${sample.demographics.location}`);
-  }
-
-  // Add personality traits
-  const traitDescriptions: string[] = [];
-  if (sample.bigFive.openness && sample.bigFive.openness > 0.7) {
-    traitDescriptions.push('highly creative and open-minded');
-  }
-  if (sample.bigFive.conscientiousness && sample.bigFive.conscientiousness > 0.7) {
-    traitDescriptions.push('very organized and disciplined');
-  }
-  if (sample.bigFive.extraversion && sample.bigFive.extraversion > 0.7) {
-    traitDescriptions.push('highly social and outgoing');
-  }
-  if (sample.bigFive.agreeableness && sample.bigFive.agreeableness > 0.7) {
-    traitDescriptions.push('compassionate and cooperative');
-  }
-
-  if (traitDescriptions.length > 0) {
-    parts.push(`who is ${traitDescriptions.join(', ')}`);
-  }
-
-  if (persona.description) {
-    parts.push(`Originally described as: "${persona.description}"`);
-  }
-
-  return parts.join(', ') + '.';
-}
-
-function generatePersonaV2Prompt(sample: TraitSample): string {
-  let prompt = `Create a detailed persona with the following characteristics:\n\n`;
-  
-  prompt += `**Core Identity**: ${sample.essence}\n\n`;
-  
-  if (Object.keys(sample.demographics).length > 0) {
-    prompt += `**Demographics**:\n`;
-    Object.entries(sample.demographics).forEach(([key, value]) => {
-      if (value) prompt += `- ${key.replace('_', ' ')}: ${value}\n`;
-    });
-    prompt += `\n`;
-  }
-
-  if (Object.keys(sample.bigFive).length > 0) {
-    prompt += `**Personality Traits** (Big Five scale 0-1):\n`;
-    Object.entries(sample.bigFive).forEach(([key, value]) => {
-      if (value !== undefined) prompt += `- ${key}: ${value}\n`;
-    });
-    prompt += `\n`;
-  }
-
-  prompt += `Please generate a comprehensive PersonaV2 that captures this personality accurately while filling in missing details with realistic, consistent characteristics.`;
-  
-  return prompt;
+interface MigrationResult {
+  persona_id: string;
+  name: string;
+  status: 'success' | 'error';
+  message: string;
 }
 
 serve(async (req) => {
@@ -203,32 +68,65 @@ serve(async (req) => {
 
     const results = [];
 
+    // Get OpenAI API key
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
     for (const v1Persona of v1Personas) {
       try {
         console.log(`Migrating persona: ${v1Persona.name} (${v1Persona.persona_id})`);
         
-        // Sample traits from V1 persona
-        const traitSample = samplePersonaTraits(v1Persona);
-        const prompt = generatePersonaV2Prompt(traitSample);
+        // Direct conversion prompt - simple and straightforward
+        const conversionPrompt = `Convert this V1 persona JSON to V2 format. Just do a reasonably good job converting from one format to another.
 
-        console.log(`Generated prompt for ${v1Persona.name}:`, prompt);
+Here's the V1 JSON:
+${JSON.stringify(v1Persona, null, 2)}
 
-        // Generate PersonaV2 using the existing generate-persona function
-        const generateResponse = await supabase.functions.invoke('generate-persona', {
-          body: { prompt },
+Please return the V2 JSON format. Focus on preserving the core personality, traits, and characteristics while adapting to the new structure.`;
+
+        console.log(`Converting persona: ${v1Persona.name}`);
+
+        // Call OpenAI directly for conversion
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
           headers: {
-            Authorization: authHeader,
-            'Content-Type': 'application/json'
-          }
+            'Authorization': `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a helpful assistant that converts persona data formats. Return only valid JSON without any additional text.'
+              },
+              {
+                role: 'user',
+                content: conversionPrompt
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 4000
+          }),
         });
 
-        if (generateResponse.error) {
-          throw new Error(`Failed to generate PersonaV2: ${generateResponse.error.message}`);
+        if (!openaiResponse.ok) {
+          const errorData = await openaiResponse.json();
+          throw new Error(`OpenAI API error: ${errorData.error?.message || openaiResponse.statusText}`);
         }
 
-        const generatedPersona = generateResponse.data?.persona;
-        if (!generatedPersona) {
-          throw new Error('No persona data returned from generation');
+        const openaiData = await openaiResponse.json();
+        const convertedContent = openaiData.choices[0].message.content;
+
+        // Parse the JSON response
+        let v2PersonaData;
+        try {
+          v2PersonaData = JSON.parse(convertedContent);
+        } catch (parseError) {
+          console.error('Failed to parse OpenAI response:', convertedContent);
+          throw new Error('Invalid JSON returned from OpenAI');
         }
 
         // Save to personas_v2 table, preserving key attributes
@@ -237,7 +135,7 @@ serve(async (req) => {
           user_id: v1Persona.user_id,
           name: v1Persona.name,
           description: v1Persona.description,
-          persona_data: generatedPersona,
+          persona_data: v2PersonaData,
           persona_type: 'humanoid',
           is_public: v1Persona.is_public || false,
           profile_image_url: v1Persona.profile_image_url
@@ -257,7 +155,7 @@ serve(async (req) => {
           persona_id: v1Persona.persona_id,
           name: v1Persona.name,
           status: 'success',
-          message: 'Successfully migrated to PersonaV2'
+          message: 'Successfully converted and migrated to PersonaV2'
         });
 
         console.log(`Successfully migrated: ${v1Persona.name}`);
