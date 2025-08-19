@@ -10,9 +10,9 @@ import { toast } from 'sonner';
 import { PlayCircle, PauseCircle, RefreshCw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 interface MigrationStats {
-  v1Count: number;
-  v2Count: number;
-  migrationRate: number;
+  v1Count: number; // Remaining unmigrated personas
+  v2Count: number; // Successfully migrated personas
+  migrationRate: number; // Percentage of total original personas migrated
 }
 
 export const AdminPersonaV2Migration: React.FC = () => {
@@ -38,9 +38,10 @@ export const AdminPersonaV2Migration: React.FC = () => {
 
       const v1Count = v1Result.count || 0;
       const v2Count = v2Result.count || 0;
-      const migrationRate = v1Count > 0 ? (v2Count / (v1Count + v2Count)) * 100 : 0;
+      const remainingCount = Math.max(0, v1Count - v2Count);
+      const migrationRate = v1Count > 0 ? (v2Count / v1Count) * 100 : 0;
 
-      setStats({ v1Count, v2Count, migrationRate });
+      setStats({ v1Count: remainingCount, v2Count, migrationRate });
     } catch (error) {
       console.error('Failed to load migration stats:', error);
       toast.error('Failed to load migration statistics');
@@ -171,7 +172,7 @@ export const AdminPersonaV2Migration: React.FC = () => {
               <AlertCircle className="h-4 w-4 text-amber-500" />
             </div>
             <p className="text-2xl font-bold">{loadingStats ? '...' : stats.v1Count}</p>
-            <p className="text-xs text-muted-foreground">Need migration</p>
+            <p className="text-xs text-muted-foreground">Remaining</p>
           </div>
           
           <div className="bg-muted/50 p-4 rounded-lg">
