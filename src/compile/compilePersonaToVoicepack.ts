@@ -50,35 +50,39 @@ export function compilePersonaToVoicepack(persona: PersonaV2): VoicepackRuntime 
 function extractStanceBiases(persona: PersonaV2): Array<{ topic: string; w: number }> {
   const biases: Array<{ topic: string; w: number }> = [];
   
-  // Extract from values and motivations
-  if (persona.cognitive_profile?.values?.moral_foundations) {
-    const foundations = persona.cognitive_profile.values.moral_foundations;
-    if (foundations.care > 0.7) biases.push({ topic: "health", w: 0.9 });
-    if (foundations.fairness > 0.7) biases.push({ topic: "social-justice", w: 0.8 });
-    if (foundations.authority > 0.7) biases.push({ topic: "institutions", w: 0.7 });
-    if (foundations.loyalty > 0.7) biases.push({ topic: "community", w: 0.8 });
+  // Extract from moral foundations
+  if (persona.cognitive_profile?.moral_foundations) {
+    const foundations = persona.cognitive_profile.moral_foundations;
+    if (foundations.care_harm > 0.7) biases.push({ topic: "health", w: 0.9 });
+    if (foundations.fairness_cheating > 0.7) biases.push({ topic: "social-justice", w: 0.8 });
+    if (foundations.authority_subversion > 0.7) biases.push({ topic: "institutions", w: 0.7 });
+    if (foundations.loyalty_betrayal > 0.7) biases.push({ topic: "community", w: 0.8 });
   }
   
-  // Extract from life context
-  if (persona.life_context?.socioeconomic_status?.income_level) {
-    const income = persona.life_context.socioeconomic_status.income_level;
-    if (income === "high") biases.push({ topic: "luxury", w: 0.6 }, { topic: "investment", w: 0.7 });
-    if (income === "low") biases.push({ topic: "affordability", w: 0.9 }, { topic: "value", w: 0.8 });
+  // Extract from life context (simplified since detailed fields may not exist)
+  const background = persona.life_context?.background_narrative || "";
+  if (background.includes("wealthy") || background.includes("affluent")) {
+    biases.push({ topic: "luxury", w: 0.6 }, { topic: "investment", w: 0.7 });
+  } else if (background.includes("struggle") || background.includes("poor")) {
+    biases.push({ topic: "affordability", w: 0.9 }, { topic: "value", w: 0.8 });
   }
   
-  // Extract from interests and expertise
-  if (persona.life_context?.interests) {
-    persona.life_context.interests.forEach(interest => {
-      biases.push({ topic: interest.toLowerCase().replace(/\s+/g, "-"), w: 0.6 });
-    });
-  }
+  // Extract from current situation and daily routine
+  const currentSituation = persona.life_context?.current_situation || "";
+  const dailyRoutine = persona.life_context?.daily_routine || "";
+  const combined = (currentSituation + " " + dailyRoutine).toLowerCase();
+  
+  // Extract topics from text content
+  if (combined.includes("tech") || combined.includes("computer")) biases.push({ topic: "technology", w: 0.6 });
+  if (combined.includes("food") || combined.includes("cooking")) biases.push({ topic: "food", w: 0.6 });
+  if (combined.includes("travel") || combined.includes("vacation")) biases.push({ topic: "travel", w: 0.6 });
   
   return biases.slice(0, 15); // Limit to most important stances
 }
 
 function buildResponseShapes(persona: PersonaV2): Record<string, string[]> {
-  const personality = persona.cognitive_profile?.personality_traits;
-  const communication = persona.linguistic_style?.communication_style;
+  const personality = persona.cognitive_profile?.big_five;
+  const communication = persona.linguistic_style?.base_voice;
   
   return {
     opinion: [
@@ -111,21 +115,21 @@ function buildResponseShapes(persona: PersonaV2): Record<string, string[]> {
 
 function buildLexicon(persona: PersonaV2): VoicepackRuntime['lexicon'] {
   const linguistic = persona.linguistic_style;
-  const cultural = persona.life_context?.cultural_context;
+  const cultural = persona.identity;
   
   const signature_tokens: string[] = [];
   const discourse_markers: Array<{ term: string; p: number }> = [];
   const interjections: Array<{ term: string; p: number }> = [];
   
   // Extract signature tokens from communication style
-  if (linguistic?.communication_style?.formality === "casual") {
+  if (linguistic?.base_voice?.formality === "casual") {
     signature_tokens.push("honestly", "like", "you know", "kind of");
-  } else if (linguistic?.communication_style?.formality === "formal") {
+  } else if (linguistic?.base_voice?.formality === "formal") {
     signature_tokens.push("consequently", "furthermore", "nevertheless", "accordingly");
   }
   
   // Add discourse markers based on personality
-  const extraversion = persona.cognitive_profile?.personality_traits?.extraversion || 0.5;
+  const extraversion = persona.cognitive_profile?.big_five?.extraversion || 0.5;
   if (extraversion > 0.7) {
     discourse_markers.push(
       { term: "So anyway", p: 0.3 },
@@ -134,12 +138,12 @@ function buildLexicon(persona: PersonaV2): VoicepackRuntime['lexicon'] {
     );
   }
   
-  // Add interjections based on cultural context
-  if (cultural?.regional_culture) {
-    const region = cultural.regional_culture.toLowerCase();
-    if (region.includes("south")) {
+  // Add interjections based on cultural background
+  if (cultural) {
+    const culturalStr = (cultural.ethnicity + " " + cultural.nationality).toLowerCase();
+    if (culturalStr.includes("south") || culturalStr.includes("texas") || culturalStr.includes("alabama")) {
       interjections.push({ term: "Well", p: 0.4 }, { term: "Now", p: 0.3 });
-    } else if (region.includes("west")) {
+    } else if (culturalStr.includes("west") || culturalStr.includes("california") || culturalStr.includes("oregon")) {
       interjections.push({ term: "Dude", p: 0.2 }, { term: "Man", p: 0.3 });
     }
   }
@@ -152,16 +156,16 @@ function buildLexicon(persona: PersonaV2): VoicepackRuntime['lexicon'] {
 }
 
 function buildSyntaxPolicy(persona: PersonaV2): VoicepackRuntime['syntax_policy'] {
-  const education = persona.life_context?.socioeconomic_status?.education_level;
-  const communication = persona.linguistic_style?.communication_style;
+  const occupation = persona.identity?.occupation || ""; 
+  const communication = persona.linguistic_style?.base_voice;
   
   let complexity: "simple" | "compound" | "complex" = "compound";
   let sentence_dist = { short: 0.4, medium: 0.4, long: 0.2 };
   
-  if (education === "high_school" || education === "some_college") {
+  if (occupation.includes("teacher") || occupation.includes("student") || occupation.includes("clerk")) {
     complexity = "simple";
     sentence_dist = { short: 0.6, medium: 0.3, long: 0.1 };
-  } else if (education === "graduate" || education === "doctorate") {
+  } else if (occupation.includes("doctor") || occupation.includes("lawyer") || occupation.includes("professor") || occupation.includes("researcher")) {
     complexity = "complex";
     sentence_dist = { short: 0.2, medium: 0.4, long: 0.4 };
   }
@@ -176,7 +180,7 @@ function buildSyntaxPolicy(persona: PersonaV2): VoicepackRuntime['syntax_policy'
 }
 
 function buildStyleProbs(persona: PersonaV2): VoicepackRuntime['style_probs'] {
-  const traits = persona.cognitive_profile?.personality_traits;
+  const traits = persona.cognitive_profile?.big_five;
   const neuroticism = traits?.neuroticism || 0.5;
   const agreeableness = traits?.agreeableness || 0.5;
   const conscientiousness = traits?.conscientiousness || 0.5;
@@ -245,15 +249,15 @@ function buildSexualityHooks(persona: PersonaV2): VoicepackRuntime['sexuality_ho
   let disclosure: "low"|"medium"|"high" = "medium";
   let humor_style_bias = "neutral";
   
-  if (sexuality?.sexual_identity?.orientation_certainty === "very_certain") {
-    disclosure = "high";
+  if (sexuality?.orientation === "asexual" || sexuality?.expression === "private") {
+    disclosure = "low";
   }
   
   // Conservative estimate for privacy by default
-  if (!sexuality || sexuality.sexual_identity?.comfort_discussing === "uncomfortable") {
+  if (!sexuality || sexuality.expression === "private" || sexuality.expression === "conservative") {
     privacy = "private";
     disclosure = "low";
-  } else if (sexuality.sexual_identity?.comfort_discussing === "very_comfortable") {
+  } else if (sexuality.expression === "open" || sexuality.expression === "flamboyant") {
     privacy = "open";
     humor_style_bias = "playful";
   }
@@ -287,18 +291,19 @@ function buildAntiModeCollapse(persona: PersonaV2): VoicepackRuntime['anti_mode_
 function extractMemoryKeys(persona: PersonaV2): string[] {
   const keys: string[] = [];
   
-  // Extract from life context
-  if (persona.life_context?.personal_history?.childhood_location) {
-    keys.push(`grew up in ${persona.life_context.personal_history.childhood_location}`);
+  // Extract from identity and life context
+  if (persona.identity?.age) {
+    keys.push(`is ${persona.identity.age} years old`);
   }
   
-  if (persona.life_context?.family_structure?.marital_status) {
-    keys.push(`is ${persona.life_context.family_structure.marital_status}`);
+  if (persona.identity?.occupation) {
+    keys.push(`works as ${persona.identity.occupation}`);
   }
   
-  // Extract from interests
-  if (persona.life_context?.interests) {
-    keys.push(...persona.life_context.interests.slice(0, 3).map(i => `loves ${i}`));
+  // Extract from background narrative
+  const background = persona.life_context?.background_narrative || "";
+  if (background.length > 50) {
+    keys.push(background.substring(0, 80) + "...");
   }
   
   return keys.slice(0, 6);

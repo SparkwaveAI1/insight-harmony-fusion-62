@@ -1177,6 +1177,57 @@ export type Database = {
         }
         Relationships: []
       }
+      voicepack_telemetry: {
+        Row: {
+          avg_sentence_length: number | null
+          banned_frame_hits: number | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          must_include_satisfied: boolean | null
+          persona_id: string
+          rhetorical_q_count: number | null
+          session_id: string | null
+          signature_token_count: number | null
+          state_deltas_applied: Json | null
+          turn_classification: Json | null
+          used_response_shape: string
+          voicepack_hash: string
+        }
+        Insert: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id: string
+          rhetorical_q_count?: number | null
+          session_id?: string | null
+          signature_token_count?: number | null
+          state_deltas_applied?: Json | null
+          turn_classification?: Json | null
+          used_response_shape: string
+          voicepack_hash: string
+        }
+        Update: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id?: string
+          rhetorical_q_count?: number | null
+          session_id?: string | null
+          signature_token_count?: number | null
+          state_deltas_applied?: Json | null
+          turn_classification?: Json | null
+          used_response_shape?: string
+          voicepack_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

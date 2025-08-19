@@ -31,6 +31,20 @@ export {
   updatePersonaV2ProfileImageUrl
 } from './operations/personaV2Operations';
 
+// Voicepack runtime system
+export { 
+  getOrCompileVoicepack,
+  clearVoicepackCache,
+  getVoicepackCacheStats 
+} from '../voicepackCache';
+export { compilePersonaToVoicepack } from '../compile/compilePersonaToVoicepack';
+export { 
+  classifyTurn, 
+  planTurn, 
+  updateStateFromText 
+} from '../conversation/controller';
+export { postProcess, generateTelemetry } from '../conversation/postProcess';
+
 // Migration utilities
 export { samplePersonaTraits, generatePersonaV2Prompt } from './migration/traitSampler';
 

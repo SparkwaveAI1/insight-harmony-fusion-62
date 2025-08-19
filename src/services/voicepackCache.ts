@@ -39,13 +39,14 @@ export async function getOrCompileVoicepack(personaId: string): Promise<Voicepac
 
     if (dbEntry?.voicepack_runtime && dbEntry.voicepack_hash === personaDataHash) {
       // Cache in memory and return
+      const voicepack = dbEntry.voicepack_runtime as unknown as VoicepackRuntime;
       const cacheEntry: VoicepackCacheEntry = {
-        voicepack: dbEntry.voicepack_runtime,
+        voicepack,
         hash: personaDataHash,
         compiled_at: new Date().toISOString()
       };
       voicepackCache.set(personaId, cacheEntry);
-      return dbEntry.voicepack_runtime;
+      return voicepack;
     }
 
     // Need to compile fresh voicepack
@@ -56,7 +57,7 @@ export async function getOrCompileVoicepack(personaId: string): Promise<Voicepac
     await supabase
       .from('personas_v2')
       .update({
-        voicepack_runtime: voicepack,
+        voicepack_runtime: voicepack as any,
         voicepack_hash: personaDataHash
       })
       .eq('persona_id', personaId);
