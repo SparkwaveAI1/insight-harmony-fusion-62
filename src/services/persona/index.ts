@@ -37,13 +37,13 @@ export {
   clearVoicepackCache,
   getVoicepackCacheStats 
 } from '../voicepackCache';
-export { compilePersonaToVoicepack } from '../compile/compilePersonaToVoicepack';
+export { compilePersonaToVoicepack } from '../../compile/compilePersonaToVoicepack';
 export { 
   classifyTurn, 
   planTurn, 
   updateStateFromText 
-} from '../conversation/controller';
-export { postProcess, generateTelemetry } from '../conversation/postProcess';
+} from '../../conversation/controller';
+export { postProcess, generateTelemetry } from '../../conversation/postProcess';
 
 // Migration utilities
 export { samplePersonaTraits, generatePersonaV2Prompt } from './migration/traitSampler';
