@@ -2,21 +2,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
 import { ChatMode } from '@/components/persona-chat/ChatModeSelector';
-import { 
-  getOrCompileVoicepack, 
-  classifyTurn, 
-  planTurn, 
-  updateStateFromText,
-  serializeVoicepack,
-  serializePlan,
-  createSystemPrompt,
-  pickTempFromTraits,
-  pickPresencePenalty,
-  pickFrequencyPenalty,
-  pickMaxTokens,
-  postProcess,
-  analyzeResponse
-} from '../testing';
 import { sendMessageToPersona as sendMessageToPersonaOriginal } from '@/components/persona-chat/api/personaApiService';
 
 export interface VoicepackChatOptions {
@@ -41,20 +26,18 @@ export async function sendMessageToPersonaWithVoicepack(
   
   const { useVoicepack = true, state = {}, conversationContext = '' } = options;
   
-  console.log('🎭 Voicepack Chat: Starting enhanced conversation flow');
+  console.log('🎭 Voicepack Chat: Starting production voicepack flow');
   console.log('Settings:', { useVoicepack, personaId, mode });
 
   try {
     if (useVoicepack) {
-      return await voicepackDrivenChat(
+      return await productionVoicepackChat(
         personaId, 
         userMessage, 
         conversationHistory, 
-        persona, 
-        state, 
-        conversationContext,
         additionalContext,
-        imageData
+        imageData,
+        conversationContext
       );
     } else {
       // Fallback to traditional persona chat
@@ -70,7 +53,7 @@ export async function sendMessageToPersonaWithVoicepack(
       return { response };
     }
   } catch (error) {
-    console.error('❌ Enhanced persona chat failed:', error);
+    console.error('❌ Voicepack chat failed:', error);
     // Fallback to traditional chat on error
     console.log('🔄 Falling back to traditional persona chat');
     const response = await sendMessageToPersonaOriginal(
@@ -87,181 +70,56 @@ export async function sendMessageToPersonaWithVoicepack(
 }
 
 /**
- * Single-call voicepack-driven conversation pipeline
+ * Production voicepack chat using the persona-quick-chat edge function
  */
-async function voicepackDrivenChat(
+async function productionVoicepackChat(
   personaId: string,
   userMessage: string,
   conversationHistory: Message[],
-  persona: Persona,
-  state: Record<string, any>,
-  conversationContext: string,
   additionalContext: string = '',
-  imageData: string | null = null
-): Promise<{ response: string; telemetry: Record<string, any> }> {
+  imageData: string | null = null,
+  conversationContext: string = ''
+): Promise<{ response: string; telemetry?: Record<string, any> }> {
   
   const startTime = Date.now();
   
-  // Step 1: Get or compile voicepack
-  console.log('🎭 Step 1: Fetching voicepack');
-  const voicepack = await getOrCompileVoicepack(personaId);
-  console.log('✅ Voicepack loaded:', Object.keys(voicepack).length, 'properties');
+  console.log('🎭 Using production voicepack pipeline via persona-quick-chat');
   
-  // Step 2: Classify user input
-  console.log('🎭 Step 2: Classifying turn');
-  const classification = classifyTurn(userMessage);
-  console.log('✅ Classification:', classification);
-  
-  // Step 3: Update state from user input
-  console.log('🎭 Step 3: Updating state');
-  const updatedState = updateStateFromText(state, userMessage);
-  console.log('✅ State updated:', updatedState);
-  
-  // Step 4: Create execution plan
-  console.log('🎭 Step 4: Creating plan');
-  const plan = planTurn(classification, voicepack, updatedState);
-  console.log('✅ Plan created:', plan);
-  
-  // Step 5: Single LLM call with voicepack + plan
-  console.log('🎭 Step 5: Making LLM call');
-  const llmResponse = await makeVoicepackLLMCall(
-    userMessage,
-    conversationHistory,
-    voicepack,
-    plan,
-    updatedState,
-    conversationContext,
-    additionalContext,
-    imageData
-  );
-  console.log('✅ LLM response received');
-  
-  // Step 6: Post-process response
-  console.log('🎭 Step 6: Post-processing');
-  const finalResponse = postProcess(llmResponse, voicepack, plan);
-  console.log('✅ Response post-processed');
-  
-  // Step 7: Generate telemetry
-  const telemetry = {
-    ...analyzeResponse(finalResponse, voicepack, plan),
-    latency_ms: Date.now() - startTime,
-    voicepack_hash: hashVoicepack(voicepack),
-    used_voicepack: true,
-    classification,
-    plan: {
-      response_shape: plan.response_shape,
-      brevity: plan.brevity,
-      style_deltas_count: Object.keys(plan.style_deltas).length
-    }
-  };
-  
-  console.log('🎭 Voicepack chat complete. Telemetry:', telemetry);
-  
-  return {
-    response: finalResponse,
-    telemetry
-  };
-}
-
-/**
- * Makes the actual LLM call with voicepack and plan
- */
-async function makeVoicepackLLMCall(
-  userMessage: string,
-  conversationHistory: Message[],
-  voicepack: any,
-  plan: any,
-  state: Record<string, any>,
-  conversationContext: string,
-  additionalContext: string,
-  imageData: string | null
-): Promise<string> {
-  
-  // Prepare messages for LLM
-  const messages = [];
-  
-  // System prompt
-  messages.push({
-    role: 'system',
-    content: createSystemPrompt()
-  });
-  
-  // Developer prompt with voicepack
-  messages.push({
-    role: 'developer',
-    content: `VOICEPACK: ${serializeVoicepack(voicepack)}`
-  });
-  
-  // Conversation history (last 10 messages for context)
-  const recentHistory = conversationHistory.slice(-10);
-  for (const msg of recentHistory) {
-    messages.push({
-      role: msg.role,
-      content: msg.content
-    });
-  }
-  
-  // Additional context if provided
-  if (additionalContext || conversationContext) {
-    const context = [additionalContext, conversationContext].filter(Boolean).join('\n\n');
-    messages.push({
-      role: 'system',
-      content: `CONTEXT: ${context}`
-    });
-  }
-  
-  // User message (potentially with image)
-  const userMessageContent = imageData 
-    ? `${userMessage}\n[Image attached for analysis]`
-    : userMessage;
-    
-  messages.push({
-    role: 'user',
-    content: userMessageContent
-  });
-  
-  // Assistant planning prompt
-  messages.push({
-    role: 'assistant',
-    content: `PLAN: ${serializePlan(plan)}\n\nI'll respond according to this plan:`
-  });
-  
-  // Call the LLM via edge function
-  const { data, error } = await supabase.functions.invoke('persona-voicepack-chat', {
+  // Call the production edge function that handles the entire voicepack pipeline
+  const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
     body: {
-      messages,
-      temperature: pickTempFromTraits(state, voicepack),
-      presence_penalty: pickPresencePenalty(state, voicepack),
-      frequency_penalty: pickFrequencyPenalty(state, voicepack),
-      max_tokens: pickMaxTokens(plan, voicepack),
-      image_data: imageData
+      persona_id: personaId,
+      user_message: userMessage,
+      conversation_history: conversationHistory,
+      mode: 'conversation',
+      conversation_context: conversationContext,
+      additional_context: additionalContext,
+      image_data: imageData,
+      use_voicepack: true
     }
   });
   
   if (error) {
-    console.error('❌ Voicepack LLM call failed:', error);
-    throw new Error(`LLM call failed: ${error.message}`);
+    console.error('❌ Production voicepack call failed:', error);
+    throw new Error(`Voicepack call failed: ${error.message}`);
   }
   
   if (!data?.response) {
-    throw new Error('No response from LLM');
+    throw new Error('No response from voicepack pipeline');
   }
   
-  return data.response;
-}
-
-/**
- * Creates a simple hash of the voicepack for telemetry
- */
-function hashVoicepack(voicepack: any): string {
-  const str = JSON.stringify(voicepack);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(16);
+  const telemetry = {
+    latency_ms: Date.now() - startTime,
+    used_voicepack: true,
+    ...(data.telemetry || {})
+  };
+  
+  console.log('✅ Production voicepack chat complete. Latency:', telemetry.latency_ms, 'ms');
+  
+  return {
+    response: data.response,
+    telemetry
+  };
 }
 
 /**
