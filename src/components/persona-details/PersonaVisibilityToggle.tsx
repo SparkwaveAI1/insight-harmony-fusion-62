@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Globe, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { updatePersonaVisibility } from "@/services/persona";
+import { updatePersonaV2Visibility } from "@/services/persona";
 
 interface PersonaVisibilityToggleProps {
   personaId: string;
@@ -28,14 +28,9 @@ const PersonaVisibilityToggle = ({
     
     try {
       const newVisibility = !isPublic;
-      const success = await updatePersonaVisibility(personaId, newVisibility);
-      
-      if (success) {
-        onVisibilityChange(newVisibility);
-        toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
-      } else {
-        toast.error("Failed to update visibility");
-      }
+      await updatePersonaV2Visibility(personaId, newVisibility);
+      onVisibilityChange(newVisibility);
+      toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
     } catch (error) {
       console.error("Error updating visibility:", error);
       toast.error("Failed to update visibility");

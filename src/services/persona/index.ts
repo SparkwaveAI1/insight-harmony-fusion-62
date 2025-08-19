@@ -9,22 +9,8 @@ export {
   type UnifiedPersona
 } from './operations/unifiedPersonaOperations';
 
-// Legacy V1 operations (for migration/compatibility only)
-export { savePersona } from './operations/savePersona';
-export { 
-  getPersonaById, 
-  getPersonaByPersonaId, 
-  getAllPersonas, 
-  getPersonasByCollection 
-} from './operations/getPersonas';
-export { 
-  updatePersonaVisibility, 
-  updatePersonaName,
-  updatePersonaProfileImageUrl 
-} from './operations/updatePersona';
-export { deletePersona } from './operations/deletePersona';
+// V1 operations removed - use V2 operations instead
 export { clonePersona } from './operations/clonePersona';
-export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
 export { generatePersonaDescription, updatePersonaDescription } from './operations/generatePersonaDescription';
 export { enhancePersona } from './enhancePersona';

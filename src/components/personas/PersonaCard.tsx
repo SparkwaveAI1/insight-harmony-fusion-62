@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
-import { updatePersonaVisibility } from "@/services/persona"; 
+import { updatePersonaV2Visibility } from "@/services/persona"; 
 import { Persona } from "@/services/persona/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,14 +47,10 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
 
     const newVisibility = !isPublic;
     try {
-      const success = await updatePersonaVisibility(persona.persona_id, newVisibility);
-      if (success) {
-        setIsPublic(newVisibility);
-        if (onVisibilityChange) {
-          onVisibilityChange(persona.persona_id, newVisibility);
-        }
-      } else {
-        console.error("Failed to update persona visibility");
+      await updatePersonaV2Visibility(persona.persona_id, newVisibility);
+      setIsPublic(newVisibility);
+      if (onVisibilityChange) {
+        onVisibilityChange(persona.persona_id, newVisibility);
       }
     } catch (error) {
       console.error("Error updating persona visibility:", error);

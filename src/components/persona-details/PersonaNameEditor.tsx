@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { updatePersonaName } from "@/services/persona";
+import { updatePersonaV2Name } from "@/services/persona";
 
 interface PersonaNameEditorProps {
   personaId: string;
@@ -31,14 +31,10 @@ export default function PersonaNameEditor({
     }
     
     try {
-      const updated = await updatePersonaName(personaId, newName);
-      if (updated) {
-        toast.success("Persona name updated");
-        setIsEditing(false);
-        onNameUpdate(newName);
-      } else {
-        toast.error("Failed to update persona name");
-      }
+      await updatePersonaV2Name(personaId, newName);
+      toast.success("Persona name updated");
+      setIsEditing(false);
+      onNameUpdate(newName);
     } catch (error) {
       console.error("Error updating persona name:", error);
       toast.error("An error occurred while updating the name");
