@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import Landing from '@/pages/Landing';
+import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
 import PersonaDetail from '@/pages/PersonaDetail';
 import PersonaViewer from '@/pages/PersonaViewer';
@@ -28,7 +28,7 @@ function App() {
         <AuthProvider>
           <Router>
             <Routes>
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
               <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
