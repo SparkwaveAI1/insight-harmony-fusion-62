@@ -9,14 +9,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
-const EXAMPLE_PROMPTS = [
-  "A 28-year-old tech startup founder from San Francisco who's passionate about sustainability and rock climbing",
-  "A 45-year-old high school teacher from rural Texas who loves gardening and coaches the debate team",
-  "A 22-year-old college student studying psychology in Berlin, introverted but passionate about social justice",
-  "A 35-year-old single parent working as a nurse in Chicago, optimistic despite daily challenges",
-  "A 60-year-old retired mechanic from Australia who's learning to paint and loves fishing"
-];
-
 const SimplePersonaGenerator: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -80,10 +72,6 @@ const SimplePersonaGenerator: React.FC = () => {
     }
   };
 
-  const handleExampleClick = (example: string) => {
-    setPrompt(example);
-  };
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="text-center space-y-4">
@@ -120,23 +108,6 @@ const SimplePersonaGenerator: React.FC = () => {
               <span>{prompt.length} characters</span>
             </div>
           </div>
-
-          {!isGenerating && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Example Prompts (click to use):</Label>
-              <div className="grid gap-2">
-                {EXAMPLE_PROMPTS.map((example, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleExampleClick(example)}
-                    className="text-left p-3 text-sm bg-muted/50 hover:bg-muted rounded-lg transition-colors border border-transparent hover:border-border"
-                  >
-                    "{example}"
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {isGenerating && (
             <div className="space-y-4 p-6 bg-muted/20 rounded-lg">
