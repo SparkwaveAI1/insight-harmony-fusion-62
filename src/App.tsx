@@ -25,6 +25,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
               <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
+              <Route path="/persona-viewer" element={<PersonaViewer />} />
               <Route path="/personas" element={<PersonaViewer />} />
               <Route path="/collections" element={<Collections />} />
               <Route path="/collection/:collectionId" element={<CollectionDetail />} />

@@ -17,7 +17,7 @@ const Landing = () => {
             AI-Powered Qualitative Research Platform
           </p>
           <div className="space-x-4">
-            <Button onClick={() => navigate('/personas')}>
+            <Button onClick={() => navigate('/persona-viewer')}>
               View Personas
             </Button>
             <Button variant="outline" onClick={() => navigate('/collections')}>
