@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import Landing from '@/pages/Landing';
+import Dashboard from '@/pages/Dashboard';
 import PersonaDetail from '@/pages/PersonaDetail';
 import PersonaViewer from '@/pages/PersonaViewer';
 import PersonaChat from '@/pages/PersonaChat';
@@ -21,6 +22,7 @@ function App() {
           <Router>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
               <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
               <Route path="/personas" element={<PersonaViewer />} />
