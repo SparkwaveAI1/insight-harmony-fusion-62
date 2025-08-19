@@ -12,7 +12,7 @@ async function callOpenAI(messages: any[], temperature = 0.8, maxTokens = 1500):
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14',
+      model: 'gpt-4o-mini',
       messages,
       temperature,
       max_tokens: maxTokens,
@@ -25,7 +25,14 @@ async function callOpenAI(messages: any[], temperature = 0.8, maxTokens = 1500):
   }
 
   const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
+  const content = data.choices[0].message.content;
+  
+  try {
+    return JSON.parse(content);
+  } catch (error) {
+    console.error('Failed to parse JSON response:', content);
+    throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 100)}...`);
+  }
 }
 
 export async function generatePersonaV2Identity(prompt: string): Promise<PersonaV2Identity> {
@@ -261,7 +268,12 @@ export async function generatePersonaV2Description(identity: PersonaV2Identity, 
   const messages = [
     {
       role: "system",
-      content: `Generate a 2-3 sentence concise description of this persona that captures their essence.`
+      content: `Generate a 2-3 sentence concise description of this persona that captures their essence.
+      
+      Return JSON in this exact structure:
+      {
+        "description": "string (2-3 sentences describing the persona)"
+      }`
     },
     {
       role: "user",
@@ -270,5 +282,5 @@ export async function generatePersonaV2Description(identity: PersonaV2Identity, 
   ];
 
   const result = await callOpenAI(messages, 0.7, 200);
-  return typeof result === 'string' ? result : result.description || `${identity.name} is a ${identity.age}-year-old ${identity.occupation} based in ${identity.location.city}.`;
+  return result.description || `${identity.name} is a ${identity.age}-year-old ${identity.occupation} based in ${identity.location.city}.`;
 }
