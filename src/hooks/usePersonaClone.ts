@@ -46,31 +46,20 @@ Please create a persona with the above customizations applied. The customization
       console.log("Generating customized persona with enhanced prompt:", enhancedPrompt);
       
       // Use generatePersona with the enhanced prompt
-      const generatedPersona = await generatePersona(enhancedPrompt);
+      const success = await generatePersona(enhancedPrompt);
       
-      if (generatedPersona) {
-        console.log("Original name from form:", data.name);
-        console.log("Before name update, persona has name:", generatedPersona.name);
-        
-        // Explicitly set the name to the user-specified name from the form
-        generatedPersona.name = data.name;
-        
-        console.log("After name update, persona now has name:", generatedPersona.name);
-        
-        // Store the customization notes in the metadata for reference
-        if (generatedPersona.metadata && data.customization_notes) {
-          generatedPersona.metadata = {
-            ...generatedPersona.metadata,
-            customization_notes: data.customization_notes,
-            customized_from: persona.persona_id
-          };
-        }
-        
-        console.log("Persona generated successfully:", generatedPersona);
+      if (success) {
+        console.log("Persona generated successfully");
         toast.success("Customized persona created successfully!");
         
-        // Navigate to the new persona detail page with the correct path
-        navigate(`/persona/${generatedPersona.persona_id}`);
+        // Navigate to the persona creation complete page since we don't have the exact persona ID
+        navigate("/persona-creation/complete", {
+          state: {
+            error: false,
+            personaName: data.name
+          },
+          replace: true
+        });
         return true;
       } else {
         console.error("Failed to generate persona - no result returned");

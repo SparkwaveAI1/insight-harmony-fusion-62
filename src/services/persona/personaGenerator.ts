@@ -6,7 +6,7 @@ import { logTraitValidation } from "./traitValidation";
 import { validatePersonaCompleteness, logPersonaValidation } from "./validation/personaValidation";
 
 // Now generates PersonaV2 format and saves to personas_v2 table
-export const generatePersona = async (prompt: string): Promise<Persona | null> => {
+export const generatePersona = async (prompt: string): Promise<boolean> => {
   try {
     toast.info("Generating persona...", {
       id: "persona-generation",
@@ -21,7 +21,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     if (userError) {
       console.error("❌ Error getting user:", userError);
       toast.error("Authentication error - please try logging in again", { id: "persona-generation" });
-      return null;
+      return false;
     }
     
     const userId = user?.id;
@@ -30,7 +30,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     if (!userId) {
       console.error("❌ No authenticated user found");
       toast.error("You must be logged in to create personas", { id: "persona-generation" });
-      return null;
+      return false;
     }
 
     console.log("Calling generate-persona edge function (PersonaV2)...");
@@ -41,7 +41,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     if (error) {
       console.error("❌ Error calling generate-persona function:", error);
       toast.error(`Failed to generate persona: ${error.message}`, { id: "persona-generation" });
-      return null;
+      return false;
     }
 
     console.log("Edge function response received:", data);
@@ -49,7 +49,7 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
     if (!data.success || !data.persona) {
       console.error("❌ PersonaV2 generation failed:", data.error || "Unknown error");
       toast.error(`Failed to generate persona: ${data.error || "Unknown error"}`, { id: "persona-generation" });
-      return null;
+      return false;
     }
 
     const personaV2 = data.persona;
@@ -78,107 +78,24 @@ export const generatePersona = async (prompt: string): Promise<Persona | null> =
       if (saveV2Error) {
         console.error("❌ Failed to save PersonaV2:", saveV2Error);
         toast.error(`Failed to save persona: ${saveV2Error.message}`, { id: "persona-generation" });
-        return null;
+        return false;
       }
       
       console.log("✅ PersonaV2 saved successfully with ID:", savedV2.persona_id);
       
-      // Convert PersonaV2 to V1 format for backward compatibility
-      const v1Persona = convertV2ToV1(savedV2, personaV2);
-      
-      toast.success(`"${v1Persona.name}" created successfully!`, { id: "persona-generation" });
+      toast.success(`"${personaV2.identity.name}" created successfully!`, { id: "persona-generation" });
       console.log("=== PersonaV2 GENERATION COMPLETED ===");
-      return v1Persona;
+      return true;
       
     } catch (saveError: any) {
       console.error("❌ Error saving PersonaV2 to database:", saveError);
       toast.error(`Error saving persona: ${saveError.message || "Unknown database error"}`, { id: "persona-generation" });
-      return null;
+      return false;
     }
   } catch (error: any) {
     console.error("❌ Unexpected error in generatePersona:", error);
     toast.error(`An unexpected error occurred: ${error.message || "Unknown error"}`, { id: "persona-generation" });
-    return null;
+    return false;
   }
 };
 
-// Convert PersonaV2 to V1 format for backward compatibility
-function convertV2ToV1(savedV2: any, personaV2: any): Persona {
-  return {
-    persona_id: savedV2.persona_id,
-    id: savedV2.id,
-    name: savedV2.name,
-    description: savedV2.description,
-    creation_date: savedV2.created_at,
-    created_at: savedV2.created_at,
-    user_id: savedV2.user_id,
-    is_public: savedV2.is_public,
-    profile_image_url: savedV2.profile_image_url,
-    persona_type: savedV2.persona_type,
-    persona_version: "2.0",
-    persona_context: {
-      source: "PersonaV2",
-      generation_method: "AI-generated",
-      conversion_timestamp: new Date().toISOString()
-    },
-    metadata: {
-      age: personaV2.identity.age,
-      gender: personaV2.identity.gender,
-      occupation: personaV2.life_context.occupation.title,
-      location: personaV2.life_context.current_location.city,
-      education_level: personaV2.life_context.education.highest_degree,
-      income_level: personaV2.life_context.financial_situation.income_stability,
-      enhanced_metadata_version: 2
-    },
-    trait_profile: {
-      big_five: personaV2.cognitive_profile.big_five,
-      moral_foundations: personaV2.cognitive_profile.moral_foundations,
-      world_values: {
-        traditional_vs_secular: 0.5,
-        survival_vs_self_expression: 0.5,
-        materialist_vs_postmaterialist: 0.5
-      }
-    },
-    behavioral_modulation: {
-      communication_style: {
-        formality_level: personaV2.social_cognition.communication_style.formality_preference,
-        emotional_expressiveness: personaV2.social_cognition.communication_style.emotional_expressiveness,
-        directness: personaV2.social_cognition.communication_style.directness
-      }
-    },
-    linguistic_profile: {
-      default_output_length: "moderate",
-      speech_register: "hybrid",
-      speaking_style: {
-        uses_neutral_fillers: true,
-        sentence_revisions: true,
-        topic_length_variability: true,
-        contradiction_tolerance: true,
-        trust_modulated_tone: true,
-        mirroring_tendency: true
-      },
-      sample_phrasing: []
-    },
-    interview_sections: [{
-      section: "Personal Background",
-      notes: "Generated from PersonaV2",
-      questions: [{
-        question: "Tell me about yourself",
-        response: personaV2.identity.core_identity_narrative
-      }],
-      responses: [personaV2.identity.core_identity_narrative]
-    }],
-    emotional_triggers: {
-      positive_triggers: personaV2.emotional_triggers.positive_activators,
-      negative_triggers: personaV2.emotional_triggers.negative_activators
-    },
-    simulation_directives: {
-      encourage_contradiction: true,
-      emotional_asymmetry: true,
-      stress_behavior_expected: true,
-      inconsistency_is_valid: true,
-      response_length_variability: true
-    },
-    preinterview_tags: ["PersonaV2", "demographic_match", "trait_validated"]
-  };
-}

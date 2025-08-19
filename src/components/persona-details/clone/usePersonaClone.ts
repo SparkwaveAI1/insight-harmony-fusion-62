@@ -37,17 +37,20 @@ export function usePersonaClone(persona: Persona) {
       console.log("Generating new customized persona with prompt:", fullPrompt);
       
       // Use generatePersona instead of clonePersona to create a truly new persona
-      const generatedPersona = await generatePersona(fullPrompt);
+      const success = await generatePersona(fullPrompt);
       
-      if (generatedPersona) {
-        // Update the name to the user-specified name
-        generatedPersona.name = data.name;
-        
-        console.log("Persona generated successfully:", generatedPersona);
+      if (success) {
+        console.log("Persona generated successfully");
         toast.success("Customized persona created successfully!");
         
-        // Navigate to the new persona detail page with the correct path
-        navigate(`/persona/${generatedPersona.persona_id}`);
+        // Navigate to the persona creation complete page since we don't have the exact persona ID
+        navigate("/persona-creation/complete", {
+          state: {
+            error: false,
+            personaName: data.name
+          },
+          replace: true
+        });
         return true;
       } else {
         console.error("Failed to generate persona - no result returned");

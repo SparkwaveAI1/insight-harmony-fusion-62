@@ -33,23 +33,21 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
     onGenerate();
     
     try {
-      const persona = await generatePersona(prompt.trim());
+      const success = await generatePersona(prompt.trim());
       
-      if (persona) {
-        console.log("✅ HERO SECTION: Persona generated successfully:", persona.name);
-        console.log("✅ HERO SECTION: Persona ID:", persona.persona_id);
+      if (success) {
+        console.log("✅ HERO SECTION: Persona generated successfully");
         
         // Navigate to the persona completion page with success state
         navigate("/persona-creation/complete", {
           state: {
-            personaId: persona.persona_id,
-            personaName: persona.name,
-            error: false
+            error: false,
+            personaName: "New Persona"
           },
           replace: true
         });
       } else {
-        console.error("❌ HERO SECTION: Persona generation returned null");
+        console.error("❌ HERO SECTION: Persona generation returned false");
         
         // Navigate to completion page with error state
         navigate("/persona-creation/complete", {
