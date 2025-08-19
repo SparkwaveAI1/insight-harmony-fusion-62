@@ -8,14 +8,13 @@ import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
-import PersonaDetailHeader from "@/components/persona-details/PersonaDetailHeader";
-import PersonaContent from "@/components/persona-details/PersonaContent";
+import PersonaDetailHeaderV2 from "@/components/persona-details/PersonaDetailHeaderV2";
+import PersonaContentV2 from "@/components/persona-details/PersonaContentV2";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton"; 
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
 import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
-import { adaptV2ToV1Persona, adaptV1ToV2Persona } from "@/utils/personaV2Adapter";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -72,8 +71,8 @@ const PersonaDetail = () => {
                 <NotFoundState />
               ) : (
                 <>
-                  <PersonaDetailHeader 
-                    persona={adaptV2ToV1Persona(persona)}
+                  <PersonaDetailHeaderV2 
+                    persona={persona}
                     isOwner={isOwner}
                     isPublic={isPublic}
                     onVisibilityChange={handleVisibilityChange}
@@ -83,13 +82,10 @@ const PersonaDetail = () => {
                     onImageGenerated={handleImageGenerated}
                     onDownloadJSON={handleDownloadJSON}
                     onChatClick={handleChatClick}
-                    onPersonaUpdated={(v1Persona) => {
-                      const adaptedV2 = adaptV1ToV2Persona(v1Persona, persona);
-                      handlePersonaUpdated(adaptedV2);
-                    }}
+                    onPersonaUpdated={handlePersonaUpdated}
                   />
                   
-                  <PersonaContent persona={adaptV2ToV1Persona(persona)} isOwner={isOwner} />
+                  <PersonaContentV2 persona={persona} isOwner={isOwner} />
                   
                   {/* Move Delete button to the very bottom of the page */}
                   {isOwner && (
