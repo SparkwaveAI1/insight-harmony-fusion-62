@@ -21,7 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Persona } from "@/services/persona/types";
 import { Collection } from "@/services/collections/types";
 import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
-import { dbPersonaToPersona } from "@/services/persona/mappers";
+import { getAllUnifiedPersonas } from "@/services/persona";
 import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
 interface AddPersonasToCollectionDialogProps {
@@ -86,9 +86,8 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
       }
 
       const availablePersonasData = await getPersonasNotInCollection(collectionId, user.id);
-      // Transform the data using the dbPersonaToPersona mapper to ensure correct type
-      const transformedPersonas = availablePersonasData.map(dbPersonaToPersona);
-      setPersonas(transformedPersonas);
+      // Convert to Persona format - use as unknown first for type safety
+      setPersonas(availablePersonasData as unknown as Persona[]);
     } catch (error) {
       console.error("Error fetching personas not in collection:", error);
       toast.error("Failed to load available personas.");

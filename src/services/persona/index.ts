@@ -1,5 +1,15 @@
 
-// Re-export all functions from the operations
+// Unified Persona Operations (V2 Priority System) - USE THESE FIRST
+export { 
+  getUnifiedPersonaById,
+  getAllUnifiedPersonas,
+  getPublicUnifiedPersonas,
+  getUnifiedPersonasForListing,
+  checkPersonaVersion,
+  type UnifiedPersona
+} from './operations/unifiedPersonaOperations';
+
+// Legacy V1 operations (for migration/compatibility only)
 export { savePersona } from './operations/savePersona';
 export { 
   getPersonaById, 

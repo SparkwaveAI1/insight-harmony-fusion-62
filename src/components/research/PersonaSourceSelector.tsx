@@ -7,9 +7,9 @@ import { Users, Folder, Globe, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Persona } from '@/services/persona/types';
-import { dbPersonaToPersona } from '@/services/persona/mappers';
+import { getAllUnifiedPersonas, getUnifiedPersonasForListing } from '@/services/persona';
 import { getProjectCollections } from '@/services/collections/projectCollectionOperations';
-import { getPersonasByCollectionForListing, getPersonasForListing } from '@/services/persona/operations/getPersonas';
+import { getPersonasByCollectionForListing } from '@/services/persona/operations/getPersonas';
 import { Collection } from '@/services/collections/types';
 
 interface PersonaSourceSelectorProps {
@@ -127,22 +127,17 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           if (!user?.id) {
             throw new Error('User authentication required');
           }
-          const { data: myPersonasData, error: myError } = await supabase
-            .from('personas')
-            .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-          
-          if (myError) throw myError;
-          personas = myPersonasData ? myPersonasData.map(item => ({
-            id: item.id,
-            persona_id: item.persona_id,
-            name: item.name,
-            description: `Created on ${item.creation_date}`,
-            creation_date: item.creation_date,
-            user_id: item.user_id,
-            is_public: item.is_public,
-            created_at: item.created_at,
+          // Use unified system for user personas
+          const unifiedPersonas = await getAllUnifiedPersonas(user.id);
+          personas = unifiedPersonas.map(unified => ({
+            id: unified.id,
+            persona_id: unified.persona_id,
+            name: unified.name,
+            description: unified.description || `Created on ${new Date(unified.created_at).toLocaleDateString()}`,
+            creation_date: new Date(unified.created_at).toLocaleDateString(),
+            user_id: unified.user_id,
+            is_public: unified.is_public,
+            created_at: unified.created_at,
             metadata: {},
             trait_profile: {},
             behavioral_modulation: {},
@@ -152,11 +147,33 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
             simulation_directives: {},
             interview_sections: [],
             prompt: null
-          } as Persona)) : [];
+          } as Persona));
           break;
           
         case 'public-personas':
-          personas = await getPersonasForListing();
+          // Use unified system for public personas
+          const publicUnifiedPersonas = await getUnifiedPersonasForListing();
+          personas = publicUnifiedPersonas
+            .filter(unified => unified.is_public)
+            .map(unified => ({
+              id: unified.id,
+              persona_id: unified.persona_id,
+              name: unified.name,
+              description: unified.description || `Created on ${new Date(unified.created_at).toLocaleDateString()}`,
+              creation_date: new Date(unified.created_at).toLocaleDateString(),
+              user_id: unified.user_id,
+              is_public: unified.is_public,
+              created_at: unified.created_at,
+              metadata: {},
+              trait_profile: {},
+              behavioral_modulation: {},
+              linguistic_profile: {},
+              emotional_triggers: null,
+              preinterview_tags: [],
+              simulation_directives: {},
+              interview_sections: [],
+              prompt: null
+            } as Persona));
           break;
       }
       
