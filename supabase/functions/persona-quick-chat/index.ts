@@ -129,7 +129,7 @@ function planTurn(cls: TurnClassification, vp: VoicepackRuntime, state: Conversa
     stance_hint: stanceHints.slice(0, 2),
     must_include: mustInclude.slice(0, 2),
     banned_frames: vp.anti_mode_collapse.forbidden_frames,
-    style_deltas,
+    style_deltas: styleDeltas,
     brevity,
     memory_snippets: vp.memory_keys.slice(0, 2)
   };
