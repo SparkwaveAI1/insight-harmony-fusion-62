@@ -135,13 +135,13 @@ export async function enhancePersonaMetadata(basePersona: PersonaTemplate, promp
     { personaName: basePersona.name }
   );
   
-  // Merge all metadata
+  // Merge all metadata - keep nested structure for validation
   Object.assign(basePersona.metadata, {
     ...locationContext.location_context,
-    ...familyRelationships.relationships_family,
+    relationships_family: familyRelationships.relationships_family,
     ...healthAttributes.health_attributes,
     ...physicalDescription.physical_description,
-    ...knowledgeDomains.knowledge_domains,
+    knowledge_domains: knowledgeDomains.knowledge_domains,
     ...psychologicalCultural.psychological_cultural
   });
   
