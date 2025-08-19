@@ -1,9 +1,10 @@
+
 import React from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/AppSidebar';
-import PersonaV2CreationForm from '@/components/persona-v2/PersonaV2CreationForm';
+import SimplePersonaGenerator from '@/components/persona-v2/SimplePersonaGenerator';
 
 const SimulatedPersona = () => {
   return (
@@ -18,7 +19,7 @@ const SimulatedPersona = () => {
                 <div className="flex items-center justify-between mb-6">
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
-                <PersonaV2CreationForm />
+                <SimplePersonaGenerator />
               </div>
             </main>
             <Footer />
