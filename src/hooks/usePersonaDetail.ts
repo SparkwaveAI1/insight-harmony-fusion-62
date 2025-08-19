@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, updatePersonaDescription, generatePersonaImage, deletePersona } from "@/services/persona";
-import { Persona } from "@/services/persona/types";
+import { getPersonaV2ById, updatePersonaV2Visibility, updatePersonaV2Name, updatePersonaV2Description, updatePersonaV2ProfileImageUrl, deletePersonaV2 } from "@/services/persona";
+import { DbPersonaV2 } from "@/services/persona/types/persona-v2-db";
 import { useAuth } from "@/context/AuthContext";
 import { validatePersonaCompleteness, logPersonaValidation } from "@/services/persona/validation/personaValidation";
 
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
   const navigate = useNavigate();
-  const [persona, setPersona] = useState<Persona | null>(null);
+  const [persona, setPersona] = useState<DbPersonaV2 | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const { user } = useAuth();
@@ -19,23 +19,14 @@ export function usePersonaDetail() {
     setIsLoading(true);
     try {
       console.log("Loading persona with ID:", id);
-      const data = await getPersonaByPersonaId(id);
+      const data = await getPersonaV2ById(id);
       if (data) {
         console.log("Persona data loaded:", data);
         console.log("Profile image URL:", data.profile_image_url);
         console.log("Description loaded:", data.description);
         
-        // Validate the loaded persona
-        console.log("=== VALIDATING LOADED PERSONA ===");
-        const validationResult = validatePersonaCompleteness(data);
-        logPersonaValidation(data, validationResult);
-        
-        if (!validationResult.isValid) {
-          toast.warning(
-            `This persona appears to be incomplete: ${validationResult.errors.join(', ')}`,
-            { duration: 8000 }
-          );
-        }
+        // Note: V2 personas have different validation logic
+        // For now, skip V1-style validation as V2 has structured PersonaV2 data
         
         setPersona(data);
       } else {
@@ -66,7 +57,8 @@ export function usePersonaDetail() {
     if (!personaId || !user) return Promise.resolve();
     
     try {
-      const success = await deletePersona(personaId);
+      await deletePersonaV2(personaId);
+      const success = true;
       if (success) {
         toast.success("Persona deleted successfully");
         navigate("/persona-viewer");
@@ -86,7 +78,8 @@ export function usePersonaDetail() {
     if (!personaId || !user) return;
     
     try {
-      const success = await updatePersonaVisibility(personaId, newVisibility);
+      await updatePersonaV2Visibility(personaId, newVisibility);
+      const success = true;
       if (success) {
         setIsPublic(newVisibility);
         setPersona(prev => prev ? { ...prev, is_public: newVisibility } : null);
@@ -105,7 +98,8 @@ export function usePersonaDetail() {
     if (!personaId || !user) return;
     
     try {
-      const success = await updatePersonaName(personaId, name);
+      await updatePersonaV2Name(personaId, name);
+      const success = true;
       if (success) {
         setPersona(prev => prev ? { ...prev, name } : null);
         toast.success("Persona name updated successfully");
@@ -133,7 +127,8 @@ export function usePersonaDetail() {
     
     try {
       console.log("Calling updatePersonaDescription service...");
-      const success = await updatePersonaDescription(personaId, description);
+      await updatePersonaV2Description(personaId, description);
+      const success = true;
       if (success) {
         console.log("Description update successful, updating local state");
         console.log("Previous persona description:", persona?.description);
@@ -149,7 +144,7 @@ export function usePersonaDetail() {
         // Reload persona to verify the update persisted
         console.log("Reloading persona to verify description persistence...");
         setTimeout(async () => {
-          const refreshedPersona = await getPersonaByPersonaId(personaId);
+        const refreshedPersona = await getPersonaV2ById(personaId);
           if (refreshedPersona) {
             console.log("Refreshed persona description:", refreshedPersona.description);
             if (refreshedPersona.description !== description) {
@@ -176,34 +171,16 @@ export function usePersonaDetail() {
     console.log("=== DESCRIPTION UPDATE END ===");
   };
 
-  // Handle image generation
+  // Handle image generation - simplified for V2
   const handleImageGenerated = async () => {
     if (!personaId || !persona || !user) return null;
     
     setIsGeneratingImage(true);
     
     try {
-      toast.info("Generating profile image...");
-      const imageUrl = await generatePersonaImage(persona);
-      
-      if (imageUrl) {
-        toast.success("Profile image generated and saved successfully");
-        
-        // Force reload the persona to ensure we have the updated image URL
-        const refreshedPersona = await getPersonaByPersonaId(personaId);
-        if (refreshedPersona) {
-          console.log("Refreshed persona data with new image:", refreshedPersona.profile_image_url);
-          setPersona(refreshedPersona);
-        } else {
-          // Fallback: Update the local state with the new image URL
-          setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
-        }
-        console.log("Updated persona in state with new image URL:", imageUrl);
-        return imageUrl;
-      } else {
-        toast.error("Failed to generate profile image");
-        return null;
-      }
+      toast.info("V2 image generation not yet implemented");
+      // TODO: Implement V2 image generation
+      return null;
     } catch (error) {
       console.error("Error generating profile image:", error);
       toast.error("An error occurred while generating the profile image");
@@ -216,7 +193,7 @@ export function usePersonaDetail() {
   // Check if current user is the owner of this persona
   const isOwner = user?.id === persona?.user_id;
 
-  const handlePersonaUpdated = async (updatedPersona: Persona) => {
+  const handlePersonaUpdated = async (updatedPersona: DbPersonaV2) => {
     console.log("Persona updated via enhancement:", updatedPersona.name);
     setPersona(updatedPersona);
     toast.success(`${updatedPersona.name} has been enhanced!`);

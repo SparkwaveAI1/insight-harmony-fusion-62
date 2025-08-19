@@ -38,7 +38,11 @@ export {
   savePersonaV2,
   updatePersonaV2,
   deletePersonaV2,
-  updatePersonaV2Voicepack
+  updatePersonaV2Voicepack,
+  updatePersonaV2Visibility,
+  updatePersonaV2Name,
+  updatePersonaV2Description,
+  updatePersonaV2ProfileImageUrl
 } from './operations/personaV2Operations';
 
 // Migration utilities

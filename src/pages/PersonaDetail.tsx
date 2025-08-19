@@ -15,6 +15,7 @@ import DeletePersonaButton from "@/components/persona-details/DeletePersonaButto
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
 import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
+import { adaptV2ToV1Persona, adaptV1ToV2Persona } from "@/utils/personaV2Adapter";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -72,7 +73,7 @@ const PersonaDetail = () => {
               ) : (
                 <>
                   <PersonaDetailHeader 
-                    persona={persona}
+                    persona={adaptV2ToV1Persona(persona)}
                     isOwner={isOwner}
                     isPublic={isPublic}
                     onVisibilityChange={handleVisibilityChange}
@@ -82,10 +83,13 @@ const PersonaDetail = () => {
                     onImageGenerated={handleImageGenerated}
                     onDownloadJSON={handleDownloadJSON}
                     onChatClick={handleChatClick}
-                    onPersonaUpdated={handlePersonaUpdated}
+                    onPersonaUpdated={(v1Persona) => {
+                      const adaptedV2 = adaptV1ToV2Persona(v1Persona, persona);
+                      handlePersonaUpdated(adaptedV2);
+                    }}
                   />
                   
-                  <PersonaContent persona={persona} isOwner={isOwner} />
+                  <PersonaContent persona={adaptV2ToV1Persona(persona)} isOwner={isOwner} />
                   
                   {/* Move Delete button to the very bottom of the page */}
                   {isOwner && (

@@ -180,3 +180,75 @@ export async function updatePersonaV2Voicepack(
     throw new Error(`Failed to update voicepack: ${error.message}`);
   }
 }
+
+export async function updatePersonaV2Visibility(
+  personaId: string, 
+  isPublic: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from('personas_v2')
+    .update({
+      is_public: isPublic,
+      updated_at: new Date().toISOString()
+    })
+    .eq('persona_id', personaId);
+
+  if (error) {
+    console.error('Error updating PersonaV2 visibility:', error);
+    throw new Error(`Failed to update visibility: ${error.message}`);
+  }
+}
+
+export async function updatePersonaV2Name(
+  personaId: string, 
+  name: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('personas_v2')
+    .update({
+      name: name,
+      updated_at: new Date().toISOString()
+    })
+    .eq('persona_id', personaId);
+
+  if (error) {
+    console.error('Error updating PersonaV2 name:', error);
+    throw new Error(`Failed to update name: ${error.message}`);
+  }
+}
+
+export async function updatePersonaV2Description(
+  personaId: string, 
+  description: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('personas_v2')
+    .update({
+      description: description,
+      updated_at: new Date().toISOString()
+    })
+    .eq('persona_id', personaId);
+
+  if (error) {
+    console.error('Error updating PersonaV2 description:', error);
+    throw new Error(`Failed to update description: ${error.message}`);
+  }
+}
+
+export async function updatePersonaV2ProfileImageUrl(
+  personaId: string, 
+  imageUrl: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('personas_v2')
+    .update({
+      profile_image_url: imageUrl,
+      updated_at: new Date().toISOString()
+    })
+    .eq('persona_id', personaId);
+
+  if (error) {
+    console.error('Error updating PersonaV2 profile image:', error);
+    throw new Error(`Failed to update profile image: ${error.message}`);
+  }
+}

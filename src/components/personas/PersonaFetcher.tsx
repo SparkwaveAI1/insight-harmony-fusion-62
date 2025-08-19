@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 import { formatName } from '@/lib/utils';
-import { getPersonaByPersonaId } from '@/services/persona'; // Updated import path
+import { getPersonaV2ById } from '@/services/persona';
 
 interface PersonaFetcherProps {
   personaId: string;
@@ -13,7 +13,7 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
   // Use React Query to fetch the persona with better error handling
   const { data: activePersona, isLoading, error } = useQuery({
     queryKey: ['persona', personaId],
-    queryFn: () => getPersonaByPersonaId(personaId),
+    queryFn: () => getPersonaV2ById(personaId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
@@ -50,31 +50,33 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
       <div className="mb-4">
         <strong>Persona ID:</strong> {activePersona.persona_id}
         <br />
-        <strong>Created:</strong> {activePersona.creation_date}
+        <strong>Created:</strong> {activePersona.created_at}
         <br />
-        <strong>Prompt:</strong> {activePersona.prompt || 'No prompt available'}
+        <strong>Description:</strong> {activePersona.description || 'No description available'}
       </div>
       
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-3">Demographics</h3>
+        <h3 className="text-lg font-semibold mb-3">V2 Persona Data</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <strong>Age:</strong> {activePersona.metadata?.age || 'Not specified'}
+            <strong>Age:</strong> {activePersona.persona_data?.identity?.age || 'Not specified'}
             <br />
-            <strong>Gender:</strong> {activePersona.metadata?.gender || 'Not specified'}
+            <strong>Name:</strong> {activePersona.persona_data?.identity?.name || 'Not specified'}
             <br />
-            <strong>Ethnicity:</strong> {activePersona.metadata?.race_ethnicity || 'Not specified'}
+            <strong>Location:</strong> {typeof activePersona.persona_data?.identity?.location === 'string' 
+              ? activePersona.persona_data.identity.location 
+              : activePersona.persona_data?.identity?.location?.city || 'Not specified'}
             <br />
-            <strong>Region:</strong> {activePersona.metadata?.region || 'Not specified'}
+            <strong>Occupation:</strong> {activePersona.persona_data?.identity?.occupation || 'Not specified'}
           </div>
           <div>
-            <strong>Education:</strong> {activePersona.metadata?.education_level || 'Not specified'}
+            <strong>Type:</strong> {activePersona.persona_type || 'Not specified'}
             <br />
-            <strong>Occupation:</strong> {activePersona.metadata?.occupation || 'Not specified'}
+            <strong>Public:</strong> {activePersona.is_public ? 'Yes' : 'No'}
             <br />
-            <strong>Income Level:</strong> {activePersona.metadata?.income_level || 'Not specified'}
+            <strong>V2 Structure:</strong> Available
             <br />
-            <strong>Relationship:</strong> {activePersona.metadata?.relationship_status || 'Not specified'}
+            <strong>Voicepack:</strong> {activePersona.voicepack_runtime ? 'Compiled' : 'Not compiled'}
           </div>
         </div>
       </div>

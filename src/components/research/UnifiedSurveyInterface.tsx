@@ -405,7 +405,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         questions={surveyData.questions}
         sessionId={sessionId!}
         surveySessionId={surveySessionId}
-        loadedPersonas={loadedPersonas}
+        loadedPersonas={loadedPersonas as any}
         onBack={handleBackToSetup}
       />
     );

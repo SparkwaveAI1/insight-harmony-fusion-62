@@ -9,15 +9,15 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getResearchSessionById, getResearchReport, ResearchSurveySession, ResearchReport } from '@/services/collections/researchOperations';
 import SurveyResults from '@/components/research/SurveyResults';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getPersonaByPersonaId } from '@/services/persona';
-import { Persona } from '@/services/persona/types';
+import { getPersonaV2ById } from '@/services/persona';
+import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
 
 const ResearchResults = () => {
   const { surveySessionId } = useParams<{ surveySessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<ResearchSurveySession | null>(null);
   const [report, setReport] = useState<ResearchReport | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
+  const [loadedPersonas, setLoadedPersonas] = useState<DbPersonaV2[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,13 +42,13 @@ const ResearchResults = () => {
         return;
       }
       
-      // Fetch real persona data
+      // Fetch real V2 persona data
       const personaDataPromises = sessionData.selected_personas.map(personaId => 
-        getPersonaByPersonaId(personaId)
+        getPersonaV2ById(personaId)
       );
       
       const personaDataResults = await Promise.all(personaDataPromises);
-      const validPersonas = personaDataResults.filter((persona): persona is Persona => persona !== null);
+      const validPersonas = personaDataResults.filter((persona): persona is DbPersonaV2 => persona !== null);
       
       // Create fallback personas for any that couldn't be loaded
       const allPersonas = sessionData.selected_personas.map(personaId => {
@@ -57,23 +57,22 @@ const ResearchResults = () => {
           return foundPersona;
         }
         
-        // Fallback persona with ID + name format
+        // Fallback V2 persona with ID + name format
         return {
           persona_id: personaId,
           id: personaId,
           name: `Persona ${personaId}`,
-          creation_date: '',
+          description: 'Fallback persona - original not found',
+          user_id: '',
           created_at: '',
-          metadata: {},
-          trait_profile: {},
-          simulation_directives: {},
-          behavioral_modulation: {},
-          interview_sections: [],
-          preinterview_tags: [],
-          linguistic_profile: {},
-          persona_context: '',
-          persona_type: 'persona'
-        } as Persona;
+          updated_at: '',
+          persona_data: {} as any,
+          persona_type: 'humanoid',
+          is_public: false,
+          profile_image_url: null,
+          voicepack_runtime: null,
+          voicepack_hash: null
+        } as DbPersonaV2;
       });
       
       setSession(sessionData);
