@@ -143,7 +143,7 @@ function sampleBehavioralTraits(bigFive: PersonaV2['cognitive_profile']['big_fiv
 
 function enforceContrast(bigFive: PersonaV2['cognitive_profile']['big_five'], behavioral: any, rng: () => number): void {
   const allTraits = { ...bigFive, ...behavioral };
-  const midrange = Object.values(allTraits).filter(val => val >= 0.35 && val <= 0.65).length;
+  const midrange = Object.values(allTraits).filter((val): val is number => typeof val === 'number' && val >= 0.35 && val <= 0.65).length;
   const totalTraits = Object.keys(allTraits).length;
   const outsideMidrange = totalTraits - midrange;
   
