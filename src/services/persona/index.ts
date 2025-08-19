@@ -1,13 +1,12 @@
 
-// Unified Persona Operations (V2 Priority System) - USE THESE FIRST
+// V2-Only Persona Operations
 export { 
-  getUnifiedPersonaById,
-  getAllUnifiedPersonas,
-  getPublicUnifiedPersonas,
-  getUnifiedPersonasForListing,
-  checkPersonaVersion,
-  type UnifiedPersona
-} from './operations/unifiedPersonaOperations';
+  getPersonaById,
+  getAllPersonas,
+  getPublicPersonas,
+  getPersonasForListing,
+  checkPersonaVersion
+} from './operations/personaOperations';
 
 // V1 operations removed - use V2 operations instead
 export { clonePersona } from './operations/clonePersona';

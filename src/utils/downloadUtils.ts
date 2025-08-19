@@ -1,6 +1,6 @@
 
 export const downloadPersonaAsJSON = (persona: any) => {
-  // Create a clean copy of the V2 persona data structure
+  // Export V2 persona with proper structure
   const personaData = {
     persona_id: persona.persona_id,
     id: persona.id,

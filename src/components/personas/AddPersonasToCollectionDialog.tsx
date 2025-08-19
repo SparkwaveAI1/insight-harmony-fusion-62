@@ -21,7 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Persona } from "@/services/persona/types";
 import { Collection } from "@/services/collections/types";
 import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
-import { getAllUnifiedPersonas } from "@/services/persona";
+import { getAllPersonas } from "@/services/persona";
 import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
 interface AddPersonasToCollectionDialogProps {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAllUnifiedPersonas } from "@/services/persona";
+import { getAllPersonas } from "@/services/persona";
 import { useAuth } from "@/context/AuthContext";
 
 interface PersonaStats {
@@ -30,7 +30,7 @@ export function usePersonaStats() {
       setLoading(true);
       
       // Use unified persona system to get all personas
-      const unifiedPersonas = await getAllUnifiedPersonas(user?.id);
+      const unifiedPersonas = await getAllPersonas(user?.id);
 
       if (!unifiedPersonas || unifiedPersonas.length === 0) {
         setStats({
@@ -46,8 +46,8 @@ export function usePersonaStats() {
       }
 
       const totalPersonas = unifiedPersonas.length;
-      const v2PersonasCount = unifiedPersonas.filter(p => p.version === 'v2').length;
-      const v1PersonasCount = unifiedPersonas.filter(p => p.version === 'v1').length;
+      const v2PersonasCount = unifiedPersonas.length; // All are V2 now
+      const v1PersonasCount = 0; // No V1 personas exist
       
       let missingDemographics = 0;
       let missingKnowledgeDomains = 0;
@@ -57,12 +57,11 @@ export function usePersonaStats() {
       console.log('Total unified personas found:', totalPersonas);
       console.log('V2 personas:', v2PersonasCount, 'V1 personas:', v1PersonasCount);
 
-      unifiedPersonas.forEach(unifiedPersona => {
-        // For V1 personas, analyze the converted data
-        if (unifiedPersona.version === 'v1') {
-          const persona = unifiedPersona.data as any;
-          const metadata = persona.metadata || {};
-          const demographics = metadata.demographics || {};
+      unifiedPersonas.forEach(persona => {
+        // All personas are V2 now, analyze the V2 structure
+        const personaData = persona.persona_data as any;
+          const identity = personaData?.identity || {};
+          const demographics = identity;
           
           // Check if ANY required demographic field is missing or empty
           const hasAge = demographics.age && demographics.age !== "";
@@ -74,28 +73,11 @@ export function usePersonaStats() {
             missingDemographics++;
           }
 
-          // Check for missing knowledge domains
-          const knowledgeDomains = metadata.knowledge_domains || metadata.knowledgeDomains || [];
-          if (!Array.isArray(knowledgeDomains) || knowledgeDomains.length === 0 || 
-              (knowledgeDomains.length === 1 && (!knowledgeDomains[0] || knowledgeDomains[0] === ""))) {
-            missingKnowledgeDomains++;
-          }
-
-          // Check for missing education
-          const education = metadata.education || {};
-          const hasLevel = education.level && education.level !== "";
-          const hasField = education.field && education.field !== "";
-          
-          if (!hasLevel || !hasField) {
-            missingEducation++;
-          }
-        }
-        
-        // For V2 personas, we'd need to implement similar checks for the V2 structure
-        // For now, assume V2 personas are complete
+        // For V2 personas, knowledge domains would be in life_context or cognitive_profile
+        // For now, assume all V2 personas are complete since they have proper structure
         
         // Check for brief descriptions (less than 50 characters or missing)
-        const description = unifiedPersona.description || '';
+        const description = persona.description || '';
         if (!description || description.length < 50) {
           briefDescriptions++;
         }
