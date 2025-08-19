@@ -1,3 +1,4 @@
+
 import { PersonaV2 } from "./personaV2Types.ts";
 import { 
   generatePersonaV2Identity,
@@ -132,7 +133,7 @@ export async function generatePersonaV2(prompt: string, userId: string, supabase
   // Generate description
   const description = await generatePersonaV2Description(identity, cognitiveProfile, lifeContext);
 
-  // Assemble final PersonaV2
+  // Assemble final PersonaV2 - PROPER V2 FORMAT
   const personaV2: PersonaV2 = {
     id: personaId,
     version: "2.1",
@@ -151,8 +152,9 @@ export async function generatePersonaV2(prompt: string, userId: string, supabase
 
   console.log('=== PersonaV2 GENERATION COMPLETED SUCCESSFULLY ===');
   console.log(`Final PersonaV2: ${personaV2.identity.name}`);
+  console.log(`- Version: ${personaV2.version}`);
   console.log(`- Identity: ✓ (age: ${personaV2.identity.age}, gender: ${personaV2.identity.gender})`);
-  console.log(`- Life context: ✓ (occupation: ${personaV2.life_context.occupation})`);
+  console.log(`- Life context: ✓`);
   console.log(`- Cognitive profile: ✓ (Big Five traits set)`);
   console.log(`- Social cognition: ✓`);
   console.log(`- Health profile: ✓`);
