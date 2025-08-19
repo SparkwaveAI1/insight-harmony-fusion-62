@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PersonaLoader } from './PersonaLoader';
+// PersonaLoader removed - using simplified version
 import { ResearchConversation } from './ResearchConversation';
 import { ResearchHeader } from './ResearchHeader';
 import { ActivePersonasDisplay } from './ActivePersonasDisplay';
@@ -77,11 +77,15 @@ const ResearchInterface: React.FC<ResearchInterfaceProps> = ({
               </div>
             )}
           </div>
-          <PersonaLoader
-            maxPersonas={4}
-            onStartSession={handleStartSession}
-            isLoading={isLoading}
-          />
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <p className="text-muted-foreground">Please select personas to begin your research session.</p>
+            <button 
+              onClick={() => window.location.href = '/personas'}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Select Personas
+            </button>
+          </div>
         </div>
       </div>
     );

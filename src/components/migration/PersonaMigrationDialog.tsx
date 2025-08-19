@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { usePersona } from '@/hooks/usePersona';
+import { getAllPersonasV2 } from "@/services/persona";
 import {
   Dialog,
   DialogContent,
@@ -33,10 +33,35 @@ export function PersonaMigrationDialog() {
   const [isMigrating, setIsMigrating] = useState(false);
   const [migrationResults, setMigrationResults] = useState<MigrationResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { personas, refreshPersonas } = usePersona();
+  const [personas, setPersonas] = useState<any[]>([]);
 
-  // Fallback refresh function if not available in context
-  const handleRefresh = refreshPersonas || (() => Promise.resolve());
+  useEffect(() => {
+    const loadPersonas = async () => {
+      try {
+        const data = await getAllPersonasV2();
+        setPersonas(data);
+      } catch (error) {
+        console.error('Error loading personas:', error);
+      }
+    };
+    if (isOpen) {
+      loadPersonas();
+    }
+  }, [isOpen]);
+
+  const handleRefresh = () => {
+    if (isOpen) {
+      const loadPersonas = async () => {
+        try {
+          const data = await getAllPersonasV2();
+          setPersonas(data);
+        } catch (error) {
+          console.error('Error loading personas:', error);
+        }
+      };
+      loadPersonas();
+    }
+  };
 
   const handleMigrateAll = async () => {
     setIsMigrating(true);
@@ -56,7 +81,7 @@ export function PersonaMigrationDialog() {
       
       // Refresh personas list after migration
       if (data.successful > 0) {
-        await handleRefresh();
+        handleRefresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Migration failed');
@@ -79,7 +104,7 @@ export function PersonaMigrationDialog() {
       }
 
       setMigrationResults(data);
-      await handleRefresh();
+      handleRefresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Migration failed');
     } finally {

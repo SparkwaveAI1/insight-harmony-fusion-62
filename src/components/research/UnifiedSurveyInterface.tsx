@@ -15,7 +15,7 @@ import { createSurveySession, updateSurveySessionStatus } from './services/surve
 import { QuestionUpload, SurveyQuestion } from './QuestionUpload';
 import ProjectSelector from './ProjectSelector';
 import DocumentManager from './DocumentManager';
-import { PersonaSourceSelector } from './PersonaSourceSelector';
+// PersonaSourceSelector removed - using simplified version
 import { KnowledgeBaseDocument } from '@/services/collections';
 import { getProjectQuestionSets, saveQuestionSet, ProjectQuestionSet } from '@/services/questionSets/questionSetService';
 
@@ -553,12 +553,15 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           )}
         </div>
 
-        <PersonaSourceSelector
-          projectId={selectedProjectId || undefined}
-          selectedPersonas={selectedPersonas}
-          onPersonaSelectionChange={handlePersonaSelectionChange}
-          maxPersonas={10}
-        />
+        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4 border rounded-lg bg-muted/10">
+          <h3 className="text-lg font-medium">Select Personas for Survey</h3>
+          <p className="text-muted-foreground text-center">
+            Please select personas to participate in your survey.
+          </p>
+          <Button onClick={() => window.location.href = '/personas'}>
+            Select Personas ({selectedPersonas.length} selected)
+          </Button>
+        </div>
       </div>
 
       <div className="flex justify-end">

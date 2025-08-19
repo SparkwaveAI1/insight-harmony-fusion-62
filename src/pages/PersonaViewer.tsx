@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonaList from "@/components/personas/PersonaList";
+import PersonaListV2 from "@/components/personas/PersonaListV2";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
@@ -136,32 +136,11 @@ const PersonaViewerContent = () => {
             </TabsList>
 
             <TabsContent value="my-personas" className="space-y-6">
-              <PersonaList
-                onPersonasLoad={setMyPersonas}
-                filterByCurrentUser={true}
-                searchQuery={searchQuery}
-                selectedTags={selectedTags}
-                selectedAge={selectedAge}
-                selectedRegion={selectedRegion}
-                selectedIncome={selectedIncome}
-                selectedSourceType={selectedSourceType}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-              />
+              <PersonaListV2 />
             </TabsContent>
 
             <TabsContent value="public-personas" className="space-y-6">
-              <PersonaList 
-                onPersonasLoad={setPublicPersonas}
-                publicOnly={true}
-                filterByOtherUsers={true}
-                searchQuery={searchQuery}
-                selectedTags={selectedTags}
-                selectedAge={selectedAge}
-                selectedRegion={selectedRegion}
-                selectedIncome={selectedIncome}
-                selectedSourceType={selectedSourceType}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-              />
+              <PersonaListV2 />
             </TabsContent>
           </Tabs>
         </div>
