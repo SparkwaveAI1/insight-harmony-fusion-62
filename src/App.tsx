@@ -1,9 +1,12 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Index from '@/pages/Index';
+import SignIn from '@/pages/SignIn';
 import Dashboard from '@/pages/Dashboard';
 import PersonaDetail from '@/pages/PersonaDetail';
 import PersonaViewer from '@/pages/PersonaViewer';
@@ -28,20 +31,76 @@ function App() {
         <AuthProvider>
           <Router>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/persona-detail/:personaId" element={<PersonaDetail />} />
-              <Route path="/persona/:personaId/chat" element={<PersonaChat />} />
-              <Route path="/persona-viewer" element={<PersonaViewer />} />
-              <Route path="/personas" element={<PersonaViewer />} />
-              <Route path="/collections" element={<Collections />} />
-              <Route path="/collection/:collectionId" element={<CollectionDetail />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/docs" element={<Docs />} />
-              <Route path="/custom-research" element={<CustomResearch />} />
-              <Route path="/simulated-persona" element={<SimulatedPersona />} />
-              <Route path="/research" element={<Research />} />
+              <Route path="/sign-in" element={<SignIn />} />
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-detail/:personaId" element={
+                <ProtectedRoute>
+                  <PersonaDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona/:personaId/chat" element={
+                <ProtectedRoute>
+                  <PersonaChat />
+                </ProtectedRoute>
+              } />
+              <Route path="/persona-viewer" element={
+                <ProtectedRoute>
+                  <PersonaViewer />
+                </ProtectedRoute>
+              } />
+              <Route path="/personas" element={
+                <ProtectedRoute>
+                  <PersonaViewer />
+                </ProtectedRoute>
+              } />
+              <Route path="/collections" element={
+                <ProtectedRoute>
+                  <Collections />
+                </ProtectedRoute>
+              } />
+              <Route path="/collection/:collectionId" element={
+                <ProtectedRoute>
+                  <CollectionDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <Projects />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              } />
+              <Route path="/docs" element={
+                <ProtectedRoute>
+                  <Docs />
+                </ProtectedRoute>
+              } />
+              <Route path="/custom-research" element={
+                <ProtectedRoute>
+                  <CustomResearch />
+                </ProtectedRoute>
+              } />
+              <Route path="/simulated-persona" element={
+                <ProtectedRoute>
+                  <SimulatedPersona />
+                </ProtectedRoute>
+              } />
+              <Route path="/research" element={
+                <ProtectedRoute>
+                  <Research />
+                </ProtectedRoute>
+              } />
               <Route path="/prsna" element={<Prsna />} />
               <Route path="/survey" element={<SurveyInterface />} />
             </Routes>
