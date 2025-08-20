@@ -11,6 +11,7 @@ import Dashboard from '@/pages/Dashboard';
 import PersonaDetail from '@/pages/PersonaDetail';
 import PersonaViewer from '@/pages/PersonaViewer';
 import PersonaChat from '@/pages/PersonaChat';
+import CreatePersonaV3 from '@/pages/CreatePersonaV3';
 import CollectionDetail from '@/pages/CollectionDetail';
 import Collections from '@/pages/Collections';
 import Projects from '@/pages/Projects';
@@ -49,6 +50,11 @@ function App() {
               <Route path="/persona/:personaId/chat" element={
                 <ProtectedRoute>
                   <PersonaChat />
+                </ProtectedRoute>
+              } />
+              <Route path="/create-persona-v3" element={
+                <ProtectedRoute>
+                  <CreatePersonaV3 />
                 </ProtectedRoute>
               } />
               <Route path="/persona-viewer" element={

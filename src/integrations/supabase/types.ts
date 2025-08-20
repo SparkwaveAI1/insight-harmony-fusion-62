@@ -445,6 +445,7 @@ export type Database = {
           persona_data: Json
           persona_id: string
           persona_type: string
+          persona_version: string
           profile_image_url: string | null
           reasoning_modifiers: Json | null
           runtime_controls: Json | null
@@ -468,6 +469,7 @@ export type Database = {
           persona_data: Json
           persona_id: string
           persona_type?: string
+          persona_version?: string
           profile_image_url?: string | null
           reasoning_modifiers?: Json | null
           runtime_controls?: Json | null
@@ -491,6 +493,7 @@ export type Database = {
           persona_data?: Json
           persona_id?: string
           persona_type?: string
+          persona_version?: string
           profile_image_url?: string | null
           reasoning_modifiers?: Json | null
           runtime_controls?: Json | null

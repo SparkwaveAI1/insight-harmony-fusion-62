@@ -164,7 +164,7 @@ export interface PersonaV3CurrentState {
 
 export interface PersonaV3StateRule {
   when: Record<string, string>;
-  shift: Record<string, Record<string, Record<string, string>>>;
+  shift: Record<string, Record<string, string>>;
 }
 
 export interface PersonaV3StateModifiers {

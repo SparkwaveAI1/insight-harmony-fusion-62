@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
 import { getAllPersonasV2 } from '@/services/persona';
+import { getAllPersonasV3 } from '@/services/persona/personaV3Service';
 import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
+import { DbPersonaV3 } from '@/services/persona/personaV3Service';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const PersonaListV2 = () => {
-  const [personas, setPersonas] = useState<DbPersonaV2[]>([]);
+  const [personas, setPersonas] = useState<(DbPersonaV2 | DbPersonaV3)[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -21,8 +23,18 @@ const PersonaListV2 = () => {
   const loadPersonas = async () => {
     try {
       setIsLoading(true);
-      const data = await getAllPersonasV2();
-      setPersonas(data);
+      // Load both V2 and V3 personas
+      const [v2Data, v3Data] = await Promise.all([
+        getAllPersonasV2(),
+        getAllPersonasV3()
+      ]);
+      
+      // Combine and sort by updated_at
+      const allPersonas = [...v2Data, ...v3Data].sort((a, b) => 
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      
+      setPersonas(allPersonas);
     } catch (error) {
       console.error('Error loading personas:', error);
     } finally {
@@ -59,9 +71,9 @@ const PersonaListV2 = () => {
             className="pl-10"
           />
         </div>
-        <Button onClick={() => navigate('/')}>
+        <Button onClick={() => navigate('/create-persona-v3')}>
           <Plus className="h-4 w-4 mr-2" />
-          Create New
+          Create V3 Persona
         </Button>
       </div>
 
@@ -98,6 +110,9 @@ const PersonaListV2 = () => {
                     {persona.persona_data?.identity?.occupation && (
                       <span className="truncate">{persona.persona_data.identity.occupation}</span>
                     )}
+                    <span className="ml-auto text-xs px-2 py-1 bg-accent rounded">
+                      {(persona as any).persona_version || 'V2'}
+                    </span>
                   </div>
                 </div>
               </div>
