@@ -70,7 +70,7 @@ export async function sendMessageToPersonaWithVoicepack(
 }
 
 /**
- * Production voicepack chat using the persona-quick-chat edge function
+ * Production authentic persona chat using the new persona-authentic-chat edge function
  */
 async function productionVoicepackChat(
   personaId: string,
@@ -83,36 +83,49 @@ async function productionVoicepackChat(
   
   const startTime = Date.now();
   
-  console.log('🎭 Using production voicepack pipeline via persona-quick-chat');
+  console.log('🎭 Using authentic persona pipeline via persona-authentic-chat');
   
-  // Call the production edge function that handles the entire voicepack pipeline
-  const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+  // Combine additional context and conversation context
+  const combinedContext = [additionalContext, conversationContext].filter(Boolean).join('\n\n');
+  
+  // Call the new authentic edge function that handles comprehensive trait scanning
+  const { data, error } = await supabase.functions.invoke('persona-authentic-chat', {
     body: {
       personaId: personaId,
       message: userMessage,
-      previousMessages: conversationHistory,
-      mode: 'conversation',
-      conversationContext: conversationContext,
+      previousMessages: conversationHistory.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      })),
+      conversationContext: combinedContext,
       imageData: imageData
     }
   });
   
   if (error) {
-    console.error('❌ Production voicepack call failed:', error);
-    throw new Error(`Voicepack call failed: ${error.message}`);
+    console.error('❌ Authentic persona call failed:', error);
+    throw new Error(`Authentic persona call failed: ${error.message}`);
   }
   
   if (!data?.response) {
-    throw new Error('No response from voicepack pipeline');
+    throw new Error('No response from authentic persona pipeline');
   }
   
   const telemetry = {
     latency_ms: Date.now() - startTime,
-    used_voicepack: true,
-    ...(data.telemetry || {})
+    used_authentic_pipeline: true,
+    traits_analyzed: data.metadata?.traits_analyzed || 0,
+    emotional_triggers: data.metadata?.emotional_triggers || 0,
+    knowledge_domains: data.metadata?.knowledge_domains || 0,
+    ...(data.metadata || {})
   };
   
-  console.log('✅ Production voicepack chat complete. Latency:', telemetry.latency_ms, 'ms');
+  console.log('✅ Authentic persona chat complete. Latency:', telemetry.latency_ms, 'ms');
+  console.log('📊 Trait analysis:', {
+    traits_analyzed: telemetry.traits_analyzed,
+    emotional_triggers: telemetry.emotional_triggers,
+    knowledge_domains: telemetry.knowledge_domains
+  });
   
   return {
     response: data.response,
