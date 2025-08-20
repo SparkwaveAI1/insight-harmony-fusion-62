@@ -7,38 +7,62 @@ if (!OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY environment variable is required');
 }
 
-// Stage 1: Core Demographics
+// Stage 1: Core Demographics -> V3 Identity
 export async function generateCoreDemographics(prompt: string): Promise<any> {
-  console.log(`Generating core demographics from prompt: "${prompt}"`);
+  console.log(`Generating V3 identity from prompt: "${prompt}"`);
   
   const messages = [
     {
       role: "system",
-      content: `Generate core demographic data for a realistic persona. Return ONLY valid JSON with NO markdown formatting.
+      content: `You are creating a distinctive, memorable persona with unique characteristics. Generate V3 identity data that avoids generic midline values. Return ONLY valid JSON with NO markdown formatting.
 
-REQUIRED STRUCTURE - Include ALL these core fields:
+CRITICAL: Create someone with personality! Avoid bland, default characteristics. Make them interesting and memorable with clear traits, not generic middle-ground values.
+
+REQUIRED V3 STRUCTURE:
 {
   "name": "First Last",
   "persona_id": "unique-id-123", 
-  "creation_date": "2024-01-01",
-  "metadata": {
-    "age": "25",
+  "creation_date": "2025-01-01",
+  "identity": {
+    "age": 29,
     "gender": "Non-binary",
-    "race_ethnicity": "Mixed heritage", 
-    "sexual_orientation": "Pansexual",
-    "education_level": "Bachelor's Degree",
-    "occupation": "Software Developer",
-    "employment_type": "Full-time",
-    "income_level": "$60,000-$80,000",
-    "social_class_identity": "Middle class",
-    "marital_status": "Single",
-    "parenting_role": "No children",
-    "relationship_history": "Previous relationship",
-    "military_service": "None"
+    "pronouns": "they/them",
+    "ethnicity": "Korean-American",
+    "nationality": "American",
+    "occupation": "UX Designer",
+    "relationship_status": "In a relationship",
+    "dependents": 0,
+    "location": {
+      "city": "Austin",
+      "region": "Texas",
+      "country": "USA"
+    },
+    "socioeconomic_context": {
+      "income_level": "$75,000-$90,000",
+      "education_level": "Bachelor's Degree",
+      "social_class_identity": "Upper middle class",
+      "political_affiliation": "Progressive",
+      "religious_affiliation": "Agnostic",
+      "religious_practice_level": "low",
+      "cultural_background": "Korean-American heritage",
+      "cultural_dimensions": {
+        "power_distance": 0.3,
+        "individualism_vs_collectivism": 0.7,
+        "masculinity_vs_femininity": 0.4,
+        "uncertainty_avoidance": 0.6,
+        "long_term_orientation": 0.8,
+        "indulgence_vs_restraint": 0.6
+      }
+    }
   }
 }
 
-Generate realistic, diverse values for ALL fields. Avoid stereotypes and defaults.`
+DISTINCTIVENESS REQUIREMENTS:
+- Age: Vary from 22-65, avoid round numbers like 25, 30, 40
+- Create interesting combinations (rural programmer, urban farmer, etc.)
+- Give them compelling backstories and unique characteristics
+- Cultural dimensions should reflect their specific background, not generic 0.5 values
+- Make them someone you'd remember meeting at a party`
     },
     {
       role: "user",
@@ -46,60 +70,80 @@ Generate realistic, diverse values for ALL fields. Avoid stereotypes and default
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY, {
+    model: 'gpt-4.1-2025-04-14',
+    temperature: 0.9, // Higher temperature for more distinctive personas
+    max_tokens: 1500
+  });
+  
   const content = response.choices[0].message.content;
   
   try {
     return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse core demographics JSON:', content);
-    throw new Error('Invalid JSON response from OpenAI for core demographics');
+    console.error('Failed to parse V3 identity JSON:', content);
+    throw new Error('Invalid JSON response from OpenAI for V3 identity');
   }
 }
 
-// Stage 2: Location & Context
-export async function generateLocationContext(basePersona: any, prompt: string): Promise<any> {
-  console.log(`Generating location & context for: ${basePersona.name}`);
+// Stage 2: V3 Life Context
+export async function generateLifeContext(basePersona: any, prompt: string): Promise<any> {
+  console.log(`Generating V3 life context for: ${basePersona.name}`);
   
   const messages = [
     {
       role: "system",
-      content: `Generate location and cultural context data for the persona. Return ONLY valid JSON.
+      content: `Generate compelling life context that makes this persona distinctive and memorable. Create someone with a rich, specific life story. Return ONLY valid JSON.
 
-REQUIRED STRUCTURE:
+REQUIRED V3 STRUCTURE:
 {
-  "location_context": {
-    "region": "Austin, Texas",
-    "urban_rural_context": "Urban",
-    "location_history": {
-      "grew_up_in": "Dallas, TX",
-      "current_residence": "Austin, TX", 
-      "places_lived": ["Dallas", "Austin"]
-    },
-    "migration_history": "Moved for job opportunities",
-    "climate_risk_zone": "Moderate heat risk",
-    "language_proficiency": ["English", "Spanish"],
-    "religious_affiliation": "Agnostic",
-    "religious_practice_level": "Non-practicing",
-    "cultural_background": "Mexican-American",
-    "cultural_affiliation": ["Hispanic", "Tech culture"]
+  "life_context": {
+    "supports": [
+      "Close friend group from college",
+      "Supportive romantic partner",
+      "Weekly therapy sessions",
+      "Active online community for designers"
+    ],
+    "stressors": [
+      "Aging parents needing more help",
+      "Imposter syndrome at work",
+      "Rising rent costs",
+      "Creative burnout from client demands"
+    ],
+    "daily_routine": "Early riser who starts with meditation and coffee, works from home most days, takes long walks during lunch, evening cooking experiments, weekend art projects and social gatherings",
+    "current_situation": "Recently promoted to senior UX designer but feeling overwhelmed by leadership responsibilities while maintaining creative output. Partner is considering job relocation which creates uncertainty about future plans.",
+    "background_narrative": "Grew up in a traditional Korean household but always felt drawn to creative fields. Parents wanted them to be a doctor, but they found their passion in design during college. Struggled with identity and family expectations before finding their voice and community in the design world.",
+    "lifestyle": "Health-conscious creative with strong work-life boundaries, values authentic relationships over networking, prefers small gatherings over large parties, passionate about sustainable design and ethical consumption"
   }
-}`
+}
+
+DISTINCTIVENESS REQUIREMENTS:
+- Create specific, detailed supports and stressors (not generic ones)
+- Daily routine should reflect their personality and priorities
+- Current situation should have interesting tensions or developments
+- Background narrative should explain how they became who they are
+- Lifestyle should show their values and preferences clearly
+- Make them feel like a real person with a compelling story`
     },
     {
       role: "user",
-      content: `Generate location & context for: ${basePersona.name}, based on: ${prompt}`
+      content: `Generate life context for: ${basePersona.name} (${basePersona.identity.occupation}, ${basePersona.identity.age}), based on: ${prompt}`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY, {
+    model: 'gpt-4.1-2025-04-14',
+    temperature: 0.9,
+    max_tokens: 1500
+  });
+  
   const content = response.choices[0].message.content;
   
   try {
     return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse location context JSON:', content);
-    throw new Error('Invalid JSON response from OpenAI for location context');
+    console.error('Failed to parse V3 life context JSON:', content);
+    throw new Error('Invalid JSON response from OpenAI for V3 life context');
   }
 }
 
@@ -247,62 +291,68 @@ REQUIRED STRUCTURE:
   }
 }
 
-// Stage 6: Knowledge Domains
-export async function generateKnowledgeDomains(basePersona: any, prompt: string): Promise<any> {
-  console.log(`Generating knowledge domains for: ${basePersona.name}`);
+// Stage 3: V3 Knowledge Profile
+export async function generateKnowledgeProfile(basePersona: any, prompt: string): Promise<any> {
+  console.log(`Generating V3 knowledge profile for: ${basePersona.name}`);
   
   const messages = [
     {
       role: "system",
-      content: `Generate knowledge domain ratings (1-5) for the persona. Return ONLY valid JSON.
+      content: `Generate a distinctive knowledge profile that reflects this persona's background, interests, and expertise. Avoid generic ratings - create a knowledge signature that makes them unique. Return ONLY valid JSON.
 
-REQUIRED STRUCTURE:
+REQUIRED V3 STRUCTURE:
 {
-  "knowledge_domains": {
-    "finance_basics": 3,
-    "crypto_blockchain": 2,
-    "world_politics": 3,
-    "national_politics": 4,
-    "pop_culture": 4,
-    "basic_technology": 5,
-    "deep_technology": 5,
-    "health_medicine": 3,
-    "advanced_medical": 1,
-    "science_concepts": 4,
-    "sports": 2,
-    "news_literacy": 4,
-    "environmental_issues": 4,
-    "cultural_history": 3,
-    "law_legal": 2,
-    "religion_spirituality": 2,
-    "art_literature": 3,
-    "gaming": 4,
-    "food_cooking": 3,
-    "travel_geography": 3,
-    "parenting_childcare": 1,
-    "home_improvement": 2,
-    "business_entrepreneurship": 3,
-    "psychology_social_science": 3,
-    "economics": 3
+  "knowledge_profile": {
+    "general_knowledge_level": "high",
+    "tech_literacy": "high",
+    "domains_of_expertise": [
+      "User Experience Design",
+      "Korean Culture and Language",
+      "Sustainable Design Practices",
+      "Digital Art Techniques"
+    ],
+    "knowledge_domains": {
+      "arts": 4,
+      "health": 3,
+      "sports": 2,
+      "finance": 3,
+      "history": 4,
+      "science": 3,
+      "business": 4,
+      "politics": 3,
+      "technology": 5,
+      "entertainment": 4
+    }
   }
 }
 
-Rate each domain 1-5 based on the persona's background and interests.`
+DISTINCTIVENESS REQUIREMENTS:
+- General/tech literacy should reflect their background and generation
+- Domains of expertise should be specific, not generic (e.g., "UX Design" not "computers")
+- Knowledge domains (1-5 scale) should create a clear profile, not all 3s
+- Give them 2-3 areas of genuine expertise (4-5) and 2-3 areas of low knowledge (1-2)
+- Should align with their occupation, background, and interests
+- Make their knowledge profile tell a story about who they are`
     },
     {
       role: "user",
-      content: `Generate knowledge domains for: ${basePersona.name}, based on: ${prompt}`
+      content: `Generate knowledge profile for: ${basePersona.name} (${basePersona.identity.occupation}, age ${basePersona.identity.age}, ${basePersona.identity.cultural_background}), based on: ${prompt}`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY, {
+    model: 'gpt-4.1-2025-04-14',
+    temperature: 0.9,
+    max_tokens: 1200
+  });
+  
   const content = response.choices[0].message.content;
   
   try {
     return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse knowledge domains JSON:', content);
-    throw new Error('Invalid JSON response from OpenAI for knowledge domains');
+    console.error('Failed to parse V3 knowledge profile JSON:', content);
+    throw new Error('Invalid JSON response from OpenAI for V3 knowledge profile');
   }
 }
 
@@ -350,141 +400,98 @@ REQUIRED STRUCTURE:
   }
 }
 
-// Stage 8: Complete Trait Profile - All 9 Categories
-export async function generateTraitProfile(basePersona: any, prompt: string): Promise<any> {
-  console.log(`Generating complete trait profile for: ${basePersona.name}`);
+// Stage 4: V3 Cognitive Profile 
+export async function generateCognitiveProfile(basePersona: any, prompt: string): Promise<any> {
+  console.log(`Generating V3 cognitive profile for: ${basePersona.name}`);
   
   const messages = [
     {
-      role: "system", 
-      content: `Generate a complete psychological trait profile for the persona. Return ONLY valid JSON with trait values between 0.0-1.0.
+      role: "system",
+      content: `Generate a distinctive cognitive profile that creates a unique personality signature. Avoid generic midline values - make this persona memorable with clear psychological patterns. Return ONLY valid JSON.
 
-CRITICAL: Generate ALL 9 trait categories with EXACT field names. Avoid default values of exactly 0.5. Use varied, realistic values.
+CRITICAL: Create someone with personality! Avoid bland, default characteristics. Make them psychologically distinctive with clear strengths, weaknesses, and quirks.
 
-Return this EXACT structure with ALL categories:
+REQUIRED V3 STRUCTURE:
 {
-  "trait_profile": {
+  "cognitive_profile": {
     "big_five": {
-      "openness": 0.73,
-      "conscientiousness": 0.82,
-      "extraversion": 0.45,
-      "agreeableness": 0.67,
-      "neuroticism": 0.28
-    },
-    "moral_foundations": {
-      "care": 0.78,
-      "fairness": 0.85,
-      "loyalty": 0.63,
-      "authority": 0.42,
-      "sanctity": 0.38,
-      "liberty": 0.72
-    },
-    "world_values": {
-      "traditional_vs_secular": 0.34,
-      "survival_vs_self_expression": 0.76,
-      "materialist_vs_postmaterialist": 0.58
-    },
-    "political_compass": {
-      "economic": 0.45,
-      "authoritarian_libertarian": 0.68,
-      "cultural_conservative_progressive": 0.72,
-      "political_salience": 0.52,
-      "group_fusion_level": 0.39,
-      "outgroup_threat_sensitivity": 0.31,
-      "commons_orientation": 0.64,
-      "political_motivations": {
-        "material_interest": 0.43,
-        "moral_vision": 0.78,
-        "cultural_preservation": 0.29,
-        "status_reordering": 0.51
-      }
-    },
-    "behavioral_economics": {
-      "present_bias": 0.42,
-      "loss_aversion": 0.67,
-      "overconfidence": 0.38,
-      "risk_sensitivity": 0.73,
-      "scarcity_sensitivity": 0.45
-    },
-    "cultural_dimensions": {
-      "power_distance": 0.41,
-      "individualism_vs_collectivism": 0.74,
-      "masculinity_vs_femininity": 0.52,
-      "uncertainty_avoidance": 0.63,
-      "long_term_orientation": 0.69,
-      "indulgence_vs_restraint": 0.47
-    },
-    "social_identity": {
-      "identity_strength": 0.71,
-      "identity_complexity": 0.58,
-      "ingroup_bias_tendency": 0.44,
-      "outgroup_bias_tendency": 0.32,
-      "social_dominance_orientation": 0.28,
-      "system_justification": 0.51,
-      "intergroup_contact_comfort": 0.76,
-      "cultural_intelligence": 0.68
+      "openness": 0.82,
+      "neuroticism": 0.34,
+      "extraversion": 0.71,
+      "agreeableness": 0.68,
+      "conscientiousness": 0.79
     },
     "extended_traits": {
-      "truth_orientation": 0.82,
-      "moral_consistency": 0.74,
-      "self_awareness": 0.67,
-      "empathy": 0.79,
-      "self_efficacy": 0.71,
-      "manipulativeness": 0.23,
-      "impulse_control": 0.68,
-      "shadow_trait_activation": 0.34,
-      "attention_pattern": 0.63,
-      "cognitive_load_resilience": 0.72,
-      "institutional_trust": 0.48,
-      "conformity_tendency": 0.41,
-      "conflict_avoidance": 0.52,
-      "cognitive_flexibility": 0.75,
-      "need_for_cognitive_closure": 0.38,
-      "emotional_intensity": 0.64,
-      "emotional_regulation": 0.69,
-      "trigger_sensitivity": 0.46
+      "empathy": 0.84,
+      "self_efficacy": 0.76,
+      "cognitive_flexibility": 0.88,
+      "impulse_control": 0.72,
+      "attention_pattern": 0.69,
+      "manipulativeness": 0.18,
+      "need_for_cognitive_closure": 0.31,
+      "institutional_trust": 0.43
     },
-    "dynamic_state": {
-      "current_stress_level": 0.42,
-      "emotional_stability_context": 0.67,
-      "motivation_orientation": 0.73,
-      "trust_volatility": 0.39,
-      "trigger_threshold": 0.58
-    }
+    "intelligence": {
+      "type": ["Creative Intelligence", "Emotional Intelligence", "Spatial Intelligence"],
+      "level": "high"
+    },
+    "decision_style": "mixed",
+    "behavioral_economics": {
+      "present_bias": 0.38,
+      "loss_aversion": 0.62,
+      "overconfidence": 0.29,
+      "risk_sensitivity": 0.74,
+      "scarcity_sensitivity": 0.41
+    },
+    "moral_foundations": {
+      "care_harm": 0.86,
+      "fairness_cheating": 0.81,
+      "loyalty_betrayal": 0.54,
+      "authority_subversion": 0.32,
+      "sanctity_degradation": 0.28,
+      "liberty_oppression": 0.79
+    },
+    "social_identity": {
+      "identity_strength": 0.77,
+      "ingroup_bias_tendency": 0.39,
+      "outgroup_bias_tendency": 0.23,
+      "cultural_intelligence": 0.83,
+      "system_justification": 0.35
+    },
+    "political_orientation": {
+      "authoritarian_libertarian": 0.74,
+      "economic": 0.41,
+      "cultural_progressive_conservative": 0.82
+    },
+    "worldview_summary": "A compassionate progressive who believes in systemic change through creative innovation. Values individual freedom while maintaining strong empathy for others. Approaches problems with both analytical thinking and intuitive insight, preferring collaborative solutions that address root causes rather than symptoms."
   },
   "emotional_triggers": {
-    "positive_triggers": [
-      {
-        "keywords": ["recognition", "achievement"],
-        "emotion_type": "pride",
-        "intensity_multiplier": 1.2,
-        "description": "Professional recognition and accomplishments"
-      }
-    ],
-    "negative_triggers": [
-      {
-        "keywords": ["micromanagement", "control"],
-        "emotion_type": "frustration",
-        "intensity_multiplier": 1.4,
-        "description": "Excessive oversight and control"
-      }
-    ]
+    "positive": ["creative recognition", "meaningful impact", "authentic connection"],
+    "negative": ["micromanagement", "injustice", "superficiality"],
+    "explosive": ["discrimination", "deliberate cruelty", "environmental destruction"]
   }
 }
 
-Generate realistic, varied values that create a unique personality profile based on the persona's background and context.`
+DISTINCTIVENESS REQUIREMENTS:
+- Big Five should show clear personality patterns, not all balanced around 0.5
+- Give them 2-3 standout traits (>0.8 or <0.2) that define their character
+- Intelligence types should reflect their background and interests specifically  
+- Decision style should match their personality (logical/intuitive/mixed)
+- Moral foundations should show clear value priorities, not equal ratings
+- Worldview summary should capture their unique perspective in 1-2 sentences
+- Triggers should be specific to their experiences and values, not generic
+- Make them psychologically coherent - traits should work together to tell a story`
     },
     {
       role: "user",
-      content: `Generate complete trait profile for: ${basePersona.name}\nContext: ${prompt}\nBackground: ${JSON.stringify(basePersona.metadata, null, 2)}`
+      content: `Generate cognitive profile for: ${basePersona.name} (${basePersona.identity.occupation}, ${basePersona.identity.cultural_background}), based on: ${prompt}`
     }
   ];
 
-  // CRITICAL FIX: Increase max_tokens to handle the much larger comprehensive trait profile
   const response = await generateChatResponse(messages, OPENAI_API_KEY, {
     model: 'gpt-4.1-2025-04-14',
-    temperature: 0.8,
-    max_tokens: 3000  // Increased from default ~1000 to 3000 for comprehensive trait profile
+    temperature: 0.9,
+    max_tokens: 2000
   });
   
   const content = response.choices[0].message.content;
@@ -492,8 +499,8 @@ Generate realistic, varied values that create a unique personality profile based
   try {
     return JSON.parse(content);
   } catch (error) {
-    console.error('Failed to parse trait profile JSON:', content);
-    throw new Error('Invalid JSON response from OpenAI for trait profile');
+    console.error('Failed to parse V3 cognitive profile JSON:', content);
+    throw new Error('Invalid JSON response from OpenAI for V3 cognitive profile');
   }
 }
 

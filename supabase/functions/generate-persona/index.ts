@@ -12,11 +12,12 @@ import { validateUserAuthentication } from "./authService.ts";
 import { validatePersonaUniqueness } from "./validationHelpers.ts";
 import { 
   generateBasePersona,
-  enhancePersonaMetadata, 
-  generatePersonaTraitProfile, 
-  generatePersonaBehavioralLinguistic,
+  enhancePersonaV3Components, 
+  generatePersonaCognitiveProfile, 
+  generatePersonaSocialProfiles,
+  generatePersonaRuntimeControls,
   generatePersonaInterview, 
-  finalizePersona 
+  finalizePersonaV3 
 } from "./personaGenerator.ts";
 
 serve(async (req) => {
@@ -45,8 +46,8 @@ serve(async (req) => {
     console.log(`User: ${user.id}`);
     console.log(`Prompt length: ${prompt.length} characters`);
     
-    // STAGE 1: Generate core demographics
-    console.log('🔄 Stage 1: Working on core demographics...');
+    // STAGE 1: Generate V3 identity
+    console.log('🔄 Stage 1: Working on V3 identity...');
     const basePersona = await generateBasePersona(prompt);
     console.log(`✅ Stage 1 Complete: Generated core demographics for "${basePersona.name}"`);
     

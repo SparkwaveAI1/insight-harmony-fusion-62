@@ -2,16 +2,18 @@
 import { PersonaTemplate } from "./types.ts";
 import { 
   generateCoreDemographics,
-  generateLocationContext,
-  generateFamilyRelationships,
-  generateHealthAttributes,
-  generatePhysicalDescription,
-  generateKnowledgeDomains,
-  generatePsychologicalCultural,
-  generateTraitProfile,
-  generateBehavioralLinguistic,
+  generateLifeContext,
+  generateKnowledgeProfile,
+  generateCognitiveProfile,
   generateInterviewResponses
 } from "./openaiService.ts";
+import {
+  generateMemory,
+  generateStateModifiers,
+  generateLinguisticStyle,
+  generateSocialProfiles,
+  generateRuntimeControls
+} from "./v3Generators.ts";
 import { validateAndCleanTraits } from "./traitValidator.ts";
 import { 
   validateUserPrompt, 
@@ -60,192 +62,145 @@ export async function generateBasePersona(prompt: string): Promise<PersonaTempla
   return basePersona;
 }
 
-export async function enhancePersonaMetadata(basePersona: PersonaTemplate, prompt: string): Promise<PersonaTemplate> {
-  console.log('=== STAGE 2-7: ENHANCING METADATA ===');
+export async function enhancePersonaV3Components(basePersona: PersonaTemplate, prompt: string): Promise<PersonaTemplate> {
+  console.log('=== STAGE 2-6: GENERATING V3 COMPONENTS ===');
   
-  // Stage 2: Location & Context
-  console.log('Generating location & context...');
-  const locationContext = await wrapWithErrorHandling(
+  // Stage 2: Life Context
+  console.log('Generating V3 life context...');
+  const lifeContext = await wrapWithErrorHandling(
     () => withRetry(
-      () => generateLocationContext(basePersona, prompt),
+      () => generateLifeContext(basePersona, prompt),
       { maxRetries: 1 },
-      'Location Context Generation'
+      'Life Context Generation'
     ),
-    'location_context',
+    'life_context',
     { personaName: basePersona.name }
   );
   
-  // Stage 3: Family & Relationships
-  console.log('Generating family & relationships...');
-  const familyRelationships = await wrapWithErrorHandling(
+  // Stage 3: Knowledge Profile
+  console.log('Generating V3 knowledge profile...');
+  const knowledgeProfile = await wrapWithErrorHandling(
     () => withRetry(
-      () => generateFamilyRelationships(basePersona, prompt),
+      () => generateKnowledgeProfile(basePersona, prompt),
       { maxRetries: 1 },
-      'Family Relationships Generation'
+      'Knowledge Profile Generation'
     ),
-    'family_relationships',
+    'knowledge_profile',
     { personaName: basePersona.name }
   );
   
-  // Stage 4: Health Attributes
-  console.log('Generating health attributes...');
-  const healthAttributes = await wrapWithErrorHandling(
+  // Stage 4: Memory
+  console.log('Generating V3 memory...');
+  const memory = await wrapWithErrorHandling(
     () => withRetry(
-      () => generateHealthAttributes(basePersona, prompt),
+      () => generateMemory(basePersona, prompt),
       { maxRetries: 1 },
-      'Health Attributes Generation'
+      'Memory Generation'
     ),
-    'health_attributes',
+    'memory',
     { personaName: basePersona.name }
   );
   
-  // Stage 5: Physical Description
-  console.log('Generating physical description...');
-  const physicalDescription = await wrapWithErrorHandling(
+  // Stage 5: State Modifiers
+  console.log('Generating V3 state modifiers...');
+  const stateModifiers = await wrapWithErrorHandling(
     () => withRetry(
-      () => generatePhysicalDescription(basePersona, prompt),
+      () => generateStateModifiers(basePersona, prompt),
       { maxRetries: 1 },
-      'Physical Description Generation'
+      'State Modifiers Generation'
     ),
-    'physical_description',
+    'state_modifiers',
     { personaName: basePersona.name }
   );
   
-  // Stage 6: Knowledge Domains
-  console.log('Generating knowledge domains...');
-  const knowledgeDomains = await wrapWithErrorHandling(
+  // Stage 6: Linguistic Style
+  console.log('Generating V3 linguistic style...');
+  const linguisticStyle = await wrapWithErrorHandling(
     () => withRetry(
-      () => generateKnowledgeDomains(basePersona, prompt),
+      () => generateLinguisticStyle(basePersona, prompt),
       { maxRetries: 1 },
-      'Knowledge Domains Generation'
+      'Linguistic Style Generation'
     ),
-    'knowledge_domains',
+    'linguistic_style',
     { personaName: basePersona.name }
   );
   
-  // Stage 7: Psychological & Cultural
-  console.log('Generating psychological & cultural data...');
-  const psychologicalCultural = await wrapWithErrorHandling(
-    () => withRetry(
-      () => generatePsychologicalCultural(basePersona, prompt),
-      { maxRetries: 1 },
-      'Psychological Cultural Generation'
-    ),
-    'psychological_cultural',
-    { personaName: basePersona.name }
-  );
-  
-  // Merge all metadata
-  Object.assign(basePersona.metadata, {
-    ...locationContext.location_context,
-    ...familyRelationships.relationships_family,
-    ...healthAttributes.health_attributes,
-    ...physicalDescription.physical_description,
-    ...knowledgeDomains.knowledge_domains,
-    ...psychologicalCultural.psychological_cultural
+  // Merge V3 components into the persona
+  Object.assign(basePersona, {
+    life_context: lifeContext.life_context,
+    knowledge_profile: knowledgeProfile.knowledge_profile,
+    memory: memory.memory,
+    state_modifiers: stateModifiers.state_modifiers,
+    linguistic_style: linguisticStyle.linguistic_style
   });
   
-  // Now validate complete metadata after all stages
-  const completeValidation = validateCompleteMetadata(basePersona.metadata);
-  if (!completeValidation.isValid) {
-    console.warn('⚠️ Complete metadata validation failed:', completeValidation.errors);
-    // Don't throw error, just warn - we can continue with incomplete data
-  }
-  
-  console.log('✅ Enhanced metadata with all comprehensive attributes');
+  console.log('✅ Enhanced persona with all V3 components');
   return basePersona;
 }
 
-export async function generatePersonaTraitProfile(basePersona: PersonaTemplate, prompt: string): Promise<any> {
-  console.log('=== STAGE 8: GENERATING TRAIT PROFILE ===');
+export async function generatePersonaCognitiveProfile(basePersona: PersonaTemplate, prompt: string): Promise<any> {
+  console.log('=== STAGE 7: GENERATING V3 COGNITIVE PROFILE ===');
   
-  let traitData;
+  let cognitiveData;
   let attemptCount = 0;
-  const maxTraitAttempts = 3;
+  const maxAttempts = 3;
   
   do {
     attemptCount++;
-    console.log(`=== TRAIT GENERATION ATTEMPT ${attemptCount}/${maxTraitAttempts} ===`);
+    console.log(`=== COGNITIVE PROFILE GENERATION ATTEMPT ${attemptCount}/${maxAttempts} ===`);
     
     try {
-      traitData = await wrapWithErrorHandling(
+      cognitiveData = await wrapWithErrorHandling(
         () => withRetry(
-          () => generateTraitProfile(basePersona, prompt),
+          () => generateCognitiveProfile(basePersona, prompt),
           { maxRetries: 1 },
-          'Trait Profile Generation'
+          'Cognitive Profile Generation'
         ),
-        'traits',
+        'cognitive_profile',
         { personaName: basePersona.name, attempt: attemptCount }
       );
 
-      // Validate trait realism
-      const traitValidation = validateTraitRealism(traitData.trait_profile);
-      
-      if (!traitValidation.isValid) {
-        console.error(`❌ Trait validation failed on attempt ${attemptCount}:`, traitValidation.errors);
-        console.error(`Default ratio: ${Math.round(traitValidation.defaultRatio * 100)}%`);
-        
-        if (attemptCount >= maxTraitAttempts) {
-          throw new PersonaGenerationError(
-            'traits',
-            `Failed to generate realistic traits after ${maxTraitAttempts} attempts. Last error: ${traitValidation.errors.join(', ')}`,
-            undefined,
-            { 
-              personaName: basePersona.name, 
-              finalDefaultRatio: traitValidation.defaultRatio,
-              attempts: attemptCount 
-            }
-          );
-        }
-        
-        console.warn(`⚠️ Retrying trait generation (attempt ${attemptCount + 1}/${maxTraitAttempts})`);
-        continue;
+      // Basic validation - ensure we have required structure
+      if (!cognitiveData.cognitive_profile || !cognitiveData.cognitive_profile.big_five) {
+        throw new Error('Missing required cognitive profile structure');
       }
       
-      console.log(`✅ Trait validation passed on attempt ${attemptCount}`);
-      console.log(`Default ratio: ${Math.round(traitValidation.defaultRatio * 100)}% (threshold: ≤30%)`);
+      console.log(`✅ Cognitive profile generated successfully on attempt ${attemptCount}`);
       break;
       
     } catch (error) {
-      console.error(`Trait generation attempt ${attemptCount} failed:`, error.message);
+      console.error(`Cognitive profile generation attempt ${attemptCount} failed:`, error.message);
       
-      if (attemptCount >= maxTraitAttempts) {
+      if (attemptCount >= maxAttempts) {
         throw new PersonaGenerationError(
-          'traits',
-          `All trait generation attempts failed. Last error: ${error.message}`,
+          'cognitive_profile',
+          `All cognitive profile generation attempts failed. Last error: ${error.message}`,
           error,
           { personaName: basePersona.name, attempts: attemptCount }
         );
       }
     }
-  } while (attemptCount < maxTraitAttempts);
+  } while (attemptCount < maxAttempts);
 
-  console.log('✅ Generated and validated realistic trait profile');
-  
-  // Validate trait values
-  const traitValidation = validateTraitValues(traitData.trait_profile);
-  if (!traitValidation.isValid) {
-    console.error('Final trait validation failed:', traitValidation.errors);
-  }
-  
-  return { traitData, attemptCount };
+  console.log('✅ Generated and validated V3 cognitive profile');
+  return { cognitiveData, attemptCount };
 }
 
-export async function generatePersonaBehavioralLinguistic(basePersona: PersonaTemplate, prompt: string): Promise<any> {
-  console.log('=== STAGE 9: GENERATING BEHAVIORAL & LINGUISTIC PROFILES ===');
+export async function generatePersonaSocialProfiles(basePersona: PersonaTemplate, prompt: string): Promise<any> {
+  console.log('=== STAGE 8: GENERATING V3 SOCIAL PROFILES ===');
   
-  const behavioralLinguistic = await wrapWithErrorHandling(
+  const socialProfiles = await wrapWithErrorHandling(
     () => withRetry(
-      () => generateBehavioralLinguistic(basePersona, prompt),
+      () => generateSocialProfiles(basePersona, prompt),
       { maxRetries: 1 },
-      'Behavioral Linguistic Generation'
+      'Social Profiles Generation'
     ),
-    'behavioral_linguistic',
+    'social_profiles',
     { personaName: basePersona.name }
   );
   
-  console.log('✅ Generated behavioral and linguistic profiles');
-  return behavioralLinguistic;
+  console.log('✅ Generated V3 social profiles');
+  return socialProfiles;
 }
 
 export async function generatePersonaInterview(basePersona: PersonaTemplate): Promise<any[]> {
@@ -271,7 +226,7 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
         responses: [
           {
             question: "Tell me about yourself",
-            answer: `Hi, I'm ${basePersona.name}. ${basePersona.metadata.background || 'I\'d be happy to share more about my experiences and perspective.'}`
+            answer: `Hi, I'm ${basePersona.name}. I'm a ${basePersona.identity?.occupation || 'professional'} living in ${basePersona.identity?.location?.city || 'my current city'}. I'd be happy to share more about my experiences and perspective.`
           }
         ]
       }
@@ -279,73 +234,113 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
   }
 }
 
-export function finalizePersona(
+export async function generatePersonaRuntimeControls(basePersona: PersonaTemplate, prompt: string): Promise<any> {
+  console.log('=== STAGE 9: GENERATING V3 RUNTIME CONTROLS ===');
+  
+  const runtimeControls = await wrapWithErrorHandling(
+    () => withRetry(
+      () => generateRuntimeControls(basePersona, prompt),
+      { maxRetries: 1 },
+      'Runtime Controls Generation'
+    ),
+    'runtime_controls',
+    { personaName: basePersona.name }
+  );
+  
+  console.log('✅ Generated V3 runtime controls');
+  return runtimeControls;
+}
+
+export function finalizePersonaV3(
   basePersona: PersonaTemplate, 
-  traitData: any, 
-  behavioralLinguistic: any, 
+  cognitiveData: any, 
+  socialProfiles: any,
+  runtimeControls: any,
   interviewResponses: any[]
 ): PersonaTemplate {
-  console.log('=== FINALIZING PERSONA ===');
+  console.log('=== FINALIZING V3 PERSONA ===');
   
-  // Generate description from traits and metadata
-  const description = generatePersonaDescription(basePersona, traitData);
+  // Generate description from identity and cognitive profile
+  const description = generateV3PersonaDescription(basePersona, cognitiveData);
   
-  // Merge all components into the base persona
+  // Merge all V3 components into the base persona
   Object.assign(basePersona, {
-    description: description, // Add the generated description
-    trait_profile: traitData.trait_profile,
-    emotional_triggers: traitData.emotional_triggers,
-    behavioral_modulation: behavioralLinguistic.behavioral_modulation,
-    linguistic_profile: behavioralLinguistic.linguistic_profile,
-    simulation_directives: behavioralLinguistic.simulation_directives,
-    preinterview_tags: behavioralLinguistic.preinterview_tags
+    version: "3.0",
+    description: description,
+    cognitive_profile: cognitiveData.cognitive_profile,
+    emotional_triggers: cognitiveData.emotional_triggers,
+    group_behavior: socialProfiles.group_behavior,
+    social_cognition: socialProfiles.social_cognition,
+    sexuality_profile: socialProfiles.sexuality_profile,
+    runtime_controls: runtimeControls.runtime_controls
   });
   
   basePersona.interview_sections = interviewResponses;
 
-  // Final validation before saving
-  const finalValidation = validateGeneratedPersona(basePersona);
-  if (!finalValidation.isValid) {
-    console.error('Final persona validation failed:', finalValidation.errors);
+  // Basic V3 validation
+  if (!basePersona.identity || !basePersona.cognitive_profile || !basePersona.life_context) {
     throw new PersonaGenerationError(
       'validation', 
-      `Generated persona is incomplete: ${finalValidation.errors.join(', ')}`,
+      'Generated V3 persona is missing required components',
       undefined,
-      { personaName: basePersona.name, errors: finalValidation.errors }
+      { personaName: basePersona.name }
     );
   }
 
-  // Clean and validate traits
-  const validatedPersona = validateAndCleanTraits(basePersona);
+  console.log('✅ V3 Persona finalized and validated');
+  return basePersona;
+}
+
+function generateV3PersonaDescription(persona: PersonaTemplate, cognitiveData: any): string {
+  // Extract key characteristics
+  const name = persona.name;
+  const identity = persona.identity;
+  const cognitive = cognitiveData.cognitive_profile;
   
-  // Ensure all required fields have proper defaults
-  validatedPersona.behavioral_modulation = validatedPersona.behavioral_modulation || {
-    communication_style: { formality_level: 0.5, emotional_expressiveness: 0.6, directness: 0.7, humor_usage: 0.4 },
-    response_patterns: { elaboration_tendency: 0.6, example_usage: 0.7, personal_anecdote_frequency: 0.5, technical_depth_preference: 0.4 },
-    contextual_adaptability: { topic_sensitivity: 0.6, audience_awareness: 0.7, emotional_responsiveness: 0.6 }
-  };
-
-  validatedPersona.linguistic_profile = validatedPersona.linguistic_profile || {
-    vocabulary_complexity: 0.6, sentence_structure_preference: 0.5, cultural_linguistic_markers: [],
-    communication_pace: 0.6, filler_word_usage: 0.3, interruption_tendency: 0.4,
-    question_asking_frequency: 0.5, storytelling_inclination: 0.6
-  };
-
-  validatedPersona.simulation_directives = validatedPersona.simulation_directives || {
-    authenticity_level: 0.9, consistency_enforcement: 0.8, emotional_range_limit: 0.7,
-    response_variability: 0.6, knowledge_boundary_respect: 0.9, personality_drift_prevention: 0.8
-  };
-
-  validatedPersona.preinterview_tags = validatedPersona.preinterview_tags || [
-    "demographic_match", "trait_validated", "behavioral_profiled"
-  ];
-
-  validatedPersona.emotional_triggers = validatedPersona.emotional_triggers || {
-    positive_triggers: [], negative_triggers: []
-  };
-
-  console.log('✅ Persona finalized and validated');
-  return validatedPersona;
+  const personalityTraits: string[] = [];
+  
+  // Big Five analysis for V3
+  if (cognitive.big_five.extraversion > 0.7) personalityTraits.push("outgoing and energetic");
+  else if (cognitive.big_five.extraversion < 0.3) personalityTraits.push("reserved and thoughtful");
+  
+  if (cognitive.big_five.openness > 0.7) personalityTraits.push("creative and curious");
+  else if (cognitive.big_five.openness < 0.3) personalityTraits.push("practical and traditional");
+  
+  if (cognitive.big_five.conscientiousness > 0.7) personalityTraits.push("organized and disciplined");
+  else if (cognitive.big_five.conscientiousness < 0.3) personalityTraits.push("flexible and spontaneous");
+  
+  if (cognitive.big_five.agreeableness > 0.7) personalityTraits.push("compassionate and cooperative");
+  else if (cognitive.big_five.agreeableness < 0.3) personalityTraits.push("direct and competitive");
+  
+  // Values analysis for V3
+  const valueTraits: string[] = [];
+  if (cognitive.moral_foundations.care_harm > 0.7) valueTraits.push("deeply caring");
+  if (cognitive.moral_foundations.fairness_cheating > 0.7) valueTraits.push("justice-oriented");
+  if (cognitive.moral_foundations.liberty_oppression > 0.7) valueTraits.push("freedom-loving");
+  
+  // Build description
+  let description = `${name} is`;
+  
+  if (identity?.age) description += ` a ${identity.age}-year-old`;
+  if (identity?.occupation) description += ` ${identity.occupation}`;
+  if (identity?.location?.city) description += ` from ${identity.location.city}`;
+  
+  description += ".";
+  
+  if (personalityTraits.length > 0) {
+    description += ` They are ${personalityTraits.slice(0, 2).join(" and ")}.`;
+  }
+  
+  if (valueTraits.length > 0) {
+    description += ` ${valueTraits.join(" and ")}.`;
+  }
+  
+  // Add worldview if available
+  if (cognitive.worldview_summary) {
+    description += ` ${cognitive.worldview_summary}`;
+  }
+  
+  return description;
 }
 
 function generatePersonaDescription(persona: PersonaTemplate, traits: any): string {
