@@ -129,7 +129,7 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           }
           const { data: myPersonasData, error: myError } = await supabase
             .from('personas')
-            .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
+            .select('id, persona_id, name, description, user_id, is_public, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
           
@@ -138,8 +138,7 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
             id: item.id,
             persona_id: item.persona_id,
             name: item.name,
-            description: `Created on ${item.creation_date}`,
-            creation_date: item.creation_date,
+            description: item.description || `Created on ${new Date(item.created_at).toLocaleDateString()}`,
             user_id: item.user_id,
             is_public: item.is_public,
             created_at: item.created_at,

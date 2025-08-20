@@ -23,10 +23,17 @@ export function usePersonaStats() {
     try {
       setLoading(true);
       
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('Error getting user:', userError);
+        return;
+      }
+
       const { data: personas, error } = await supabase
         .from('personas')
-        .select('persona_id, name, trait_profile, interview_sections, metadata, linguistic_profile, description')
-        .order('name', { ascending: true });
+        .select('id, persona_data, description')
+        .eq('user_id', user.id);
 
       if (error) {
         console.error('Error fetching personas:', error);
@@ -51,11 +58,12 @@ export function usePersonaStats() {
       let briefDescriptions = 0;
 
       console.log('Total personas found:', totalPersonas);
-      console.log('Sample persona metadata:', personas[0]?.metadata);
+      console.log('Sample persona data:', personas[0]?.persona_data);
 
       personas.forEach(persona => {
-        // Check for missing demographics in metadata
-        const metadata = persona.metadata as any || {};
+        // Check for missing demographics in persona_data
+        const personaData = persona.persona_data as any || {};
+        const metadata = personaData.metadata || {};
         const demographics = metadata.demographics || {};
         
         // Check if ANY required demographic field is missing or empty

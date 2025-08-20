@@ -47,8 +47,8 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
     console.log('Persona found:', data);
     
     try {
-      // Handle potential JSON parsing issues with interview_sections
-      console.log('Interview sections structure:', JSON.stringify(data.interview_sections, null, 2));
+      // Handle potential JSON parsing issues with persona_data
+      console.log('Persona data structure:', JSON.stringify(data.persona_data, null, 2));
       return dbPersonaToPersona(data);
     } catch (parseError) {
       console.error('Error parsing persona data:', parseError);
@@ -66,7 +66,7 @@ export async function getPersonasForListing(): Promise<Persona[]> {
     console.log("Fetching personas for listing from Supabase");
     const { data, error } = await supabase
       .from('personas')
-      .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
+      .select('id, persona_id, name, description, user_id, is_public, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -79,11 +79,11 @@ export async function getPersonasForListing(): Promise<Persona[]> {
       id: item.id,
       persona_id: item.persona_id,
       name: item.name,
-      description: `Created on ${item.creation_date}`,
-      creation_date: item.creation_date,
+      description: item.description || `Created on ${new Date(item.created_at).toLocaleDateString()}`,
       user_id: item.user_id,
       is_public: item.is_public,
       created_at: item.created_at,
+      updated_at: item.created_at,
       // Placeholder values for required fields
       metadata: {},
       trait_profile: {},
@@ -143,7 +143,7 @@ export async function getPersonasByCollectionForListing(collectionId: string): P
     // Then fetch the actual personas (lightweight)
     const { data: personas, error: personasError } = await supabase
       .from('personas')
-      .select('id, persona_id, name, creation_date, user_id, is_public, created_at')
+      .select('id, persona_id, name, description, user_id, is_public, created_at')
       .in('persona_id', personaIds)
       .order('created_at', { ascending: false });
     
@@ -153,11 +153,11 @@ export async function getPersonasByCollectionForListing(collectionId: string): P
       id: item.id,
       persona_id: item.persona_id,
       name: item.name,
-      description: `Created on ${item.creation_date}`,
-      creation_date: item.creation_date,
+      description: item.description || `Created on ${new Date(item.created_at).toLocaleDateString()}`,
       user_id: item.user_id,
       is_public: item.is_public,
       created_at: item.created_at,
+      updated_at: item.created_at,
       // Placeholder values for required fields
       metadata: {},
       trait_profile: {},

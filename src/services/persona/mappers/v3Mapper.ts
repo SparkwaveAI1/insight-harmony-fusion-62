@@ -8,27 +8,25 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
     description: persona.description || null,
     user_id: persona.user_id,
     is_public: persona.is_public || false,
+    updated_at: new Date().toISOString(),
     profile_image_url: persona.profile_image_url || null,
     prompt: persona.prompt || null,
-    enhanced_metadata_version: persona.enhanced_metadata_version || 3,
+    version: persona.version || '3.0',
     
     // Store all persona data in the persona_data JSONB field
-    persona_data: persona.persona_data,
-    
-    // Voicepack cache
-    voicepack_runtime: persona.voicepack_runtime || null,
-    voicepack_hash: persona.voicepack_hash || null,
-    
-    // Legacy fields - map from persona_data for backwards compatibility
-    creation_date: persona.persona_data?.creation_date || new Date().toISOString(),
-    metadata: persona.persona_data?.metadata || {},
-    behavioral_modulation: persona.persona_data?.behavioral_modulation || {},
-    interview_sections: persona.persona_data?.interview_sections || [],
-    linguistic_profile: persona.persona_data?.linguistic_profile || {},
-    preinterview_tags: persona.persona_data?.preinterview_tags || [],
-    simulation_directives: persona.persona_data?.simulation_directives || {},
-    trait_profile: persona.persona_data?.trait_profile || {},
-    emotional_triggers: persona.persona_data?.emotional_triggers || {}
+    persona_data: persona.persona_data || {
+      metadata: persona.metadata || {},
+      trait_profile: persona.trait_profile || {},
+      behavioral_modulation: persona.behavioral_modulation || {},
+      linguistic_profile: persona.linguistic_profile || {},
+      interview_sections: persona.interview_sections || [],
+      emotional_triggers: persona.emotional_triggers || {},
+      preinterview_tags: persona.preinterview_tags || [],
+      simulation_directives: persona.simulation_directives || {},
+      persona_context: persona.persona_context || {},
+      persona_type: persona.persona_type || 'humanoid',
+      creation_date: persona.creation_date || new Date().toISOString()
+    }
   };
 }
 
@@ -47,7 +45,7 @@ export function dbPersonaToPersona(dbPersona: any): Persona {
     is_public: dbPersona.is_public,
     profile_image_url: dbPersona.profile_image_url,
     prompt: dbPersona.prompt,
-    enhanced_metadata_version: dbPersona.enhanced_metadata_version,
+    version: dbPersona.version || '3.0',
     
     // Primary V3 structure
     persona_data: hasPersonaData ? dbPersona.persona_data : {
@@ -64,10 +62,6 @@ export function dbPersonaToPersona(dbPersona: any): Persona {
       creation_date: dbPersona.creation_date || dbPersona.created_at
     },
     
-    // Voicepack cache
-    voicepack_runtime: dbPersona.voicepack_runtime,
-    voicepack_hash: dbPersona.voicepack_hash,
-    
     // Legacy support - expose persona_data fields at root level for backwards compatibility
     metadata: hasPersonaData ? dbPersona.persona_data.metadata : dbPersona.metadata,
     trait_profile: hasPersonaData ? dbPersona.persona_data.trait_profile : dbPersona.trait_profile,
@@ -79,6 +73,7 @@ export function dbPersonaToPersona(dbPersona: any): Persona {
     simulation_directives: hasPersonaData ? dbPersona.persona_data.simulation_directives : dbPersona.simulation_directives,
     persona_context: hasPersonaData ? dbPersona.persona_data.persona_context : dbPersona.persona_context,
     persona_type: hasPersonaData ? dbPersona.persona_data.persona_type : dbPersona.persona_type,
-    creation_date: hasPersonaData ? dbPersona.persona_data.creation_date : dbPersona.creation_date
+    creation_date: hasPersonaData ? dbPersona.persona_data.creation_date : dbPersona.creation_date,
+    enhanced_metadata_version: dbPersona.enhanced_metadata_version || 3
   };
 }

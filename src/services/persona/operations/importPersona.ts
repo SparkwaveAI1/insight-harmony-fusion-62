@@ -36,8 +36,8 @@ export async function importPersonaFromJSON(jsonData: any): Promise<Persona | nu
       description: jsonData.description || "",
       
       // Timestamps - use current time for import
-      creation_date: currentDateOnly,
       created_at: currentDate,
+      updated_at: currentDate,
       
       // User assignment
       user_id: user.id,

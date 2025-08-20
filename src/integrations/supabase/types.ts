@@ -436,7 +436,6 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
-          enhanced_metadata_version: number | null
           id: string
           is_public: boolean
           name: string
@@ -446,13 +445,11 @@ export type Database = {
           prompt: string | null
           updated_at: string
           user_id: string
-          voicepack_hash: string | null
-          voicepack_runtime: Json | null
+          version: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
-          enhanced_metadata_version?: number | null
           id?: string
           is_public?: boolean
           name: string
@@ -462,13 +459,11 @@ export type Database = {
           prompt?: string | null
           updated_at?: string
           user_id: string
-          voicepack_hash?: string | null
-          voicepack_runtime?: Json | null
+          version?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
-          enhanced_metadata_version?: number | null
           id?: string
           is_public?: boolean
           name?: string
@@ -478,8 +473,7 @@ export type Database = {
           prompt?: string | null
           updated_at?: string
           user_id?: string
-          voicepack_hash?: string | null
-          voicepack_runtime?: Json | null
+          version?: string | null
         }
         Relationships: []
       }
