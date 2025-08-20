@@ -15,14 +15,16 @@ import {
   generateV3LifeContext,
   generateV3KnowledgeProfile,
   generateV3CognitiveProfile,
+  generateV3Interview
+} from "./openaiService.ts";
+import { 
   generateV3Memory,
   generateV3StateModifiers,
   generateV3LinguisticStyle,
   generateV3SocialProfiles,
-  generateV3RuntimeControls,
-  generateV3Interview,
-  finalizePersonaV3 
-} from "./personaGenerator.ts";
+  generateV3RuntimeControls
+} from "./v3Generators.ts";
+import { finalizePersonaV3 } from "./personaGenerator.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
