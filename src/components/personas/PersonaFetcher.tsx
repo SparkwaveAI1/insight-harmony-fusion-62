@@ -79,9 +79,9 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
             <br />
             <strong>Region:</strong> {
               activePersona.persona_data?.identity?.region || 
-              activePersona.persona_data?.identity?.location ||
-              activePersona.metadata?.region || 
-              'Not specified'
+              (activePersona.persona_data?.identity?.location ? 
+                `${activePersona.persona_data.identity.location.city || ''}, ${activePersona.persona_data.identity.location.region || ''}, ${activePersona.persona_data.identity.location.country || ''}`.replace(/^, |, $|, , /g, '').replace(/^, /, '') || 'Not specified'
+                : activePersona.metadata?.region || 'Not specified')
             }
           </div>
           <div>
