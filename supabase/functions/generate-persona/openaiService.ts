@@ -71,15 +71,17 @@ DISTINCTIVENESS REQUIREMENTS:
   ];
 
   const response = await generateChatResponse(messages, OPENAI_API_KEY, {
-    model: 'gpt-4.1-2025-04-14',
-    temperature: 0.9, // Higher temperature for more distinctive personas
-    max_tokens: 1500
+    model: 'gpt-5-2025-08-07', // Use flagship model for better accuracy
+    max_completion_tokens: 1500 // Updated parameter for newer models
   });
   
   const content = response.choices[0].message.content;
+  console.log('Raw OpenAI identity response:', content);
   
   try {
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    console.log('Parsed identity data:', JSON.stringify(parsed, null, 2));
+    return parsed;
   } catch (error) {
     console.error('Failed to parse V3 identity JSON:', content);
     throw new Error('Invalid JSON response from OpenAI for V3 identity');
