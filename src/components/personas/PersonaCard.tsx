@@ -106,11 +106,17 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     persona.metadata?.age, 
     'Not specified'
   );
-  const location = getV3DataWithFallback(
-    persona.persona_data?.identity?.location || persona.persona_data?.identity?.region,
-    persona.metadata?.location || persona.metadata?.region,
-    'Not specified'
-  );
+  const location = (() => {
+    const locationObj = persona.persona_data?.identity?.location;
+    if (locationObj && typeof locationObj === 'object' && (locationObj.city || locationObj.region || locationObj.country)) {
+      return `${locationObj.city || ''}, ${locationObj.region || ''}, ${locationObj.country || ''}`.replace(/^, |, $|, , /g, '').replace(/^, /, '') || 'Not specified';
+    }
+    return getV3DataWithFallback(
+      persona.persona_data?.identity?.region,
+      persona.metadata?.location || persona.metadata?.region,
+      'Not specified'
+    );
+  })();
   const occupation = getV3DataWithFallback(
     persona.persona_data?.identity?.occupation,
     persona.metadata?.occupation,
