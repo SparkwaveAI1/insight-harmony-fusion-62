@@ -1,5 +1,6 @@
 
 import { generateChatResponse } from "../_shared/openai.ts";
+import { extractUserDetails, validateUserInputPreservation, generatePersonaRequirements } from "./inputProcessor.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
@@ -7,85 +8,169 @@ if (!OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY environment variable is required');
 }
 
+// Input Processing Utility
+function extractUserDetails(prompt: string): any {
+  console.log('Extracting user details from prompt:', prompt);
+  
+  // Extract key information patterns
+  const nameMatch = prompt.match(/([A-Z][a-z]+ [A-Z][a-z]+)/);
+  const ageMatch = prompt.match(/(\d{2,3})/);
+  const occupationMatch = prompt.match(/(?:works as|job|occupation|is a|as a)\s+([^,\.]+)/i);
+  const locationMatch = prompt.match(/(?:in|from|lives in|located in)\s+([^,\.]+)/i);
+  const educationMatch = prompt.match(/(?:went to|graduated from|studied at)\s+([^,\.]+)/i);
+  const familyMatch = prompt.match(/(?:married|wife|husband|spouse|kids|children|family)/i);
+  
+  const extracted = {
+    name: nameMatch ? nameMatch[1] : null,
+    age: ageMatch ? parseInt(ageMatch[1]) : null,
+    occupation: occupationMatch ? occupationMatch[1].trim() : null,
+    location: locationMatch ? locationMatch[1].trim() : null,
+    education: educationMatch ? educationMatch[1].trim() : null,
+    hasFamily: !!familyMatch,
+    fullPrompt: prompt
+  };
+  
+  console.log('Extracted details:', JSON.stringify(extracted, null, 2));
+  return extracted;
+}
+
+// Probabilistic Trait Generator
+function generateProbabilisticTraits(userDetails: any, personalityContext: string): any {
+  console.log('Generating probabilistic traits based on user context...');
+  
+  // Base probabilities adjusted by user context
+  const traits = {
+    power_distance: Math.random() * 0.4 + 0.2, // 0.2-0.6 range
+    individualism_vs_collectivism: Math.random() * 0.6 + 0.3, // 0.3-0.9 range
+    masculinity_vs_femininity: Math.random() * 0.8 + 0.1, // 0.1-0.9 range
+    uncertainty_avoidance: Math.random() * 0.7 + 0.2, // 0.2-0.9 range
+    long_term_orientation: Math.random() * 0.6 + 0.3, // 0.3-0.9 range
+    indulgence_vs_restraint: Math.random() * 0.8 + 0.1 // 0.1-0.9 range
+  };
+  
+  // Adjust based on occupation and context
+  if (userDetails.occupation?.toLowerCase().includes('tech') || 
+      userDetails.occupation?.toLowerCase().includes('software') ||
+      personalityContext.toLowerCase().includes('crypto')) {
+    traits.individualism_vs_collectivism += 0.1;
+    traits.uncertainty_avoidance -= 0.1;
+  }
+  
+  if (personalityContext.toLowerCase().includes('family') || 
+      personalityContext.toLowerCase().includes('married')) {
+    traits.individualism_vs_collectivism -= 0.1;
+    traits.long_term_orientation += 0.1;
+  }
+  
+  // Clamp values to 0-1 range
+  Object.keys(traits).forEach(key => {
+    traits[key] = Math.max(0, Math.min(1, traits[key]));
+    traits[key] = Math.round(traits[key] * 100) / 100; // Round to 2 decimal places
+  });
+  
+  console.log('Generated probabilistic traits:', traits);
+  return traits;
+}
+
 // Stage 1: Core Demographics -> V3 Identity
 export async function generateCoreDemographics(prompt: string): Promise<any> {
   console.log(`Generating V3 identity from prompt: "${prompt}"`);
   
+  // Extract key details from user input first
+  const userDetails = extractUserDetails(prompt);
+  
   const messages = [
     {
       role: "system",
-      content: `You are creating a distinctive, memorable persona with unique characteristics. Generate V3 identity data that avoids generic midline values. Return ONLY valid JSON with NO markdown formatting.
+      content: `You are creating a V3 persona identity by extracting and building upon the user's provided information. 
 
-CRITICAL: Create someone with personality! Avoid bland, default characteristics. Make them interesting and memorable with clear traits, not generic middle-ground values.
+CRITICAL INSTRUCTIONS:
+1. **EXTRACT FIRST**: Identify all explicitly provided details (name, age, occupation, location, background)
+2. **USE PROVIDED DATA**: Never override user-specified information with template examples
+3. **FILL GAPS INTELLIGENTLY**: Only generate data for missing fields, keeping it consistent with provided context
+4. **MAKE IT DISTINCTIVE**: Avoid generic values, create memorable characteristics based on the user's description
 
-REQUIRED V3 STRUCTURE:
+REQUIRED V3 STRUCTURE (JSON only, no markdown):
 {
-  "name": "First Last",
+  "name": "[Use provided name or generate if missing]",
   "persona_id": "unique-id-123", 
-  "creation_date": "2025-01-01",
+  "creation_date": "2025-01-20",
   "identity": {
-    "age": 29,
-    "gender": "Non-binary",
-    "pronouns": "they/them",
-    "ethnicity": "Korean-American",
-    "nationality": "American",
-    "occupation": "UX Designer",
-    "relationship_status": "In a relationship",
-    "dependents": 0,
+    "age": [Use provided age or generate 22-65],
+    "gender": "[Infer from context or ask/generate]",
+    "pronouns": "[Match gender]",
+    "ethnicity": "[Extract from background or generate]",
+    "nationality": "[Extract from location/background]",
+    "occupation": "[Use provided occupation]",
+    "relationship_status": "[Extract from family context]",
+    "dependents": [Extract from family info],
     "location": {
-      "city": "Austin",
-      "region": "Texas",
-      "country": "USA"
+      "city": "[Extract from provided location]",
+      "region": "[State/Province]",
+      "country": "[Extract from context]"
     },
     "socioeconomic_context": {
-      "income_level": "$75,000-$90,000",
-      "education_level": "Bachelor's Degree",
-      "social_class_identity": "Upper middle class",
-      "political_affiliation": "Progressive",
-      "religious_affiliation": "Agnostic",
-      "religious_practice_level": "low",
-      "cultural_background": "Korean-American heritage",
-      "cultural_dimensions": {
-        "power_distance": 0.3,
-        "individualism_vs_collectivism": 0.7,
-        "masculinity_vs_femininity": 0.4,
-        "uncertainty_avoidance": 0.6,
-        "long_term_orientation": 0.8,
-        "indulgence_vs_restraint": 0.6
-      }
+      "income_level": "[Generate realistic for occupation]",
+      "education_level": "[Extract or infer from occupation/background]",
+      "social_class_identity": "[Infer from income/education/context]",
+      "political_affiliation": "[Infer from context clues or generate]",
+      "religious_affiliation": "[Extract from background or generate]",
+      "religious_practice_level": "[low/medium/high]",
+      "cultural_background": "[Extract from ethnicity/location/family]",
+      "cultural_dimensions": "[Will be set separately with probabilistic values]"
     }
   }
 }
 
-DISTINCTIVENESS REQUIREMENTS:
-- Age: Vary from 22-65, avoid round numbers like 25, 30, 40
-- Create interesting combinations (rural programmer, urban farmer, etc.)
-- Give them compelling backstories and unique characteristics
-- Cultural dimensions should reflect their specific background, not generic 0.5 values
-- Make them someone you'd remember meeting at a party`
+EXTRACTION PRIORITIES:
+- NAME: "${userDetails.name || 'Generate distinctive name'}"
+- AGE: ${userDetails.age || 'Generate realistic age 22-65'}
+- OCCUPATION: "${userDetails.occupation || 'Generate based on context'}"
+- LOCATION: "${userDetails.location || 'Generate realistic location'}"
+- EDUCATION: "${userDetails.education || 'Infer from occupation/context'}"
+- FAMILY: ${userDetails.hasFamily ? 'Has family/relationships' : 'Determine from context'}
+
+BUILD THE PERSONA around these extracted details. Make them memorable and realistic.`
     },
     {
       role: "user",
-      content: prompt
+      content: `Create V3 identity for this person. Extract all provided information and build a complete identity:
+
+${prompt}
+
+CRITICAL: Use the provided name, age, occupation, location, and background details exactly as given. Only generate missing information.`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY, {
-    model: 'gpt-5-2025-08-07', // Use flagship model for better accuracy
-    max_completion_tokens: 1500 // Updated parameter for newer models
-  });
+// Add validation to the main identity generation
+const response = await generateChatResponse(messages, OPENAI_API_KEY, {
+  model: 'gpt-5-2025-08-07',
+  max_completion_tokens: 1500
+});
+
+const content = response.choices[0].message.content;
+console.log('Raw OpenAI identity response:', content);
+
+try {
+  const parsed = JSON.parse(content);
   
-  const content = response.choices[0].message.content;
-  console.log('Raw OpenAI identity response:', content);
+  // Add probabilistic cultural dimensions
+  const culturalTraits = generateProbabilisticTraits(userDetails, prompt);
+  parsed.identity.socioeconomic_context.cultural_dimensions = culturalTraits;
   
-  try {
-    const parsed = JSON.parse(content);
-    console.log('Parsed identity data:', JSON.stringify(parsed, null, 2));
-    return parsed;
-  } catch (error) {
-    console.error('Failed to parse V3 identity JSON:', content);
-    throw new Error('Invalid JSON response from OpenAI for V3 identity');
+  console.log('Final identity with probabilistic traits:', JSON.stringify(parsed, null, 2));
+  
+  // Validate that user input was preserved
+  const preservationWarnings = validateUserInputPreservation(parsed, userDetails);
+  if (preservationWarnings.length > 0) {
+    console.warn('⚠️ User input preservation issues:', preservationWarnings);
   }
+  
+  return parsed;
+} catch (error) {
+  console.error('Failed to parse V3 identity JSON:', content);
+  throw new Error('Invalid JSON response from OpenAI for V3 identity');
+}
 }
 
 // Stage 2: V3 Life Context

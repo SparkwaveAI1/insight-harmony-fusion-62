@@ -1,4 +1,5 @@
 import { generateChatResponse } from "../_shared/openai.ts";
+import { extractUserDetails } from "./inputProcessor.ts";
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
