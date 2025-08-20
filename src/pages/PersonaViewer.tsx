@@ -13,6 +13,7 @@ import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
+import UpgradeNotice from "@/components/ui/UpgradeNotice";
 import { Persona } from "@/services/persona";
 
 // Create a QueryClient with specific retry configuration
@@ -89,6 +90,7 @@ const PersonaViewerContent = () => {
       <main className="flex-1 pt-24">
         <div className="container py-6">
           <ViewerHeader isLoading={isLoading} />
+          <UpgradeNotice />
           
           {/* Page Header */}
           <div className="mb-8">
