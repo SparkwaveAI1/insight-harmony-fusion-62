@@ -143,7 +143,7 @@ const PersonaViewerContent = () => {
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
-                showPublicOnly={false}
+                mode="my-personas"
               />
             </TabsContent>
 
@@ -155,7 +155,7 @@ const PersonaViewerContent = () => {
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
-                showPublicOnly={true}
+                mode="public-personas"
               />
             </TabsContent>
           </Tabs>

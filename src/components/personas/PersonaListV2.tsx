@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { getAllPersonas } from '@/services/persona';
+import { getAllPersonas, getPublicPersonas } from '@/services/persona';
 import { DbPersona } from '@/services/persona';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,7 +15,7 @@ interface PersonaListProps {
   selectedRegion?: string;
   selectedIncome?: string;
   selectedSourceType?: string;
-  showPublicOnly?: boolean;
+  mode?: 'my-personas' | 'public-personas';
 }
 
 const PersonaList = ({ 
@@ -25,7 +25,7 @@ const PersonaList = ({
   selectedRegion = "", 
   selectedIncome = "", 
   selectedSourceType = "",
-  showPublicOnly = false 
+  mode = 'my-personas'
 }: PersonaListProps) => {
   const [personas, setPersonas] = useState<DbPersona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,13 +33,20 @@ const PersonaList = ({
 
   useEffect(() => {
     loadPersonas();
-  }, []);
+  }, [mode]);
 
   const loadPersonas = async () => {
     try {
       setIsLoading(true);
-      const allPersonas = await getAllPersonas();
-      setPersonas(allPersonas);
+      if (mode === 'public-personas') {
+        // For public personas, get all public personas from all users
+        const publicPersonas = await getPublicPersonas();
+        setPersonas(publicPersonas);
+      } else {
+        // For my personas, get all personas owned by current user (both public and private)
+        const myPersonas = await getAllPersonas();
+        setPersonas(myPersonas);
+      }
     } catch (error) {
       console.error('Error loading personas:', error);
     } finally {
@@ -50,11 +57,8 @@ const PersonaList = ({
   // Use enhanced search hook
   const searchedPersonas = usePersonaSearch(personas, searchQuery);
   
-  // Apply additional filters
+  // Apply additional filters (no visibility filtering needed since we load the right personas)
   const filteredPersonas = searchedPersonas.filter(persona => {
-    // Filter by visibility
-    if (showPublicOnly && !persona.is_public) return false;
-    if (!showPublicOnly && persona.is_public) return false;
     
     // Filter by age
     if (selectedAge && persona.persona_data?.identity?.age) {
