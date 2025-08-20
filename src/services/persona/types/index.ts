@@ -6,11 +6,3 @@ export * from './trait-profile';
 export * from './linguistic-profile';
 export * from './db-models';
 export * from './persona';
-
-// Export voicepack types
-export * from '../../../types/voicepack';
-export * from '../../../types/persona-v2';
-
-// Export migration types
-export * from '../migration/traitSampler';
-export * from './persona-v2-db';

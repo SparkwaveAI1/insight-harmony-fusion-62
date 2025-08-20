@@ -3,7 +3,6 @@ import { PersonaMetadata } from './metadata';
 import { TraitProfile } from './trait-profile';
 import { LinguisticProfile, SimulationDirectives } from './linguistic-profile';
 import { InterviewSection } from './interview';
-import { VoicepackRuntime } from '../../../types/voicepack';
 
 export interface Persona {
   persona_id: string;
@@ -27,7 +26,5 @@ export interface Persona {
   profile_image_url?: string; // Ensure this field is explicitly defined
   emotional_triggers?: any;
   enhanced_metadata_version?: number;
-  voicepack_runtime?: VoicepackRuntime; // compiled & cached voicepack
-  persona_version?: string; // track schema versions
   [key: string]: any;
 }

@@ -28,9 +28,14 @@ const PersonaVisibilityToggle = ({
     
     try {
       const newVisibility = !isPublic;
-      await updatePersonaVisibility(personaId, newVisibility);
-      onVisibilityChange(newVisibility);
-      toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
+      const success = await updatePersonaVisibility(personaId, newVisibility);
+      
+      if (success) {
+        onVisibilityChange(newVisibility);
+        toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
+      } else {
+        toast.error("Failed to update visibility");
+      }
     } catch (error) {
       console.error("Error updating visibility:", error);
       toast.error("Failed to update visibility");

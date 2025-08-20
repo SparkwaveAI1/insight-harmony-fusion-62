@@ -170,26 +170,18 @@ export function validateCompleteMetadata(metadata: any): { isValid: boolean; err
 }
 
 export async function validatePersonaUniqueness(supabase: any, persona: any): Promise<string> {
-  // Generate a unique persona ID based on name and timestamp
-  const baseName = persona.name?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'persona';
-  const timestamp = Date.now().toString(36);
-  const randomSuffix = Math.random().toString(36).substr(2, 4);
-  const proposedId = `${baseName}-${timestamp}-${randomSuffix}`;
-
-  // Check if this ID already exists (very unlikely but safe)
+  // Validate persona_id uniqueness
   const { data: existingPersona } = await supabase
-    .from('personas_v2')
+    .from('personas')
     .select('persona_id')
-    .eq('persona_id', proposedId)
-    .maybeSingle();
+    .eq('persona_id', persona.persona_id)
+    .single();
 
   if (existingPersona) {
-    // If collision, add another random suffix
-    const fallbackId = `${proposedId}-${Math.random().toString(36).substr(2, 4)}`;
-    console.log(`Persona ID collision detected, using fallback: ${fallbackId}`);
-    return fallbackId;
+    const newId = `${persona.persona_id}-${Math.random().toString(36).substr(2, 4)}`;
+    console.log(`Persona ID collision detected, using: ${newId}`);
+    return newId;
   }
   
-  console.log(`Generated unique persona ID: ${proposedId}`);
-  return proposedId;
+  return persona.persona_id;
 }

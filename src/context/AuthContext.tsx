@@ -25,17 +25,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("Setting up auth state...");
     
-    // Set up the auth state listener first
+    // First set up the auth state listener before checking existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event, {
-          userId: currentSession?.user?.id || 'undefined',
-          userEmail: currentSession?.user?.email || 'undefined'
+          userId: currentSession?.user?.id,
+          userEmail: currentSession?.user?.email
         });
         
-        // Always update state with the session data
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setSession(null);
+        } else if (currentSession) {
+          setUser(currentSession.user);
+          setSession(currentSession);
+          console.log("User authenticated:", {
+            id: currentSession.user.id,
+            email: currentSession.user.email
+          });
+        }
+        
         setIsLoading(false);
       }
     );
@@ -44,30 +53,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initializeAuth = async () => {
       try {
         console.log("Checking for existing session...");
-        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error("Error getting session:", error);
-          setSession(null);
-          setUser(null);
-        } else if (existingSession) {
+        if (existingSession) {
           console.log("Found existing session:", {
             userId: existingSession.user?.id,
             userEmail: existingSession.user?.email
           });
-          setSession(existingSession);
           setUser(existingSession.user);
+          setSession(existingSession);
         } else {
           console.log("No existing session found");
-          setSession(null);
-          setUser(null);
         }
         
         setIsLoading(false);
       } catch (error) {
         console.error("Error checking auth session:", error);
-        setSession(null);
-        setUser(null);
         setIsLoading(false);
       }
     };
@@ -82,18 +83,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
-      });
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
       
+      // Email confirmations are disabled, so we can show a success message
       toast.success("Account created successfully! You can now sign in.");
     } catch (error: any) {
-      console.error("Sign up error:", error);
       toast.error(error.message || "Error signing up");
       throw error;
     }
@@ -125,21 +120,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("Signing out...");
       
+      // First, clear local state immediately to prevent UI confusion
+      setUser(null);
+      setSession(null);
+      
+      // Then attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
+      // Handle the "Auth session missing" error gracefully
       if (error && error.message !== "Auth session missing!") {
         console.error("Sign out error:", error);
         throw error;
       }
       
-      // Clear local state
-      setUser(null);
-      setSession(null);
-      
+      // Even if there was a session missing error, we consider logout successful
+      // since the user is already signed out locally
       console.log("Sign out completed successfully");
       toast.success("Successfully signed out");
     } catch (error: any) {
       console.error("Sign out exception:", error);
+      // Don't show error for session missing as it means user is already logged out
       if (error.message !== "Auth session missing!") {
         toast.error(error.message || "Error signing out");
       } else {

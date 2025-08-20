@@ -41,15 +41,16 @@ const ParticipateResearch = () => {
               
               <Reveal delay={300}>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button 
-                    variant="primary" 
-                    size="lg" 
-                    className="group w-full sm:w-auto opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    Coming Soon
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                  <Link to="/interview-process">
+                    <Button 
+                      variant="primary" 
+                      size="lg" 
+                      className="group w-full sm:w-auto"
+                    >
+                      Start Research Interview
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
                 </div>
               </Reveal>
             </div>
@@ -113,10 +114,12 @@ const ParticipateResearch = () => {
 
             <div className="text-center mt-12">
               <Reveal delay={300}>
-                <Button size="lg" className="group opacity-50 cursor-not-allowed" disabled>
-                  Coming Soon
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Link to="/interview-process">
+                  <Button size="lg" className="group">
+                    Start Interview Now
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </Reveal>
             </div>
           </div>
@@ -167,10 +170,12 @@ const ParticipateResearch = () => {
 
             <div className="text-center mt-12">
               <Reveal delay={300}>
-                <Button size="lg" className="group opacity-50 cursor-not-allowed" disabled>
-                  Coming Soon
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Link to="/interview-process">
+                  <Button size="lg" className="group">
+                    Participate Now
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </Reveal>
             </div>
           </div>

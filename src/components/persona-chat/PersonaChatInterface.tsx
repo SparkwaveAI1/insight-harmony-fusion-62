@@ -23,14 +23,6 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const [conversationContext, setConversationContext] = useState<string>('');
-  const [conversationState, setConversationState] = useState<Record<string, any>>({
-    stress: 0.3,
-    fatigue: 0.3,
-    mood_valence: 0.5,
-    time_pressure: 0.3,
-    social_safety: 0.7,
-    sexual_tension: 0.2
-  });
   const [sessionStarted, setSessionStarted] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [initializationAttempts, setInitializationAttempts] = useState(0);
@@ -161,16 +153,8 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     }
     
     try {
-      console.log('📤 Persona Chat: Sending message:', { 
-        message, 
-        hasImage: !!imageFile,
-        conversationState
-      });
-      
-      await sendMessage(message, imageFile, {
-        state: conversationState
-      });
-      
+      console.log('📤 Persona Chat: Sending message:', { message, hasImage: !!imageFile });
+      await sendMessage(message, imageFile);
       console.log('✅ Persona Chat: Message sent successfully');
     } catch (error) {
       console.error('❌ Persona Chat: Error sending message:', error);
@@ -232,7 +216,9 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         <div>
           <p className="font-medium">{activePersona.name}</p>
           <p className="text-xs text-muted-foreground">
-            {activePersona.description || 'Persona'}
+            {activePersona.metadata?.occupation || ''} 
+            {activePersona.metadata?.age && `, ${activePersona.metadata.age}`}
+            {activePersona.metadata?.region && ` • ${activePersona.metadata.region}`}
           </p>
         </div>
         

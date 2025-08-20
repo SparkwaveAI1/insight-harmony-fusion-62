@@ -1,43 +1,24 @@
 
-// Unified Persona Operations
+// Re-export all functions from the operations
+export { savePersona } from './operations/savePersona';
 export { 
-  getPersonaById,
-  getAllPersonas,
-  getPublicPersonas,
-  getPersonasForListing,
-  checkPersonaVersion,
-  savePersona,
-  updatePersona,
-  deletePersona,
-  updatePersonaVoicepack,
-  updatePersonaVisibility,
+  getPersonaById, 
+  getPersonaByPersonaId, 
+  getAllPersonas, 
+  getPersonasByCollection 
+} from './operations/getPersonas';
+export { 
+  updatePersonaVisibility, 
   updatePersonaName,
-  updatePersonaDescription,
-  updatePersonaProfileImageUrl
-} from './operations/personaOperations';
-
-// Additional operations
+  updatePersonaProfileImageUrl 
+} from './operations/updatePersona';
+export { deletePersona } from './operations/deletePersona';
+export { clonePersona } from './operations/clonePersona';
+export { generatePersona } from './personaGenerator';
 export { generatePersonaImage } from './operations/generatePersonaImage';
+export { generatePersonaDescription, updatePersonaDescription } from './operations/generatePersonaDescription';
 export { enhancePersona } from './enhancePersona';
 export { bulkEnhancePersonas } from './bulkEnhancePersonas';
 
-// Voicepack runtime system
-export { 
-  getOrCompileVoicepack,
-  clearVoicepackCache,
-  getVoicepackCacheStats 
-} from '../voicepackCache';
-export { compilePersonaToVoicepack } from '../../compile/compilePersonaToVoicepack';
-export { 
-  classifyTurn, 
-  planTurn, 
-  updateStateFromText 
-} from '../../conversation/controller';
-export { postProcess, generateTelemetry } from '../../conversation/postProcess';
-
-// Migration utilities
-export { samplePersonaTraits, generatePersonaV2Prompt } from './migration/traitSampler';
-
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';
-export type { CreatePersonaRequest, UpdatePersonaRequest, DbPersona } from './operations/personaOperations';

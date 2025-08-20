@@ -19,7 +19,7 @@ export const navigationMenuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Personas",
+    title: "Persona Library",
     url: "/persona-viewer",
     icon: Users,
   },

@@ -15,7 +15,7 @@ import { createSurveySession, updateSurveySessionStatus } from './services/surve
 import { QuestionUpload, SurveyQuestion } from './QuestionUpload';
 import ProjectSelector from './ProjectSelector';
 import DocumentManager from './DocumentManager';
-// PersonaSourceSelector removed - using simplified version
+import { PersonaSourceSelector } from './PersonaSourceSelector';
 import { KnowledgeBaseDocument } from '@/services/collections';
 import { getProjectQuestionSets, saveQuestionSet, ProjectQuestionSet } from '@/services/questionSets/questionSetService';
 
@@ -385,7 +385,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       <SequentialSurveyExecution
         surveyData={surveyData}
         selectedPersonas={selectedPersonas}
-        loadedPersonas={loadedPersonas as any}
+        loadedPersonas={loadedPersonas}
         sessionId={sessionId}
         surveySessionId={surveySessionId}
         projectDocuments={projectDocuments}
@@ -405,7 +405,7 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         questions={surveyData.questions}
         sessionId={sessionId!}
         surveySessionId={surveySessionId}
-        loadedPersonas={loadedPersonas as any}
+        loadedPersonas={loadedPersonas}
         onBack={handleBackToSetup}
       />
     );
@@ -553,15 +553,12 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           )}
         </div>
 
-        <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4 border rounded-lg bg-muted/10">
-          <h3 className="text-lg font-medium">Select Personas for Survey</h3>
-          <p className="text-muted-foreground text-center">
-            Please select personas to participate in your survey.
-          </p>
-          <Button onClick={() => window.location.href = '/personas'}>
-            Select Personas ({selectedPersonas.length} selected)
-          </Button>
-        </div>
+        <PersonaSourceSelector
+          projectId={selectedProjectId || undefined}
+          selectedPersonas={selectedPersonas}
+          onPersonaSelectionChange={handlePersonaSelectionChange}
+          maxPersonas={10}
+        />
       </div>
 
       <div className="flex justify-end">

@@ -8,8 +8,8 @@ import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import PersonaHeader from "@/components/persona-details/PersonaHeader";
 import PersonaLoadingState from "@/components/persona-details/PersonaLoadingState";
-import PersonaDetailHeaderV2 from "@/components/persona-details/PersonaDetailHeaderV2";
-import PersonaContentV2 from "@/components/persona-details/PersonaContentV2";
+import PersonaDetailHeader from "@/components/persona-details/PersonaDetailHeader";
+import PersonaContent from "@/components/persona-details/PersonaContent";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton"; 
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
@@ -28,7 +28,6 @@ const PersonaDetail = () => {
     isLoading,
     isPublic,
     isOwner,
-    isGeneratingImage,
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
@@ -72,11 +71,10 @@ const PersonaDetail = () => {
                 <NotFoundState />
               ) : (
                 <>
-                  <PersonaDetailHeaderV2 
+                  <PersonaDetailHeader 
                     persona={persona}
                     isOwner={isOwner}
                     isPublic={isPublic}
-                    isGeneratingImage={isGeneratingImage}
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
                     onNameUpdate={handleNameUpdate}
@@ -87,7 +85,7 @@ const PersonaDetail = () => {
                     onPersonaUpdated={handlePersonaUpdated}
                   />
                   
-                  <PersonaContentV2 persona={persona} isOwner={isOwner} />
+                  <PersonaContent persona={persona} isOwner={isOwner} />
                   
                   {/* Move Delete button to the very bottom of the page */}
                   {isOwner && (

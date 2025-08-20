@@ -43,7 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const [collection, setCollection] = useState<Collection | null>(null);
-  const [personas, setPersonas] = useState<any[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPersonasDialog, setShowAddPersonasDialog] = useState(false);
   const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);

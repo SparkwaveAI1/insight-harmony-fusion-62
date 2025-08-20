@@ -34,18 +34,17 @@ serve(async (req) => {
     // Build trait summary for description
     const traitSummary = generateTraitSummary(traits, metadata);
     
-    const prompt = `Generate a realistic, nuanced description (2-3 sentences, max 120 words) for this persona based on their traits and background:
+    const prompt = `Generate a concise, engaging description (2-3 sentences, max 120 words) for this persona based on their traits and background:
 
 Name: ${persona.name}
 ${traitSummary}
 
 The description should:
-- Accurately reflect their psychological traits, especially neuroticism and conscientiousness levels
-- Include their struggles and challenges, not just positive qualities
-- Be written in third person with authentic, human complexity
-- Avoid overly optimistic language if traits suggest otherwise
-- Show how their personality affects their daily life and relationships
-- Sound realistic and grounded, acknowledging both strengths and difficulties
+- Capture their key personality traits and characteristics
+- Be written in third person
+- Sound natural and engaging
+- Avoid technical jargon
+- Focus on what makes them unique
 
 Return only the description text, no additional formatting or explanation.`;
 
@@ -120,61 +119,28 @@ function generateTraitSummary(traits: any, metadata: any): string {
   if (metadata.occupation) summary.push(`Occupation: ${metadata.occupation}`);
   if (metadata.location) summary.push(`Location: ${metadata.location}`);
 
-  // Big Five traits with more nuanced descriptions
+  // Big Five traits
   if (traits.big_five) {
     const bigFive = traits.big_five;
     const traitDescriptions: string[] = [];
     
-    // Extraversion
-    if (bigFive.extraversion > 0.7) traitDescriptions.push("highly social and outgoing");
-    else if (bigFive.extraversion > 0.5) traitDescriptions.push("moderately social but selective");
-    else if (bigFive.extraversion < 0.3) traitDescriptions.push("prefers solitude and quiet environments");
+    if (bigFive.extraversion > 0.7) traitDescriptions.push("highly extraverted");
+    else if (bigFive.extraversion < 0.3) traitDescriptions.push("introverted");
     
-    // Conscientiousness with struggle implications
-    if (bigFive.conscientiousness > 0.7) traitDescriptions.push("highly organized and disciplined");
-    else if (bigFive.conscientiousness < 0.3) traitDescriptions.push("struggles with organization and follow-through");
-    else if (bigFive.conscientiousness < 0.5) traitDescriptions.push("somewhat impulsive and disorganized");
+    if (bigFive.openness > 0.7) traitDescriptions.push("very open to experience");
+    else if (bigFive.openness < 0.3) traitDescriptions.push("conventional");
     
-    // Neuroticism with mental health implications
-    if (bigFive.neuroticism > 0.7) traitDescriptions.push("prone to anxiety and emotional volatility");
-    else if (bigFive.neuroticism > 0.5) traitDescriptions.push("experiences moderate stress and worry");
-    else if (bigFive.neuroticism < 0.3) traitDescriptions.push("emotionally resilient and stable");
+    if (bigFive.conscientiousness > 0.7) traitDescriptions.push("highly conscientious");
+    else if (bigFive.conscientiousness < 0.3) traitDescriptions.push("spontaneous");
     
-    // Agreeableness with relationship implications
-    if (bigFive.agreeableness > 0.7) traitDescriptions.push("cooperative and trusting");
-    else if (bigFive.agreeableness < 0.3) traitDescriptions.push("skeptical and often defensive in relationships");
-    else if (bigFive.agreeableness < 0.5) traitDescriptions.push("somewhat guarded and competitive");
+    if (bigFive.agreeableness > 0.7) traitDescriptions.push("highly agreeable");
+    else if (bigFive.agreeableness < 0.3) traitDescriptions.push("competitive");
     
-    // Openness
-    if (bigFive.openness > 0.7) traitDescriptions.push("intellectually curious and creative");
-    else if (bigFive.openness < 0.3) traitDescriptions.push("prefers routine and conventional approaches");
+    if (bigFive.neuroticism > 0.7) traitDescriptions.push("emotionally sensitive");
+    else if (bigFive.neuroticism < 0.3) traitDescriptions.push("emotionally stable");
     
     if (traitDescriptions.length > 0) {
       summary.push(`Personality: ${traitDescriptions.join(", ")}`);
-    }
-  }
-
-  // Add health struggles if present
-  if (traits.health_profile) {
-    const health = traits.health_profile;
-    const struggles: string[] = [];
-    
-    if (health.mental_health && health.mental_health.length > 0) {
-      const mentalHealth = health.mental_health.filter((h: string) => h !== "none");
-      if (mentalHealth.length > 0) {
-        struggles.push(`mental health challenges: ${mentalHealth.join(", ")}`);
-      }
-    }
-    
-    if (health.substance_use && health.substance_use.length > 0) {
-      const substances = health.substance_use.filter((s: string) => s !== "none");
-      if (substances.length > 0) {
-        struggles.push(`substance use: ${substances.join(", ")}`);
-      }
-    }
-    
-    if (struggles.length > 0) {
-      summary.push(`Challenges: ${struggles.join("; ")}`);
     }
   }
 

@@ -31,10 +31,14 @@ export default function PersonaNameEditor({
     }
     
     try {
-      await updatePersonaName(personaId, newName);
-      toast.success("Persona name updated");
-      setIsEditing(false);
-      onNameUpdate(newName);
+      const updated = await updatePersonaName(personaId, newName);
+      if (updated) {
+        toast.success("Persona name updated");
+        setIsEditing(false);
+        onNameUpdate(newName);
+      } else {
+        toast.error("Failed to update persona name");
+      }
     } catch (error) {
       console.error("Error updating persona name:", error);
       toast.error("An error occurred while updating the name");

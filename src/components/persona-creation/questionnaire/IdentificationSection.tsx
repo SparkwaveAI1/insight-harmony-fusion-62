@@ -1,0 +1,78 @@
+
+import React from "react";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { UseFormReturn } from "react-hook-form";
+import { Card } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+interface IdentificationSectionProps {
+  form: UseFormReturn<any>;
+  participantIdentifier?: string | null;
+}
+
+const IdentificationSection = ({ form, participantIdentifier }: IdentificationSectionProps) => {
+  return (
+    <Card className="p-6">
+      <h3 className="text-xl font-medium mb-6">🧾 Identification</h3>
+      
+      {participantIdentifier && (
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Your Participant Identifier</AlertTitle>
+          <AlertDescription>
+            Your unique participant identifier is: <span className="font-bold">{participantIdentifier}</span>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <FormField
+        control={form.control}
+        name="identification.participantId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Participant ID</FormLabel>
+            <FormDescription>This is your unique identifier for this research study.</FormDescription>
+            <FormControl>
+              <Input placeholder="Participant ID" {...field} readOnly />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="identification.name"
+        render={({ field }) => (
+          <FormItem className="mt-6">
+            <FormLabel>First name + last initial</FormLabel>
+            <FormDescription>e.g., Dana M.</FormDescription>
+            <FormControl>
+              <Input placeholder="Your name" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="identification.email"
+        render={({ field }) => (
+          <FormItem className="mt-6">
+            <FormLabel>Email address</FormLabel>
+            <FormDescription>We need your email to contact you to schedule the conversational interview</FormDescription>
+            <FormControl>
+              <Input type="email" placeholder="Your email address" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </Card>
+  );
+};
+
+export default IdentificationSection;

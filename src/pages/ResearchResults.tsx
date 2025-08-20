@@ -9,15 +9,15 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getResearchSessionById, getResearchReport, ResearchSurveySession, ResearchReport } from '@/services/collections/researchOperations';
 import SurveyResults from '@/components/research/SurveyResults';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getPersonaById } from '@/services/persona';
-import { DbPersona } from '@/services/persona';
+import { getPersonaByPersonaId } from '@/services/persona';
+import { Persona } from '@/services/persona/types';
 
 const ResearchResults = () => {
   const { surveySessionId } = useParams<{ surveySessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<ResearchSurveySession | null>(null);
   const [report, setReport] = useState<ResearchReport | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<DbPersona[]>([]);
+  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,13 +42,13 @@ const ResearchResults = () => {
         return;
       }
       
-      // Fetch real V2 persona data
+      // Fetch real persona data
       const personaDataPromises = sessionData.selected_personas.map(personaId => 
-        getPersonaById(personaId)
+        getPersonaByPersonaId(personaId)
       );
       
       const personaDataResults = await Promise.all(personaDataPromises);
-      const validPersonas = personaDataResults.filter((persona): persona is DbPersona => persona !== null);
+      const validPersonas = personaDataResults.filter((persona): persona is Persona => persona !== null);
       
       // Create fallback personas for any that couldn't be loaded
       const allPersonas = sessionData.selected_personas.map(personaId => {
@@ -62,18 +62,18 @@ const ResearchResults = () => {
           persona_id: personaId,
           id: personaId,
           name: `Persona ${personaId}`,
-          description: 'Fallback persona - original not found',
-          user_id: '',
+          creation_date: '',
           created_at: '',
-          updated_at: '',
-          persona_data: {} as any,
-          persona_type: 'humanoid',
-          is_public: false,
-          profile_image_url: null,
-          voicepack_runtime: null,
-          voicepack_hash: null,
-          persona_version: '3.0'
-        } as DbPersona;
+          metadata: {},
+          trait_profile: {},
+          simulation_directives: {},
+          behavioral_modulation: {},
+          interview_sections: [],
+          preinterview_tags: [],
+          linguistic_profile: {},
+          persona_context: '',
+          persona_type: 'persona'
+        } as Persona;
       });
       
       setSession(sessionData);

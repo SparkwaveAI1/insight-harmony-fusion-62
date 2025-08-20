@@ -47,10 +47,14 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
 
     const newVisibility = !isPublic;
     try {
-      await updatePersonaVisibility(persona.persona_id, newVisibility);
-      setIsPublic(newVisibility);
-      if (onVisibilityChange) {
-        onVisibilityChange(persona.persona_id, newVisibility);
+      const success = await updatePersonaVisibility(persona.persona_id, newVisibility);
+      if (success) {
+        setIsPublic(newVisibility);
+        if (onVisibilityChange) {
+          onVisibilityChange(persona.persona_id, newVisibility);
+        }
+      } else {
+        console.error("Failed to update persona visibility");
       }
     } catch (error) {
       console.error("Error updating persona visibility:", error);

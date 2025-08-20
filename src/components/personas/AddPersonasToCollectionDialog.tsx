@@ -18,11 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { DbPersona } from "@/services/persona/operations/personaOperations";
-import { PersonaV3Identity, PersonaV3SocioeconomicContext } from "@/types/persona-v3";
+import { Persona } from "@/services/persona/types";
 import { Collection } from "@/services/collections/types";
 import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
-import { getAllPersonas } from "@/services/persona";
+import { dbPersonaToPersona } from "@/services/persona/mappers";
 import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
 interface AddPersonasToCollectionDialogProps {
@@ -38,7 +37,7 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
   onOpenChange,
   onPersonasAdded,
 }) => {
-  const [personas, setPersonas] = useState<DbPersona[]>([]);
+  const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersonaIds, setSelectedPersonaIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCollection, setSelectedCollection] = useState<string>('none');
@@ -87,8 +86,9 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
       }
 
       const availablePersonasData = await getPersonasNotInCollection(collectionId, user.id);
-      // Convert to DbPersona format - use as unknown first for type safety
-      setPersonas(availablePersonasData as unknown as DbPersona[]);
+      // Transform the data using the dbPersonaToPersona mapper to ensure correct type
+      const transformedPersonas = availablePersonasData.map(dbPersonaToPersona);
+      setPersonas(transformedPersonas);
     } catch (error) {
       console.error("Error fetching personas not in collection:", error);
       toast.error("Failed to load available personas.");
@@ -252,8 +252,7 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
                   {filteredPersonas.map((persona) => {
                     const isSelected = selectedPersonaIds.includes(persona.persona_id);
-                    const identity = persona.persona_data?.identity as PersonaV3Identity | undefined;
-                    const socioeconomic = identity?.socioeconomic_context as PersonaV3SocioeconomicContext | undefined;
+                    const metadata = persona.metadata || {};
 
                     return (
                       <Card
@@ -279,66 +278,66 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
                               <div className="space-y-2">
                                 {/* Primary Demographics */}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  {identity?.age && (
+                                  {metadata.age && (
                                     <Badge variant="outline" className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200">
-                                      Age: {identity.age}
+                                      Age: {metadata.age}
                                     </Badge>
                                   )}
-                                  {identity?.gender && (
+                                  {metadata.gender && (
                                     <Badge variant="outline" className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 border-purple-200">
-                                      {identity.gender}
+                                      {metadata.gender}
                                     </Badge>
                                   )}
                                 </div>
                                 
                                 {/* Occupation */}
-                                {identity?.occupation && (
+                                {metadata.occupation && (
                                   <p className="text-xs font-medium text-foreground">
-                                    {identity.occupation}
+                                    {metadata.occupation}
                                   </p>
                                 )}
                                 
                                 {/* Secondary Demographics */}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  {socioeconomic?.education_level && (
+                                  {metadata.education_level && (
                                     <Badge variant="outline" className="text-xs px-2 py-0.5 bg-green-50 text-green-700 border-green-200">
-                                      {socioeconomic.education_level}
+                                      {metadata.education_level}
                                     </Badge>
                                   )}
-                                  {socioeconomic?.income_level && (
+                                  {metadata.income_level && (
                                     <Badge variant="outline" className="text-xs px-2 py-0.5 bg-yellow-50 text-yellow-700 border-yellow-200">
-                                      {socioeconomic.income_level}
+                                      {metadata.income_level}
                                     </Badge>
                                   )}
                                 </div>
                                 
                                 {/* Location */}
-                                {identity?.location && (
+                                {(metadata.region || metadata.location_history?.current_residence) && (
                                   <div className="flex items-center gap-1">
                                     <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                      📍 {identity.location.city}, {identity.location.country}
+                                      📍 {metadata.region || metadata.location_history?.current_residence}
                                     </Badge>
                                   </div>
                                 )}
                                 
                                 {/* Ethnicity */}
-                                {identity?.ethnicity && (
+                                {metadata.race_ethnicity && (
                                   <p className="text-xs text-muted-foreground">
-                                    {identity.ethnicity}
+                                    {metadata.race_ethnicity}
                                   </p>
                                 )}
                                 
-                                {/* Emotional Triggers as Tags */}
-                                {persona.persona_data?.emotional_triggers && (
+                                {/* Tags */}
+                                {persona.preinterview_tags && Array.isArray(persona.preinterview_tags) && persona.preinterview_tags.length > 0 && (
                                   <div className="flex flex-wrap gap-1 mt-2">
-                                    {persona.persona_data.emotional_triggers.positive?.slice(0, 2).map((trigger, index) => (
-                                      <Badge key={`pos-${index}`} variant="secondary" className="text-xs px-1.5 py-0.5 bg-green-50">
-                                        {trigger}
+                                    {persona.preinterview_tags.slice(0, 3).map((tag, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs px-1.5 py-0.5">
+                                        {tag}
                                       </Badge>
                                     ))}
-                                    {(persona.persona_data.emotional_triggers.positive?.length || 0) > 2 && (
+                                    {persona.preinterview_tags.length > 3 && (
                                       <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                                        +{(persona.persona_data.emotional_triggers.positive?.length || 0) - 2}
+                                        +{persona.preinterview_tags.length - 3}
                                       </Badge>
                                     )}
                                   </div>

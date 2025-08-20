@@ -1,6 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { createEnhancedPersonaInstructions } from './enhancedPersonaInstructions.ts';
+import { TraitRelevanceAnalyzer } from './traitRelevanceAnalyzer.ts';
+import { DrivingTraitsSynthesizer } from './drivingTraitsSynthesizer.ts';
+import { FocusedInstructions } from './focusedInstructions.ts';
+import { TraitsFirstParameterEngine } from './traitsFirstParameterEngine.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -13,6 +18,7 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -23,116 +29,103 @@ serve(async (req) => {
       personaId, 
       message, 
       previousMessages = [], 
+      mode = 'conversation',
       conversationContext = '',
       imageData
     } = await req.json();
 
-    console.log('Simple persona chat request:', { personaId, messageLength: message.length });
+    console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
 
-    // Try to fetch PersonaV2 first, fallback to old personas
-    let persona = null;
-    const { data: personaV2, error: v2Error } = await supabase
-      .from('personas_v2')
+    // Fetch persona data from database
+    const { data: persona, error: personaError } = await supabase
+      .from('personas')
       .select('*')
       .eq('persona_id', personaId)
       .single();
 
-    if (personaV2) {
-      persona = personaV2;
-      console.log('Using PersonaV2');
-    } else {
-      const { data: legacyPersona, error: legacyError } = await supabase
-        .from('personas')
-        .select('*')
-        .eq('persona_id', personaId)
-        .single();
-      
-      if (legacyPersona) {
-        persona = legacyPersona;
-        console.log('Using legacy persona');
-      }
-    }
-
-    if (!persona) {
+    if (personaError || !persona) {
       return new Response(JSON.stringify({ error: 'Persona not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    
+    // TRAIT-FIRST RESPONSE SYSTEM - COMPLETE TRAIT PROCESSING
+    console.log('🚀 Starting traits-first response generation with ALL traits...');
+    
+    // Extract complete trait profiles
+    const completeTraitProfile = persona.trait_profile || {};
+    const linguisticProfile = persona.linguistic_profile || {};
+    
+    console.log('🔍 Complete trait profile categories:', Object.keys(completeTraitProfile));
+    
+    // Generate system prompt from complete personality matrix
+    console.log('📝 Building comprehensive persona instructions from complete trait profile...');
+    const systemPrompt = FocusedInstructions.buildComprehensivePersonaInstructions(
+      persona,
+      completeTraitProfile,
+      linguisticProfile,
+      conversationContext || ''
+    );
+    console.log('✅ Complete personality-driven instructions built');
+    
+    console.log('System prompt length:', systemPrompt.length, 'characters');
+    console.log('Conversation context included:', conversationContext ? 'YES' : 'NO', conversationContext ? `(${conversationContext.length} chars)` : '');
 
-    // Extract persona information for natural conversation
-    const personaData = personaV2 ? personaV2.persona_data : persona;
-    const personaName = personaData.identity?.name || persona.name || 'Assistant';
-    const personaAge = personaData.identity?.age;
-    const personaOccupation = personaData.identity?.occupation;
-    const personaBackground = personaData.life_context?.background_narrative || personaData.background;
-    const personaPersonality = personaData.cognitive_profile?.big_five || personaData.personality;
+    // Build message history with proper image context preservation
+    console.log('Building message history from', previousMessages.length, 'previous messages');
+    const recentMessages = previousMessages.slice(-8);
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...recentMessages.map((msg: any) => {
+        const messageContent: any = { 
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content 
+        };
+        
+        // Preserve image context in conversation history
+        if (msg.image && msg.role === 'user') {
+          messageContent.content = [
+            { type: 'text', text: msg.content },
+            { type: 'image_url', image_url: { url: msg.image } }
+          ];
+        }
+        
+        return messageContent;
+      })
+    ];
+    
+    console.log('Message history built with', messages.length, 'messages including system prompt');
 
-    // Build a natural system prompt based on persona characteristics
-    let systemPrompt = `You are ${personaName}`;
-    
-    if (personaAge) {
-      systemPrompt += `, ${personaAge} years old`;
-    }
-    
-    if (personaOccupation) {
-      systemPrompt += `, working as a ${personaOccupation}`;
-    }
-    
-    systemPrompt += '. ';
-    
-    if (personaBackground) {
-      systemPrompt += `Background: ${personaBackground}. `;
-    }
-    
-    if (personaPersonality) {
-      const personalityTraits = [];
-      if (personaPersonality.extraversion > 0.6) personalityTraits.push('outgoing and social');
-      if (personaPersonality.agreeableness > 0.6) personalityTraits.push('friendly and cooperative');
-      if (personaPersonality.conscientiousness > 0.6) personalityTraits.push('organized and responsible');
-      if (personaPersonality.neuroticism > 0.6) personalityTraits.push('thoughtful and sometimes anxious');
-      if (personaPersonality.openness > 0.6) personalityTraits.push('creative and open to new experiences');
-      
-      if (personalityTraits.length > 0) {
-        systemPrompt += `You are ${personalityTraits.join(', ')}. `;
-      }
-    }
-    
-    systemPrompt += 'Respond naturally and authentically in conversations, staying true to your character and background. Be conversational and engaging without using robotic phrases or formal announcements.';
-
-    // Prepare conversation history
-    const conversationMessages = [];
-    
-    // Add context if provided
-    if (conversationContext) {
-      conversationMessages.push({
-        role: 'system',
-        content: `Additional context for this conversation: ${conversationContext}`
-      });
-    }
-
-    // Add previous messages
-    if (previousMessages && previousMessages.length > 0) {
-      conversationMessages.push(...previousMessages.map((msg: any) => ({
-        role: msg.role,
-        content: msg.content
-      })));
-    }
-
-    // Add current user message
-    const userMessage: any = { role: 'user', content: message };
-    
-    // Handle image if provided
+    // Add current user message with potential image data
+    const userMessage: any = { role: 'user' };
     if (imageData) {
       userMessage.content = [
         { type: 'text', text: message },
         { type: 'image_url', image_url: { url: imageData } }
       ];
+    } else {
+      userMessage.content = message;
     }
-    
-    conversationMessages.push(userMessage);
+    messages.push(userMessage);
 
-    // Make simple OpenAI call
+    // Add image analysis instructions if image is present
+    if (imageData) {
+      const imageInstructions = `\n\n${'='.repeat(40)}\n📷 IMAGE ANALYSIS 📷\n${'='.repeat(40)}\n\nYou can see and analyze this image. Respond naturally based on your personality, background, and values.\nDon't be an objective image describer - be yourself looking at this image.\nYou have the ability to see and understand visual content when it's shared with you.\n${'='.repeat(40)}`;
+      messages[0].content += imageInstructions;
+    }
+
+    // Generate AI parameters from complete personality matrix
+    const aiParameters = TraitsFirstParameterEngine.synthesizeAIParameters(
+      completeTraitProfile,
+      linguisticProfile,
+      null, // No filtered traits - use complete profile
+      completeTraitProfile.dynamic_state || {}
+    );
+    
+    console.log(`Complete personality-driven parameters: temp=${aiParameters.temperature}, tokens=${aiParameters.max_tokens}`);
+
+    // Generate response with complete personality-driven parameters
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -140,36 +133,28 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...conversationMessages
-        ],
-        temperature: 0.8,
-        max_tokens: 500,
-        top_p: 0.9
-      })
+        model: 'gpt-4.1-2025-04-14', // Quality model for authentic responses
+        messages,
+        temperature: aiParameters.temperature,
+        max_tokens: aiParameters.max_tokens,
+        top_p: aiParameters.top_p,
+        frequency_penalty: aiParameters.frequency_penalty,
+        presence_penalty: aiParameters.presence_penalty,
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API Error:', response.status, errorText);
-      throw new Error('AI service temporarily unavailable');
+      throw new Error(`AI service temporarily unavailable`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || 'I apologize, but I cannot respond right now.';
+    const generatedResponse = data.choices[0].message.content;
 
-    console.log('Simple persona chat completed successfully');
+    console.log('Response generated, length:', generatedResponse.length);
 
-    return new Response(JSON.stringify({ 
-      response: aiResponse,
-      personaId,
-      timestamp: new Date().toISOString(),
-      metadata: {
-        pipeline: 'simple'
-      }
-    }), {
+    return new Response(JSON.stringify({ response: generatedResponse }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

@@ -8,13 +8,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonaList from "@/components/personas/PersonaListV2";
+import PersonaList from "@/components/personas/PersonaList";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
 import { Persona } from "@/services/persona";
-import { PersonaMigrationDialog } from "@/components/migration/PersonaMigrationDialog";
 
 // Create a QueryClient with specific retry configuration
 const queryClient = new QueryClient({
@@ -92,23 +91,16 @@ const PersonaViewerContent = () => {
           <ViewerHeader isLoading={isLoading} />
           
           {/* Page Header */}
-          <div className="mb-8 flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
-                {isLibraryView ? "Persona Library" : "My Personas"}
-              </h1>
-              {isLibraryView && (
-                <p className="text-muted-foreground mb-2">
-                  Browse publicly shared personas from our community
-                </p>
-              )}
-              <div className="w-32 h-1 bg-accent mb-6"></div>
-            </div>
-            
-            {/* Migration Dialog - only show on My Personas tab */}
-            {!isLibraryView && (
-              <PersonaMigrationDialog />
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
+              {isLibraryView ? "Persona Library" : "My Personas"}
+            </h1>
+            {isLibraryView && (
+              <p className="text-muted-foreground mb-2">
+                Browse publicly shared personas from our community
+              </p>
             )}
+            <div className="w-32 h-1 bg-accent mb-6"></div>
           </div>
 
           {/* Filter Section - Now with enhanced functionality */}
@@ -136,26 +128,31 @@ const PersonaViewerContent = () => {
             </TabsList>
 
             <TabsContent value="my-personas" className="space-y-6">
-              <PersonaList 
+              <PersonaList
+                onPersonasLoad={setMyPersonas}
+                filterByCurrentUser={true}
                 searchQuery={searchQuery}
                 selectedTags={selectedTags}
                 selectedAge={selectedAge}
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
-                mode="my-personas"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
 
             <TabsContent value="public-personas" className="space-y-6">
               <PersonaList 
+                onPersonasLoad={setPublicPersonas}
+                publicOnly={true}
+                filterByOtherUsers={true}
                 searchQuery={searchQuery}
                 selectedTags={selectedTags}
                 selectedAge={selectedAge}
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
-                mode="public-personas"
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
           </Tabs>

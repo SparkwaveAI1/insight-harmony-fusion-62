@@ -1,29 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { DbPersona } from '@/services/persona';
+import { Persona } from '@/services/persona/types';
+import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectById, getProjectDocuments } from '@/services/collections';
 import { processMessageWithFile, ResearchMessage } from '../services/messageService';
-import { sendMessageToPersonaWithVoicepack } from '../../../services/voicepack/chat/voicepackChatService';
+import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 import { Message } from '@/components/persona-chat/types';
 import { processPersonasInParallel } from '../utils/parallelProcessing';
 
 export interface UseResearchSessionReturn {
   sessionId: string | null;
-  loadedPersonas: DbPersona[];
+  loadedPersonas: Persona[];
   projectDocuments: any[];
   messages: (Message & { responding_persona_id?: string })[];
   personaConversations: Map<string, (Message & { responding_persona_id?: string })[]>;
   isLoading: boolean;
   createSession: (personaIds: string[], projectId?: string) => Promise<boolean>;
-  sendMessage: (message: string, imageFile?: File | null, options?: { useVoicepack?: boolean; state?: Record<string, any> }) => Promise<Message>;
-  sendToPersona: (personaId: string, userMessage?: Message, options?: { useVoicepack?: boolean; state?: Record<string, any> }) => Promise<string>;
-  sendToAllPersonas: (userMessage: Message, options?: { useVoicepack?: boolean; state?: Record<string, any> }) => Promise<void>;
+  sendMessage: (message: string, imageFile?: File | null) => Promise<Message>;
+  sendToPersona: (personaId: string, userMessage?: Message) => Promise<string>;
+  sendToAllPersonas: (userMessage: Message) => Promise<void>;
 }
 
 export const useResearchSession = (projectId?: string): UseResearchSessionReturn => {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<DbPersona[]>([]);
+  const [loadedPersonas, setLoadedPersonas] = useState<Persona[]>([]);
   const [projectDocuments, setProjectDocuments] = useState<any[]>([]);
   const [messages, setMessages] = useState<(Message & { responding_persona_id?: string })[]>([]);
   const [personaConversations, setPersonaConversations] = useState<Map<string, (Message & { responding_persona_id?: string })[]>>(new Map());
@@ -120,7 +121,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       // Load personas using the existing database query
       console.log('Loading personas...');
       const { data: personasData, error: personasError } = await supabase
-        .from('personas_v2')
+        .from('personas')
         .select('*')
         .in('persona_id', personaIds);
 
@@ -136,8 +137,10 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         return false;
       }
 
-      // Use personasData directly as it's already DbPersona
-      const mappedPersonas = personasData as unknown as DbPersona[];
+      // Use the existing dbPersonaToPersona mapper to ensure proper type conversion
+      const mappedPersonas: Persona[] = personasData.map(dbPersona => 
+        dbPersonaToPersona(dbPersona)
+      );
 
       console.log('Personas loaded:', mappedPersonas.length);
       setLoadedPersonas(mappedPersonas);
@@ -165,11 +168,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
-  const sendMessage = async (
-    message: string, 
-    imageFile?: File | null,
-    options: { useVoicepack?: boolean; state?: Record<string, any> } = {}
-  ): Promise<Message> => {
+  const sendMessage = async (message: string, imageFile?: File | null): Promise<Message> => {
     if (!sessionId) {
       toast.error('No active session');
       throw new Error('No active session');
@@ -217,7 +216,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       if (loadedPersonas.length > 0) {
         console.log('Automatically sending to all personas');
         try {
-          await sendToAllPersonas(userMessage, options);
+          await sendToAllPersonas(userMessage);
         } catch (error) {
           console.error('Error sending to all personas after user message:', error);
           // Don't throw here - the user message was successfully added
@@ -235,11 +234,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
-  const sendToPersona = async (
-    personaId: string, 
-    userMessage?: Message,
-    options: { useVoicepack?: boolean; state?: Record<string, any> } = {}
-  ): Promise<string> => {
+  const sendToPersona = async (personaId: string, userMessage?: Message): Promise<string> => {
     if (!sessionId) {
       toast.error('No active session');
       throw new Error('No active session');
@@ -286,20 +281,15 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
           ? 'VISUAL MATERIAL FOR REVIEW: I\'m sharing an image with you. Please analyze it and give me your authentic perspective based on your values, background, and personal viewpoint.'
           : '';
 
-      // Get persona response using the enhanced conversation engine with voicepack support
-      const { response } = await sendMessageToPersonaWithVoicepack(
+      // Get persona response using the unified conversation engine with isolated conversation history
+      const response = await sendMessageToPersona(
         personaId,
         messageToSend.content,
         previousMessages,
-        activePersona as any,
+        activePersona,
         'conversation',
         materialContext,
-        messageToSend.image,
-        {
-          useVoicepack: options.useVoicepack,
-          state: options.state,
-          conversationContext: ''
-        }
+        messageToSend.image
       );
       
       // Add persona response to this persona's individual conversation
@@ -343,10 +333,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     }
   };
 
-  const sendToAllPersonas = async (
-    userMessage: Message,
-    options: { useVoicepack?: boolean; state?: Record<string, any> } = {}
-  ): Promise<void> => {
+  const sendToAllPersonas = async (userMessage: Message): Promise<void> => {
     if (!sessionId) {
       toast.error('No active session');
       throw new Error('No active session');
@@ -370,7 +357,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       const personaIds = loadedPersonas.map(p => p.persona_id);
       
       const sendToPersonaWrapper = async (personaId: string): Promise<string> => {
-        return await sendToPersona(personaId, userMessage, options);
+        return await sendToPersona(personaId, userMessage);
       };
 
       await processPersonasInParallel(

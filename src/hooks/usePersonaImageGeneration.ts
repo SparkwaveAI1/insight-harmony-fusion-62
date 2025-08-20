@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { generatePersonaImage } from '@/services/persona';
-import { uploadPersonaImageFromUrl } from '@/services/supabase/storage/imageUploadService';
+import { savePersonaProfileImage } from '@/services/supabase/storage/imageUploadService';
 import { Persona } from '@/services/persona/types';
 
 export const usePersonaImageGeneration = (persona: Persona) => {
@@ -28,16 +28,16 @@ export const usePersonaImageGeneration = (persona: Persona) => {
         setGeneratedImageUrl(imageUrl);
         
         if (saveToGallery) {
-          // Save to both profile and gallery using URL
-          const savedUrl = await uploadPersonaImageFromUrl(imageUrl, persona.persona_id);
+          // Save to both profile and gallery
+          const savedUrl = await savePersonaProfileImage(persona.persona_id, imageUrl);
           if (savedUrl) {
             toast.success('Profile image generated and saved to gallery!');
           } else {
             toast.warning('Image generated but failed to save to gallery');
           }
         } else {
-          // Just set as profile using URL
-          const savedUrl = await uploadPersonaImageFromUrl(imageUrl, persona.persona_id);
+          // Just set as profile
+          const savedUrl = await savePersonaProfileImage(persona.persona_id, imageUrl);
           if (savedUrl) {
             toast.success('Profile image generated successfully!');
           } else {

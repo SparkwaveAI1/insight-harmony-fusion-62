@@ -30,11 +30,9 @@ const NotFound = () => {
       return;
     }
     
-    // Check if the user was trying to access old persona creation routes
-    if (location.pathname.includes('/persona-creation') || 
-        location.pathname.includes('/interview-process') ||
-        location.pathname.includes('/persona-ai-interviewer')) {
-      toast.info("That feature is being rebuilt. Redirecting to personas...");
+    // Check if the user was coming from persona creation
+    if (location.pathname.includes('/persona-creation')) {
+      toast.info("Redirecting to personas...");
       setTimeout(() => navigate("/persona-viewer"), 1000);
       return;
     }
