@@ -12,6 +12,7 @@ import PersonaEnhancementDialog from "./PersonaEnhancementDialog";
 import { DbPersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { PersonaValidationResult } from "@/services/persona/validation/personaValidation";
+import AddToCollectionButton from "@/components/personas/AddToCollectionButton";
 
 interface PersonaDetailHeaderV2Props {
   persona: DbPersona;
@@ -209,6 +210,7 @@ export default function PersonaDetailHeaderV2({
                   <Sparkles className="h-4 w-4 mr-2" />
                   Enhance Persona
                 </Button>
+                <AddToCollectionButton personaId={persona.persona_id} />
               </div>
               <Button variant="outline" onClick={onDownloadJSON}>
                 <Download className="h-4 w-4 mr-2" />
