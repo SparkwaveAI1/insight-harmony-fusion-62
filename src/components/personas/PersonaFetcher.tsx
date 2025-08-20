@@ -59,22 +59,55 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
         <h3 className="text-lg font-semibold mb-3">Demographics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <strong>Age:</strong> {activePersona.metadata?.age || 'Not specified'}
+            <strong>Age:</strong> {
+              activePersona.persona_data?.identity?.age && activePersona.persona_data.identity.age !== 0 
+                ? activePersona.persona_data.identity.age 
+                : (activePersona.metadata?.age || 'Not specified')
+            }
             <br />
-            <strong>Gender:</strong> {activePersona.metadata?.gender || 'Not specified'}
+            <strong>Gender:</strong> {
+              activePersona.persona_data?.identity?.gender || 
+              activePersona.metadata?.gender || 
+              'Not specified'
+            }
             <br />
-            <strong>Ethnicity:</strong> {activePersona.metadata?.race_ethnicity || 'Not specified'}
+            <strong>Ethnicity:</strong> {
+              activePersona.persona_data?.identity?.ethnicity || 
+              activePersona.metadata?.race_ethnicity || 
+              'Not specified'
+            }
             <br />
-            <strong>Region:</strong> {activePersona.metadata?.region || 'Not specified'}
+            <strong>Region:</strong> {
+              activePersona.persona_data?.identity?.region || 
+              activePersona.persona_data?.identity?.location ||
+              activePersona.metadata?.region || 
+              'Not specified'
+            }
           </div>
           <div>
-            <strong>Education:</strong> {activePersona.metadata?.education_level || 'Not specified'}
+            <strong>Education:</strong> {
+              activePersona.persona_data?.identity?.education_level || 
+              activePersona.metadata?.education_level || 
+              'Not specified'
+            }
             <br />
-            <strong>Occupation:</strong> {activePersona.metadata?.occupation || 'Not specified'}
+            <strong>Occupation:</strong> {
+              activePersona.persona_data?.identity?.occupation && activePersona.persona_data.identity.occupation !== 'unemployed'
+                ? activePersona.persona_data.identity.occupation
+                : (activePersona.metadata?.occupation || 'Not specified')
+            }
             <br />
-            <strong>Income Level:</strong> {activePersona.metadata?.income_level || 'Not specified'}
+            <strong>Income Level:</strong> {
+              activePersona.persona_data?.identity?.income_level || 
+              activePersona.metadata?.income_level || 
+              'Not specified'
+            }
             <br />
-            <strong>Relationship:</strong> {activePersona.metadata?.relationship_status || 'Not specified'}
+            <strong>Relationship:</strong> {
+              activePersona.persona_data?.identity?.relationship_status || 
+              activePersona.metadata?.relationship_status || 
+              'Not specified'
+            }
           </div>
         </div>
       </div>

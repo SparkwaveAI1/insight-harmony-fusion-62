@@ -95,9 +95,27 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   };
 
   const description = getDescription();
-  const age = persona.metadata?.age || 'Not specified';
-  const location = persona.metadata?.location || persona.metadata?.region || 'Not specified';
-  const occupation = persona.metadata?.occupation || 'Not specified';
+  
+  // Helper function to get V3 data with legacy fallback
+  const getV3DataWithFallback = (v3Path: any, legacyPath: any, defaultValue: string = 'Not specified') => {
+    return v3Path && v3Path !== 0 && v3Path !== '' ? v3Path : (legacyPath || defaultValue);
+  };
+  
+  const age = getV3DataWithFallback(
+    persona.persona_data?.identity?.age, 
+    persona.metadata?.age, 
+    'Not specified'
+  );
+  const location = getV3DataWithFallback(
+    persona.persona_data?.identity?.location || persona.persona_data?.identity?.region,
+    persona.metadata?.location || persona.metadata?.region,
+    'Not specified'
+  );
+  const occupation = getV3DataWithFallback(
+    persona.persona_data?.identity?.occupation,
+    persona.metadata?.occupation,
+    'Not specified'
+  );
 
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
