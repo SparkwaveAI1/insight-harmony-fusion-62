@@ -14,7 +14,6 @@ import SaveConversationModal from '@/components/persona-chat/SaveConversationMod
 import { useResearchSession } from '@/components/research/hooks/useResearchSession';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
-import { VoicepackToggle } from '@/components/persona-chat/VoicepackToggle';
 import { toast } from 'sonner';
 
 interface PersonaChatInterfaceProps {
@@ -24,7 +23,6 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const [conversationContext, setConversationContext] = useState<string>('');
-  const [voicepackEnabled, setVoicepackEnabled] = useState<boolean>(true);
   const [conversationState, setConversationState] = useState<Record<string, any>>({
     stress: 0.3,
     fatigue: 0.3,
@@ -166,12 +164,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       console.log('📤 Persona Chat: Sending message:', { 
         message, 
         hasImage: !!imageFile,
-        voicepackEnabled,
         conversationState
       });
       
       await sendMessage(message, imageFile, {
-        useVoicepack: voicepackEnabled,
         state: conversationState
       });
       
@@ -253,13 +249,6 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           </Button>
         )}
       </div>
-
-      {/* Voicepack Toggle */}
-      <VoicepackToggle 
-        enabled={voicepackEnabled} 
-        onToggle={setVoicepackEnabled}
-        className="mb-4"
-      />
 
       {/* Conversation Context */}
       <ConversationContext 
