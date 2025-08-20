@@ -20,8 +20,8 @@ export function validateUserPrompt(prompt: string): ValidationResult {
     errors.push('Prompt must be at least 10 characters long');
   }
   
-  if (trimmedPrompt.length > 2000) {
-    errors.push('Prompt must be less than 2000 characters');
+  if (trimmedPrompt.length > 4000) {
+    errors.push('Prompt must be less than 4000 characters');
   }
   
   if (trimmedPrompt.length < 30) {
@@ -48,41 +48,33 @@ export function validateGeneratedPersona(persona: any): ValidationResult {
     errors.push('Generated persona is missing an ID');
   }
   
-  if (!persona.metadata) {
-    errors.push('Generated persona is missing metadata');
+  // V3 Structure Validation
+  if (!persona.identity) {
+    errors.push('Generated persona is missing V3 identity');
   } else {
-    if (!persona.metadata.age || persona.metadata.age === 0) {
+    if (!persona.identity.age || persona.identity.age === 0) {
       errors.push('Generated persona is missing age information');
     }
-    if (!persona.metadata.occupation || persona.metadata.occupation.trim().length === 0) {
+    if (!persona.identity.occupation || persona.identity.occupation.trim().length === 0) {
       errors.push('Generated persona is missing occupation information');
     }
   }
   
-  // Check trait profile completeness
-  if (!persona.trait_profile) {
-    errors.push('Generated persona is missing trait profile');
+  // Check cognitive profile (V3 structure)
+  if (!persona.cognitive_profile) {
+    errors.push('Generated persona is missing V3 cognitive profile');
   } else {
-    const requiredTraitCategories = ['big_five', 'moral_foundations', 'world_values', 'political_compass'];
-    for (const category of requiredTraitCategories) {
-      if (!persona.trait_profile[category]) {
-        errors.push(`Generated persona is missing ${category} traits`);
-      }
+    if (!persona.cognitive_profile.big_five) {
+      errors.push('Generated persona is missing Big Five traits');
+    }
+    if (!persona.cognitive_profile.moral_foundations) {
+      errors.push('Generated persona is missing moral foundations');
     }
   }
   
-  // Check emotional triggers
-  if (!persona.emotional_triggers) {
-    errors.push('Generated persona is missing emotional triggers');
-  } else {
-    if (!Array.isArray(persona.emotional_triggers.positive_triggers) || 
-        persona.emotional_triggers.positive_triggers.length === 0) {
-      errors.push('Generated persona is missing positive emotional triggers');
-    }
-    if (!Array.isArray(persona.emotional_triggers.negative_triggers) || 
-        persona.emotional_triggers.negative_triggers.length === 0) {
-      errors.push('Generated persona is missing negative emotional triggers');
-    }
+  // Check memory system (V3 structure)
+  if (!persona.memory) {
+    errors.push('Generated persona is missing V3 memory system');
   }
   
   // Check interview responses

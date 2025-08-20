@@ -23,43 +23,79 @@ export async function importPersonaFromJSON(jsonData: any): Promise<Persona | nu
     const newPersonaId = `persona-${Math.random().toString(36).substr(2, 6)}`;
     const newId = uuidv4();
     const currentDate = new Date().toISOString();
-    const currentDateOnly = new Date().toISOString().split('T')[0];
 
-    // Create persona object with imported data but new IDs and user info
-    const persona: Persona = {
-      // New generated IDs
-      persona_id: newPersonaId,
-      id: newId,
-      
-      // Core persona data from import
-      name: jsonData.name,
-      description: jsonData.description || "",
-      
-      // Timestamps - use current time for import
-      created_at: currentDate,
-      updated_at: currentDate,
-      
-      // User assignment
-      user_id: user.id,
-      is_public: false, // Default to private for imported personas
-      
-      // Import all the structured data
-      metadata: jsonData.metadata || {},
-      trait_profile: jsonData.trait_profile || {},
-      behavioral_modulation: jsonData.behavioral_modulation || {},
-      linguistic_profile: jsonData.linguistic_profile || {},
-      emotional_triggers: jsonData.emotional_triggers || { positive_triggers: [], negative_triggers: [] },
-      interview_sections: Array.isArray(jsonData.interview_sections) ? jsonData.interview_sections : (jsonData.interview_sections?.interview_sections || []),
-      simulation_directives: jsonData.simulation_directives || {},
-      preinterview_tags: jsonData.preinterview_tags || [],
-      
-      // Optional fields
-      prompt: jsonData.prompt || "",
-      profile_image_url: jsonData.profile_image_url || null,
-      enhanced_metadata_version: jsonData.enhanced_metadata_version || 2,
-      persona_type: "imported",
-      persona_context: jsonData.persona_context || {}
-    };
+    // Detect V3 vs Legacy JSON structure
+    const isV3Structure = jsonData.identity || jsonData.cognitive_profile || jsonData.persona_data;
+    
+    console.log("Detected structure:", isV3Structure ? "V3" : "Legacy");
+
+    let persona: Persona;
+
+    if (isV3Structure) {
+      // V3 JSON Import - preserve structure exactly
+      persona = {
+        // New generated IDs
+        persona_id: newPersonaId,
+        id: newId,
+        
+        // Core persona data from import
+        name: jsonData.name,
+        description: jsonData.description || "",
+        
+        // Timestamps - use current time for import
+        created_at: currentDate,
+        updated_at: currentDate,
+        
+        // User assignment
+        user_id: user.id,
+        is_public: false,
+        
+        // V3 structure - preserve persona_data exactly
+        persona_data: jsonData.persona_data || jsonData, // If whole object is V3 structure
+        version: "V3",
+        
+        // Optional fields
+        prompt: jsonData.prompt || "",
+        profile_image_url: jsonData.profile_image_url || null,
+        persona_type: "imported"
+      };
+    } else {
+      // Legacy JSON Import - use existing conversion logic
+      persona = {
+        // New generated IDs
+        persona_id: newPersonaId,
+        id: newId,
+        
+        // Core persona data from import
+        name: jsonData.name,
+        description: jsonData.description || "",
+        
+        // Timestamps - use current time for import
+        created_at: currentDate,
+        updated_at: currentDate,
+        
+        // User assignment
+        user_id: user.id,
+        is_public: false,
+        
+        // Import all the structured data (legacy format)
+        metadata: jsonData.metadata || {},
+        trait_profile: jsonData.trait_profile || {},
+        behavioral_modulation: jsonData.behavioral_modulation || {},
+        linguistic_profile: jsonData.linguistic_profile || {},
+        emotional_triggers: jsonData.emotional_triggers || { positive_triggers: [], negative_triggers: [] },
+        interview_sections: Array.isArray(jsonData.interview_sections) ? jsonData.interview_sections : (jsonData.interview_sections?.interview_sections || []),
+        simulation_directives: jsonData.simulation_directives || {},
+        preinterview_tags: jsonData.preinterview_tags || [],
+        
+        // Optional fields
+        prompt: jsonData.prompt || "",
+        profile_image_url: jsonData.profile_image_url || null,
+        enhanced_metadata_version: jsonData.enhanced_metadata_version || 2,
+        persona_type: "imported",
+        persona_context: jsonData.persona_context || {}
+      };
+    }
 
     console.log("✅ Persona import data structured:", {
       persona_id: persona.persona_id,

@@ -18,34 +18,52 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   console.log("=== DETAILED PERSONA VALIDATION ===");
   console.log("Persona name:", persona.name);
   console.log("Persona ID:", persona.persona_id);
+  console.log("Persona structure:", persona.persona_data ? "V3" : "Legacy");
+  
+  // Determine structure and extract trait data
+  let traitData, emotionalTriggers, interviewSections, metadataOrIdentity;
+  
+  if (persona.persona_data) {
+    // V3 structure
+    traitData = persona.persona_data.cognitive_profile;
+    emotionalTriggers = persona.persona_data.state_modifiers?.emotional_triggers;
+    interviewSections = persona.persona_data.interview_sections || persona.interview_sections;
+    metadataOrIdentity = persona.persona_data.identity;
+  } else {
+    // Legacy structure
+    traitData = persona.trait_profile;
+    emotionalTriggers = persona.emotional_triggers;
+    interviewSections = persona.interview_sections;
+    metadataOrIdentity = persona.metadata;
+  }
   
   // Check if trait profile has non-default values
-  const hasRealTraits = checkForRealTraits(persona.trait_profile);
+  const hasRealTraits = checkForRealTraits(traitData);
   console.log("Has real traits:", hasRealTraits);
   
   if (!hasRealTraits) {
     errors.push("Persona has default trait values - generation failed completely");
     console.error("❌ CRITICAL: ALL TRAITS ARE DEFAULT VALUES - GENERATION FAILED");
-    logDetailedTraitAnalysis(persona.trait_profile);
+    logDetailedTraitAnalysis(traitData);
   }
   
   // Check emotional triggers
-  const hasEmotionalTriggers = checkEmotionalTriggers(persona.emotional_triggers);
+  const hasEmotionalTriggers = checkEmotionalTriggers(emotionalTriggers);
   console.log("Has emotional triggers:", hasEmotionalTriggers);
   if (!hasEmotionalTriggers) {
-    errors.push("Missing or empty emotional triggers");
+    warnings.push("Missing or empty emotional triggers"); // Make this a warning for V3
   }
   
   // Check interview responses
-  const hasInterviewResponses = checkInterviewResponses(persona.interview_sections);
+  const hasInterviewResponses = checkInterviewResponses(interviewSections);
   console.log("Has interview responses:", hasInterviewResponses);
   if (!hasInterviewResponses) {
     errors.push("Missing or empty interview responses");
   }
   
-  // Check metadata completeness - make this an ERROR not warning
-  const hasMetadata = checkMetadata(persona.metadata);
-  console.log("Has complete metadata:", hasMetadata);
+  // Check metadata/identity completeness
+  const hasMetadata = checkMetadata(metadataOrIdentity);
+  console.log("Has complete metadata/identity:", hasMetadata);
   if (!hasMetadata) {
     errors.push("Missing required demographic metadata - persona creation incomplete");
   }
