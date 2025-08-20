@@ -1,4 +1,4 @@
-import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
+import { DbPersona } from '@/services/persona';
 import { Persona } from '@/services/persona/types';
 
 // Helper function to convert string levels to numbers for trait compatibility
@@ -15,7 +15,7 @@ function convertLevelToNumber(level?: string): number {
  * Temporary adapter to convert V2 personas to V1 format for legacy components
  * This should be removed once all components are migrated to V2
  */
-export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
+export function adaptV2ToV1Persona(v2Persona: DbPersona): Persona {
   const personaData = v2Persona.persona_data;
   
   // Map V2 persona_data to V1 metadata structure
@@ -43,12 +43,12 @@ export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
       support_system_strength: personaData.life_context?.supports?.length ? 'strong' : 'weak'
     },
     
-    // Health and wellness
+    // Health and wellness (V3 doesn't have health_profile)
     health_wellness: {
-      mental_health_conditions: personaData.health_profile?.mental_health || [],
-      physical_health_status: personaData.health_profile?.physical_health || [],
-      substance_use: (personaData.health_profile?.substance_use || []).join(', '),
-      energy_level: personaData.health_profile?.energy_baseline || ''
+      mental_health_conditions: [],
+      physical_health_status: [],
+      substance_use: '',
+      energy_level: 'medium'
     },
     
     // Knowledge domains
@@ -65,7 +65,7 @@ export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
       big_five: personaData.cognitive_profile?.big_five || {},
       moral_foundations: personaData.cognitive_profile?.moral_foundations || {},
       decision_style: personaData.cognitive_profile?.decision_style,
-      temporal_orientation: personaData.cognitive_profile?.temporal_orientation,
+      temporal_orientation: personaData.cognitive_profile?.behavioral_economics?.present_bias ? 'present_focused' : 'future_focused',
       worldview_summary: personaData.cognitive_profile?.worldview_summary
     },
     
@@ -73,10 +73,10 @@ export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
     extended_traits: {
       empathy: convertLevelToNumber(personaData.social_cognition?.empathy),
       theory_of_mind: convertLevelToNumber(personaData.social_cognition?.theory_of_mind),
-      trust_baseline: convertLevelToNumber(personaData.social_cognition?.trust_baseline),
+      trust_baseline: personaData.cognitive_profile?.extended_traits?.institutional_trust ? personaData.cognitive_profile.extended_traits.institutional_trust * 10 : 5,
       conflict_orientation: personaData.social_cognition?.conflict_orientation || '',
-      persuasion_style: personaData.social_cognition?.persuasion_style || '',
-      attachment_style: personaData.social_cognition?.attachment_style || '',
+      persuasion_style: personaData.group_behavior?.assertiveness || '',
+      attachment_style: personaData.cognitive_profile?.extended_traits?.empathy ? 'secure' : 'avoidant',
       intelligence_level: personaData.cognitive_profile?.intelligence?.level || '',
       intelligence_type: personaData.cognitive_profile?.intelligence?.type || []
     },
@@ -86,8 +86,7 @@ export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
       stress_level: 0.5, // Default value
       emotional_stability: personaData.cognitive_profile?.big_five?.neuroticism ? 
         (10 - personaData.cognitive_profile.big_five.neuroticism) / 10 : 0.5,
-      fatigue_level: personaData.health_profile?.energy_baseline === 'low' ? 0.7 : 
-        personaData.health_profile?.energy_baseline === 'high' ? 0.3 : 0.5
+      fatigue_level: personaData.state_modifiers?.current_state?.fatigue || 0.5
     }
   } : {};
 
@@ -117,7 +116,7 @@ export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
       direct: personaData.linguistic_style?.base_voice?.directness === 'direct',
       polite: personaData.linguistic_style?.base_voice?.politeness === 'high'
     },
-    sample_phrasing: personaData.linguistic_style?.lexical_preferences?.intensifiers || []
+    sample_phrasing: personaData.linguistic_style?.syntax_and_rhythm?.signature_phrases || []
   } : {};
 
   return {
@@ -154,7 +153,7 @@ export function adaptV2ToV1Persona(v2Persona: DbPersonaV2): Persona {
  * Adapter to convert V1 persona back to V2 after updates
  * This maintains V2 structure while preserving V1 updates
  */
-export function adaptV1ToV2Persona(v1Persona: Persona, originalV2: DbPersonaV2): DbPersonaV2 {
+export function adaptV1ToV2Persona(v1Persona: Persona, originalV2: DbPersona): DbPersona {
   return {
     ...originalV2,
     name: v1Persona.name,

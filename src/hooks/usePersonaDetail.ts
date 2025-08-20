@@ -178,7 +178,7 @@ export function usePersonaDetail() {
     setIsGeneratingImage(true);
     
     try {
-      // Convert DbPersonaV2 to legacy Persona format for image generation
+      // Convert DbPersona to legacy Persona format for image generation
       const legacyPersona = {
         id: persona.id,
         persona_id: persona.persona_id,

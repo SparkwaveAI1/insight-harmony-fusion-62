@@ -1,10 +1,10 @@
-import { DbPersonaV2 } from "@/services/persona/types/persona-v2-db";
+import { DbPersona } from "@/services/persona";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
 interface PersonaTraitsSummaryV2Props {
-  persona: DbPersonaV2;
+  persona: DbPersona;
 }
 
 const PersonaTraitsSummaryV2 = ({ persona }: PersonaTraitsSummaryV2Props) => {
@@ -135,10 +135,10 @@ const PersonaTraitsSummaryV2 = ({ persona }: PersonaTraitsSummaryV2Props) => {
                 <Badge variant="outline" className="ml-2">{socialCognition.theory_of_mind}</Badge>
               </div>
             )}
-            {socialCognition?.trust_baseline && (
+            {cognitiveProfile?.extended_traits?.institutional_trust && (
               <div>
-                <span className="font-semibold">Trust Baseline:</span>
-                <Badge variant="outline" className="ml-2">{socialCognition.trust_baseline}</Badge>
+                <span className="font-semibold">Institutional Trust:</span>
+                <Badge variant="outline" className="ml-2">{Math.round(cognitiveProfile.extended_traits.institutional_trust * 100)}%</Badge>
               </div>
             )}
           </CardContent>

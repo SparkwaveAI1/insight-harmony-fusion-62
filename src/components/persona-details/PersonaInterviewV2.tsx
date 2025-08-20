@@ -1,9 +1,9 @@
-import { DbPersonaV2 } from "@/services/persona/types/persona-v2-db";
+import { DbPersona } from "@/services/persona";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface PersonaInterviewV2Props {
-  persona: DbPersonaV2;
+  persona: DbPersona;
 }
 
 const PersonaInterviewV2 = ({ persona }: PersonaInterviewV2Props) => {

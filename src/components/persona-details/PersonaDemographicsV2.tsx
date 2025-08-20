@@ -1,9 +1,9 @@
-import { DbPersonaV2 } from "@/services/persona/types/persona-v2-db";
+import { DbPersona } from "@/services/persona";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface PersonaDemographicsV2Props {
-  persona: DbPersonaV2;
+  persona: DbPersona;
 }
 
 const PersonaDemographicsV2 = ({ persona }: PersonaDemographicsV2Props) => {
@@ -104,9 +104,9 @@ const PersonaDemographicsV2 = ({ persona }: PersonaDemographicsV2Props) => {
           <CardDescription>Life context and background information</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {lifeContext?.life_stage && (
+          {lifeContext?.lifestyle && (
             <div>
-              <span className="font-semibold">Life Stage:</span> {lifeContext.life_stage.replace('_', ' ')}
+              <span className="font-semibold">Lifestyle:</span> {lifeContext.lifestyle}
             </div>
           )}
           {lifeContext?.background_narrative && (

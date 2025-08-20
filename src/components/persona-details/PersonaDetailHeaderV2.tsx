@@ -9,12 +9,12 @@ import PersonaNameEditor from "./PersonaNameEditor";
 import PersonaDescriptionEditor from "./PersonaDescriptionEditor";
 import PersonaImageGenerationDialog from "./PersonaImageGenerationDialog";
 import PersonaEnhancementDialog from "./PersonaEnhancementDialog";
-import { DbPersonaV2 } from "@/services/persona/types/persona-v2-db";
+import { DbPersona } from "@/services/persona";
 import { Persona } from "@/services/persona/types";
 import { PersonaValidationResult } from "@/services/persona/validation/personaValidation";
 
 interface PersonaDetailHeaderV2Props {
-  persona: DbPersonaV2;
+  persona: DbPersona;
   isOwner: boolean;
   isPublic: boolean;
   isGeneratingImage: boolean;
@@ -25,7 +25,7 @@ interface PersonaDetailHeaderV2Props {
   onImageGenerated: () => Promise<string | null>;
   onDownloadJSON: () => void;
   onChatClick: () => void;
-  onPersonaUpdated?: (updatedPersona: DbPersonaV2) => void;
+  onPersonaUpdated?: (updatedPersona: DbPersona) => void;
 }
 
 export default function PersonaDetailHeaderV2({
@@ -44,7 +44,7 @@ export default function PersonaDetailHeaderV2({
 }: PersonaDetailHeaderV2Props) {
   const [enhancementDialogOpen, setEnhancementDialogOpen] = useState(false);
   
-  // Convert DbPersonaV2 to Persona format for components that expect it
+  // Convert DbPersona to Persona format for components that expect it
   const legacyPersona: Persona = {
     id: persona.id,
     persona_id: persona.persona_id,
@@ -227,8 +227,8 @@ export default function PersonaDetailHeaderV2({
           persona={legacyPersona}
           validationResult={validationResult}
           onPersonaUpdated={(updatedPersona) => {
-            // Convert back to DbPersonaV2 format
-            const updatedDbPersona: DbPersonaV2 = {
+            // Convert back to DbPersona format
+            const updatedDbPersona: DbPersona = {
               ...persona,
               name: updatedPersona.name,
               description: updatedPersona.description,

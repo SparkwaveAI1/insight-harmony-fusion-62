@@ -2,13 +2,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getPersonaById } from '@/services/persona';
-import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
+import { DbPersona } from '@/services/persona';
 import { getProjectDocuments, KnowledgeBaseDocument } from '@/services/collections';
 
 interface SessionCreationResult {
   success: boolean;
   sessionId?: string;
-  selectedPersonas?: DbPersonaV2[];
+  selectedPersonas?: DbPersona[];
   projectDocuments?: KnowledgeBaseDocument[];
   error?: string;
 }
@@ -39,8 +39,8 @@ export const createResearchSession = async (
       return { success: false, error: 'Not authenticated' };
     }
     
-    // Load all selected personas using getPersonaV2ById
-    const selectedPersonas: DbPersonaV2[] = [];
+    // Load all selected personas
+    const selectedPersonas: DbPersona[] = [];
     for (const personaId of personaIds) {
       try {
         console.log(`Loading V2 persona with ID: ${personaId}`);

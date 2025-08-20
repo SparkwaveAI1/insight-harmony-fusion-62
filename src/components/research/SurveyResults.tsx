@@ -6,7 +6,7 @@ import { Download, ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
+import { DbPersona } from '@/services/persona';
 import { adaptV2ToV1Persona } from '@/utils/personaV2Adapter';
 import { SurveyReportGenerator } from './reports/SurveyReportGenerator';
 import { PersonaSurveyStatus } from './utils/responseUtils';
@@ -17,7 +17,7 @@ interface SurveyResultsProps {
   questions: string[];
   sessionId: string;
   surveySessionId?: string | null;
-  loadedPersonas: DbPersonaV2[];
+  loadedPersonas: DbPersona[];
   onBack: () => void;
 }
 

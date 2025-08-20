@@ -1,4 +1,4 @@
-import { DbPersonaV2 } from "@/services/persona/types/persona-v2-db";
+import { DbPersona } from "@/services/persona";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaDemographicsV2 from "./PersonaDemographicsV2";
 import PersonaTraitsSummaryV2 from "./PersonaTraitsSummaryV2";
@@ -6,7 +6,7 @@ import PersonaInterviewV2 from "./PersonaInterviewV2";
 import { SurveyManagement } from '../surveys/SurveyManagement';
 
 interface PersonaContentV2Props {
-  persona: DbPersonaV2;
+  persona: DbPersona;
   isOwner?: boolean;
 }
 

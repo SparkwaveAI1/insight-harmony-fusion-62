@@ -17,7 +17,7 @@ const ResearchResults = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<ResearchSurveySession | null>(null);
   const [report, setReport] = useState<ResearchReport | null>(null);
-  const [loadedPersonas, setLoadedPersonas] = useState<DbPersonaV2[]>([]);
+  const [loadedPersonas, setLoadedPersonas] = useState<DbPersona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +48,7 @@ const ResearchResults = () => {
       );
       
       const personaDataResults = await Promise.all(personaDataPromises);
-      const validPersonas = personaDataResults.filter((persona): persona is DbPersonaV2 => persona !== null);
+      const validPersonas = personaDataResults.filter((persona): persona is DbPersona => persona !== null);
       
       // Create fallback personas for any that couldn't be loaded
       const allPersonas = sessionData.selected_personas.map(personaId => {
@@ -57,7 +57,7 @@ const ResearchResults = () => {
           return foundPersona;
         }
         
-        // Fallback V2 persona with ID + name format
+        // Fallback persona with ID + name format
         return {
           persona_id: personaId,
           id: personaId,
@@ -71,8 +71,9 @@ const ResearchResults = () => {
           is_public: false,
           profile_image_url: null,
           voicepack_runtime: null,
-          voicepack_hash: null
-        } as DbPersonaV2;
+          voicepack_hash: null,
+          persona_version: '3.0'
+        } as DbPersona;
       });
       
       setSession(sessionData);
