@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -432,113 +432,129 @@ export type Database = {
         }
         Relationships: []
       }
-      persona_images: {
-        Row: {
-          created_at: string | null
-          file_path: string
-          generation_prompt: string | null
-          id: string
-          is_current: boolean | null
-          original_url: string | null
-          persona_id: string
-          physical_attributes: Json | null
-          storage_url: string
-        }
-        Insert: {
-          created_at?: string | null
-          file_path: string
-          generation_prompt?: string | null
-          id?: string
-          is_current?: boolean | null
-          original_url?: string | null
-          persona_id: string
-          physical_attributes?: Json | null
-          storage_url: string
-        }
-        Update: {
-          created_at?: string | null
-          file_path?: string
-          generation_prompt?: string | null
-          id?: string
-          is_current?: boolean | null
-          original_url?: string | null
-          persona_id?: string
-          physical_attributes?: Json | null
-          storage_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "persona_images_persona_id_fkey"
-            columns: ["persona_id"]
-            isOneToOne: false
-            referencedRelation: "personas"
-            referencedColumns: ["persona_id"]
-          },
-        ]
-      }
       personas: {
         Row: {
-          behavioral_modulation: Json
-          created_at: string | null
-          creation_date: string
+          created_at: string
           description: string | null
-          emotional_triggers: Json | null
           enhanced_metadata_version: number | null
           id: string
-          interview_sections: Json
-          is_public: boolean | null
-          linguistic_profile: Json
-          metadata: Json
+          is_public: boolean
           name: string
+          persona_data: Json
           persona_id: string
-          preinterview_tags: Json
           profile_image_url: string | null
           prompt: string | null
-          simulation_directives: Json
-          trait_profile: Json
-          user_id: string | null
+          updated_at: string
+          user_id: string
+          voicepack_hash: string | null
+          voicepack_runtime: Json | null
         }
         Insert: {
-          behavioral_modulation: Json
-          created_at?: string | null
-          creation_date: string
+          created_at?: string
           description?: string | null
-          emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
           id?: string
-          interview_sections: Json
-          is_public?: boolean | null
-          linguistic_profile: Json
-          metadata: Json
+          is_public?: boolean
           name: string
+          persona_data?: Json
           persona_id: string
-          preinterview_tags: Json
           profile_image_url?: string | null
           prompt?: string | null
-          simulation_directives: Json
-          trait_profile: Json
-          user_id?: string | null
+          updated_at?: string
+          user_id: string
+          voicepack_hash?: string | null
+          voicepack_runtime?: Json | null
         }
         Update: {
-          behavioral_modulation?: Json
-          created_at?: string | null
-          creation_date?: string
+          created_at?: string
           description?: string | null
-          emotional_triggers?: Json | null
           enhanced_metadata_version?: number | null
           id?: string
-          interview_sections?: Json
-          is_public?: boolean | null
-          linguistic_profile?: Json
-          metadata?: Json
+          is_public?: boolean
           name?: string
+          persona_data?: Json
           persona_id?: string
-          preinterview_tags?: Json
           profile_image_url?: string | null
           prompt?: string | null
-          simulation_directives?: Json
-          trait_profile?: Json
-          user_id?: string | null
+          updated_at?: string
+          user_id?: string
+          voicepack_hash?: string | null
+          voicepack_runtime?: Json | null
+        }
+        Relationships: []
+      }
+      personas_v2: {
+        Row: {
+          builder_metadata: Json | null
+          created_at: string
+          description: string | null
+          group_behavior: Json | null
+          id: string
+          is_public: boolean
+          linguistic_style: Json | null
+          name: string
+          persona_data: Json
+          persona_id: string
+          persona_type: string
+          persona_version: string
+          profile_image_url: string | null
+          reasoning_modifiers: Json | null
+          runtime_controls: Json | null
+          state_modifiers: Json | null
+          trait_to_language_map: Json | null
+          updated_at: string
+          user_id: string
+          validation_flags: Json | null
+          voicepack_hash: string | null
+          voicepack_runtime: Json | null
+        }
+        Insert: {
+          builder_metadata?: Json | null
+          created_at?: string
+          description?: string | null
+          group_behavior?: Json | null
+          id?: string
+          is_public?: boolean
+          linguistic_style?: Json | null
+          name: string
+          persona_data: Json
+          persona_id: string
+          persona_type?: string
+          persona_version?: string
+          profile_image_url?: string | null
+          reasoning_modifiers?: Json | null
+          runtime_controls?: Json | null
+          state_modifiers?: Json | null
+          trait_to_language_map?: Json | null
+          updated_at?: string
+          user_id: string
+          validation_flags?: Json | null
+          voicepack_hash?: string | null
+          voicepack_runtime?: Json | null
+        }
+        Update: {
+          builder_metadata?: Json | null
+          created_at?: string
+          description?: string | null
+          group_behavior?: Json | null
+          id?: string
+          is_public?: boolean
+          linguistic_style?: Json | null
+          name?: string
+          persona_data?: Json
+          persona_id?: string
+          persona_type?: string
+          persona_version?: string
+          profile_image_url?: string | null
+          reasoning_modifiers?: Json | null
+          runtime_controls?: Json | null
+          state_modifiers?: Json | null
+          trait_to_language_map?: Json | null
+          updated_at?: string
+          user_id?: string
+          validation_flags?: Json | null
+          voicepack_hash?: string | null
+          voicepack_runtime?: Json | null
         }
         Relationships: []
       }
@@ -1066,6 +1082,114 @@ export type Database = {
         }
         Relationships: []
       }
+      voicepack_chat_telemetry: {
+        Row: {
+          avg_sentence_length: number | null
+          banned_frame_hits: number | null
+          classification: Json | null
+          conversation_id: string | null
+          created_at: string
+          estimated_tokens: number | null
+          id: string
+          latency_ms: number | null
+          must_include_satisfied: boolean | null
+          persona_id: string
+          plan: Json | null
+          response_shape: string | null
+          rhetorical_q_count: number | null
+          signature_token_count: number | null
+          user_id: string
+          voicepack_hash: string | null
+        }
+        Insert: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          classification?: Json | null
+          conversation_id?: string | null
+          created_at?: string
+          estimated_tokens?: number | null
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id: string
+          plan?: Json | null
+          response_shape?: string | null
+          rhetorical_q_count?: number | null
+          signature_token_count?: number | null
+          user_id: string
+          voicepack_hash?: string | null
+        }
+        Update: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          classification?: Json | null
+          conversation_id?: string | null
+          created_at?: string
+          estimated_tokens?: number | null
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id?: string
+          plan?: Json | null
+          response_shape?: string | null
+          rhetorical_q_count?: number | null
+          signature_token_count?: number | null
+          user_id?: string
+          voicepack_hash?: string | null
+        }
+        Relationships: []
+      }
+      voicepack_telemetry: {
+        Row: {
+          avg_sentence_length: number | null
+          banned_frame_hits: number | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          must_include_satisfied: boolean | null
+          persona_id: string
+          rhetorical_q_count: number | null
+          session_id: string | null
+          signature_token_count: number | null
+          state_deltas_applied: Json | null
+          turn_classification: Json | null
+          used_response_shape: string
+          voicepack_hash: string
+        }
+        Insert: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id: string
+          rhetorical_q_count?: number | null
+          session_id?: string | null
+          signature_token_count?: number | null
+          state_deltas_applied?: Json | null
+          turn_classification?: Json | null
+          used_response_shape: string
+          voicepack_hash: string
+        }
+        Update: {
+          avg_sentence_length?: number | null
+          banned_frame_hits?: number | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          must_include_satisfied?: boolean | null
+          persona_id?: string
+          rhetorical_q_count?: number | null
+          session_id?: string | null
+          signature_token_count?: number | null
+          state_deltas_applied?: Json | null
+          turn_classification?: Json | null
+          used_response_shape?: string
+          voicepack_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1082,16 +1206,16 @@ export type Database = {
       get_user_projects_with_counts: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          name: string
-          description: string
-          information: string
-          research_objectives: string
-          methodology: string
-          user_id: string
-          created_at: string
-          updated_at: string
           conversation_count: number
+          created_at: string
+          description: string
+          id: string
+          information: string
+          methodology: string
+          name: string
+          research_objectives: string
+          updated_at: string
+          user_id: string
         }[]
       }
     }
