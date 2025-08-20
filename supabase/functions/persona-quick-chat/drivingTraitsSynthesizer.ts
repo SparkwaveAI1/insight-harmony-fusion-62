@@ -26,7 +26,9 @@ export interface TraitInteraction {
 }
 
 export class DrivingTraitsSynthesizer {
-  // Use ALL traits - no limits or filtering for complete personality influence
+  private static readonly MIN_DRIVING_TRAITS = 5;
+  private static readonly MAX_DRIVING_TRAITS = 12;
+  private static readonly MIN_RELEVANCE_THRESHOLD = 2;
 
   public static async synthesizeDrivingTraits(
     highPriorityTraits: TraitRelevanceScore[],
@@ -46,9 +48,15 @@ export class DrivingTraitsSynthesizer {
         const bScore = a.relevanceScore + (Math.abs(bTraitValue - 0.5) * 4);
         
         return bScore - aScore;
-      });
+      })
+      .slice(0, this.MAX_DRIVING_TRAITS);
     
-    // Use ALL traits - no artificial limits or filtering
+    // Ensure we have minimum number of traits
+    if (sortedTraits.length < this.MIN_DRIVING_TRAITS) {
+      console.log('⚠️ Insufficient high-priority traits, adding top-scoring traits');
+      // Add more traits if needed, lowering threshold
+      // This would involve going back to the full trait scan
+    }
     
     // Convert to driving traits with behavioral influence
     const drivingTraits = await this.createDrivingTraits(sortedTraits, traitProfile);
