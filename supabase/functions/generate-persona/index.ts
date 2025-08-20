@@ -77,32 +77,32 @@ serve(async (req) => {
     
     // STAGE 5: Generate memory system
     console.log('🔄 Stage 5: Generating memory system...');
-    const memory = await generateV3Memory(identity, life_context);
+    const memory = await generateV3Memory(identity, prompt);
     console.log('✅ Stage 5 Complete: Generated memory system');
 
     // STAGE 6: Generate state modifiers
     console.log('🔄 Stage 6: Generating state modifiers...');
-    const state_modifiers = await generateV3StateModifiers(cognitive_profile);
+    const state_modifiers = await generateV3StateModifiers(cognitive_profile, prompt);
     console.log('✅ Stage 6 Complete: Generated state modifiers');
 
     // STAGE 7: Generate linguistic style
     console.log('🔄 Stage 7: Generating linguistic style...');
-    const linguistic_style = await generateV3LinguisticStyle(identity, cognitive_profile);
+    const linguistic_style = await generateV3LinguisticStyle(identity, prompt);
     console.log('✅ Stage 7 Complete: Generated linguistic style');
 
     // STAGE 8: Generate social profiles
     console.log('🔄 Stage 8: Generating social profiles...');
-    const social_profiles = await generateV3SocialProfiles(identity, cognitive_profile);
+    const social_profiles = await generateV3SocialProfiles(identity, prompt);
     console.log('✅ Stage 8 Complete: Generated social profiles');
 
     // STAGE 9: Generate runtime controls
     console.log('🔄 Stage 9: Generating runtime controls...');
-    const runtime_controls = await generateV3RuntimeControls(cognitive_profile);
+    const runtime_controls = await generateV3RuntimeControls(cognitive_profile, prompt);
     console.log('✅ Stage 9 Complete: Generated runtime controls');
 
     // STAGE 10: Generate interview responses
     console.log('🔄 Stage 10: Generating interview responses...');
-    const interview_sections = await generateV3Interview(identity, cognitive_profile);
+    const interview_sections = await generateV3Interview(identity);
     console.log(`✅ Stage 10 Complete: Generated ${interview_sections.length} interview sections`);
 
     // FINALIZATION: Assemble complete V3 persona
