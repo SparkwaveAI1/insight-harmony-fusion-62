@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, User, Brain, Upload } from "lucide-react";
-import { generatePersona } from "@/services/persona";
+import { usePersonaCreationProgress } from "@/hooks/usePersonaCreationProgress";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import JSONImportDialog from "./JSONImportDialog";
@@ -16,9 +16,9 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
   const [prompt, setPrompt] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const navigate = useNavigate();
+  const { createPersona, progress, isCreating } = usePersonaCreationProgress();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -26,14 +26,13 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
       return;
     }
 
-    console.log("=== HERO SECTION: Starting persona generation ===");
+    console.log("=== HERO SECTION: Starting persona generation with progress ===");
     console.log("User prompt:", prompt);
     
-    setIsLoading(true);
     onGenerate();
     
     try {
-      const persona = await generatePersona(prompt.trim());
+      const persona = await createPersona(prompt.trim());
       
       if (persona) {
         console.log("✅ HERO SECTION: Persona generated successfully:", persona.name);
@@ -75,8 +74,6 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
         },
         replace: true
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -117,16 +114,16 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 className="min-h-32 resize-none"
-                disabled={isLoading}
+                disabled={isCreating}
               />
               <div className="flex gap-2">
                 <Button 
                   onClick={handleGenerate}
                   className="flex-1" 
                   size="lg"
-                  disabled={isLoading || !prompt.trim()}
+                  disabled={isCreating || !prompt.trim()}
                 >
-                  {isLoading ? (
+                  {isCreating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating Persona...
@@ -142,7 +139,7 @@ const HeroSection = ({ onGenerate, isGenerating }: HeroSectionProps) => {
                   variant="outline"
                   onClick={() => setShowImportDialog(true)}
                   size="lg"
-                  disabled={isLoading}
+                  disabled={isCreating}
                 >
                   <Upload className="mr-2 h-4 w-4" />
                   Import JSON

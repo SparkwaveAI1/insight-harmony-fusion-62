@@ -44,8 +44,6 @@ import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScr
 import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
 import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
 
-// Character feature unavailable component
-import CharacterFeatureUnavailable from "./components/CharacterFeatureUnavailable";
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
@@ -77,20 +75,6 @@ function App() {
                 {/* Documentation - Protected Route */}
                 <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
                 
-                {/* Character Routes - DEACTIVATED - All character routes redirect to unavailable page */}
-                <Route path="/characters-home" element={<CharacterFeatureUnavailable />} />
-                <Route path="/characters/*" element={<CharacterFeatureUnavailable />} />
-                
-                {/* Character specific routes - DEACTIVATED */}
-                {/* 
-                <Route path="/characters" element={<ProtectedRoute><CharacterDashboard /></ProtectedRoute>} />
-                <Route path="/characters/creative" element={<ProtectedRoute><CreativeCharacterDashboard /></ProtectedRoute>} />
-                <Route path="/characters/:characterId" element={<ProtectedRoute><CharacterDetail /></ProtectedRoute>} />
-                <Route path="/characters/:characterId/edit" element={<ProtectedRoute><CharacterEdit /></ProtectedRoute>} />
-                <Route path="/characters/:characterId/chat" element={<ProtectedRoute><CharacterChat /></ProtectedRoute>} />
-                <Route path="/characters/create/historical" element={<ProtectedRoute><HistoricalCharacterCreate /></ProtectedRoute>} />
-                <Route path="/characters/create/creative" element={<ProtectedRoute><CreativeCharacterCreate /></ProtectedRoute>} />
-                */}
                 
                 {/* PRSNA token routes - public access */}
                 <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
