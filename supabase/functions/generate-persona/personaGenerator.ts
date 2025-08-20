@@ -251,49 +251,74 @@ export async function generatePersonaRuntimeControls(basePersona: PersonaTemplat
   return runtimeControls;
 }
 
-export function finalizePersonaV3(
-  basePersona: PersonaTemplate, 
-  cognitiveData: any, 
-  socialProfiles: any,
-  runtimeControls: any,
-  interviewResponses: any[]
-): PersonaTemplate {
+export function finalizePersonaV3(params: {
+  persona_id: string;
+  user_id: string;
+  identity: any;
+  life_context: any;
+  knowledge_profile: any;
+  cognitive_profile: any;
+  memory: any;
+  state_modifiers: any;
+  linguistic_style: any;
+  social_profiles: any;
+  runtime_controls: any;
+  interview_sections: any[];
+}): any {
   console.log('=== FINALIZING V3 PERSONA ===');
   
+  const { 
+    persona_id, user_id, identity, life_context, knowledge_profile, 
+    cognitive_profile, memory, state_modifiers, linguistic_style, 
+    social_profiles, runtime_controls, interview_sections 
+  } = params;
+  
   // Generate description from identity and cognitive profile
-  const description = generateV3PersonaDescription(basePersona, cognitiveData);
+  const description = generateV3PersonaDescription({ identity }, cognitive_profile);
   
-  // Merge all V3 components into the base persona
-  Object.assign(basePersona, {
+  // Create complete V3 persona
+  const finalPersona = {
+    persona_id,
+    user_id,
+    name: identity.name,
     version: "3.0",
-    description: description,
-    cognitive_profile: cognitiveData.cognitive_profile,
-    emotional_triggers: cognitiveData.emotional_triggers,
-    group_behavior: socialProfiles.group_behavior,
-    social_cognition: socialProfiles.social_cognition,
-    sexuality_profile: socialProfiles.sexuality_profile,
-    runtime_controls: runtimeControls.runtime_controls
-  });
-  
-  basePersona.interview_sections = interviewResponses;
+    description,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    
+    // V3 Structure
+    identity: identity.identity,
+    life_context: life_context.life_context,
+    knowledge_profile: knowledge_profile.knowledge_profile,
+    cognitive_profile: cognitive_profile.cognitive_profile,
+    emotional_triggers: cognitive_profile.emotional_triggers,
+    memory: memory.memory,
+    state_modifiers: state_modifiers.state_modifiers,
+    linguistic_style: linguistic_style.linguistic_style,
+    group_behavior: social_profiles.group_behavior,
+    social_cognition: social_profiles.social_cognition,
+    sexuality_profile: social_profiles.sexuality_profile,
+    runtime_controls: runtime_controls.runtime_controls,
+    interview_sections
+  };
 
   // Basic V3 validation
-  if (!basePersona.identity || !basePersona.cognitive_profile || !basePersona.life_context) {
+  if (!finalPersona.identity || !finalPersona.cognitive_profile || !finalPersona.life_context) {
     throw new PersonaGenerationError(
       'validation', 
       'Generated V3 persona is missing required components',
       undefined,
-      { personaName: basePersona.name }
+      { personaName: finalPersona.name }
     );
   }
 
   console.log('✅ V3 Persona finalized and validated');
-  return basePersona;
+  return finalPersona;
 }
 
-function generateV3PersonaDescription(persona: PersonaTemplate, cognitiveData: any): string {
+function generateV3PersonaDescription(persona: any, cognitiveData: any): string {
   // Extract key characteristics
-  const name = persona.name;
+  const name = persona.identity?.name || 'Unknown';
   const identity = persona.identity;
   const cognitive = cognitiveData.cognitive_profile;
   

@@ -615,3 +615,10 @@ Generate 3-4 sections covering background, values, daily life, and future goals.
     throw new Error('Invalid JSON response from OpenAI for interview');
   }
 }
+
+// V3 Export Aliases - matching what index.ts expects
+export const generateV3Identity = generateCoreDemographics;
+export const generateV3LifeContext = generateLifeContext;
+export const generateV3KnowledgeProfile = generateKnowledgeProfile;
+export const generateV3CognitiveProfile = generateCognitiveProfile;
+export const generateV3Interview = generateInterviewResponses;

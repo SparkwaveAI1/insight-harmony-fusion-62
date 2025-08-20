@@ -352,3 +352,10 @@ DISTINCTIVENESS REQUIREMENTS:
     throw new Error('Invalid JSON response from OpenAI for V3 runtime controls');
   }
 }
+
+// V3 Export Aliases - matching what index.ts expects
+export const generateV3Memory = generateMemory;
+export const generateV3StateModifiers = generateStateModifiers;
+export const generateV3LinguisticStyle = generateLinguisticStyle;
+export const generateV3SocialProfiles = generateSocialProfiles;
+export const generateV3RuntimeControls = generateRuntimeControls;
