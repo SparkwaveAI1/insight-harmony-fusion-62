@@ -62,7 +62,7 @@ export async function updatePersonaWithImageUrl(
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
   const { error: updateError } = await supabase
-    .from('personas')
+    .from('personas_v2')
     .update({ profile_image_url: imageUrl })
     .eq('persona_id', personaId);
     
