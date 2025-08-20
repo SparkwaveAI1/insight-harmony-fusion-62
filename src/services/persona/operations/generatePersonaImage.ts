@@ -16,8 +16,21 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     console.log("Persona ID:", persona.persona_id);
     console.log("Persona name:", persona.name);
     
+    // Transform PersonaV2 data to expected format for the edge function
+    const transformedPersona = {
+      persona_id: persona.persona_id,
+      name: persona.name,
+      metadata: {
+        age: persona.persona_data?.identity?.age || 30,
+        gender: persona.persona_data?.identity?.gender || 'person',
+        race_ethnicity: persona.persona_data?.identity?.ethnicity || 'diverse',
+        occupation: persona.persona_data?.identity?.occupation || 'professional',
+        // Add other metadata fields as needed
+      }
+    };
+    
     const { data, error } = await supabase.functions.invoke('generate-persona-image', {
-      body: { personaData: persona }
+      body: { personaData: transformedPersona }
     });
 
     if (error) {
