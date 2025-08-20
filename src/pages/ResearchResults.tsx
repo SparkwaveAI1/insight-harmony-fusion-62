@@ -9,8 +9,8 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getResearchSessionById, getResearchReport, ResearchSurveySession, ResearchReport } from '@/services/collections/researchOperations';
 import SurveyResults from '@/components/research/SurveyResults';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getPersonaV2ById } from '@/services/persona';
-import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
+import { getPersonaById } from '@/services/persona';
+import { DbPersona } from '@/services/persona';
 
 const ResearchResults = () => {
   const { surveySessionId } = useParams<{ surveySessionId: string }>();
@@ -44,7 +44,7 @@ const ResearchResults = () => {
       
       // Fetch real V2 persona data
       const personaDataPromises = sessionData.selected_personas.map(personaId => 
-        getPersonaV2ById(personaId)
+        getPersonaById(personaId)
       );
       
       const personaDataResults = await Promise.all(personaDataPromises);

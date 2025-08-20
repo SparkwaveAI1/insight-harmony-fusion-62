@@ -31,7 +31,7 @@ import {
 } from "@/services/collections"; 
 import { Collection } from "@/services/collections/types";
 import { Persona } from "@/services/persona/types";
-import { getAllPersonasV2 } from "@/services/persona";
+import { getAllPersonas } from "@/services/persona";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import NotFoundState from "@/components/persona-details/NotFoundState";
@@ -83,7 +83,7 @@ const CollectionDetail = () => {
       const personaIds = await getPersonasInCollection(collectionId);
       if (personaIds && personaIds.length > 0) {
         // Fetch all personas to filter by IDs in collection
-        const allPersonas = await getAllPersonasV2();
+        const allPersonas = await getAllPersonas();
         const filteredPersonas = allPersonas.filter((persona) =>
           personaIds.includes(persona.persona_id)
         );

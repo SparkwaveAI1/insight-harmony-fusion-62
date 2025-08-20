@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getPersonaV2ById } from '@/services/persona';
+import { getPersonaById } from '@/services/persona';
 import { DbPersonaV2 } from '@/services/persona/types/persona-v2-db';
 import { getProjectDocuments, KnowledgeBaseDocument } from '@/services/collections';
 
@@ -44,7 +44,7 @@ export const createResearchSession = async (
     for (const personaId of personaIds) {
       try {
         console.log(`Loading V2 persona with ID: ${personaId}`);
-        const persona = await getPersonaV2ById(personaId);
+        const persona = await getPersonaById(personaId);
         if (persona) {
           selectedPersonas.push(persona);
           console.log(`Successfully loaded V2 persona: ${persona.name}`);

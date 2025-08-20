@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { updatePersonaV2Name } from "@/services/persona";
+import { updatePersonaName } from "@/services/persona";
 
 interface PersonaNameEditorProps {
   personaId: string;
@@ -31,7 +31,7 @@ export default function PersonaNameEditor({
     }
     
     try {
-      await updatePersonaV2Name(personaId, newName);
+      await updatePersonaName(personaId, newName);
       toast.success("Persona name updated");
       setIsEditing(false);
       onNameUpdate(newName);

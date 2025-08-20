@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
 import Section from '@/components/ui-custom/Section';
 import PersonaChatInterface from '@/components/persona-chat/PersonaChatInterface';
-import { getPersonaV2ById } from '@/services/persona';
+import { getPersonaById } from '@/services/persona';
 import { Toaster } from 'sonner';
 
 // Create a QueryClient for this route

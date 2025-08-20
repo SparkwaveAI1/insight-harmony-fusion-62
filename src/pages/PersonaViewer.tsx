@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonaListV2 from "@/components/personas/PersonaListV2";
+import PersonaList from "@/components/personas/PersonaListV2";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
@@ -136,11 +136,11 @@ const PersonaViewerContent = () => {
             </TabsList>
 
             <TabsContent value="my-personas" className="space-y-6">
-              <PersonaListV2 />
+              <PersonaList />
             </TabsContent>
 
             <TabsContent value="public-personas" className="space-y-6">
-              <PersonaListV2 />
+              <PersonaList />
             </TabsContent>
           </Tabs>
         </div>

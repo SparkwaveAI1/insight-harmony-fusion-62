@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 import { formatName } from '@/lib/utils';
-import { getPersonaV2ById } from '@/services/persona';
+import { getPersonaById } from '@/services/persona';
 
 interface PersonaFetcherProps {
   personaId: string;
@@ -13,7 +13,7 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
   // Use React Query to fetch the persona with better error handling
   const { data: activePersona, isLoading, error } = useQuery({
     queryKey: ['persona', personaId],
-    queryFn: () => getPersonaV2ById(personaId),
+    queryFn: () => getPersonaById(personaId),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
@@ -61,7 +61,7 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
           <div>
             <strong>Age:</strong> {activePersona.persona_data?.identity?.age || 'Not specified'}
             <br />
-            <strong>Name:</strong> {activePersona.persona_data?.identity?.name || 'Not specified'}
+            <strong>Name:</strong> {activePersona.name || 'Not specified'}
             <br />
             <strong>Location:</strong> {typeof activePersona.persona_data?.identity?.location === 'string' 
               ? activePersona.persona_data.identity.location 

@@ -1,32 +1,25 @@
 
-// V2-Only Persona Operations
+// Unified Persona Operations
 export { 
   getPersonaById,
   getAllPersonas,
   getPublicPersonas,
   getPersonasForListing,
-  checkPersonaVersion
+  checkPersonaVersion,
+  savePersona,
+  updatePersona,
+  deletePersona,
+  updatePersonaVoicepack,
+  updatePersonaVisibility,
+  updatePersonaName,
+  updatePersonaDescription,
+  updatePersonaProfileImageUrl
 } from './operations/personaOperations';
 
-// V1 operations removed - use V2 operations instead
+// Additional operations
 export { generatePersonaImage } from './operations/generatePersonaImage';
 export { enhancePersona } from './enhancePersona';
 export { bulkEnhancePersonas } from './bulkEnhancePersonas';
-
-// PersonaV2 operations
-export { 
-  getPersonaV2ById,
-  getAllPersonasV2,
-  getPublicPersonasV2,
-  savePersonaV2,
-  updatePersonaV2,
-  deletePersonaV2,
-  updatePersonaV2Voicepack,
-  updatePersonaV2Visibility,
-  updatePersonaV2Name,
-  updatePersonaV2Description,
-  updatePersonaV2ProfileImageUrl
-} from './operations/personaV2Operations';
 
 // Voicepack runtime system
 export { 
@@ -47,4 +40,4 @@ export { samplePersonaTraits, generatePersonaV2Prompt } from './migration/traitS
 
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';
-export type { CreatePersonaV2Request, UpdatePersonaV2Request } from './types/persona-v2-db';
+export type { CreatePersonaRequest, UpdatePersonaRequest, DbPersona } from './operations/personaOperations';

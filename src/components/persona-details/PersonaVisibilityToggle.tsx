@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Globe, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { updatePersonaV2Visibility } from "@/services/persona";
+import { updatePersonaVisibility } from "@/services/persona";
 
 interface PersonaVisibilityToggleProps {
   personaId: string;
@@ -28,7 +28,7 @@ const PersonaVisibilityToggle = ({
     
     try {
       const newVisibility = !isPublic;
-      await updatePersonaV2Visibility(personaId, newVisibility);
+      await updatePersonaVisibility(personaId, newVisibility);
       onVisibilityChange(newVisibility);
       toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
     } catch (error) {

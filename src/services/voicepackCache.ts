@@ -1,6 +1,6 @@
 import { VoicepackRuntime } from '../types/voicepack';
 import { compilePersonaToVoicepack } from '../compile/compilePersonaToVoicepack';
-import { getPersonaV2ById } from './persona';
+import { getPersonaById } from './persona';
 import { supabase } from '@/integrations/supabase/client';
 import crypto from 'crypto';
 
@@ -16,7 +16,7 @@ const voicepackCache = new Map<string, VoicepackCacheEntry>();
 export async function getOrCompileVoicepack(personaId: string): Promise<VoicepackRuntime> {
   try {
     // Get the persona data
-    const persona = await getPersonaV2ById(personaId);
+    const persona = await getPersonaById(personaId);
     if (!persona) {
       throw new Error(`Persona not found: ${personaId}`);
     }
@@ -51,7 +51,7 @@ export async function getOrCompileVoicepack(personaId: string): Promise<Voicepac
 
     // Need to compile fresh voicepack
     console.log(`Compiling fresh voicepack for persona ${personaId}`);
-    const voicepack = compilePersonaToVoicepack(persona.persona_data);
+    const voicepack = compilePersonaToVoicepack(persona.persona_data as any);
 
     // Update database cache
     await supabase

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getAllPersonasV2 } from "@/services/persona";
+import { getAllPersonas } from "@/services/persona";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ export function PersonaMigrationDialog() {
   useEffect(() => {
     const loadPersonas = async () => {
       try {
-        const data = await getAllPersonasV2();
+        const data = await getAllPersonas();
         setPersonas(data);
       } catch (error) {
         console.error('Error loading personas:', error);
@@ -53,7 +53,7 @@ export function PersonaMigrationDialog() {
     if (isOpen) {
       const loadPersonas = async () => {
         try {
-          const data = await getAllPersonasV2();
+          const data = await getAllPersonas();
           setPersonas(data);
         } catch (error) {
           console.error('Error loading personas:', error);

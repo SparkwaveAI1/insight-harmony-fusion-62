@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
-import { PersonaV2 } from '@/types/persona-v2';
+import { PersonaV3 } from '@/types/persona-v3';
 import { 
-  getAllPersonasV2, 
-  getPersonaV2ById, 
-  savePersonaV2, 
-  updatePersonaV2,
-  deletePersonaV2 
-} from '@/services/persona/operations/personaV2Operations';
+  getAllPersonas, 
+  getPersonaById, 
+  savePersona, 
+  updatePersona,
+  deletePersona,
+  CreatePersonaRequest,
+  UpdatePersonaRequest,
+  DbPersona
+} from '@/services/persona';
 
-export function usePersonaV2() {
-  const [personas, setPersonas] = useState<any[]>([]);
+export function usePersona() {
+  const [personas, setPersonas] = useState<DbPersona[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +20,7 @@ export function usePersonaV2() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllPersonasV2(userId);
+      const data = await getAllPersonas(userId);
       setPersonas(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load personas');
@@ -30,7 +33,7 @@ export function usePersonaV2() {
     setLoading(true);
     setError(null);
     try {
-      const persona = await getPersonaV2ById(personaId);
+      const persona = await getPersonaById(personaId);
       return persona;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load persona');
@@ -40,11 +43,11 @@ export function usePersonaV2() {
     }
   };
 
-  const createPersona = async (personaData: any) => {
+  const createPersona = async (personaData: CreatePersonaRequest) => {
     setLoading(true);
     setError(null);
     try {
-      const newPersona = await savePersonaV2(personaData);
+      const newPersona = await savePersona(personaData);
       setPersonas(prev => [newPersona, ...prev]);
       return newPersona;
     } catch (err) {
@@ -55,11 +58,11 @@ export function usePersonaV2() {
     }
   };
 
-  const updatePersona = async (personaId: string, updates: any) => {
+  const updatePersonaData = async (personaId: string, updates: UpdatePersonaRequest) => {
     setLoading(true);
     setError(null);
     try {
-      const updatedPersona = await updatePersonaV2(personaId, updates);
+      const updatedPersona = await updatePersona(personaId, updates);
       setPersonas(prev => 
         prev.map(p => p.persona_id === personaId ? updatedPersona : p)
       );
@@ -76,7 +79,7 @@ export function usePersonaV2() {
     setLoading(true);
     setError(null);
     try {
-      await deletePersonaV2(personaId);
+      await deletePersona(personaId);
       setPersonas(prev => prev.filter(p => p.persona_id !== personaId));
       return true;
     } catch (err) {
@@ -94,7 +97,7 @@ export function usePersonaV2() {
     loadPersonas,
     loadPersona,
     createPersona,
-    updatePersona,
+    updatePersona: updatePersonaData,
     removePersona,
     refreshPersonas: loadPersonas
   };

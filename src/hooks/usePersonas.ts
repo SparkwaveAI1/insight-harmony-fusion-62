@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAllPersonas, getPersonaById } from "@/services/persona";
+import { getAllPersonas, getPersonaById } from "@/services/persona/operations/personaOperations";
 
 export function usePersonas(lightweight = false) {
   return useQuery({
@@ -25,8 +25,9 @@ export function usePersonaVersionStats() {
       const personas = await getAllPersonas();
       return {
         total: personas.length,
-        v2: personas.length, // All are V2 now
-        v1: 0 // No V1 personas exist
+        v3: personas.length, // All are V3 now
+        v1: 0, // No legacy versions exist
+        v2: 0
       };
     },
     staleTime: 60000, // Consider stats fresh for 1 minute
