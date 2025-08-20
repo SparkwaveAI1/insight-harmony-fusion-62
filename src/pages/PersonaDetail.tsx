@@ -28,6 +28,7 @@ const PersonaDetail = () => {
     isLoading,
     isPublic,
     isOwner,
+    isGeneratingImage,
     handleVisibilityChange,
     handlePersonaDeleted,
     handleNameUpdate,
@@ -75,6 +76,7 @@ const PersonaDetail = () => {
                     persona={persona}
                     isOwner={isOwner}
                     isPublic={isPublic}
+                    isGeneratingImage={isGeneratingImage}
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
                     onNameUpdate={handleNameUpdate}

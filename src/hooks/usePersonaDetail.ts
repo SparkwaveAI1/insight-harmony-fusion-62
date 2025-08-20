@@ -171,15 +171,70 @@ export function usePersonaDetail() {
     console.log("=== DESCRIPTION UPDATE END ===");
   };
 
-  // Handle image generation - simplified for V2
+  // Handle image generation for V2 personas
   const handleImageGenerated = async () => {
     if (!personaId || !persona || !user) return null;
     
     setIsGeneratingImage(true);
     
     try {
-      toast.info("V2 image generation not yet implemented");
-      // TODO: Implement V2 image generation
+      // Convert DbPersonaV2 to legacy Persona format for image generation
+      const legacyPersona = {
+        id: persona.id,
+        persona_id: persona.persona_id,
+        name: persona.name,
+        description: persona.description || '',
+        profile_image_url: persona.profile_image_url || undefined,
+        creation_date: persona.created_at,
+        created_at: persona.created_at,
+        persona_context: 'legacy',
+        persona_type: 'legacy' as any,
+        metadata: {
+          age: String(persona.persona_data?.identity?.age || ''),
+          gender: persona.persona_data?.identity?.gender || '',
+          race_ethnicity: persona.persona_data?.identity?.ethnicity || '',
+          education_level: '',
+          occupation: persona.persona_data?.identity?.occupation || '',
+          employment_type: '',
+          income_level: '',
+          social_class_identity: '',
+          marital_status: persona.persona_data?.identity?.relationship_status || ''
+        },
+        behavioral_modulation: {},
+        interview_sections: [],
+        linguistic_profile: {},
+        preinterview_tags: [],
+        trait_profile: {
+          big_five: {
+            openness: persona.persona_data.cognitive_profile?.big_five?.openness || 0.5,
+            conscientiousness: persona.persona_data.cognitive_profile?.big_five?.conscientiousness || 0.5,
+            extraversion: persona.persona_data.cognitive_profile?.big_five?.extraversion || 0.5,
+            agreeableness: persona.persona_data.cognitive_profile?.big_five?.agreeableness || 0.5,
+            neuroticism: persona.persona_data.cognitive_profile?.big_five?.neuroticism || 0.5
+          },
+          moral_foundations: {
+            care: persona.persona_data.cognitive_profile?.moral_foundations?.care_harm || 0.5,
+            fairness: persona.persona_data.cognitive_profile?.moral_foundations?.fairness_cheating || 0.5,
+            loyalty: persona.persona_data.cognitive_profile?.moral_foundations?.loyalty_betrayal || 0.5,
+            authority: persona.persona_data.cognitive_profile?.moral_foundations?.authority_subversion || 0.5,
+            sanctity: persona.persona_data.cognitive_profile?.moral_foundations?.sanctity_degradation || 0.5,
+            liberty: persona.persona_data.cognitive_profile?.moral_foundations?.liberty_oppression || 0.5
+          }
+        },
+        emotional_triggers: persona.persona_data.emotional_triggers || { positive_triggers: [], negative_triggers: [] }
+      };
+
+      const { generatePersonaImage } = await import("@/services/persona/operations/generatePersonaImage");
+      const imageUrl = await generatePersonaImage(legacyPersona);
+      
+      if (imageUrl) {
+        // Update the persona with the new image URL
+        await updatePersonaV2ProfileImageUrl(personaId, imageUrl);
+        setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
+        toast.success("Profile image generated successfully!");
+        return imageUrl;
+      }
+      
       return null;
     } catch (error) {
       console.error("Error generating profile image:", error);
