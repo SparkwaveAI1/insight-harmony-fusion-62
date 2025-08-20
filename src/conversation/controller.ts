@@ -6,7 +6,17 @@ export function classifyTurn(userText: string): TurnClassification {
   // Intent classification based on patterns
   let intent: TurnClassification['intent'] = "opinion";
   
-  if (text.includes("what do you think about") || text.includes("opinion on")) {
+  // Conversational greetings and check-ins
+  if (text.includes("how are you") || text.includes("how you doing") || text.includes("what's up") || 
+      text.includes("how's it going") || text.includes("how do you feel") || text.includes("feeling")) {
+    intent = "opinion";
+  } else if (text.includes("what's on your mind") || text.includes("what are you thinking") || 
+             text.includes("thinking about") || text.includes("what do you think") && !text.includes("about")) {
+    intent = "opinion";
+  } else if (text.includes("hello") || text.includes("hi ") || text.includes("hey") || text.includes("good morning") || 
+             text.includes("good afternoon") || text.includes("good evening")) {
+    intent = "opinion";
+  } else if (text.includes("what do you think about") || text.includes("opinion on")) {
     intent = "opinion";
   } else if (text.includes("what's wrong with") || text.includes("critique") || text.includes("problems with")) {
     intent = "critique";
@@ -16,7 +26,7 @@ export function classifyTurn(userText: string): TurnClassification {
     intent = "story";
   } else if (text.includes("compare") || text.includes("versus") || text.includes("vs") || text.includes("which is better")) {
     intent = "compare";
-  } else if (text.includes("can you explain") || text.includes("what does") || text.includes("clarify")) {
+  } else if (text.includes("can you explain") || text.includes("what does") || text.includes("clarify") || text.includes("define")) {
     intent = "clarify";
   }
   
