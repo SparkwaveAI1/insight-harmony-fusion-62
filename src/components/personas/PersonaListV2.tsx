@@ -150,9 +150,6 @@ const PersonaList = ({
                     {persona.persona_data?.identity?.occupation && (
                       <span className="truncate">{persona.persona_data.identity.occupation}</span>
                     )}
-                    <span className="ml-auto text-xs px-2 py-1 bg-accent rounded">
-                      V3
-                    </span>
                   </div>
                 </div>
               </div>
