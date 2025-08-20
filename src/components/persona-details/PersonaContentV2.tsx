@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonaDemographicsV2 from "./PersonaDemographicsV2";
 import PersonaTraitsSummaryV2 from "./PersonaTraitsSummaryV2";
 import PersonaInterviewV2 from "./PersonaInterviewV2";
-import VoicepackStatus from "./VoicepackStatus";
 import { SurveyManagement } from '../surveys/SurveyManagement';
 
 interface PersonaContentV2Props {
@@ -15,11 +14,10 @@ const PersonaContentV2 = ({ persona, isOwner = false }: PersonaContentV2Props) =
   return (
     <div className="mt-8">
       <Tabs defaultValue="demographics" className="w-full">
-        <TabsList className="grid grid-cols-5 w-full mb-8">
+        <TabsList className="grid grid-cols-4 w-full mb-8">
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
           <TabsTrigger value="traits">Traits & Behavior</TabsTrigger>
           <TabsTrigger value="interview">Interview</TabsTrigger>
-          <TabsTrigger value="voicepack">Voicepack</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
         </TabsList>
 
@@ -33,14 +31,6 @@ const PersonaContentV2 = ({ persona, isOwner = false }: PersonaContentV2Props) =
 
         <TabsContent value="interview" className="space-y-6">
           <PersonaInterviewV2 persona={persona} />
-        </TabsContent>
-        
-        <TabsContent value="voicepack" className="space-y-6">
-          <VoicepackStatus 
-            personaId={persona.persona_id}
-            isCompiled={!!persona.voicepack_runtime}
-            lastCompiled={persona.updated_at}
-          />
         </TabsContent>
         
         <TabsContent value="surveys" className="space-y-6">
