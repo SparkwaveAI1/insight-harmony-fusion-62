@@ -65,32 +65,52 @@ const PersonaListV2 = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredPersonas.map((persona) => (
           <Card 
             key={persona.id} 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group"
             onClick={() => handlePersonaClick(persona.persona_id)}
           >
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={persona.profile_image_url || undefined} alt={persona.name} />
-                  <AvatarFallback>{persona.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <CardHeader className="pb-4">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 border-2 border-border rounded-lg">
+                  <AvatarImage 
+                    src={persona.profile_image_url || undefined} 
+                    alt={persona.name}
+                    className="object-cover rounded-lg"
+                  />
+                  <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg text-lg">
+                    {persona.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg truncate">{persona.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {persona.persona_data?.identity?.age ? `Age ${persona.persona_data.identity.age}` : 'Persona'}
-                  </p>
+                  <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">
+                    {persona.name}
+                  </CardTitle>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                    {persona.persona_data?.identity?.age && (
+                      <span>Age {persona.persona_data.identity.age}</span>
+                    )}
+                    {persona.persona_data?.identity?.age && persona.persona_data?.identity?.occupation && (
+                      <span>•</span>
+                    )}
+                    {persona.persona_data?.identity?.occupation && (
+                      <span className="truncate">{persona.persona_data.identity.occupation}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardHeader>
+            
             {persona.description && (
               <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {persona.description}
-                </p>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
+                  <p className="text-sm text-foreground line-clamp-3 leading-relaxed">
+                    {persona.description.length > 120 ? `${persona.description.substring(0, 120)}...` : persona.description}
+                  </p>
+                </div>
               </CardContent>
             )}
           </Card>
