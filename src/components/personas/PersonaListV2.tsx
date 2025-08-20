@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getAllPersonas } from '@/services/persona';
 import { DbPersona } from '@/services/persona';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 
-const PersonaList = () => {
+interface PersonaListProps {
+  searchQuery?: string;
+  selectedTags?: string[];
+  selectedAge?: string;
+  selectedRegion?: string;
+  selectedIncome?: string;
+  selectedSourceType?: string;
+  showPublicOnly?: boolean;
+}
+
+const PersonaList = ({ 
+  searchQuery = "", 
+  selectedTags = [], 
+  selectedAge = "", 
+  selectedRegion = "", 
+  selectedIncome = "", 
+  selectedSourceType = "",
+  showPublicOnly = false 
+}: PersonaListProps) => {
   const [personas, setPersonas] = useState<DbPersona[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -30,10 +47,50 @@ const PersonaList = () => {
     }
   };
 
-  const filteredPersonas = personas.filter(persona =>
-    persona.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (persona.description && persona.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Use enhanced search hook
+  const searchedPersonas = usePersonaSearch(personas, searchQuery);
+  
+  // Apply additional filters
+  const filteredPersonas = searchedPersonas.filter(persona => {
+    // Filter by visibility
+    if (showPublicOnly && !persona.is_public) return false;
+    if (!showPublicOnly && persona.is_public) return false;
+    
+    // Filter by age
+    if (selectedAge && persona.persona_data?.identity?.age) {
+      const age = persona.persona_data.identity.age;
+      switch (selectedAge) {
+        case '18-25':
+          if (age < 18 || age > 25) return false;
+          break;
+        case '26-35':
+          if (age < 26 || age > 35) return false;
+          break;
+        case '36-50':
+          if (age < 36 || age > 50) return false;
+          break;
+        case '51+':
+          if (age < 51) return false;
+          break;
+      }
+    }
+    
+    // Filter by region
+    if (selectedRegion && persona.persona_data?.identity?.location?.country) {
+      if (!persona.persona_data.identity.location.country.toLowerCase().includes(selectedRegion.toLowerCase())) {
+        return false;
+      }
+    }
+    
+    // Filter by income
+    if (selectedIncome && persona.persona_data?.identity?.socioeconomic_context?.income_level) {
+      if (!persona.persona_data.identity.socioeconomic_context.income_level.toLowerCase().includes(selectedIncome.toLowerCase())) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
 
   const handlePersonaClick = (personaId: string) => {
     navigate(`/persona-detail/${personaId}`);
@@ -50,15 +107,6 @@ const PersonaList = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search personas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
         <Button onClick={() => navigate('/create-persona')}>
           <Plus className="h-4 w-4 mr-2" />
           Create Persona
@@ -123,7 +171,7 @@ const PersonaList = () => {
       {filteredPersonas.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            {searchTerm ? 'No personas found matching your search.' : 'No personas available.'}
+            {searchQuery ? 'No personas found matching your search.' : 'No personas available.'}
           </p>
         </div>
       )}

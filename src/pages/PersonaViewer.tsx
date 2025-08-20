@@ -136,11 +136,27 @@ const PersonaViewerContent = () => {
             </TabsList>
 
             <TabsContent value="my-personas" className="space-y-6">
-              <PersonaList />
+              <PersonaList 
+                searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedAge={selectedAge}
+                selectedRegion={selectedRegion}
+                selectedIncome={selectedIncome}
+                selectedSourceType={selectedSourceType}
+                showPublicOnly={false}
+              />
             </TabsContent>
 
             <TabsContent value="public-personas" className="space-y-6">
-              <PersonaList />
+              <PersonaList 
+                searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedAge={selectedAge}
+                selectedRegion={selectedRegion}
+                selectedIncome={selectedIncome}
+                selectedSourceType={selectedSourceType}
+                showPublicOnly={true}
+              />
             </TabsContent>
           </Tabs>
         </div>
