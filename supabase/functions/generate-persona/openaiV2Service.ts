@@ -28,7 +28,15 @@ async function callOpenAI(messages: any[], temperature = 0.8, maxTokens = 1500):
   const content = data.choices[0].message.content;
   
   try {
-    return JSON.parse(content);
+    // Clean up markdown formatting if present
+    let cleanContent = content.trim();
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    return JSON.parse(cleanContent);
   } catch (error) {
     console.error('Failed to parse JSON response:', content);
     throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 100)}...`);
