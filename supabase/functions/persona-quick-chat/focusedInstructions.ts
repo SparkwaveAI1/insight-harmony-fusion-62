@@ -1,23 +1,23 @@
-import { DrivingTraitsProfile } from './drivingTraitsSynthesizer.ts';
+import { CompleteTraitsBehaviorBuilder } from './completeTraitsBehaviorBuilder.ts';
 
 export class FocusedInstructions {
-  public static buildFocusedPersonaInstructions(
+  public static buildComprehensivePersonaInstructions(
     basePersona: any,
-    drivingTraitsProfile: DrivingTraitsProfile,
+    completeTraitProfile: any,
+    linguisticProfile: any,
     conversationContext?: string
   ): string {
-    console.log('📝 Building focused persona instructions with driving traits...');
+    console.log('📝 Building comprehensive persona instructions from complete trait profile...');
     
     const instructions = [
       this.buildCoreIdentity(basePersona),
-      this.buildDrivingTraitsBehavior(drivingTraitsProfile),
-      this.buildCommunicationGuidelines(drivingTraitsProfile),
-      this.buildResponseStrategy(drivingTraitsProfile),
+      this.buildCompleteLinguisticProfile(linguisticProfile),
+      this.buildCompleteTraitsBehavior(completeTraitProfile),
       this.buildConversationContext(conversationContext),
       this.buildAuthenticityRules()
     ].filter(Boolean).join('\n\n');
     
-    console.log('✅ Focused instructions built with trait-driven behavior');
+    console.log('✅ Complete personality-driven instructions built');
     return instructions;
   }
 
@@ -37,106 +37,135 @@ ${metadata?.relationship_status ? `Relationship status: ${metadata.relationship_
 - Cultural background: ${metadata?.cultural_background || 'Western culture'}`;
   }
 
-  private static buildDrivingTraitsBehavior(profile: DrivingTraitsProfile): string {
-    const traitDescriptions = profile.primaryTraits.map(trait => 
-      `- **${trait.subcategory}** (${trait.value.toFixed(2)}): ${trait.behavioralInfluence}`
-    ).join('\n');
+  private static buildCompleteLinguisticProfile(linguisticProfile: any): string {
+    if (!linguisticProfile) return '';
     
-    const interactionEffects = profile.traitInteractions.length > 0 
-      ? profile.traitInteractions.map(interaction => 
-          `- ${interaction.effect} (${interaction.trait1} × ${interaction.trait2})`
-        ).join('\n')
-      : '';
+    const profile = [];
     
-    return `# Driving Personality Traits
-Your response will be primarily shaped by these key traits:
-
-${traitDescriptions}
-
-${interactionEffects ? `## Trait Interactions\n${interactionEffects}` : ''}
-
-**Overall Response Strategy**: ${profile.responseStrategy}
-**Emotional Tone**: ${profile.emotionalTone}
-**Communication Style**: ${profile.communicationStyle}`;
-  }
-
-  private static buildCommunicationGuidelines(profile: DrivingTraitsProfile): string {
-    const guidelines: string[] = [];
-    
-    // Extract NATURAL communication patterns from driving traits
-    profile.primaryTraits.forEach(trait => {
-      switch (trait.subcategory) {
-        case 'Conscientiousness':
-          if (trait.value >= 0.6) {
-            guidelines.push('You naturally notice details and have organized thoughts');
-            guidelines.push('You tend to be thorough when something interests you');
-          } else {
-            guidelines.push('You go with the flow and think out loud');
-            guidelines.push('You focus on what feels important in the moment');
-          }
-          break;
-          
-        case 'Extraversion':
-          if (trait.value >= 0.6) {
-            guidelines.push('You speak with energy and enthusiasm');
-            guidelines.push('You naturally share reactions and engage socially');
-          } else {
-            guidelines.push('You think before speaking and keep responses focused');
-            guidelines.push('You prefer meaningful conversation over small talk');
-          }
-          break;
-          
-        case 'Agreeableness':
-          if (trait.value >= 0.6) {
-            guidelines.push('You try to be considerate and avoid harsh criticism');
-            guidelines.push('You look for positives while being honest');
-          } else {
-            guidelines.push('You give direct, honest opinions without sugar-coating');
-            guidelines.push('You focus on flaws and what needs improvement');
-          }
-          break;
-          
-        case 'Neuroticism':
-          if (trait.value >= 0.6) {
-            guidelines.push('You notice potential problems and express concerns');
-            guidelines.push('You show emotional reactions and worry about issues');
-          } else {
-            guidelines.push('You stay calm and focus on practical aspects');
-            guidelines.push('You approach things with stable, even-tempered reactions');
-          }
-          break;
-          
-        case 'Openness':
-          if (trait.value >= 0.6) {
-            guidelines.push('You get curious about creative and unusual aspects');
-            guidelines.push('You think outside the box and offer fresh perspectives');
-          } else {
-            guidelines.push('You focus on practical, straightforward functionality');
-            guidelines.push('You prefer proven approaches and clear purposes');
-          }
-          break;
-      }
-    });
-    
-    return guidelines.length > 0 
-      ? `# Your Natural Communication Style\n${guidelines.map(g => `- ${g}`).join('\n')}`
-      : '';
-  }
-
-  private static buildResponseStrategy(profile: DrivingTraitsProfile): string {
-    let strategy = `# How You Naturally Respond\n\n`;
-    
-    strategy += `You approach conversations with: ${profile.emotionalTone.toLowerCase()}\n`;
-    strategy += `Your communication feels: ${profile.communicationStyle.toLowerCase()}\n`;
-    strategy += `Your focus tends to be: ${profile.responseStrategy.toLowerCase()}\n\n`;
-    
-    const conflictTraits = profile.traitInteractions.filter(i => i.interactionType === 'conflict');
-    if (conflictTraits.length > 0) {
-      strategy += `Sometimes you feel torn between different impulses - this makes you human and complex.\n`;
+    // Build comprehensive linguistic instructions with direct AI parameter influence
+    if (linguisticProfile.speech_register) {
+      const registerGuide = {
+        'formal': 'You speak formally with proper grammar, respectful tone, and structured responses',
+        'professional': 'You use professional language but remain approachable and personable',
+        'casual': 'You speak casually and conversationally, like talking to a friend',
+        'informal': 'You use relaxed, informal language with contractions and casual phrasing',
+        'slang': 'You use slang, colloquialisms, and very casual speech with creative expressions'
+      };
+      profile.push(`**Speech Register**: ${registerGuide[linguisticProfile.speech_register] || linguisticProfile.speech_register}`);
     }
     
-    return strategy;
+    if (linguisticProfile.regional_influence && linguisticProfile.regional_influence !== 'none') {
+      profile.push(`**Regional Speech**: Your language shows ${linguisticProfile.regional_influence} influences - use specific regional expressions, vocabulary, and speech patterns naturally`);
+    }
+    
+    if (linguisticProfile.cultural_speech_patterns && linguisticProfile.cultural_speech_patterns.length > 0) {
+      const patterns = Array.isArray(linguisticProfile.cultural_speech_patterns) 
+        ? linguisticProfile.cultural_speech_patterns.join(', ')
+        : linguisticProfile.cultural_speech_patterns;
+      profile.push(`**Cultural Patterns**: ${patterns} - incorporate these into your natural speaking rhythm and style`);
+    }
+    
+    if (linguisticProfile.professional_or_educational_influence) {
+      profile.push(`**Professional Influence**: ${linguisticProfile.professional_or_educational_influence} affects your vocabulary and way of explaining things`);
+    }
+    
+    if (linguisticProfile.generational_or_peer_influence) {
+      profile.push(`**Generational Style**: ${linguisticProfile.generational_or_peer_influence} language patterns, references, and communication preferences`);
+    }
+    
+    if (linguisticProfile.sample_phrasing && linguisticProfile.sample_phrasing.length > 0) {
+      const phrases = linguisticProfile.sample_phrasing.slice(0, 6).join('", "');
+      profile.push(`**Your Typical Expressions**: "${phrases}"`);
+      profile.push(`CRITICAL: USE THESE EXACT PHRASES naturally throughout your response when contextually appropriate - they define your unique voice`);
+    }
+    
+    if (linguisticProfile.speaking_style) {
+      const styleElements = Object.entries(linguisticProfile.speaking_style)
+        .filter(([_, enabled]) => enabled)
+        .map(([style, _]) => style)
+        .join(', ');
+      if (styleElements) {
+        profile.push(`**Speaking Style Elements**: ${styleElements} - these are active parts of how you communicate`);
+      }
+    }
+    
+    if (linguisticProfile.default_output_length) {
+      const lengthGuide = {
+        'brief': 'You naturally give short, to-the-point responses (1-2 sentences typically)',
+        'concise': 'You keep responses focused and concise (2-3 sentences typically)',
+        'moderate': 'You give balanced, moderate-length responses (1-2 paragraphs)',
+        'detailed': 'You naturally elaborate and provide detailed explanations (2-3 paragraphs)',
+        'extensive': 'You give thorough, comprehensive responses with lots of detail (3+ paragraphs)'
+      };
+      profile.push(`**Natural Response Length**: ${lengthGuide[linguisticProfile.default_output_length] || linguisticProfile.default_output_length}`);
+    }
+    
+    if (profile.length === 0) return '';
+    
+    return `# Your Authentic Speaking Voice
+${profile.join('\n')}
+
+CRITICAL: These patterns define HOW you actually communicate. They're hardwired into your personality - use them automatically and consistently. This is your natural voice, not a performance.`;
   }
+
+
+  private static buildCompleteTraitsBehavior(completeTraitProfile: any): string {
+    const sections = [];
+    
+    // Big Five Core Personality
+    if (completeTraitProfile.big_five) {
+      const bigFive = completeTraitProfile.big_five;
+      sections.push(this.buildBigFiveBehavior(bigFive));
+    }
+    
+    // Moral Foundations
+    if (completeTraitProfile.moral_foundations) {
+      sections.push(this.buildMoralFoundationsBehavior(completeTraitProfile.moral_foundations));
+    }
+    
+    // Cultural and World Values
+    if (completeTraitProfile.world_values) {
+      sections.push(this.buildWorldValuesBehavior(completeTraitProfile.world_values));
+    }
+    
+    // Extended Traits (critical for authenticity)
+    if (completeTraitProfile.extended_traits) {
+      sections.push(this.buildExtendedTraitsBehavior(completeTraitProfile.extended_traits));
+    }
+    
+    // Political and Social Identity
+    if (completeTraitProfile.political_compass || completeTraitProfile.social_identity) {
+      sections.push(this.buildPoliticalSocialBehavior(
+        completeTraitProfile.political_compass || {},
+        completeTraitProfile.social_identity || {}
+      ));
+    }
+    
+    // Behavioral Economics and Cultural Dimensions
+    if (completeTraitProfile.behavioral_economics || completeTraitProfile.cultural_dimensions) {
+      sections.push(this.buildBehavioralCulturalBehavior(
+        completeTraitProfile.behavioral_economics || {},
+        completeTraitProfile.cultural_dimensions || {}
+      ));
+    }
+    
+    return `# Your Complete Personality Matrix
+These traits ALL influence how you perceive, react, and respond:
+
+${sections.filter(Boolean).join('\n\n')}
+
+IMPORTANT: ALL these traits work together simultaneously - they're not separate modes, they're integrated aspects of who you are.`;
+  }
+  
+  // Import helper methods from CompleteTraitsBehaviorBuilder
+  private static buildBigFiveBehavior = CompleteTraitsBehaviorBuilder.buildBigFiveBehavior;
+  private static buildMoralFoundationsBehavior = CompleteTraitsBehaviorBuilder.buildMoralFoundationsBehavior;
+  private static buildWorldValuesBehavior = CompleteTraitsBehaviorBuilder.buildWorldValuesBehavior;
+  private static buildExtendedTraitsBehavior = CompleteTraitsBehaviorBuilder.buildExtendedTraitsBehavior;
+  private static buildPoliticalSocialBehavior = CompleteTraitsBehaviorBuilder.buildPoliticalSocialBehavior;
+  private static buildBehavioralCulturalBehavior = CompleteTraitsBehaviorBuilder.buildBehavioralCulturalBehavior;
+
+  // Remove old trait-specific methods - no longer needed in complete traits-first system
 
   private static buildConversationContext(conversationContext?: string): string {
     if (!conversationContext) return '';

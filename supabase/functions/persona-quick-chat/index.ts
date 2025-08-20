@@ -5,6 +5,7 @@ import { createEnhancedPersonaInstructions } from './enhancedPersonaInstructions
 import { TraitRelevanceAnalyzer } from './traitRelevanceAnalyzer.ts';
 import { DrivingTraitsSynthesizer } from './drivingTraitsSynthesizer.ts';
 import { FocusedInstructions } from './focusedInstructions.ts';
+import { TraitsFirstParameterEngine } from './traitsFirstParameterEngine.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -17,51 +18,6 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Cache for persona data and processed instructions - DISABLED FOR TESTING
-const personaCache = new Map<string, { 
-  persona: any, 
-  instructions: string, 
-  timestamp: number 
-}>();
-const CACHE_TTL = 0; // Cache disabled - forcing fresh analysis each time
-
-// Simple hash function for conversation context
-function hashContext(context: string): string {
-  let hash = 0;
-  for (let i = 0; i < context.length; i++) {
-    const char = context.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(36);
-}
-
-function getCachedPersona(personaId: string, conversationContext: string = ''): { persona: any, instructions: string } | null {
-  // Include personaId in the context hash to prevent cross-contamination between personas
-  // This ensures each persona gets unique cache entries even with identical material contexts
-  const contextWithPersona = `${conversationContext}-persona:${personaId}`;
-  const contextHash = hashContext(contextWithPersona);
-  const cacheKey = `${personaId}-${contextHash}`;
-  const cached = personaCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log('Using cached persona data for:', personaId, 'with unique context hash:', contextHash);
-    return { persona: cached.persona, instructions: cached.instructions };
-  }
-  return null;
-}
-
-function setCachedPersona(personaId: string, conversationContext: string = '', persona: any, instructions: string): void {
-  // Include personaId in the context hash to prevent cross-contamination between personas
-  const contextWithPersona = `${conversationContext}-persona:${personaId}`;
-  const contextHash = hashContext(contextWithPersona);
-  const cacheKey = `${personaId}-${contextHash}`;
-  personaCache.set(cacheKey, {
-    persona,
-    instructions,
-    timestamp: Date.now()
-  });
-  console.log('Cached persona data for:', personaId, 'with unique context hash:', contextHash);
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -80,74 +36,38 @@ serve(async (req) => {
 
     console.log('Quick chat request:', { personaId, messageLength: message.length, mode });
 
-    // Check cache first
-    let persona: any;
-    let systemPrompt: string;
-    
-    const cached = getCachedPersona(personaId, conversationContext);
-    if (cached) {
-      persona = cached.persona;
-      systemPrompt = cached.instructions;
-    } else {
-      // Fetch persona data from database
-      const { data: fetchedPersona, error: personaError } = await supabase
-        .from('personas')
-        .select('*')
-        .eq('persona_id', personaId)
-        .single();
+    // Fetch persona data from database
+    const { data: persona, error: personaError } = await supabase
+      .from('personas')
+      .select('*')
+      .eq('persona_id', personaId)
+      .single();
 
-      if (personaError || !fetchedPersona) {
-        return new Response(JSON.stringify({ error: 'Persona not found' }), {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      persona = fetchedPersona;
-      
-      // TRAIT-FIRST RESPONSE SYSTEM
-      console.log('🚀 Starting trait-first response generation...');
-      
-      // DEBUG: Log trait profile structure to understand what we're working with
-      console.log('🔍 DEBUG: Trait profile keys:', persona.trait_profile ? Object.keys(persona.trait_profile) : 'null');
-      if (persona.trait_profile?.big_five) {
-        console.log('🔍 DEBUG: Big Five values:', {
-          openness: persona.trait_profile.big_five.openness,
-          conscientiousness: persona.trait_profile.big_five.conscientiousness,
-          extraversion: persona.trait_profile.big_five.extraversion,
-          agreeableness: persona.trait_profile.big_five.agreeableness,
-          neuroticism: persona.trait_profile.big_five.neuroticism
-        });
-      }
-      
-      // Step 1: Comprehensive trait relevance analysis
-      const traitScanResult = await TraitRelevanceAnalyzer.analyzeTraitRelevance(
-        message,
-        conversationContext || '',
-        persona.trait_profile
-      );
-      
-      console.log(`📊 Trait scan: ${traitScanResult.totalScanned} traits, ${traitScanResult.highPriorityTraits.length} high-priority`);
-      
-      // Step 2: Synthesize driving traits from high-priority candidates
-      const drivingTraitsProfile = await DrivingTraitsSynthesizer.synthesizeDrivingTraits(
-        traitScanResult.highPriorityTraits,
-        persona.trait_profile,
-        message
-      );
-      
-      console.log(`🎯 Driving traits: ${drivingTraitsProfile.primaryTraits.map(t => t.subcategory).join(', ')}`);
-      
-      // Step 3: Generate focused instructions using only driving traits
-      systemPrompt = FocusedInstructions.buildFocusedPersonaInstructions(
-        persona,
-        drivingTraitsProfile,
-        conversationContext || ''
-      );
-      
-      // Cache for future requests with context-aware cache key
-      setCachedPersona(personaId, conversationContext, persona, systemPrompt);
+    if (personaError || !persona) {
+      return new Response(JSON.stringify({ error: 'Persona not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+    
+    // TRAIT-FIRST RESPONSE SYSTEM - COMPLETE TRAIT PROCESSING
+    console.log('🚀 Starting traits-first response generation with ALL traits...');
+    
+    // Extract complete trait profiles
+    const completeTraitProfile = persona.trait_profile || {};
+    const linguisticProfile = persona.linguistic_profile || {};
+    
+    console.log('🔍 Complete trait profile categories:', Object.keys(completeTraitProfile));
+    
+    // Generate system prompt from complete personality matrix
+    console.log('📝 Building comprehensive persona instructions from complete trait profile...');
+    const systemPrompt = FocusedInstructions.buildComprehensivePersonaInstructions(
+      persona,
+      completeTraitProfile,
+      linguisticProfile,
+      conversationContext || ''
+    );
+    console.log('✅ Complete personality-driven instructions built');
     
     console.log('System prompt length:', systemPrompt.length, 'characters');
     console.log('Conversation context included:', conversationContext ? 'YES' : 'NO', conversationContext ? `(${conversationContext.length} chars)` : '');
@@ -195,36 +115,17 @@ serve(async (req) => {
       messages[0].content += imageInstructions;
     }
 
-    // AGGRESSIVE trait-driven generation parameters
-    const bigFive = persona.trait_profile?.big_five || {};
-    const neuroticism = parseFloat(bigFive.neuroticism || '0.5');
-    const conscientiousness = parseFloat(bigFive.conscientiousness || '0.5');
-    const extraversion = parseFloat(bigFive.extraversion || '0.5');
-    const agreeableness = parseFloat(bigFive.agreeableness || '0.5');
-    const openness = parseFloat(bigFive.openness || '0.5');
+    // Generate AI parameters from complete personality matrix
+    const aiParameters = TraitsFirstParameterEngine.synthesizeAIParameters(
+      completeTraitProfile,
+      linguisticProfile,
+      null, // No filtered traits - use complete profile
+      completeTraitProfile.dynamic_state || {}
+    );
     
-    // MUCH more aggressive trait-responsive parameters
-    let temperature = 0.8; // Base temperature
-    if (conscientiousness < 0.3) temperature = 1.1; // Very disorganized = very random
-    if (conscientiousness > 0.7) temperature = 0.6; // Very organized = more focused
-    if (neuroticism > 0.7) temperature += 0.2; // Neurotic = more erratic
-    if (openness > 0.7) temperature += 0.15; // Open = more creative
-    if (openness < 0.3) temperature -= 0.15; // Closed = more predictable
-    temperature = Math.max(0.4, Math.min(1.2, temperature));
-    
-    // Much more aggressive token limits
-    let maxTokens = 800; // Base limit
-    if (extraversion < 0.3) maxTokens = 150; // Very introverted = very brief
-    if (extraversion > 0.7) maxTokens = 1500; // Very extraverted = very verbose
-    if (conscientiousness < 0.3) maxTokens = Math.min(maxTokens, 400); // Disorganized = shorter
-    
-    // Personality-driven penalties
-    const frequencyPenalty = neuroticism > 0.7 ? 0.05 : 0.25; // Neurotic = repeat concerns
-    const presencePenalty = agreeableness < 0.3 ? 0.6 : 0.2; // Disagreeable = focus on problems
-    
-    console.log(`Trait-responsive parameters: temp=${temperature}, tokens=${maxTokens}, neuroticism=${neuroticism}`);
+    console.log(`Complete personality-driven parameters: temp=${aiParameters.temperature}, tokens=${aiParameters.max_tokens}`);
 
-    // Generate response with trait-driven parameters
+    // Generate response with complete personality-driven parameters
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -234,11 +135,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'gpt-4.1-2025-04-14', // Quality model for authentic responses
         messages,
-        temperature,
-        max_tokens: maxTokens,
-        top_p: 0.95,
-        frequency_penalty: frequencyPenalty,
-        presence_penalty: presencePenalty,
+        temperature: aiParameters.temperature,
+        max_tokens: aiParameters.max_tokens,
+        top_p: aiParameters.top_p,
+        frequency_penalty: aiParameters.frequency_penalty,
+        presence_penalty: aiParameters.presence_penalty,
       }),
     });
 
