@@ -82,7 +82,7 @@ serve(async (req) => {
 
     // STAGE 6: Generate state modifiers
     console.log('🔄 Stage 6: Generating state modifiers...');
-    const state_modifiers = await generateV3StateModifiers(cognitive_profile, prompt);
+    const state_modifiers = await generateV3StateModifiers(identity, prompt);
     console.log('✅ Stage 6 Complete: Generated state modifiers');
 
     // STAGE 7: Generate linguistic style
@@ -97,7 +97,7 @@ serve(async (req) => {
 
     // STAGE 9: Generate runtime controls
     console.log('🔄 Stage 9: Generating runtime controls...');
-    const runtime_controls = await generateV3RuntimeControls(cognitive_profile, prompt);
+    const runtime_controls = await generateV3RuntimeControls(identity, prompt);
     console.log('✅ Stage 9 Complete: Generated runtime controls');
 
     // STAGE 10: Generate interview responses
