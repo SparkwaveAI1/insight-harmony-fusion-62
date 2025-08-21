@@ -29,6 +29,11 @@ export const navigationMenuItems = [
     icon: UserPlus,
   },
   {
+    title: "V3 Persona Creator",
+    url: "/persona-creator-v3",
+    icon: UserPlus,
+  },
+  {
     title: "Collections",
     url: "/collections",
     icon: Folder,
