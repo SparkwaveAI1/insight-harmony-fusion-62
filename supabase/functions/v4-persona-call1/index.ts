@@ -108,7 +108,7 @@ Return this exact JSON structure:
     // Store in database
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     const persona_id = `v4_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
