@@ -24,15 +24,14 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   let traitData, emotionalTriggers, interviewSections, metadataOrIdentity;
   
   if (persona.persona_data) {
-    // V3 structure - fix data path for emotional triggers
+    // V3 structure - proper data paths
     traitData = persona.persona_data.cognitive_profile;
-    emotionalTriggers = persona.persona_data.emotional_triggers || persona.persona_data.state_modifiers?.emotional_triggers;
-    interviewSections = persona.persona_data.interview_sections || persona.interview_sections;
+    emotionalTriggers = persona.persona_data.emotional_triggers;
+    interviewSections = persona.persona_data.interview_sections;
     metadataOrIdentity = persona.persona_data.identity;
     
     console.log("🔍 V3 validation paths:", {
       hasTraitData: !!traitData,
-      emotionalTriggersPath: persona.persona_data.emotional_triggers ? "persona_data.emotional_triggers" : "state_modifiers.emotional_triggers",
       hasEmotionalTriggers: !!emotionalTriggers,
       hasInterviewSections: !!interviewSections,
       hasIdentity: !!metadataOrIdentity
@@ -146,7 +145,7 @@ function checkForRealTraits(traitProfile: any): boolean {
     return hasRealValues;
   };
   
-  const categories = ['big_five', 'moral_foundations', 'world_values', 'political_compass'];
+  const categories = ['big_five', 'moral_foundations', 'extended_traits', 'behavioral_economics', 'political_orientation'];
   let validCategories = 0;
   
   for (const cat of categories) {
@@ -155,14 +154,14 @@ function checkForRealTraits(traitProfile: any): boolean {
     }
   }
   
-  console.log(`✅ Valid categories: ${validCategories}/${categories.length}`);
+  console.log(`✅ Valid V3 categories: ${validCategories}/${categories.length}`);
   
-  // Require at least 3 out of 4 core categories to have real values
+  // Require at least 3 out of 5 V3 categories to have real values
   const hasRealTraits = validCategories >= 3;
-  console.log(`✅ Overall has real traits: ${hasRealTraits} (need ≥3 valid categories)`);
+  console.log(`✅ Overall has real traits: ${hasRealTraits} (need ≥3 valid V3 categories)`);
   
   if (!hasRealTraits) {
-    console.error("❌ CRITICAL FAILURE: Not enough trait categories have real values");
+    console.error("❌ CRITICAL FAILURE: Not enough V3 trait categories have real values");
     console.error("❌ This indicates the OpenAI generation completely failed");
   }
   

@@ -598,7 +598,7 @@ serve(async (req) => {
     console.log("🔄 Stage 5: Generating interview sections...");
     const interviewSections = await Promise.race([generateInterviewSections(identity), timeoutPromise]);
 
-    // Assemble final V3 persona with proper structure
+    // Assemble final V3 persona with proper structure - NO LEGACY FIELDS
     const finalPersona = {
       persona_id: identity.persona_id,
       name: identity.name,
@@ -607,16 +607,7 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       
-      // Legacy compatibility fields
-      metadata: {
-        age: identity.identity.age,
-        location: `${identity.identity.location.city}, ${identity.identity.location.region}`,
-        occupation: identity.identity.occupation,
-        education: identity.identity.socioeconomic_context.education_level,
-        income: identity.identity.socioeconomic_context.income_level
-      },
-      
-      // Complete V3 data stored in persona_data for proper validation
+      // Pure V3 structure matching PersonaV3 interface exactly
       persona_data: {
         version: "3.0",
         identity: identity.identity,
@@ -625,13 +616,36 @@ serve(async (req) => {
         cognitive_profile: cognitiveData.cognitive_profile,
         interview_sections: interviewSections,
         
-        // Validation expects trait_profile structure
-        trait_profile: cognitiveData.cognitive_profile,
+        // Emotional triggers at ROOT level of V3 structure
+        emotional_triggers: cognitiveData.emotional_triggers,
         
-        // FIXED: Emotional triggers should be at state_modifiers level for validation
+        // Add required V3 fields that may be missing
+        memory: {
+          persistence: { long_term: 0.8, short_term: 0.6 },
+          long_term_events: [],
+          short_term_slots: 5
+        },
         state_modifiers: {
-          emotional_triggers: cognitiveData.emotional_triggers
-        }
+          current_state: {
+            fatigue: 0.3,
+            acute_stress: 0.2,
+            mood_valence: 0.6,
+            social_safety: 0.7,
+            time_pressure: 0.3
+          },
+          state_to_shift_rules: []
+        },
+        linguistic_style: {
+          base_voice: { formality: "casual", verbosity: "moderate", directness: "balanced", politeness: "medium" },
+          syntax_and_rhythm: { complexity: "compound", disfluencies: ["um"], signature_phrases: [], avg_sentence_tokens: { baseline_max: 20, baseline_min: 10 }},
+          anti_mode_collapse: { forbidden_frames: ["At the end of the day"], must_include_one_of: { advice: ["suggest"], opinion: ["perspective"] }},
+          lexical_preferences: { hedges: ["I think"], modal_verbs: ["could"], affect_words: { negative_bias: 0.3, positive_bias: 0.6 }},
+          response_shapes_by_intent: { story: ["This reminds me"], advice: ["You might consider"], opinion: ["From my perspective"] }
+        },
+        group_behavior: { assertiveness: "medium", interruption_tolerance: "medium", self_disclosure_rate: "medium" },
+        social_cognition: { empathy: "medium", theory_of_mind: "medium", conflict_orientation: "collaborative" },
+        sexuality_profile: { orientation: "heterosexual", expression: "private", flirtatiousness: "low", libido_level: "medium", relationship_norms: "monogamous" },
+        runtime_controls: { style_weights: { cognition: 0.4, knowledge: 0.3, linguistics: 0.3 }, token_budgets: { max: 500, min: 100 }, variability_profile: { turn_to_turn: 0.2, session_to_session: 0.1 }}
       }
     };
 
