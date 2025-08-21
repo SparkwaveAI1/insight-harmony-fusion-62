@@ -27,6 +27,13 @@ serve(async (req) => {
     
     console.log('Starting V4 Call 1 - Detailed traits generation')
     console.log('User prompt:', user_prompt)
+    
+    // Check if OpenAI API key is available
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openaiApiKey) {
+      console.error('OpenAI API key not found')
+      throw new Error('OpenAI API key not configured')
+    }
 
     // Call OpenAI to generate detailed traits
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
