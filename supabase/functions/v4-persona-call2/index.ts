@@ -58,11 +58,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Create conversation summaries based on the detailed traits provided. 
+            content: `Analyze the complete detailed persona traits and create accurate conversation summaries for all categories.
 
-CRITICAL: Return ONLY valid JSON without any markdown formatting, code blocks, or additional text. Do not wrap the response in \`\`\`json or any other formatting.
+TASK: Generate conversation summaries that capture the essence and key patterns from the full_profile.
 
-Return this exact JSON structure:
+Return valid JSON with this exact structure:
 {
   "conversation_summary": {
     "demographics": {
@@ -70,16 +70,43 @@ Return this exact JSON structure:
       "age": exact_age_from_full_profile,
       "occupation": "exact occupation from full_profile",
       "location": "city, region format",
-      "background_description": "Rich 2-3 sentence narrative synthesizing their background, values, and daily life"
+      "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, key relationships, and what occupies their daily thoughts"
     },
-    "motivation_summary": "Concise description of their top 3-4 motivators and what drives them",
+    "motivation_summary": "Concise qualitative description focusing on top 3-4 primary drivers and how they manifest in decisions. Include goal orientation strength and typical want vs should patterns.",
+    "goal_priorities": "List current goals with intensity: goal_name (intensity_1-10); goal_name (intensity_1-10); goal_name (intensity_1-10)",
+    "want_vs_should_pattern": "Concise description of how they typically resolve conflicts between desires and obligations, including key trigger situations",
+    "inhibitor_summary": "Concise description of main psychological barriers that hold them back, including social sensitivity, risk aversion, confidence issues, and mental health factors",
+    "truth_flexibility_summary": "Concise description of their relationship with honesty - baseline truthfulness, when/how they bend truth, and how self-interest affects their honesty in different contexts",
+    "knowledge_profile": {
+      "education_level": "exact from full_profile",
+      "expertise_domains": "exact array from full_profile",
+      "knowledge_gaps": "exact array from full_profile", 
+      "vocabulary_ceiling": "exact from full_profile"
+    },
+    "voice_summary": "Concise description of their distinctive communication style including directness level, formality, emotional expression, pace, and signature linguistic patterns",
     "communication_style": {
-      "directness": "same as full_profile",
-      "formality": "same as full_profile",
-      "signature_phrases": "same array as full_profile"
-    }
+      "directness": "exact from full_profile voice_foundation.directness_level",
+      "formality": "exact from full_profile voice_foundation.formality_default",
+      "signature_phrases": "exact array from full_profile linguistic_signature.signature_phrases",
+      "response_patterns": {
+        "advice": "exact from full_profile response_architecture.advice_structure",
+        "opinion": "exact from full_profile response_architecture.opinion_structure"
+      },
+      "forbidden_expressions": "exact array from full_profile authenticity_filters.forbidden_phrases"
+    },
+    "emotional_triggers_summary": "Concise summary in format: 'Energized by: [positive triggers]. Frustrated by: [negative triggers]. Explosive reactions to: [explosive triggers]'",
+    "contradictions_summary": "Concise summary of their main internal tensions and contradictions, including when these contradictions surface and how they typically manifest",
+    "sexuality_summary": "Concise summary of their sexuality profile including orientation, expression style, boundaries, and how this influences their communication and social behavior"
   }
-}`
+}
+
+CRITICAL REQUIREMENTS:
+- Summaries must accurately reflect the detailed traits from full_profile, not generic interpretations
+- Extract exact values for communication_style and knowledge_profile fields
+- Make summaries concise but capture essential behavioral patterns
+- Ensure background_description synthesizes multiple trait categories into coherent narrative
+- Focus on how traits manifest in conversation and decision-making
+- Return ONLY the JSON object, no explanations or markdown`
           },
           {
             role: 'user',
@@ -87,7 +114,7 @@ Return this exact JSON structure:
           }
         ],
         temperature: 0.3,
-        max_tokens: 800
+        max_tokens: 1500
       })
     })
 
