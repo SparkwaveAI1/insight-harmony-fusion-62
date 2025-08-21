@@ -225,6 +225,9 @@ export interface V4ConversationSummary {
     background_description: string;  // Generated in Call 2
   };
   
+  // ADD THIS NEW FIELD:
+  physical_description: string;      // Generated in Call 2 for image generation
+  
   motivation_summary: string;        // "Driven primarily by self-interest and family..."
   goal_priorities: string;           // "professional advancement (6); improve marriage (8)..."
   want_vs_should_pattern: string;    // "Generally follows 'should' for family/work..."

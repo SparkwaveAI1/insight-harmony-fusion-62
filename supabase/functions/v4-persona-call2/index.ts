@@ -65,13 +65,14 @@ TASK: Generate conversation summaries that capture the essence and key patterns 
 Return valid JSON with this exact structure:
 {
   "conversation_summary": {
-    "demographics": {
-      "name": "exact name from full_profile",
-      "age": exact_age_from_full_profile,
-      "occupation": "exact occupation from full_profile",
-      "location": "city, region format",
-      "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, key relationships, and what occupies their daily thoughts"
-    },
+     "demographics": {
+       "name": "exact name from full_profile",
+       "age": exact_age_from_full_profile,
+       "occupation": "exact occupation from full_profile",
+       "location": "city, region format",
+       "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, key relationships, and what occupies their daily thoughts"
+     },
+     "physical_description": "Detailed physical description for image generation: height, build, hair color/style, eye color, skin tone, facial features, typical clothing style, notable physical characteristics. Base this on age, occupation, cultural background, and lifestyle from full_profile.",
     "motivation_summary": "Concise qualitative description focusing on top 3-4 primary drivers and how they manifest in decisions. Include goal orientation strength and typical want vs should patterns.",
     "goal_priorities": "List current goals with intensity: goal_name (intensity_1-10); goal_name (intensity_1-10); goal_name (intensity_1-10)",
     "want_vs_should_pattern": "Concise description of how they typically resolve conflicts between desires and obligations, including key trigger situations",
@@ -106,6 +107,10 @@ CRITICAL REQUIREMENTS:
 - Make summaries concise but capture essential behavioral patterns
 - Ensure background_description synthesizes multiple trait categories into coherent narrative
 - Focus on how traits manifest in conversation and decision-making
+- Generate realistic physical description based on age, ethnicity, occupation, and lifestyle
+- Include details useful for AI image generation: height, build, hair, eyes, skin tone, clothing style
+- Make physical appearance consistent with cultural background and occupation
+- Consider how lifestyle (exercise habits, work environment, etc.) affects appearance
 - Return ONLY the JSON object, no explanations or markdown`
           },
           {
