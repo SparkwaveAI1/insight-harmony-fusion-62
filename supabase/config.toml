@@ -75,6 +75,9 @@ verify_jwt = true
 [functions.bulk-enhance-personas]
 verify_jwt = true
 
+[functions.v4-persona-call1]
+verify_jwt = true
+
 [edge-runtime]
 policy = "per_worker"
 inspector_port = 8083
