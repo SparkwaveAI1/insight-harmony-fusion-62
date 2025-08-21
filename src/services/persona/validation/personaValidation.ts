@@ -205,19 +205,23 @@ function checkEmotionalTriggers(triggers: any): boolean {
     return false;
   }
   
-  console.log("🔍 Checking emotional triggers:", {
-    hasPositiveTriggers: Array.isArray(triggers.positive_triggers),
-    positiveCount: triggers.positive_triggers?.length || 0,
-    hasNegativeTriggers: Array.isArray(triggers.negative_triggers),
-    negativeCount: triggers.negative_triggers?.length || 0
+  console.log("🔍 Checking V3 emotional triggers:", {
+    hasPositive: Array.isArray(triggers.positive),
+    positiveCount: triggers.positive?.length || 0,
+    hasNegative: Array.isArray(triggers.negative),
+    negativeCount: triggers.negative?.length || 0,
+    hasExplosive: Array.isArray(triggers.explosive),
+    explosiveCount: triggers.explosive?.length || 0
   });
   
-  const hasPositive = Array.isArray(triggers.positive_triggers) && triggers.positive_triggers.length > 0;
-  const hasNegative = Array.isArray(triggers.negative_triggers) && triggers.negative_triggers.length > 0;
+  // V3 format: { positive: string[], negative: string[], explosive: string[] }
+  const hasPositive = Array.isArray(triggers.positive) && triggers.positive.length > 0;
+  const hasNegative = Array.isArray(triggers.negative) && triggers.negative.length > 0;
+  const hasExplosive = Array.isArray(triggers.explosive) && triggers.explosive.length > 0;
   
-  // For imported personas, accept if either positive or negative triggers exist
-  const result = hasPositive || hasNegative;
-  console.log(`✅ Emotional triggers check result: ${result}`);
+  // Accept if any of the three trigger types exist
+  const result = hasPositive || hasNegative || hasExplosive;
+  console.log(`✅ V3 emotional triggers check result: ${result}`);
   return result;
 }
 
