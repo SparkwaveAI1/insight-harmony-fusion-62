@@ -1001,6 +1001,48 @@ export type Database = {
         }
         Relationships: []
       }
+      v4_personas: {
+        Row: {
+          conversation_summary: Json
+          created_at: string | null
+          creation_completed: boolean | null
+          creation_stage: string | null
+          full_profile: Json
+          id: string
+          name: string
+          persona_id: string
+          schema_version: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_summary?: Json
+          created_at?: string | null
+          creation_completed?: boolean | null
+          creation_stage?: string | null
+          full_profile?: Json
+          id?: string
+          name: string
+          persona_id: string
+          schema_version?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_summary?: Json
+          created_at?: string | null
+          creation_completed?: boolean | null
+          creation_stage?: string | null
+          full_profile?: Json
+          id?: string
+          name?: string
+          persona_id?: string
+          schema_version?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       voicepack_chat_telemetry: {
         Row: {
           avg_sentence_length: number | null
