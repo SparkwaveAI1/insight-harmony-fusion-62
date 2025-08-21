@@ -153,10 +153,12 @@ CRITICAL: Use the provided name, age, occupation, location, and background detai
     }
   ];
 
+  console.log('📤 Making OpenAI call for identity generation...');
   const response = await generateChatResponse(messages, openAIApiKey, {
     model: 'gpt-5-2025-08-07',
     max_completion_tokens: 1500
   });
+  console.log('📥 OpenAI response received for identity');
 
   const content = response.choices[0].message.content;
   console.log('📄 Raw identity response:', content);
@@ -287,18 +289,16 @@ IMPORTANT: Create distinctive trait values that avoid 0.5 defaults. Make this pe
     }
   ];
 
-  console.log('📤 DEBUG: Sending prompt to OpenAI:', {
-    model: 'gpt-4.1-2025-04-14',
-    temperature: 0.9,
+  console.log('📤 DEBUG: Sending cognitive prompt to OpenAI:', {
+    model: 'gpt-5-2025-08-07',
     messageCount: messages.length,
     systemPromptLength: messages[0].content.length,
     userPromptLength: messages[1].content.length
   });
 
   const response = await generateChatResponse(messages, openAIApiKey, {
-    model: 'gpt-4.1-2025-04-14',
-    temperature: 0.9,
-    max_tokens: 2000
+    model: 'gpt-5-2025-08-07',
+    max_completion_tokens: 2000
   });
 
   const content = response.choices[0].message.content;
@@ -380,9 +380,8 @@ Make them feel like a real person with a compelling story based on their backgro
   ];
 
   const response = await generateChatResponse(messages, openAIApiKey, {
-    model: 'gpt-4.1-2025-04-14',
-    temperature: 0.9,
-    max_tokens: 1500
+    model: 'gpt-5-2025-08-07',
+    max_completion_tokens: 1500
   });
 
   const content = response.choices[0].message.content;
@@ -437,9 +436,8 @@ Give them 2-3 areas of expertise (4-5) and 2-3 areas of low knowledge (1-2).`
   ];
 
   const response = await generateChatResponse(messages, openAIApiKey, {
-    model: 'gpt-4.1-2025-04-14',
-    temperature: 0.9,
-    max_tokens: 1200
+    model: 'gpt-5-2025-08-07',
+    max_completion_tokens: 1200
   });
 
   const content = response.choices[0].message.content;
@@ -497,9 +495,8 @@ Create 3-4 sections with 2-3 responses each. Make them sound authentic to the pe
 
   try {
     const response = await generateChatResponse(messages, openAIApiKey, {
-      model: 'gpt-4.1-2025-04-14',
-      temperature: 0.9,
-      max_tokens: 2000
+      model: 'gpt-5-2025-08-07',
+      max_completion_tokens: 2000
     });
 
     const content = response.choices[0].message.content;

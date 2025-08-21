@@ -24,11 +24,19 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   let traitData, emotionalTriggers, interviewSections, metadataOrIdentity;
   
   if (persona.persona_data) {
-    // V3 structure
+    // V3 structure - fix data path for emotional triggers
     traitData = persona.persona_data.cognitive_profile;
-    emotionalTriggers = persona.persona_data.state_modifiers?.emotional_triggers;
+    emotionalTriggers = persona.persona_data.emotional_triggers || persona.persona_data.state_modifiers?.emotional_triggers;
     interviewSections = persona.persona_data.interview_sections || persona.interview_sections;
     metadataOrIdentity = persona.persona_data.identity;
+    
+    console.log("🔍 V3 validation paths:", {
+      hasTraitData: !!traitData,
+      emotionalTriggersPath: persona.persona_data.emotional_triggers ? "persona_data.emotional_triggers" : "state_modifiers.emotional_triggers",
+      hasEmotionalTriggers: !!emotionalTriggers,
+      hasInterviewSections: !!interviewSections,
+      hasIdentity: !!metadataOrIdentity
+    });
   } else {
     // Legacy structure
     traitData = persona.trait_profile;
@@ -193,13 +201,25 @@ function logDetailedTraitAnalysis(traitProfile: any) {
 }
 
 function checkEmotionalTriggers(triggers: any): boolean {
-  if (!triggers || typeof triggers !== 'object') return false;
+  if (!triggers || typeof triggers !== 'object') {
+    console.log("❌ Emotional triggers check failed: not an object", typeof triggers);
+    return false;
+  }
+  
+  console.log("🔍 Checking emotional triggers:", {
+    hasPositiveTriggers: Array.isArray(triggers.positive_triggers),
+    positiveCount: triggers.positive_triggers?.length || 0,
+    hasNegativeTriggers: Array.isArray(triggers.negative_triggers),
+    negativeCount: triggers.negative_triggers?.length || 0
+  });
   
   const hasPositive = Array.isArray(triggers.positive_triggers) && triggers.positive_triggers.length > 0;
   const hasNegative = Array.isArray(triggers.negative_triggers) && triggers.negative_triggers.length > 0;
   
   // For imported personas, accept if either positive or negative triggers exist
-  return hasPositive || hasNegative;
+  const result = hasPositive || hasNegative;
+  console.log(`✅ Emotional triggers check result: ${result}`);
+  return result;
 }
 
 function checkInterviewResponses(sections: any): boolean {
