@@ -47,39 +47,191 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Generate a V4 persona with detailed traits. 
+            content: `Generate a complete V4 persona with all trait categories. Return ONLY valid JSON without any markdown formatting, explanations, or code blocks.
 
-CRITICAL: Return ONLY valid JSON without any markdown formatting, code blocks, or additional text. Do not wrap the response in \`\`\`json or any other formatting.
+Create a realistic, internally consistent persona with these exact structure:
 
-Return this exact JSON structure:
 {
   "full_profile": {
     "identity": {
       "name": "First Last",
-      "age": 35,
-      "gender": "Male/Female",
-      "occupation": "Job Title",
+      "age": 25-80,
+      "gender": "Male/Female/Non-binary",
+      "pronouns": "he/him/she/her/they/them",
+      "ethnicity": "specific ethnicity",
+      "nationality": "US/Canadian/British/etc",
       "location": {"city": "City", "region": "State", "country": "Country"},
-      "background_summary": "Rich narrative about their life, experiences, values, and personality"
+      "occupation": "Specific job title",
+      "relationship_status": "married/single/divorced/partnered",
+      "dependents": 0-5
     },
     "motivation_profile": {
-      "self_interest": 0.7,
-      "family": 0.8,
-      "status": 0.5,
-      "mastery": 0.6,
-      "care": 0.4,
-      "security": 0.7,
-      "belonging": 0.3,
-      "novelty": 0.2,
-      "meaning": 0.5
+      "primary_drivers": {
+        "self_interest": 0.1-0.9,
+        "family": 0.1-0.9,
+        "status": 0.1-0.9,
+        "mastery": 0.1-0.9,
+        "care": 0.1-0.9,
+        "security": 0.1-0.9,
+        "belonging": 0.1-0.9,
+        "novelty": 0.1-0.9,
+        "meaning": 0.1-0.9
+      },
+      "goal_orientation": {
+        "strength": 0.1-0.9,
+        "time_horizon": "short_term/medium_term/long_term/mixed",
+        "primary_goals": [
+          {"goal": "specific goal", "intensity": 1-10, "timeframe": "6_months/1_year/5_years"}
+        ],
+        "goal_flexibility": 0.1-0.9
+      },
+      "want_vs_should_tension": {
+        "default_resolution": "want_wins/should_wins/context_dependent",
+        "major_conflicts": [
+          {
+            "want": "what they want to do",
+            "should": "what they think they should do", 
+            "trigger_conditions": ["condition1", "condition2"],
+            "typical_resolution": "how they usually resolve it"
+          }
+        ]
+      }
+    },
+    "inhibitor_profile": {
+      "social_cost_sensitivity": 0.1-0.9,
+      "consequence_aversion": 0.1-0.9,
+      "confidence_level": 0.1-0.9,
+      "confirmation_bias": 0.1-0.9,
+      "honesty_flexibility": 0.1-0.9,
+      "mental_health_factors": ["stable/anxiety/depression/adhd/ptsd"],
+      "learned_avoidance": {"domain": 0.1-0.9},
+      "perfectionism": 0.1-0.9
+    },
+    "truth_honesty_profile": {
+      "baseline_honesty": 0.1-0.9,
+      "self_interest_override": 0.1-0.9,
+      "confirmation_bias_strength": 0.1-0.9,
+      "truth_flexibility_by_context": {
+        "family": 0.1-0.9,
+        "friends": 0.1-0.9,
+        "work": 0.1-0.9,
+        "strangers": 0.1-0.9,
+        "authority": 0.1-0.9
+      },
+      "lie_types_willing": ["white_lies/omission/exaggeration/strategic_deception"]
+    },
+    "identity_salience": {
+      "political_identity": {
+        "orientation": "conservative/liberal/libertarian/apolitical/moderate",
+        "strength": 0.1-0.9,
+        "key_issues": ["issue1", "issue2", "issue3"],
+        "tribal_loyalty": 0.1-0.9
+      },
+      "community_identities": [
+        {
+          "type": "veteran/parent/religious/ethnic/professional",
+          "salience": 0.1-0.9,
+          "triggers": ["trigger1", "trigger2"]
+        }
+      ],
+      "cultural_background": "detailed cultural context description"
+    },
+    "knowledge_profile": {
+      "education_level": "high_school/some_college/bachelors/masters/doctorate",
+      "vocabulary_ceiling": "working_class/professional/academic",
+      "expertise_domains": ["domain1", "domain2", "domain3"],
+      "knowledge_gaps": ["gap1", "gap2"],
+      "learning_style": "hands_on/theoretical/social/mixed",
+      "source_preferences": ["personal_experience/youtube/books/podcasts/news"]
+    },
+    "daily_life": {
+      "primary_activities": {
+        "work": 6-10,
+        "family_time": 0-6,
+        "personal_interests": 0-4,
+        "social_interaction": 0-4,
+        "personal_care": 0-3
+      },
+      "screen_time_summary": "Detailed description: Watches [platform] X hrs daily ([specific shows]); [social media] Y hrs ([content type]); [news source] Z hrs",
+      "mental_preoccupations": ["preoccupation1", "preoccupation2", "preoccupation3"]
     },
     "communication_style": {
-      "directness": "high/medium/low",
-      "formality": "casual/neutral/formal", 
-      "signature_phrases": ["phrase1", "phrase2", "phrase3"]
+      "voice_foundation": {
+        "directness_level": "blunt/direct/balanced/diplomatic/indirect",
+        "formality_default": "very_casual/casual/neutral/formal/very_formal",
+        "emotional_expression": "controlled/moderate/expressive/dramatic",
+        "pace_rhythm": "clipped_military/relaxed_southern/rapid_urban/measured_academic"
+      },
+      "linguistic_signature": {
+        "sentence_patterns": ["pattern1", "pattern2"],
+        "signature_phrases": ["phrase1", "phrase2", "phrase3"],
+        "typical_openers": ["opener1", "opener2"],
+        "conversation_enders": ["ender1", "ender2"]
+      },
+      "lexical_profile": {
+        "vocabulary_level": "working_class_direct/professional_polished/academic_precise",
+        "regional_markers": ["marker1", "marker2"],
+        "domain_jargon": ["jargon1", "jargon2", "jargon3"],
+        "intensifiers": ["intensifier1", "intensifier2"],
+        "hedging_language": ["hedge1", "hedge2"] or ["none"]
+      },
+      "response_architecture": {
+        "opinion_structure": "stance_evidence_action/context_nuance_conclusion",
+        "advice_structure": "goal_steps_checks/explore_options_reflect",
+        "criticism_structure": "problem_evidence_solution/acknowledge_concern_suggest",
+        "storytelling_structure": "context_obstacle_resolution/character_journey_lesson"
+      },
+      "authenticity_filters": {
+        "forbidden_phrases": ["phrase1", "phrase2", "phrase3"],
+        "required_elements": ["specific_example", "personal_relevance", "concrete_detail"],
+        "personality_anchors": ["anchor1", "anchor2", "anchor3"]
+      }
+    },
+    "emotional_profile": {
+      "positive_triggers": ["trigger1", "trigger2", "trigger3"],
+      "negative_triggers": ["trigger1", "trigger2", "trigger3"],
+      "explosive_triggers": ["trigger1", "trigger2"],
+      "emotional_regulation": "high_control/moderate_control/low_control",
+      "stress_responses": ["response1", "response2"]
+    },
+    "contradictions": {
+      "primary_tension": {
+        "description": "Detailed description of main contradiction",
+        "trigger_conditions": ["condition1", "condition2"],
+        "manifestation": "How this contradiction shows up in behavior"
+      },
+      "secondary_tensions": [
+        {
+          "belief": "What they believe",
+          "conflicting_behavior": "How they actually behave",
+          "context_triggers": ["trigger1", "trigger2"]
+        }
+      ]
+    },
+    "sexuality_profile": {
+      "orientation": "heterosexual/homosexual/bisexual/asexual/pansexual",
+      "expression_style": "private/selective/open",
+      "relationship_norms": "monogamous/polyamorous/casual/traditional",
+      "boundaries": {
+        "topics_off_limits": ["topic1", "topic2"],
+        "comfort_level": "conservative/moderate/liberal"
+      },
+      "linguistic_influences": {
+        "flirtation_style": "none/subtle/direct",
+        "humor_boundaries": "clean/suggestive/explicit",
+        "taboo_navigation": "avoid/navigate_carefully/comfortable"
+      }
     }
   }
-}`
+}
+
+CRITICAL INSTRUCTIONS:
+- Avoid midline values (0.5) - create distinctive personalities
+- Ensure internal consistency across all traits
+- Create realistic contradictions and tensions
+- Make communication style unique and specific to this person
+- Generate diverse, authentic personas representing full human range
+- Return ONLY the JSON object, no explanations or markdown`
           },
           {
             role: 'user',
@@ -87,7 +239,7 @@ Return this exact JSON structure:
           }
         ],
         temperature: 0.8,
-        max_tokens: 1500
+        max_tokens: 4000
       })
     })
 
