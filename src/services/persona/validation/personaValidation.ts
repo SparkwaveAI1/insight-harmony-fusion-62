@@ -224,30 +224,60 @@ function checkMetadata(metadata: any): boolean {
     return false;
   }
   
-  // Required core demographic fields based on actual generation structure
-  const requiredDemographicFields = [
-    'age',
-    'gender', 
-    'race_ethnicity',
-    'education_level',
-    'occupation',
-    'employment_type',
-    'income_level',
-    'social_class_identity',
-    'marital_status'
-  ];
+  console.log("Checking metadata structure:", Object.keys(metadata));
   
-  const missingFields = requiredDemographicFields.filter(field => 
-    !metadata[field] || metadata[field] === 'Not specified' || metadata[field] === ''
-  );
+  // Check if this is V3 identity structure
+  const isV3Identity = metadata.age && metadata.gender && metadata.occupation && metadata.location;
   
-  if (missingFields.length > 0) {
-    console.warn(`❌ Missing required demographic fields: ${missingFields.join(', ')}`);
-    return false;
+  if (isV3Identity) {
+    // V3 identity structure validation
+    const requiredV3Fields = ['age', 'gender', 'occupation'];
+    const missingV3Fields = requiredV3Fields.filter(field => 
+      !metadata[field] || metadata[field] === 'Not specified' || metadata[field] === ''
+    );
+    
+    // Check location object
+    const hasValidLocation = metadata.location && 
+      (metadata.location.city || metadata.location.region || metadata.location.country);
+    
+    if (missingV3Fields.length > 0) {
+      console.warn(`❌ Missing required V3 identity fields: ${missingV3Fields.join(', ')}`);
+      return false;
+    }
+    
+    if (!hasValidLocation) {
+      console.warn("❌ Missing valid location data in V3 identity");
+      return false;
+    }
+    
+    console.log("✅ V3 identity structure is complete");
+    return true;
+  } else {
+    // Legacy metadata structure validation
+    const requiredLegacyFields = [
+      'age',
+      'gender', 
+      'race_ethnicity',
+      'education_level',
+      'occupation',
+      'employment_type',
+      'income_level',
+      'social_class_identity',
+      'marital_status'
+    ];
+    
+    const missingFields = requiredLegacyFields.filter(field => 
+      !metadata[field] || metadata[field] === 'Not specified' || metadata[field] === ''
+    );
+    
+    if (missingFields.length > 0) {
+      console.warn(`❌ Missing required legacy demographic fields: ${missingFields.join(', ')}`);
+      return false;
+    }
+    
+    console.log("✅ Legacy metadata structure is complete");
+    return true;
   }
-  
-  console.log("✅ All required demographic metadata fields present");
-  return true;
 }
 
 export function logPersonaValidation(persona: any, validationResult: PersonaValidationResult) {

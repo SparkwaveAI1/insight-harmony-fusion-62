@@ -174,11 +174,20 @@ CRITICAL: Use the provided name, age, occupation, location, and background detai
 // Generate V3 Cognitive Profile (Big Five + All Trait Categories)
 async function generateV3CognitiveProfile(basePersona: any, prompt: string): Promise<any> {
   console.log('🧠 Generating V3 cognitive profile...');
+  console.log('🔍 DEBUG: Cognitive generation inputs:', {
+    personaName: basePersona.name,
+    occupation: basePersona.identity?.occupation,
+    age: basePersona.identity?.age,
+    promptLength: prompt.length,
+    promptPreview: prompt.substring(0, 200)
+  });
   
   const messages = [
     {
       role: "system",
       content: `Generate a comprehensive V3 cognitive profile with ALL 8 trait categories. Create distinctive, realistic traits that avoid defaults. Return ONLY valid JSON.
+
+CRITICAL: DO NOT use 0.5 as default values! Generate distinctive trait patterns based on persona background.
 
 REQUIRED V3 STRUCTURE:
 {
@@ -257,6 +266,12 @@ REQUIRED V3 STRUCTURE:
   }
 }
 
+EXAMPLES OF DISTINCTIVE PATTERNS (don't copy exactly but use as reference):
+- Tech founder: openness 0.85, conscientiousness 0.75, extraversion 0.65
+- Teacher: agreeableness 0.8, care_harm 0.9, authority_subversion 0.3
+- Artist: openness 0.9, traditional_vs_secular 0.2, uncertainty_avoidance 0.25
+- Engineer: conscientiousness 0.8, power_distance 0.3, risk_sensitivity 0.7
+
 DISTINCTIVENESS REQUIREMENTS:
 - Create distinctive trait patterns that reflect their background and personality
 - Avoid clustering around 0.5 defaults - give them clear personality signature
@@ -266,9 +281,19 @@ DISTINCTIVENESS REQUIREMENTS:
     },
     {
       role: "user",
-      content: `Generate cognitive profile for: ${basePersona.name} (${basePersona.identity.occupation}, age ${basePersona.identity.age}), based on: ${prompt}`
+      content: `Generate cognitive profile for: ${basePersona.name} (${basePersona.identity.occupation}, age ${basePersona.identity.age}), based on: ${prompt}
+
+IMPORTANT: Create distinctive trait values that avoid 0.5 defaults. Make this person psychologically unique.`
     }
   ];
+
+  console.log('📤 DEBUG: Sending prompt to OpenAI:', {
+    model: 'gpt-4.1-2025-04-14',
+    temperature: 0.9,
+    messageCount: messages.length,
+    systemPromptLength: messages[0].content.length,
+    userPromptLength: messages[1].content.length
+  });
 
   const response = await generateChatResponse(messages, openAIApiKey, {
     model: 'gpt-4.1-2025-04-14',
@@ -277,13 +302,42 @@ DISTINCTIVENESS REQUIREMENTS:
   });
 
   const content = response.choices[0].message.content;
+  console.log('📥 DEBUG: Raw OpenAI response:', {
+    responseLength: content.length,
+    responsePreview: content.substring(0, 500),
+    containsJson: content.includes('{') && content.includes('}')
+  });
   
   try {
     const parsed = JSON.parse(content);
-    console.log('✅ V3 cognitive profile generated');
+    
+    // Validate that we don't have all default values
+    const bigFive = parsed.cognitive_profile?.big_five;
+    if (bigFive) {
+      const allNearDefault = Object.values(bigFive).every((value: any) => 
+        typeof value === 'number' && Math.abs(value - 0.5) < 0.1
+      );
+      
+      if (allNearDefault) {
+        console.warn('⚠️ WARNING: All Big Five traits are near 0.5 defaults, retrying...');
+        throw new Error('Generated default values, retry needed');
+      }
+      
+      console.log('✅ V3 cognitive profile generated with distinctive traits:', {
+        openness: bigFive.openness,
+        conscientiousness: bigFive.conscientiousness,
+        extraversion: bigFive.extraversion,
+        agreeableness: bigFive.agreeableness,
+        neuroticism: bigFive.neuroticism
+      });
+    }
+    
     return parsed;
   } catch (error) {
-    console.error('❌ Failed to parse V3 cognitive profile JSON:', content);
+    console.error('❌ Failed to parse V3 cognitive profile JSON:', {
+      error: error.message,
+      rawResponse: content
+    });
     throw new Error('Invalid JSON response from OpenAI for V3 cognitive profile');
   }
 }
@@ -500,9 +554,40 @@ serve(async (req) => {
     console.log("🔄 Stage 1: Generating identity...");
     const identity = await Promise.race([generateV3Identity(prompt), timeoutPromise]);
     
-    // Stage 2: Generate V3 Cognitive Profile (all trait categories)
+    // Stage 2: Generate V3 Cognitive Profile (all trait categories) with retry logic
     console.log("🔄 Stage 2: Generating cognitive profile...");
-    const cognitiveData = await Promise.race([generateV3CognitiveProfile(identity, prompt), timeoutPromise]);
+    let cognitiveData;
+    let cognitiveAttempts = 0;
+    const maxCognitiveAttempts = 3;
+    
+    do {
+      cognitiveAttempts++;
+      console.log(`🔄 Cognitive profile attempt ${cognitiveAttempts}/${maxCognitiveAttempts}`);
+      
+      try {
+        cognitiveData = await Promise.race([generateV3CognitiveProfile(identity, prompt), timeoutPromise]);
+        
+        // Check for default values
+        const bigFive = cognitiveData?.cognitive_profile?.big_five;
+        if (bigFive) {
+          const allNearDefault = Object.values(bigFive).every((value: any) => 
+            typeof value === 'number' && Math.abs(value - 0.5) < 0.1
+          );
+          
+          if (allNearDefault && cognitiveAttempts < maxCognitiveAttempts) {
+            console.warn(`⚠️ Attempt ${cognitiveAttempts}: Got default values, retrying...`);
+            continue;
+          }
+        }
+        
+        break;
+      } catch (error) {
+        console.error(`❌ Cognitive profile attempt ${cognitiveAttempts} failed:`, error.message);
+        if (cognitiveAttempts >= maxCognitiveAttempts) {
+          throw error;
+        }
+      }
+    } while (cognitiveAttempts < maxCognitiveAttempts);
     
     // Stage 3: Generate V3 Life Context
     console.log("🔄 Stage 3: Generating life context...");
@@ -541,11 +626,15 @@ serve(async (req) => {
         life_context: lifeContextData.life_context,
         knowledge_profile: knowledgeData.knowledge_profile,
         cognitive_profile: cognitiveData.cognitive_profile,
-        emotional_triggers: cognitiveData.emotional_triggers,
         interview_sections: interviewSections,
         
         // Validation expects trait_profile structure
-        trait_profile: cognitiveData.cognitive_profile
+        trait_profile: cognitiveData.cognitive_profile,
+        
+        // FIXED: Emotional triggers should be at state_modifiers level for validation
+        state_modifiers: {
+          emotional_triggers: cognitiveData.emotional_triggers
+        }
       }
     };
 
