@@ -104,18 +104,64 @@ export async function getPersonasForListing(): Promise<Persona[]> {
 export async function getAllPersonas(): Promise<Persona[]> {
   try {
     console.log("Fetching all personas from Supabase");
-    const { data, error } = await supabase
+    
+    // Fetch regular personas
+    const { data: regularPersonas, error: regularError } = await supabase
       .from('personas')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("Error fetching all personas:", error);
-      throw error;
+    if (regularError) {
+      console.error("Error fetching regular personas:", regularError);
+      throw regularError;
     }
+
+    // Fetch V4 personas
+    const { data: v4Personas, error: v4Error } = await supabase
+      .from('v4_personas')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (v4Error) {
+      console.error("Error fetching V4 personas:", v4Error);
+      // Don't throw error for V4 personas, just log and continue
+      console.warn("Continuing without V4 personas");
+    }
+
+    // Convert regular personas
+    const convertedRegularPersonas = regularPersonas ? regularPersonas.map(dbPersonaToPersona) : [];
     
-    console.log(`Retrieved ${data?.length || 0} personas from database`);
-    return data ? data.map(dbPersonaToPersona) : [];
+    // Convert V4 personas to regular persona format
+    const convertedV4Personas = v4Personas ? v4Personas.map(v4Persona => {
+      // Safely access conversation_summary
+      const conversationSummary = v4Persona.conversation_summary as any;
+      const demographics = conversationSummary?.demographics;
+      const backgroundDescription = demographics?.background_description;
+      
+      return {
+        id: v4Persona.id,
+        persona_id: v4Persona.persona_id,
+        name: v4Persona.name,
+        description: backgroundDescription || `${v4Persona.name} - V4 Enhanced Persona`,
+        user_id: v4Persona.user_id,
+        is_public: false, // V4 personas default to private for now
+        created_at: v4Persona.created_at,
+        updated_at: v4Persona.updated_at,
+        persona_data: v4Persona.full_profile,
+        profile_image_url: null,
+        prompt: `V4 Enhanced Persona: ${v4Persona.name}`,
+        version: v4Persona.schema_version || 'v4.0'
+      };
+    }) : [];
+
+    // Combine and sort by creation date
+    const allPersonas = [...convertedRegularPersonas, ...convertedV4Personas]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    console.log(`Retrieved ${convertedRegularPersonas.length} regular personas and ${convertedV4Personas.length} V4 personas`);
+    console.log(`Total personas: ${allPersonas.length}`);
+    
+    return allPersonas;
   } catch (error) {
     console.error("Error getting all personas:", error);
     return [];
