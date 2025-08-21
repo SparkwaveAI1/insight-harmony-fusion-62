@@ -11,6 +11,8 @@ export interface PersonaValidationResult {
   };
 }
 
+import { detectPersonaVersion, isV4Persona } from '@/utils/personaDetection';
+
 export function validatePersonaCompleteness(persona: any): PersonaValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -18,12 +20,20 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   console.log("=== DETAILED PERSONA VALIDATION ===");
   console.log("Persona name:", persona.name);
   console.log("Persona ID:", persona.persona_id);
-  console.log("Persona structure:", persona.persona_data ? "V3" : "Legacy");
   
-  // Determine structure and extract trait data
+  // Detect persona version
+  const versionInfo = detectPersonaVersion(persona);
+  console.log("Detected version:", versionInfo);
+  
+  // Handle V4 personas
+  if (versionInfo.isV4) {
+    return validateV4Persona(persona, errors, warnings);
+  }
+  
+  // Determine structure and extract trait data for V3 and legacy
   let traitData, emotionalTriggers, interviewSections, metadataOrIdentity;
   
-  if (persona.persona_data) {
+  if (versionInfo.isV3) {
     // V3 structure - proper data paths
     traitData = persona.persona_data.cognitive_profile;
     emotionalTriggers = persona.persona_data.emotional_triggers;
@@ -86,6 +96,67 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
       hasEmotionalTriggers,
       hasInterviewResponses,
       hasMetadata
+    }
+  };
+}
+
+function validateV4Persona(persona: any, errors: string[], warnings: string[]): PersonaValidationResult {
+  console.log("=== V4 PERSONA VALIDATION ===");
+  
+  const fullProfile = persona.full_profile;
+  const conversationSummary = persona.conversation_summary;
+  
+  // Check if V4 persona is complete
+  const hasFullProfile = fullProfile && 
+    fullProfile.identity && 
+    fullProfile.trait_profile && 
+    fullProfile.communication_style;
+    
+  const hasConversationSummary = conversationSummary && 
+    conversationSummary.demographics && 
+    conversationSummary.motivation_summary;
+    
+  const isCreationCompleted = persona.creation_completed === true;
+  
+  console.log("V4 validation checks:", {
+    hasFullProfile,
+    hasConversationSummary,
+    isCreationCompleted,
+    creationStage: persona.creation_stage
+  });
+  
+  if (!isCreationCompleted) {
+    if (persona.creation_stage === 'not_started' || !persona.creation_stage) {
+      errors.push("V4 persona creation has not been started");
+    } else if (persona.creation_stage.includes('call1') || persona.creation_stage.includes('call2')) {
+      warnings.push(`V4 persona creation in progress: ${persona.creation_stage}`);
+    } else {
+      errors.push(`V4 persona creation incomplete: ${persona.creation_stage}`);
+    }
+  }
+  
+  if (!hasFullProfile) {
+    errors.push("V4 persona missing full_profile data");
+  }
+  
+  if (!hasConversationSummary) {
+    errors.push("V4 persona missing conversation_summary data");
+  }
+  
+  // V4 personas are considered valid if creation is completed and core data exists
+  const isValid = isCreationCompleted && hasFullProfile && hasConversationSummary && errors.length === 0;
+  
+  console.log("V4 validation result:", { isValid, errorCount: errors.length, warningCount: warnings.length });
+  
+  return {
+    isValid,
+    errors,
+    warnings,
+    completeness: {
+      hasRealTraits: hasFullProfile,
+      hasEmotionalTriggers: !!fullProfile?.emotional_profile,
+      hasInterviewResponses: true, // V4 doesn't use traditional interview sections
+      hasMetadata: hasConversationSummary
     }
   };
 }

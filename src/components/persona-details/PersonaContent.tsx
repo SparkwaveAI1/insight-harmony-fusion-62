@@ -7,6 +7,8 @@ import InterviewResponses from "./InterviewResponses";
 import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
 import PersonaKeyInsights from "./PersonaKeyInsights";
 import { SurveyManagement } from '../surveys/SurveyManagement';
+import { V4PersonaDisplay } from '../personas/V4PersonaDisplay';
+import { detectPersonaVersion, isV4Persona } from '@/utils/personaDetection';
 
 interface PersonaContentProps {
   persona: Persona;
@@ -28,6 +30,16 @@ const PersonaContent = ({ persona, isOwner = false }: PersonaContentProps) => {
   console.log("Full persona object:", persona);
   console.log("Persona name:", persona.name);
   console.log("Persona ID:", persona.persona_id);
+  
+  // Detect persona version
+  const versionInfo = detectPersonaVersion(persona);
+  console.log("Detected persona version:", versionInfo);
+  
+  // If this is a V4 persona, use the V4 display component
+  if (versionInfo.isV4 && isV4Persona(persona)) {
+    return <V4PersonaDisplay persona={persona} isOwner={isOwner} />;
+  }
+  
   console.log("Trait profile exists:", !!persona.trait_profile);
   console.log("Trait profile type:", typeof persona.trait_profile);
   console.log("Trait profile content:", persona.trait_profile);

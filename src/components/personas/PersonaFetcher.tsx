@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Card from '@/components/ui-custom/Card';
 import { formatName } from '@/lib/utils';
-import { getPersonaByPersonaId } from '@/services/persona'; // Updated import path
+import { getPersonaByPersonaId } from '@/services/persona';
+import { V4PersonaDisplay } from './V4PersonaDisplay';
+import { detectPersonaVersion, isV4Persona } from '@/utils/personaDetection';
 
 interface PersonaFetcherProps {
   personaId: string;
@@ -44,10 +46,15 @@ const PersonaFetcher: React.FC<PersonaFetcherProps> = ({ personaId }) => {
     );
   }
 
-  // Check if this is a V4 persona
-  const isV4Persona = activePersona.version === 'v4.0' || activePersona.version?.startsWith('v4');
+  // Detect persona version using improved detection logic
+  const versionInfo = detectPersonaVersion(activePersona);
   
-  if (isV4Persona) {
+  if (versionInfo.isV4 && isV4Persona(activePersona)) {
+    // Use new V4 display component
+    return <V4PersonaDisplay persona={activePersona} />;
+  }
+  
+  if (versionInfo.isV4 || activePersona.version === 'v4.0' || activePersona.version?.startsWith('v4')) {
     // Render V4 persona format
     const fullProfile = activePersona.persona_data as any;
     const identity = fullProfile?.identity;

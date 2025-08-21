@@ -1,28 +1,9 @@
 
+import { getPersonaDownloadData } from './personaDetection';
+
 export const downloadPersonaAsJSON = (persona: any) => {
-  // Create a clean copy of the persona data
-  const personaData = {
-    persona_id: persona.persona_id,
-    id: persona.id,
-    name: persona.name,
-    creation_date: persona.creation_date,
-    created_at: persona.created_at,
-    metadata: persona.metadata,
-    trait_profile: persona.trait_profile,
-    behavioral_modulation: persona.behavioral_modulation,
-    linguistic_profile: persona.linguistic_profile,
-    emotional_triggers: persona.emotional_triggers,
-    interview_sections: persona.interview_sections,
-    simulation_directives: persona.simulation_directives,
-    preinterview_tags: persona.preinterview_tags,
-    prompt: persona.prompt,
-    user_id: persona.user_id,
-    is_public: persona.is_public,
-    profile_image_url: persona.profile_image_url,
-    enhanced_metadata_version: persona.enhanced_metadata_version,
-    persona_type: persona.persona_type,
-    persona_context: persona.persona_context
-  };
+  // Use version-aware download data extraction
+  const personaData = getPersonaDownloadData(persona);
 
   // Convert to formatted JSON
   const jsonString = JSON.stringify(personaData, null, 2);
