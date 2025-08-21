@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to extract JSON from markdown code blocks
+function extractJSONFromMarkdown(text: string): string {
+  // Remove markdown code blocks if present
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    return jsonMatch[1].trim();
+  }
+  // Return original text if no markdown blocks found
+  return text.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -29,35 +40,39 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Generate a V4 persona with detailed traits. Return valid JSON with this structure:
-            {
-              "full_profile": {
-                "identity": {
-                  "name": "First Last",
-                  "age": 35,
-                  "gender": "Male/Female",
-                  "occupation": "Job Title",
-                  "location": {"city": "City", "region": "State", "country": "Country"},
-                  "background_summary": "Rich narrative about their life, experiences, values, and personality"
-                },
-                "motivation_profile": {
-                  "self_interest": 0.7,
-                  "family": 0.8,
-                  "status": 0.5,
-                  "mastery": 0.6,
-                  "care": 0.4,
-                  "security": 0.7,
-                  "belonging": 0.3,
-                  "novelty": 0.2,
-                  "meaning": 0.5
-                },
-                "communication_style": {
-                  "directness": "high/medium/low",
-                  "formality": "casual/neutral/formal", 
-                  "signature_phrases": ["phrase1", "phrase2", "phrase3"]
-                }
-              }
-            }`
+            content: `Generate a V4 persona with detailed traits. 
+
+CRITICAL: Return ONLY valid JSON without any markdown formatting, code blocks, or additional text. Do not wrap the response in \`\`\`json or any other formatting.
+
+Return this exact JSON structure:
+{
+  "full_profile": {
+    "identity": {
+      "name": "First Last",
+      "age": 35,
+      "gender": "Male/Female",
+      "occupation": "Job Title",
+      "location": {"city": "City", "region": "State", "country": "Country"},
+      "background_summary": "Rich narrative about their life, experiences, values, and personality"
+    },
+    "motivation_profile": {
+      "self_interest": 0.7,
+      "family": 0.8,
+      "status": 0.5,
+      "mastery": 0.6,
+      "care": 0.4,
+      "security": 0.7,
+      "belonging": 0.3,
+      "novelty": 0.2,
+      "meaning": 0.5
+    },
+    "communication_style": {
+      "directness": "high/medium/low",
+      "formality": "casual/neutral/formal", 
+      "signature_phrases": ["phrase1", "phrase2", "phrase3"]
+    }
+  }
+}`
           },
           {
             role: 'user',
@@ -72,7 +87,23 @@ serve(async (req) => {
     const openaiData = await openaiResponse.json()
     console.log('OpenAI response received')
 
-    const generatedPersona = JSON.parse(openaiData.choices[0].message.content)
+    // Get the raw content from OpenAI
+    const rawContent = openaiData.choices[0].message.content
+    console.log('Raw OpenAI content:', rawContent)
+
+    // Extract JSON from potential markdown formatting
+    const cleanedContent = extractJSONFromMarkdown(rawContent)
+    console.log('Cleaned content for parsing:', cleanedContent)
+
+    let generatedPersona
+    try {
+      generatedPersona = JSON.parse(cleanedContent)
+      console.log('Successfully parsed persona JSON')
+    } catch (parseError) {
+      console.error('JSON parsing failed:', parseError)
+      console.error('Content that failed to parse:', cleanedContent)
+      throw new Error(`Failed to parse OpenAI response as JSON: ${parseError.message}`)
+    }
 
     // Store in database
     const supabase = createClient(

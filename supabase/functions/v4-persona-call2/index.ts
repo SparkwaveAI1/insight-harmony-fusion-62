@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper function to extract JSON from markdown code blocks
+function extractJSONFromMarkdown(text: string): string {
+  // Remove markdown code blocks if present
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    return jsonMatch[1].trim();
+  }
+  // Return original text if no markdown blocks found
+  return text.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -47,24 +58,28 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Create conversation summaries based on the detailed traits provided. Return valid JSON:
-            {
-              "conversation_summary": {
-                "demographics": {
-                  "name": "exact name from full_profile",
-                  "age": exact_age_from_full_profile,
-                  "occupation": "exact occupation from full_profile",
-                  "location": "city, region format",
-                  "background_description": "Rich 2-3 sentence narrative synthesizing their background, values, and daily life"
-                },
-                "motivation_summary": "Concise description of their top 3-4 motivators and what drives them",
-                "communication_style": {
-                  "directness": "same as full_profile",
-                  "formality": "same as full_profile",
-                  "signature_phrases": "same array as full_profile"
-                }
-              }
-            }`
+            content: `Create conversation summaries based on the detailed traits provided. 
+
+CRITICAL: Return ONLY valid JSON without any markdown formatting, code blocks, or additional text. Do not wrap the response in \`\`\`json or any other formatting.
+
+Return this exact JSON structure:
+{
+  "conversation_summary": {
+    "demographics": {
+      "name": "exact name from full_profile",
+      "age": exact_age_from_full_profile,
+      "occupation": "exact occupation from full_profile",
+      "location": "city, region format",
+      "background_description": "Rich 2-3 sentence narrative synthesizing their background, values, and daily life"
+    },
+    "motivation_summary": "Concise description of their top 3-4 motivators and what drives them",
+    "communication_style": {
+      "directness": "same as full_profile",
+      "formality": "same as full_profile",
+      "signature_phrases": "same array as full_profile"
+    }
+  }
+}`
           },
           {
             role: 'user',
@@ -79,7 +94,23 @@ serve(async (req) => {
     const openaiData = await openaiResponse.json()
     console.log('Summary generation complete')
 
-    const summaryData = JSON.parse(openaiData.choices[0].message.content)
+    // Get the raw content from OpenAI
+    const rawContent = openaiData.choices[0].message.content
+    console.log('Raw OpenAI summary content:', rawContent)
+
+    // Extract JSON from potential markdown formatting
+    const cleanedContent = extractJSONFromMarkdown(rawContent)
+    console.log('Cleaned summary content for parsing:', cleanedContent)
+
+    let summaryData
+    try {
+      summaryData = JSON.parse(cleanedContent)
+      console.log('Successfully parsed summary JSON')
+    } catch (parseError) {
+      console.error('Summary JSON parsing failed:', parseError)
+      console.error('Summary content that failed to parse:', cleanedContent)
+      throw new Error(`Failed to parse OpenAI summary response as JSON: ${parseError.message}`)
+    }
 
     // Update persona with conversation summary
     const { data: updatedPersona, error: updateError } = await supabase
