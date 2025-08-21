@@ -14,7 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ConversationDetail from "./pages/ConversationDetail";
-import YourPersona from "./pages/YourPersona";
+
 import Interviewer from "./pages/Interviewer";
 import PRSNAEcosystem from "./pages/PRSNAEcosystem";
 import Collections from "./pages/Collections";
@@ -97,7 +97,7 @@ function App() {
                 <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
                 <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
                 <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
-                <Route path="/your-persona" element={<ProtectedRoute><YourPersona /></ProtectedRoute>} />
+                
                 <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                 <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                 <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
