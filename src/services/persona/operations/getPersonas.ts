@@ -28,6 +28,7 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
       return null;
     }
     
+    // First, try to fetch from the regular personas table
     const { data, error } = await supabase
       .from('personas')
       .select('*')
@@ -39,21 +40,60 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
       return null;
     }
 
-    if (!data) {
-      console.log(`No persona found with ID ${personaId}`);
+    if (data) {
+      console.log('Regular persona found:', data);
+      try {
+        // Handle potential JSON parsing issues with persona_data
+        console.log('Persona data structure:', JSON.stringify(data.persona_data, null, 2));
+        return dbPersonaToPersona(data);
+      } catch (parseError) {
+        console.error('Error parsing persona data:', parseError);
+        return null;
+      }
+    }
+    
+    // If not found in regular personas, try V4 personas table
+    console.log(`No regular persona found with ID ${personaId}, checking V4 personas`);
+    
+    const { data: v4Data, error: v4Error } = await supabase
+      .from('v4_personas')
+      .select('*')
+      .eq('persona_id', personaId)
+      .maybeSingle();
+
+    if (v4Error) {
+      console.error(`Error fetching V4 persona with ID ${personaId}:`, v4Error);
+      return null;
+    }
+
+    if (!v4Data) {
+      console.log(`No V4 persona found with ID ${personaId}`);
       return null;
     }
     
-    console.log('Persona found:', data);
+    console.log('V4 persona found:', v4Data);
     
-    try {
-      // Handle potential JSON parsing issues with persona_data
-      console.log('Persona data structure:', JSON.stringify(data.persona_data, null, 2));
-      return dbPersonaToPersona(data);
-    } catch (parseError) {
-      console.error('Error parsing persona data:', parseError);
-      return null;
-    }
+    // Convert V4 persona to regular persona format
+    const conversationSummary = v4Data.conversation_summary as any;
+    const demographics = conversationSummary?.demographics;
+    const backgroundDescription = demographics?.background_description;
+    
+    const convertedPersona = {
+      id: v4Data.id,
+      persona_id: v4Data.persona_id,
+      name: v4Data.name,
+      description: backgroundDescription || `${v4Data.name} - V4 Enhanced Persona`,
+      user_id: v4Data.user_id,
+      is_public: false, // V4 personas default to private for now
+      created_at: v4Data.created_at,
+      updated_at: v4Data.updated_at,
+      persona_data: v4Data.full_profile,
+      profile_image_url: null,
+      prompt: `V4 Enhanced Persona: ${v4Data.name}`,
+      version: v4Data.schema_version || 'v4.0'
+    };
+    
+    return convertedPersona;
   } catch (error) {
     console.error("Error getting persona by persona_id:", error);
     return null;
