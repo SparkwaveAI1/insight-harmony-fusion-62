@@ -491,22 +491,32 @@ serve(async (req) => {
 
     console.log("🏗️ Starting V3 persona generation...");
 
+    // Add timeout handling for all OpenAI calls
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Generation timeout - process took too long')), 30000)
+    );
+
     // Stage 1: Generate V3 Identity
-    const identity = await generateV3Identity(prompt);
+    console.log("🔄 Stage 1: Generating identity...");
+    const identity = await Promise.race([generateV3Identity(prompt), timeoutPromise]);
     
     // Stage 2: Generate V3 Cognitive Profile (all trait categories)
-    const cognitiveData = await generateV3CognitiveProfile(identity, prompt);
+    console.log("🔄 Stage 2: Generating cognitive profile...");
+    const cognitiveData = await Promise.race([generateV3CognitiveProfile(identity, prompt), timeoutPromise]);
     
     // Stage 3: Generate V3 Life Context
-    const lifeContextData = await generateV3LifeContext(identity, prompt);
+    console.log("🔄 Stage 3: Generating life context...");
+    const lifeContextData = await Promise.race([generateV3LifeContext(identity, prompt), timeoutPromise]);
     
     // Stage 4: Generate V3 Knowledge Profile
-    const knowledgeData = await generateV3KnowledgeProfile(identity, prompt);
+    console.log("🔄 Stage 4: Generating knowledge profile...");
+    const knowledgeData = await Promise.race([generateV3KnowledgeProfile(identity, prompt), timeoutPromise]);
     
     // Stage 5: Generate Interview Sections
-    const interviewSections = await generateInterviewSections(identity);
+    console.log("🔄 Stage 5: Generating interview sections...");
+    const interviewSections = await Promise.race([generateInterviewSections(identity), timeoutPromise]);
 
-    // Assemble final V3 persona
+    // Assemble final V3 persona with proper structure
     const finalPersona = {
       persona_id: identity.persona_id,
       name: identity.name,
@@ -515,15 +525,7 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       
-      // V3 Structure
-      identity: identity.identity,
-      life_context: lifeContextData.life_context,
-      knowledge_profile: knowledgeData.knowledge_profile,
-      cognitive_profile: cognitiveData.cognitive_profile,
-      emotional_triggers: cognitiveData.emotional_triggers,
-      interview_sections: interviewSections,
-      
-      // Legacy compatibility
+      // Legacy compatibility fields
       metadata: {
         age: identity.identity.age,
         location: `${identity.identity.location.city}, ${identity.identity.location.region}`,
@@ -531,11 +533,19 @@ serve(async (req) => {
         education: identity.identity.socioeconomic_context.education_level,
         income: identity.identity.socioeconomic_context.income_level
       },
+      
+      // Complete V3 data stored in persona_data for proper validation
       persona_data: {
+        version: "3.0",
         identity: identity.identity,
-        trait_profile: {
-          big_five: cognitiveData.cognitive_profile.big_five
-        }
+        life_context: lifeContextData.life_context,
+        knowledge_profile: knowledgeData.knowledge_profile,
+        cognitive_profile: cognitiveData.cognitive_profile,
+        emotional_triggers: cognitiveData.emotional_triggers,
+        interview_sections: interviewSections,
+        
+        // Validation expects trait_profile structure
+        trait_profile: cognitiveData.cognitive_profile
       }
     };
 
