@@ -18,6 +18,8 @@ interface V4PersonaDisplayProps {
   onVisibilityChange?: (isPublic: boolean) => void;
   onDelete?: () => Promise<void>;
   onDownloadJSON?: () => void;
+  showChat?: boolean;
+  onChatToggle?: () => void;
 }
 
 export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ 
@@ -26,9 +28,11 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   isPublic = false, 
   onVisibilityChange, 
   onDelete, 
-  onDownloadJSON 
+  onDownloadJSON,
+  showChat = false,
+  onChatToggle
 }) => {
-  const [showChat, setShowChat] = useState(false);
+  
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
   
@@ -314,16 +318,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Chat Button */}
-            <Button 
-              onClick={() => setShowChat(!showChat)}
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              {showChat ? 'Hide Chat' : 'Chat with ' + persona.name}
-            </Button>
-            
             {/* Owner Controls */}
             {isOwner && (
               <div className="flex items-center gap-2">
@@ -354,7 +348,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
         </div>
       </Card>
 
-      {/* Chat Section - Expandable */}
+      {/* Chat Section - Controlled from parent */}
       {showChat && (
         <Card className="p-6 border-primary/20 bg-primary/5">
           <div className="flex items-center justify-between mb-4">
@@ -362,7 +356,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => setShowChat(false)}
+              onClick={onChatToggle}
             >
               <X className="h-4 w-4" />
             </Button>

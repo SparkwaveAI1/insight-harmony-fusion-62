@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -22,6 +22,7 @@ import { V4Persona } from "@/types/persona-v4";
 const queryClient = new QueryClient();
 
 const PersonaDetail = () => {
+  const [showChat, setShowChat] = useState(false);
   const { personaId } = useParams<{ personaId: string }>();
   const navigate = useNavigate();
   
@@ -68,7 +69,12 @@ const PersonaDetail = () => {
         <main className="flex-grow">
           <Section className="bg-gradient-to-b from-[#F5F5F7] via-background to-background pt-24">
             <div className="container px-4 mx-auto">
-              <PersonaHeader />
+              <PersonaHeader 
+                showChatButton={isV4Persona(persona)}
+                chatButtonText={`Chat with ${persona?.name || 'Persona'}`}
+                onChatToggle={() => setShowChat(!showChat)}
+                isChatOpen={showChat}
+              />
               
               {isLoading ? (
                 <PersonaLoadingState />
@@ -83,6 +89,8 @@ const PersonaDetail = () => {
                   onVisibilityChange={handleVisibilityChange}
                   onDelete={handlePersonaDeleted}
                   onDownloadJSON={handleDownloadJSON}
+                  showChat={showChat}
+                  onChatToggle={() => setShowChat(!showChat)}
                 />
               ) : (
                 // Legacy Persona - Use original layout
