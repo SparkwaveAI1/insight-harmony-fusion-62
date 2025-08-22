@@ -470,51 +470,6 @@ export type Database = {
         }
         Relationships: []
       }
-      personas: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_public: boolean
-          name: string
-          persona_data: Json
-          persona_id: string
-          profile_image_url: string | null
-          prompt: string | null
-          updated_at: string
-          user_id: string
-          version: string | null
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_public?: boolean
-          name: string
-          persona_data?: Json
-          persona_id: string
-          profile_image_url?: string | null
-          prompt?: string | null
-          updated_at?: string
-          user_id: string
-          version?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_public?: boolean
-          name?: string
-          persona_data?: Json
-          persona_id?: string
-          profile_image_url?: string | null
-          prompt?: string | null
-          updated_at?: string
-          user_id?: string
-          version?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
