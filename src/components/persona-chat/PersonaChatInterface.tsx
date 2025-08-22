@@ -123,6 +123,9 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       return;
     }
     
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
     try {
       setIsLoading(true);
       console.log('📤 V4/Grok Chat: Sending message:', { message, hasImage: !!imageFile });

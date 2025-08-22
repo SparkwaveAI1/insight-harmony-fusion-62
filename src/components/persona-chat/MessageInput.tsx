@@ -14,7 +14,8 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!inputMessage.trim() && !selectedImage) return;
     onSendMessage(inputMessage, selectedImage);
     setInputMessage('');
@@ -69,12 +70,12 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
           </div>
         )}
         
-        <div className="flex gap-2">
+        <form onSubmit={handleSendMessage} className="flex gap-2">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage(e)}
             placeholder={selectedImage ? "Add a message with your image..." : "Type your message..."}
             className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isResponding}
@@ -105,7 +106,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
           >
             <Send className="h-4 w-4" />
           </Button>
-        </div>
+        </form>
       </div>
     </div>
   );
