@@ -89,12 +89,46 @@ export function usePersonaDetail() {
   const handleVisibilityChange = async (newVisibility: boolean) => {
     if (!personaId || !user) return;
     
+    console.log("=== VISIBILITY CHANGE START ===");
+    console.log("Persona ID:", personaId);
+    console.log("Current isPublic state:", isPublic);
+    console.log("Current persona.is_public:", persona?.is_public);
+    console.log("Requested newVisibility:", newVisibility);
+    console.log("Is V4 persona:", persona?.persona_id?.startsWith('v4_'));
+    
     try {
       const success = await updatePersonaVisibility(personaId, newVisibility);
+      console.log("Update visibility result:", success);
+      
       if (success) {
+        console.log("Updating local state...");
+        console.log("Before state update - isPublic:", isPublic);
+        console.log("Before state update - persona.is_public:", persona?.is_public);
+        
+        // Update state immediately
         setIsPublic(newVisibility);
-        setPersona(prev => prev ? { ...prev, is_public: newVisibility } : null);
+        setPersona(prev => {
+          const updated = prev ? { ...prev, is_public: newVisibility } : null;
+          console.log("Updated persona state - is_public:", updated?.is_public);
+          return updated;
+        });
+        
+        console.log("After state update - isPublic should be:", newVisibility);
+        
         toast.success(`Persona visibility ${newVisibility ? 'published' : 'set to private'}`);
+        
+        // For V4 personas, force a reload to ensure state consistency
+        if (persona?.persona_id?.startsWith('v4_')) {
+          console.log("V4 persona detected, forcing reload for state consistency...");
+          setTimeout(async () => {
+            const refreshedPersona = await getPersonaByPersonaId(personaId);
+            if (refreshedPersona) {
+              console.log("Refreshed persona visibility:", refreshedPersona.is_public);
+              setPersona(refreshedPersona);
+              setIsPublic(refreshedPersona.is_public || false);
+            }
+          }, 500);
+        }
       } else {
         toast.error("Failed to update visibility");
       }
@@ -102,6 +136,8 @@ export function usePersonaDetail() {
       console.error("Error updating visibility:", error);
       toast.error("Failed to update visibility");
     }
+    
+    console.log("=== VISIBILITY CHANGE END ===");
   };
 
   // Handle name update

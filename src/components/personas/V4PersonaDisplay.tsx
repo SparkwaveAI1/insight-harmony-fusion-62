@@ -362,12 +362,17 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
               <div className="flex items-center gap-2">
                 {/* Visibility Toggle */}
                 {onVisibilityChange && (
-                  <PersonaVisibilityToggle
-                    personaId={persona.persona_id}
-                    isPublic={isPublic}
-                    isOwner={isOwner}
-                    onVisibilityChange={onVisibilityChange}
-                  />
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">
+                      Debug: V4Display isPublic={String(isPublic)}
+                    </div>
+                    <PersonaVisibilityToggle
+                      personaId={persona.persona_id}
+                      isPublic={isPublic}
+                      isOwner={isOwner}
+                      onVisibilityChange={onVisibilityChange}
+                    />
+                  </div>
                 )}
                 
                 {/* Download JSON */}

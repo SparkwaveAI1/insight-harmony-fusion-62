@@ -24,20 +24,23 @@ const PersonaVisibilityToggle = ({
 
   const handleVisibilityChange = async () => {
     if (isUpdating) return;
+    
+    console.log("=== VISIBILITY TOGGLE COMPONENT ===");
+    console.log("Component personaId:", personaId);
+    console.log("Component current isPublic prop:", isPublic);
+    console.log("Component isOwner:", isOwner);
+    
     setIsUpdating(true);
     
     try {
       const newVisibility = !isPublic;
-      const success = await updatePersonaVisibility(personaId, newVisibility);
+      console.log("Toggle component requesting newVisibility:", newVisibility);
       
-      if (success) {
-        onVisibilityChange(newVisibility);
-        toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
-      } else {
-        toast.error("Failed to update visibility");
-      }
+      // Call parent handler instead of direct service call to avoid double updates
+      onVisibilityChange(newVisibility);
+      
     } catch (error) {
-      console.error("Error updating visibility:", error);
+      console.error("Error in toggle component:", error);
       toast.error("Failed to update visibility");
     } finally {
       setIsUpdating(false);
