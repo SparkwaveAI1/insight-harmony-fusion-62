@@ -75,7 +75,12 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
 
   // Get description with proper fallback
   const getDescription = () => {
-    // First try the direct description field
+    // First try V4 background description
+    if (persona.conversation_summary?.demographics?.background_description && persona.conversation_summary.demographics.background_description.trim()) {
+      return persona.conversation_summary.demographics.background_description;
+    }
+    
+    // Then try the direct description field (legacy)
     if (persona.description && persona.description.trim()) {
       return persona.description;
     }
@@ -96,29 +101,29 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
 
   const description = getDescription();
   
-  // Helper function to get V3 data with legacy fallback
-  const getV3DataWithFallback = (v3Path: any, legacyPath: any, defaultValue: string = 'Not specified') => {
-    return v3Path && v3Path !== 0 && v3Path !== '' ? v3Path : (legacyPath || defaultValue);
+  // Helper function to get V4 data with legacy fallback
+  const getV4DataWithFallback = (v4Path: any, legacyPath: any, defaultValue: string = 'Not specified') => {
+    return v4Path && v4Path !== 0 && v4Path !== '' ? v4Path : (legacyPath || defaultValue);
   };
   
-  const age = getV3DataWithFallback(
-    persona.persona_data?.identity?.age, 
+  const age = getV4DataWithFallback(
+    persona.conversation_summary?.demographics?.age, 
     persona.metadata?.age, 
     'Not specified'
   );
   const location = (() => {
-    const locationObj = persona.persona_data?.identity?.location;
-    if (locationObj && typeof locationObj === 'object' && (locationObj.city || locationObj.region || locationObj.country)) {
-      return `${locationObj.city || ''}, ${locationObj.region || ''}, ${locationObj.country || ''}`.replace(/^, |, $|, , /g, '').replace(/^, /, '') || 'Not specified';
+    const locationStr = persona.conversation_summary?.demographics?.location;
+    if (locationStr && typeof locationStr === 'string' && locationStr.trim()) {
+      return locationStr;
     }
-    return getV3DataWithFallback(
-      persona.persona_data?.identity?.region,
+    return getV4DataWithFallback(
+      persona.conversation_summary?.demographics?.location,
       persona.metadata?.location || persona.metadata?.region,
       'Not specified'
     );
   })();
-  const occupation = getV3DataWithFallback(
-    persona.persona_data?.identity?.occupation,
+  const occupation = getV4DataWithFallback(
+    persona.conversation_summary?.demographics?.occupation,
     persona.metadata?.occupation,
     'Not specified'
   );

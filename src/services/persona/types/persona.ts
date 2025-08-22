@@ -17,7 +17,19 @@ export interface Persona {
   prompt?: string;
   version?: string;
   
-  // V3 persona data structure (stored in JSONB)
+  // V4 persona data structure (stored in JSONB)
+  conversation_summary?: {
+    demographics?: {
+      age?: number | string;
+      location?: string;
+      occupation?: string;
+      name?: string;
+      background_description?: string;
+    };
+    [key: string]: any;
+  };
+  
+  // V3 persona data structure (stored in JSONB) - legacy
   persona_data?: any;
   
   // Legacy support - these will be computed from persona_data or used directly
