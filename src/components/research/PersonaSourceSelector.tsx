@@ -11,6 +11,7 @@ import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectCollections } from '@/services/collections/projectCollectionOperations';
 import { getPersonasByCollectionForListing, getPersonasForListing } from '@/services/persona/operations/getPersonas';
 import { Collection } from '@/services/collections/types';
+import { getV4Personas } from '@/services/v4-persona/getV4Personas';
 
 interface PersonaSourceSelectorProps {
   projectId?: string;
@@ -19,7 +20,7 @@ interface PersonaSourceSelectorProps {
   maxPersonas?: number;
 }
 
-type PersonaSource = 'project-collections' | 'my-personas' | 'public-personas';
+type PersonaSource = 'project-collections' | 'my-personas' | 'public-personas' | 'v4-personas';
 
 interface PersonaSourceOption {
   id: PersonaSource;
@@ -46,6 +47,12 @@ const PERSONA_SOURCE_OPTIONS: PersonaSourceOption[] = [
     label: 'Public Personas',
     icon: <Globe className="w-4 h-4" />,
     description: 'Choose from publicly available personas'
+  },
+  {
+    id: 'v4-personas',
+    label: 'V4 Personas',
+    icon: <Users className="w-4 h-4" />,
+    description: 'Choose from your V4 personas (next-generation)'
   }
 ];
 
@@ -156,6 +163,31 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           
         case 'public-personas':
           personas = await getPersonasForListing();
+          break;
+          
+        case 'v4-personas':
+          if (!user?.id) {
+            throw new Error('User authentication required');
+          }
+          const v4PersonasData = await getV4Personas(user.id);
+          personas = v4PersonasData.map(v4Persona => ({
+            id: v4Persona.id,
+            persona_id: v4Persona.persona_id,
+            name: v4Persona.name,
+            description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
+            user_id: v4Persona.user_id,
+            is_public: false,
+            created_at: v4Persona.created_at || '',
+            metadata: {},
+            trait_profile: {},
+            behavioral_modulation: {},
+            linguistic_profile: {},
+            emotional_triggers: null,
+            preinterview_tags: [],
+            simulation_directives: {},
+            interview_sections: [],
+            prompt: null
+          } as Persona));
           break;
       }
       

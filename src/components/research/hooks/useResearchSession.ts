@@ -8,6 +8,8 @@ import { processMessageWithFile, ResearchMessage } from '../services/messageServ
 import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
 import { Message } from '@/components/persona-chat/types';
 import { processPersonasInParallel } from '../utils/parallelProcessing';
+import { getV4PersonaById } from '@/services/v4-persona/getV4Personas';
+import { sendV4Message } from '@/services/v4-persona/conversationV4';
 
 export interface UseResearchSessionReturn {
   sessionId: string | null;
@@ -118,29 +120,62 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
       console.log('Session created:', session.id);
       setSessionId(session.id);
 
-      // Load personas using the existing database query
+      // Load personas - handle both legacy and V4 personas
       console.log('Loading personas...');
-      const { data: personasData, error: personasError } = await supabase
-        .from('personas')
-        .select('*')
-        .in('persona_id', personaIds);
-
-      if (personasError) {
-        console.error('Personas loading error:', personasError);
-        toast.error(`Failed to load personas: ${personasError.message}`);
-        return false;
+      const mappedPersonas: Persona[] = [];
+      
+      for (const personaId of personaIds) {
+        if (personaId.startsWith('v4_')) {
+          // Load V4 persona
+          console.log('Loading V4 persona:', personaId);
+          const v4Persona = await getV4PersonaById(personaId);
+          if (v4Persona) {
+            // Convert V4 persona to legacy persona format for consistency
+            mappedPersonas.push({
+              id: v4Persona.id,
+              persona_id: v4Persona.persona_id,
+              name: v4Persona.name,
+              description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
+              user_id: v4Persona.user_id,
+              is_public: false,
+              created_at: v4Persona.created_at || '',
+              updated_at: v4Persona.updated_at || '',
+              metadata: {},
+              trait_profile: {},
+              behavioral_modulation: {},
+              linguistic_profile: {},
+              emotional_triggers: null,
+              preinterview_tags: [],
+              simulation_directives: {},
+              interview_sections: [],
+              prompt: null
+            } as Persona);
+          }
+        } else {
+          // Load legacy persona
+          console.log('Loading legacy persona:', personaId);
+          const { data: personaData, error: personaError } = await supabase
+            .from('personas')
+            .select('*')
+            .eq('persona_id', personaId)
+            .single();
+            
+          if (personaError) {
+            console.error('Error loading legacy persona:', personaError);
+            continue;
+          }
+          
+          if (personaData) {
+            mappedPersonas.push(dbPersonaToPersona(personaData));
+          }
+        }
       }
 
-      if (!personasData || personasData.length === 0) {
+      if (mappedPersonas.length === 0) {
         console.error('No personas found with provided IDs');
         toast.error('No personas found. Please check your selection.');
         return false;
       }
-
-      // Use the existing dbPersonaToPersona mapper to ensure proper type conversion
-      const mappedPersonas: Persona[] = personasData.map(dbPersona => 
-        dbPersonaToPersona(dbPersona)
-      );
 
       console.log('Personas loaded:', mappedPersonas.length);
       setLoadedPersonas(mappedPersonas);
@@ -281,16 +316,43 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
           ? 'VISUAL MATERIAL FOR REVIEW: I\'m sharing an image with you. Please analyze it and give me your authentic perspective based on your values, background, and personal viewpoint.'
           : '';
 
-      // Get persona response using the unified conversation engine with isolated conversation history
-      const response = await sendMessageToPersona(
-        personaId,
-        messageToSend.content,
-        previousMessages,
-        activePersona,
-        'conversation',
-        materialContext,
-        messageToSend.image
-      );
+      // Route to appropriate conversation system based on persona type
+      let response: string;
+      
+      if (personaId.startsWith('v4_')) {
+        // Use V4 conversation system
+        console.log('Routing to V4 conversation system');
+        const conversationHistory = previousMessages.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        }));
+        
+        const fullMessage = materialContext ? `${materialContext}\n\n${messageToSend.content}` : messageToSend.content;
+        
+        const v4Response = await sendV4Message({
+          persona_id: personaId,
+          user_message: fullMessage,
+          conversation_history: conversationHistory
+        });
+        
+        if (!v4Response.success || !v4Response.response) {
+          throw new Error('V4 persona response failed');
+        }
+        
+        response = v4Response.response;
+      } else {
+        // Use legacy conversation system
+        console.log('Routing to legacy conversation system');
+        response = await sendMessageToPersona(
+          personaId,
+          messageToSend.content,
+          previousMessages,
+          activePersona,
+          'conversation',
+          materialContext,
+          messageToSend.image
+        );
+      }
       
       // Add persona response to this persona's individual conversation
       const personaMessage: Message & { responding_persona_id: string } = {
