@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Download, MessageCircle, Sparkles } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Card from "@/components/ui-custom/Card";
@@ -23,7 +23,6 @@ interface PersonaDetailHeaderProps {
   onDescriptionUpdate: (description: string) => Promise<void>;
   onImageGenerated: () => Promise<string | null>;
   onDownloadJSON: () => void;
-  onChatClick: () => void;
   onPersonaUpdated?: (updatedPersona: Persona) => void;
 }
 
@@ -37,7 +36,6 @@ export default function PersonaDetailHeader({
   onDescriptionUpdate,
   onImageGenerated,
   onDownloadJSON,
-  onChatClick,
   onPersonaUpdated
 }: PersonaDetailHeaderProps) {
   const [showEnhancementDialog, setShowEnhancementDialog] = useState(false);
@@ -90,15 +88,6 @@ export default function PersonaDetailHeader({
               </div>
             </div>
 
-            {/* Prominent Chat Button */}
-            <Button 
-              onClick={onChatClick} 
-              size="lg"
-              className="flex-shrink-0"
-            >
-              <MessageCircle className="h-5 w-5 mr-2" />
-              Chat with {persona.name}
-            </Button>
           </div>
 
           {/* Description Section */}

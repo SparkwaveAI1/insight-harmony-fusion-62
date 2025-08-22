@@ -50,11 +50,6 @@ const PersonaDetail = () => {
     }
   };
 
-  const handleChatClick = () => {
-    if (personaId) {
-      navigate(`/persona/${personaId}/chat`);
-    }
-  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -81,7 +76,6 @@ const PersonaDetail = () => {
                     onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
                     onDownloadJSON={handleDownloadJSON}
-                    onChatClick={handleChatClick}
                     onPersonaUpdated={handlePersonaUpdated}
                   />
                   
