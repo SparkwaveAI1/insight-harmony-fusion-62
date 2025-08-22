@@ -120,11 +120,6 @@ export function PersonaChat({ persona, personaId, title, height = "h-96" }: Pers
                      persona?.name || 'Persona'}
                   </div>
                   <div>{message.content}</div>
-                  {message.traits_used && (
-                    <div className="text-xs text-gray-500 mt-2">
-                      Traits used: {message.traits_used.join(', ')}
-                    </div>
-                  )}
                   <div className="text-xs text-gray-400 mt-1">
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </div>
