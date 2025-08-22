@@ -80,7 +80,7 @@ export function V4PersonaCreator() {
     <div className="max-w-2xl mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>V4 Persona Creator (Beta)</CardTitle>
+          <CardTitle>Persona Creator</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
