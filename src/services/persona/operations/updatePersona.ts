@@ -10,9 +10,19 @@ export async function updatePersonaVisibility(personaId: string, isPublic: boole
     
     // Check if this is a V4 persona
     if (personaId.startsWith('v4_')) {
-      console.log('V4 personas do not support visibility toggle - they are always private');
-      // Return false to indicate the operation is not supported
-      return false;
+      console.log('Updating V4 persona visibility in v4_personas table');
+      const { error } = await supabase
+        .from('v4_personas')
+        .update({ is_public: isPublic })
+        .eq('persona_id', personaId);
+
+      if (error) {
+        console.error("Database error updating V4 persona visibility:", error);
+        throw error;
+      }
+      
+      console.log('Successfully updated V4 persona visibility');
+      return true;
     } else {
       // Update legacy personas table
       console.log('Updating legacy persona visibility in personas table');

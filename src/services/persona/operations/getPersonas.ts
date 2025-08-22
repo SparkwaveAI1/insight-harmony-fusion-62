@@ -57,7 +57,7 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           name: v4Data.name,
           description: backgroundDescription || `${v4Data.name} - V4 Enhanced Persona`,
           user_id: v4Data.user_id,
-          is_public: false, // V4 personas default to private for now
+          is_public: v4Data.is_public || false, // Use actual is_public value from database
           created_at: v4Data.created_at,
           updated_at: v4Data.updated_at,
           persona_data: v4Data.full_profile,
@@ -190,7 +190,7 @@ export async function getAllPersonas(): Promise<Persona[]> {
         name: v4Persona.name,
         description: backgroundDescription || `${v4Persona.name} - V4 Enhanced Persona`,
         user_id: v4Persona.user_id,
-        is_public: false, // V4 personas default to private for now
+        is_public: v4Persona.is_public || false, // Use actual is_public value from database
         created_at: v4Persona.created_at,
         updated_at: v4Persona.updated_at,
         persona_data: v4Persona.full_profile,

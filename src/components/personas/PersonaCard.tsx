@@ -177,21 +177,19 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
             </DropdownMenuItem>
             {isOwner && (
               <>
-                {!persona.persona_id.startsWith('v4_') && (
-                  <DropdownMenuItem onClick={handleVisibilityChange}>
-                    {isPublic ? (
-                      <>
-                        <EyeOff className="mr-2 h-4 w-4" />
-                        Make Private
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Make Public
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={handleVisibilityChange}>
+                  {isPublic ? (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      Make Private
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Make Public
+                    </>
+                  )}
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to={`/persona/${persona.persona_id}/chat`}>
                     Chat with Persona

@@ -1009,6 +1009,7 @@ export type Database = {
           creation_stage: string | null
           full_profile: Json
           id: string
+          is_public: boolean
           name: string
           persona_id: string
           profile_image_url: string | null
@@ -1023,6 +1024,7 @@ export type Database = {
           creation_stage?: string | null
           full_profile?: Json
           id?: string
+          is_public?: boolean
           name: string
           persona_id: string
           profile_image_url?: string | null
@@ -1037,6 +1039,7 @@ export type Database = {
           creation_stage?: string | null
           full_profile?: Json
           id?: string
+          is_public?: boolean
           name?: string
           persona_id?: string
           profile_image_url?: string | null
