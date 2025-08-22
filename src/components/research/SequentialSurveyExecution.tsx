@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
-import { sendMessageToPersonaViaV4 } from '@/services/v4-persona/personaAdapter';
+import { sendV4Message } from '@/services/v4-persona';
 import { updateSurveySessionStatus } from '@/components/research/services/surveySessionService';
 import { SurveyQuestion } from './QuestionUpload';
 
@@ -269,20 +269,16 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Just use the question message as-is for multi-image support
             let finalQuestionMessage = questionMessage;
             
-            // Get response using V4/Grok system with conversation memory
+            // Get response using V4/Grok system directly
             let response: string;
             try {
-                const v4Response = await sendMessageToPersonaViaV4({
-                  persona,
-                  userMessage: finalQuestionMessage,
-                  conversationHistory: conversationHistory.map(msg => ({
+                const v4Response = await sendV4Message({
+                  persona_id: persona.persona_id,
+                  user_message: finalQuestionMessage,
+                  conversation_history: conversationHistory.map(msg => ({
                     role: msg.role,
-                    content: msg.content,
-                    image: msg.image
-                  })),
-                  mode: 'conversation',
-                  conversationContext: fullContext,
-                  imageData: Array.isArray(imagesToSend) ? imagesToSend : (imagesToSend ? [imagesToSend] : undefined)
+                    content: msg.content
+                  }))
                 });
                 
                 if (v4Response.success && v4Response.response) {
@@ -295,17 +291,13 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               // Retry once after a short delay
               await new Promise(resolve => setTimeout(resolve, 2000));
               try {
-                const retryResponse = await sendMessageToPersonaViaV4({
-                  persona,
-                  userMessage: finalQuestionMessage,
-                  conversationHistory: conversationHistory.map(msg => ({
+                const retryResponse = await sendV4Message({
+                  persona_id: persona.persona_id,
+                  user_message: finalQuestionMessage,
+                  conversation_history: conversationHistory.map(msg => ({
                     role: msg.role,
-                    content: msg.content,
-                    image: msg.image
-                  })),
-                  mode: 'conversation',
-                  conversationContext: fullContext,
-                  imageData: Array.isArray(imagesToSend) ? imagesToSend : (imagesToSend ? [imagesToSend] : undefined)
+                    content: msg.content
+                  }))
                 });
                 
                 if (retryResponse.success && retryResponse.response) {

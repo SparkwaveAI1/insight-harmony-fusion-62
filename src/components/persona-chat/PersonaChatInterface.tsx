@@ -11,7 +11,7 @@ import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import { sendMessageToPersonaViaV4 } from '@/services/v4-persona/personaAdapter';
+import { sendV4Message } from '@/services/v4-persona';
 import { getPersonaByPersonaId } from '@/services/persona';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
@@ -148,17 +148,14 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       // Add user message to UI immediately
       setMessages(prev => [...prev, userMessage]);
       
-      // Send to V4/Grok system
-      const response = await sendMessageToPersonaViaV4({
-        persona: activePersona,
-        userMessage: message,
-        conversationHistory: messages.map(m => ({
+      // Send to V4/Grok system directly
+      const response = await sendV4Message({
+        persona_id: personaId,
+        user_message: message,
+        conversation_history: messages.map(m => ({
           role: m.role,
-          content: m.content,
-          image: m.image
-        })),
-        conversationContext,
-        imageData
+          content: m.content
+        }))
       });
       
       if (response.success && response.response) {
