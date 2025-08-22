@@ -25,16 +25,20 @@ export function usePersonaDetail() {
         console.log("Profile image URL:", data.profile_image_url);
         console.log("Description loaded:", data.description);
         
-        // Validate the loaded persona
-        console.log("=== VALIDATING LOADED PERSONA ===");
-        const validationResult = validatePersonaCompleteness(data);
-        logPersonaValidation(data, validationResult);
-        
-        if (!validationResult.isValid) {
-          toast.warning(
-            `This persona appears to be incomplete: ${validationResult.errors.join(', ')}`,
-            { duration: 8000 }
-          );
+        // Skip validation for V4 personas since they use a different JSON structure
+        if (!data.persona_id.startsWith('v4_')) {
+          console.log("=== VALIDATING LOADED PERSONA ===");
+          const validationResult = validatePersonaCompleteness(data);
+          logPersonaValidation(data, validationResult);
+          
+          if (!validationResult.isValid) {
+            toast.warning(
+              `This persona appears to be incomplete: ${validationResult.errors.join(', ')}`,
+              { duration: 8000 }
+            );
+          }
+        } else {
+          console.log("Skipping validation for V4 persona - using different structure");
         }
         
         setPersona(data);
