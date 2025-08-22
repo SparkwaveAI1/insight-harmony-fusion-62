@@ -54,6 +54,16 @@ const PersonaDetail = () => {
     }
   };
 
+  // Wrapper function to handle V4 persona updates with proper typing
+  const handleV4PersonaUpdated = (updatedPersona: V4Persona) => {
+    // Convert V4Persona to Persona-compatible format for the hook
+    const personaWithIsPublic = {
+      ...updatedPersona,
+      is_public: updatedPersona.is_public
+    };
+    handlePersonaUpdated(personaWithIsPublic as any);
+  };
+
 
 
   return (
@@ -84,6 +94,7 @@ const PersonaDetail = () => {
                   onDelete={handlePersonaDeleted}
                   onDownloadJSON={handleDownloadJSON}
                   onImageGenerated={handleImageGenerated}
+                  onPersonaUpdated={handleV4PersonaUpdated}
                   showChat={showChat}
                   onChatToggle={() => setShowChat(!showChat)}
                 />
@@ -100,7 +111,7 @@ const PersonaDetail = () => {
                     onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
                     onDownloadJSON={handleDownloadJSON}
-                    onPersonaUpdated={handlePersonaUpdated}
+                  onPersonaUpdated={handlePersonaUpdated}
                   />
                   
                   <PersonaContent persona={persona} isOwner={isOwner} />

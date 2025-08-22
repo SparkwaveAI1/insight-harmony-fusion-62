@@ -267,6 +267,7 @@ export interface V4Persona {
   user_id: string;
   schema_version: string;
   profile_image_url?: string;
+  is_public: boolean;
   
   full_profile: V4FullProfile;
   conversation_summary: V4ConversationSummary;

@@ -70,7 +70,24 @@ export function usePersonaDetail() {
     if (!personaId || !user) return Promise.resolve();
     
     try {
-      const success = await deletePersona(personaId);
+      console.log('🗑️ Deleting persona:', personaId);
+      console.log('🗑️ Is V4 persona:', personaId?.startsWith('v4_'));
+      
+      let success = false;
+      
+      // Use correct deletion service based on persona type
+      if (personaId?.startsWith('v4_')) {
+        const { deleteV4Persona } = await import('@/services/v4-persona/deleteV4Persona');
+        const result = await deleteV4Persona(personaId);
+        success = result.success;
+        if (!success && result.error) {
+          console.error('V4 deletion error:', result.error);
+        }
+      } else {
+        // Legacy persona deletion
+        success = await deletePersona(personaId);
+      }
+      
       if (success) {
         toast.success("Persona deleted successfully");
         navigate("/persona-viewer");

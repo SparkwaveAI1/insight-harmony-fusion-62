@@ -4,3 +4,5 @@ export * from './getV4Personas';
 export * from './deleteV4Persona';
 export * from './conversationV4';           // Now defaults to Grok
 export * from './conversationGrok';         // Direct Grok access
+export * from './v4PersonaValidation';      // V4 validation services
+export * from './v4PersonaCompletion';      // V4 completion services

@@ -11,6 +11,7 @@ import { PersonaChat } from './PersonaChat';
 import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
 import DeletePersonaButton from '../persona-details/DeletePersonaButton';
 import PersonaImageGenerationDialog from '../persona-details/PersonaImageGenerationDialog';
+import { V4PersonaCompletionCard } from '@/components/persona-details/V4PersonaCompletionCard';
 import { useNavigate } from 'react-router-dom';
 
 interface V4PersonaDisplayProps {
@@ -21,6 +22,7 @@ interface V4PersonaDisplayProps {
   onDelete?: () => Promise<void>;
   onDownloadJSON?: () => void;
   onImageGenerated?: () => void;
+  onPersonaUpdated?: (updatedPersona: V4Persona) => void;
   showChat?: boolean;
   onChatToggle?: () => void;
 }
@@ -33,6 +35,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   onDelete, 
   onDownloadJSON,
   onImageGenerated,
+  onPersonaUpdated,
   showChat = false,
   onChatToggle
 }) => {
@@ -300,6 +303,12 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   
   return (
     <div className="space-y-6">
+      {/* V4 Persona Completion Card */}
+      <V4PersonaCompletionCard 
+        persona={persona} 
+        onPersonaUpdated={onPersonaUpdated}
+      />
+
       {/* Enhanced Header with Management Controls */}
       <Card className="p-6">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">

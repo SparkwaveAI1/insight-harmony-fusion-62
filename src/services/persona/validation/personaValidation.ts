@@ -12,6 +12,7 @@ export interface PersonaValidationResult {
 }
 
 import { detectPersonaVersion, isV4Persona } from '@/utils/personaDetection';
+import { validateV4PersonaCompleteness } from '@/services/v4-persona/v4PersonaValidation';
 
 export function validatePersonaCompleteness(persona: any): PersonaValidationResult {
   const errors: string[] = [];
@@ -25,18 +26,20 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   const versionInfo = detectPersonaVersion(persona);
   console.log("Detected version:", versionInfo);
   
-  // Handle V4 personas - skip validation since they use a different structure
+  // Handle V4 personas with proper validation
   if (versionInfo.isV4) {
-    console.log("Skipping validation for V4 persona - using different JSON structure");
+    console.log("Validating V4 persona with dedicated V4 validation");
+    const v4Validation = validateV4PersonaCompleteness(persona);
+    
     return {
-      isValid: true,
-      errors: [],
-      warnings: [],
+      isValid: v4Validation.isValid,
+      errors: v4Validation.errors,
+      warnings: v4Validation.warnings,
       completeness: {
-        hasRealTraits: true,
-        hasEmotionalTriggers: true,
-        hasInterviewResponses: true,
-        hasMetadata: true
+        hasRealTraits: v4Validation.completeness.hasFullProfile,
+        hasEmotionalTriggers: v4Validation.completeness.hasFullProfile,
+        hasInterviewResponses: v4Validation.completeness.hasConversationSummary,
+        hasMetadata: v4Validation.completeness.hasConversationSummary
       }
     };
   }
