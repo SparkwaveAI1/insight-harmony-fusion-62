@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
+import { PersonaChat } from './PersonaChat';
 
 interface V4PersonaDisplayProps {
   persona: V4Persona;
@@ -291,13 +292,14 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
       
       {/* Tabbed Content */}
       <Tabs defaultValue="demographics" className="w-full">
-        <TabsList className="grid grid-cols-7 w-full mb-8">
+        <TabsList className="grid grid-cols-8 w-full mb-8">
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
           <TabsTrigger value="motivation">Motivation</TabsTrigger>
           <TabsTrigger value="communication">Communication</TabsTrigger>
           <TabsTrigger value="traits">Traits</TabsTrigger>
           <TabsTrigger value="emotional">Emotional</TabsTrigger>
           <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
+          <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
         </TabsList>
 
@@ -323,6 +325,14 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
 
         <TabsContent value="knowledge" className="space-y-6">
           {renderKnowledge()}
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-6">
+          <PersonaChat 
+            persona={persona} 
+            personaId={persona.persona_id}
+            height="h-[500px]"
+          />
         </TabsContent>
 
         <TabsContent value="surveys" className="space-y-6">
