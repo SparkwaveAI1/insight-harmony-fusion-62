@@ -4,11 +4,9 @@ export async function deleteSpecificPersonas() {
   try {
     console.log('🗑️ Deleting specific personas...');
     
-    // Delete Ethan Kaplan from personas table
-    const { error: ethanError } = await supabase
-      .from('personas')
-      .delete()
-      .eq('name', 'Ethan Kaplan');
+    // Personas table no longer exists - skip deletion
+    console.log('Skipping Ethan Kaplan deletion - personas table no longer exists');
+    const ethanError = null;
     
     if (ethanError) {
       console.error('Error deleting Ethan Kaplan:', ethanError);

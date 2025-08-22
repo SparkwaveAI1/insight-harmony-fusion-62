@@ -70,21 +70,21 @@ export const SurveyExecution: React.FC<SurveyExecutionProps> = ({
       // Use the enhanced persona API service for consistent responses
       const { sendMessageToPersona } = await import('@/components/persona-chat/api/personaApiService');
       
-      // Get persona data
+      // Get V4 persona data
       const { data: personaData, error } = await supabase
-        .from('personas')
+        .from('v4_personas')
         .select('*')
-        .eq('id', personaId)
+        .eq('persona_id', personaId)
         .single();
       
       if (error || !personaData) {
         throw new Error('Failed to load persona data');
       }
 
-      // Convert database persona to expected format
+      // Convert V4 persona to expected format
       const formattedPersona = {
         ...personaData,
-        persona_context: personaData.description || '',
+        persona_context: `V4 Persona - ${personaData.name}`,
         persona_type: 'research'
       } as any;
 

@@ -160,33 +160,8 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
             throw new Error('User authentication required');
           }
           
-          // Get legacy personas
-          const { data: myPersonasData, error: myError } = await supabase
-            .from('personas')
-            .select('id, persona_id, name, description, user_id, is_public, created_at')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-          
-          if (myError) throw myError;
-          
-          const legacyPersonas = myPersonasData ? myPersonasData.map(item => ({
-            id: item.id,
-            persona_id: item.persona_id,
-            name: item.name,
-            description: item.description || `Created on ${new Date(item.created_at).toLocaleDateString()}`,
-            user_id: item.user_id,
-            is_public: item.is_public,
-            created_at: item.created_at,
-            metadata: {},
-            trait_profile: {},
-            behavioral_modulation: {},
-            linguistic_profile: {},
-            emotional_triggers: null,
-            preinterview_tags: [],
-            simulation_directives: {},
-            interview_sections: [],
-            prompt: null
-          } as Persona)) : [];
+          // No more legacy personas - only V4 personas exist now
+          const legacyPersonas: Persona[] = [];
           
           // Get V4 personas
           const v4PersonasData = await getV4Personas(user.id);

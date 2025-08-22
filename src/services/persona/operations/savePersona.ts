@@ -5,24 +5,9 @@ import { personaToDbPersona, dbPersonaToPersona } from "../mappers";
 
 export async function savePersona(persona: Persona): Promise<Persona | null> {
   try {
-    console.log("Saving persona to Supabase:", persona.persona_id);
-    console.log("Full persona data being saved:", JSON.stringify(persona, null, 2));
-    
-    const dbPersona = personaToDbPersona(persona);
-    
-    const { data, error } = await supabase
-      .from('personas')
-      .insert(dbPersona)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error saving persona to Supabase:", error);
-      throw error;
-    }
-    
-    console.log("Persona successfully saved:", data);
-    return dbPersonaToPersona(data);
+    // Legacy savePersona is deprecated - V4 personas use different creation flow
+    console.warn('savePersona is deprecated - use V4 persona creation instead');
+    throw new Error('Legacy persona saving is no longer supported. Please use V4 persona creation.');
   } catch (error) {
     console.error("Error in savePersona:", error);
     throw error;

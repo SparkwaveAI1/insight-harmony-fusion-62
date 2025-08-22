@@ -16,9 +16,9 @@ export async function deletePersona(personaId: string): Promise<boolean> {
       return false;
     }
     
-    // Verify ownership before deletion
+    // Verify ownership before deletion - check V4 personas table
     const { data: persona, error: fetchError } = await supabase
-      .from('personas')
+      .from('v4_personas')
       .select('user_id')
       .eq('persona_id', personaId)
       .single();
@@ -46,9 +46,9 @@ export async function deletePersona(personaId: string): Promise<boolean> {
       // Continue with deletion anyway
     }
     
-    // Delete the persona
+    // Delete the V4 persona
     const { error } = await supabase
-      .from('personas')
+      .from('v4_personas')
       .delete()
       .eq('persona_id', personaId);
 

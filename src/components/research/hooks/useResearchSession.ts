@@ -152,22 +152,9 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
             } as Persona);
           }
         } else {
-          // Load legacy persona
-          console.log('Loading legacy persona:', personaId);
-          const { data: personaData, error: personaError } = await supabase
-            .from('personas')
-            .select('*')
-            .eq('persona_id', personaId)
-            .single();
-            
-          if (personaError) {
-            console.error('Error loading legacy persona:', personaError);
-            continue;
-          }
-          
-          if (personaData) {
-            mappedPersonas.push(dbPersonaToPersona(personaData));
-          }
+          // No more legacy personas - all personas are V4 now
+          console.warn('Legacy persona ID provided but legacy personas no longer exist:', personaId);
+          continue;
         }
       }
 

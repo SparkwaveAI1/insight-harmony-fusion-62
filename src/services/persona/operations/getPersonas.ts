@@ -1,19 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
 import { V4Persona } from "@/types/persona-v4";
-import { dbPersonaToPersona } from "../mappers";
 
 export async function getPersonaById(id: string): Promise<Persona | null> {
   try {
-    const { data, error } = await supabase
-      .from('personas')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw error;
-    return data ? dbPersonaToPersona(data) : null;
+    // Legacy personas table no longer exists - return null
+    console.warn('getPersonaById is deprecated - use V4 personas instead');
+    return null;
   } catch (error) {
     console.error("Error getting persona by ID:", error);
     return null;
@@ -52,22 +45,27 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
         const demographics = conversationSummary?.demographics;
         const backgroundDescription = demographics?.background_description;
         
-        const convertedPersona = {
+        const convertedPersona: Persona = {
           id: v4Data.id,
           persona_id: v4Data.persona_id,
           name: v4Data.name,
           description: backgroundDescription || `${v4Data.name} - V4 Enhanced Persona`,
           user_id: v4Data.user_id,
-          is_public: v4Data.is_public || false, // Use actual is_public value from database
-          created_at: v4Data.created_at,
-          updated_at: v4Data.updated_at,
-          persona_data: v4Data.full_profile,
-          profile_image_url: v4Data.profile_image_url || null,
-          prompt: `V4 Enhanced Persona: ${v4Data.name}`,
-          version: v4Data.schema_version || 'v4.0',
-          // Preserve V4 specific data for V4PersonaDisplay component
-          full_profile: v4Data.full_profile,
-          conversation_summary: v4Data.conversation_summary
+          is_public: v4Data.is_public || false,
+          created_at: v4Data.created_at || '',
+          updated_at: v4Data.updated_at || '',
+          metadata: {},
+          trait_profile: {},
+          behavioral_modulation: {},
+          linguistic_profile: {},
+          emotional_triggers: null,
+          preinterview_tags: [],
+          simulation_directives: {},
+          interview_sections: [],
+          prompt: null,
+          profile_image_url: v4Data.profile_image_url,
+          // Add V4 specific fields with proper typing
+          conversation_summary: (conversationSummary || {}) as any
         };
         
         return convertedPersona;
@@ -77,29 +75,8 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
       return null;
     }
     
-    // For non-V4 personas, try the regular personas table
-    const { data, error } = await supabase
-      .from('personas')
-      .select('*')
-      .eq('persona_id', personaId)
-      .maybeSingle();
-
-    if (error) {
-      console.error(`Error fetching persona with ID ${personaId}:`, error);
-      return null;
-    }
-
-    if (data) {
-      console.log('Regular persona found:', data);
-      try {
-        return dbPersonaToPersona(data);
-      } catch (parseError) {
-        console.error('Error parsing persona data:', parseError);
-        return null;
-      }
-    }
-    
-    console.log(`No persona found with ID ${personaId}`);
+    // For non-V4 personas, legacy personas table no longer exists
+    console.log(`Non-V4 persona ID provided but legacy personas no longer exist: ${personaId}`);
     return null;
   } catch (error) {
     console.error("Error getting persona by persona_id:", error);
@@ -111,37 +88,9 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
 export async function getPersonasForListing(): Promise<Persona[]> {
   try {
     console.log("Fetching personas for listing from Supabase");
-    const { data, error } = await supabase
-      .from('personas')
-      .select('id, persona_id, name, description, user_id, is_public, created_at')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("Error fetching personas for listing:", error);
-      throw error;
-    }
-    
-    console.log(`Retrieved ${data?.length || 0} personas for listing`);
-    return data ? data.map(item => ({
-      id: item.id,
-      persona_id: item.persona_id,
-      name: item.name,
-      description: item.description || `Created on ${new Date(item.created_at).toLocaleDateString()}`,
-      user_id: item.user_id,
-      is_public: item.is_public,
-      created_at: item.created_at,
-      updated_at: item.created_at,
-      // Placeholder values for required fields
-      metadata: {},
-      trait_profile: {},
-      behavioral_modulation: {},
-      linguistic_profile: {},
-      emotional_triggers: null,
-      preinterview_tags: [],
-      simulation_directives: {},
-      interview_sections: [],
-      prompt: null
-    } as Persona)) : [];
+    // Legacy personas table no longer exists - return empty array
+    console.warn('getPersonasForListing is deprecated - use V4 personas instead');
+    return [];
   } catch (error) {
     console.error("Error getting personas for listing:", error);
     return [];
@@ -174,50 +123,10 @@ export async function getAllPersonas(): Promise<V4Persona[]> {
 // Lightweight version for collection personas
 export async function getPersonasByCollectionForListing(collectionId: string): Promise<Persona[]> {
   try {
-    // First get the persona_ids from the collection_personas table
-    const { data: collectionPersonas, error: collectionError } = await supabase
-      .from('collection_personas')
-      .select('persona_id')
-      .eq('collection_id', collectionId);
-
-    if (collectionError) throw collectionError;
-    
-    if (!collectionPersonas || collectionPersonas.length === 0) {
-      return [];
-    }
-    
-    // Extract the persona_ids
-    const personaIds = collectionPersonas.map(cp => cp.persona_id);
-    
-    // Then fetch the actual personas (lightweight)
-    const { data: personas, error: personasError } = await supabase
-      .from('personas')
-      .select('id, persona_id, name, description, user_id, is_public, created_at')
-      .in('persona_id', personaIds)
-      .order('created_at', { ascending: false });
-    
-    if (personasError) throw personasError;
-    
-    return personas ? personas.map(item => ({
-      id: item.id,
-      persona_id: item.persona_id,
-      name: item.name,
-      description: item.description || `Created on ${new Date(item.created_at).toLocaleDateString()}`,
-      user_id: item.user_id,
-      is_public: item.is_public,
-      created_at: item.created_at,
-      updated_at: item.created_at,
-      // Placeholder values for required fields
-      metadata: {},
-      trait_profile: {},
-      behavioral_modulation: {},
-      linguistic_profile: {},
-      emotional_triggers: null,
-      preinterview_tags: [],
-      simulation_directives: {},
-      interview_sections: [],
-      prompt: null
-    } as Persona)) : [];
+    // Legacy personas table no longer exists - return empty array for now
+    // Collections should use V4 personas instead
+    console.warn('getPersonasByCollectionForListing is deprecated - use V4 personas instead');
+    return [];
   } catch (error) {
     console.error("Error getting personas by collection for listing:", error);
     return [];
@@ -226,31 +135,10 @@ export async function getPersonasByCollectionForListing(collectionId: string): P
 
 export async function getPersonasByCollection(collectionId: string): Promise<Persona[]> {
   try {
-    // First get the persona_ids from the collection_personas table
-    const { data: collectionPersonas, error: collectionError } = await supabase
-      .from('collection_personas')
-      .select('persona_id')
-      .eq('collection_id', collectionId);
-
-    if (collectionError) throw collectionError;
-    
-    if (!collectionPersonas || collectionPersonas.length === 0) {
-      return [];
-    }
-    
-    // Extract the persona_ids
-    const personaIds = collectionPersonas.map(cp => cp.persona_id);
-    
-    // Then fetch the actual personas
-    const { data: personas, error: personasError } = await supabase
-      .from('personas')
-      .select('*')
-      .in('persona_id', personaIds)
-      .order('created_at', { ascending: false });
-    
-    if (personasError) throw personasError;
-    
-    return personas ? personas.map(dbPersonaToPersona) : [];
+    // Legacy personas table no longer exists - return empty array for now
+    // Collections should use V4 personas instead
+    console.warn('getPersonasByCollection is deprecated - use V4 personas instead');
+    return [];
   } catch (error) {
     console.error("Error getting personas by collection:", error);
     return [];

@@ -150,21 +150,8 @@ export const getPersonasNotInCollection = async (collectionId: string, userId: s
     // Extract just the persona IDs
     const personaIdsInCollection = collectionPersonas.map(item => item.persona_id);
 
-    // Get legacy personas not in collection
-    let legacyQuery = supabase
-      .from('personas')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (personaIdsInCollection.length > 0) {
-      legacyQuery = legacyQuery.not('persona_id', 'in', `(${personaIdsInCollection.join(',')})`);
-    }
-
-    const { data: legacyPersonas, error: legacyError } = await legacyQuery;
-
-    if (legacyError) {
-      console.error('Error getting legacy personas:', legacyError);
-    }
+    // No more legacy personas - they have all been migrated to V4
+    const legacyPersonas: any[] = [];
 
     // Get V4 personas and filter out those in collection
     const v4Personas = await getV4Personas(userId);

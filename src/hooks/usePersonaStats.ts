@@ -31,8 +31,8 @@ export function usePersonaStats() {
       }
 
       const { data: personas, error } = await supabase
-        .from('personas')
-        .select('id, persona_data, description')
+        .from('v4_personas')
+        .select('id, full_profile, conversation_summary')
         .eq('user_id', user.id);
 
       if (error) {
@@ -58,13 +58,12 @@ export function usePersonaStats() {
       let briefDescriptions = 0;
 
       console.log('Total personas found:', totalPersonas);
-      console.log('Sample persona data:', personas[0]?.persona_data);
+      console.log('Sample persona data:', personas[0]?.full_profile);
 
       personas.forEach(persona => {
-        // Check for missing demographics in persona_data
-        const personaData = persona.persona_data as any || {};
-        const metadata = personaData.metadata || {};
-        const demographics = metadata.demographics || {};
+        // Check for missing demographics in V4 persona structure
+        const fullProfile = persona.full_profile as any || {};
+        const demographics = fullProfile.demographics || {};
         
         // Check if ANY required demographic field is missing or empty
         const hasAge = demographics.age && demographics.age !== "";
@@ -76,25 +75,22 @@ export function usePersonaStats() {
           missingDemographics++;
         }
 
-        // Check for missing knowledge domains - more comprehensive check
-        const knowledgeDomains = metadata.knowledge_domains || metadata.knowledgeDomains || [];
-        if (!Array.isArray(knowledgeDomains) || knowledgeDomains.length === 0 || 
-            (knowledgeDomains.length === 1 && (!knowledgeDomains[0] || knowledgeDomains[0] === ""))) {
+        // Check for missing knowledge domains - V4 personas store this differently
+        const interests = fullProfile.interests || [];
+        if (!Array.isArray(interests) || interests.length === 0) {
           missingKnowledgeDomains++;
         }
 
-        // Check for missing education - more comprehensive check
-        const education = metadata.education || {};
-        const hasLevel = education.level && education.level !== "";
-        const hasField = education.field && education.field !== "";
-        
-        if (!hasLevel || !hasField) {
+        // Check for missing education - V4 personas store this in demographics
+        const education = demographics.education || "";
+        if (!education || education === "") {
           missingEducation++;
         }
 
-        // Check for brief descriptions (less than 50 characters or missing)
-        const description = persona.description || '';
-        if (!description || description.length < 50) {
+        // Check for brief descriptions using conversation_summary
+        const conversationSummary = persona.conversation_summary as any || {};
+        const backgroundDescription = conversationSummary.demographics?.background_description || '';
+        if (!backgroundDescription || backgroundDescription.length < 50) {
           briefDescriptions++;
         }
       });

@@ -29,9 +29,9 @@ export function useRecentActivity() {
       setIsLoading(true);
       
       try {
-        // Fetch recent personas (created or updated) for the current user
+        // Fetch recent V4 personas (created or updated) for the current user
         const { data: personas, error: personasError } = await supabase
-          .from('personas')
+          .from('v4_personas')
           .select('id, persona_id, name, created_at')
           .eq('user_id', user.id) // Filter by user ID
           .order('created_at', { ascending: false })
@@ -65,9 +65,9 @@ export function useRecentActivity() {
         
         if (collectionPersonas && collectionPersonas.length > 0) {
           for (const cp of collectionPersonas) {
-            // Get persona name
+            // Get V4 persona name
             const { data: personaData } = await supabase
-              .from('personas')
+              .from('v4_personas')
               .select('name')
               .eq('persona_id', cp.persona_id)
               .single();

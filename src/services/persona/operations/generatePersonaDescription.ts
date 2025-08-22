@@ -34,20 +34,9 @@ export const generatePersonaDescription = async (persona: Persona): Promise<stri
 
 export const updatePersonaDescription = async (personaId: string, description: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('personas')
-      .update({ description })
-      .eq('persona_id', personaId);
-
-    if (error) {
-      console.error('Error updating persona description:', error);
-      toast.error('Failed to update description');
-      return false;
-    }
-
-    toast.success('Description updated successfully');
-    return true;
-
+    // V4 personas don't have a separate description field - this functionality is deprecated
+    console.warn('updatePersonaDescription is deprecated for V4 personas');
+    return false;
   } catch (error) {
     console.error('Error in updatePersonaDescription:', error);
     toast.error('Failed to update description');

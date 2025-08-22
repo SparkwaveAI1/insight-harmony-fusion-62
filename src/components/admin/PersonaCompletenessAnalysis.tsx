@@ -59,11 +59,10 @@ export function PersonaCompletenessAnalysis() {
     let completionScore = 0;
     const totalComponents = 4;
 
-    // Check trait profile completeness
-    const traitProfileComplete = persona.trait_profile && 
-      Object.keys(persona.trait_profile).length > 0 &&
-      persona.trait_profile.big_five &&
-      persona.trait_profile.moral_foundations;
+    // Check trait profile completeness - V4 personas store this in full_profile
+    const fullProfile = persona.full_profile || {};
+    const traitProfileComplete = fullProfile.personality && 
+      Object.keys(fullProfile.personality).length > 0;
     
     if (traitProfileComplete) {
       completionScore++;
@@ -71,10 +70,10 @@ export function PersonaCompletenessAnalysis() {
       missingComponents.push("Trait Profile");
     }
 
-    // Check interview sections completeness
-    const interviewSectionsComplete = persona.interview_sections && 
-      Array.isArray(persona.interview_sections) &&
-      persona.interview_sections.length > 0;
+    // Check interview sections completeness - V4 personas have conversations
+    const interviewSectionsComplete = fullProfile.conversations && 
+      Array.isArray(fullProfile.conversations) &&
+      fullProfile.conversations.length > 0;
     
     if (interviewSectionsComplete) {
       completionScore++;
@@ -82,10 +81,11 @@ export function PersonaCompletenessAnalysis() {
       missingComponents.push("Interview Sections");
     }
 
-    // Check metadata completeness - use proper demographic validation
-    const metadataComplete = persona.metadata && 
-      Object.keys(persona.metadata).length > 0 &&
-      hasRequiredDemographicFields(persona.metadata);
+    // Check metadata completeness - V4 personas store demographics in full_profile.demographics
+    const demographics = fullProfile.demographics || {};
+    const metadataComplete = demographics && 
+      Object.keys(demographics).length > 0 &&
+      demographics.age && demographics.occupation && demographics.location;
     
     if (metadataComplete) {
       completionScore++;
@@ -93,9 +93,9 @@ export function PersonaCompletenessAnalysis() {
       missingComponents.push("Demographics Metadata");
     }
 
-    // Check linguistic profile completeness
-    const linguisticProfileComplete = persona.linguistic_profile && 
-      Object.keys(persona.linguistic_profile).length > 0;
+    // Check linguistic profile completeness - V4 personas store this in full_profile.communication
+    const linguisticProfileComplete = fullProfile.communication && 
+      Object.keys(fullProfile.communication).length > 0;
     
     if (linguisticProfileComplete) {
       completionScore++;
@@ -123,8 +123,8 @@ export function PersonaCompletenessAnalysis() {
       setLoading(true);
       
       const { data: personasData, error } = await supabase
-        .from('personas')
-        .select('persona_id, name, trait_profile, interview_sections, metadata, linguistic_profile, is_public')
+        .from('v4_personas')
+        .select('persona_id, name, full_profile, is_public')
         .order('name');
 
       if (error) {

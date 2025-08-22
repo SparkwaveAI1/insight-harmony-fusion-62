@@ -24,20 +24,9 @@ export async function updatePersonaVisibility(personaId: string, isPublic: boole
       console.log('Successfully updated V4 persona visibility');
       return true;
     } else {
-      // Update legacy personas table
-      console.log('Updating legacy persona visibility in personas table');
-      const { error } = await supabase
-        .from('personas')
-        .update({ is_public: isPublic })
-        .eq('persona_id', personaId);
-
-      if (error) {
-        console.error("Database error updating persona visibility:", error);
-        throw error;
-      }
-      
-      console.log('Successfully updated legacy persona visibility');
-      return true;
+      // Legacy personas no longer exist
+      console.warn('Legacy persona visibility update attempted but personas table no longer exists');
+      return false;
     }
   } catch (error) {
     console.error("Error updating persona visibility:", error);
@@ -52,14 +41,9 @@ export async function updatePersonaName(personaId: string, name: string): Promis
   try {
     console.log(`Updating persona ${personaId} name to "${name}"`);
     
-    const { error } = await supabase
-      .from('personas')
-      .update({ name: name })
-      .eq('persona_id', personaId);
-
-    if (error) throw error;
-    
-    return true;
+    // Legacy personas no longer exist
+    console.warn('updatePersonaName is deprecated - personas table no longer exists');
+    return false;
   } catch (error) {
     console.error("Error updating persona name:", error);
     return false;
@@ -74,35 +58,9 @@ export async function updatePersonaDescription(personaId: string, description: s
     console.log("=== UPDATE PERSONA DESCRIPTION SERVICE ===");
     console.log(`Updating persona ${personaId} description to: "${description}"`);
     
-    const { data, error } = await supabase
-      .from('personas')
-      .update({ description: description })
-      .eq('persona_id', personaId)
-      .select('description, persona_id, name');
-
-    if (error) {
-      console.error("Supabase error updating persona description:", error);
-      throw error;
-    }
-    
-    console.log("Successfully updated persona description in database:");
-    console.log("Updated data:", data);
-    
-    // Verify the update by checking the returned data
-    if (data && data.length > 0) {
-      const updatedRecord = data[0];
-      console.log("Verification - Description in DB:", updatedRecord.description);
-      if (updatedRecord.description === description) {
-        console.log("✅ Description successfully saved to database");
-      } else {
-        console.error("❌ Description mismatch in database!");
-        console.error("Expected:", description);
-        console.error("Actual:", updatedRecord.description);
-      }
-    }
-    
-    console.log("=== END UPDATE PERSONA DESCRIPTION SERVICE ===");
-    return true;
+    // Legacy personas no longer exist
+    console.warn('updatePersonaDescription is deprecated - personas table no longer exists');
+    return false;
   } catch (error) {
     console.error("Error updating persona description:", error);
     return false;
@@ -132,20 +90,9 @@ export async function updatePersonaProfileImageUrl(personaId: string, imageUrl: 
       console.log('Successfully updated V4 persona profile image URL');
       return true;
     } else {
-      // Update legacy personas table
-      console.log('Detected legacy persona, updating personas table');
-      const { error } = await supabase
-        .from('personas')
-        .update({ profile_image_url: imageUrl })
-        .eq('persona_id', personaId);
-
-      if (error) {
-        console.error("Error updating legacy persona profile image URL:", error);
-        return false;
-      }
-      
-      console.log('Successfully updated legacy persona profile image URL');
-      return true;
+      // Legacy personas no longer exist
+      console.warn('Legacy persona profile image update attempted but personas table no longer exists');
+      return false;
     }
   } catch (error) {
     console.error("Error updating persona profile image URL:", error);

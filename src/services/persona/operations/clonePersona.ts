@@ -75,19 +75,9 @@ export async function clonePersona(personaData: Persona): Promise<Persona | null
     
     console.log("Saving cloned persona to database:", dbPersona);
     
-    const { data, error } = await supabase
-      .from('personas')
-      .insert(dbPersona)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error cloning persona:", error);
-      throw error;
-    }
-    
-    console.log("Persona successfully cloned:", data);
-    return dbPersonaToPersona(data);
+    // Cloning is no longer supported for legacy personas
+    // All personas are now V4 personas
+    throw new Error('Persona cloning is no longer supported. Please create a new V4 persona instead.');
   } catch (error) {
     console.error("Error in clonePersona:", error);
     return null;
