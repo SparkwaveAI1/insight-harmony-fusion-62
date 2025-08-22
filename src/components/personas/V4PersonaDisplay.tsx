@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X, Globe, Lock, Download, Trash2 } from 'lucide-react';
+import { MessageCircle, X, Globe, Lock, Download, Trash2, User } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
@@ -297,22 +297,40 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
     <div className="space-y-6">
       {/* Enhanced Header with Management Controls */}
       <Card className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-2xl font-bold">{formatName(persona.name)}</h2>
-              <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div className="flex gap-4">
+            {/* Profile Image */}
+            <div className="flex-shrink-0">
+              {(persona as any).profile_image_url ? (
+                <img 
+                  src={(persona as any).profile_image_url} 
+                  alt={`${persona.name} profile`}
+                  className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-primary/20">
+                  <User className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
             </div>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <div className="flex items-center gap-4">
-                <span>{persona.conversation_summary?.demographics?.age} years old</span>
-                <span>{persona.conversation_summary?.demographics?.occupation}</span>
-                <span>{persona.conversation_summary?.demographics?.location}</span>
+            
+            {/* Persona Info */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-bold">{formatName(persona.name)}</h2>
+                <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
               </div>
-              <div>{persona.conversation_summary?.demographics?.background_description}</div>
-              <div className="text-xs mt-2">
-                Created: {new Date(persona.created_at).toLocaleDateString()} • 
-                ID: {persona.persona_id}
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div className="flex items-center gap-4">
+                  <span>{persona.conversation_summary?.demographics?.age} years old</span>
+                  <span>{persona.conversation_summary?.demographics?.occupation}</span>
+                  <span>{persona.conversation_summary?.demographics?.location}</span>
+                </div>
+                <div>{persona.conversation_summary?.demographics?.background_description}</div>
+                <div className="text-xs mt-2">
+                  Created: {new Date(persona.created_at).toLocaleDateString()} • 
+                  ID: {persona.persona_id}
+                </div>
               </div>
             </div>
           </div>
