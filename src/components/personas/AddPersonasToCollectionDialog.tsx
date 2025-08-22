@@ -23,6 +23,7 @@ import { Collection } from "@/services/collections/types";
 import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
 import { dbPersonaToPersona } from "@/services/persona/mappers";
 import { usePersonaSearch } from "@/hooks/usePersonaSearch";
+import { V4Persona } from "@/types/persona-v4";
 
 interface AddPersonasToCollectionDialogProps {
   collectionId: string;
@@ -97,8 +98,8 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
     }
   };
 
-  // Use shared search hook
-  const searchedPersonas = usePersonaSearch(personas, searchTerm);
+  // Use shared search hook (cast for V4 search)
+  const searchedPersonas = usePersonaSearch(personas as unknown as V4Persona[], searchTerm) as unknown as Persona[];
 
   // Filter personas by collection (simplified - collection filtering removed as it wasn't implemented)
   const filteredPersonas = useMemo(() => {

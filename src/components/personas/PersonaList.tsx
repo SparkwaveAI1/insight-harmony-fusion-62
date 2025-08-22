@@ -10,6 +10,7 @@ import { Persona } from "@/services/persona/types";
 import { getPersonasByCollection } from "@/services/persona";
 import { cn } from "@/lib/utils";
 import { usePersonaSearch } from "@/hooks/usePersonaSearch";
+import { V4Persona } from "@/types/persona-v4";
 
 // Helper function to detect if a persona is from the US
 const isUSPersona = (persona: Persona): boolean => {
@@ -224,8 +225,8 @@ export default function PersonaList({
     });
   };
 
-  // Use shared search hook and apply advanced filters
-  const searchedPersonas = usePersonaSearch(personas, searchQuery);
+  // Use shared search hook and apply advanced filters (cast for V4 search)
+  const searchedPersonas = usePersonaSearch(personas as unknown as V4Persona[], searchQuery) as unknown as Persona[];
   let filteredPersonas = applyAdvancedFilters(searchedPersonas);
   
   // Apply priority sorting only for public personas (not user's own personas)

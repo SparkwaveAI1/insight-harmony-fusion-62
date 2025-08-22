@@ -11,6 +11,7 @@ import { getUserCollections } from '@/services/collections';
 import { Persona } from '@/services/persona/types';
 import { Collection } from '@/services/collections/types';
 import { usePersonaSearch } from '@/hooks/usePersonaSearch';
+import { V4Persona } from '@/types/persona-v4';
 
 interface PersonaLoaderProps {
   maxPersonas: number;
@@ -86,8 +87,8 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     }
   }, [selectedCollection, isLoadingCollections]);
 
-  // Use shared search hook
-  const filteredPersonas = usePersonaSearch(personas, searchTerm);
+  // Use shared search hook (cast for V4 search)
+  const filteredPersonas = usePersonaSearch(personas as unknown as V4Persona[], searchTerm) as unknown as Persona[];
 
   const handlePersonaSelect = (personaId: string) => {
     setSelectedPersonas(prev => {
