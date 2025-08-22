@@ -11,7 +11,8 @@ import MessageInput from '@/components/persona-chat/MessageInput';
 import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
 import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
 import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
-import { useResearchSession } from '@/components/research/hooks/useResearchSession';
+import { sendMessageToPersonaViaV4 } from '@/services/v4-persona/personaAdapter';
+import { getPersonaByPersonaId } from '@/services/persona';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import ConversationContext from '@/components/persona-chat/ConversationContext';
 import { toast } from 'sonner';
@@ -23,17 +24,10 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [chatMode, setChatMode] = useState<ChatMode>('conversation');
   const [conversationContext, setConversationContext] = useState<string>('');
-  const [sessionStarted, setSessionStarted] = useState(false);
+  const [activePersona, setActivePersona] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [initializationAttempts, setInitializationAttempts] = useState(0);
-  const {
-    sessionId,
-    loadedPersonas,
-    messages,
-    isLoading,
-    createSession,
-    sendMessage
-  } = useResearchSession();
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,40 +35,34 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const navigate = useNavigate();
 
-  const activePersona = loadedPersonas.find(p => p.persona_id === personaId);
   const isResponding = isLoading;
 
-  // Initialize session on mount  
+  // Load persona on mount - now using V4/Grok system
   useEffect(() => {
-    const initSession = async () => {
-      if (!sessionStarted && !sessionError && initializationAttempts < 3) {
-        console.log(`🔄 Persona Chat: Initializing session for persona ${personaId} (attempt ${initializationAttempts + 1})`);
-        setInitializationAttempts(prev => prev + 1);
+    const loadPersona = async () => {
+      try {
+        setIsLoading(true);
+        console.log('🔄 Loading persona for V4/Grok chat:', personaId);
         
-        try {
-          // Create a temporary project for persona chats
-          console.log('🔄 Persona Chat: Creating session...');
-          const success = await createSession([personaId]);
-          
-          if (success) {
-            console.log('✅ Persona Chat: Session created successfully');
-            setSessionStarted(true);
-            setSessionError(null);
-          } else {
-            console.error('❌ Persona Chat: Session creation returned false');
-            setSessionError('Failed to create chat session. Please try again.');
-          }
-        } catch (error) {
-          console.error('❌ Persona Chat: Session creation error:', error);
-          setSessionError(`Session initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const persona = await getPersonaByPersonaId(personaId);
+        if (persona) {
+          setActivePersona(persona);
+          console.log('✅ Persona loaded for V4/Grok chat:', persona.name);
+        } else {
+          setSessionError('Persona not found');
         }
+      } catch (error) {
+        console.error('❌ Error loading persona:', error);
+        setSessionError('Failed to load persona');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    initSession();
-  }, [personaId, sessionStarted, createSession, sessionError, initializationAttempts]);
+    loadPersona();
+  }, [personaId]);
 
-  // Show session error if initialization failed
+  // Show error if persona loading failed
   if (sessionError) {
     return (
       <div className="space-y-4">
@@ -86,33 +74,17 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         <Button 
           onClick={() => {
             setSessionError(null);
-            setInitializationAttempts(0);
-            setSessionStarted(false);
+            window.location.reload();
           }}
           className="w-full"
         >
-          Retry Initialization
+          Retry
         </Button>
       </div>
     );
   }
 
-  if (isLoading && !sessionStarted) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground">
-          Initializing chat session... (Attempt {initializationAttempts}/3)
-        </p>
-      </div>
-    );
-  }
-
-  if (!activePersona) {
-    if (sessionStarted) {
-      return <ErrorDisplay personaId={personaId} />;
-    }
-    // Still loading persona
+  if (isLoading || !activePersona) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -146,19 +118,71 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   };
 
   const handleSendMessageWithImage = async (message: string, imageFile: File | null) => {
-    if (!sessionId) {
-      console.error('❌ Persona Chat: No session ID available for sending message');
-      toast.error("Session not ready");
+    if (!activePersona) {
+      toast.error("Persona not loaded");
       return;
     }
     
     try {
-      console.log('📤 Persona Chat: Sending message:', { message, hasImage: !!imageFile });
-      await sendMessage(message, imageFile);
-      console.log('✅ Persona Chat: Message sent successfully');
+      setIsLoading(true);
+      console.log('📤 V4/Grok Chat: Sending message:', { message, hasImage: !!imageFile });
+      
+      // Convert image file to base64 if present
+      let imageData: string | undefined;
+      if (imageFile) {
+        const reader = new FileReader();
+        imageData = await new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
+        });
+      }
+      
+      // Create user message
+      const userMessage = {
+        role: 'user' as const,
+        content: message,
+        timestamp: new Date(),
+        ...(imageData && { image: imageData })
+      };
+      
+      // Add user message to UI immediately
+      setMessages(prev => [...prev, userMessage]);
+      
+      // Send to V4/Grok system
+      const response = await sendMessageToPersonaViaV4({
+        persona: activePersona,
+        userMessage: message,
+        conversationHistory: messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          image: m.image
+        })),
+        conversationContext,
+        imageData
+      });
+      
+      if (response.success && response.response) {
+        // Add assistant response
+        const assistantMessage = {
+          role: 'assistant' as const,
+          content: response.response,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        console.log('✅ V4/Grok response received');
+      } else {
+        throw new Error(response.error || 'Failed to get response');
+      }
+      
     } catch (error) {
-      console.error('❌ Persona Chat: Error sending message:', error);
+      console.error('❌ V4/Grok Chat error:', error);
       toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Remove the user message that failed
+      setMessages(prev => prev.slice(0, -1));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -223,7 +247,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </div>
         
         {/* Save Conversation Button */}
-        {messages.length > 1 && sessionId && (
+        {messages.length > 1 && (
           <Button 
             variant="outline" 
             size="sm" 
@@ -266,10 +290,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         />
       </Card>
       
-      <Alert className="bg-amber-50 border-amber-200">
-        <MessageCircle className="h-4 w-4 text-amber-500" />
-        <AlertDescription className="text-amber-800 font-medium">
-          Voice conversation feature is currently in development. Stay tuned for updates!
+      <Alert className="bg-blue-50 border-blue-200">
+        <MessageCircle className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-blue-800 font-medium">
+          Now powered by V4/Grok system for more natural, authentic conversations!
         </AlertDescription>
       </Alert>
       
@@ -280,20 +304,18 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       />
       
       {/* Save Conversation Modal */}
-      {sessionId && (
-        <SaveConversationModal
-          open={saveModalOpen}
-          onOpenChange={setSaveModalOpen}
-          messages={messages.map(m => ({
-            role: m.role,
-            content: m.content,
-            persona_id: personaId
-          }))}
-          personaIds={[personaId]}
-          defaultTitle={generateDefaultTitle()}
-          onSaved={handleConversationSaved}
-        />
-      )}
+      <SaveConversationModal
+        open={saveModalOpen}
+        onOpenChange={setSaveModalOpen}
+        messages={messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          persona_id: personaId
+        }))}
+        personaIds={[personaId]}
+        defaultTitle={generateDefaultTitle()}
+        onSaved={handleConversationSaved}
+      />
     </div>
   );
 };

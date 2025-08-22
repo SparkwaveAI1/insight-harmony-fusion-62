@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Persona } from '@/services/persona/types';
 import { Message } from '@/components/persona-chat/types';
-import { sendMessageToPersona } from '@/components/persona-chat/api/personaApiService';
+import { sendMessageToPersonaViaV4 } from '@/services/v4-persona/personaAdapter';
 import { updateSurveySessionStatus } from '@/components/research/services/surveySessionService';
 import { SurveyQuestion } from './QuestionUpload';
 
@@ -269,43 +269,53 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Just use the question message as-is for multi-image support
             let finalQuestionMessage = questionMessage;
             
-            // Get response using sendMessageToPersona with conversation memory
+            // Get response using V4/Grok system with conversation memory
             let response: string;
             try {
-                response = await sendMessageToPersona(
-                  currentPersona.personaId,
-                  finalQuestionMessage,
-                  conversationHistory.map(msg => ({
+                const v4Response = await sendMessageToPersonaViaV4({
+                  persona,
+                  userMessage: finalQuestionMessage,
+                  conversationHistory: conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content,
                     image: msg.image
                   })),
-                  persona,
-                  'conversation',
-                  fullContext,
-                  Array.isArray(imagesToSend) ? imagesToSend.join(',') : imagesToSend
-                );
+                  mode: 'conversation',
+                  conversationContext: fullContext,
+                  imageData: Array.isArray(imagesToSend) ? imagesToSend : (imagesToSend ? [imagesToSend] : undefined)
+                });
+                
+                if (v4Response.success && v4Response.response) {
+                  response = v4Response.response;
+                } else {
+                  throw new Error(v4Response.error || 'No response from V4 system');
+                }
             } catch (personaResponseError) {
-              console.error(`Error getting response from persona ${currentPersona.personaName}:`, personaResponseError);
+              console.error(`Error getting V4/Grok response from persona ${currentPersona.personaName}:`, personaResponseError);
               // Retry once after a short delay
               await new Promise(resolve => setTimeout(resolve, 2000));
               try {
-                response = await sendMessageToPersona(
-                  currentPersona.personaId,
-                  finalQuestionMessage,
-                  conversationHistory.map(msg => ({
+                const retryResponse = await sendMessageToPersonaViaV4({
+                  persona,
+                  userMessage: finalQuestionMessage,
+                  conversationHistory: conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content,
                     image: msg.image
                   })),
-                  persona,
-                  'conversation',
-                  fullContext,
-                  Array.isArray(imagesToSend) ? imagesToSend.join(',') : imagesToSend
-                );
+                  mode: 'conversation',
+                  conversationContext: fullContext,
+                  imageData: Array.isArray(imagesToSend) ? imagesToSend : (imagesToSend ? [imagesToSend] : undefined)
+                });
+                
+                if (retryResponse.success && retryResponse.response) {
+                  response = retryResponse.response;
+                } else {
+                  throw new Error(retryResponse.error || 'No response from V4 system on retry');
+                }
               } catch (retryError) {
-                console.error(`Retry failed for persona ${currentPersona.personaName}:`, retryError);
-                throw new Error(`Failed to get response after retry: ${retryError.message}`);
+                console.error(`V4/Grok retry failed for persona ${currentPersona.personaName}:`, retryError);
+                throw new Error(`Failed to get V4/Grok response after retry: ${retryError.message}`);
               }
             }
             
