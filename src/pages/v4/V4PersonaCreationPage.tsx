@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { V4PersonaCreator, V4ConversationTest } from '@/components/v4-system';
+import { V4PersonaCreator, V4ConversationTest, V4ABTestConversation } from '@/components/v4-system';
 import { Button } from '@/components/ui/button';
 
 export function V4PersonaCreationPage() {
-  const [activeTab, setActiveTab] = useState<'create' | 'chat'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'chat' | 'abtest'>('create');
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -33,8 +33,15 @@ export function V4PersonaCreationPage() {
             <Button
               variant={activeTab === 'chat' ? 'default' : 'ghost'}
               onClick={() => setActiveTab('chat')}
+              className="mr-1"
             >
               Test Conversations
+            </Button>
+            <Button
+              variant={activeTab === 'abtest' ? 'default' : 'ghost'}
+              onClick={() => setActiveTab('abtest')}
+            >
+              A/B Test Models
             </Button>
           </div>
         </div>
@@ -42,6 +49,7 @@ export function V4PersonaCreationPage() {
         {/* Content */}
         {activeTab === 'create' && <V4PersonaCreator />}
         {activeTab === 'chat' && <V4ConversationTest />}
+        {activeTab === 'abtest' && <V4ABTestConversation />}
 
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>V4 System - Two-stage persona generation with trait-scanning conversations</p>
