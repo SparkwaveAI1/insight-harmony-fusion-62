@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MessageCircle, X } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
@@ -13,6 +15,7 @@ interface V4PersonaDisplayProps {
 }
 
 export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isOwner = false }) => {
+  const [showChat, setShowChat] = useState(false);
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
   
@@ -275,10 +278,10 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
   
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Chat Button */}
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-bold">{formatName(persona.name)}</h2>
             <div className="text-sm text-muted-foreground mt-1">
               <div>Persona ID: {persona.persona_id}</div>
@@ -286,20 +289,50 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
               <div>Created: {new Date(persona.created_at).toLocaleDateString()}</div>
             </div>
           </div>
-          <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
+            <Button 
+              onClick={() => setShowChat(!showChat)}
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <MessageCircle className="mr-2 h-5 w-5" />
+              {showChat ? 'Hide Chat' : 'Chat with ' + persona.name}
+            </Button>
+          </div>
         </div>
       </Card>
+
+      {/* Chat Section - Expandable */}
+      {showChat && (
+        <Card className="p-6 border-primary/20 bg-primary/5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Chat with {persona.name}</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowChat(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <PersonaChat 
+            persona={persona} 
+            personaId={persona.persona_id}
+            height="h-[500px]"
+          />
+        </Card>
+      )}
       
       {/* Tabbed Content */}
       <Tabs defaultValue="demographics" className="w-full">
-        <TabsList className="grid grid-cols-8 w-full mb-8">
+        <TabsList className="grid grid-cols-7 w-full mb-8">
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
           <TabsTrigger value="motivation">Motivation</TabsTrigger>
           <TabsTrigger value="communication">Communication</TabsTrigger>
           <TabsTrigger value="traits">Traits</TabsTrigger>
           <TabsTrigger value="emotional">Emotional</TabsTrigger>
           <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
-          <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
         </TabsList>
 
@@ -325,14 +358,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
 
         <TabsContent value="knowledge" className="space-y-6">
           {renderKnowledge()}
-        </TabsContent>
-
-        <TabsContent value="chat" className="space-y-6">
-          <PersonaChat 
-            persona={persona} 
-            personaId={persona.persona_id}
-            height="h-[500px]"
-          />
         </TabsContent>
 
         <TabsContent value="surveys" className="space-y-6">
