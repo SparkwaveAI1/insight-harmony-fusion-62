@@ -1,0 +1,1 @@
+DELETE FROM v4_personas WHERE persona_id = 'v4_1755845163561_ibrtpiilg';
