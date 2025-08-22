@@ -21,6 +21,22 @@ const PersonaVisibilityToggle = ({
   const [isUpdating, setIsUpdating] = useState(false);
   
   if (!isOwner) return null;
+  
+  // V4 personas don't support visibility toggle
+  const isV4Persona = personaId.startsWith('v4_');
+  if (isV4Persona) {
+    return (
+      <div className="flex items-center space-x-2 mt-2">
+        <div className="flex items-center space-x-2">
+          <Lock className="w-4 h-4 text-amber-500" />
+          <span className="text-sm font-medium">Private</span>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          V4 personas are always private
+        </span>
+      </div>
+    );
+  }
 
   const handleVisibilityChange = async () => {
     if (isUpdating) return;
