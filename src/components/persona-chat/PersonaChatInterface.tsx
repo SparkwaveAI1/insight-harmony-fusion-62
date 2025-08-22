@@ -64,7 +64,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           </AlertDescription>
         </Alert>
         <Button 
-          onClick={() => setSessionError(null)}
+          onClick={() => {
+            setSessionError(null);
+            window.location.reload();
+          }}
           className="w-full"
         >
           Retry
@@ -80,6 +83,25 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         <p className="text-sm text-muted-foreground">
           Loading V4 persona...
         </p>
+      </div>
+    );
+  }
+
+  // Check if persona has required data
+  if (!activePersona.name) {
+    return (
+      <div className="space-y-4">
+        <Alert className="bg-yellow-50 border-yellow-200">
+          <AlertDescription className="text-yellow-800">
+            This V4 persona appears to be incomplete. Please check the persona data.
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => window.location.reload()}
+          className="w-full"
+        >
+          Refresh
+        </Button>
       </div>
     );
   }
