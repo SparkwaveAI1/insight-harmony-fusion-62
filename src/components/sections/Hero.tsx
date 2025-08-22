@@ -41,7 +41,7 @@ const Hero = () => {
                 size="lg" 
                 className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
                 as={Link}
-                to="/simulated-persona"
+                to="/persona-creator"
                 variant="primary"
               >
                 Create a Simulated Persona
