@@ -3,13 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X, Globe, Lock, Download, Trash2, User } from 'lucide-react';
+import { MessageCircle, X, Globe, Lock, Download, Trash2, User, Plus } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
 import { PersonaChat } from './PersonaChat';
 import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
 import DeletePersonaButton from '../persona-details/DeletePersonaButton';
+import { useNavigate } from 'react-router-dom';
 
 interface V4PersonaDisplayProps {
   persona: V4Persona;
@@ -32,6 +33,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   showChat = false,
   onChatToggle
 }) => {
+  const navigate = useNavigate();
   
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
@@ -336,6 +338,15 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Generate Persona Button */}
+            <Button
+              onClick={() => navigate('/v4/persona-creator')}
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" />
+              Generate Persona
+            </Button>
+            
             {/* Owner Controls */}
             {isOwner && (
               <div className="flex items-center gap-2">
