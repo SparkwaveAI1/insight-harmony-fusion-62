@@ -60,7 +60,7 @@ export function DashboardContent() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Primary Action - Create Persona */}
-          <Link to="/simulated-persona" className="group block h-full">
+          <Link to="/v4/persona-creator" className="group block h-full">
             <Card className="relative overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover-scale h-full">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
               <CardContent className="p-6 relative h-full flex flex-col">
@@ -74,10 +74,10 @@ export function DashboardContent() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
-                    Create a Persona
+                    Generate Persona
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    Create a behavioral-realistic AI persona in under 5 minutes. Chat with your persona immediately.
+                    Create a behavioral-realistic AI persona with advanced V4 technology. Chat with your persona immediately.
                   </p>
                 </div>
               </CardContent>
