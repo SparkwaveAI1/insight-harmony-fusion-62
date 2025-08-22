@@ -399,14 +399,7 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="font-medium text-sm">{persona.name}</div>
-                            {persona.persona_id.startsWith('v4_') && (
-                              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 border-purple-200">
-                                V4
-                              </Badge>
-                            )}
-                          </div>
+                          <div className="font-medium text-sm">{persona.name}</div>
                           <div className="text-xs text-muted-foreground mt-1">
                             {persona.description || 'No description'}
                           </div>
