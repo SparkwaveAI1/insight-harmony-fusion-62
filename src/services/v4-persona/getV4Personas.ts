@@ -32,7 +32,7 @@ export async function getV4PersonaById(persona_id: string): Promise<V4Persona | 
     const { data, error } = await supabase
       .from('v4_personas')
       .select('*')
-      .eq('id', persona_id)
+      .eq('persona_id', persona_id)
       .single();
 
     if (error) {
