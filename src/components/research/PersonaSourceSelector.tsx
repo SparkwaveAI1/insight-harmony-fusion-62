@@ -20,7 +20,7 @@ interface PersonaSourceSelectorProps {
   maxPersonas?: number;
 }
 
-type PersonaSource = 'project-collections' | 'my-personas' | 'public-personas' | 'v4-personas';
+type PersonaSource = 'project-collections' | 'my-personas' | 'public-personas';
 
 interface PersonaSourceOption {
   id: PersonaSource;
@@ -47,12 +47,6 @@ const PERSONA_SOURCE_OPTIONS: PersonaSourceOption[] = [
     label: 'Public Personas',
     icon: <Globe className="w-4 h-4" />,
     description: 'Choose from publicly available personas'
-  },
-  {
-    id: 'v4-personas',
-    label: 'V4 Personas',
-    icon: <Users className="w-4 h-4" />,
-    description: 'Choose from your V4 personas (next-generation)'
   }
 ];
 
@@ -126,7 +120,38 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
       switch (selectedSource) {
         case 'project-collections':
           if (selectedCollection) {
-            personas = await getPersonasByCollectionForListing(selectedCollection);
+            // Get legacy personas from collection
+            const legacyPersonas = await getPersonasByCollectionForListing(selectedCollection);
+            
+            // Get V4 personas that might be in this collection
+            if (user?.id) {
+              const v4PersonasData = await getV4Personas(user.id);
+              const v4Personas = v4PersonasData.map(v4Persona => ({
+                id: v4Persona.id,
+                persona_id: v4Persona.persona_id,
+                name: v4Persona.name,
+                description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
+                user_id: v4Persona.user_id,
+                is_public: false,
+                created_at: v4Persona.created_at || '',
+                metadata: {},
+                trait_profile: {},
+                behavioral_modulation: {},
+                linguistic_profile: {},
+                emotional_triggers: null,
+                preinterview_tags: [],
+                simulation_directives: {},
+                interview_sections: [],
+                prompt: null
+              } as Persona));
+              
+              // Combine and sort by creation date
+              personas = [...legacyPersonas, ...v4Personas].sort((a, b) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              );
+            } else {
+              personas = legacyPersonas;
+            }
           }
           break;
           
@@ -191,32 +216,12 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           break;
           
         case 'public-personas':
-          personas = await getPersonasForListing();
-          break;
+          // Get legacy public personas
+          const legacyPublicPersonas = await getPersonasForListing();
           
-        case 'v4-personas':
-          if (!user?.id) {
-            throw new Error('User authentication required');
-          }
-          const v4OnlyPersonasData = await getV4Personas(user.id);
-          personas = v4OnlyPersonasData.map(v4Persona => ({
-            id: v4Persona.id,
-            persona_id: v4Persona.persona_id,
-            name: v4Persona.name,
-            description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
-            user_id: v4Persona.user_id,
-            is_public: false,
-            created_at: v4Persona.created_at || '',
-            metadata: {},
-            trait_profile: {},
-            behavioral_modulation: {},
-            linguistic_profile: {},
-            emotional_triggers: null,
-            preinterview_tags: [],
-            simulation_directives: {},
-            interview_sections: [],
-            prompt: null
-          } as Persona));
+          // For now, V4 personas are not public, but we could add them here in the future
+          // when V4 personas support public sharing
+          personas = legacyPublicPersonas;
           break;
       }
       
