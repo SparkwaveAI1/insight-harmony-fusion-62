@@ -5,12 +5,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from '@/services/v4-persona';
+import { CollectionsMultiSelector } from '@/components/collections/CollectionsMultiSelector';
+import { addPersonaToCollection } from '@/services/collections/collectionsService';
 import { useAuth } from '@/context/AuthContext';
 
 export function V4PersonaCreator() {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [generateImage, setGenerateImage] = useState(true);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [stage, setStage] = useState<'idle' | 'call1' | 'call2' | 'call3' | 'completed' | 'error'>('idle');
   const [result, setResult] = useState<any>(null);
@@ -58,6 +61,14 @@ export function V4PersonaCreator() {
       const call3Response = await createV4PersonaCall3(call2Response.persona_id!, generateImage);
 
       console.log('Call 3 completed:', call3Response);
+
+      // Add to selected collections if any
+      if (selectedCollectionIds.length > 0) {
+        for (const collectionId of selectedCollectionIds) {
+          await addPersonaToCollection(collectionId, call1Response.persona_id!);
+        }
+        console.log(`Persona added to ${selectedCollectionIds.length} collection(s)`);
+      }
 
       setStage('completed');
       setResult({
@@ -126,6 +137,11 @@ export function V4PersonaCreator() {
               Generate profile image automatically
             </label>
           </div>
+
+          <CollectionsMultiSelector
+            selectedCollectionIds={selectedCollectionIds}
+            onSelectionChange={setSelectedCollectionIds}
+          />
 
           <Button
             onClick={handleCreatePersona}

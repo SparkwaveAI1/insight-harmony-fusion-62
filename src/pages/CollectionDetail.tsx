@@ -34,6 +34,7 @@ import { Persona } from "@/services/persona/types";
 import { getAllPersonas } from "@/services/persona";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
+import { CreatePersonaInCollectionDialog } from "@/components/collections/CreatePersonaInCollectionDialog";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import Footer from "@/components/sections/Footer";
 import PersonaCard from "@/components/personas/PersonaCard";
@@ -170,10 +171,17 @@ const CollectionDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="mb-4 flex items-center justify-between">
-                <Button onClick={() => setShowAddPersonasDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Personas
-                </Button>
+                <div className="flex gap-2">
+                  <CreatePersonaInCollectionDialog
+                    collectionId={collection?.id || ""}
+                    collectionName={collection?.name || ""}
+                    onPersonaCreated={handlePersonasAdded}
+                  />
+                  <Button onClick={() => setShowAddPersonasDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Personas
+                  </Button>
+                </div>
                 {collection && (
                   <CollectionVisibilityToggle
                     collectionId={collection.id}
