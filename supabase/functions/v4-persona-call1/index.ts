@@ -65,6 +65,16 @@ Create a realistic, internally consistent persona with these exact structure:
       "relationship_status": "married/single/divorced/partnered",
       "dependents": 0-5
     },
+    "physical_profile": {
+      "height": "specific height (e.g., 5'8\", 6'2\")",
+      "build": "slim/athletic/average/stocky/overweight/obese/muscular",
+      "hair": "detailed hair description (color, length, style, texture)",
+      "eyes": "eye color and characteristics",
+      "skin_tone": "specific skin tone description",
+      "facial_features": "distinctive facial characteristics",
+      "clothing_style": "typical dress style and preferences",
+      "notable_characteristics": "any distinctive physical traits, posture, mannerisms"
+    },
     "motivation_profile": {
       "primary_drivers": {
         "self_interest": 0.1-0.9,
@@ -231,6 +241,10 @@ CRITICAL INSTRUCTIONS:
 - Create realistic contradictions and tensions
 - Make communication style unique and specific to this person
 - Generate diverse, authentic personas representing full human range
+- PHYSICAL PROFILE: Extract ALL physical characteristics mentioned in the user prompt
+- Include weight/body type information explicitly (overweight, slim, muscular, etc.)
+- Make physical appearance consistent with lifestyle, occupation, and health conditions
+- Pay special attention to user-provided physical details
 - Return ONLY the JSON object, no explanations or markdown`
           },
           {
