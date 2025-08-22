@@ -384,6 +384,44 @@ export type Database = {
         }
         Relationships: []
       }
+      participant_access_log: {
+        Row: {
+          access_type: string
+          id: string
+          ip_address: unknown | null
+          participant_id: string
+          timestamp: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type: string
+          id?: string
+          ip_address?: unknown | null
+          participant_id: string
+          timestamp?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          id?: string
+          ip_address?: unknown | null
+          participant_id?: string
+          timestamp?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_access_log_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participants: {
         Row: {
           audio_url: string | null
@@ -1001,6 +1039,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       v4_personas: {
         Row: {
           conversation_summary: Json
@@ -1185,9 +1247,20 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_researcher_or_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "researcher" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1314,6 +1387,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "researcher", "user"],
+    },
   },
 } as const
