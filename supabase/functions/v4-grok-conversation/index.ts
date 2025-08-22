@@ -279,7 +279,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'grok-4-latest',
         messages: [
           {
             role: 'system',
@@ -292,13 +292,33 @@ serve(async (req) => {
             content: user_message
           }
         ],
-        temperature: 0.8,
-        max_tokens: 300
+        stream: false,
+        temperature: 0
       })
     })
 
-    const grokData = await grokResponse.json()
     console.log('Grok response received')
+    
+    // Check if response is ok
+    if (!grokResponse.ok) {
+      const errorText = await grokResponse.text()
+      console.error('Grok API error:', grokResponse.status, errorText)
+      throw new Error(`Grok API error: ${grokResponse.status} - ${errorText}`)
+    }
+
+    const grokData = await grokResponse.json()
+    console.log('Grok response data:', JSON.stringify(grokData, null, 2))
+
+    // Validate response structure
+    if (!grokData.choices || !Array.isArray(grokData.choices) || grokData.choices.length === 0) {
+      console.error('Invalid Grok response structure:', grokData)
+      throw new Error('Invalid response structure from Grok API - no choices array')
+    }
+
+    if (!grokData.choices[0].message || !grokData.choices[0].message.content) {
+      console.error('Invalid Grok choice structure:', grokData.choices[0])
+      throw new Error('Invalid response structure from Grok API - no message content')
+    }
 
     const personaResponse = grokData.choices[0].message.content
 
@@ -308,7 +328,7 @@ serve(async (req) => {
         response: personaResponse,
         traits_selected: Object.keys(selectedTraits),
         persona_name: persona.conversation_summary.demographics.name,
-        model_used: 'grok-beta'
+        model_used: 'grok-4-latest'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
