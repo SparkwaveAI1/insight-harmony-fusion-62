@@ -46,9 +46,12 @@ export function V4ABTestConversation() {
     try {
       console.log('Running A/B test for:', userMessage);
 
-      // Run both models in parallel
+      // Import backup OpenAI function dynamically
+      const { sendV4MessageOpenAI } = await import('@/services/v4-persona/conversationV4');
+      
+      // Run both models in parallel (OpenAI vs Grok)
       const [openaiResult, grokResult] = await Promise.all([
-        sendV4Message({
+        sendV4MessageOpenAI({
           persona_id: selectedPersonaId,
           user_message: userMessage
         }),
@@ -169,7 +172,7 @@ export function V4ABTestConversation() {
               {/* Grok Response */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Grok Beta</CardTitle>
+                  <CardTitle className="text-lg">Grok (Default)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {grokResponse?.success ? (

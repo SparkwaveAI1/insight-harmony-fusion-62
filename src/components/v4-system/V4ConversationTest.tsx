@@ -65,11 +65,11 @@ export function V4ConversationTest() {
         setConversation(prev => [...prev, {
           role: 'assistant' as const,
           content: response.response!,
-          traits_used: response.traits_used
+          traits_used: response.traits_selected
         }]);
         
         console.log('V4 conversation successful:', response.persona_name);
-        console.log('Traits used:', response.traits_used);
+        console.log('Traits used:', response.traits_selected);
       } else {
         throw new Error(response.error || 'Failed to get response');
       }
@@ -93,7 +93,7 @@ export function V4ConversationTest() {
     <div className="max-w-4xl mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>V4 Conversation Engine Test</CardTitle>
+          <CardTitle>V4 Conversation Engine Test (Grok Default)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           
@@ -200,12 +200,13 @@ export function V4ConversationTest() {
 
           {/* Instructions */}
           <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-            <strong>Test Instructions:</strong>
+            <strong>V4 Conversation Engine (Using Grok by Default):</strong>
             <ul className="mt-2 space-y-1 list-disc list-inside">
               <li>Select a V4 persona from the dropdown</li>
               <li>Try different types of messages to test trait relevance</li>
               <li>Watch which traits are activated for each response</li>
               <li>Test topics like: goals, emotions, work, opinions, challenges</li>
+              <li>Grok provides more natural, less wordy responses</li>
             </ul>
           </div>
 
