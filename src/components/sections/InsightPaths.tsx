@@ -11,7 +11,7 @@ const pathsData = [
     subtitle: "AI Personas",
     description: "Create behaviorally realistic personas using natural language prompts or system-generated profiles. All personas are grounded in psychological modeling and simulate authentic, testable behavior.",
     buttonText: "Create a Simulated Persona",
-    buttonHref: "/simulated-persona"
+    buttonHref: "/persona-creator"
   },
   {
     icon: <Brain className="h-12 w-12 text-primary" />,
