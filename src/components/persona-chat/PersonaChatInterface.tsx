@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,13 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import MessageList from '@/components/persona-chat/MessageList';
 import MessageInput from '@/components/persona-chat/MessageInput';
-import ErrorDisplay from '@/components/persona-chat/ErrorDisplay';
-import ChatModeSelector, { ChatMode } from '@/components/persona-chat/ChatModeSelector';
-import SaveConversationModal from '@/components/persona-chat/SaveConversationModal';
 import { sendV4Message } from '@/services/v4-persona';
-import { getPersonaByPersonaId } from '@/services/persona';
+import { getV4PersonaById } from '@/services/v4-persona';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
-import ConversationContext from '@/components/persona-chat/ConversationContext';
 import { toast } from 'sonner';
 
 interface PersonaChatInterfaceProps {
@@ -22,8 +18,6 @@ interface PersonaChatInterfaceProps {
 }
 
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
-  const [chatMode, setChatMode] = useState<ChatMode>('conversation');
-  const [conversationContext, setConversationContext] = useState<string>('');
   const [activePersona, setActivePersona] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,79 +26,26 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const navigate = useNavigate();
-
-  // DEBUGGING: Track component mounts
-  const [mountCount, setMountCount] = useState(0);
-
-  // DEBUGGING: Component mount/unmount tracking
-  useEffect(() => {
-    setMountCount(prev => prev + 1);
-    console.log('PersonaChatInterface mounted/remounted - Mount count:', mountCount + 1);
-    
-    if (mountCount > 0) {
-      console.error('⚠️ PersonaChatInterface is remounting unexpectedly!');
-    }
-    
-    return () => console.log('PersonaChatInterface unmounting');
-  }, []);
-
-  // DEBUGGING: Prevent unwanted page reloads
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      console.log('🚨 Page trying to unload/reload!');
-      e.preventDefault();
-      return (e.returnValue = 'Page is trying to reload - this might be the issue!');
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
-  // DEBUGGING: Global form reload prevention
-  useEffect(() => {
-    const preventDefault = (e: Event) => {
-      console.log('🛑 Preventing default on:', e.type, e.target);
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    // Find and handle any forms that might cause reloads
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-      if (!form.hasAttribute('data-handled')) {
-        form.setAttribute('data-handled', 'true');
-        form.addEventListener('submit', preventDefault);
-      }
-    });
-
-    return () => {
-      forms.forEach(form => {
-        form.removeEventListener('submit', preventDefault);
-      });
-    };
-  }, [messages]); // Re-run when messages change to catch new forms
 
   const isResponding = isLoading;
 
-  // Load persona on mount - now using V4/Grok system
+  // Load V4 persona directly
   useEffect(() => {
     const loadPersona = async () => {
       try {
         setIsLoading(true);
-        console.log('🔄 Loading persona for V4/Grok chat:', personaId);
+        console.log('Loading V4 persona:', personaId);
         
-        const persona = await getPersonaByPersonaId(personaId);
+        const persona = await getV4PersonaById(personaId);
         if (persona) {
           setActivePersona(persona);
-          console.log('✅ Persona loaded for V4/Grok chat:', persona.name);
+          console.log('V4 persona loaded:', persona.name);
         } else {
-          setSessionError('Persona not found');
+          setSessionError('V4 persona not found');
         }
       } catch (error) {
-        console.error('❌ Error loading persona:', error);
-        setSessionError('Failed to load persona');
+        console.error('Error loading V4 persona:', error);
+        setSessionError('Failed to load V4 persona');
       } finally {
         setIsLoading(false);
       }
@@ -123,10 +64,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           </AlertDescription>
         </Alert>
         <Button 
-          onClick={() => {
-            setSessionError(null);
-            window.location.reload();
-          }}
+          onClick={() => setSessionError(null)}
           className="w-full"
         >
           Retry
@@ -140,54 +78,21 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <p className="text-sm text-muted-foreground">
-          Loading persona...
+          Loading V4 persona...
         </p>
       </div>
     );
   }
   
   const toggleMobileMenu = () => {
-    console.log("Opening mobile menu, current state:", mobileMenuOpen);
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const handleConversationSaved = (conversationId: string, projectId: string) => {
-    toast.success("Conversation saved successfully", {
-      description: "Your conversation has been saved to your project.",
-      action: {
-        label: "Go to Project",
-        onClick: () => navigate(`/projects/${projectId}`),
-      },
-    });
-  };
-
-  const handleContextChange = (newContext: string) => {
-    setConversationContext(newContext);
-    if (newContext) {
-      toast.success("Conversation context updated");
-    }
-  };
-
   const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {
-    console.log('🚀 handleSendMessageWithImage called:', message);
-    console.log('📍 Current URL before message:', window.location.href);
-    console.log('📊 Component state - isLoading:', isLoading, 'activePersona:', !!activePersona);
-    
-    if (!activePersona) {
-      console.error('❌ Persona not loaded');
-      toast.error("Persona not loaded");
-      return;
-    }
-    
-    // Prevent multiple submissions
-    if (isLoading) {
-      console.log('⚠️ Already loading, preventing duplicate submission');
-      return;
-    }
+    if (!activePersona || isLoading) return;
     
     try {
       setIsLoading(true);
-      console.log('📤 V4/Grok Chat: Sending message:', { message, hasImage: !!imageFile });
       
       // Convert image file to base64 if present
       let imageData: string | undefined;
@@ -210,7 +115,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       // Add user message to UI immediately
       setMessages(prev => [...prev, userMessage]);
       
-      // Send to V4/Grok system directly
+      // Send to V4/Grok system
       const response = await sendV4Message({
         persona_id: personaId,
         user_message: message,
@@ -221,7 +126,6 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       });
       
       if (response.success && response.response) {
-        // Add assistant response
         const assistantMessage = {
           role: 'assistant' as const,
           content: response.response,
@@ -229,35 +133,19 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         };
         
         setMessages(prev => [...prev, assistantMessage]);
-        console.log('✅ V4/Grok response received');
       } else {
         throw new Error(response.error || 'Failed to get response');
       }
       
     } catch (error) {
-      console.error('❌ V4/Grok Chat error:', error);
+      console.error('V4/Grok Chat error:', error);
       toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      
-      // Remove the user message that failed
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
   }, [activePersona, isLoading, messages, personaId]);
 
-  // Generate a default title from the conversation content
-  const generateDefaultTitle = () => {
-    // Get the first user message, or use a default
-    const firstUserMessage = messages.find(m => m.role === 'user');
-    if (firstUserMessage && firstUserMessage.content.length > 0) {
-      // Use first few words of first message
-      const titlePreview = firstUserMessage.content.slice(0, 30);
-      return `${titlePreview}${firstUserMessage.content.length > 30 ? '...' : ''}`;
-    }
-    
-    // Default title with persona name and date
-    return `Chat with ${activePersona.name} - ${new Date().toLocaleDateString()}`;
-  };
 
   return (
     <div className="space-y-4">
@@ -298,35 +186,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </Avatar>
         <div>
           <p className="font-medium">{activePersona.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {activePersona.metadata?.occupation || ''} 
-            {activePersona.metadata?.age && `, ${activePersona.metadata.age}`}
-            {activePersona.metadata?.region && ` • ${activePersona.metadata.region}`}
-          </p>
+          <p className="text-xs text-muted-foreground">V4 Enhanced Persona</p>
         </div>
-        
-        {/* Save Conversation Button */}
-        {messages.length > 1 && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="ml-auto"
-            onClick={() => setSaveModalOpen(true)}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save
-          </Button>
-        )}
       </div>
 
-      {/* Conversation Context */}
-      <ConversationContext 
-        context={conversationContext} 
-        onContextChange={handleContextChange} 
-      />
-
-      {/* Chat Mode Selector */}
-      <ChatModeSelector selectedMode={chatMode} onChange={setChatMode} />
       
       {/* Card with scroll area and message input */}
       <Card className="h-[600px] flex flex-col">
@@ -352,7 +215,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       <Alert className="bg-blue-50 border-blue-200">
         <MessageCircle className="h-4 w-4 text-blue-500" />
         <AlertDescription className="text-blue-800 font-medium">
-          Now powered by V4/Grok system for more natural, authentic conversations!
+          Powered by V4/Grok system for authentic conversations!
         </AlertDescription>
       </Alert>
       
@@ -360,20 +223,6 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       <MobileDrawerMenu 
         open={mobileMenuOpen}
         onOpenChange={setMobileMenuOpen}
-      />
-      
-      {/* Save Conversation Modal */}
-      <SaveConversationModal
-        open={saveModalOpen}
-        onOpenChange={setSaveModalOpen}
-        messages={messages.map(m => ({
-          role: m.role,
-          content: m.content,
-          persona_id: personaId
-        }))}
-        personaIds={[personaId]}
-        defaultTitle={generateDefaultTitle()}
-        onSaved={handleConversationSaved}
       />
     </div>
   );

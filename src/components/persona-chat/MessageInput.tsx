@@ -15,23 +15,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    console.log('📝 MessageInput form submitted');
-    console.log('🔍 Event type:', e.type);
-    console.log('🌍 Current URL:', window.location.href);
-    console.log('📤 Form data:', { message: inputMessage, hasImage: !!selectedImage });
-    
-    // CRITICAL: Prevent default behavior FIRST
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('✅ Form default prevented, proceeding with message send');
+    if (!inputMessage.trim() && !selectedImage) return;
     
-    if (!inputMessage.trim() && !selectedImage) {
-      console.log('⚠️ No message or image to send');
-      return;
-    }
-    
-    console.log('🚀 Calling onSendMessage with:', inputMessage);
     onSendMessage(inputMessage, selectedImage);
     setInputMessage('');
     setSelectedImage(null);
@@ -92,7 +80,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
-                console.log('⌨️ Enter key pressed, triggering form submit');
                 e.preventDefault();
                 handleSubmit(e as any);
               }
