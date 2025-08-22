@@ -3,18 +3,31 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X, Globe, Lock, Download, Trash2 } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
 import { PersonaChat } from './PersonaChat';
+import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
+import DeletePersonaButton from '../persona-details/DeletePersonaButton';
 
 interface V4PersonaDisplayProps {
   persona: V4Persona;
   isOwner?: boolean;
+  isPublic?: boolean;
+  onVisibilityChange?: (isPublic: boolean) => void;
+  onDelete?: () => Promise<void>;
+  onDownloadJSON?: () => void;
 }
 
-export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isOwner = false }) => {
+export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ 
+  persona, 
+  isOwner = false, 
+  isPublic = false, 
+  onVisibilityChange, 
+  onDelete, 
+  onDownloadJSON 
+}) => {
   const [showChat, setShowChat] = useState(false);
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
@@ -278,19 +291,30 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
   
   return (
     <div className="space-y-6">
-      {/* Header with Chat Button */}
+      {/* Enhanced Header with Management Controls */}
       <Card className="p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex-1">
-            <h2 className="text-xl font-bold">{formatName(persona.name)}</h2>
-            <div className="text-sm text-muted-foreground mt-1">
-              <div>Persona ID: {persona.persona_id}</div>
-              <div>Version: {persona.schema_version}</div>
-              <div>Created: {new Date(persona.created_at).toLocaleDateString()}</div>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-2xl font-bold">{formatName(persona.name)}</h2>
+              <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <div className="flex items-center gap-4">
+                <span>{persona.conversation_summary?.demographics?.age} years old</span>
+                <span>{persona.conversation_summary?.demographics?.occupation}</span>
+                <span>{persona.conversation_summary?.demographics?.location}</span>
+              </div>
+              <div>{persona.conversation_summary?.demographics?.background_description}</div>
+              <div className="text-xs mt-2">
+                Created: {new Date(persona.created_at).toLocaleDateString()} • 
+                ID: {persona.persona_id}
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Chat Button */}
             <Button 
               onClick={() => setShowChat(!showChat)}
               size="lg"
@@ -299,6 +323,33 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
               <MessageCircle className="mr-2 h-5 w-5" />
               {showChat ? 'Hide Chat' : 'Chat with ' + persona.name}
             </Button>
+            
+            {/* Owner Controls */}
+            {isOwner && (
+              <div className="flex items-center gap-2">
+                {/* Visibility Toggle */}
+                {onVisibilityChange && (
+                  <PersonaVisibilityToggle
+                    personaId={persona.persona_id}
+                    isPublic={isPublic}
+                    isOwner={isOwner}
+                    onVisibilityChange={onVisibilityChange}
+                  />
+                )}
+                
+                {/* Download JSON */}
+                {onDownloadJSON && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onDownloadJSON}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    JSON
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -367,6 +418,16 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({ persona, isO
           />
         </TabsContent>
       </Tabs>
+      
+      {/* Delete Button - Bottom of Page for Owners */}
+      {isOwner && onDelete && (
+        <div className="max-w-md mx-auto mt-16 mb-8">
+          <DeletePersonaButton 
+            onDelete={onDelete} 
+            isOwner={isOwner} 
+          />
+        </div>
+      )}
     </div>
   );
 };

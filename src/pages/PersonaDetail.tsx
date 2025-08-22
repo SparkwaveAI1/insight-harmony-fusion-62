@@ -11,10 +11,12 @@ import PersonaLoadingState from "@/components/persona-details/PersonaLoadingStat
 import PersonaDetailHeader from "@/components/persona-details/PersonaDetailHeader";
 import PersonaContent from "@/components/persona-details/PersonaContent";
 import NotFoundState from "@/components/persona-details/NotFoundState";
-import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton"; 
+import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton";
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
 import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
+import { V4PersonaDisplay } from "@/components/personas/V4PersonaDisplay";
+import { V4Persona } from "@/types/persona-v4";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -50,6 +52,14 @@ const PersonaDetail = () => {
     }
   };
 
+  // Check if this is a V4 persona
+  const isV4Persona = (persona: any): persona is V4Persona => {
+    return persona && 
+           persona.schema_version === 'v4' && 
+           persona.full_profile && 
+           persona.conversation_summary;
+  };
+
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -64,7 +74,18 @@ const PersonaDetail = () => {
                 <PersonaLoadingState />
               ) : !persona ? (
                 <NotFoundState />
+              ) : isV4Persona(persona) ? (
+                // V4 Persona - Use dedicated V4 display with built-in management
+                <V4PersonaDisplay 
+                  persona={persona}
+                  isOwner={isOwner}
+                  isPublic={isPublic}
+                  onVisibilityChange={handleVisibilityChange}
+                  onDelete={handlePersonaDeleted}
+                  onDownloadJSON={handleDownloadJSON}
+                />
               ) : (
+                // Legacy Persona - Use original layout
                 <>
                   <PersonaDetailHeader 
                     persona={persona}
