@@ -17,6 +17,7 @@ import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService"
 import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
 import { V4PersonaDisplay } from "@/components/personas/V4PersonaDisplay";
 import { V4Persona } from "@/types/persona-v4";
+import { isV4Persona } from "@/utils/personaDetection";
 
 // Create a QueryClient for this route
 const queryClient = new QueryClient();
@@ -53,13 +54,6 @@ const PersonaDetail = () => {
     }
   };
 
-  // Check if this is a V4 persona
-  const isV4Persona = (persona: any): persona is V4Persona => {
-    return persona && 
-           persona.schema_version === 'v4' && 
-           persona.full_profile && 
-           persona.conversation_summary;
-  };
 
 
   return (
@@ -70,7 +64,7 @@ const PersonaDetail = () => {
           <Section className="bg-gradient-to-b from-[#F5F5F7] via-background to-background pt-24">
             <div className="container px-4 mx-auto">
               <PersonaHeader 
-                showChatButton={isV4Persona(persona)}
+                showChatButton={Boolean(persona)}
                 chatButtonText={`Chat with ${persona?.name || 'Persona'}`}
                 onChatToggle={() => setShowChat(!showChat)}
                 isChatOpen={showChat}
