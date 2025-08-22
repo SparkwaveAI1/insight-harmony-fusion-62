@@ -269,6 +269,19 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
       if (success) {
         if (sessionId) {
           await updateSurveySessionStatus(sessionTrackingId, 'active', sessionId);
+          
+          // Use new server-side orchestration
+          const { startResearchSessionOrchestration } = await import('@/services/collections/researchSessionRecovery');
+          const result = await startResearchSessionOrchestration(sessionTrackingId);
+          
+          if (result.success) {
+            toast.success('Research session started in background - you can safely close your browser');
+            // Navigate to results page immediately
+            navigate(`/research/results/${sessionTrackingId}`);
+            return;
+          } else {
+            toast.error('Failed to start research session orchestration, using fallback');
+          }
         }
         
         setCurrentStep('execution');

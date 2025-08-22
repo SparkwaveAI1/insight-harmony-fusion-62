@@ -9,8 +9,9 @@ import ResearchModeSelector from '@/components/research/ResearchModeSelector';
 import InterviewMode from '@/components/research/modes/InterviewMode';
 
 import SurveyMode from '@/components/research/modes/SurveyMode';
+import SessionRecoveryDashboard from '@/components/research/SessionRecoveryDashboard';
 
-type ResearchMode = 'selector' | 'interview' | 'survey';
+type ResearchMode = 'selector' | 'interview' | 'survey' | 'recovery';
 
 const Research: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -31,6 +32,8 @@ const Research: React.FC = () => {
         return <InterviewMode onBack={handleBackToSelector} />;
       case 'survey':
         return <SurveyMode onBack={handleBackToSelector} />;
+      case 'recovery':
+        return <SessionRecoveryDashboard />;
       default:
         return <ResearchModeSelector onSelectMode={handleModeSelect} />;
     }
