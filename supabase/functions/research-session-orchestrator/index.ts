@@ -136,13 +136,16 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
           continue;
         }
 
-        // Generate response using V4 persona call
+        // Generate response using V4 Grok conversation engine with isolation
         try {
-          const response = await supabase.functions.invoke('v4-persona-call1', {
+          // Create isolated conversation context for this persona/session
+          const conversationHistory = [];
+          
+          const response = await supabase.functions.invoke('v4-grok-conversation', {
             body: {
               persona_id: personaId,
-              message: question.text,
-              conversation_id: session.conversation_id
+              user_message: question.text,
+              conversation_history: conversationHistory // Empty for isolation
             }
           });
 
