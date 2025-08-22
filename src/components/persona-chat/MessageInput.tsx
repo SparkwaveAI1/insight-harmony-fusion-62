@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Send, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,13 +14,28 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!inputMessage.trim() && !selectedImage) return;
+  const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    console.log('📝 MessageInput form submitted');
+    console.log('🔍 Event type:', e.type);
+    console.log('🌍 Current URL:', window.location.href);
+    console.log('📤 Form data:', { message: inputMessage, hasImage: !!selectedImage });
+    
+    // CRITICAL: Prevent default behavior FIRST
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('✅ Form default prevented, proceeding with message send');
+    
+    if (!inputMessage.trim() && !selectedImage) {
+      console.log('⚠️ No message or image to send');
+      return;
+    }
+    
+    console.log('🚀 Calling onSendMessage with:', inputMessage);
     onSendMessage(inputMessage, selectedImage);
     setInputMessage('');
     setSelectedImage(null);
-  };
+  }, [inputMessage, selectedImage, onSendMessage]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -70,12 +85,18 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
           </div>
         )}
         
-        <form onSubmit={handleSendMessage} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2" style={{ width: '100%' }}>
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage(e)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                console.log('⌨️ Enter key pressed, triggering form submit');
+                e.preventDefault();
+                handleSubmit(e as any);
+              }
+            }}
             placeholder={selectedImage ? "Add a message with your image..." : "Type your message..."}
             className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isResponding}
@@ -104,7 +125,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
             disabled={(!inputMessage.trim() && !selectedImage) || isResponding}
             size="icon"
           >
-            <Send className="h-4 w-4" />
+            {isResponding ? '⏳' : <Send className="h-4 w-4" />}
           </Button>
         </form>
       </div>

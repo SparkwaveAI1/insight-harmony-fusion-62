@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { MessageCircle, Menu, LayoutDashboard, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
@@ -34,6 +34,57 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const navigate = useNavigate();
+
+  // DEBUGGING: Track component mounts
+  const [mountCount, setMountCount] = useState(0);
+
+  // DEBUGGING: Component mount/unmount tracking
+  useEffect(() => {
+    setMountCount(prev => prev + 1);
+    console.log('PersonaChatInterface mounted/remounted - Mount count:', mountCount + 1);
+    
+    if (mountCount > 0) {
+      console.error('⚠️ PersonaChatInterface is remounting unexpectedly!');
+    }
+    
+    return () => console.log('PersonaChatInterface unmounting');
+  }, []);
+
+  // DEBUGGING: Prevent unwanted page reloads
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      console.log('🚨 Page trying to unload/reload!');
+      e.preventDefault();
+      return (e.returnValue = 'Page is trying to reload - this might be the issue!');
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // DEBUGGING: Global form reload prevention
+  useEffect(() => {
+    const preventDefault = (e: Event) => {
+      console.log('🛑 Preventing default on:', e.type, e.target);
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // Find and handle any forms that might cause reloads
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+      if (!form.hasAttribute('data-handled')) {
+        form.setAttribute('data-handled', 'true');
+        form.addEventListener('submit', preventDefault);
+      }
+    });
+
+    return () => {
+      forms.forEach(form => {
+        form.removeEventListener('submit', preventDefault);
+      });
+    };
+  }, [messages]); // Re-run when messages change to catch new forms
 
   const isResponding = isLoading;
 
@@ -117,14 +168,22 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     }
   };
 
-  const handleSendMessageWithImage = async (message: string, imageFile: File | null) => {
+  const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {
+    console.log('🚀 handleSendMessageWithImage called:', message);
+    console.log('📍 Current URL before message:', window.location.href);
+    console.log('📊 Component state - isLoading:', isLoading, 'activePersona:', !!activePersona);
+    
     if (!activePersona) {
+      console.error('❌ Persona not loaded');
       toast.error("Persona not loaded");
       return;
     }
     
     // Prevent multiple submissions
-    if (isLoading) return;
+    if (isLoading) {
+      console.log('⚠️ Already loading, preventing duplicate submission');
+      return;
+    }
     
     try {
       setIsLoading(true);
@@ -184,7 +243,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activePersona, isLoading, messages, personaId]);
 
   // Generate a default title from the conversation content
   const generateDefaultTitle = () => {
