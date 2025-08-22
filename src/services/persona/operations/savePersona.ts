@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Persona } from "../types";
-import { personaToDbPersona, dbPersonaToPersona } from "../mappers/v3Mapper";
+import { personaToDbPersona, dbPersonaToPersona } from "../mappers";
 
 export async function savePersona(persona: Persona): Promise<Persona | null> {
   try {

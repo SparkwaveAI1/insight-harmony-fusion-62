@@ -202,12 +202,12 @@ export async function getAllPersonas(): Promise<Persona[]> {
 
     // Combine and sort by creation date
     const allPersonas = [...convertedRegularPersonas, ...convertedV4Personas]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     console.log(`Retrieved ${convertedRegularPersonas.length} regular personas and ${convertedV4Personas.length} V4 personas`);
     console.log(`Total personas: ${allPersonas.length}`);
     
-    return allPersonas;
+    return allPersonas as Persona[];
   } catch (error) {
     console.error("Error getting all personas:", error);
     return [];

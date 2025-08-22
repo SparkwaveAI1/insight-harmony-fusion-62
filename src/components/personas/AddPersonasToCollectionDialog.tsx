@@ -87,7 +87,7 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
 
       const availablePersonasData = await getPersonasNotInCollection(collectionId, user.id);
       // Transform the data using the dbPersonaToPersona mapper to ensure correct type
-      const transformedPersonas = availablePersonasData.map(dbPersonaToPersona);
+      const transformedPersonas = availablePersonasData.map((dbPersona: any) => dbPersonaToPersona(dbPersona));
       setPersonas(transformedPersonas);
     } catch (error) {
       console.error("Error fetching personas not in collection:", error);

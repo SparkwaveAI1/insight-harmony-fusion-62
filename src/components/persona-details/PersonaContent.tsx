@@ -1,10 +1,7 @@
 
 import { Persona } from "@/services/persona/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonaDemographics from "./PersonaDemographics";
-import PersonaTraits from "./PersonaTraits";
-import InterviewResponses from "./InterviewResponses";
-import PersonaEmotionalTriggers from "./PersonaEmotionalTriggers";
+// Legacy components removed - V4 personas use V4PersonaDisplay
 import PersonaKeyInsights from "./PersonaKeyInsights";
 import { SurveyManagement } from '../surveys/SurveyManagement';
 import { V4PersonaDisplay } from '../personas/V4PersonaDisplay';
@@ -107,63 +104,37 @@ const PersonaContent = ({ persona, isOwner = false }: PersonaContentProps) => {
       })
     : [];
 
+  // Legacy V1/V2/V3 personas no longer supported
   return (
     <div className="mt-8">
-      <Tabs defaultValue="demographics" className="w-full">
-        <TabsList className="grid grid-cols-6 w-full mb-8">
-          <TabsTrigger value="demographics">Demographics</TabsTrigger>
-          <TabsTrigger value="traits">
-            Traits
-            {!persona.trait_profile && <span className="text-red-500 ml-1">❌</span>}
-          </TabsTrigger>
-          <TabsTrigger value="interview">Interview</TabsTrigger>
-          <TabsTrigger value="triggers">Triggers</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-          <TabsTrigger value="surveys">Surveys</TabsTrigger>
-        </TabsList>
+      <div className="text-center p-8 bg-amber-50 border border-amber-200 rounded-lg">
+        <h3 className="text-xl font-semibold text-amber-600 mb-2">Legacy Persona Format</h3>
+        <p className="text-amber-600 mb-4">
+          This persona uses an older format that is no longer supported. Please create a new V4 persona.
+        </p>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium">Available tabs:</p>
+            <Tabs defaultValue="insights" className="w-full mt-4">
+              <TabsList className="grid grid-cols-2 w-full mb-4">
+                <TabsTrigger value="insights">Insights</TabsTrigger>
+                <TabsTrigger value="surveys">Surveys</TabsTrigger>
+              </TabsList>
 
-        <TabsContent value="demographics" className="space-y-6">
-          <PersonaDemographics metadata={persona.metadata} />
-        </TabsContent>
-
-        <TabsContent value="traits" className="space-y-6">
-          {persona.trait_profile ? (
-            <PersonaTraits traitProfile={persona.trait_profile} />
-          ) : (
-            <div className="text-center p-8 bg-red-50 border border-red-200 rounded-lg">
-              <h3 className="text-xl font-semibold text-red-600 mb-2">❌ No Trait Profile</h3>
-              <p className="text-red-600">
-                This persona is missing trait profile data. This indicates a generation failure.
-              </p>
-              <details className="mt-4 text-left">
-                <summary className="cursor-pointer font-mono text-sm">Debug: Full Persona Object</summary>
-                <pre className="mt-2 text-xs overflow-auto max-h-40 bg-white p-2 rounded border">
-                  {JSON.stringify(persona, null, 2)}
-                </pre>
-              </details>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="interview" className="space-y-6">
-          <InterviewResponses sections={processedInterviewSections} />
-        </TabsContent>
-
-        <TabsContent value="triggers" className="space-y-6">
-          <PersonaEmotionalTriggers emotionalTriggers={persona.emotional_triggers} />
-        </TabsContent>
-
-        <TabsContent value="insights" className="space-y-6">
-          <PersonaKeyInsights metadata={persona} />
-        </TabsContent>
-        
-        <TabsContent value="surveys" className="space-y-6">
-          <SurveyManagement 
-            personaId={persona.persona_id} 
-            isOwner={isOwner}
-          />
-        </TabsContent>
-      </Tabs>
+              <TabsContent value="insights" className="space-y-6">
+                <PersonaKeyInsights metadata={persona} />
+              </TabsContent>
+              
+              <TabsContent value="surveys" className="space-y-6">
+                <SurveyManagement 
+                  personaId={persona.persona_id} 
+                  isOwner={isOwner}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

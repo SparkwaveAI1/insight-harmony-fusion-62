@@ -36,7 +36,7 @@ import WhitePaper from "./pages/WhitePaper";
 import Roadmap from "./pages/Roadmap";
 import EarnPRSNA from "./pages/EarnPRSNA";
 import Docs from "./pages/Docs";
-import V3PersonaCreator from "./pages/V3PersonaCreator";
+
 import { V4PersonaCreationPage } from "./pages/v4";
 
 // Pages - Persona Creation
@@ -112,7 +112,7 @@ function App() {
                 <Route path="/persona-ai-interviewer" element={<ProtectedRoute><PersonaAIInterviewer /></ProtectedRoute>} />
                 
                 <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
-                <Route path="/persona-creator-v3" element={<ProtectedRoute><V3PersonaCreator /></ProtectedRoute>} />
+                
                 <Route path="/v4/persona-creator" element={<ProtectedRoute><V4PersonaCreationPage /></ProtectedRoute>} />
                 <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
                 <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
