@@ -93,14 +93,37 @@ export async function updatePersonaProfileImageUrl(personaId: string, imageUrl: 
   try {
     console.log(`Updating persona ${personaId} with profile image URL: ${imageUrl}`);
     
-    const { error } = await supabase
-      .from('personas')
-      .update({ profile_image_url: imageUrl })
-      .eq('persona_id', personaId);
+    // First try to update in v4_personas table (for V4 personas)
+    if (personaId.startsWith('v4_')) {
+      console.log('Detected V4 persona, updating v4_personas table');
+      const { error: v4Error } = await supabase
+        .from('v4_personas')
+        .update({ profile_image_url: imageUrl })
+        .eq('persona_id', personaId);
 
-    if (error) throw error;
-    
-    return true;
+      if (v4Error) {
+        console.error("Error updating V4 persona profile image URL:", v4Error);
+        return false;
+      }
+      
+      console.log('Successfully updated V4 persona profile image URL');
+      return true;
+    } else {
+      // Update legacy personas table
+      console.log('Detected legacy persona, updating personas table');
+      const { error } = await supabase
+        .from('personas')
+        .update({ profile_image_url: imageUrl })
+        .eq('persona_id', personaId);
+
+      if (error) {
+        console.error("Error updating legacy persona profile image URL:", error);
+        return false;
+      }
+      
+      console.log('Successfully updated legacy persona profile image URL');
+      return true;
+    }
   } catch (error) {
     console.error("Error updating persona profile image URL:", error);
     return false;
