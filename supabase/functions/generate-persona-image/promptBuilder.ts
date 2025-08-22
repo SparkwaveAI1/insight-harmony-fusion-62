@@ -43,7 +43,64 @@ function getAgeHealthAppearance(metadata: any): string {
 
 export function buildImagePrompt(personaData: any): string {
   console.log("Generating enhanced realistic image prompt from persona data");
+  console.log("Persona data structure:", JSON.stringify(personaData, null, 2));
   
+  // Check if this is a V4 persona
+  const isV4Persona = personaData.persona_id?.startsWith('v4_') || personaData.full_profile || personaData.conversation_summary;
+  
+  if (isV4Persona) {
+    console.log("Detected V4 persona, using V4 data structure");
+    return buildV4ImagePrompt(personaData);
+  } else {
+    console.log("Detected legacy persona, using legacy data structure");
+    return buildLegacyImagePrompt(personaData);
+  }
+}
+
+function buildV4ImagePrompt(personaData: any): string {
+  const identity = personaData.full_profile?.identity || {};
+  const conversationSummary = personaData.conversation_summary || {};
+  const demographics = conversationSummary.demographics || {};
+  const physicalDescription = conversationSummary.physical_description || '';
+  
+  // Extract V4 demographic information
+  const age = identity.age || demographics.age || 30;
+  const gender = identity.gender || 'person';
+  const ethnicity = identity.ethnicity || 'diverse';
+  const occupation = demographics.occupation || identity.occupation || 'professional';
+  
+  console.log("V4 persona details:", { age, gender, ethnicity, occupation });
+  console.log("Physical description:", physicalDescription);
+  
+  // Build prompt starting with basic demographics
+  let prompt = `Professional headshot portrait of a ${age}-year-old ${gender}`;
+  
+  if (ethnicity && ethnicity !== 'diverse' && ethnicity.toLowerCase() !== 'unknown') {
+    prompt += ` of ${ethnicity} ethnicity`;
+  }
+  
+  // Add physical description if available
+  if (physicalDescription && physicalDescription.trim() !== '') {
+    prompt += `, ${physicalDescription}`;
+  } else {
+    // Fallback to age-appropriate appearance
+    prompt += `, ${getAgeAppearanceFromAge(age)}`;
+  }
+  
+  // Add occupation-appropriate attire
+  prompt += `, dressed professionally appropriate for a ${occupation}`;
+  
+  // Photography style and quality
+  prompt += `, professional lighting, clean background, high quality portrait photography`;
+  prompt += `, realistic, photorealistic, detailed facial features, natural expression`;
+  prompt += `, shot with professional camera, studio lighting, crisp details`;
+  prompt += `, 4K resolution, professional headshot style, corporate portrait quality`;
+  
+  console.log("Generated V4 image prompt:", prompt);
+  return prompt;
+}
+
+function buildLegacyImagePrompt(personaData: any): string {
   const metadata = personaData.metadata || {};
   
   // Basic demographic information
@@ -90,6 +147,22 @@ export function buildImagePrompt(personaData: any): string {
   // Final quality modifiers
   prompt += `, 4K resolution, professional headshot style, corporate portrait quality`;
   
-  console.log("Generated image prompt:", prompt);
+  console.log("Generated legacy image prompt:", prompt);
   return prompt;
+}
+
+function getAgeAppearanceFromAge(age: number): string {
+  if (age < 25) {
+    return 'youthful appearance, clear skin, energetic posture';
+  } else if (age < 35) {
+    return 'young adult appearance, confident bearing';
+  } else if (age < 45) {
+    return 'mature adult appearance, established presence';
+  } else if (age < 55) {
+    return 'middle-aged appearance, distinguished look';
+  } else if (age < 65) {
+    return 'mature appearance, some signs of aging';
+  } else {
+    return 'older adult appearance, wisdom in features, possible gray hair';
+  }
 }
