@@ -6,12 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Smart trait selection based on input analysis
+// Intelligent trait analysis - scans trait content for relevance
 function analyzeTraitRelevance(userInput: string, conversationSummary: any): any {
-  const input = userInput.toLowerCase();
   const selectedTraits: any = {};
+  const input = userInput.toLowerCase();
   
-  // ALWAYS include these core traits
+  // ALWAYS include core traits
   selectedTraits.background = conversationSummary.demographics.background_description;
   selectedTraits.name = conversationSummary.demographics.name;
   selectedTraits.basic_communication = {
@@ -19,158 +19,213 @@ function analyzeTraitRelevance(userInput: string, conversationSummary: any): any
     formality: conversationSummary.communication_style.formality
   };
   
-  // Simple greeting detection - minimal traits needed
+  // Check for simple greetings (minimal response needed)
   const simpleGreetings = ['hi', 'hello', 'hey', 'how are you', 'whats up', "what's up", 'good morning', 'good afternoon'];
   const isSimpleGreeting = simpleGreetings.some(greeting => 
     input.includes(greeting) && input.split(' ').length <= 4
   );
   
   if (isSimpleGreeting) {
-    // Only basic traits for simple greetings
-    selectedTraits.current_mood = "feeling good after recent activities";
+    selectedTraits.current_mood = "responding to greeting naturally";
     return selectedTraits;
   }
+
+  // INTELLIGENT CONTENT ANALYSIS - scan actual trait content for relevance
   
-  // Work/Career topics
-  if (input.includes('work') || input.includes('job') || input.includes('career') || 
-      input.includes('profession') || input.includes('workplace')) {
-    selectedTraits.expertise = conversationSummary.knowledge_profile.expertise_domains;
-    selectedTraits.knowledge_gaps = conversationSummary.knowledge_profile.knowledge_gaps;
-    selectedTraits.work_motivation = extractWorkRelatedMotivation(conversationSummary.motivation_summary);
-    if (conversationSummary.contradictions_summary.includes('work')) {
-      selectedTraits.work_tension = conversationSummary.contradictions_summary;
+  // 1. EXPLOSIVE TRIGGERS (HIGHEST PRIORITY)
+  const emotionalTriggers = conversationSummary.emotional_triggers_summary || '';
+  if (checkContentMatch(input, emotionalTriggers)) {
+    console.log('Explosive trigger detected');
+    selectedTraits.emotional_trigger_activated = emotionalTriggers;
+    selectedTraits.emotional_regulation = "activated explosive response";
+    
+    // Add supporting psychological traits for explosive reactions
+    selectedTraits.psychological_state = conversationSummary.inhibitor_summary;
+    selectedTraits.confirmation_bias = conversationSummary.truth_flexibility_summary;
+    
+    // If political trigger, add political identity
+    if (emotionalTriggers.toLowerCase().includes('liberal') || 
+        emotionalTriggers.toLowerCase().includes('immigrant') ||
+        emotionalTriggers.toLowerCase().includes('political')) {
+      selectedTraits.political_viewpoint = "strong conservative identity with high tribal loyalty";
     }
   }
   
-  // Family topics
-  if (input.includes('family') || input.includes('children') || input.includes('kids') || 
-      input.includes('spouse') || input.includes('parent')) {
-    selectedTraits.family_priority = extractFamilyMotivation(conversationSummary.motivation_summary);
+  // 2. CONTRADICTIONS/INTERNAL TENSIONS
+  const contradictions = conversationSummary.contradictions_summary || '';
+  if (checkContentMatch(input, contradictions)) {
+    console.log('Internal contradiction detected');
+    selectedTraits.internal_conflict = contradictions;
+    selectedTraits.psychological_barriers = conversationSummary.inhibitor_summary;
+  }
+  
+  // 3. MOTIVATIONS AND GOALS
+  const motivations = conversationSummary.motivation_summary || '';
+  const goals = conversationSummary.goal_priorities || '';
+  if (checkContentMatch(input, motivations) || checkContentMatch(input, goals)) {
+    console.log('Motivation/goal relevance detected');
+    selectedTraits.driving_forces = motivations;
+    selectedTraits.current_goals = goals;
+    selectedTraits.decision_patterns = conversationSummary.want_vs_should_pattern;
+  }
+  
+  // 4. WORK/PROFESSIONAL CONTENT
+  const knowledge = conversationSummary.knowledge_profile || {};
+  const expertiseDomains = knowledge.expertise_domains ? knowledge.expertise_domains.join(' ') : '';
+  if (checkContentMatch(input, expertiseDomains) || 
+      input.includes('work') || input.includes('job') || input.includes('career')) {
+    console.log('Work/expertise relevance detected');
+    selectedTraits.professional_expertise = knowledge.expertise_domains;
+    selectedTraits.knowledge_limitations = knowledge.knowledge_gaps;
+    selectedTraits.work_related_motivation = extractWorkContent(motivations);
+  }
+  
+  // 5. FAMILY/RELATIONSHIP CONTENT
+  if (checkContentMatch(input, motivations, ['family', 'children', 'relationship']) ||
+      input.includes('family') || input.includes('kids') || input.includes('children')) {
+    console.log('Family relevance detected');
+    selectedTraits.family_dynamics = extractFamilyContent(motivations);
     selectedTraits.family_decisions = conversationSummary.want_vs_should_pattern;
   }
   
-  // Opinion/Values topics
-  if (input.includes('think') || input.includes('believe') || input.includes('opinion') || 
-      input.includes('feel about') || input.includes('view')) {
-    selectedTraits.honesty_approach = conversationSummary.truth_flexibility_summary;
-    selectedTraits.internal_tensions = conversationSummary.contradictions_summary;
-  }
-  
-  // Goal/Future topics
-  if (input.includes('goal') || input.includes('plan') || input.includes('future') || 
-      input.includes('want') || input.includes('hope')) {
-    selectedTraits.goals = conversationSummary.goal_priorities;
-    selectedTraits.motivation_drivers = conversationSummary.motivation_summary;
-    selectedTraits.decision_pattern = conversationSummary.want_vs_should_pattern;
-  }
-  
-  // Emotional/Personal topics
-  if (input.includes('feel') || input.includes('emotion') || input.includes('upset') || 
-      input.includes('happy') || input.includes('stress') || input.includes('difficult')) {
-    selectedTraits.emotional_patterns = conversationSummary.emotional_triggers_summary;
-    selectedTraits.barriers = conversationSummary.inhibitor_summary;
-  }
-  
-  // Challenge/Problem topics
-  if (input.includes('problem') || input.includes('challenge') || input.includes('difficult') || 
-      input.includes('struggle') || input.includes('hard')) {
+  // 6. PERSONAL/EMOTIONAL TOPICS
+  if (input.includes('feel') || input.includes('emotion') || input.includes('personal') ||
+      checkContentMatch(input, emotionalTriggers, ['stress', 'anxiety', 'depression', 'lonely'])) {
+    console.log('Emotional content detected');
+    selectedTraits.emotional_patterns = emotionalTriggers;
     selectedTraits.psychological_barriers = conversationSummary.inhibitor_summary;
-    selectedTraits.stress_responses = extractStressInfo(conversationSummary.emotional_triggers_summary);
   }
-  
+
   return selectedTraits;
 }
 
-// Helper functions to extract specific info
-function extractWorkRelatedMotivation(motivationSummary: string): string {
-  // Extract work-related motivations from the summary
-  const workKeywords = ['work', 'career', 'professional', 'patient', 'job'];
-  const sentences = motivationSummary.split('.');
-  const workSentences = sentences.filter(sentence => 
-    workKeywords.some(keyword => sentence.toLowerCase().includes(keyword))
+// Helper function for intelligent content matching
+function checkContentMatch(userInput: string, traitContent: string, additionalKeywords: string[] = []): boolean {
+  if (!traitContent) return false;
+  
+  const input = userInput.toLowerCase();
+  const content = traitContent.toLowerCase();
+  
+  // Extract key concepts from user input
+  const inputWords = input.split(/\s+/).filter(word => word.length > 2);
+  
+  // Check for direct word matches in trait content
+  const hasDirectMatch = inputWords.some(word => content.includes(word));
+  
+  // Check for conceptual matches
+  const hasConceptualMatch = additionalKeywords.some(keyword => 
+    input.includes(keyword) && content.includes(keyword)
   );
-  return workSentences.join('.').trim();
-}
-
-function extractFamilyMotivation(motivationSummary: string): string {
-  const familyKeywords = ['family', 'children', 'child', 'parent', 'spouse'];
-  const sentences = motivationSummary.split('.');
-  const familySentences = sentences.filter(sentence => 
-    familyKeywords.some(keyword => sentence.toLowerCase().includes(keyword))
-  );
-  return familySentences.join('.').trim();
-}
-
-function extractStressInfo(emotionalSummary: string): string {
-  if (emotionalSummary.includes('Frustrated by:')) {
-    return emotionalSummary.split('Frustrated by:')[1].split('.')[0];
+  
+  // Special case: political content matching
+  if (input.includes('liberal') || input.includes('immigrant') || input.includes('politics')) {
+    return content.includes('liberal') || content.includes('immigrant') || content.includes('political');
   }
-  return '';
+  
+  return hasDirectMatch || hasConceptualMatch;
 }
 
-// Build focused instructions using only selected traits
+// Helper function to extract work-related content from motivations
+function extractWorkContent(motivationSummary: string): string {
+  if (!motivationSummary) return '';
+  
+  const sentences = motivationSummary.split(/[.!?]+/);
+  const workSentences = sentences.filter(sentence => {
+    const lower = sentence.toLowerCase();
+    return lower.includes('work') || lower.includes('career') || lower.includes('professional') || 
+           lower.includes('job') || lower.includes('patient') || lower.includes('client');
+  });
+  
+  return workSentences.join('. ').trim();
+}
+
+// Helper function to extract family-related content from motivations
+function extractFamilyContent(motivationSummary: string): string {
+  if (!motivationSummary) return '';
+  
+  const sentences = motivationSummary.split(/[.!?]+/);
+  const familySentences = sentences.filter(sentence => {
+    const lower = sentence.toLowerCase();
+    return lower.includes('family') || lower.includes('children') || lower.includes('child') || 
+           lower.includes('parent') || lower.includes('spouse') || lower.includes('kid');
+  });
+  
+  return familySentences.join('. ').trim();
+}
+
+// Enhanced instruction builder that handles explosive emotional states
 function buildV4Instructions(selectedTraits: any, userInput: string): string {
   let instructions = `You are ${selectedTraits.name}. ${selectedTraits.background}
 
 `;
 
-  // Add trait-specific context only if traits were selected
-  if (selectedTraits.current_mood) {
-    instructions += `Right now: ${selectedTraits.current_mood}\n`;
+  // EXPLOSIVE TRIGGER HANDLING (HIGHEST PRIORITY)
+  if (selectedTraits.emotional_trigger_activated) {
+    instructions += `CRITICAL: This topic triggers strong emotional reactions in you.
+Your emotional triggers: ${selectedTraits.emotional_trigger_activated}
+Your emotional regulation: You have low emotional control and tend to react strongly.
+`;
+    
+    if (selectedTraits.political_viewpoint) {
+      instructions += `Your political identity: ${selectedTraits.political_viewpoint}
+`;
+    }
+    
+    if (selectedTraits.confirmation_bias) {
+      instructions += `Your bias patterns: ${selectedTraits.confirmation_bias}
+`;
+    }
+  }
+
+  // Add other traits as before, but only if not in explosive mode
+  if (!selectedTraits.emotional_trigger_activated) {
+    // Regular trait loading for non-explosive topics
+    if (selectedTraits.current_mood) {
+      instructions += `Current state: ${selectedTraits.current_mood}\n`;
+    }
+    
+    if (selectedTraits.driving_forces) {
+      instructions += `What motivates you: ${selectedTraits.driving_forces}\n`;
+    }
+    
+    if (selectedTraits.internal_conflict) {
+      instructions += `Your internal tensions: ${selectedTraits.internal_conflict}\n`;
+    }
+  }
+
+  // Add remaining traits...
+  if (selectedTraits.professional_expertise) {
+    instructions += `Your expertise: ${selectedTraits.professional_expertise.join(', ')}\n`;
   }
   
-  if (selectedTraits.expertise) {
-    instructions += `Your expertise: ${selectedTraits.expertise.join(', ')}\n`;
-  }
-  
-  if (selectedTraits.knowledge_gaps) {
-    instructions += `Areas you're not expert in: ${selectedTraits.knowledge_gaps.join(', ')}\n`;
-  }
-  
-  if (selectedTraits.work_motivation) {
-    instructions += `What drives you at work: ${selectedTraits.work_motivation}\n`;
-  }
-  
-  if (selectedTraits.work_tension) {
-    instructions += `Your work tension: ${selectedTraits.work_tension}\n`;
-  }
-  
-  if (selectedTraits.family_priority) {
-    instructions += `About family: ${selectedTraits.family_priority}\n`;
-  }
-  
-  if (selectedTraits.family_decisions) {
-    instructions += `Family decisions: ${selectedTraits.family_decisions}\n`;
-  }
-  
-  if (selectedTraits.goals) {
-    instructions += `Your current goals: ${selectedTraits.goals}\n`;
-  }
-  
-  if (selectedTraits.motivation_drivers) {
-    instructions += `What motivates you: ${selectedTraits.motivation_drivers}\n`;
-  }
-  
-  if (selectedTraits.honesty_approach) {
-    instructions += `Your approach to honesty: ${selectedTraits.honesty_approach}\n`;
-  }
-  
-  if (selectedTraits.emotional_patterns) {
-    instructions += `Your emotional patterns: ${selectedTraits.emotional_patterns}\n`;
+  if (selectedTraits.family_dynamics) {
+    instructions += `Family relationships: ${selectedTraits.family_dynamics}\n`;
   }
   
   if (selectedTraits.psychological_barriers) {
     instructions += `What holds you back: ${selectedTraits.psychological_barriers}\n`;
   }
 
-  // Universal response requirements
-  instructions += `
+  // Response requirements adapted for emotional state
+  if (selectedTraits.emotional_trigger_activated) {
+    instructions += `
+RESPONSE REQUIREMENTS:
+- This topic triggers strong emotions in you - respond authentically with that emotional intensity
+- Be blunt and direct as this is how you naturally react when triggered
+- Your emotional control is low - let your genuine reaction show
+- Don't be diplomatic or balanced - react according to your actual feelings and biases
+- Keep it short and intense - you're not in a mood for long explanations`;
+  } else {
+    instructions += `
 RESPONSE REQUIREMENTS:
 - Respond as yourself in this conversation, not as a role you're playing
 - Match the energy and length of the input (simple questions = short answers)
 - Be naturally human - use contractions, be imperfect, react authentically  
 - Don't announce your profession or explain your background unless directly asked
-- Respond directly to what was asked without over-explaining
+- Respond directly to what was asked without over-explaining`;
+  }
+
+  instructions += `
 
 USER: "${userInput}"
 
