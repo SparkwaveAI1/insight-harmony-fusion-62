@@ -7,7 +7,7 @@ import HeroSection from "@/components/simulated-persona/HeroSection";
 import HowItWorksSection from "@/components/simulated-persona/HowItWorksSection";
 import UseCasesSection from "@/components/simulated-persona/UseCasesSection";
 import WhyDifferentSection from "@/components/simulated-persona/WhyDifferentSection";
-import UpgradeNotice from "@/components/ui/UpgradeNotice";
+
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 
@@ -30,7 +30,6 @@ const SimulatedPersonaPage = () => {
                 <div className="flex items-center justify-between">
                   <SidebarTrigger className="hidden md:flex" />
                 </div>
-                <UpgradeNotice />
                 <HeroSection onGenerate={handleGeneratePersona} isGenerating={isGenerating} />
                 <HowItWorksSection />
                 <UseCasesSection />
