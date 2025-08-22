@@ -357,15 +357,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Generate Persona Button */}
-            <Button
-              onClick={() => navigate('/v4/persona-creator')}
-              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" />
-              Generate Persona
-            </Button>
-            
             {/* Owner Controls */}
             {isOwner && (
               <div className="flex items-center gap-2">
