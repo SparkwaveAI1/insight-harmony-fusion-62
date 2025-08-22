@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { createV4PersonaCall1, createV4PersonaCall2 } from '@/services/v4-persona';
+import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from '@/services/v4-persona';
 import { useAuth } from '@/context/AuthContext';
 
 export function V4PersonaCreator() {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
+  const [generateImage, setGenerateImage] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [stage, setStage] = useState<'idle' | 'call1' | 'call2' | 'completed' | 'error'>('idle');
+  const [stage, setStage] = useState<'idle' | 'call1' | 'call2' | 'call3' | 'completed' | 'error'>('idle');
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string>('');
 
@@ -49,8 +51,20 @@ export function V4PersonaCreator() {
 
       console.log('Call 2 successful:', call2Response);
 
+      // Call 3: Generate profile image (optional)
+      setStage('call3');
+      console.log('Starting Call 3 (image generation)...');
+
+      const call3Response = await createV4PersonaCall3(call2Response.persona_id!, generateImage);
+
+      console.log('Call 3 completed:', call3Response);
+
       setStage('completed');
-      setResult(call2Response);
+      setResult({
+        ...call2Response,
+        image_url: call3Response.image_url,
+        image_error: call3Response.error
+      });
 
     } catch (err) {
       console.error('Error creating V4 persona:', err);
@@ -67,6 +81,8 @@ export function V4PersonaCreator() {
         return 'Generating detailed personality traits...';
       case 'call2':
         return 'Creating conversation summaries...';
+      case 'call3':
+        return 'Generating profile image...';
       case 'completed':
         return 'Persona created successfully!';
       case 'error':
@@ -96,7 +112,22 @@ export function V4PersonaCreator() {
             />
           </div>
 
-          <Button 
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="generate-image"
+              checked={generateImage}
+              onCheckedChange={(checked) => setGenerateImage(checked === true)}
+              disabled={isCreating}
+            />
+            <label 
+              htmlFor="generate-image" 
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Generate profile image automatically
+            </label>
+          </div>
+
+          <Button
             onClick={handleCreatePersona}
             disabled={isCreating || !prompt.trim() || !user}
             className="w-full"
@@ -137,6 +168,12 @@ export function V4PersonaCreator() {
                   <div className="font-medium">Success!</div>
                   <div>Persona "{result.persona_name}" created successfully.</div>
                   <div className="text-sm text-gray-600">Persona ID: {result.persona_id}</div>
+                  {result.image_url && (
+                    <div className="text-sm text-green-600">✓ Profile image generated successfully</div>
+                  )}
+                  {result.image_error && (
+                    <div className="text-sm text-yellow-600">⚠ {result.image_error}</div>
+                  )}
                 </div>
               </AlertDescription>
             </Alert>
