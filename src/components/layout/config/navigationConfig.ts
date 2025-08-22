@@ -25,7 +25,7 @@ export const navigationMenuItems = [
   },
   {
     title: "Create a Persona",
-    url: "/simulated-persona",
+    url: "/persona-creator",
     icon: UserPlus,
   },
   {

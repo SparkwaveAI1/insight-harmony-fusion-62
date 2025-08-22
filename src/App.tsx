@@ -113,7 +113,7 @@ function App() {
                 
                 <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
                 
-                <Route path="/v4/persona-creator" element={<ProtectedRoute><V4PersonaCreationPage /></ProtectedRoute>} />
+                <Route path="/persona-creator" element={<ProtectedRoute><V4PersonaCreationPage /></ProtectedRoute>} />
                 <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
                 <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
                 <Route path="/research/results/:surveySessionId" element={<ProtectedRoute><ResearchResults /></ProtectedRoute>} />

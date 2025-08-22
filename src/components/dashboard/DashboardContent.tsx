@@ -60,7 +60,7 @@ export function DashboardContent() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Primary Action - Create Persona */}
-          <Link to="/v4/persona-creator" className="group block h-full">
+          <Link to="/persona-creator" className="group block h-full">
             <Card className="relative overflow-hidden border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover-scale h-full">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
               <CardContent className="p-6 relative h-full flex flex-col">

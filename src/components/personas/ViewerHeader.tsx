@@ -23,7 +23,7 @@ const ViewerHeader = ({ isLoading }: ViewerHeaderProps) => {
       
       <div className="flex items-center gap-3">
         <Button 
-          onClick={() => navigate('/v4/persona-creator')}
+          onClick={() => navigate('/persona-creator')}
           className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Plus className="h-4 w-4" />

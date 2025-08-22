@@ -12,7 +12,7 @@ const PersonaEmptyState = () => {
       <p className="text-muted-foreground mb-6">
         You haven't generated any personas yet. Create your first persona to see it here.
       </p>
-      <Button onClick={() => navigate('/v4/persona-creator')}>
+      <Button onClick={() => navigate('/persona-creator')}>
         Generate Persona
       </Button>
     </Card>
