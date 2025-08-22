@@ -83,6 +83,7 @@ const PersonaDetail = () => {
                   onVisibilityChange={handleVisibilityChange}
                   onDelete={handlePersonaDeleted}
                   onDownloadJSON={handleDownloadJSON}
+                  onImageGenerated={handleImageGenerated}
                   showChat={showChat}
                   onChatToggle={() => setShowChat(!showChat)}
                 />

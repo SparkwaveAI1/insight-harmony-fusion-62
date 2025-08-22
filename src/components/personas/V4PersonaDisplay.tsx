@@ -10,6 +10,7 @@ import { SurveyManagement } from '../surveys/SurveyManagement';
 import { PersonaChat } from './PersonaChat';
 import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
 import DeletePersonaButton from '../persona-details/DeletePersonaButton';
+import PersonaImageGenerationDialog from '../persona-details/PersonaImageGenerationDialog';
 import { useNavigate } from 'react-router-dom';
 
 interface V4PersonaDisplayProps {
@@ -19,6 +20,7 @@ interface V4PersonaDisplayProps {
   onVisibilityChange?: (isPublic: boolean) => void;
   onDelete?: () => Promise<void>;
   onDownloadJSON?: () => void;
+  onImageGenerated?: () => void;
   showChat?: boolean;
   onChatToggle?: () => void;
 }
@@ -30,6 +32,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   onVisibilityChange, 
   onDelete, 
   onDownloadJSON,
+  onImageGenerated,
   showChat = false,
   onChatToggle
 }) => {
@@ -302,7 +305,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div className="flex gap-4">
             {/* Profile Image */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 relative group">
               {persona.profile_image_url ? (
                 <img 
                   src={persona.profile_image_url} 
@@ -312,6 +315,22 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
               ) : (
                 <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20">
                   <User className="h-12 w-12 text-muted-foreground" />
+                </div>
+              )}
+              
+              {/* Image generation overlay for owners */}
+              {isOwner && onImageGenerated && (
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <PersonaImageGenerationDialog
+                    persona={persona as any}
+                    onImageGenerated={onImageGenerated}
+                    trigger={
+                      <Button size="sm" variant="secondary" className="text-xs">
+                        <Plus className="h-3 w-3 mr-1" />
+                        Generate
+                      </Button>
+                    }
+                  />
                 </div>
               )}
             </div>
