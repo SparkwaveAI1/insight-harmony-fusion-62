@@ -272,7 +272,14 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm mb-2 truncate">{persona.name}</h3>
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold text-sm truncate">{persona.name}</h3>
+                                {persona.persona_id.startsWith('v4_') && (
+                                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 border-purple-200">
+                                    V4
+                                  </Badge>
+                                )}
+                              </div>
                               
                               {/* Enhanced Demographics Display */}
                               <div className="space-y-2">
