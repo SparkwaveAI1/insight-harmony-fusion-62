@@ -301,15 +301,15 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           <div className="flex gap-4">
             {/* Profile Image */}
             <div className="flex-shrink-0">
-              {(persona as any).profile_image_url ? (
+              {persona.profile_image_url ? (
                 <img 
-                  src={(persona as any).profile_image_url} 
+                  src={persona.profile_image_url} 
                   alt={`${persona.name} profile`}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
+                  className="w-24 h-24 rounded-lg object-cover border-2 border-primary/20"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-primary/20">
-                  <User className="h-8 w-8 text-muted-foreground" />
+                <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20">
+                  <User className="h-12 w-12 text-muted-foreground" />
                 </div>
               )}
             </div>

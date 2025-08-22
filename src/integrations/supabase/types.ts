@@ -1011,6 +1011,7 @@ export type Database = {
           id: string
           name: string
           persona_id: string
+          profile_image_url: string | null
           schema_version: string
           updated_at: string | null
           user_id: string
@@ -1024,6 +1025,7 @@ export type Database = {
           id?: string
           name: string
           persona_id: string
+          profile_image_url?: string | null
           schema_version?: string
           updated_at?: string | null
           user_id: string
@@ -1037,6 +1039,7 @@ export type Database = {
           id?: string
           name?: string
           persona_id?: string
+          profile_image_url?: string | null
           schema_version?: string
           updated_at?: string | null
           user_id?: string

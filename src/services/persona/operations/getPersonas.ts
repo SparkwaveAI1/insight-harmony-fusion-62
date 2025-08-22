@@ -61,7 +61,7 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           created_at: v4Data.created_at,
           updated_at: v4Data.updated_at,
           persona_data: v4Data.full_profile,
-          profile_image_url: null,
+          profile_image_url: v4Data.profile_image_url || null,
           prompt: `V4 Enhanced Persona: ${v4Data.name}`,
           version: v4Data.schema_version || 'v4.0',
           // Preserve V4 specific data for V4PersonaDisplay component
@@ -194,7 +194,7 @@ export async function getAllPersonas(): Promise<Persona[]> {
         created_at: v4Persona.created_at,
         updated_at: v4Persona.updated_at,
         persona_data: v4Persona.full_profile,
-        profile_image_url: null,
+        profile_image_url: v4Persona.profile_image_url || null,
         prompt: `V4 Enhanced Persona: ${v4Persona.name}`,
         version: v4Persona.schema_version || 'v4.0'
       };
