@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Send, Image as ImageIcon } from 'lucide-react';
-import Button from '@/components/ui-custom/Button';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 interface MessageInputProps {
@@ -100,7 +100,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
           />
           
           <Button
-            onClick={handleSendMessage}
+            type="submit"
             disabled={(!inputMessage.trim() && !selectedImage) || isResponding}
             size="icon"
           >
