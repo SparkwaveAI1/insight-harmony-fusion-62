@@ -134,6 +134,8 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           if (!user?.id) {
             throw new Error('User authentication required');
           }
+          
+          // Get legacy personas
           const { data: myPersonasData, error: myError } = await supabase
             .from('personas')
             .select('id, persona_id, name, description, user_id, is_public, created_at')
@@ -141,7 +143,8 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
             .order('created_at', { ascending: false });
           
           if (myError) throw myError;
-          personas = myPersonasData ? myPersonasData.map(item => ({
+          
+          const legacyPersonas = myPersonasData ? myPersonasData.map(item => ({
             id: item.id,
             persona_id: item.persona_id,
             name: item.name,
@@ -159,6 +162,32 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
             interview_sections: [],
             prompt: null
           } as Persona)) : [];
+          
+          // Get V4 personas
+          const v4PersonasData = await getV4Personas(user.id);
+          const v4Personas = v4PersonasData.map(v4Persona => ({
+            id: v4Persona.id,
+            persona_id: v4Persona.persona_id,
+            name: v4Persona.name,
+            description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
+            user_id: v4Persona.user_id,
+            is_public: false,
+            created_at: v4Persona.created_at || '',
+            metadata: {},
+            trait_profile: {},
+            behavioral_modulation: {},
+            linguistic_profile: {},
+            emotional_triggers: null,
+            preinterview_tags: [],
+            simulation_directives: {},
+            interview_sections: [],
+            prompt: null
+          } as Persona));
+          
+          // Combine both types and sort by creation date
+          personas = [...legacyPersonas, ...v4Personas].sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
           break;
           
         case 'public-personas':
@@ -169,8 +198,8 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           if (!user?.id) {
             throw new Error('User authentication required');
           }
-          const v4PersonasData = await getV4Personas(user.id);
-          personas = v4PersonasData.map(v4Persona => ({
+          const v4OnlyPersonasData = await getV4Personas(user.id);
+          personas = v4OnlyPersonasData.map(v4Persona => ({
             id: v4Persona.id,
             persona_id: v4Persona.persona_id,
             name: v4Persona.name,
@@ -365,7 +394,14 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="font-medium text-sm">{persona.name}</div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="font-medium text-sm">{persona.name}</div>
+                            {persona.persona_id.startsWith('v4_') && (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 border-purple-200">
+                                V4
+                              </Badge>
+                            )}
+                          </div>
                           <div className="text-xs text-muted-foreground mt-1">
                             {persona.description || 'No description'}
                           </div>
