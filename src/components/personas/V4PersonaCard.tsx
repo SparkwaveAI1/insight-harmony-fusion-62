@@ -56,7 +56,7 @@ const V4PersonaCard: React.FC<V4PersonaCardProps> = ({
   };
 
   const handleViewDetails = () => {
-    navigate(`/v4-persona/${persona.persona_id}`);
+    navigate(`/persona-detail/${persona.persona_id}`);
   };
 
   // Generate initials for avatar fallback
@@ -179,7 +179,7 @@ const V4PersonaCard: React.FC<V4PersonaCardProps> = ({
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to={`/v4-persona/${persona.persona_id}/chat`}>
+                  <Link to={`/persona/${persona.persona_id}/chat`}>
                     Chat with Persona
                   </Link>
                 </DropdownMenuItem>
