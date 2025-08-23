@@ -71,7 +71,9 @@ export function CreatePersonaInCollectionDialog({
 
       if (!addedToCollection) {
         // Persona was created but couldn't be added to collection
-        toast.error(`Persona created but couldn't be added to ${collectionName}. You can add it manually.`);
+        setError(`Persona created successfully but couldn't be added to ${collectionName}. You can add it manually from the personas page.`);
+        setStage('error');
+        return;
       }
 
       setStage('success');
