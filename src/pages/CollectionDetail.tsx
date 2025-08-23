@@ -31,16 +31,13 @@ import {
 } from "@/services/collections"; 
 import { Collection } from "@/services/collections/types";
 import { Persona } from "@/services/persona/types";
-import { V4Persona } from "@/types/persona-v4";
 import { getAllPersonas } from "@/services/persona";
-import { getV4Personas } from "@/services/v4-persona/getV4Personas";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 import { CreatePersonaInCollectionDialog } from "@/components/collections/CreatePersonaInCollectionDialog";
 import NotFoundState from "@/components/persona-details/NotFoundState";
 import Footer from "@/components/sections/Footer";
 import PersonaCard from "@/components/personas/PersonaCard";
-import V4PersonaCard from "@/components/personas/V4PersonaCard";
 import CollectionVisibilityToggle from "@/components/collections/CollectionVisibilityToggle";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -48,7 +45,6 @@ const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [v4Personas, setV4Personas] = useState<V4Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPersonasDialog, setShowAddPersonasDialog] = useState(false);
   const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);
@@ -87,39 +83,14 @@ const CollectionDetail = () => {
     try {
       const personaIds = await getPersonasInCollection(collectionId);
       if (personaIds && personaIds.length > 0) {
-        // Get current user for V4 personas
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Fetch all V4 personas for this user
-        const allV4Personas = await getV4Personas(user.id);
-        
-        // Try to match personas by both persona_id and id fields
-        const matchedV4Personas = allV4Personas.filter((persona) => 
-          personaIds.includes(persona.persona_id) || personaIds.includes(persona.id)
+        // Fetch all personas to filter by IDs in collection
+        const allPersonas = await getAllPersonas();
+        const filteredPersonas = allPersonas.filter((persona) =>
+          personaIds.includes(persona.persona_id)
         );
-
-        if (matchedV4Personas.length > 0) {
-          setV4Personas(matchedV4Personas);
-          setPersonas([]); // No legacy personas since all are V4
-        } else {
-          // Fallback: try to fetch legacy personas if no V4 matches
-          try {
-            const allPersonas = await getAllPersonas();
-            const filteredPersonas = allPersonas.filter((persona) =>
-              personaIds.includes(persona.persona_id)
-            );
-            setPersonas(filteredPersonas);
-            setV4Personas([]);
-          } catch (error) {
-            console.error("No legacy personas found:", error);
-            setPersonas([]);
-            setV4Personas([]);
-          }
-        }
+        setPersonas(filteredPersonas);
       } else {
-        setPersonas([]);
-        setV4Personas([]);
+        setPersonas([]); // No personas in collection
       }
     } catch (error) {
       console.error("Error loading personas in collection:", error);
@@ -224,20 +195,12 @@ const CollectionDetail = () => {
               <div className="mt-4">
                 {isLoading ? (
                   <p>Loading personas...</p>
-                ) : personas.length === 0 && v4Personas.length === 0 ? (
+                ) : personas.length === 0 ? (
                   <p>No personas in this collection.</p>
                 ) : (
                   <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Legacy personas */}
                     {personas.map((persona) => (
                       <PersonaCard 
-                        key={persona.persona_id}
-                        persona={persona}
-                      />
-                    ))}
-                    {/* V4 personas */}
-                    {v4Personas.map((persona) => (
-                      <V4PersonaCard 
                         key={persona.persona_id}
                         persona={persona}
                       />
