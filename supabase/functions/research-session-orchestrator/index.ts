@@ -119,6 +119,12 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
     for (const personaId of personas) {
       console.log(`Processing persona ${personaId}`);
       
+      // Validate that this is a V4 persona
+      if (!personaId.startsWith('v4_')) {
+        console.error(`Skipping non-V4 persona: ${personaId}. Research sessions only support V4 personas.`);
+        continue;
+      }
+      
       for (let questionIndex = 0; questionIndex < questions.length; questionIndex++) {
         const question = questions[questionIndex];
         
@@ -136,17 +142,18 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
           continue;
         }
 
-        // Generate response using V4 persona call
+        // Generate response using V4 Grok conversation
         try {
-          const response = await supabase.functions.invoke('v4-persona-call1', {
+          const response = await supabase.functions.invoke('v4-grok-conversation', {
             body: {
               persona_id: personaId,
-              message: question.text,
-              conversation_id: session.conversation_id
+              user_message: question.text
             }
           });
 
-          if (response.data?.response) {
+          console.log(`V4 Grok response for ${personaId}:`, response);
+
+          if (response.data?.success && response.data?.response) {
             // Store the response
             await supabase
               .from('research_survey_responses')
@@ -159,6 +166,8 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
               });
 
             console.log(`Stored response for persona ${personaId}, question ${questionIndex}`);
+          } else {
+            console.error(`Invalid response from V4 Grok for persona ${personaId}:`, response.data);
           }
 
           // Add delay between requests to avoid rate limits
