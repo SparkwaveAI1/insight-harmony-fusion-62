@@ -91,30 +91,31 @@ const CollectionDetail = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Separate V4 and legacy persona IDs
-        const v4PersonaIds = personaIds.filter(id => id.startsWith('v4_'));
-        const legacyPersonaIds = personaIds.filter(id => !id.startsWith('v4_'));
+        // Fetch all V4 personas for this user
+        const allV4Personas = await getV4Personas(user.id);
+        
+        // Try to match personas by both persona_id and id fields
+        const matchedV4Personas = allV4Personas.filter((persona) => 
+          personaIds.includes(persona.persona_id) || personaIds.includes(persona.id)
+        );
 
-        // Fetch V4 personas
-        if (v4PersonaIds.length > 0) {
-          const allV4Personas = await getV4Personas(user.id);
-          const filteredV4Personas = allV4Personas.filter((persona) =>
-            v4PersonaIds.includes(persona.persona_id)
-          );
-          setV4Personas(filteredV4Personas);
+        if (matchedV4Personas.length > 0) {
+          setV4Personas(matchedV4Personas);
+          setPersonas([]); // No legacy personas since all are V4
         } else {
-          setV4Personas([]);
-        }
-
-        // Fetch legacy personas
-        if (legacyPersonaIds.length > 0) {
-          const allPersonas = await getAllPersonas();
-          const filteredPersonas = allPersonas.filter((persona) =>
-            legacyPersonaIds.includes(persona.persona_id)
-          );
-          setPersonas(filteredPersonas);
-        } else {
-          setPersonas([]);
+          // Fallback: try to fetch legacy personas if no V4 matches
+          try {
+            const allPersonas = await getAllPersonas();
+            const filteredPersonas = allPersonas.filter((persona) =>
+              personaIds.includes(persona.persona_id)
+            );
+            setPersonas(filteredPersonas);
+            setV4Personas([]);
+          } catch (error) {
+            console.error("No legacy personas found:", error);
+            setPersonas([]);
+            setV4Personas([]);
+          }
         }
       } else {
         setPersonas([]);
