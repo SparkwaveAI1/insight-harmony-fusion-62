@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { FreshPersonaService } from "@/services/persona/FreshPersonaService";
 import { QueryClientProvider, QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -183,6 +184,14 @@ const PersonaViewerContent = () => {
 };
 
 const PersonaViewer = () => {
+  useEffect(() => {
+    console.log('🚨 NUCLEAR FRESH PersonaViewer mounted');
+    console.log(`🔥 Fresh service ID: ${FreshPersonaService.getFreshServiceId()}`);
+    
+    // Test fresh service immediately
+    FreshPersonaService.testFreshV4Access();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <SidebarProvider defaultOpen={true}>

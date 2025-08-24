@@ -48,12 +48,23 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 
 import "./App.css";
 
-// Build timestamp for cache busting - Force fresh deployment
-const BUILD_TIMESTAMP = Date.now();
-console.log(`🚀 PersonaAI App Loaded - Build: ${BUILD_TIMESTAMP} - Using v4_personas table`);
+// NUCLEAR CACHE BUSTER - Force complete fresh deployment
+const NUCLEAR_BUILD_ID = `NUCLEAR_${Date.now()}_V4_PERSONAS_ONLY`;
+const DEPLOYMENT_VERIFICATION = `PRODUCTION_VERIFICATION_${Math.random().toString(36)}`;
+console.log(`🚨 NUCLEAR CACHE BUSTER ACTIVE: ${NUCLEAR_BUILD_ID}`);
+console.log(`🔥 DEPLOYMENT VERIFICATION ID: ${DEPLOYMENT_VERIFICATION}`);
+console.log(`🚀 PersonaAI App Loaded - FORCED FRESH BUILD - Using v4_personas table EXCLUSIVELY`);
+console.log(`🎯 If you see this message, the NEW code is running!`);
+
+// Force immediate cache invalidation
+if (typeof window !== 'undefined') {
+  (window as any).LOVABLE_DEPLOYMENT_CHECK = DEPLOYMENT_VERIFICATION;
+  console.log(`✅ Window deployment check set: ${(window as any).LOVABLE_DEPLOYMENT_CHECK}`);
+}
 
 // Create a client with aggressive cache invalidation
 const queryClient = new QueryClient({
@@ -74,6 +85,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <PersonaProvider>
+            <DeploymentVerifier />
             <Routes>
                 {/* Public Routes - Accessible without login */}
                 <Route path="/" element={<Index />} />
