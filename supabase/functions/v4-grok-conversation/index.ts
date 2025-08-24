@@ -235,6 +235,8 @@ Your response:`;
 }
 
 serve(async (req) => {
+  console.log('🔥 DEPLOYMENT TEST - Edge function is live and updated!')
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
