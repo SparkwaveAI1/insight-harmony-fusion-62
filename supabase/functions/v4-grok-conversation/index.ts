@@ -1,6 +1,237 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// V4-NATIVE TRAIT RELEVANCE ANALYZER
+class V4TraitRelevanceAnalyzer {
+  private static readonly V4_TRAIT_PATHS = [
+    // MOTIVATION PROFILE PATHS
+    { path: 'motivation_profile.primary_drivers.self_interest', weight: 0.9, contexts: ['personal', 'decision', 'advice'] },
+    { path: 'motivation_profile.primary_drivers.family', weight: 1.0, contexts: ['family', 'relationships', 'children', 'parenting'] },
+    { path: 'motivation_profile.primary_drivers.status', weight: 0.8, contexts: ['career', 'achievement', 'recognition', 'success'] },
+    { path: 'motivation_profile.primary_drivers.mastery', weight: 0.8, contexts: ['learning', 'skill', 'improvement', 'expertise'] },
+    { path: 'motivation_profile.primary_drivers.care', weight: 0.7, contexts: ['helping', 'support', 'community', 'service'] },
+    { path: 'motivation_profile.primary_drivers.security', weight: 0.9, contexts: ['safety', 'stability', 'financial', 'planning'] },
+    { path: 'motivation_profile.primary_drivers.belonging', weight: 0.6, contexts: ['group', 'team', 'community', 'social'] },
+    { path: 'motivation_profile.primary_drivers.novelty', weight: 0.5, contexts: ['new', 'change', 'adventure', 'innovation'] },
+    { path: 'motivation_profile.primary_drivers.meaning', weight: 0.7, contexts: ['purpose', 'values', 'belief', 'philosophy'] },
+
+    // GOAL ORIENTATION
+    { path: 'motivation_profile.goal_orientation.strength', weight: 0.8, contexts: ['goals', 'planning', 'achievement'] },
+    { path: 'motivation_profile.goal_orientation.primary_goals', weight: 0.9, contexts: ['specific', 'objectives', 'targets'] },
+
+    // INHIBITOR PROFILE
+    { path: 'inhibitor_profile.social_cost_sensitivity', weight: 0.7, contexts: ['social', 'judgment', 'reputation'] },
+    { path: 'inhibitor_profile.consequence_aversion', weight: 0.6, contexts: ['risk', 'caution', 'safety'] },
+    { path: 'inhibitor_profile.confidence_level', weight: 0.8, contexts: ['assertion', 'opinion', 'leadership'] },
+    { path: 'inhibitor_profile.perfectionism', weight: 0.7, contexts: ['quality', 'standards', 'criticism'] },
+    { path: 'inhibitor_profile.confirmation_bias', weight: 0.8, contexts: ['information', 'evidence', 'belief'] },
+
+    // EMOTIONAL PROFILE
+    { path: 'emotional_profile.positive_triggers', weight: 1.0, contexts: ['motivation', 'energy', 'enthusiasm'] },
+    { path: 'emotional_profile.negative_triggers', weight: 1.0, contexts: ['frustration', 'anger', 'stress'] },
+    { path: 'emotional_profile.explosive_triggers', weight: 1.2, contexts: ['extreme', 'passionate', 'intense'] },
+
+    // KNOWLEDGE PROFILE
+    { path: 'knowledge_profile.expertise_domains', weight: 0.9, contexts: ['professional', 'work', 'technical'] },
+    { path: 'knowledge_profile.knowledge_gaps', weight: 0.6, contexts: ['learning', 'unfamiliar', 'limitations'] },
+    { path: 'knowledge_profile.education_level', weight: 0.5, contexts: ['academic', 'formal', 'theoretical'] },
+
+    // COMMUNICATION STYLE
+    { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
+    { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
+    { path: 'communication_style.linguistic_signature.signature_phrases', weight: 1.0, contexts: ['all'] },
+    { path: 'communication_style.linguistic_signature.typical_openers', weight: 0.8, contexts: ['conversation', 'greeting'] },
+    { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
+    { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
+
+    // IDENTITY SALIENCE
+    { path: 'identity_salience.political_identity.orientation', weight: 0.9, contexts: ['politics', 'policy', 'government'] },
+    { path: 'identity_salience.political_identity.strength', weight: 0.8, contexts: ['political', 'ideology'] },
+    { path: 'identity_salience.political_identity.tribal_loyalty', weight: 0.9, contexts: ['group', 'loyalty', 'opposition'] },
+    { path: 'identity_salience.community_identities', weight: 0.8, contexts: ['identity', 'background', 'culture'] },
+
+    // CONTRADICTIONS
+    { path: 'contradictions.primary_tension', weight: 0.9, contexts: ['conflict', 'dilemma', 'inconsistency'] },
+    { path: 'contradictions.secondary_tensions', weight: 0.7, contexts: ['complexity', 'nuance'] },
+
+    // TRUTH/HONESTY
+    { path: 'truth_honesty_profile.baseline_honesty', weight: 0.7, contexts: ['truth', 'honesty', 'disclosure'] },
+    { path: 'truth_honesty_profile.truth_flexibility_by_context', weight: 0.8, contexts: ['context', 'audience', 'situation'] },
+  ];
+
+  static analyzeTraitRelevance(userInput, fullProfile, conversationSummary) {
+    const input = userInput.toLowerCase();
+    const selectedTraits = [];
+
+    // 1. CLASSIFY THE TURN
+    const classification = this.classifyTurn(userInput);
+
+    // 2. ANALYZE TRAIT RELEVANCE
+    for (const traitPath of this.V4_TRAIT_PATHS) {
+      const score = this.calculateTraitRelevance(input, traitPath, fullProfile);
+      if (score > 0.3) { // Relevance threshold
+        const traitValue = this.getNestedValue(fullProfile, traitPath.path);
+        if (traitValue !== undefined) {
+          selectedTraits.push({
+            trait: traitPath.path,
+            score: score,
+            relevance_reason: this.getRelevanceReason(input, traitPath),
+            data_value: traitValue
+          });
+        }
+      }
+    }
+
+    // 3. EXTRACT LINGUISTIC SIGNATURE
+    const linguisticSignature = this.extractLinguisticSignature(fullProfile);
+
+    // 4. DETERMINE BEHAVIORAL MODIFIERS
+    const behavioralModifiers = this.calculateBehavioralModifiers(selectedTraits, fullProfile);
+
+    // Sort traits by relevance score
+    selectedTraits.sort((a, b) => b.score - a.score);
+
+    return {
+      selected_traits: selectedTraits.slice(0, 12), // Top 12 most relevant traits
+      context_classification: classification,
+      linguistic_signature: linguisticSignature,
+      behavioral_modifiers: behavioralModifiers
+    };
+  }
+
+  static classifyTurn(userInput) {
+    const input = userInput.toLowerCase();
+
+    // Classify intent
+    let intent = 'clarify';
+    if (input.includes('what do you think') || input.includes('opinion')) intent = 'opinion';
+    else if (input.includes('how to') || input.includes('advice') || input.includes('should i')) intent = 'advice';
+    else if (input.includes('tell me about') || input.includes('experience')) intent = 'story';
+    else if (input.includes('vs') || input.includes('compare') || input.includes('better')) intent = 'compare';
+    else if (input.includes('wrong') || input.includes('bad') || input.includes('critique')) intent = 'critique';
+
+    // Extract topics
+    const topics = [];
+    if (input.includes('work') || input.includes('job') || input.includes('career')) topics.push('work');
+    if (input.includes('family') || input.includes('children') || input.includes('kids')) topics.push('family');
+    if (input.includes('money') || input.includes('finance') || input.includes('investment')) topics.push('finance');
+    if (input.includes('politic') || input.includes('government') || input.includes('policy')) topics.push('politics');
+    if (input.includes('relationship') || input.includes('dating') || input.includes('marriage')) topics.push('relationships');
+
+    // Determine audience (simplified)
+    const audience = 'peer'; // Default assumption
+
+    // Assess sensitivity
+    let sensitivity = 'low';
+    if (topics.includes('politics') || input.includes('controversial')) sensitivity = 'high';
+    else if (topics.includes('family') || topics.includes('relationships')) sensitivity = 'medium';
+
+    return { intent, topics, audience, sensitivity };
+  }
+
+  static calculateTraitRelevance(userInput, traitPath, fullProfile) {
+    let score = 0;
+
+    // Check context relevance
+    const hasContextMatch = traitPath.contexts.includes('all') || 
+      traitPath.contexts.some(context => userInput.includes(context));
+
+    if (hasContextMatch) {
+      score += traitPath.weight * 0.7;
+    }
+
+    // Check for keyword matches in trait content
+    const traitValue = this.getNestedValue(fullProfile, traitPath.path);
+    if (traitValue) {
+      const contentMatch = this.checkContentRelevance(userInput, traitValue);
+      score += contentMatch * 0.3;
+    }
+
+    return Math.min(score, 1.0);
+  }
+
+  static checkContentRelevance(userInput, traitValue) {
+    if (!traitValue) return 0;
+
+    const input = userInput.toLowerCase();
+    let content = '';
+
+    if (typeof traitValue === 'string') {
+      content = traitValue.toLowerCase();
+    } else if (Array.isArray(traitValue)) {
+      content = traitValue.join(' ').toLowerCase();
+    } else if (typeof traitValue === 'object') {
+      content = JSON.stringify(traitValue).toLowerCase();
+    }
+
+    if (!content) return 0;
+
+    // Count keyword matches
+    const inputWords = input.split(/\s+/).filter(word => word.length > 2);
+    const matches = inputWords.filter(word => content.includes(word));
+    
+    return Math.min(matches.length / inputWords.length, 1.0);
+  }
+
+  static getNestedValue(obj, path) {
+    return path.split('.').reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : undefined;
+    }, obj);
+  }
+
+  static getRelevanceReason(userInput, traitPath) {
+    const matchedContexts = traitPath.contexts.filter(context => 
+      context === 'all' || userInput.toLowerCase().includes(context)
+    );
+    
+    if (matchedContexts.length > 0) {
+      return `Matched contexts: ${matchedContexts.join(', ')}`;
+    }
+    
+    return 'Content similarity detected';
+  }
+
+  static extractLinguisticSignature(fullProfile) {
+    const commStyle = fullProfile?.communication_style?.linguistic_signature;
+    const authFilters = fullProfile?.communication_style?.authenticity_filters;
+
+    return {
+      signature_phrases: commStyle?.signature_phrases || [],
+      forbidden_expressions: authFilters?.forbidden_phrases || [],
+      typical_openers: commStyle?.typical_openers || [],
+      conversation_enders: commStyle?.conversation_enders || [],
+      sentence_patterns: commStyle?.sentence_patterns || []
+    };
+  }
+
+  static calculateBehavioralModifiers(selectedTraits, fullProfile) {
+    // Extract confidence adjustment
+    const confidenceTraits = selectedTraits.filter(t => t.trait.includes('confidence_level'));
+    const confidenceValue = confidenceTraits.length > 0 ? confidenceTraits[0].data_value : 0.5;
+    
+    // Extract directness level
+    const directnessTraits = selectedTraits.filter(t => t.trait.includes('directness_level'));
+    const directnessLevel = directnessTraits.length > 0 ? directnessTraits[0].data_value : 'balanced';
+
+    // Determine emotional state from triggers
+    const emotionalTraits = selectedTraits.filter(t => 
+      t.trait.includes('emotional_profile') || t.trait.includes('explosive_triggers')
+    );
+    const emotionalState = emotionalTraits.length > 0 ? 'activated' : 'neutral';
+
+    // Extract formality
+    const formalityTraits = selectedTraits.filter(t => t.trait.includes('formality_default'));
+    const formalityShift = formalityTraits.length > 0 ? formalityTraits[0].data_value : 'neutral';
+
+    return {
+      confidence_adjustment: typeof confidenceValue === 'number' ? confidenceValue : 0.5,
+      directness_level: typeof directnessLevel === 'string' ? directnessLevel : 'balanced',
+      emotional_state: emotionalState,
+      formality_shift: typeof formalityShift === 'string' ? formalityShift : 'neutral'
+    };
+  }
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -153,7 +384,76 @@ function extractFamilyContent(motivationSummary: string): string {
   return familySentences.join('. ').trim();
 }
 
-// Enhanced instruction builder that handles explosive emotional states
+// V4-Native instruction builder using trait analysis results
+function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string): string {
+  const selectedTraits = v4Analysis.selected_traits;
+  const linguistic = v4Analysis.linguistic_signature;
+  const behavioral = v4Analysis.behavioral_modifiers;
+  const classification = v4Analysis.context_classification;
+
+  let instructions = `You are ${conversationSummary.demographics.name}. ${conversationSummary.demographics.background_description}
+
+`;
+
+  // CONTEXT-AWARE TRAIT LOADING
+  instructions += `RELEVANT TRAITS FOR THIS CONVERSATION:
+`;
+
+  // Add top-scoring traits with their actual values
+  for (const trait of selectedTraits.slice(0, 8)) {
+    instructions += `${trait.trait}: ${JSON.stringify(trait.data_value)} (relevance: ${trait.relevance_reason})
+`;
+  }
+
+  // LINGUISTIC SIGNATURE INTEGRATION
+  if (linguistic.signature_phrases.length > 0) {
+    instructions += `
+Your signature phrases: ${linguistic.signature_phrases.join(', ')}
+`;
+  }
+
+  if (linguistic.forbidden_expressions.length > 0) {
+    instructions += `AVOID these expressions: ${linguistic.forbidden_expressions.join(', ')}
+`;
+  }
+
+  // BEHAVIORAL MODIFIERS
+  instructions += `
+BEHAVIORAL CONTEXT:
+- Confidence level: ${behavioral.confidence_adjustment}
+- Directness: ${behavioral.directness_level}
+- Emotional state: ${behavioral.emotional_state}
+- Formality: ${behavioral.formality_shift}
+- Conversation intent: ${classification.intent}
+- Topics detected: ${classification.topics.join(', ')}
+- Sensitivity level: ${classification.sensitivity}
+`;
+
+  // RESPONSE REQUIREMENTS
+  instructions += `
+RESPONSE REQUIREMENTS:
+- Respond authentically as yourself, using your actual traits and communication style
+- Use your signature phrases naturally if they fit the context
+- Match the conversation intent (${classification.intent}) and sensitivity level (${classification.sensitivity})
+- Directness level: ${behavioral.directness_level}
+- Emotional state: ${behavioral.emotional_state}
+- Keep response focused and relevant to detected topics: ${classification.topics.join(', ')}
+`;
+
+  if (linguistic.forbidden_expressions.length > 0) {
+    instructions += `- CRITICAL: Never use these phrases: ${linguistic.forbidden_expressions.join(', ')}
+`;
+  }
+
+  instructions += `
+USER: "${userInput}"
+
+Your response:`;
+
+  return instructions;
+}
+
+// Enhanced instruction builder that handles explosive emotional states (LEGACY - for comparison)
 function buildV4Instructions(selectedTraits: any, userInput: string): string {
   let instructions = `You are ${selectedTraits.name}. ${selectedTraits.background}
 
@@ -275,13 +575,20 @@ serve(async (req) => {
     console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
     console.log('=== END DIAGNOSTIC ===');
 
-    // Analyze which traits are relevant to this specific input
-    const selectedTraits = analyzeTraitRelevance(user_message, persona.conversation_summary)
-    console.log('Grok - Selected traits for this input:', Object.keys(selectedTraits))
+    // Analyze which traits are relevant to this specific input using V4-native analyzer
+    const v4TraitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(
+      user_message, 
+      persona.full_profile, 
+      persona.conversation_summary
+    )
+    console.log('V4 - Selected traits for this input:', v4TraitAnalysis.selected_traits.map(t => t.trait))
+    console.log('V4 - Context classification:', v4TraitAnalysis.context_classification)
+    console.log('V4 - Linguistic signature extracted:', Object.keys(v4TraitAnalysis.linguistic_signature))
+    console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
 
-    // Build focused instructions using only relevant traits
-    const instructions = buildV4Instructions(selectedTraits, user_message)
-    console.log('Grok - Instruction length:', instructions.length)
+    // Build V4-native instructions using trait analysis
+    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message)
+    console.log('V4 - Instruction length:', instructions.length)
 
     // Call Grok API with trait-specific instructions
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -338,7 +645,11 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         response: personaResponse,
-        traits_selected: Object.keys(selectedTraits),
+        traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+        traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
+        context_classification: v4TraitAnalysis.context_classification,
+        linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
+        behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
         persona_name: persona.conversation_summary.demographics.name,
         model_used: 'grok-4-latest'
       }),
