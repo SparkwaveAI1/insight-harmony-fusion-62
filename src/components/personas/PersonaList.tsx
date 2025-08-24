@@ -110,11 +110,21 @@ export default function PersonaList({
   selectedIncome = "",
   selectedSourceType = ""
 }: PersonaListProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  
+  // Determine if we need to wait for auth to load
+  const needsAuth = filterByCurrentUser || filterByOtherUsers;
+  const shouldWaitForAuth = needsAuth && authLoading;
   
   // Use React Query to fetch personas
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['personas', { filterByCurrentUser, filterByOtherUsers, publicOnly, collectionId, userId: user?.id }],
+    queryKey: ['personas', { 
+      filterByCurrentUser: filterByCurrentUser && !!user, 
+      filterByOtherUsers: filterByOtherUsers && !!user, 
+      publicOnly, 
+      collectionId, 
+      userId: user?.id 
+    }],
     queryFn: async () => {
       try {
         console.log("Fetching personas with filters:", { filterByCurrentUser, filterByOtherUsers, publicOnly, collectionId });
@@ -146,7 +156,7 @@ export default function PersonaList({
           return filteredPersonas;
         } else if (publicOnly) {
           // For the public library (Persona Library view):
-          // Show only public personas (if not filtered by other users)
+          // Show only public personas (regardless of user auth state)
           console.log("Showing all public personas");
           const filteredPersonas = data.filter(persona => persona.is_public);
           console.log("All public personas count:", filteredPersonas.length);
@@ -161,9 +171,10 @@ export default function PersonaList({
         throw err;
       }
     },
+    enabled: !shouldWaitForAuth, // Don't run query until auth is ready when needed
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: true, // Add this to ensure a refresh when component mounts
-    refetchOnWindowFocus: true // Refetch when window regains focus
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
   
   // Update the parent component with loaded personas
