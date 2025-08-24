@@ -249,10 +249,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch V4 persona conversation summary
+    // Fetch V4 persona conversation summary AND full_profile for diagnostic
     const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
-      .select('conversation_summary')
+      .select('conversation_summary, full_profile')
       .eq('persona_id', persona_id)
       .single()
 
@@ -262,6 +262,16 @@ serve(async (req) => {
     }
 
     console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
+
+    // === VOICE DIFFERENTIATION DIAGNOSTIC ===
+    console.log('=== VOICE DIFFERENTIATION DIAGNOSTIC ===');
+    console.log('Current persona data keys:', Object.keys(persona));
+    console.log('Conversation summary communication style:', persona.conversation_summary?.communication_style);
+    console.log('Full profile exists:', !!persona.full_profile);
+    console.log('Full profile communication style:', persona.full_profile?.communication_style?.linguistic_signature);
+    console.log('David Kim signature phrases:', persona.full_profile?.communication_style?.linguistic_signature?.signature_phrases);
+    console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
+    console.log('=== END DIAGNOSTIC ===');
 
     // Analyze which traits are relevant to this specific input
     const selectedTraits = analyzeTraitRelevance(user_message, persona.conversation_summary)
