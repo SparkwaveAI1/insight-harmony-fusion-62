@@ -101,23 +101,50 @@ export async function getPersonasForListing(): Promise<Persona[]> {
 
 export async function getAllPersonas(): Promise<V4Persona[]> {
   try {
-    console.log("Fetching all V4 personas from Supabase");
+    const timestamp = new Date().toISOString();
+    console.log(`🔍 [${timestamp}] getAllPersonas: Starting Supabase query`);
+    console.log(`🔍 Supabase URL: https://wgerdrdsuusnrdnwwelt.supabase.co`);
+    console.log(`🔍 Environment: ${process.env.NODE_ENV}`);
     
-    // Fetch only V4 personas
+    // Fetch only V4 personas with enhanced logging
     const { data: v4Personas, error: v4Error } = await supabase
       .from('v4_personas')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (v4Error) {
-      console.error("Error fetching V4 personas:", v4Error);
+      console.error(`🔍 [${timestamp}] Supabase query error:`, {
+        message: v4Error.message,
+        details: v4Error.details,
+        hint: v4Error.hint,
+        code: v4Error.code
+      });
       throw v4Error;
     }
 
-    console.log(`Retrieved ${v4Personas?.length || 0} V4 personas`);
+    console.log(`🔍 [${timestamp}] Supabase query successful`);
+    console.log(`🔍 Retrieved ${v4Personas?.length || 0} V4 personas`);
+    
+    if (v4Personas && v4Personas.length > 0) {
+      console.log(`🔍 First persona sample:`, {
+        id: v4Personas[0].persona_id,
+        name: v4Personas[0].name,
+        isPublic: v4Personas[0].is_public,
+        userId: v4Personas[0].user_id
+      });
+      
+      const publicCount = v4Personas.filter(p => p.is_public).length;
+      console.log(`🔍 Public personas in result: ${publicCount}`);
+    }
+    
     return (v4Personas || []) as unknown as V4Persona[];
-  } catch (error) {
-    console.error("Error getting all personas:", error);
+  } catch (error: any) {
+    const errorTimestamp = new Date().toISOString();
+    console.error(`🔍 [${errorTimestamp}] getAllPersonas error:`, {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return [];
   }
 }

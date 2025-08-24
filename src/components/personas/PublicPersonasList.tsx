@@ -30,23 +30,50 @@ const PublicPersonasList = ({
 }: PublicPersonasListProps) => {
   const [personas, setPersonas] = useState<V4Persona[]>([]);
 
-  // Simple query - just get all public personas
+  // Enhanced query with detailed debugging
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['public-personas'],
     queryFn: async () => {
-      console.log("Fetching all personas for public view");
-      const data = await getAllPersonas();
-      console.log("Raw personas data:", data?.length || 0);
+      const timestamp = new Date().toISOString();
+      console.log(`🔍 [${timestamp}] PublicPersonasList: Starting fetchAllPersonas`);
+      console.log(`🔍 Environment: ${process.env.NODE_ENV}`);
+      console.log(`🔍 URL: ${window.location.href}`);
       
-      // Filter to only public personas
-      const publicPersonas = data.filter(persona => persona.is_public);
-      console.log("Public personas count:", publicPersonas.length);
-      
-      return publicPersonas;
+      try {
+        const data = await getAllPersonas();
+        console.log(`🔍 [${timestamp}] Raw personas data received:`, {
+          count: data?.length || 0,
+          firstPersona: data?.[0] ? {
+            id: data[0].persona_id,
+            name: data[0].name,
+            isPublic: data[0].is_public
+          } : null
+        });
+        
+        // Filter to only public personas with detailed logging
+        const publicPersonas = data.filter(persona => {
+          const isPublic = persona.is_public === true;
+          console.log(`🔍 Persona ${persona.name} (${persona.persona_id}): is_public = ${persona.is_public}, filtered = ${isPublic}`);
+          return isPublic;
+        });
+        
+        console.log(`🔍 [${timestamp}] Final public personas count: ${publicPersonas.length}`);
+        console.log(`🔍 Public personas list:`, publicPersonas.map(p => ({
+          id: p.persona_id,
+          name: p.name,
+          isPublic: p.is_public
+        })));
+        
+        return publicPersonas;
+      } catch (error) {
+        console.error(`🔍 [${timestamp}] Error in PublicPersonasList queryFn:`, error);
+        throw error;
+      }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Force fresh data for debugging
     refetchOnMount: true,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    retry: 1
   });
 
   // Update the parent component with loaded personas

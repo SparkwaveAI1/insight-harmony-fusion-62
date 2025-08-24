@@ -10,6 +10,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PublicPersonasList from "@/components/personas/PublicPersonasList";
 import MyPersonasList from "@/components/personas/MyPersonasList";
+import PersonaDebugTest from "@/components/personas/PersonaDebugTest";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
@@ -121,6 +122,9 @@ const PersonaViewerContent = () => {
             selectedSourceType={selectedSourceType}
             onSourceTypeChange={setSelectedSourceType}
           />
+
+          {/* Debug Component - Temporary for production debugging */}
+          <PersonaDebugTest />
 
           {/* Conditional rendering based on view type */}
           {isLibraryView ? (
