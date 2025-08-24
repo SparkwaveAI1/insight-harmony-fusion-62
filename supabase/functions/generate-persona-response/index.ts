@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
     // Fetch the persona from the database
     console.log(`Fetching persona with ID: ${persona_id}`)
     const { data: persona, error: personaError } = await supabase
-      .from('personas')
+      .from('v4_personas')
       .select('*')
       .eq('persona_id', persona_id)
       .single()
@@ -75,17 +75,18 @@ Deno.serve(async (req: Request) => {
     
     // DETECT EMOTIONAL TRIGGERS from the most recent user message
     const lastUserMessage = previous_messages?.findLast((msg: Message) => msg.role === 'user');
-    if (lastUserMessage && persona.emotional_triggers) {
+    const fullProfile = persona.full_profile || {};
+    if (lastUserMessage && fullProfile.emotional_triggers) {
       console.log('Detecting emotional triggers for message:', lastUserMessage.content);
       
       // Extract personality traits for emotional amplification
-      const emotionalIntensity = parseFloat(persona.trait_profile?.extended_traits?.emotional_intensity || '0.5');
-      const currentStressLevel = parseFloat(persona.trait_profile?.dynamic_state?.current_stress_level || '0.5');
-      const neuroticism = parseFloat(persona.trait_profile?.big_five?.neuroticism || '0.5');
+      const emotionalIntensity = parseFloat(fullProfile.trait_profile?.extended_traits?.emotional_intensity || '0.5');
+      const currentStressLevel = parseFloat(fullProfile.trait_profile?.dynamic_state?.current_stress_level || '0.5');
+      const neuroticism = parseFloat(fullProfile.trait_profile?.big_five?.neuroticism || '0.5');
       
       const triggeredEmotions = detectEmotionalTriggers(
         lastUserMessage.content,
-        persona.emotional_triggers,
+        fullProfile.emotional_triggers,
         emotionalIntensity,
         currentStressLevel,
         neuroticism
@@ -99,7 +100,7 @@ Deno.serve(async (req: Request) => {
     }
     
     // ADD INTERVIEW CONTEXT WHEN RELEVANT
-    if (lastUserMessage && persona.interview_sections) {
+    if (lastUserMessage && fullProfile.interview_sections) {
       console.log('Checking for relevant interview context...');
       const interviewInstructions = generateInterviewContextInstructions(
         persona,
@@ -287,8 +288,9 @@ function getChatModeInstructions(mode: string, persona: any): string {
 
 // Generate linguistic instructions based on persona profile
 function generateLinguisticInstructions(persona: any): string {
-  const linguisticProfile = persona.linguistic_profile || {};
-  const simulationDirectives = persona.simulation_directives || {};
+  const fullProfile = persona.full_profile || {};
+  const linguisticProfile = fullProfile.linguistic_profile || {};
+  const simulationDirectives = fullProfile.simulation_directives || {};
   
   let instructions = `\n\n${'='.repeat(50)}\n🗣️ CRITICAL: SPEAK LIKE A HUMAN, NOT AN AI 🗣️\n${'='.repeat(50)}\n\n`;
   
@@ -332,9 +334,10 @@ function generateLinguisticInstructions(persona: any): string {
 
 // Generate response parameters based on persona traits and mode
 function generateResponseParameters(persona: any, chatMode: string) {
-  const extendedTraits = persona.trait_profile?.extended_traits || {};
-  const linguisticProfile = persona.linguistic_profile || {};
-  const simulationDirectives = persona.simulation_directives || {};
+  const fullProfile = persona.full_profile || {};
+  const extendedTraits = fullProfile.trait_profile?.extended_traits || {};
+  const linguisticProfile = fullProfile.linguistic_profile || {};
+  const simulationDirectives = fullProfile.simulation_directives || {};
   
   // Base parameters
   let temperature = 1.0;

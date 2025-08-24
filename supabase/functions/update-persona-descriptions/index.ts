@@ -18,9 +18,9 @@ serve(async (req) => {
 
     // Get personas without descriptions
     const { data: personas, error: fetchError } = await supabase
-      .from('personas')
-      .select('persona_id, name, trait_profile, metadata, description')
-      .or('description.is.null,description.eq.')
+      .from('v4_personas')
+      .select('persona_id, name, full_profile')
+      .or('full_profile->description.is.null,full_profile->description.eq.')
       .limit(50); // Process in batches
 
     if (fetchError) {
@@ -57,8 +57,13 @@ serve(async (req) => {
         
         if (description) {
           const { error: updateError } = await supabase
-            .from('personas')
-            .update({ description: description })
+            .from('v4_personas')
+            .update({ 
+              full_profile: {
+                ...persona.full_profile,
+                description: description
+              }
+            })
             .eq('persona_id', persona.persona_id);
 
           if (updateError) {
@@ -113,8 +118,9 @@ serve(async (req) => {
 async function generateDescription(persona: any, openaiApiKey: string): Promise<string | null> {
   try {
     // Extract key traits for description generation
-    const traits = persona.trait_profile || {};
-    const metadata = persona.metadata || {};
+    const fullProfile = persona.full_profile || {};
+    const traits = fullProfile.trait_profile || {};
+    const metadata = fullProfile.metadata || {};
     
     // Build trait summary for description
     const traitSummary = generateTraitSummary(traits, metadata);

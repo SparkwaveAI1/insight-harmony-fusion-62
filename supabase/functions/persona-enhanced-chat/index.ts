@@ -50,7 +50,7 @@ serve(async (req) => {
     
     try {
       const { data, error } = await supabase
-        .from('personas')
+        .from('v4_personas')
         .select('*')
         .eq('persona_id', personaId)
         .single();
@@ -111,21 +111,17 @@ serve(async (req) => {
 });
 
 function buildSystemPrompt(persona: any, conversationContext: string): string {
-  const age = persona.age || persona.metadata?.age || 30;
-  const education = persona.education || persona.metadata?.education_level || persona.metadata?.education || 'high school';
-  const occupation = persona.occupation || persona.metadata?.occupation || 'unknown';
+  const fullProfile = persona.full_profile || {};
+  const metadata = fullProfile.metadata || {};
+  const age = metadata.age || 30;
+  const education = metadata.education_level || metadata.education || 'high school';
+  const occupation = metadata.occupation || 'unknown';
   
   // Extract personality traits
-  const bigFive = persona.trait_profile?.big_five || {
-    openness: persona.openness,
-    conscientiousness: persona.conscientiousness,
-    extraversion: persona.extraversion,
-    agreeableness: persona.agreeableness,
-    neuroticism: persona.neuroticism
-  };
+  const bigFive = fullProfile.trait_profile?.big_five || {};
 
   // Extract knowledge domains and education level
-  const knowledgeDomains = persona.metadata?.knowledge_domains || {};
+  const knowledgeDomains = metadata.knowledge_domains || {};
   const educationLevel = getEducationLevel(education);
 
   let prompt = `You are ${persona.name}. Respond naturally as this person would.\n\n`;
@@ -133,8 +129,8 @@ function buildSystemPrompt(persona: any, conversationContext: string): string {
   // Core identity
   prompt += `WHO YOU ARE:\n`;
   if (age) prompt += `${age} years old\n`;
-  if (persona.gender) prompt += `${persona.gender}\n`;
-  if (persona.location) prompt += `From ${persona.location}\n`;
+  if (metadata.gender) prompt += `${metadata.gender}\n`;
+  if (metadata.location) prompt += `From ${metadata.location}\n`;
   if (occupation) prompt += `Work: ${occupation}\n`;
   if (education) prompt += `Education: ${education}\n`;
   prompt += '\n';
@@ -190,8 +186,8 @@ function buildSystemPrompt(persona: any, conversationContext: string): string {
   prompt += '\n';
 
   // Background context
-  if (persona.description) {
-    prompt += `BACKGROUND:\n${persona.description}\n\n`;
+  if (fullProfile.description) {
+    prompt += `BACKGROUND:\n${fullProfile.description}\n\n`;
   }
 
   if (conversationContext.trim()) {

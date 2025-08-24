@@ -43,7 +43,7 @@ serve(async (req) => {
     // Get personas missing required demographic metadata or knowledge domains
     console.log('🔍 Finding personas missing knowledge domains or demographic metadata...');
     
-    let query = supabase.from('personas').select('*');
+    let query = supabase.from('v4_personas').select('*');
     
     if (enhanceDemographics) {
       // Find personas missing required demographic fields
@@ -188,8 +188,13 @@ serve(async (req) => {
           // Update the persona in database
           if (Object.keys(updates).length > 0) {
             const { error: updateError } = await supabase
-              .from('personas')
-              .update(updates)
+              .from('v4_personas')
+              .update({ 
+                full_profile: {
+                  ...persona.full_profile,
+                  ...updates
+                }
+              })
               .eq('id', persona.id);
 
             if (updateError) {

@@ -72,9 +72,9 @@ serve(async (req) => {
 
     // Fetch persona details for context
     const { data: personaData, error: personaError } = await supabase
-      .from('personas')
-      .select('id, name, basic_info, trait_profile')
-      .in('id', sessionData?.selected_personas || []);
+      .from('v4_personas')
+      .select('persona_id, name, full_profile')
+      .in('persona_id', sessionData?.selected_personas || []);
 
     if (personaError) {
       console.warn('Could not fetch persona details:', personaError.message);
@@ -135,9 +135,9 @@ ${context.document_summaries ? context.document_summaries.map((doc: any) => `- $
 ## PERSONA PROFILES
 `;
       personaData.forEach((persona: any) => {
-        const basicInfo = persona.basic_info || {};
-        const traits = persona.trait_profile || {};
-        analysisPrompt += `**${persona.name}** (ID: ${persona.id})
+        const basicInfo = persona.full_profile?.metadata || {};
+        const traits = persona.full_profile?.trait_profile || {};
+        analysisPrompt += `**${persona.name}** (ID: ${persona.persona_id})
 - Demographics: Age ${basicInfo.age || 'Unknown'}, ${basicInfo.location || 'Unknown location'}
 - Background: ${basicInfo.occupation || 'Unknown occupation'}
 - Key Traits: ${traits.big_five ? Object.entries(traits.big_five).map(([trait, score]: [string, any]) => `${trait}=${score}`).join(', ') : 'No trait data'}
@@ -163,7 +163,7 @@ ${question.context ? `*Question Context:* ${question.context}` : ''}
 **Responses:**
 `;
       questionResponses.forEach((response) => {
-        const persona = personaData?.find((p: any) => p.id === response.persona_id);
+        const persona = personaData?.find((p: any) => p.persona_id === response.persona_id);
         const personaName = persona?.name || `Persona-${response.persona_id.slice(-4)}`;
         analysisPrompt += `
 • **${personaName}:** "${response.response_text}"
