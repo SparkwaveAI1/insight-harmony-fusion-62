@@ -4,8 +4,16 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Update the document title
-document.title = "PersonaAI - AI-Powered Qualitative Research";
+// Import cache utils
+import { logDeploymentInfo, forceBrowserCacheRefresh } from './utils/cacheUtils';
+
+// Update the document title with cache-busting build timestamp
+const BUILD_ID = `${Date.now()}-v4personas`;
+document.title = `PersonaAI - AI-Powered Qualitative Research [${BUILD_ID}]`;
+
+// Log deployment info and force cache refresh
+logDeploymentInfo();
+forceBrowserCacheRefresh();
 
 const rootElement = document.getElementById("root");
 

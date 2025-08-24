@@ -51,12 +51,19 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 import "./App.css";
 
-// Create a client
+// Build timestamp for cache busting - Force fresh deployment
+const BUILD_TIMESTAMP = Date.now();
+console.log(`🚀 PersonaAI App Loaded - Build: ${BUILD_TIMESTAMP} - Using v4_personas table`);
+
+// Create a client with aggressive cache invalidation
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
+      staleTime: 0, // Force fresh queries
+      gcTime: 0, // Clear cache immediately (replaces cacheTime)
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      refetchOnReconnect: true,
     },
   },
 });

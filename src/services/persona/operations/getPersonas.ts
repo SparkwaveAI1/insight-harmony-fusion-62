@@ -102,7 +102,8 @@ export async function getPersonasForListing(): Promise<Persona[]> {
 export async function getAllPersonas(): Promise<V4Persona[]> {
   try {
     const timestamp = new Date().toISOString();
-    console.log(`🔍 [${timestamp}] getAllPersonas: Starting Supabase query`);
+    console.log(`🚀 [${timestamp}] getAllPersonas: PRODUCTION CODE RUNNING - Build: ${Date.now()}`);
+    console.log(`🔍 [${timestamp}] getAllPersonas: Using V4_PERSONAS table (NOT legacy personas)`);
     console.log(`🔍 Supabase URL: https://wgerdrdsuusnrdnwwelt.supabase.co`);
     console.log(`🔍 Environment: ${process.env.NODE_ENV}`);
     
