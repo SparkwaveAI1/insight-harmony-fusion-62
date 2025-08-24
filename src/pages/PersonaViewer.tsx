@@ -121,42 +121,59 @@ const PersonaViewerContent = () => {
             onSourceTypeChange={setSelectedSourceType}
           />
 
-          {/* Tabs Interface */}
-          <Tabs defaultValue="my-personas" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="my-personas">My Personas</TabsTrigger>
-              <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
-            </TabsList>
+          {/* Conditional rendering based on view type */}
+          {isLibraryView ? (
+            /* Library View - Show all public personas directly */
+            <PersonaList
+              onPersonasLoad={setPublicPersonas}
+              publicOnly={true}
+              filterByOtherUsers={false}
+              searchQuery={searchQuery}
+              selectedTags={selectedTags}
+              selectedAge={selectedAge}
+              selectedRegion={selectedRegion}
+              selectedIncome={selectedIncome}
+              selectedSourceType={selectedSourceType}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            />
+          ) : (
+            /* Tabbed View - Show My Personas and Public Personas tabs */
+            <Tabs defaultValue="my-personas" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="my-personas">My Personas</TabsTrigger>
+                <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="my-personas" className="space-y-6">
-              <PersonaList
-                onPersonasLoad={setMyPersonas}
-                filterByCurrentUser={true}
-                searchQuery={searchQuery}
-                selectedTags={selectedTags}
-                selectedAge={selectedAge}
-                selectedRegion={selectedRegion}
-                selectedIncome={selectedIncome}
-                selectedSourceType={selectedSourceType}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-              />
-            </TabsContent>
+              <TabsContent value="my-personas" className="space-y-6">
+                <PersonaList
+                  onPersonasLoad={setMyPersonas}
+                  filterByCurrentUser={true}
+                  searchQuery={searchQuery}
+                  selectedTags={selectedTags}
+                  selectedAge={selectedAge}
+                  selectedRegion={selectedRegion}
+                  selectedIncome={selectedIncome}
+                  selectedSourceType={selectedSourceType}
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                />
+              </TabsContent>
 
-            <TabsContent value="public-personas" className="space-y-6">
-              <PersonaList 
-                onPersonasLoad={setPublicPersonas}
-                publicOnly={true}
-                filterByOtherUsers={!isLibraryView}
-                searchQuery={searchQuery}
-                selectedTags={selectedTags}
-                selectedAge={selectedAge}
-                selectedRegion={selectedRegion}
-                selectedIncome={selectedIncome}
-                selectedSourceType={selectedSourceType}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-              />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="public-personas" className="space-y-6">
+                <PersonaList 
+                  onPersonasLoad={setPublicPersonas}
+                  publicOnly={true}
+                  filterByOtherUsers={true}
+                  searchQuery={searchQuery}
+                  selectedTags={selectedTags}
+                  selectedAge={selectedAge}
+                  selectedRegion={selectedRegion}
+                  selectedIncome={selectedIncome}
+                  selectedSourceType={selectedSourceType}
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </main>
       <Footer />
