@@ -38,6 +38,7 @@ import EarnPRSNA from "./pages/EarnPRSNA";
 import Docs from "./pages/Docs";
 
 import { V4PersonaCreationPage } from "./pages/v4";
+import TestPersonaLibrary from "./pages/TestPersonaLibrary";
 
 // Pages - Persona Creation
 import ConsentForm from "./pages/persona-creation/ConsentForm";
@@ -87,6 +88,9 @@ function App() {
           <PersonaProvider>
             <DeploymentVerifier />
             <Routes>
+                {/* DEPLOYMENT TEST ROUTE - Independent persona test */}
+                <Route path="/test-persona-library" element={<ProtectedRoute><TestPersonaLibrary /></ProtectedRoute>} />
+                
                 {/* Public Routes - Accessible without login */}
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />

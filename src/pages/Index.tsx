@@ -15,6 +15,14 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      
+      {/* DEPLOYMENT TEST LINK - Temporary for debugging */}
+      <div className="fixed top-20 right-4 z-50 bg-primary text-primary-foreground p-3 rounded-lg shadow-lg">
+        <a href="/test-persona-library" className="text-sm font-medium hover:underline">
+          🧪 Test Persona Library (Deployment Debug)
+        </a>
+      </div>
+      
       <main className="flex-grow">
         <div className="pt-24">
           {homepageSections.map(({ id, Component }) => (
