@@ -1071,6 +1071,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_orphaned_persona_references: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cleaned_count: number
+        }[]
+      }
+      find_orphaned_persona_references: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          collection_id: string
+          collection_name: string
+          persona_id: string
+        }[]
+      }
       generate_participant_identifier: {
         Args: Record<PropertyKey, never>
         Returns: string
