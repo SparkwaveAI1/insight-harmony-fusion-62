@@ -172,7 +172,7 @@ export function validateCompleteMetadata(metadata: any): { isValid: boolean; err
 export async function validatePersonaUniqueness(supabase: any, persona: any): Promise<string> {
   // Validate persona_id uniqueness
   const { data: existingPersona } = await supabase
-    .from('personas')
+    .from('v4_personas')
     .select('persona_id')
     .eq('persona_id', persona.persona_id)
     .single();

@@ -38,7 +38,7 @@ serve(async (req) => {
 
     // Fetch persona data from database
     const { data: persona, error: personaError } = await supabase
-      .from('personas')
+      .from('v4_personas')
       .select('*')
       .eq('persona_id', personaId)
       .single();

@@ -48,7 +48,7 @@ serve(async (req) => {
 
     // Fetch the existing persona
     const { data: existingPersona, error: fetchError } = await supabase
-      .from('personas')
+      .from('v4_personas')
       .select('*')
       .eq('persona_id', personaId)
       .eq('user_id', user.id)
@@ -151,12 +151,15 @@ serve(async (req) => {
 
     // Save the enhanced persona
     const { data: updatedPersona, error: updateError } = await supabase
-      .from('personas')
+      .from('v4_personas')
       .update({
-        emotional_triggers: enhancedPersona.emotional_triggers,
-        interview_sections: enhancedPersona.interview_sections,
-        trait_profile: enhancedPersona.trait_profile,
-        metadata: enhancedPersona.metadata,
+        full_profile: {
+          ...enhancedPersona.full_profile,
+          emotional_triggers: enhancedPersona.emotional_triggers,
+          interview_sections: enhancedPersona.interview_sections,
+          trait_profile: enhancedPersona.trait_profile,
+          metadata: enhancedPersona.metadata,
+        }
       })
       .eq('persona_id', personaId)
       .eq('user_id', user.id)
