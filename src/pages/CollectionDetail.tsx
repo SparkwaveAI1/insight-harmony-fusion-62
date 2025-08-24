@@ -30,7 +30,7 @@ import {
   getPersonasInCollection,
 } from "@/services/collections"; 
 import { Collection } from "@/services/collections/types";
-import { Persona } from "@/services/persona/types";
+import { V4Persona } from "@/types/persona-v4";
 import { getAllPersonas } from "@/services/persona";
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
@@ -44,7 +44,7 @@ import { supabase } from "@/integrations/supabase/client";
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const [collection, setCollection] = useState<Collection | null>(null);
-  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [personas, setPersonas] = useState<V4Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPersonasDialog, setShowAddPersonasDialog] = useState(false);
   const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);

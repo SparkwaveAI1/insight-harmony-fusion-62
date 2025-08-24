@@ -14,7 +14,7 @@ import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
 
-import { Persona } from "@/services/persona";
+import { V4Persona } from "@/types/persona-v4";
 
 // Create a QueryClient with specific retry configuration
 const queryClient = new QueryClient({
@@ -31,8 +31,8 @@ const PersonaViewerContent = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { personaId } = useParams<{ personaId?: string }>();
-  const [myPersonas, setMyPersonas] = useState<Persona[]>([]);
-  const [publicPersonas, setPublicPersonas] = useState<Persona[]>([]);
+  const [myPersonas, setMyPersonas] = useState<V4Persona[]>([]);
+  const [publicPersonas, setPublicPersonas] = useState<V4Persona[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
   // New filter states

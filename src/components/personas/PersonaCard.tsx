@@ -18,12 +18,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona"; 
 import { Persona } from "@/services/persona/types";
+import { V4Persona } from "@/types/persona-v4";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AddToCollectionButton from "./AddToCollectionButton";
 
 interface PersonaCardProps {
-  persona: Persona;
+  persona: V4Persona;
   onVisibilityChange?: (personaId: string, isPublic: boolean) => void;
   onDelete?: (personaId: string) => void;
   showDeleteButton?: boolean;
@@ -73,60 +74,20 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
-  // Get description with proper fallback
+  // Get description from V4 persona
   const getDescription = () => {
-    // First try V4 background description
-    if (persona.conversation_summary?.demographics?.background_description && persona.conversation_summary.demographics.background_description.trim()) {
+    if (persona.conversation_summary?.demographics?.background_description) {
       return persona.conversation_summary.demographics.background_description;
     }
-    
-    // Then try the direct description field (legacy)
-    if (persona.description && persona.description.trim()) {
-      return persona.description;
-    }
-    
-    // Then try metadata description
-    if (persona.metadata?.description && persona.metadata.description.trim()) {
-      return persona.metadata.description;
-    }
-    
-    // Then try prompt as fallback
-    if (persona.prompt && persona.prompt.trim()) {
-      return persona.prompt;
-    }
-    
-    // Default fallback
     return "No description available";
   };
 
   const description = getDescription();
   
-  // Helper function to get V4 data with legacy fallback
-  const getV4DataWithFallback = (v4Path: any, legacyPath: any, defaultValue: string = 'Not specified') => {
-    return v4Path && v4Path !== 0 && v4Path !== '' ? v4Path : (legacyPath || defaultValue);
-  };
-  
-  const age = getV4DataWithFallback(
-    persona.conversation_summary?.demographics?.age, 
-    persona.metadata?.age, 
-    'Not specified'
-  );
-  const location = (() => {
-    const locationStr = persona.conversation_summary?.demographics?.location;
-    if (locationStr && typeof locationStr === 'string' && locationStr.trim()) {
-      return locationStr;
-    }
-    return getV4DataWithFallback(
-      persona.conversation_summary?.demographics?.location,
-      persona.metadata?.location || persona.metadata?.region,
-      'Not specified'
-    );
-  })();
-  const occupation = getV4DataWithFallback(
-    persona.conversation_summary?.demographics?.occupation,
-    persona.metadata?.occupation,
-    'Not specified'
-  );
+  // Get V4 persona data
+  const age = persona.conversation_summary?.demographics?.age || 'Not specified';
+  const location = persona.conversation_summary?.demographics?.location || 'Not specified';
+  const occupation = persona.conversation_summary?.demographics?.occupation || 'Not specified';
 
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
@@ -163,7 +124,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
             </div>
             <div className="flex items-center text-xs text-muted-foreground">
               <Clock className="h-3 w-3 mr-1" />
-              <span>Created {persona.creation_date}</span>
+              <span>Created {new Date(persona.created_at).toLocaleDateString()}</span>
             </div>
           </div>
         </div>

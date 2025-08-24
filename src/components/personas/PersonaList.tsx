@@ -13,8 +13,8 @@ import { usePersonaSearch } from "@/hooks/usePersonaSearch";
 import { V4Persona } from "@/types/persona-v4";
 
 // Helper function to detect if a persona is from the US
-const isUSPersona = (persona: Persona): boolean => {
-  const region = persona.metadata?.demographics?.region?.toLowerCase() || '';
+const isUSPersona = (persona: V4Persona): boolean => {
+  const region = persona.conversation_summary?.demographics?.location?.toLowerCase() || '';
   const usIndicators = [
     // States
     'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware', 'florida', 'georgia',
@@ -38,21 +38,21 @@ const isUSPersona = (persona: Persona): boolean => {
 };
 
 // Helper function to check if persona has complete profile
-const hasCompleteProfile = (persona: Persona): boolean => {
+const hasCompleteProfile = (persona: V4Persona): boolean => {
   const hasImage = !!persona.profile_image_url;
-  const hasDescription = !!persona.description;
+  const hasDescription = !!persona.conversation_summary?.demographics?.background_description;
   return hasImage && hasDescription;
 };
 
 // Helper function to check if persona has partial profile
-const hasPartialProfile = (persona: Persona): boolean => {
+const hasPartialProfile = (persona: V4Persona): boolean => {
   const hasImage = !!persona.profile_image_url;
-  const hasDescription = !!persona.description;
+  const hasDescription = !!persona.conversation_summary?.demographics?.background_description;
   return hasImage || hasDescription;
 };
 
 // Priority scoring function for sorting
-const getPersonaPriority = (persona: Persona): number => {
+const getPersonaPriority = (persona: V4Persona): number => {
   const isUS = isUSPersona(persona);
   const hasComplete = hasCompleteProfile(persona);
   const hasPartial = hasPartialProfile(persona);
@@ -66,7 +66,7 @@ const getPersonaPriority = (persona: Persona): number => {
 };
 
 // Function to sort personas by priority (for public personas only)
-const sortPersonasByPriority = (personas: Persona[]): Persona[] => {
+const sortPersonasByPriority = (personas: V4Persona[]): V4Persona[] => {
   return personas.sort((a, b) => {
     // First sort by priority score (highest first)
     const priorityDiff = getPersonaPriority(b) - getPersonaPriority(a);
@@ -80,7 +80,7 @@ const sortPersonasByPriority = (personas: Persona[]): Persona[] => {
 };
 
 interface PersonaListProps {
-  onPersonasLoad?: (personas: Persona[]) => void;
+  onPersonasLoad?: (personas: V4Persona[]) => void;
   filterByCurrentUser?: boolean;
   filterByOtherUsers?: boolean;
   publicOnly?: boolean;
@@ -125,9 +125,8 @@ export default function PersonaList({
         
         // Apply filtering logic based on the view type
         if (collectionId) {
-          // If we're in a collection, fetch personas for that collection
-          const collectionPersonas = await getPersonasByCollection(collectionId);
-          return collectionPersonas;
+          // Collections not supported for V4 personas yet
+          return [];
         } else if (filterByCurrentUser && user) {
           // For My Personas view: Show only the current user's personas
           console.log("Filtering by current user:", user.id);
@@ -174,7 +173,7 @@ export default function PersonaList({
     }
   }, [allPersonas, onPersonasLoad]);
 
-  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [personas, setPersonas] = useState<V4Persona[]>([]);
   
   // Update local state when personas are loaded from React Query
   useEffect(() => {
@@ -186,47 +185,43 @@ export default function PersonaList({
 
 
   // New filter function for advanced filters
-  const applyAdvancedFilters = (personas: Persona[]) => {
+  const applyAdvancedFilters = (personas: V4Persona[]) => {
     return personas.filter((persona) => {
-      // Tags filter - check metadata for use case tags
+      // Tags filter - check name and background for tags
       if (selectedTags.length > 0) {
-        const personaTags = persona.metadata?.tags || [];
         const hasMatchingTag = selectedTags.some(tag => 
-          personaTags.includes(tag) ||
           persona.name.toLowerCase().includes(tag) ||
-          persona.prompt?.toLowerCase().includes(tag)
+          persona.conversation_summary?.demographics?.background_description?.toLowerCase().includes(tag) ||
+          persona.conversation_summary?.demographics?.occupation?.toLowerCase().includes(tag)
         );
         if (!hasMatchingTag) return false;
       }
 
-      // Demographics filters - check metadata
+      // Demographics filters - check conversation_summary
       if (selectedAge) {
-        const personaAge = persona.metadata?.demographics?.age_range;
-        if (personaAge !== selectedAge) return false;
+        const personaAge = persona.conversation_summary?.demographics?.age;
+        // Convert age ranges to match
+        if (selectedAge === "18-25" && (personaAge < 18 || personaAge > 25)) return false;
+        if (selectedAge === "26-35" && (personaAge < 26 || personaAge > 35)) return false;
+        if (selectedAge === "36-50" && (personaAge < 36 || personaAge > 50)) return false;
+        if (selectedAge === "51+" && personaAge < 51) return false;
       }
 
       if (selectedRegion) {
-        const personaRegion = persona.metadata?.demographics?.region;
-        if (personaRegion !== selectedRegion) return false;
+        const personaLocation = persona.conversation_summary?.demographics?.location;
+        if (!personaLocation?.toLowerCase().includes(selectedRegion.toLowerCase())) return false;
       }
 
-      if (selectedIncome) {
-        const personaIncome = persona.metadata?.demographics?.income_level;
-        if (personaIncome !== selectedIncome) return false;
-      }
-
-      // Source type filter
-      if (selectedSourceType) {
-        const sourceType = persona.metadata?.source_type || "simulated";
-        if (sourceType !== selectedSourceType) return false;
-      }
+      // Note: V4 personas don't have income data in the current schema
+      // Source type filter - V4 personas are all "enhanced"
+      if (selectedSourceType && selectedSourceType !== "enhanced") return false;
 
       return true;
     });
   };
 
-  // Use shared search hook and apply advanced filters (cast for V4 search)
-  const searchedPersonas = usePersonaSearch(personas as unknown as V4Persona[], searchQuery) as unknown as Persona[];
+  // Use shared search hook and apply advanced filters
+  const searchedPersonas = usePersonaSearch(personas, searchQuery);
   let filteredPersonas = applyAdvancedFilters(searchedPersonas);
   
   // Apply priority sorting only for public personas (not user's own personas)
