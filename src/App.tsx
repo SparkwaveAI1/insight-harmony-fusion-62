@@ -53,6 +53,9 @@ import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 
 import "./App.css";
 
+// Import the diagnostic test to trigger David Kim conversation
+import './test-david-kim-diagnostic';
+
 // NUCLEAR CACHE BUSTER - Force complete fresh deployment
 const NUCLEAR_BUILD_ID = `NUCLEAR_${Date.now()}_V4_PERSONAS_ONLY`;
 const DEPLOYMENT_VERIFICATION = `PRODUCTION_VERIFICATION_${Math.random().toString(36)}`;
