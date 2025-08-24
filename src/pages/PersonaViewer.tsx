@@ -8,7 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonaList from "@/components/personas/PersonaList";
+import PublicPersonasList from "@/components/personas/PublicPersonasList";
+import MyPersonasList from "@/components/personas/MyPersonasList";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
@@ -124,10 +125,8 @@ const PersonaViewerContent = () => {
           {/* Conditional rendering based on view type */}
           {isLibraryView ? (
             /* Library View - Show all public personas directly */
-            <PersonaList
+            <PublicPersonasList
               onPersonasLoad={setPublicPersonas}
-              publicOnly={true}
-              filterByOtherUsers={false}
               searchQuery={searchQuery}
               selectedTags={selectedTags}
               selectedAge={selectedAge}
@@ -145,9 +144,8 @@ const PersonaViewerContent = () => {
               </TabsList>
 
               <TabsContent value="my-personas" className="space-y-6">
-                <PersonaList
+                <MyPersonasList
                   onPersonasLoad={setMyPersonas}
-                  filterByCurrentUser={true}
                   searchQuery={searchQuery}
                   selectedTags={selectedTags}
                   selectedAge={selectedAge}
@@ -159,10 +157,8 @@ const PersonaViewerContent = () => {
               </TabsContent>
 
               <TabsContent value="public-personas" className="space-y-6">
-                <PersonaList 
+                <PublicPersonasList 
                   onPersonasLoad={setPublicPersonas}
-                  publicOnly={true}
-                  filterByOtherUsers={true}
                   searchQuery={searchQuery}
                   selectedTags={selectedTags}
                   selectedAge={selectedAge}
