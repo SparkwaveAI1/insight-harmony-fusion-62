@@ -88,6 +88,16 @@ const CollectionDetail = () => {
         const filteredPersonas = allPersonas.filter((persona) =>
           personaIds.includes(persona.persona_id)
         );
+        
+        // Check for orphaned references and warn
+        const foundIds = filteredPersonas.map(p => p.persona_id);
+        const orphanedIds = personaIds.filter(id => !foundIds.includes(id));
+        
+        if (orphanedIds.length > 0) {
+          console.warn(`Found ${orphanedIds.length} orphaned persona references in collection ${collectionId}:`, orphanedIds);
+          // Could optionally show a toast here: toast.warning(`${orphanedIds.length} personas in this collection no longer exist`);
+        }
+        
         setPersonas(filteredPersonas);
       } else {
         setPersonas([]); // No personas in collection
