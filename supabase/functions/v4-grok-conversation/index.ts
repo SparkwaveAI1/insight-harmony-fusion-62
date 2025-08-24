@@ -88,6 +88,9 @@ class V4TraitRelevanceAnalyzer {
     // 4. DETERMINE BEHAVIORAL MODIFIERS
     const behavioralModifiers = this.calculateBehavioralModifiers(selectedTraits, fullProfile);
 
+    // 5. CALCULATE KNOWLEDGE BOUNDARIES
+    const knowledgeBoundary = this.calculateKnowledgeBoundaries(classification.topics, fullProfile);
+
     // Sort traits by relevance score
     selectedTraits.sort((a, b) => b.score - a.score);
 
@@ -95,7 +98,8 @@ class V4TraitRelevanceAnalyzer {
       selected_traits: selectedTraits.slice(0, 12), // Top 12 most relevant traits
       context_classification: classification,
       linguistic_signature: linguisticSignature,
-      behavioral_modifiers: behavioralModifiers
+      behavioral_modifiers: behavioralModifiers,
+      knowledge_boundary: knowledgeBoundary
     };
   }
 
@@ -229,6 +233,136 @@ class V4TraitRelevanceAnalyzer {
       emotional_state: emotionalState,
       formality_shift: typeof formalityShift === 'string' ? formalityShift : 'neutral'
     };
+  }
+
+  static calculateKnowledgeBoundaries(userTopics, fullProfile) {
+    // Extract expertise domains from the persona
+    const expertiseDomains = fullProfile?.knowledge_profile?.expertise_domains || [];
+    
+    // Expand topic keywords for better matching
+    const expandedTopics = this.expandTopics(userTopics);
+    const expandedExpertise = this.expandExpertiseDomains(expertiseDomains);
+    
+    // Calculate overlap score
+    const overlapScore = this.calculateTopicExpertiseOverlap(expandedTopics, expandedExpertise);
+    
+    // Determine confidence level
+    let confidenceLevel;
+    if (overlapScore >= 0.7) confidenceLevel = 'high';
+    else if (overlapScore >= 0.3) confidenceLevel = 'medium';
+    else confidenceLevel = 'low';
+    
+    // Generate guidance based on overlap
+    const guidance = this.generateKnowledgeGuidance(confidenceLevel, expandedTopics, expandedExpertise);
+    
+    return {
+      user_topics: expandedTopics,
+      expertise_domains: expandedExpertise,
+      overlap_score: overlapScore,
+      confidence_level: confidenceLevel,
+      guidance
+    };
+  }
+
+  static expandTopics(topics) {
+    const topicExpansions = {
+      'work': ['career', 'professional', 'employment', 'job', 'business'],
+      'finance': ['money', 'investment', 'financial', 'economic', 'budget', 'market'],
+      'politics': ['government', 'policy', 'political', 'election', 'law', 'regulation'],
+      'family': ['children', 'parenting', 'relationships', 'marriage', 'kids'],
+      'relationships': ['dating', 'friendship', 'social', 'interpersonal'],
+      'technology': ['tech', 'software', 'digital', 'computer', 'programming', 'AI'],
+      'health': ['medical', 'wellness', 'fitness', 'healthcare', 'mental health'],
+      'education': ['learning', 'school', 'academic', 'study', 'training'],
+      'climate': ['environment', 'sustainability', 'green', 'carbon', 'emissions'],
+      'science': ['research', 'scientific', 'study', 'data', 'analysis']
+    };
+
+    const expanded = new Set(topics);
+    topics.forEach(topic => {
+      if (topicExpansions[topic]) {
+        topicExpansions[topic].forEach(expansion => expanded.add(expansion));
+      }
+    });
+
+    return Array.from(expanded);
+  }
+
+  static expandExpertiseDomains(domains) {
+    const domainExpansions = {
+      'real estate': ['property', 'housing', 'development', 'investment property', 'construction'],
+      'technology': ['tech', 'software', 'programming', 'digital', 'IT', 'computers'],
+      'finance': ['banking', 'investment', 'trading', 'financial planning', 'economics'],
+      'healthcare': ['medical', 'medicine', 'health', 'clinical', 'patient care'],
+      'law': ['legal', 'attorney', 'court', 'litigation', 'contracts'],
+      'education': ['teaching', 'academic', 'curriculum', 'learning', 'training'],
+      'manufacturing': ['production', 'industrial', 'factory', 'operations'],
+      'mining': ['extraction', 'minerals', 'geological', 'resources'],
+      'agriculture': ['farming', 'crops', 'livestock', 'rural', 'food production'],
+      'automotive': ['cars', 'vehicles', 'transportation', 'mechanics']
+    };
+
+    const expanded = new Set();
+    domains.forEach(domain => {
+      const domainLower = domain.toLowerCase();
+      expanded.add(domainLower);
+      
+      // Check for partial matches in expansions
+      Object.entries(domainExpansions).forEach(([key, expansions]) => {
+        if (domainLower.includes(key) || key.includes(domainLower)) {
+          expansions.forEach(expansion => expanded.add(expansion));
+        }
+      });
+    });
+
+    return Array.from(expanded);
+  }
+
+  static calculateTopicExpertiseOverlap(topics, expertise) {
+    if (topics.length === 0 || expertise.length === 0) return 0;
+
+    let matches = 0;
+    const totalComparisons = topics.length;
+
+    topics.forEach(topic => {
+      const hasMatch = expertise.some(exp => {
+        return topic.includes(exp) || exp.includes(topic) || 
+               this.calculateStringSimilarity(topic, exp) > 0.6;
+      });
+      if (hasMatch) matches++;
+    });
+
+    return matches / totalComparisons;
+  }
+
+  static calculateStringSimilarity(str1, str2) {
+    const words1 = str1.toLowerCase().split(/\s+/);
+    const words2 = str2.toLowerCase().split(/\s+/);
+    
+    let commonWords = 0;
+    words1.forEach(word1 => {
+      if (words2.some(word2 => word1.includes(word2) || word2.includes(word1))) {
+        commonWords++;
+      }
+    });
+
+    return commonWords / Math.max(words1.length, words2.length);
+  }
+
+  static generateKnowledgeGuidance(confidence, topics, expertise) {
+    switch (confidence) {
+      case 'high':
+        return `You have strong expertise in this area (${expertise.slice(0, 3).join(', ')}). Speak confidently about these topics: ${topics.slice(0, 3).join(', ')}.`;
+      
+      case 'medium':
+        return `You have some relevant knowledge but this question touches on areas outside your core expertise. Share what you know but acknowledge limitations where appropriate.`;
+      
+      case 'low':
+        return `This question is about ${topics.slice(0, 2).join(' and ')} but your expertise is in ${expertise.slice(0, 2).join(' and ')}. Express appropriate uncertainty and acknowledge your knowledge limitations on these specific technical details.`;
+      
+      default:
+        return 'Respond based on your general knowledge and personal experience.';
+    }
   }
 }
 
@@ -390,6 +524,7 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   const linguistic = v4Analysis.linguistic_signature;
   const behavioral = v4Analysis.behavioral_modifiers;
   const classification = v4Analysis.context_classification;
+  const knowledgeBoundary = v4Analysis.knowledge_boundary;
 
   let instructions = `You are ${conversationSummary.demographics.name}. ${conversationSummary.demographics.background_description}
 
@@ -417,6 +552,15 @@ Your signature phrases: ${linguistic.signature_phrases.join(', ')}
 `;
   }
 
+  // KNOWLEDGE BOUNDARIES
+  instructions += `
+KNOWLEDGE BOUNDARIES:
+- Your expertise domains: ${knowledgeBoundary.expertise_domains.slice(0, 3).join(', ')}
+- Question topics: ${knowledgeBoundary.user_topics.slice(0, 3).join(', ')}
+- Knowledge confidence: ${knowledgeBoundary.confidence_level} (${(knowledgeBoundary.overlap_score * 100).toFixed(0)}% overlap)
+- Guidance: ${knowledgeBoundary.guidance}
+`;
+
   // BEHAVIORAL MODIFIERS
   instructions += `
 BEHAVIORAL CONTEXT:
@@ -438,6 +582,7 @@ RESPONSE REQUIREMENTS:
 - Directness level: ${behavioral.directness_level}
 - Emotional state: ${behavioral.emotional_state}
 - Keep response focused and relevant to detected topics: ${classification.topics.join(', ')}
+- CRITICAL: Follow knowledge boundary guidance - ${knowledgeBoundary.guidance}
 `;
 
   if (linguistic.forbidden_expressions.length > 0) {

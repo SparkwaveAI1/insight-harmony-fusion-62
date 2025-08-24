@@ -57,6 +57,14 @@ export interface V4TraitScore {
   data_value: any;
 }
 
+export interface KnowledgeBoundary {
+  user_topics: string[];
+  expertise_domains: string[];
+  overlap_score: number;
+  confidence_level: 'high' | 'medium' | 'low';
+  guidance: string;
+}
+
 export interface V4TraitAnalysisResult {
   selected_traits: V4TraitScore[];
   context_classification: TurnClassification;
@@ -73,4 +81,5 @@ export interface V4TraitAnalysisResult {
     emotional_state: string;
     formality_shift: string;
   };
+  knowledge_boundary: KnowledgeBoundary;
 }
