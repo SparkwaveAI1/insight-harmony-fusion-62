@@ -11,7 +11,6 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PublicPersonasList from "@/components/personas/PublicPersonasList";
 import MyPersonasList from "@/components/personas/MyPersonasList";
-import PersonaDebugTest from "@/components/personas/PersonaDebugTest";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
 import FilterSection from "@/components/personas/FilterSection";
@@ -53,7 +52,6 @@ const PersonaViewerContent = () => {
 
   // Reset the query cache when component mounts to ensure fresh data
   useEffect(() => {
-    console.log("PersonaViewer mounted, invalidating personas query cache");
     queryClient.invalidateQueries({ queryKey: ['personas'] });
   }, [queryClient]);
 
@@ -124,9 +122,6 @@ const PersonaViewerContent = () => {
             onSourceTypeChange={setSelectedSourceType}
           />
 
-          {/* Debug Component - Temporary for production debugging */}
-          <PersonaDebugTest />
-
           {/* Conditional rendering based on view type */}
           {isLibraryView ? (
             /* Library View - Show all public personas directly */
@@ -184,14 +179,6 @@ const PersonaViewerContent = () => {
 };
 
 const PersonaViewer = () => {
-  useEffect(() => {
-    console.log('🚨 NUCLEAR FRESH PersonaViewer mounted');
-    console.log(`🔥 Fresh service ID: ${FreshPersonaService.getFreshServiceId()}`);
-    
-    // Test fresh service immediately
-    FreshPersonaService.testFreshV4Access();
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <SidebarProvider defaultOpen={true}>

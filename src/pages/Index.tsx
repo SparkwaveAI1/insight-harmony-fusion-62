@@ -1,11 +1,4 @@
 
-// 🚨 CRITICAL DEPLOYMENT VERIFICATION 🚨
-// If you don't see these logs on the published site, deployment is broken
-const CRITICAL_DEPLOYMENT_TEST = `CRITICAL_DEPLOYMENT_${Date.now()}_EMERGENCY_VERIFICATION`;
-console.log(`🚨🚨🚨 CRITICAL: ${CRITICAL_DEPLOYMENT_TEST} 🚨🚨🚨`);
-console.log(`🔥🔥🔥 INDEX PAGE EMERGENCY VERIFICATION - NEW CODE RUNNING! 🔥🔥🔥`);
-console.log(`💀💀💀 IF YOU SEE THIS MESSAGE, DEPLOYMENT WORKED! 💀💀💀`);
-
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,13 +8,6 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
-      {/* DEPLOYMENT TEST LINK - Temporary for debugging */}
-      <div className="fixed top-20 right-4 z-50 bg-primary text-primary-foreground p-3 rounded-lg shadow-lg">
-        <a href="/test-persona-library" className="text-sm font-medium hover:underline">
-          🧪 Test Persona Library (Deployment Debug)
-        </a>
-      </div>
       
       <main className="flex-grow">
         <div className="pt-24">
