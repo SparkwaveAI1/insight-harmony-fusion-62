@@ -64,7 +64,9 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           interview_sections: [],
           prompt: null,
           profile_image_url: v4Data.profile_image_url,
-          // Add V4 specific fields with proper typing
+          // Preserve V4 fields for correct detection
+          schema_version: v4Data.schema_version,
+          full_profile: v4Data.full_profile,
           conversation_summary: (conversationSummary || {}) as any
         };
         

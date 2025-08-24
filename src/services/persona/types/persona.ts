@@ -45,4 +45,8 @@ export interface Persona {
   persona_type?: string;
   creation_date?: string;
   enhanced_metadata_version?: number;
+  
+  // V4 fields for detection (preserved during conversion)
+  schema_version?: string;
+  full_profile?: any;
 }
