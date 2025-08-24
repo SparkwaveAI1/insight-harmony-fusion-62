@@ -146,7 +146,7 @@ const PersonaViewerContent = () => {
               <PersonaList 
                 onPersonasLoad={setPublicPersonas}
                 publicOnly={true}
-                filterByOtherUsers={true}
+                filterByOtherUsers={!isLibraryView}
                 searchQuery={searchQuery}
                 selectedTags={selectedTags}
                 selectedAge={selectedAge}
