@@ -319,11 +319,11 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
                 <img 
                   src={persona.profile_image_url} 
                   alt={`${persona.name} profile`}
-                  className="w-24 h-24 rounded-lg object-cover border-2 border-primary/20"
+                  className="w-48 h-48 rounded-lg object-cover border-2 border-primary/20"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20">
-                  <User className="h-12 w-12 text-muted-foreground" />
+                <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20">
+                  <User className="h-24 w-24 text-muted-foreground" />
                 </div>
               )}
               
