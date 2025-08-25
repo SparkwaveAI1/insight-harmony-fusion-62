@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X, Globe, Lock, Download, Trash2, User, Plus } from 'lucide-react';
+import { MessageCircle, X, Globe, Lock, Download, Trash2, User, Plus, ImageIcon } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
@@ -315,32 +315,49 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           <div className="flex gap-4">
             {/* Profile Image */}
             <div className="flex-shrink-0 relative group">
-              {persona.profile_image_url ? (
-                <img 
-                  src={persona.profile_image_url} 
-                  alt={`${persona.name} profile`}
-                  className="w-48 h-48 rounded-lg object-cover border-2 border-primary/20"
+              {isOwner && onImageGenerated ? (
+                <PersonaImageGenerationDialog
+                  persona={persona as any}
+                  onImageGenerated={onImageGenerated}
+                  trigger={
+                    <div className="cursor-pointer">
+                      {persona.profile_image_url ? (
+                        <img 
+                          src={persona.profile_image_url} 
+                          alt={`${persona.name} profile`}
+                          className="w-48 h-48 rounded-lg object-cover border-2 border-primary/20 hover:border-primary/40 transition-colors"
+                        />
+                      ) : (
+                        <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20 hover:border-primary/40 transition-colors">
+                          <User className="h-24 w-24 text-muted-foreground" />
+                        </div>
+                      )}
+                      {/* Overlay hint */}
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <ImageIcon className="h-6 w-6 mx-auto mb-1" />
+                          <span className="text-xs">
+                            {persona.profile_image_url ? "Change Photo" : "Add Photo"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  }
                 />
               ) : (
-                <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20">
-                  <User className="h-24 w-24 text-muted-foreground" />
-                </div>
-              )}
-              
-              {/* Image generation overlay for owners */}
-              {isOwner && onImageGenerated && (
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                  <PersonaImageGenerationDialog
-                    persona={persona as any}
-                    onImageGenerated={onImageGenerated}
-                    trigger={
-                      <Button size="sm" variant="secondary" className="text-xs">
-                        <Plus className="h-3 w-3 mr-1" />
-                        Generate
-                      </Button>
-                    }
-                  />
-                </div>
+                <>
+                  {persona.profile_image_url ? (
+                    <img 
+                      src={persona.profile_image_url} 
+                      alt={`${persona.name} profile`}
+                      className="w-48 h-48 rounded-lg object-cover border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border-2 border-primary/20">
+                      <User className="h-24 w-24 text-muted-foreground" />
+                    </div>
+                  )}
+                </>
               )}
             </div>
             
