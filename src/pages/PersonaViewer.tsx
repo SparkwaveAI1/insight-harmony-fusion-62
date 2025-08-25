@@ -122,54 +122,39 @@ const PersonaViewerContent = () => {
             onSourceTypeChange={setSelectedSourceType}
           />
 
-          {/* Conditional rendering based on view type */}
-          {isLibraryView ? (
-            /* Library View - Show all public personas directly */
-            <PublicPersonasList
-              onPersonasLoad={setPublicPersonas}
-              searchQuery={searchQuery}
-              selectedTags={selectedTags}
-              selectedAge={selectedAge}
-              selectedRegion={selectedRegion}
-              selectedIncome={selectedIncome}
-              selectedSourceType={selectedSourceType}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            />
-          ) : (
-            /* Tabbed View - Show My Personas and Public Personas tabs */
-            <Tabs defaultValue="my-personas" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="my-personas">My Personas</TabsTrigger>
-                <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
-              </TabsList>
+          {/* Tabbed View - Always show both tabs */}
+          <Tabs defaultValue={isLibraryView ? "public-personas" : "my-personas"} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="my-personas">My Personas</TabsTrigger>
+              <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="my-personas" className="space-y-6">
-                <MyPersonasList
-                  onPersonasLoad={setMyPersonas}
-                  searchQuery={searchQuery}
-                  selectedTags={selectedTags}
-                  selectedAge={selectedAge}
-                  selectedRegion={selectedRegion}
-                  selectedIncome={selectedIncome}
-                  selectedSourceType={selectedSourceType}
-                  className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                />
-              </TabsContent>
+            <TabsContent value="my-personas" className="space-y-6">
+              <MyPersonasList
+                onPersonasLoad={setMyPersonas}
+                searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedAge={selectedAge}
+                selectedRegion={selectedRegion}
+                selectedIncome={selectedIncome}
+                selectedSourceType={selectedSourceType}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              />
+            </TabsContent>
 
-              <TabsContent value="public-personas" className="space-y-6">
-                <PublicPersonasList 
-                  onPersonasLoad={setPublicPersonas}
-                  searchQuery={searchQuery}
-                  selectedTags={selectedTags}
-                  selectedAge={selectedAge}
-                  selectedRegion={selectedRegion}
-                  selectedIncome={selectedIncome}
-                  selectedSourceType={selectedSourceType}
-                  className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                />
-              </TabsContent>
-            </Tabs>
-          )}
+            <TabsContent value="public-personas" className="space-y-6">
+              <PublicPersonasList 
+                onPersonasLoad={setPublicPersonas}
+                searchQuery={searchQuery}
+                selectedTags={selectedTags}
+                selectedAge={selectedAge}
+                selectedRegion={selectedRegion}
+                selectedIncome={selectedIncome}
+                selectedSourceType={selectedSourceType}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
