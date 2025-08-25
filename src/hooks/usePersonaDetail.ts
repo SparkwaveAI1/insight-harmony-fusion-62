@@ -5,10 +5,12 @@ import { getPersonaByPersonaId, updatePersonaVisibility, updatePersonaName, upda
 import { Persona } from "@/services/persona/types";
 import { useAuth } from "@/context/AuthContext";
 import { validatePersonaCompleteness, logPersonaValidation } from "@/services/persona/validation/personaValidation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function usePersonaDetail() {
   const { personaId } = useParams<{ personaId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [persona, setPersona] = useState<Persona | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -90,7 +92,17 @@ export function usePersonaDetail() {
       
       if (success) {
         toast.success("Persona deleted successfully");
-        navigate("/persona-viewer");
+        
+        // Invalidate React Query cache to refresh persona lists
+        console.log('🔄 Invalidating persona queries to refresh lists...');
+        queryClient.invalidateQueries({ queryKey: ['personas'] });
+        queryClient.invalidateQueries({ queryKey: ['myPersonas'] });
+        queryClient.invalidateQueries({ queryKey: ['publicPersonas'] });
+        
+        // Small delay to ensure cache invalidation completes before navigation
+        setTimeout(() => {
+          navigate("/persona-viewer");
+        }, 100);
       } else {
         toast.error("Failed to delete persona");
       }
