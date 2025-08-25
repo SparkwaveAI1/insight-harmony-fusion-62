@@ -208,7 +208,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         </Avatar>
         <div>
           <p className="font-medium">{activePersona.name}</p>
-          <p className="text-xs text-muted-foreground">V4 Enhanced Persona</p>
+          
         </div>
       </div>
 

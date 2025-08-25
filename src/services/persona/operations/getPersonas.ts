@@ -49,7 +49,7 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           id: v4Data.id,
           persona_id: v4Data.persona_id,
           name: v4Data.name,
-          description: backgroundDescription || `${v4Data.name} - V4 Enhanced Persona`,
+          description: backgroundDescription || `${v4Data.name}`,
           user_id: v4Data.user_id,
           is_public: v4Data.is_public || false,
           created_at: v4Data.created_at || '',

@@ -348,7 +348,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-2xl font-bold">{formatName(persona.name)}</h2>
-                <Badge variant="default" className="bg-blue-100 text-blue-800">V4 Enhanced</Badge>
               </div>
               <div className="text-sm text-muted-foreground space-y-1">
                 <div className="flex items-center gap-4">
