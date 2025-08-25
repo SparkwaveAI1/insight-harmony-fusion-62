@@ -10,7 +10,7 @@ import { getAllPersonas, getPersonasByCollection } from '@/services/persona';
 import { getUserCollections } from '@/services/collections';
 import { Persona } from '@/services/persona/types';
 import { Collection } from '@/services/collections/types';
-import { usePersonaSearch } from '@/hooks/usePersonaSearch';
+import { useUnifiedPersonaSearch } from '@/hooks/useUnifiedPersonaSearch';
 import { V4Persona } from '@/types/persona-v4';
 
 interface PersonaLoaderProps {
@@ -87,8 +87,11 @@ export const PersonaLoader: React.FC<PersonaLoaderProps> = ({
     }
   }, [selectedCollection, isLoadingCollections]);
 
-  // Use shared search hook (cast for V4 search)
-  const filteredPersonas = usePersonaSearch(personas as unknown as V4Persona[], searchTerm) as unknown as Persona[];
+  // Use unified search hook (cast for V4 search)
+  const filteredPersonas = useUnifiedPersonaSearch(personas as unknown as V4Persona[], searchTerm, {
+    context: 'research',
+    maxResults: maxPersonas
+  }) as unknown as Persona[];
 
   const handlePersonaSelect = (personaId: string) => {
     setSelectedPersonas(prev => {

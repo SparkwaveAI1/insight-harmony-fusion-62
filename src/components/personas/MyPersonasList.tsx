@@ -5,7 +5,7 @@ import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
 import { getV4Personas } from "@/services/v4-persona/getV4Personas";
-import { usePersonaSearch } from "@/hooks/usePersonaSearch";
+import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona/operations/updatePersona";
 
@@ -114,7 +114,10 @@ const MyPersonasList = ({
 
   // Apply filters and search
   const filteredPersonas = applyAdvancedFilters(allPersonas);
-  const searchedPersonas = usePersonaSearch(filteredPersonas, searchQuery);
+  const searchedPersonas = useUnifiedPersonaSearch(filteredPersonas, searchQuery, { 
+    context: 'library',
+    maxResults: 50 
+  });
 
   // Update local state
   useEffect(() => {

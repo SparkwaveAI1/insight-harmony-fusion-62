@@ -9,7 +9,7 @@ import PersonaCard from "./PersonaCard";
 import { Persona } from "@/services/persona/types";
 import { getPersonasByCollection } from "@/services/persona";
 import { cn } from "@/lib/utils";
-import { usePersonaSearch } from "@/hooks/usePersonaSearch";
+import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 import { V4Persona } from "@/types/persona-v4";
 
 // Helper function to detect if a persona is from the US
@@ -232,7 +232,10 @@ export default function PersonaList({
   };
 
   // Use shared search hook and apply advanced filters
-  const searchedPersonas = usePersonaSearch(personas, searchQuery);
+  const searchedPersonas = useUnifiedPersonaSearch(personas, searchQuery, { 
+    context: 'library',
+    maxResults: 100 
+  });
   let filteredPersonas = applyAdvancedFilters(searchedPersonas);
   
   // Apply priority sorting only for public personas (not user's own personas)

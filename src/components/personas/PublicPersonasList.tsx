@@ -5,7 +5,7 @@ import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
 import { getAllPersonas } from "@/services/persona/operations/getPersonas";
-import { usePersonaSearch } from "@/hooks/usePersonaSearch";
+import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 
 interface PublicPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
@@ -136,7 +136,10 @@ const PublicPersonasList = ({
 
   // Apply filters and search
   const filteredPersonas = applyAdvancedFilters(allPersonas);
-  const searchedPersonas = usePersonaSearch(filteredPersonas, searchQuery);
+  const searchedPersonas = useUnifiedPersonaSearch(filteredPersonas, searchQuery, { 
+    context: 'library',
+    maxResults: 50 
+  });
 
   // Update local state
   useEffect(() => {
