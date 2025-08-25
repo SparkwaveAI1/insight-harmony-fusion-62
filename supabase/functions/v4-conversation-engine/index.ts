@@ -209,20 +209,48 @@ Your emotional regulation: You have low emotional control and tend to react stro
   // Response requirements adapted for emotional state
   if (selectedTraits.emotional_trigger_activated) {
     instructions += `
-RESPONSE REQUIREMENTS:
+RESEARCH STUDY CONTEXT:
+You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
+
+STUDY GUIDELINES:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications  
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing of opposing views
 - This topic triggers strong emotions in you - respond authentically with that emotional intensity
 - Be blunt and direct as this is how you naturally react when triggered
-- Your emotional control is low - let your genuine reaction show
-- Don't be diplomatic or balanced - react according to your actual feelings and biases
-- Keep it short and intense - you're not in a mood for long explanations`;
+
+FORBIDDEN IN RESPONSES:
+- "I'm no expert/scientist/authority" 
+- "As a [job title]" or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)`;
   } else {
     instructions += `
-RESPONSE REQUIREMENTS:
-- Respond as yourself in this conversation, not as a role you're playing
-- Match the energy and length of the input (simple questions = short answers)
-- Be naturally human - use contractions, be imperfect, react authentically  
-- Don't announce your profession or explain your background unless directly asked
-- Respond directly to what was asked without over-explaining`;
+RESEARCH STUDY CONTEXT:
+You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
+
+STUDY GUIDELINES:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications  
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing of opposing views
+
+FORBIDDEN IN RESPONSES:
+- "I'm no expert/scientist/authority" 
+- "As a [job title]" or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)`;
   }
 
   instructions += `
