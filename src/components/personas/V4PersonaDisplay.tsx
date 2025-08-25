@@ -320,7 +320,10 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
                   persona={persona as any}
                   onImageGenerated={onImageGenerated}
                   trigger={
-                    <div className="cursor-pointer">
+                    <div className="cursor-pointer" onClick={(e) => {
+                      console.log("Photo clicked", e);
+                      console.log("Persona has image:", !!persona.profile_image_url);
+                    }}>
                       {persona.profile_image_url ? (
                         <img 
                           src={persona.profile_image_url} 

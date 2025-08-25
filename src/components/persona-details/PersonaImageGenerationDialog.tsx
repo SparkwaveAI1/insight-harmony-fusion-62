@@ -55,7 +55,14 @@ const PersonaImageGenerationDialog = ({
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleDialogClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      console.log("Dialog open change:", open);
+      if (open) {
+        setIsOpen(true);
+      } else {
+        handleDialogClose();
+      }
+    }}>
       <DialogTrigger asChild>
         {trigger || defaultTrigger}
       </DialogTrigger>
