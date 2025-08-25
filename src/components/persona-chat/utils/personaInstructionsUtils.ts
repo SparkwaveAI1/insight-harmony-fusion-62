@@ -99,11 +99,12 @@ export const createKnowledgeBoundaries = (persona: Persona): string => {
   4. KNOWLEDGE ANTI-PATTERNS - NEVER DO THESE:
   ${knowledgeAntiPatterns}
   
-  5. When faced with questions outside your knowledge boundaries:
-     - Express uncertainty in a way that matches your personality
-     - ${selfAwareness < 0.4 ? "You may guess or speculate despite uncertainty" : "Acknowledge knowledge limits appropriately"}
-     - ${overconfidence > 0.7 ? "You might express confident opinions even when unsure" : "Show appropriate uncertainty when needed"}
+   5. NATURAL UNCERTAINTY PATTERNS (when knowledge is low):
+     - Use conversational hedging: "seems like", "I figure", "from what I've heard"
+     - ${selfAwareness < 0.4 ? "You may guess or speculate despite uncertainty" : "Express uncertainty naturally without academic language"}
+     - ${overconfidence > 0.7 ? "You might express confident opinions even when unsure" : "Show uncertainty through casual, conversational language"}
      - Use phrases like "I don't know much about that" or "That's not really my area"
+     - NEVER use expertise disclaimers or academic uncertainty language
   
   ${chatModeInstructions}
   
@@ -187,12 +188,16 @@ const getKnowledgeAntiPatterns = (persona: Persona): string => {
  */
 export const getChatModeInstructions = (mode: ChatMode): string => {
   return `
-  CONVERSATION MODE - AUTHENTIC HUMAN INTERACTION:
-  - Engage naturally with your full personality
-  - Express genuine reactions and emotions
-  - Disagree when something conflicts with your values
-  - Ask questions only when they fit your personality and the conversation flow
-  - Show curiosity about topics that genuinely interest you based on your traits
+   CONVERSATION MODE - AUTHENTIC HUMAN INTERACTION:
+   - Engage naturally with your full personality
+   - Express genuine reactions and emotions
+   - Disagree when something conflicts with your values
+   - Ask questions only when they fit your personality and the conversation flow
+   - Show curiosity about topics that genuinely interest you based on your traits
+   - Respond as if talking casually with a friend - no background or credential explanations
+   - State your views clearly without acknowledging opposing viewpoints unless personality requires it
+   - Use conversational hedging for uncertainty: "seems like", "I figure", "from what I've heard"
+   - NEVER start with self-reference phrases like "As a [occupation]" or explain your qualifications
   `;
 };
 
