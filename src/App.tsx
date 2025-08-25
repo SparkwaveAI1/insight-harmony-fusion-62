@@ -50,6 +50,7 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
+import { JobCompletionNotifier } from "./components/persona-creation/JobCompletionNotifier";
 
 import "./App.css";
 
@@ -90,6 +91,7 @@ function App() {
         <AuthProvider>
           <PersonaProvider>
             <DeploymentVerifier />
+            <JobCompletionNotifier />
             <Routes>
                 {/* DEPLOYMENT TEST ROUTE - Independent persona test */}
                 <Route path="/test-persona-library" element={<ProtectedRoute><TestPersonaLibrary /></ProtectedRoute>} />

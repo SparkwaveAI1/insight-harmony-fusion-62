@@ -8,43 +8,82 @@ import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from
 import { CollectionsMultiSelector } from '@/components/collections/CollectionsMultiSelector';
 import { addPersonaToCollection } from '@/services/collections/collectionsService';
 import { useAuth } from '@/context/AuthContext';
+import { backgroundJobService } from '@/services/persona/backgroundJobService';
+import { usePersonaCreationJob } from '@/hooks/useBackgroundPersonaJobs';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export function V4PersonaCreator() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [generateImage, setGenerateImage] = useState(true);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [stage, setStage] = useState<'idle' | 'call1' | 'call2' | 'call3' | 'completed' | 'error'>('idle');
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string>('');
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const currentJob = usePersonaCreationJob(currentJobId || undefined);
 
   const handleCreatePersona = async () => {
     if (!user || !prompt.trim()) return;
 
-    setIsCreating(true);
-    setError('');
-    setResult(null);
+    // Create background job
+    const job = backgroundJobService.createJob({
+      userId: user.id,
+      prompt: prompt.trim(),
+      generateImage,
+      selectedCollections: selectedCollectionIds,
+    });
 
+    setCurrentJobId(job.id);
+    
+    toast({
+      title: "Persona creation started",
+      description: "Your persona is being created in the background. You can navigate away and check progress from the job indicator.",
+    });
+
+    // Start background processing
+    processPersonaCreation(job.id, {
+      user_prompt: prompt.trim(),
+      user_id: user.id,
+      generateImage,
+      selectedCollectionIds,
+    });
+  };
+
+  const processPersonaCreation = async (
+    jobId: string,
+    params: {
+      user_prompt: string;
+      user_id: string;
+      generateImage: boolean;
+      selectedCollectionIds: string[];
+    }
+  ) => {
     try {
       // Call 1: Generate detailed traits
-      setStage('call1');
-      console.log('Starting Call 1...');
+      backgroundJobService.updateJob(jobId, {
+        status: 'stage1',
+        progress: 10,
+        message: 'Generating detailed personality traits...',
+      });
       
       const call1Response = await createV4PersonaCall1({
-        user_prompt: prompt,
-        user_id: user.id
+        user_prompt: params.user_prompt,
+        user_id: params.user_id,
       });
 
       if (!call1Response.success) {
         throw new Error(call1Response.error || 'Call 1 failed');
       }
 
-      console.log('Call 1 successful:', call1Response);
+      backgroundJobService.updateJobFromApiResponse(jobId, call1Response);
 
       // Call 2: Generate summaries
-      setStage('call2');
-      console.log('Starting Call 2...');
+      backgroundJobService.updateJob(jobId, {
+        status: 'stage2',
+        progress: 40,
+        message: 'Creating conversation summaries...',
+      });
 
       const call2Response = await createV4PersonaCall2(call1Response.persona_id!);
 
@@ -52,56 +91,62 @@ export function V4PersonaCreator() {
         throw new Error(call2Response.error || 'Call 2 failed');
       }
 
-      console.log('Call 2 successful:', call2Response);
+      backgroundJobService.updateJobFromApiResponse(jobId, call2Response);
 
       // Call 3: Generate profile image (optional)
-      setStage('call3');
-      console.log('Starting Call 3 (image generation)...');
+      backgroundJobService.updateJob(jobId, {
+        status: 'stage3',
+        progress: 70,
+        message: 'Generating profile image...',
+      });
 
-      const call3Response = await createV4PersonaCall3(call2Response.persona_id!, generateImage);
-
-      console.log('Call 3 completed:', call3Response);
+      const call3Response = await createV4PersonaCall3(call2Response.persona_id!, params.generateImage);
+      backgroundJobService.updateJobFromApiResponse(jobId, call3Response);
 
       // Add to selected collections if any
-      if (selectedCollectionIds.length > 0) {
-        for (const collectionId of selectedCollectionIds) {
+      if (params.selectedCollectionIds.length > 0) {
+        backgroundJobService.updateJob(jobId, {
+          progress: 90,
+          message: 'Adding to collections...',
+        });
+
+        for (const collectionId of params.selectedCollectionIds) {
           await addPersonaToCollection(collectionId, call1Response.persona_id!);
         }
-        console.log(`Persona added to ${selectedCollectionIds.length} collection(s)`);
       }
 
-      setStage('completed');
-      setResult({
-        ...call2Response,
-        image_url: call3Response.image_url,
-        image_error: call3Response.error
+      // Complete the job
+      backgroundJobService.completeJob(jobId, {
+        personaId: call2Response.persona_id!,
+        personaName: call2Response.persona_name || 'New Persona',
+        imageUrl: call3Response.image_url,
+      });
+
+      toast({
+        title: "Persona created successfully!",
+        description: `"${call2Response.persona_name}" is ready to chat with.`,
       });
 
     } catch (err) {
       console.error('Error creating V4 persona:', err);
-      setStage('error');
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setIsCreating(false);
+      backgroundJobService.failJob(jobId, err instanceof Error ? err.message : 'Unknown error occurred');
+      
+      toast({
+        title: "Persona creation failed",
+        description: err instanceof Error ? err.message : 'Unknown error occurred',
+        variant: "destructive",
+      });
     }
   };
 
-  const getStageMessage = () => {
-    switch (stage) {
-      case 'call1':
-        return 'Generating detailed personality traits...';
-      case 'call2':
-        return 'Creating conversation summaries...';
-      case 'call3':
-        return 'Generating profile image...';
-      case 'completed':
-        return 'Persona created successfully!';
-      case 'error':
-        return 'Error occurred during creation';
-      default:
-        return '';
+  const handleViewPersona = () => {
+    if (currentJob?.personaId) {
+      navigate(`/persona/${currentJob.personaId}`);
+      setCurrentJobId(null);
     }
   };
+
+  const isCreating = currentJob && ['pending', 'stage1', 'stage2', 'stage3'].includes(currentJob.status);
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -145,50 +190,52 @@ export function V4PersonaCreator() {
 
           <Button
             onClick={handleCreatePersona}
-            disabled={isCreating || !prompt.trim() || !user}
+            disabled={!!isCreating || !prompt.trim() || !user}
             className="w-full"
           >
-            {isCreating ? 'Creating Persona...' : 'Create V4 Persona'}
+            {isCreating ? 'Creating Persona...' : 'Create Persona'}
           </Button>
 
-          {stage !== 'idle' && (
-            <Alert>
+          {currentJob && (
+            <Alert className={currentJob.status === 'failed' ? 'border-red-200 bg-red-50' : 
+                            currentJob.status === 'completed' ? 'border-green-200 bg-green-50' : ''}>
               <AlertDescription>
-                <div className="space-y-2">
-                  <div className="font-medium">Stage: {stage}</div>
-                  <div>{getStageMessage()}</div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium">
+                      {currentJob.status === 'completed' ? 'Persona Ready!' : 
+                       currentJob.status === 'failed' ? 'Creation Failed' : 'Creating Persona'}
+                    </div>
+                    {currentJob.progress > 0 && currentJob.status !== 'completed' && (
+                      <span className="text-sm text-muted-foreground">{currentJob.progress}%</span>
+                    )}
+                  </div>
+                  
+                  <div>{currentJob.message}</div>
+                  
+                  {currentJob.personaName && (
+                    <div className="font-medium">{currentJob.personaName}</div>
+                  )}
+                  
                   {isCreating && (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      <span className="text-sm">Processing...</span>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${currentJob.progress}%` }}
+                      />
                     </div>
                   )}
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                <div className="font-medium">Error:</div>
-                <div>{error}</div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {result && stage === 'completed' && (
-            <Alert>
-              <AlertDescription>
-                <div className="space-y-2">
-                  <div className="font-medium">Success!</div>
-                  <div>Persona "{result.persona_name}" created successfully.</div>
-                  <div className="text-sm text-gray-600">Persona ID: {result.persona_id}</div>
-                  {result.image_url && (
-                    <div className="text-sm text-green-600">✓ Profile image generated successfully</div>
+                  
+                  {currentJob.status === 'completed' && currentJob.personaId && (
+                    <Button onClick={handleViewPersona} className="w-full mt-2">
+                      View Persona
+                    </Button>
                   )}
-                  {result.image_error && (
-                    <div className="text-sm text-yellow-600">⚠ {result.image_error}</div>
+                  
+                  {currentJob.status === 'failed' && currentJob.error && (
+                    <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded text-sm text-red-700">
+                      {currentJob.error}
+                    </div>
                   )}
                 </div>
               </AlertDescription>

@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import MobileDrawerMenu from "../navigation/MobileDrawerMenu";
 import { headerNavItems } from "./config/navigationConfig";
+import { JobStatusIndicator } from './JobStatusIndicator';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -106,6 +107,7 @@ const Header = () => {
           <div className="flex items-center gap-2">
             {/* Action Buttons (right side) - Desktop */}
             <div className="hidden md:flex items-center gap-4">
+              {user && <JobStatusIndicator />}
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
