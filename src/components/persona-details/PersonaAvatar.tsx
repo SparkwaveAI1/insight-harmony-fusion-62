@@ -38,7 +38,7 @@ export default function PersonaAvatar({
   
   return (
     <div className="relative cursor-pointer group" onClick={isOwner ? onGenerateImage : undefined}>
-      <Avatar className="h-32 w-32 bg-primary/10 text-primary text-4xl font-bold rounded-lg">
+      <Avatar className="h-48 w-48 bg-primary/10 text-primary text-6xl font-bold rounded-lg">
         {hasValidImage ? (
           <AvatarImage 
             src={imageUrl} 
