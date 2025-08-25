@@ -61,40 +61,18 @@ function buildV4ImagePrompt(personaData: any): string {
   const identity = personaData.full_profile?.identity || {};
   const conversationSummary = personaData.conversation_summary || {};
   const demographics = conversationSummary.demographics || {};
-  const physicalDescription = conversationSummary.physical_description || '';
   
-  // Extract V4 demographic information
-  const age = identity.age || demographics.age || 30;
-  const gender = identity.gender || 'person';
-  const ethnicity = identity.ethnicity || 'diverse';
-  const occupation = demographics.occupation || identity.occupation || 'professional';
+  // Extract the four required categories
+  const age = identity.age || demographics.age;
+  const gender = identity.gender;
+  const ethnicity = identity.ethnicity;
+  const physicalDescription = conversationSummary.physical_description;
   
-  console.log("V4 persona details:", { age, gender, ethnicity, occupation });
+  console.log("V4 persona details:", { age, gender, ethnicity });
   console.log("Physical description:", physicalDescription);
   
-  // Build prompt starting with basic demographics
-  let prompt = `Professional headshot portrait of a ${age}-year-old ${gender}`;
-  
-  if (ethnicity && ethnicity !== 'diverse' && ethnicity.toLowerCase() !== 'unknown') {
-    prompt += ` of ${ethnicity} ethnicity`;
-  }
-  
-  // Add physical description if available
-  if (physicalDescription && physicalDescription.trim() !== '') {
-    prompt += `, ${physicalDescription}`;
-  } else {
-    // Fallback to age-appropriate appearance
-    prompt += `, ${getAgeAppearanceFromAge(age)}`;
-  }
-  
-  // Add occupation-appropriate attire
-  prompt += `, dressed professionally appropriate for a ${occupation}`;
-  
-  // Photography style and quality
-  prompt += `, professional lighting, clean background, high quality portrait photography`;
-  prompt += `, realistic, photorealistic, detailed facial features, natural expression`;
-  prompt += `, shot with professional camera, studio lighting, crisp details`;
-  prompt += `, 4K resolution, professional headshot style, corporate portrait quality`;
+  // Build prompt using exact user specification
+  const prompt = `Film still photograph of [ Age ${age}, "gender": "${gender}", "ethnicity": "${ethnicity}", "physical_description": "${physicalDescription}" ] in 2024, sigma 85mm f/1.4`;
   
   console.log("Generated V4 image prompt:", prompt);
   return prompt;
