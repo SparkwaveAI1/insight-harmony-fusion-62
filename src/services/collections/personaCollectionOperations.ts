@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Collection, CollectionWithPersonaCount } from './types';
-import { getV4Personas } from '@/services/v4-persona/getV4Personas';
 
 /**
  * Add a persona to a collection
@@ -114,9 +113,13 @@ export const isPersonaInCollection = async (
  */
 export const getPersonasInCollection = async (collectionId: string) => {
   try {
+    // Join with personas_union to ensure we only return valid personas
     const { data, error } = await supabase
       .from('collection_personas')
-      .select('persona_id')
+      .select(`
+        persona_id,
+        personas_union!inner(id, name, profile_image_url)
+      `)
       .eq('collection_id', collectionId);
 
     if (error) {
@@ -136,10 +139,13 @@ export const getPersonasInCollection = async (collectionId: string) => {
  */
 export const getPersonasNotInCollection = async (collectionId: string, userId: string) => {
   try {
-    // First, get all persona IDs in the collection
+    // First, get all valid persona IDs in the collection using personas_union
     const { data: collectionPersonas, error: collectionError } = await supabase
       .from('collection_personas')
-      .select('persona_id')
+      .select(`
+        persona_id,
+        personas_union!inner(id)
+      `)
       .eq('collection_id', collectionId);
 
     if (collectionError) {
@@ -147,41 +153,41 @@ export const getPersonasNotInCollection = async (collectionId: string, userId: s
       return [];
     }
 
-    // Extract just the persona IDs
+    // Extract just the valid persona IDs
     const personaIdsInCollection = collectionPersonas.map(item => item.persona_id);
 
-    // No more legacy personas - they have all been migrated to V4
-    const legacyPersonas: any[] = [];
+    // Get all user's personas from personas_union and filter out those in collection
+    const { data: userPersonas, error: userPersonasError } = await supabase
+      .from('personas_union')
+      .select('*')
+      .eq('user_id', userId);
 
-    // Get V4 personas and filter out those in collection
-    const v4Personas = await getV4Personas(userId);
-    const availableV4Personas = v4Personas.filter(persona => 
-      !personaIdsInCollection.includes(persona.persona_id)
+    if (userPersonasError) {
+      console.error('Error getting user personas:', userPersonasError);
+      return [];
+    }
+
+    const availablePersonas = userPersonas.filter(persona => 
+      !personaIdsInCollection.includes(persona.id)
     );
 
-    // Convert V4 personas to legacy format for consistency
-    const convertedV4Personas = availableV4Personas.map(v4Persona => ({
-      id: v4Persona.id,
-      persona_id: v4Persona.persona_id,
-      name: v4Persona.name,
-      description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
-      user_id: v4Persona.user_id,
+    // Convert to consistent format
+    const convertedPersonas = availablePersonas.map(persona => ({
+      id: persona.id,
+      persona_id: persona.id,
+      name: persona.name,
+      description: `V4 Persona - Created on ${new Date(persona.created_at || '').toLocaleDateString()}`,
+      user_id: persona.user_id,
       is_public: false,
-      created_at: v4Persona.created_at || '',
-      updated_at: v4Persona.updated_at || '',
+      created_at: persona.created_at || '',
+      updated_at: persona.created_at || '',
       persona_data: {},
-      profile_image_url: v4Persona.profile_image_url,
+      profile_image_url: persona.profile_image_url,
       prompt: null,
       version: 'v4.0'
     }));
 
-    // Combine legacy and V4 personas
-    const allAvailablePersonas = [
-      ...(legacyPersonas || []),
-      ...convertedV4Personas
-    ];
-
-    return allAvailablePersonas;
+    return convertedPersonas;
   } catch (error) {
     console.error('Error getting personas not in collection:', error);
     return [];
