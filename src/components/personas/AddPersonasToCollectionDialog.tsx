@@ -9,18 +9,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { Persona } from "@/services/persona/types";
-import { Collection } from "@/services/collections/types";
-import { addPersonasToCollection, getPersonasNotInCollection, getUserCollections } from "@/services/collections";
+import { addPersonasToCollection, getPersonasNotInCollection } from "@/services/collections";
 import { dbPersonaToPersona } from "@/services/persona/mappers";
 import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 import { V4Persona } from "@/types/persona-v4";
@@ -41,16 +38,12 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersonaIds, setSelectedPersonaIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCollection, setSelectedCollection] = useState<string>('none');
-  const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingCollections, setIsLoadingCollections] = useState(true);
   const { user } = useAuth();
 
-  // Fetch collections when dialog opens
+  // Fetch personas when dialog opens
   useEffect(() => {
     if (open && user) {
-      fetchCollections();
       fetchAvailablePersonas();
     }
   }, [open, user, collectionId]);
@@ -59,23 +52,9 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
   useEffect(() => {
     if (!open) {
       setSearchTerm('');
-      setSelectedCollection('none');
       setSelectedPersonaIds([]);
     }
   }, [open]);
-
-  const fetchCollections = async () => {
-    setIsLoadingCollections(true);
-    try {
-      if (!user) return;
-      const allCollections = await getUserCollections();
-      setCollections(allCollections);
-    } catch (error) {
-      console.error("Error fetching collections:", error);
-    } finally {
-      setIsLoadingCollections(false);
-    }
-  };
 
   const fetchAvailablePersonas = async () => {
     setIsLoading(true);
@@ -179,48 +158,29 @@ const AddPersonasToCollectionDialog: React.FC<AddPersonasToCollectionDialogProps
               />
             </div>
             
-            {/* Collection Filter */}
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filter by collection" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">All Available</SelectItem>
-                    {collections.map((collection) => (
-                      <SelectItem key={collection.id} value={collection.id}>
-                        {collection.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Bulk Selection Controls */}
+            {filteredPersonas.length > 0 && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSelectAll}
+                  disabled={isLoading}
+                >
+                  <CheckSquare className="h-4 w-4 mr-1" />
+                  Select All
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleClearAll}
+                  disabled={isLoading || selectedPersonaIds.length === 0}
+                >
+                  <Square className="h-4 w-4 mr-1" />
+                  Clear All
+                </Button>
               </div>
-              
-              {/* Bulk Selection Controls */}
-              {filteredPersonas.length > 0 && (
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleSelectAll}
-                    disabled={isLoading}
-                  >
-                    <CheckSquare className="h-4 w-4 mr-1" />
-                    Select All
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleClearAll}
-                    disabled={isLoading || selectedPersonaIds.length === 0}
-                  >
-                    <Square className="h-4 w-4 mr-1" />
-                    Clear All
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
             
             {/* Search Help Text */}
             <p className="text-xs text-muted-foreground">
