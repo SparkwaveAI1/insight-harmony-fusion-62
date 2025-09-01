@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Download, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Card from "@/components/ui-custom/Card";
@@ -22,7 +22,6 @@ interface PersonaDetailHeaderProps {
   onNameUpdate: (name: string) => Promise<void>;
   onDescriptionUpdate: (description: string) => Promise<void>;
   onImageGenerated: () => Promise<string | null>;
-  onDownloadJSON: () => void;
   onPersonaUpdated?: (updatedPersona: Persona) => void;
 }
 
@@ -35,7 +34,6 @@ export default function PersonaDetailHeader({
   onNameUpdate,
   onDescriptionUpdate,
   onImageGenerated,
-  onDownloadJSON,
   onPersonaUpdated
 }: PersonaDetailHeaderProps) {
   const [showEnhancementDialog, setShowEnhancementDialog] = useState(false);
@@ -143,10 +141,6 @@ export default function PersonaDetailHeader({
                   </Button>
                 )}
               </div>
-              <Button variant="outline" onClick={onDownloadJSON}>
-                <Download className="h-4 w-4 mr-2" />
-                Download JSON
-              </Button>
             </div>
           )}
         </div>

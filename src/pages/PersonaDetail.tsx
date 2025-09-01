@@ -14,7 +14,7 @@ import NotFoundState from "@/components/persona-details/NotFoundState";
 import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton";
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
-import { downloadPersonaAsJSON } from "@/utils/downloadUtils";
+
 import { V4PersonaDisplay } from "@/components/personas/V4PersonaDisplay";
 import { V4Persona } from "@/types/persona-v4";
 import { isV4Persona } from "@/utils/personaDetection";
@@ -48,11 +48,6 @@ const PersonaDetail = () => {
     setupStorage();
   }, []);
 
-  const handleDownloadJSON = () => {
-    if (persona) {
-      downloadPersonaAsJSON(persona);
-    }
-  };
 
   // Wrapper function to handle V4 persona updates with proper typing
   const handleV4PersonaUpdated = (updatedPersona: V4Persona) => {
@@ -92,7 +87,6 @@ const PersonaDetail = () => {
                   isPublic={isPublic}
                   onVisibilityChange={handleVisibilityChange}
                   onDelete={handlePersonaDeleted}
-                  onDownloadJSON={handleDownloadJSON}
                   onImageGenerated={handleImageGenerated}
                   onPersonaUpdated={handleV4PersonaUpdated}
                   showChat={showChat}
@@ -110,7 +104,6 @@ const PersonaDetail = () => {
                     onNameUpdate={handleNameUpdate}
                     onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
-                    onDownloadJSON={handleDownloadJSON}
                   onPersonaUpdated={handlePersonaUpdated}
                   />
                   

@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X, Globe, Lock, Download, Trash2, User, Plus, ImageIcon } from 'lucide-react';
+import { MessageCircle, X, Globe, Lock, Trash2, User, Plus, ImageIcon } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
@@ -20,7 +20,6 @@ interface V4PersonaDisplayProps {
   isPublic?: boolean;
   onVisibilityChange?: (isPublic: boolean) => void;
   onDelete?: () => Promise<void>;
-  onDownloadJSON?: () => void;
   onImageGenerated?: () => void;
   onPersonaUpdated?: (updatedPersona: V4Persona) => void;
   showChat?: boolean;
@@ -33,7 +32,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   isPublic = false, 
   onVisibilityChange, 
   onDelete, 
-  onDownloadJSON,
   onImageGenerated,
   onPersonaUpdated,
   showChat = false,
@@ -398,18 +396,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
                       onVisibilityChange={onVisibilityChange}
                     />
                   </div>
-                )}
-                
-                {/* Download JSON */}
-                {onDownloadJSON && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onDownloadJSON}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    JSON
-                  </Button>
                 )}
               </div>
             )}
