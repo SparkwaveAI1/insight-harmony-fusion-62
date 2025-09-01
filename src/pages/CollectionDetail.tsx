@@ -52,6 +52,9 @@ const CollectionDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Scroll to top when collection changes
+    window.scrollTo(0, 0);
+    
     if (collectionId) {
       loadCollection(collectionId);
       loadPersonas(collectionId);
