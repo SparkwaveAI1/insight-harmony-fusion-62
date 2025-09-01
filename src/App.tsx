@@ -155,6 +155,7 @@ function App() {
                 <Route path="/screener" element={<ProtectedRoute><PersonaCreationScreener /></ProtectedRoute>} />
                 <Route path="/questionnaire" element={<ProtectedRoute><PersonaCreationQuestionnaire /></ProtectedRoute>} />
                 <Route path="/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
+                <Route path="/persona-creation/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
                 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
