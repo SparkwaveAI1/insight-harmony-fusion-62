@@ -311,7 +311,7 @@ CRITICAL INSTRUCTIONS:
     return new Response(
       JSON.stringify({ 
         success: true, 
-        persona_id: data[0].persona_id,
+        persona_id: data[0].id,
         persona_name: data[0].name,
         stage: 'detailed_traits_complete'
       }),

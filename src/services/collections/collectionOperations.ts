@@ -28,10 +28,10 @@ export const getCollectionById = async (id: string): Promise<Collection | null> 
  */
 export const getUserCollections = async (): Promise<Collection[]> => {
   try {
-    // RLS policies will automatically filter to user's collections
     const { data, error } = await supabase
       .from("collections")
       .select("*")
+      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -72,6 +72,7 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
     const { data: collections, error } = await supabase
       .from("collections")
       .select("*")
+      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -89,13 +90,13 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
           return { ...collection, persona_count: 0 };
         }
 
-        // Count only personas that exist using the personas_union view
+        // Count only personas that actually exist in v4_personas table
         let validPersonaCount = 0;
         if (personaData && personaData.length > 0) {
           const { data: existingPersonas } = await supabase
-            .from("personas_union")
-            .select("id")
-            .in("id", personaData.map(p => p.persona_id));
+            .from("v4_personas")
+            .select("persona_id")
+            .in("persona_id", personaData.map(p => p.persona_id));
           
           validPersonaCount = existingPersonas?.length || 0;
         }
@@ -138,13 +139,13 @@ export const getPublicCollectionsWithCount = async (): Promise<CollectionWithPer
           return { ...collection, persona_count: 0 };
         }
 
-        // Count only personas that exist using the personas_union view
+        // Count only personas that actually exist in v4_personas table
         let validPersonaCount = 0;
         if (personaData && personaData.length > 0) {
           const { data: existingPersonas } = await supabase
-            .from("personas_union")
-            .select("id")
-            .in("id", personaData.map(p => p.persona_id));
+            .from("v4_personas")
+            .select("persona_id")
+            .in("persona_id", personaData.map(p => p.persona_id));
           
           validPersonaCount = existingPersonas?.length || 0;
         }
