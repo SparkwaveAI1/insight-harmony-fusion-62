@@ -113,13 +113,10 @@ export const isPersonaInCollection = async (
  */
 export const getPersonasInCollection = async (collectionId: string) => {
   try {
-    // Join with personas_union to ensure we only return valid personas
+    // Get persona IDs in collection
     const { data, error } = await supabase
       .from('collection_personas')
-      .select(`
-        persona_id,
-        personas_union!inner(id, name, profile_image_url)
-      `)
+      .select('persona_id')
       .eq('collection_id', collectionId);
 
     if (error) {
@@ -139,13 +136,10 @@ export const getPersonasInCollection = async (collectionId: string) => {
  */
 export const getPersonasNotInCollection = async (collectionId: string, userId: string) => {
   try {
-    // First, get all valid persona IDs in the collection using personas_union
+    // Get persona IDs in this collection
     const { data: collectionPersonas, error: collectionError } = await supabase
       .from('collection_personas')
-      .select(`
-        persona_id,
-        personas_union!inner(id)
-      `)
+      .select('persona_id')
       .eq('collection_id', collectionId);
 
     if (collectionError) {
@@ -153,7 +147,7 @@ export const getPersonasNotInCollection = async (collectionId: string, userId: s
       return [];
     }
 
-    // Extract just the valid persona IDs
+    // Extract the persona IDs
     const personaIdsInCollection = collectionPersonas.map(item => item.persona_id);
 
     // Get all user's personas from personas_union and filter out those in collection
