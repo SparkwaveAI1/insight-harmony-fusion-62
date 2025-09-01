@@ -1,9 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/sections/Footer";
-import Section from "@/components/ui-custom/Section";
 import Card from "@/components/ui-custom/Card";
 import { Button } from "@/components/ui/button";
 import { getUserProjectsWithCount, createProject, deleteProject, Project, ProjectWithConversationCount } from "@/services/collections";
@@ -13,6 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import Footer from "@/components/sections/Footer";
 
 const Projects = () => {
   const [projects, setProjects] = useState<ProjectWithConversationCount[]>([]);
@@ -24,6 +24,8 @@ const Projects = () => {
   const [newProjectDescription, setNewProjectDescription] = useState('');
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
     loadProjects();
   }, []);
 
@@ -78,23 +80,33 @@ const Projects = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow">
-        <Section className="pt-24">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold mb-2 font-plasmik">Projects</h1>
-                <p className="text-muted-foreground">
-                  Organize your conversations into research projects
-                </p>
-              </div>
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Project
-              </Button>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <DashboardSidebar />
+        <SidebarInset>
+          {/* Header with sidebar trigger */}
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold">Projects</h1>
             </div>
+          </header>
+
+          {/* Main content */}
+          <main className="flex-1 overflow-auto">
+            <div className="container mx-auto px-6 py-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2 font-plasmik">Projects</h1>
+                  <p className="text-muted-foreground">
+                    Organize your conversations into research projects
+                  </p>
+                </div>
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Project
+                </Button>
+              </div>
 
             {isLoading ? (
               <div className="flex justify-center my-12">
@@ -163,9 +175,13 @@ const Projects = () => {
                 ))}
               </div>
             )}
-          </div>
-        </Section>
-      </main>
+            </div>
+            
+            {/* Footer */}
+            <Footer />
+          </main>
+        </SidebarInset>
+      </div>
       
       {/* Create Project Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -233,9 +249,7 @@ const Projects = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      <Footer />
-    </div>
+    </SidebarProvider>
   );
 };
 
