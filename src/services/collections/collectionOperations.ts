@@ -28,10 +28,10 @@ export const getCollectionById = async (id: string): Promise<Collection | null> 
  */
 export const getUserCollections = async (): Promise<Collection[]> => {
   try {
+    // RLS policies will automatically filter to user's collections
     const { data, error } = await supabase
       .from("collections")
       .select("*")
-      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -72,7 +72,6 @@ export const getUserCollectionsWithCount = async (): Promise<CollectionWithPerso
     const { data: collections, error } = await supabase
       .from("collections")
       .select("*")
-      .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
