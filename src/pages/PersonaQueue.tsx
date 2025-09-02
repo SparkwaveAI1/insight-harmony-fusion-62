@@ -84,12 +84,29 @@ const PersonaQueue = () => {
     }
   };
 
-  const handleParseAndAdd = () => {
-    toast({
-      title: "Not Implemented",
-      description: "Parsing not implemented yet",
-      variant: "default",
-    });
+  const handleParseAndAdd = async () => {
+    if (!user || !textareaContent.trim()) return;
+
+    try {
+      await addToQueue(
+        user.id,
+        'Queued Persona',
+        textareaContent.trim()
+      );
+      toast({
+        title: "Success",
+        description: "Added to queue",
+      });
+      setTextareaContent(''); // Clear textarea
+      loadQueueItems(); // Refresh the list
+    } catch (error) {
+      console.error('Error adding to queue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add to queue",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user || !isAdmin) {
