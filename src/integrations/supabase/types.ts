@@ -482,6 +482,7 @@ export type Database = {
           priority: number | null
           processed_at: string | null
           status: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -495,6 +496,7 @@ export type Database = {
           priority?: number | null
           processed_at?: string | null
           status?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -508,6 +510,7 @@ export type Database = {
           priority?: number | null
           processed_at?: string | null
           status?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

@@ -1,0 +1,1 @@
+ALTER TABLE persona_creation_queue ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
