@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { addToQueue, getQueueItems, updateQueueStatus } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
-import { generatePersona } from "@/services/persona/personaGenerator";
+import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona/createV4Persona";
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -131,25 +131,39 @@ const PersonaQueue = () => {
       await updateQueueStatus(pendingItem.id, 'processing');
       loadQueueItems(); // Refresh to show processing status
 
-      // Generate persona using existing system
-      const persona = await generatePersona(pendingItem.description);
+      // Generate persona using V4 system (3-step process)
+      // Step 1: Create initial persona with detailed traits
+      const call1Result = await createV4PersonaCall1({
+        user_prompt: pendingItem.description,
+        user_id: user.id
+      });
       
-      if (persona) {
-        // Update status to completed
-        await updateQueueStatus(pendingItem.id, 'completed');
-        toast({
-          title: "Success",
-          description: `Persona "${persona.name}" created successfully`,
-        });
-      } else {
-        // Update status to error if creation failed
-        await updateQueueStatus(pendingItem.id, 'error');
-        toast({
-          title: "Error",
-          description: "Failed to create persona",
-          variant: "destructive",
-        });
+      if (!call1Result.success || !call1Result.persona_id) {
+        throw new Error('Failed at persona creation step 1');
       }
+
+      // Step 2: Generate conversation summaries
+      await updateQueueStatus(pendingItem.id, 'processing_stage2');
+      const call2Result = await createV4PersonaCall2(call1Result.persona_id);
+      
+      if (!call2Result.success) {
+        throw new Error('Failed at persona creation step 2');
+      }
+
+      // Step 3: Generate profile image
+      await updateQueueStatus(pendingItem.id, 'processing_stage3');
+      const call3Result = await createV4PersonaCall3(call1Result.persona_id, true);
+      
+      if (!call3Result.success) {
+        console.warn('Image generation failed, but persona created successfully');
+      }
+
+      // Update status to completed
+      await updateQueueStatus(pendingItem.id, 'completed');
+      toast({
+        title: "Success",
+        description: `Persona "${call1Result.persona_name}" created successfully`,
+      });
       
       loadQueueItems(); // Refresh the list
     } catch (error) {
