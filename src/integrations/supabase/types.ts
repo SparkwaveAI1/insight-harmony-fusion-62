@@ -470,6 +470,48 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_creation_queue: {
+        Row: {
+          collections: string[] | null
+          created_at: string
+          description: string
+          error_message: string | null
+          id: string
+          name: string
+          persona_id: string | null
+          priority: number | null
+          processed_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          collections?: string[] | null
+          created_at?: string
+          description: string
+          error_message?: string | null
+          id?: string
+          name: string
+          persona_id?: string | null
+          priority?: number | null
+          processed_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          collections?: string[] | null
+          created_at?: string
+          description?: string
+          error_message?: string | null
+          id?: string
+          name?: string
+          persona_id?: string | null
+          priority?: number | null
+          processed_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
