@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { addToQueue, getQueueItems } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +23,7 @@ const PersonaQueue = () => {
   const { toast } = useToast();
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [textareaContent, setTextareaContent] = useState('');
 
   // Check if user is admin
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -82,6 +84,14 @@ const PersonaQueue = () => {
     }
   };
 
+  const handleParseAndAdd = () => {
+    toast({
+      title: "Not Implemented",
+      description: "Parsing not implemented yet",
+      variant: "default",
+    });
+  };
+
   if (!user || !isAdmin) {
     return null;
   }
@@ -100,10 +110,28 @@ const PersonaQueue = () => {
                   <h1 className="text-3xl font-bold">Persona Queue Admin</h1>
                 </div>
                 
-                <div className="mb-4">
-                  <Button onClick={handleTestAdd} variant="outline">
-                    Test Add
-                  </Button>
+                <div className="space-y-6 mb-8">
+                  {/* Text Input Area */}
+                  <div className="bg-card border rounded-lg p-6">
+                    <h2 className="text-xl font-semibold mb-4">Add Personas to Queue</h2>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="Paste persona descriptions here..."
+                        value={textareaContent}
+                        onChange={(e) => setTextareaContent(e.target.value)}
+                        className="min-h-[200px] text-base"
+                        rows={8}
+                      />
+                      <div className="flex gap-3">
+                        <Button onClick={handleParseAndAdd} className="flex-1">
+                          Parse & Add to Queue
+                        </Button>
+                        <Button onClick={handleTestAdd} variant="outline">
+                          Test Add
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {loading ? (
