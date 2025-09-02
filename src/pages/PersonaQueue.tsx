@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { addToQueue, getQueueItems, updateQueueStatus } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
-import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona/createV4Persona";
+import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
