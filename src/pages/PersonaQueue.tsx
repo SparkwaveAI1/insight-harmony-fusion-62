@@ -9,8 +9,9 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { addToQueue, getQueueItems } from "@/services/personaQueueService";
+import { addToQueue, getQueueItems, updateQueueStatus } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
+import { generatePersona } from "@/services/persona/personaGenerator";
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -24,6 +25,7 @@ const PersonaQueue = () => {
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [textareaContent, setTextareaContent] = useState('');
+  const [processing, setProcessing] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -109,6 +111,59 @@ const PersonaQueue = () => {
     }
   };
 
+  const processNextQueueItem = async () => {
+    if (!user || processing) return;
+
+    try {
+      setProcessing(true);
+      
+      // Find the first pending item
+      const pendingItem = queueItems.find(item => item.status === 'pending');
+      if (!pendingItem) {
+        toast({
+          title: "No Items",
+          description: "No pending items to process",
+        });
+        return;
+      }
+
+      // Update status to processing
+      await updateQueueStatus(pendingItem.id, 'processing');
+      loadQueueItems(); // Refresh to show processing status
+
+      // Generate persona using existing system
+      const persona = await generatePersona(pendingItem.description);
+      
+      if (persona) {
+        // Update status to completed
+        await updateQueueStatus(pendingItem.id, 'completed');
+        toast({
+          title: "Success",
+          description: `Persona "${persona.name}" created successfully`,
+        });
+      } else {
+        // Update status to error if creation failed
+        await updateQueueStatus(pendingItem.id, 'error');
+        toast({
+          title: "Error",
+          description: "Failed to create persona",
+          variant: "destructive",
+        });
+      }
+      
+      loadQueueItems(); // Refresh the list
+    } catch (error) {
+      console.error('Error processing queue item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process queue item",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (!user || !isAdmin) {
     return null;
   }
@@ -142,6 +197,9 @@ const PersonaQueue = () => {
                       <div className="flex gap-3">
                         <Button onClick={handleParseAndAdd} className="flex-1">
                           Parse & Add to Queue
+                        </Button>
+                        <Button onClick={processNextQueueItem} disabled={processing}>
+                          {processing ? "Processing..." : "Process Queue"}
                         </Button>
                         <Button onClick={handleTestAdd} variant="outline">
                           Test Add
