@@ -43,19 +43,16 @@ export async function getQueueItems(userId: string) {
   return data;
 }
 
-export async function updateQueueStatus(id: string, status: string) {
-  console.log('updateQueueStatus called');
-  
+export const updateQueueStatus = async (id: string, status: string) => {
   const { data, error } = await supabase
     .from('persona_creation_queue')
-    .update({ status })
+    .update({ status })  // Only update status, no updated_at
     .eq('id', id)
     .select()
     .single();
-
+    
   if (error) {
     throw error;
   }
-
   return data;
-}
+};
