@@ -133,28 +133,28 @@ const PersonaQueue = () => {
 
       // Generate persona using V4 system (3-step process)
       // Step 1: Create initial persona with detailed traits
-      const call1Result = await createV4PersonaCall1({
+      const call1Response = await createV4PersonaCall1({
         user_prompt: pendingItem.description,
         user_id: user.id
       });
       
-      if (!call1Result.success || !call1Result.persona_id) {
+      if (!call1Response.success || !call1Response.persona_id) {
         throw new Error('Failed at persona creation step 1');
       }
 
       // Step 2: Generate conversation summaries
       await updateQueueStatus(pendingItem.id, 'processing_stage2');
-      const call2Result = await createV4PersonaCall2(call1Result.persona_id);
+      const call2Response = await createV4PersonaCall2(call1Response.persona_id);
       
-      if (!call2Result.success) {
+      if (!call2Response.success) {
         throw new Error('Failed at persona creation step 2');
       }
 
       // Step 3: Generate profile image
       await updateQueueStatus(pendingItem.id, 'processing_stage3');
-      const call3Result = await createV4PersonaCall3(call1Result.persona_id, true);
+      const call3Response = await createV4PersonaCall3(call2Response.persona_id, true);
       
-      if (!call3Result.success) {
+      if (!call3Response.success) {
         console.warn('Image generation failed, but persona created successfully');
       }
 
@@ -162,7 +162,7 @@ const PersonaQueue = () => {
       await updateQueueStatus(pendingItem.id, 'completed');
       toast({
         title: "Success",
-        description: `Persona "${call1Result.persona_name}" created successfully`,
+        description: `Persona "${call1Response.persona_name}" created successfully`,
       });
       
       loadQueueItems(); // Refresh the list
