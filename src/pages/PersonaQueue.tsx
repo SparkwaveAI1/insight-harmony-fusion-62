@@ -328,7 +328,8 @@ const PersonaQueue = () => {
       }
 
       // === Stage 2: Enrich / finalize metadata ===
-      if (item.status === 'processing_stage1' || item.status === 'processing_stage2') {
+      // Run Stage 2 if we just completed Stage 1 OR if resuming from Stage 2
+      if (item.status === 'processing' || item.status === 'processing_stage1' || item.status === 'processing_stage2') {
         // Guard: must have personaId by now
         if (!personaId) {
           await fail('Missing persona_id before stage 2');
@@ -372,7 +373,8 @@ const PersonaQueue = () => {
       }
 
       // === Stage 3: Image / attachments ===
-      if (item.status === 'processing_stage2' || item.status === 'processing_stage3') {
+      // Run Stage 3 if we just completed Stage 2 OR if resuming from Stage 3
+      if (item.status === 'processing' || item.status === 'processing_stage1' || item.status === 'processing_stage2' || item.status === 'processing_stage3') {
         if (!personaId) {
           await fail('Missing persona_id before stage 3');
         }
@@ -439,8 +441,15 @@ const PersonaQueue = () => {
         has_comm_style: !!(finalFresh?.full_profile as any)?.communication_style,
         card_description: null, // V4 personas don't have separate card_description field  
         profile_image_url: finalFresh?.profile_image_url ?? null,
+        creation_stage: finalFresh?.creation_stage ?? null,
+        creation_completed: finalFresh?.creation_completed ?? null,
         ts: new Date().toISOString(),
       });
+      
+      // ✅ Only mark queue complete when persona is actually finished
+      if (!finalFresh?.creation_completed) {
+        await fail(`Pipeline not complete after Stage 3: creation_completed=${finalFresh?.creation_completed}, creation_stage=${finalFresh?.creation_stage}`);
+      }
       
       await updateQueueStatusSafe(item.id, 'completed', personaId);
       console.log('🏁 Processing completed successfully for:', item.name);
