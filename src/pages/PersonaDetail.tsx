@@ -14,6 +14,8 @@ import NotFoundState from "@/components/persona-details/NotFoundState";
 import DeletePersonaButton from "@/components/persona-details/DeletePersonaButton";
 import { usePersonaDetail } from "@/hooks/usePersonaDetail";
 import { ensureStorageBuckets } from "@/services/supabase/storage/bucketService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 import { V4PersonaDisplay } from "@/components/personas/V4PersonaDisplay";
 import { V4Persona } from "@/types/persona-v4";
@@ -61,6 +63,21 @@ const PersonaDetail = () => {
 
 
 
+  // V4 validation and data preference
+  const isV4 = persona?.schema_version?.startsWith('v4');
+  
+  // Debug logging for Step 2 verification
+  if (persona && isV4) {
+    const fp = (persona?.full_profile ?? {}) as {
+      trait_profile?: any;
+      motivation_profile?: any;
+      communication_style?: any;
+      metadata?: any;
+    };
+    console.debug('fp keys:', Object.keys(fp || {}));
+    console.debug('trait_profile keys:', Object.keys((fp?.trait_profile || {})));
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen flex flex-col">
@@ -79,46 +96,31 @@ const PersonaDetail = () => {
                 <PersonaLoadingState />
               ) : !persona ? (
                 <NotFoundState />
-              ) : isV4Persona(persona) ? (
-                // V4 Persona - Use dedicated V4 display with built-in management
-                <V4PersonaDisplay 
-                  persona={persona}
-                  isOwner={isOwner}
-                  isPublic={isPublic}
-                  onVisibilityChange={handleVisibilityChange}
-                  onDelete={handlePersonaDeleted}
-                  onImageGenerated={handleImageGenerated}
-                  onPersonaUpdated={handleV4PersonaUpdated}
-                  showChat={showChat}
-                  onChatToggle={() => setShowChat(!showChat)}
-                />
+              ) : !isV4 ? (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertDescription>
+                    This persona is not V4 and cannot be displayed. Schema version: {persona?.schema_version || 'missing'}
+                  </AlertDescription>
+                </Alert>
               ) : (
-                // Legacy Persona - Use original layout
-                <>
-                  <PersonaDetailHeader 
-                    persona={persona}
+                // V4 Persona - Use dedicated V4 display with V4 badge
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default">V4</Badge>
+                    <span className="text-sm text-muted-foreground">Enhanced persona with rich trait data</span>
+                  </div>
+                  <V4PersonaDisplay 
+                    persona={persona as V4Persona}
                     isOwner={isOwner}
                     isPublic={isPublic}
                     onVisibilityChange={handleVisibilityChange}
                     onDelete={handlePersonaDeleted}
-                    onNameUpdate={handleNameUpdate}
-                    onDescriptionUpdate={handleDescriptionUpdate}
                     onImageGenerated={handleImageGenerated}
-                  onPersonaUpdated={handlePersonaUpdated}
+                    onPersonaUpdated={handleV4PersonaUpdated}
+                    showChat={showChat}
+                    onChatToggle={() => setShowChat(!showChat)}
                   />
-                  
-                  <PersonaContent persona={persona} isOwner={isOwner} />
-                  
-                  {/* Move Delete button to the very bottom of the page */}
-                  {isOwner && (
-                    <div className="max-w-md mx-auto mt-16 mb-8">
-                      <DeletePersonaButton 
-                        onDelete={handlePersonaDeleted} 
-                        isOwner={isOwner} 
-                      />
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
           </Section>
