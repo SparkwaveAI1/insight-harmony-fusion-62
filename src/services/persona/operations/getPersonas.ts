@@ -40,7 +40,13 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
       if (v4Data) {
         console.log('V4 persona found:', v4Data);
         
-        // Convert V4 persona to regular persona format with full data preserved
+        // Must be V4
+        if (!v4Data.schema_version || !v4Data.schema_version.startsWith('v4')) {
+          throw new Error(`Non-V4 persona fetched (schema_version=${v4Data.schema_version ?? 'missing'})`);
+        }
+        
+        // Extract trait data from full_profile instead of clobbering with {}
+        const fullProfile = (v4Data.full_profile as any) || {};
         const conversationSummary = v4Data.conversation_summary as any;
         const demographics = conversationSummary?.demographics;
         const backgroundDescription = demographics?.background_description;
@@ -54,14 +60,15 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           is_public: v4Data.is_public || false,
           created_at: v4Data.created_at || '',
           updated_at: v4Data.updated_at || '',
-          metadata: {},
-          trait_profile: {},
-          behavioral_modulation: {},
-          linguistic_profile: {},
-          emotional_triggers: null,
-          preinterview_tags: [],
-          simulation_directives: {},
-          interview_sections: [],
+          // Extract actual trait data from full_profile instead of clobbering
+          metadata: fullProfile.metadata || null,
+          trait_profile: fullProfile.trait_profile || null,
+          behavioral_modulation: fullProfile.behavioral_modulation || {},
+          linguistic_profile: fullProfile.linguistic_profile || {},
+          emotional_triggers: fullProfile.emotional_triggers || null,
+          preinterview_tags: fullProfile.preinterview_tags || [],
+          simulation_directives: fullProfile.simulation_directives || {},
+          interview_sections: fullProfile.interview_sections || [],
           prompt: null,
           profile_image_url: v4Data.profile_image_url,
           // Preserve V4 fields for correct detection
