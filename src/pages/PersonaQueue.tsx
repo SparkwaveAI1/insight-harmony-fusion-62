@@ -267,6 +267,9 @@ const PersonaQueue = () => {
         
         // Update personaId if call2 returns a different one
         personaId = call2Response.persona_id || personaId;
+        if (!personaId) {
+          throw new Error('Stage 2 completed but returned no persona_id');
+        }
         await updateQueueStatusSafe(item.id, 'processing_stage2', personaId);
         console.log('✅ V4 persona creation step 2 completed');
       }
@@ -287,11 +290,17 @@ const PersonaQueue = () => {
         
         // Update personaId if call3 returns a different one
         personaId = call3Response.persona_id || personaId;
+        if (!personaId) {
+          throw new Error('Stage 3 completed but returned no persona_id');
+        }
         await updateQueueStatusSafe(item.id, 'processing_stage3', personaId);
         console.log('✅ V4 persona creation step 3 completed');
       }
 
       // === Finalize ===
+      if (!personaId) {
+        throw new Error('Cannot finalize - no persona_id after all stages');
+      }
       await updateQueueStatusSafe(item.id, 'completed', personaId);
       console.log('🏁 Processing completed successfully for:', item.name);
       
