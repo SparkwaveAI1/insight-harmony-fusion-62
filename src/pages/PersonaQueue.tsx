@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
 import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
+import { addPersonaToCollection } from '@/services/collections/personaCollectionOperations';
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -319,6 +320,18 @@ const PersonaQueue = () => {
       }
       await updateQueueStatusSafe(item.id, 'completed', personaId);
       console.log('🏁 Processing completed successfully for:', item.name);
+      
+      // Auto-assign to collections if specified
+      if (item.collections && item.collections.length > 0) {
+        for (const collectionId of item.collections) {
+          try {
+            await addPersonaToCollection(collectionId, personaId);
+            console.log(`Assigned persona to collection: ${collectionId}`);
+          } catch (error) {
+            console.error('Failed to assign to collection:', collectionId, error);
+          }
+        }
+      }
       
       toast({
         title: 'Persona created successfully!',
