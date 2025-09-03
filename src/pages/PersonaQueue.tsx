@@ -266,6 +266,19 @@ const PersonaQueue = () => {
         if (!personaId) {
           console.log('🎯 Starting V4 persona creation step 1...');
           
+          // DIAGNOSTIC: Log trace before queue creation call
+          const trace = {
+            mode: 'queue',
+            queue_item_id: item.id,
+            idempotency_key: item.id,
+            payload_shape: Object.keys({
+              user_prompt: item.description,
+              user_id: user.id
+            }),
+            ts: new Date().toISOString(),
+          };
+          console.log('TRACE_QUEUE_START', trace);
+          
           const call1Response = await withTimeout(createV4PersonaCall1({
             user_prompt: item.description,
             user_id: user.id
@@ -292,6 +305,23 @@ const PersonaQueue = () => {
 
           if (error) throw error;
           ensureV4PersonaCore(fresh);
+          
+          // DIAGNOSTIC: Log trace after queue creation call
+          console.log('TRACE_QUEUE_AFTER_CREATE', {
+            queue_item_id: item.id,
+            persona_id: call1Response?.persona_id,
+            edge_fn: 'v4-persona-call1',
+            db_row: {
+              schema: fresh?.schema_version,
+              has_full_profile: !!fresh?.full_profile,
+              has_identity: !!(fresh?.full_profile as any)?.identity,
+              has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
+              has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
+              // legacy presence (for visibility only)
+              has_legacy_trait_profile: !!(fresh?.full_profile as any)?.trait_profile,
+            },
+            ts: new Date().toISOString(),
+          });
           
           console.log('✅ V4 persona creation step 1 completed:', personaId);
         } else {

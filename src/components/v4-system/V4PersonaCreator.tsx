@@ -12,6 +12,7 @@ import { backgroundJobService } from '@/services/persona/backgroundJobService';
 import { usePersonaCreationJob } from '@/hooks/useBackgroundPersonaJobs';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 export function V4PersonaCreator() {
   const { user } = useAuth();
@@ -67,6 +68,19 @@ export function V4PersonaCreator() {
         message: 'Generating detailed personality traits...',
       });
       
+      // DIAGNOSTIC: Log trace before regular creation call
+      const trace = {
+        mode: 'regular',
+        job_id: jobId,
+        idempotency_key: jobId,
+        payload_shape: Object.keys({
+          user_prompt: params.user_prompt,
+          user_id: params.user_id,
+        }),
+        ts: new Date().toISOString(),
+      };
+      console.log('TRACE_REGULAR_START', trace);
+      
       const call1Response = await createV4PersonaCall1({
         user_prompt: params.user_prompt,
         user_id: params.user_id,
@@ -75,6 +89,30 @@ export function V4PersonaCreator() {
       if (!call1Response.success) {
         throw new Error(call1Response.error || 'Call 1 failed');
       }
+
+      // DIAGNOSTIC: Fetch created persona from DB for comparison
+      const { data: fresh, error } = await supabase
+        .from('v4_personas')
+        .select('id, persona_id, schema_version, full_profile')
+        .eq('persona_id', call1Response.persona_id!)
+        .maybeSingle();
+
+      // DIAGNOSTIC: Log trace after regular creation call
+      console.log('TRACE_REGULAR_AFTER_CREATE', {
+        job_id: jobId,
+        persona_id: call1Response?.persona_id,
+        edge_fn: 'v4-persona-call1',
+        db_row: {
+          schema: fresh?.schema_version,
+          has_full_profile: !!fresh?.full_profile,
+          has_identity: !!(fresh?.full_profile as any)?.identity,
+          has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
+          has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
+          // legacy presence (for visibility only)
+          has_legacy_trait_profile: !!(fresh?.full_profile as any)?.trait_profile,
+        },
+        ts: new Date().toISOString(),
+      });
 
       backgroundJobService.updateJobFromApiResponse(jobId, call1Response);
 
