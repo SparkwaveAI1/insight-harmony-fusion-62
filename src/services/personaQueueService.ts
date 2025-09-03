@@ -43,10 +43,17 @@ export async function getQueueItems(userId: string) {
   return data;
 }
 
-export const updateQueueStatus = async (id: string, status: string) => {
+export const updateQueueStatus = async (id: string, status: string, personaId?: string) => {
+  const updateData: any = { status };
+  
+  // Add persona_id if provided
+  if (personaId) {
+    updateData.persona_id = personaId;
+  }
+  
   const { data, error } = await supabase
     .from('persona_creation_queue')
-    .update({ status })  // Only update status, no updated_at
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
