@@ -86,6 +86,28 @@ const PersonaQueue = () => {
     }
   };
 
+  const testStatusUpdate = async () => {
+    // Test with Denise Chen's ID
+    const deniseId = '10bdf9e6-8327-4f4a-9f57-02de800dc7e7';
+    console.log('🧪 Testing updateQueueStatus with Denise Chen...');
+    
+    try {
+      console.log('Before update - checking current status...');
+      const result = await updateQueueStatus(deniseId, 'test_status');
+      console.log('✅ updateQueueStatus SUCCESS:', result);
+      toast({ title: "Test Success", description: "Status update worked!" });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('❌ updateQueueStatus FAILED:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      toast({ title: "Test Failed", description: `Status update failed: ${error.message}`, variant: "destructive" });
+    }
+  };
+
   const handleParseAndAdd = async () => {
     if (!user || !textareaContent.trim()) return;
 
@@ -283,9 +305,12 @@ const PersonaQueue = () => {
                         <Button onClick={processNextQueueItem} disabled={processing}>
                           {processing ? "Processing..." : "Process Queue"}
                         </Button>
-                        <Button onClick={handleTestAdd} variant="outline">
-                          Test Add
-                        </Button>
+            <Button onClick={handleTestAdd} variant="outline">
+              Test Add
+            </Button>
+            <Button onClick={testStatusUpdate} variant="outline">
+              Test Status Update
+            </Button>
                       </div>
                     </div>
                   </div>
