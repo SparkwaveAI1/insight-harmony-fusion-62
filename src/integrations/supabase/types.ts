@@ -472,43 +472,55 @@ export type Database = {
       }
       persona_creation_queue: {
         Row: {
+          attempt_count: number | null
           collections: string[] | null
+          completed_at: string | null
           created_at: string
           description: string
           error_message: string | null
           id: string
+          locked_at: string | null
           name: string
           persona_id: string | null
           priority: number | null
           processed_at: string | null
+          processing_started_at: string | null
           status: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          attempt_count?: number | null
           collections?: string[] | null
+          completed_at?: string | null
           created_at?: string
           description: string
           error_message?: string | null
           id?: string
+          locked_at?: string | null
           name: string
           persona_id?: string | null
           priority?: number | null
           processed_at?: string | null
+          processing_started_at?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          attempt_count?: number | null
           collections?: string[] | null
+          completed_at?: string | null
           created_at?: string
           description?: string
           error_message?: string | null
           id?: string
+          locked_at?: string | null
           name?: string
           persona_id?: string | null
           priority?: number | null
           processed_at?: string | null
+          processing_started_at?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
@@ -1192,6 +1204,27 @@ export type Database = {
       is_researcher_or_admin: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      pop_next_persona_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          attempt_count: number | null
+          collections: string[] | null
+          completed_at: string | null
+          created_at: string
+          description: string
+          error_message: string | null
+          id: string
+          locked_at: string | null
+          name: string
+          persona_id: string | null
+          priority: number | null
+          processed_at: string | null
+          processing_started_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
       }
     }
     Enums: {
