@@ -30,3 +30,18 @@ export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Pr
   // Strict mode (kept for other views)
   return v4Only.filter(p => (p?.full_profile as any)?.trait_profile) as unknown as V4Persona[];
 }
+
+/**
+ * Fetches ALL public personas from v4_personas table without any validation filtering
+ * Used for library views to show everything that's public
+ */
+export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
+  const { data, error } = await supabase
+    .from('v4_personas')
+    .select('id, persona_id, name, schema_version, full_profile, conversation_summary, created_at, is_public')
+    .eq('is_public', true)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as V4Persona[];
+}

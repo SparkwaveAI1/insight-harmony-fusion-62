@@ -4,7 +4,7 @@ import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getPublicV4Personas } from "@/services/persona";
+import { getPublicV4PersonasShowAll } from "@/services/persona";
 import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 
 interface PublicPersonasListProps {
@@ -30,10 +30,10 @@ const PublicPersonasList = ({
 }: PublicPersonasListProps) => {
   const [personas, setPersonas] = useState<V4Persona[]>([]);
 
-  // Use service layer with relaxed validation for public library view
+  // Show ALL public personas without any filtering
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['public-personas'],
-    queryFn: () => getPublicV4Personas({ allowIncomplete: true }),
+    queryKey: ['public-personas-show-all'],
+    queryFn: getPublicV4PersonasShowAll,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: 1
   });
