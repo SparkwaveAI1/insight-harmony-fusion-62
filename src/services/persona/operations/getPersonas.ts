@@ -145,7 +145,27 @@ export async function getAllPersonas(): Promise<V4Persona[]> {
       console.log(`🔍 Public personas in result: ${publicCount}`);
     }
     
-    return (v4Personas || []) as unknown as V4Persona[];
+    // 🔒 Validate all personas are V4 with trait profiles
+    const validatedPersonas = (v4Personas || []).filter(persona => {
+      try {
+        if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
+          console.warn(`Filtering out non-V4 persona: ${persona.persona_id} (schema_version=${persona.schema_version})`);
+          return false;
+        }
+        if (!persona.full_profile || !(persona.full_profile as any)?.trait_profile) {
+          console.warn(`Filtering out V4 persona without trait_profile: ${persona.persona_id}`);
+          return false;
+        }
+        return true;
+      } catch (error) {
+        console.warn(`Filtering out invalid persona: ${persona.persona_id}`, error);
+        return false;
+      }
+    });
+    
+    console.log(`🔒 V4 validation: ${v4Personas?.length || 0} raw -> ${validatedPersonas.length} validated personas`);
+    
+    return validatedPersonas as unknown as V4Persona[];
   } catch (error: any) {
     const errorTimestamp = new Date().toISOString();
     console.error(`🔍 [${errorTimestamp}] getAllPersonas error:`, {
