@@ -121,7 +121,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                    Owner
                  </Badge>
                )}
-               {!(persona.full_profile as any)?.trait_profile && (
+               {!persona.full_profile?.identity && (
                  <Badge variant="destructive" className="text-xs px-2 py-0.5">
                    Incomplete
                  </Badge>
