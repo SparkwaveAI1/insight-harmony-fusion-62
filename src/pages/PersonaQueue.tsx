@@ -165,6 +165,15 @@ const PersonaQueue = () => {
         description: `Persona "${call1Response.persona_name}" created successfully`,
       });
       
+      // Check if there are more pending items and process automatically
+      setTimeout(async () => {
+        const updatedItems = await getQueueItems(user.id);
+        const nextPending = updatedItems?.find(item => item.status === 'pending');
+        if (nextPending) {
+          processNextQueueItem(); // Process the next item automatically
+        }
+      }, 1000); // Small delay to let UI update
+      
       loadQueueItems(); // Refresh the list
     } catch (error) {
       console.error('Error processing queue item:', error);
