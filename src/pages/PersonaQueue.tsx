@@ -33,6 +33,7 @@ const PersonaQueue = () => {
   const [loading, setLoading] = useState(true);
   const [textareaContent, setTextareaContent] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   // Check if user is admin
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -189,7 +190,7 @@ const PersonaQueue = () => {
   const releaseUiLock = () => localStorage.removeItem(LOCK_KEY);
 
   const processNextQueueItem = async () => {
-    if (!user || processing) {
+    if (!user || processing || busy) {
       console.log('🚫 Already processing or no user, skipping...');
       return;
     }
@@ -205,6 +206,7 @@ const PersonaQueue = () => {
     }
 
     setProcessing(true);
+    setBusy(true);
     console.log('🚀 Starting to process queue with atomic pop...');
     
     let currentItemId: string | null = null;
@@ -327,6 +329,7 @@ const PersonaQueue = () => {
     } finally {
       releaseUiLock();
       setProcessing(false);
+      setBusy(false);
       console.log('🏁 Processing complete, refreshing queue...');
       loadQueueItems();
     }
@@ -366,8 +369,8 @@ const PersonaQueue = () => {
                         <Button onClick={handleParseAndAdd} className="flex-1">
                           Parse & Add to Queue
                         </Button>
-                        <Button onClick={processNextQueueItem} disabled={processing}>
-                          {processing ? "Processing..." : "Process Queue"}
+                        <Button onClick={processNextQueueItem} disabled={busy}>
+                          {busy ? "Processing..." : "Process Queue"}
                         </Button>
             <Button onClick={handleTestAdd} variant="outline">
               Test Add
