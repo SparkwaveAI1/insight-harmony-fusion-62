@@ -21,11 +21,23 @@ import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
 import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
 import { addPersonaToCollection } from '@/services/collections/personaCollectionOperations';
+import { supabase } from '@/integrations/supabase/client';
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
   "scott@sparkwave-ai.com",
 ];
+
+const ensureV4Persona = (persona: any) => {
+  if (!persona) throw new Error('No persona returned from creation call');
+  if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
+    throw new Error(`Non-V4 persona detected (schema_version=${persona.schema_version || 'missing'})`);
+  }
+  if (!persona.full_profile || !persona.full_profile.trait_profile) {
+    throw new Error('V4 persona missing trait_profile in full_profile');
+  }
+  return persona;
+};
 
 const PersonaQueue = () => {
   const { user } = useAuth();
@@ -260,6 +272,17 @@ const PersonaQueue = () => {
           }
 
           await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
+          
+          // 🔒 Fetch the created persona from DB and enforce V4 schema
+          const { data: fresh, error } = await supabase
+            .from('v4_personas')
+            .select('id, persona_id, schema_version, full_profile')
+            .eq('persona_id', personaId)
+            .maybeSingle();
+
+          if (error) throw error;
+          ensureV4Persona(fresh);
+          
           console.log('✅ V4 persona creation step 1 completed:', personaId);
         } else {
           console.log('📋 Persona already exists, skipping stage 1:', personaId);
