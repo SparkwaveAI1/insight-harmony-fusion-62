@@ -15,7 +15,8 @@ export async function addToQueue(
       name,
       description,
       collections,
-      status: 'pending'
+      status: 'pending',
+      attempt_count: 0
     })
     .select()
     .single();
@@ -24,6 +25,19 @@ export async function addToQueue(
     throw error;
   }
 
+  return data;
+}
+
+// Atomically pop the next queue item and mark it as processing
+export async function popNextQueueItem() {
+  console.log('popNextQueueItem called');
+  
+  const { data, error } = await supabase.rpc('pop_next_persona_queue');
+  
+  if (error) {
+    throw error;
+  }
+  
   return data;
 }
 
@@ -43,12 +57,30 @@ export async function getQueueItems(userId: string) {
   return data;
 }
 
-export const updateQueueStatus = async (id: string, status: string, personaId?: string) => {
-  const updateData: any = { status };
+export const updateQueueStatus = async (
+  id: string, 
+  status: string, 
+  personaId?: string, 
+  errorMessage?: string
+) => {
+  const updateData: any = { 
+    status,
+    updated_at: new Date().toISOString()
+  };
   
   // Add persona_id if provided
   if (personaId) {
     updateData.persona_id = personaId;
+  }
+  
+  // Add error message if provided
+  if (errorMessage) {
+    updateData.error_message = errorMessage;
+  }
+  
+  // Set completed_at timestamp for completed status
+  if (status === 'completed') {
+    updateData.completed_at = new Date().toISOString();
   }
   
   const { data, error } = await supabase
@@ -62,6 +94,21 @@ export const updateQueueStatus = async (id: string, status: string, personaId?: 
     throw error;
   }
   return data;
+};
+
+// Helper function to safely update queue status with error handling
+export const updateQueueStatusSafe = async (
+  id: string, 
+  status: string, 
+  personaId?: string, 
+  errorMessage?: string
+) => {
+  try {
+    return await updateQueueStatus(id, status, personaId, errorMessage);
+  } catch (error) {
+    console.error('Failed to update queue status', { id, status, personaId, error });
+    throw error;
+  }
 };
 
 export const parsePersonaDescription = (text: string) => {

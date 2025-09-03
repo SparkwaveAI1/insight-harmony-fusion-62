@@ -9,7 +9,14 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { addToQueue, getQueueItems, updateQueueStatus, parsePersonaDescription } from "@/services/personaQueueService";
+import { 
+  addToQueue, 
+  getQueueItems, 
+  updateQueueStatus, 
+  updateQueueStatusSafe, 
+  parsePersonaDescription, 
+  popNextQueueItem 
+} from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
 
@@ -161,92 +168,136 @@ const PersonaQueue = () => {
     }
   };
 
-  const processNextQueueItem = async () => {
-    if (!user || processing) return;
+  // Cross-tab lock management
+  const LOCK_KEY = 'pcq-processing-lock';
+  const LOCK_TTL_MS = 60_000; // 60 seconds
 
-    let pendingItem = null;
+  const tryAcquireUiLock = () => {
+    const raw = localStorage.getItem(LOCK_KEY);
+    if (raw) {
+      try {
+        const { until } = JSON.parse(raw);
+        if (Date.now() < until) return false;
+      } catch (e) {
+        // Invalid lock data, proceed to acquire
+      }
+    }
+    localStorage.setItem(LOCK_KEY, JSON.stringify({ until: Date.now() + LOCK_TTL_MS }));
+    return true;
+  };
+
+  const releaseUiLock = () => localStorage.removeItem(LOCK_KEY);
+
+  const processNextQueueItem = async () => {
+    if (!user || processing) {
+      console.log('🚫 Already processing or no user, skipping...');
+      return;
+    }
+
+    // Try to acquire cross-tab lock
+    if (!tryAcquireUiLock()) {
+      toast({
+        title: 'Already processing',
+        description: 'Processing is already running in another tab',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setProcessing(true);
+    console.log('🚀 Starting to process queue with atomic pop...');
     
+    let currentItemId: string | null = null;
+
     try {
-      setProcessing(true);
-      console.log('🚀 Starting queue processing...');
-      
-      // Find the first pending item
-      pendingItem = queueItems.find(item => item.status === 'pending');
-      if (!pendingItem) {
-        console.log('❌ No pending items found');
+      // 1) Atomically claim a job
+      const item = await popNextQueueItem();
+      if (!item) {
         toast({
-          title: "No Items",
-          description: "No pending items to process",
+          title: 'Queue empty',
+          description: 'No pending items to process',
         });
         return;
       }
-      
-      console.log('📝 Processing item:', pendingItem.name, 'ID:', pendingItem.id);
 
-      // Update status to processing
-      console.log('🔄 Updating status to processing...');
-      await updateQueueStatus(pendingItem.id, 'processing');
-      console.log('✅ Status updated to processing');
-      loadQueueItems(); // Refresh to show processing status
+      currentItemId = item.id;
+      console.log('📋 Claimed queue item:', item.name, 'Status:', item.status);
 
-      // Generate persona using V4 system (3-step process)
-      console.log('🎯 Starting V4 persona creation step 1...');
-      // Step 1: Create initial persona with detailed traits
-      const call1Response = await createV4PersonaCall1({
-        user_prompt: pendingItem.description,
-        user_id: user.id
-      });
-      
-      console.log('📊 Call 1 response:', call1Response);
-      
-      if (!call1Response.success || !call1Response.persona_id) {
-        console.error('❌ Step 1 failed:', call1Response);
-        throw new Error('Failed at persona creation step 1');
-      }
-      
-      console.log('✅ Step 1 completed, persona_id:', call1Response.persona_id);
+      let personaId = item.persona_id ?? null;
 
-      // Step 2: Generate conversation summaries
-      console.log('🎯 Starting V4 persona creation step 2...');
-      await updateQueueStatus(pendingItem.id, 'processing_stage2', call1Response.persona_id);
-      console.log('✅ Status updated to processing_stage2');
-      
-      const call2Response = await createV4PersonaCall2(call1Response.persona_id);
-      console.log('📊 Call 2 response:', call2Response);
-      
-      if (!call2Response.success) {
-        console.error('❌ Step 2 failed:', call2Response);
-        throw new Error('Failed at persona creation step 2');
-      }
-      
-      console.log('✅ Step 2 completed');
+      // === Stage 1: Create (idempotent) ===
+      if (item.status === 'processing' || item.status === 'processing_stage1') {
+        if (!personaId) {
+          console.log('🎯 Starting V4 persona creation step 1...');
+          
+          const call1Response = await createV4PersonaCall1({
+            user_prompt: item.description,
+            user_id: user.id
+          });
 
-      // Step 3: Generate profile image
-      console.log('🎯 Starting V4 persona creation step 3...');
-      await updateQueueStatus(pendingItem.id, 'processing_stage3', call1Response.persona_id);
-      console.log('✅ Status updated to processing_stage3');
-      
-      const call3Response = await createV4PersonaCall3(call2Response.persona_id, true);
-      console.log('📊 Call 3 response:', call3Response);
-      
-      if (!call3Response.success) {
-        console.warn('⚠️ Image generation failed, but persona created successfully');
-      } else {
-        console.log('✅ Step 3 completed');
+          if (!call1Response.success) {
+            throw new Error(`V4 Call 1 failed: ${call1Response.error}`);
+          }
+
+          personaId = call1Response.persona_id;
+          await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
+          console.log('✅ V4 persona creation step 1 completed:', personaId);
+        } else {
+          console.log('📋 Persona already exists, skipping stage 1:', personaId);
+          await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
+        }
       }
 
-      // Update status to completed
-      console.log('🏁 Updating final status to completed...');
-      await updateQueueStatus(pendingItem.id, 'completed', call1Response.persona_id);
-      console.log('✅ Final status updated to completed');
+      // === Stage 2: Enrich / finalize metadata ===
+      if (item.status === 'processing_stage1' || item.status === 'processing_stage2') {
+        // Guard: must have personaId by now
+        if (!personaId) {
+          throw new Error('Missing persona_id before stage 2');
+        }
+        
+        console.log('🎯 Starting V4 persona creation step 2...');
+        
+        const call2Response = await createV4PersonaCall2(personaId);
+        
+        if (!call2Response.success) {
+          throw new Error(`V4 Call 2 failed: ${call2Response.error}`);
+        }
+        
+        // Update personaId if call2 returns a different one
+        personaId = call2Response.persona_id || personaId;
+        await updateQueueStatusSafe(item.id, 'processing_stage2', personaId);
+        console.log('✅ V4 persona creation step 2 completed');
+      }
+
+      // === Stage 3: Image / attachments ===
+      if (item.status === 'processing_stage2' || item.status === 'processing_stage3') {
+        if (!personaId) {
+          throw new Error('Missing persona_id before stage 3');
+        }
+        
+        console.log('🎯 Starting V4 persona creation step 3...');
+        
+        const call3Response = await createV4PersonaCall3(personaId, true);
+        
+        if (!call3Response.success) {
+          throw new Error(`V4 Call 3 failed: ${call3Response.error}`);
+        }
+        
+        // Update personaId if call3 returns a different one
+        personaId = call3Response.persona_id || personaId;
+        await updateQueueStatusSafe(item.id, 'processing_stage3', personaId);
+        console.log('✅ V4 persona creation step 3 completed');
+      }
+
+      // === Finalize ===
+      await updateQueueStatusSafe(item.id, 'completed', personaId);
+      console.log('🏁 Processing completed successfully for:', item.name);
       
       toast({
-        title: "Success",
-        description: `Persona "${call1Response.persona_name}" created successfully`,
+        title: 'Persona created successfully!',
+        description: `${item.name} has been processed and is ready for use.`,
       });
-      
-      console.log('🎉 Persona creation completed successfully!');
-      
+
       // Check if there are more pending items and process automatically
       setTimeout(async () => {
         console.log('🔍 Checking for next pending item...');
@@ -258,37 +309,26 @@ const PersonaQueue = () => {
         } else {
           console.log('✅ No more pending items found');
         }
-      }, 1000); // Small delay to let UI update
+      }, 1000);
+
+    } catch (error: any) {
+      console.error('❌ Error processing queue item:', error);
       
-      loadQueueItems(); // Refresh the list
-    } catch (error) {
-      console.error('💥 QUEUE PROCESSING ERROR:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        pendingItem: pendingItem?.id,
-        pendingItemName: pendingItem?.name
-      });
-      
-      // Try to update status to failed if we have a pending item
-      if (pendingItem) {
-        try {
-          console.log('🔄 Updating status to failed...');
-          await updateQueueStatus(pendingItem.id, 'failed');
-          console.log('✅ Status updated to failed');
-        } catch (statusError) {
-          console.error('❌ Failed to update status to failed:', statusError);
-        }
+      // Update status to failed with error message if we have an item ID
+      if (currentItemId) {
+        await updateQueueStatusSafe(currentItemId, 'failed', undefined, `ERR: ${error?.message ?? 'unknown'}`);
       }
       
       toast({
-        title: "Error",
-        description: "Failed to process queue item",
-        variant: "destructive",
+        title: 'Processing failed',
+        description: error.message || 'Unknown error occurred',
+        variant: 'destructive',
       });
     } finally {
+      releaseUiLock();
       setProcessing(false);
-      console.log('🔚 Queue processing finished');
+      console.log('🏁 Processing complete, refreshing queue...');
+      loadQueueItems();
     }
   };
 
