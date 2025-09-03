@@ -118,69 +118,123 @@ const PersonaQueue = () => {
   const processNextQueueItem = async () => {
     if (!user || processing) return;
 
+    let pendingItem = null;
+    
     try {
       setProcessing(true);
+      console.log('🚀 Starting queue processing...');
       
       // Find the first pending item
-      const pendingItem = queueItems.find(item => item.status === 'pending');
+      pendingItem = queueItems.find(item => item.status === 'pending');
       if (!pendingItem) {
+        console.log('❌ No pending items found');
         toast({
           title: "No Items",
           description: "No pending items to process",
         });
         return;
       }
+      
+      console.log('📝 Processing item:', pendingItem.name, 'ID:', pendingItem.id);
 
       // Update status to processing
+      console.log('🔄 Updating status to processing...');
       await updateQueueStatus(pendingItem.id, 'processing');
+      console.log('✅ Status updated to processing');
       loadQueueItems(); // Refresh to show processing status
 
       // Generate persona using V4 system (3-step process)
+      console.log('🎯 Starting V4 persona creation step 1...');
       // Step 1: Create initial persona with detailed traits
       const call1Response = await createV4PersonaCall1({
         user_prompt: pendingItem.description,
         user_id: user.id
       });
       
+      console.log('📊 Call 1 response:', call1Response);
+      
       if (!call1Response.success || !call1Response.persona_id) {
+        console.error('❌ Step 1 failed:', call1Response);
         throw new Error('Failed at persona creation step 1');
       }
+      
+      console.log('✅ Step 1 completed, persona_id:', call1Response.persona_id);
 
       // Step 2: Generate conversation summaries
+      console.log('🎯 Starting V4 persona creation step 2...');
       await updateQueueStatus(pendingItem.id, 'processing_stage2');
+      console.log('✅ Status updated to processing_stage2');
+      
       const call2Response = await createV4PersonaCall2(call1Response.persona_id);
+      console.log('📊 Call 2 response:', call2Response);
       
       if (!call2Response.success) {
+        console.error('❌ Step 2 failed:', call2Response);
         throw new Error('Failed at persona creation step 2');
       }
+      
+      console.log('✅ Step 2 completed');
 
       // Step 3: Generate profile image
+      console.log('🎯 Starting V4 persona creation step 3...');
       await updateQueueStatus(pendingItem.id, 'processing_stage3');
+      console.log('✅ Status updated to processing_stage3');
+      
       const call3Response = await createV4PersonaCall3(call2Response.persona_id, true);
+      console.log('📊 Call 3 response:', call3Response);
       
       if (!call3Response.success) {
-        console.warn('Image generation failed, but persona created successfully');
+        console.warn('⚠️ Image generation failed, but persona created successfully');
+      } else {
+        console.log('✅ Step 3 completed');
       }
 
       // Update status to completed
+      console.log('🏁 Updating final status to completed...');
       await updateQueueStatus(pendingItem.id, 'completed');
+      console.log('✅ Final status updated to completed');
+      
       toast({
         title: "Success",
         description: `Persona "${call1Response.persona_name}" created successfully`,
       });
       
+      console.log('🎉 Persona creation completed successfully!');
+      
       // Check if there are more pending items and process automatically
       setTimeout(async () => {
+        console.log('🔍 Checking for next pending item...');
         const updatedItems = await getQueueItems(user.id);
         const nextPending = updatedItems?.find(item => item.status === 'pending');
         if (nextPending) {
+          console.log('🚀 Found next pending item, processing automatically...');
           processNextQueueItem(); // Process the next item automatically
+        } else {
+          console.log('✅ No more pending items found');
         }
       }, 1000); // Small delay to let UI update
       
       loadQueueItems(); // Refresh the list
     } catch (error) {
-      console.error('Error processing queue item:', error);
+      console.error('💥 QUEUE PROCESSING ERROR:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        pendingItem: pendingItem?.id,
+        pendingItemName: pendingItem?.name
+      });
+      
+      // Try to update status to failed if we have a pending item
+      if (pendingItem) {
+        try {
+          console.log('🔄 Updating status to failed...');
+          await updateQueueStatus(pendingItem.id, 'failed');
+          console.log('✅ Status updated to failed');
+        } catch (statusError) {
+          console.error('❌ Failed to update status to failed:', statusError);
+        }
+      }
+      
       toast({
         title: "Error",
         description: "Failed to process queue item",
@@ -188,6 +242,7 @@ const PersonaQueue = () => {
       });
     } finally {
       setProcessing(false);
+      console.log('🔚 Queue processing finished');
     }
   };
 
