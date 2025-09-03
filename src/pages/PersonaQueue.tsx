@@ -19,6 +19,7 @@ import {
 } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
+import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -169,44 +170,39 @@ const PersonaQueue = () => {
     }
   };
 
-  // Cross-tab lock management
-  const LOCK_KEY = 'pcq-processing-lock';
-  const LOCK_TTL_MS = 60_000; // 60 seconds
+  // New enhanced cross-tab lock processing handler
+  const onProcessClick = async () => {
+    if (busy) return;
 
-  const tryAcquireUiLock = () => {
-    const raw = localStorage.getItem(LOCK_KEY);
-    if (raw) {
-      try {
-        const { until } = JSON.parse(raw);
-        if (Date.now() < until) return false;
-      } catch (e) {
-        // Invalid lock data, proceed to acquire
-      }
-    }
-    localStorage.setItem(LOCK_KEY, JSON.stringify({ until: Date.now() + LOCK_TTL_MS }));
-    return true;
-  };
-
-  const releaseUiLock = () => localStorage.removeItem(LOCK_KEY);
-
-  const processNextQueueItem = async () => {
-    if (!user || processing || busy) {
-      console.log('🚫 Already processing or no user, skipping...');
-      return;
-    }
-
-    // Try to acquire cross-tab lock
-    if (!tryAcquireUiLock()) {
+    // Cross-tab guard using new utility
+    if (!tryAcquireQueueLock(60_000)) {
+      const held = readQueueLock();
       toast({
-        title: 'Already processing',
-        description: 'Processing is already running in another tab',
+        title: 'Already processing elsewhere',
+        description: `Another tab started processing. Try again in ~60s.`,
         variant: 'destructive',
       });
       return;
     }
 
-    setProcessing(true);
     setBusy(true);
+    const renew = setInterval(() => renewQueueLock(60_000), 30_000); // keepalive if it runs long
+    try {
+      await processQueueItemInternal();
+    } finally {
+      clearInterval(renew);
+      releaseQueueLock();
+      setBusy(false);
+    }
+  };
+
+  const processQueueItemInternal = async () => {
+    if (!user || processing) {
+      console.log('🚫 Already processing or no user, skipping...');
+      return;
+    }
+
+    setProcessing(true);
     console.log('🚀 Starting to process queue with atomic pop...');
     
     let currentItemId: string | null = null;
@@ -336,7 +332,7 @@ const PersonaQueue = () => {
         const nextPending = updatedItems?.find(item => item.status === 'pending');
         if (nextPending) {
           console.log('🚀 Found next pending item, processing automatically...');
-          processNextQueueItem(); // Process the next item automatically
+          onProcessClick(); // Process the next item automatically
         } else {
           console.log('✅ No more pending items found');
         }
@@ -356,7 +352,6 @@ const PersonaQueue = () => {
         variant: 'destructive',
       });
     } finally {
-      releaseUiLock();
       setProcessing(false);
       setBusy(false);
       console.log('🏁 Processing complete, refreshing queue...');
@@ -398,7 +393,7 @@ const PersonaQueue = () => {
                         <Button onClick={handleParseAndAdd} className="flex-1">
                           Parse & Add to Queue
                         </Button>
-                        <Button onClick={processNextQueueItem} disabled={busy}>
+                        <Button onClick={onProcessClick} disabled={busy}>
                           {busy ? "Processing..." : "Process Queue"}
                         </Button>
             <Button onClick={handleTestAdd} variant="outline">
