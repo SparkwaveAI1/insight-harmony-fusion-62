@@ -4,7 +4,7 @@ import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { supabase } from "@/integrations/supabase/client";
+import { getPublicV4Personas } from "@/services/persona";
 import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 
 interface PublicPersonasListProps {
@@ -30,53 +30,11 @@ const PublicPersonasList = ({
 }: PublicPersonasListProps) => {
   const [personas, setPersonas] = useState<V4Persona[]>([]);
 
-  // Direct query with relaxed validation for public library view
+  // Use service layer with relaxed validation for public library view
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['public-personas'],
-    queryFn: async () => {
-      const timestamp = new Date().toISOString();
-      console.log(`🔍 [${timestamp}] PublicPersonasList: Starting direct query (relaxed validation)`);
-      
-      try {
-        // Direct supabase query bypassing strict service validation
-        const { data: v4Personas, error: queryError } = await supabase
-          .from('v4_personas')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (queryError) throw queryError;
-        
-        console.log(`🔍 [${timestamp}] Raw personas data received:`, {
-          count: v4Personas?.length || 0,
-        });
-        
-        // 🔒 Relaxed validation: only check schema_version, allow missing trait_profile
-        const validatedPersonas = (v4Personas || []).filter(persona => {
-          if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
-            console.log(`🔍 Filtering out non-V4 persona: ${persona.persona_id} (schema_version=${persona.schema_version})`);
-            return false;
-          }
-          return true; // ✅ allow through even if trait_profile is missing
-        });
-        
-        // Filter to only public personas
-        const publicPersonas = validatedPersonas.filter(persona => {
-          const isPublic = persona.is_public === true;
-          console.log(`🔍 Persona ${persona.name} (${persona.persona_id}): is_public = ${persona.is_public}, has_trait_profile = ${!!(persona.full_profile as any)?.trait_profile}`);
-          return isPublic;
-        });
-        
-        console.log(`🔍 [${timestamp}] Final public personas count: ${publicPersonas.length}`);
-        
-        return publicPersonas as unknown as V4Persona[];
-      } catch (error) {
-        console.error(`🔍 [${timestamp}] Error in PublicPersonasList queryFn:`, error);
-        throw error;
-      }
-    },
-    staleTime: 0, // Force fresh data for debugging
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    queryFn: () => getPublicV4Personas({ allowIncomplete: true }),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: 1
   });
 
