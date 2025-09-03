@@ -69,17 +69,14 @@ export function V4PersonaCreator() {
       });
       
       // DIAGNOSTIC: Log trace before regular creation call
-      const trace = {
-        mode: 'regular',
+      console.log('TRACE_M_START', {
         job_id: jobId,
-        idempotency_key: jobId,
-        payload_shape: Object.keys({
+        payload_keys: Object.keys({
           user_prompt: params.user_prompt,
           user_id: params.user_id,
         }),
         ts: new Date().toISOString(),
-      };
-      console.log('TRACE_REGULAR_START', trace);
+      });
       
       const call1Response = await createV4PersonaCall1({
         user_prompt: params.user_prompt,
@@ -93,23 +90,23 @@ export function V4PersonaCreator() {
       // DIAGNOSTIC: Fetch created persona from DB for comparison
       const { data: fresh, error } = await supabase
         .from('v4_personas')
-        .select('id, persona_id, schema_version, full_profile')
+        .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
         .eq('persona_id', call1Response.persona_id!)
         .maybeSingle();
 
       // DIAGNOSTIC: Log trace after regular creation call
-      console.log('TRACE_REGULAR_AFTER_CREATE', {
+      console.log('TRACE_M_AFTER_CALL1', {
         job_id: jobId,
         persona_id: call1Response?.persona_id,
-        edge_fn: 'v4-persona-call1',
-        db_row: {
+        db: {
           schema: fresh?.schema_version,
-          has_full_profile: !!fresh?.full_profile,
           has_identity: !!(fresh?.full_profile as any)?.identity,
           has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
           has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
-          // legacy presence (for visibility only)
-          has_legacy_trait_profile: !!(fresh?.full_profile as any)?.trait_profile,
+          card_description: null, // V4 personas don't have separate card_description field
+          profile_image_url: fresh?.profile_image_url ?? null,
+          creation_stage: fresh?.creation_stage ?? null,
+          creation_completed: fresh?.creation_completed ?? null,
         },
         ts: new Date().toISOString(),
       });
@@ -129,6 +126,25 @@ export function V4PersonaCreator() {
         throw new Error(call2Response.error || 'Call 2 failed');
       }
 
+      // DIAGNOSTIC: Fetch persona from DB after Stage 2
+      const { data: fresh2, error: error2 } = await supabase
+        .from('v4_personas')
+        .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+        .eq('persona_id', call2Response.persona_id!)
+        .maybeSingle();
+
+      if (error2) throw error2;
+      
+      console.log('TRACE_M_AFTER_CALL2', {
+        job_id: jobId,
+        persona_id: call2Response.persona_id,
+        card_description: null, // V4 personas don't have separate card_description field  
+        profile_image_url: fresh2?.profile_image_url ?? null,
+        creation_stage: fresh2?.creation_stage ?? null,
+        creation_completed: fresh2?.creation_completed ?? null,
+        ts: new Date().toISOString(),
+      });
+
       backgroundJobService.updateJobFromApiResponse(jobId, call2Response);
 
       // Call 3: Generate profile image (optional)
@@ -139,6 +155,26 @@ export function V4PersonaCreator() {
       });
 
       const call3Response = await createV4PersonaCall3(call2Response.persona_id!, params.generateImage);
+      
+      // DIAGNOSTIC: Fetch persona from DB after Stage 3
+      const { data: fresh3, error: error3 } = await supabase
+        .from('v4_personas')
+        .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+        .eq('persona_id', call2Response.persona_id!)
+        .maybeSingle();
+
+      if (error3) throw error3;
+      
+      console.log('TRACE_M_AFTER_CALL3', {
+        job_id: jobId,
+        persona_id: call2Response.persona_id,
+        card_description: null, // V4 personas don't have separate card_description field  
+        profile_image_url: fresh3?.profile_image_url ?? null,
+        creation_stage: fresh3?.creation_stage ?? null,
+        creation_completed: fresh3?.creation_completed ?? null,
+        ts: new Date().toISOString(),
+      });
+      
       backgroundJobService.updateJobFromApiResponse(jobId, call3Response);
 
       // Add to selected collections if any
@@ -152,6 +188,29 @@ export function V4PersonaCreator() {
           await addPersonaToCollection(collectionId, call1Response.persona_id!);
         }
       }
+
+      // DIAGNOSTIC: Final trace before marking completed and navigating
+      const { data: finalFresh, error: finalError } = await supabase
+        .from('v4_personas')
+        .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+        .eq('persona_id', call2Response.persona_id!)
+        .maybeSingle();
+
+      if (finalError) throw finalError;
+      
+      console.log('TRACE_M_BEFORE_COMPLETE', {
+        job_id: jobId,
+        persona_id: call2Response.persona_id,
+        // IMPORTANT: what object are we about to render?
+        render_source: finalFresh ? 'db_fetch' : 'create_response',
+        has_full_profile: !!finalFresh?.full_profile,
+        has_identity: !!(finalFresh?.full_profile as any)?.identity,
+        has_motivation: !!(finalFresh?.full_profile as any)?.motivation_profile,
+        has_comm_style: !!(finalFresh?.full_profile as any)?.communication_style,
+        card_description: null, // V4 personas don't have separate card_description field  
+        profile_image_url: finalFresh?.profile_image_url ?? null,
+        ts: new Date().toISOString(),
+      });
 
       // Complete the job
       backgroundJobService.completeJob(jobId, {

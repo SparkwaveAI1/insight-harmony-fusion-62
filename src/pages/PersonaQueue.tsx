@@ -267,17 +267,14 @@ const PersonaQueue = () => {
           console.log('🎯 Starting V4 persona creation step 1...');
           
           // DIAGNOSTIC: Log trace before queue creation call
-          const trace = {
-            mode: 'queue',
+          console.log('TRACE_Q_START', {
             queue_item_id: item.id,
-            idempotency_key: item.id,
-            payload_shape: Object.keys({
+            payload_keys: Object.keys({
               user_prompt: item.description,
               user_id: user.id
             }),
             ts: new Date().toISOString(),
-          };
-          console.log('TRACE_QUEUE_START', trace);
+          });
           
           const call1Response = await withTimeout(createV4PersonaCall1({
             user_prompt: item.description,
@@ -299,7 +296,7 @@ const PersonaQueue = () => {
           // 🔒 Fetch the created persona from DB and enforce V4 schema
           const { data: fresh, error } = await supabase
             .from('v4_personas')
-            .select('id, persona_id, schema_version, full_profile')
+            .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
             .eq('persona_id', personaId)
             .maybeSingle();
 
@@ -307,18 +304,18 @@ const PersonaQueue = () => {
           ensureV4PersonaCore(fresh);
           
           // DIAGNOSTIC: Log trace after queue creation call
-          console.log('TRACE_QUEUE_AFTER_CREATE', {
+          console.log('TRACE_Q_AFTER_CALL1', {
             queue_item_id: item.id,
             persona_id: call1Response?.persona_id,
-            edge_fn: 'v4-persona-call1',
-            db_row: {
+            db: {
               schema: fresh?.schema_version,
-              has_full_profile: !!fresh?.full_profile,
               has_identity: !!(fresh?.full_profile as any)?.identity,
               has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
               has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
-              // legacy presence (for visibility only)
-              has_legacy_trait_profile: !!(fresh?.full_profile as any)?.trait_profile,
+              card_description: null, // V4 personas don't have separate card_description field
+              profile_image_url: fresh?.profile_image_url ?? null,
+              creation_stage: fresh?.creation_stage ?? null,
+              creation_completed: fresh?.creation_completed ?? null,
             },
             ts: new Date().toISOString(),
           });
@@ -351,6 +348,26 @@ const PersonaQueue = () => {
           await fail('Stage 2 completed but returned no persona_id');
         }
         await updateQueueStatusSafe(item.id, 'processing_stage2', personaId);
+        
+        // DIAGNOSTIC: Fetch persona from DB after Stage 2
+        const { data: fresh2, error: error2 } = await supabase
+          .from('v4_personas')
+          .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+          .eq('persona_id', personaId)
+          .maybeSingle();
+
+        if (error2) throw error2;
+        
+        console.log('TRACE_Q_AFTER_CALL2', {
+          queue_item_id: item.id,
+          persona_id: personaId,
+          card_description: null, // V4 personas don't have separate card_description field  
+          profile_image_url: fresh2?.profile_image_url ?? null,
+          creation_stage: fresh2?.creation_stage ?? null,
+          creation_completed: fresh2?.creation_completed ?? null,
+          ts: new Date().toISOString(),
+        });
+        
         console.log('✅ V4 persona creation step 2 completed');
       }
 
@@ -374,6 +391,26 @@ const PersonaQueue = () => {
           await fail('Stage 3 completed but returned no persona_id');
         }
         await updateQueueStatusSafe(item.id, 'processing_stage3', personaId);
+        
+        // DIAGNOSTIC: Fetch persona from DB after Stage 3
+        const { data: fresh3, error: error3 } = await supabase
+          .from('v4_personas')
+          .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+          .eq('persona_id', personaId)
+          .maybeSingle();
+
+        if (error3) throw error3;
+        
+        console.log('TRACE_Q_AFTER_CALL3', {
+          queue_item_id: item.id,
+          persona_id: personaId,
+          card_description: null, // V4 personas don't have separate card_description field  
+          profile_image_url: fresh3?.profile_image_url ?? null,
+          creation_stage: fresh3?.creation_stage ?? null,
+          creation_completed: fresh3?.creation_completed ?? null,
+          ts: new Date().toISOString(),
+        });
+        
         console.log('✅ V4 persona creation step 3 completed');
       }
 
@@ -381,6 +418,30 @@ const PersonaQueue = () => {
       if (!personaId) {
         await fail('Cannot finalize - no persona_id after all stages');
       }
+      
+      // DIAGNOSTIC: Final trace before marking completed and navigating
+      const { data: finalFresh, error: finalError } = await supabase
+        .from('v4_personas')
+        .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+        .eq('persona_id', personaId)
+        .maybeSingle();
+
+      if (finalError) throw finalError;
+      
+      console.log('TRACE_Q_BEFORE_COMPLETE', {
+        queue_item_id: item.id,
+        persona_id: personaId,
+        // IMPORTANT: what object are we about to render?
+        render_source: finalFresh ? 'db_fetch' : 'create_response',
+        has_full_profile: !!finalFresh?.full_profile,
+        has_identity: !!(finalFresh?.full_profile as any)?.identity,
+        has_motivation: !!(finalFresh?.full_profile as any)?.motivation_profile,
+        has_comm_style: !!(finalFresh?.full_profile as any)?.communication_style,
+        card_description: null, // V4 personas don't have separate card_description field  
+        profile_image_url: finalFresh?.profile_image_url ?? null,
+        ts: new Date().toISOString(),
+      });
+      
       await updateQueueStatusSafe(item.id, 'completed', personaId);
       console.log('🏁 Processing completed successfully for:', item.name);
       
