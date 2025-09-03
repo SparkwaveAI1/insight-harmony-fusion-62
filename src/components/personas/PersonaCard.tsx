@@ -115,12 +115,17 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
               >
                 {persona.name}
               </div>
-              {isOwner && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                  <UserCheck className="h-3 w-3 mr-1" />
-                  Owner
-                </Badge>
-              )}
+               {isOwner && (
+                 <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
+                   <UserCheck className="h-3 w-3 mr-1" />
+                   Owner
+                 </Badge>
+               )}
+               {!(persona.full_profile as any)?.trait_profile && (
+                 <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                   Incomplete
+                 </Badge>
+               )}
             </div>
             <div className="flex items-center text-xs text-muted-foreground">
               <Clock className="h-3 w-3 mr-1" />
