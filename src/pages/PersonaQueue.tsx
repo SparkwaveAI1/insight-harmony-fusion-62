@@ -208,7 +208,7 @@ const PersonaQueue = () => {
 
       // Step 2: Generate conversation summaries
       console.log('🎯 Starting V4 persona creation step 2...');
-      await updateQueueStatus(pendingItem.id, 'processing_stage2');
+      await updateQueueStatus(pendingItem.id, 'processing_stage2', call1Response.persona_id);
       console.log('✅ Status updated to processing_stage2');
       
       const call2Response = await createV4PersonaCall2(call1Response.persona_id);
@@ -223,7 +223,7 @@ const PersonaQueue = () => {
 
       // Step 3: Generate profile image
       console.log('🎯 Starting V4 persona creation step 3...');
-      await updateQueueStatus(pendingItem.id, 'processing_stage3');
+      await updateQueueStatus(pendingItem.id, 'processing_stage3', call1Response.persona_id);
       console.log('✅ Status updated to processing_stage3');
       
       const call3Response = await createV4PersonaCall3(call2Response.persona_id, true);
@@ -237,7 +237,7 @@ const PersonaQueue = () => {
 
       // Update status to completed
       console.log('🏁 Updating final status to completed...');
-      await updateQueueStatus(pendingItem.id, 'completed');
+      await updateQueueStatus(pendingItem.id, 'completed', call1Response.persona_id);
       console.log('✅ Final status updated to completed');
       
       toast({
