@@ -9,7 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { addToQueue, getQueueItems, updateQueueStatus } from "@/services/personaQueueService";
+import { addToQueue, getQueueItems, updateQueueStatus, parsePersonaDescription } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
 
@@ -90,14 +90,18 @@ const PersonaQueue = () => {
     if (!user || !textareaContent.trim()) return;
 
     try {
+      // Parse the text to extract name and collections
+      const parsed = parsePersonaDescription(textareaContent.trim());
+      
       await addToQueue(
         user.id,
-        'Queued Persona',
-        textareaContent.trim()
+        parsed.name,        // Use extracted name instead of 'Queued Persona'
+        parsed.description,
+        parsed.collections  // Pass extracted collections
       );
       toast({
         title: "Success",
-        description: "Added to queue",
+        description: `Added "${parsed.name}" to queue`,
       });
       setTextareaContent(''); // Clear textarea
       loadQueueItems(); // Refresh the list
