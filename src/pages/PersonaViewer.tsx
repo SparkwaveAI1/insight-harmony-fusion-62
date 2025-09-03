@@ -123,7 +123,7 @@ const PersonaViewerContent = () => {
           />
 
           {/* Tabbed View - Always show both tabs */}
-          <Tabs defaultValue={isLibraryView ? "public-personas" : "my-personas"} className="w-full">
+          <Tabs defaultValue="my-personas" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="my-personas">My Personas</TabsTrigger>
               <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
