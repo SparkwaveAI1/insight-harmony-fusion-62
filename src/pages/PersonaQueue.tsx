@@ -28,14 +28,24 @@ const ADMIN_EMAILS = [
   "scott@sparkwave-ai.com",
 ];
 
-const ensureV4Persona = (persona: any) => {
+const ensureV4PersonaCore = (persona: any) => {
   if (!persona) throw new Error('No persona returned from creation call');
   if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
     throw new Error(`Non-V4 persona detected (schema_version=${persona.schema_version || 'missing'})`);
   }
-  if (!persona.full_profile || !persona.full_profile.trait_profile) {
-    throw new Error('V4 persona missing trait_profile in full_profile');
+
+  const fp = persona.full_profile;
+  if (!fp) throw new Error('V4 persona missing full_profile');
+  if (!fp.identity) throw new Error('V4 persona missing full_profile.identity');
+  if (!fp.communication_style) throw new Error('V4 persona missing full_profile.communication_style');
+  if (!fp.motivation_profile) throw new Error('V4 persona missing full_profile.motivation_profile');
+
+  // conversation_summary is strongly recommended for engine:
+  if (!persona.conversation_summary) {
+    console.warn('V4 persona missing conversation_summary (will degrade UX but not blocked)');
   }
+
+  // DO NOT require legacy `trait_profile` for V4
   return persona;
 };
 
@@ -281,7 +291,7 @@ const PersonaQueue = () => {
             .maybeSingle();
 
           if (error) throw error;
-          ensureV4Persona(fresh);
+          ensureV4PersonaCore(fresh);
           
           console.log('✅ V4 persona creation step 1 completed:', personaId);
         } else {
