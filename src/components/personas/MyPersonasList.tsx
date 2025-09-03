@@ -43,7 +43,7 @@ const MyPersonasList = ({
       }
       
       console.log("Fetching my personas for user:", user.id);
-      const data = await getV4Personas(user.id);
+      const data = await getV4Personas(user.id, { allowIncomplete: true });
       console.log("My personas count:", data?.length || 0);
       
       return data;

@@ -1,18 +1,18 @@
 import { supabase } from '@/integrations/supabase/client';
 import { V4Persona } from '../../types/persona-v4';
 
-const ensureV4Persona = (persona: any) => {
+const ensureV4Persona = (persona: any, strict: boolean = true) => {
   if (!persona) throw new Error('No persona returned from query');
   if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
     throw new Error(`Non-V4 persona detected (schema_version=${persona.schema_version || 'missing'})`);
   }
-  if (!persona.full_profile || !persona.full_profile.trait_profile) {
+  if (strict && (!persona.full_profile || !persona.full_profile.trait_profile)) {
     throw new Error('V4 persona missing trait_profile in full_profile');
   }
   return persona;
 };
 
-export async function getV4Personas(user_id: string): Promise<V4Persona[]> {
+export async function getV4Personas(user_id: string, options?: { allowIncomplete?: boolean }): Promise<V4Persona[]> {
   try {
     console.log('Fetching V4 personas for user:', user_id);
 
@@ -29,10 +29,17 @@ export async function getV4Personas(user_id: string): Promise<V4Persona[]> {
 
     console.log('Retrieved V4 personas:', data?.length || 0);
     
-    // 🔒 Validate all personas are V4 with trait profiles
-    const validatedPersonas = (data || []).map(persona => ensureV4Persona(persona));
+    const allowIncomplete = options?.allowIncomplete ?? false;
     
-    return validatedPersonas as unknown as V4Persona[];
+    if (allowIncomplete) {
+      // 🔓 Relaxed validation: only require schema_version, allow missing trait_profile
+      const validatedPersonas = (data || []).map(persona => ensureV4Persona(persona, false));
+      return validatedPersonas as unknown as V4Persona[];
+    } else {
+      // 🔒 Strict validation: require trait profiles
+      const validatedPersonas = (data || []).map(persona => ensureV4Persona(persona, true));
+      return validatedPersonas as unknown as V4Persona[];
+    }
 
   } catch (error) {
     console.error('Error in getV4Personas:', error);
