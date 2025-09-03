@@ -211,6 +211,21 @@ const PersonaQueue = () => {
     
     let currentItemId: string | null = null;
 
+    // Timeout wrapper to prevent hanging stages
+    const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error('queue-stage-timeout')), ms)),
+      ]);
+
+    // Helper to fail with proper error capture
+    const fail = async (msg: string): Promise<never> => {
+      if (currentItemId) {
+        await updateQueueStatusSafe(currentItemId, 'failed', undefined, msg);
+      }
+      throw new Error(msg);
+    };
+
     try {
       // 1) Atomically claim a job
       const item = await popNextQueueItem();
@@ -232,16 +247,21 @@ const PersonaQueue = () => {
         if (!personaId) {
           console.log('🎯 Starting V4 persona creation step 1...');
           
-          const call1Response = await createV4PersonaCall1({
+          const call1Response = await withTimeout(createV4PersonaCall1({
             user_prompt: item.description,
             user_id: user.id
-          });
+          }), 90000); // 90 second timeout
 
           if (!call1Response.success) {
-            throw new Error(`V4 Call 1 failed: ${call1Response.error}`);
+            await fail(`V4 Call 1 failed: ${call1Response.error}`);
           }
 
+          // Invariant: must return persona_id
           personaId = call1Response.persona_id;
+          if (!personaId) {
+            await fail('Create returned no persona_id (silent failure from edge)');
+          }
+
           await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
           console.log('✅ V4 persona creation step 1 completed:', personaId);
         } else {
@@ -254,21 +274,21 @@ const PersonaQueue = () => {
       if (item.status === 'processing_stage1' || item.status === 'processing_stage2') {
         // Guard: must have personaId by now
         if (!personaId) {
-          throw new Error('Missing persona_id before stage 2');
+          await fail('Missing persona_id before stage 2');
         }
         
         console.log('🎯 Starting V4 persona creation step 2...');
         
-        const call2Response = await createV4PersonaCall2(personaId);
+        const call2Response = await withTimeout(createV4PersonaCall2(personaId), 90000);
         
         if (!call2Response.success) {
-          throw new Error(`V4 Call 2 failed: ${call2Response.error}`);
+          await fail(`Stage2 failed: ${call2Response.error || 'unknown'}`);
         }
         
         // Update personaId if call2 returns a different one
         personaId = call2Response.persona_id || personaId;
         if (!personaId) {
-          throw new Error('Stage 2 completed but returned no persona_id');
+          await fail('Stage 2 completed but returned no persona_id');
         }
         await updateQueueStatusSafe(item.id, 'processing_stage2', personaId);
         console.log('✅ V4 persona creation step 2 completed');
@@ -277,21 +297,21 @@ const PersonaQueue = () => {
       // === Stage 3: Image / attachments ===
       if (item.status === 'processing_stage2' || item.status === 'processing_stage3') {
         if (!personaId) {
-          throw new Error('Missing persona_id before stage 3');
+          await fail('Missing persona_id before stage 3');
         }
         
         console.log('🎯 Starting V4 persona creation step 3...');
         
-        const call3Response = await createV4PersonaCall3(personaId, true);
+        const call3Response = await withTimeout(createV4PersonaCall3(personaId, true), 90000);
         
         if (!call3Response.success) {
-          throw new Error(`V4 Call 3 failed: ${call3Response.error}`);
+          await fail(`Stage3 failed: ${call3Response.error || 'unknown'}`);
         }
         
         // Update personaId if call3 returns a different one
         personaId = call3Response.persona_id || personaId;
         if (!personaId) {
-          throw new Error('Stage 3 completed but returned no persona_id');
+          await fail('Stage 3 completed but returned no persona_id');
         }
         await updateQueueStatusSafe(item.id, 'processing_stage3', personaId);
         console.log('✅ V4 persona creation step 3 completed');
@@ -299,7 +319,7 @@ const PersonaQueue = () => {
 
       // === Finalize ===
       if (!personaId) {
-        throw new Error('Cannot finalize - no persona_id after all stages');
+        await fail('Cannot finalize - no persona_id after all stages');
       }
       await updateQueueStatusSafe(item.id, 'completed', personaId);
       console.log('🏁 Processing completed successfully for:', item.name);
@@ -327,7 +347,7 @@ const PersonaQueue = () => {
       
       // Update status to failed with error message if we have an item ID
       if (currentItemId) {
-        await updateQueueStatusSafe(currentItemId, 'failed', undefined, `ERR: ${error?.message ?? 'unknown'}`);
+        await updateQueueStatusSafe(currentItemId, 'failed', undefined, `Processor error: ${error?.message ?? 'unknown'}`);
       }
       
       toast({
