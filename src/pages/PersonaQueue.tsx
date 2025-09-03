@@ -108,6 +108,30 @@ const PersonaQueue = () => {
     }
   };
 
+  // Test function to update status WITH persona_id
+  const testStatusWithPersonaId = async () => {
+    const deniseId = '10bdf9e6-8327-4f4a-9f57-02de800dc7e7';
+    console.log('🧪 Testing status + persona_id update for Denise Chen...');
+    
+    try {
+      const result = await updateQueueStatus(deniseId, 'test_with_persona', 'test_persona_id_123');
+      console.log('✅ Status + persona_id update successful:', result);
+      console.log('📋 Check persona_id field:', result.persona_id);
+      toast({ 
+        title: "Test Success", 
+        description: `Status + persona_id update worked! persona_id: ${result.persona_id}`
+      });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('❌ Status + persona_id update failed:', error);
+      toast({ 
+        title: "Test Failed", 
+        description: `Status + persona_id update failed: ${error.message}`, 
+        variant: "destructive" 
+      });
+    }
+  };
+
   const handleParseAndAdd = async () => {
     if (!user || !textareaContent.trim()) return;
 
@@ -310,6 +334,9 @@ const PersonaQueue = () => {
             </Button>
             <Button onClick={testStatusUpdate} variant="outline">
               Test Status Update
+            </Button>
+            <Button onClick={testStatusWithPersonaId} variant="outline">
+              Test Status + Persona ID
             </Button>
                       </div>
                     </div>
