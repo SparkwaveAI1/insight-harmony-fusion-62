@@ -1163,6 +1163,10 @@ export type Database = {
           cleaned_count: number
         }[]
       }
+      fail_stale_persona_jobs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       find_orphaned_persona_references: {
         Args: Record<PropertyKey, never>
         Returns: {
