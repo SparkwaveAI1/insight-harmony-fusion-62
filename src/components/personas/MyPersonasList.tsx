@@ -4,7 +4,7 @@ import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getV4Personas } from "@/services/v4-persona/getV4Personas";
+import { getMyV4PersonasShowAll } from "@/services/persona";
 import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona/operations/updatePersona";
@@ -33,9 +33,9 @@ const MyPersonasList = ({
   const { user, isLoading: authLoading } = useAuth();
   const [personas, setPersonas] = useState<V4Persona[]>([]);
 
-  // Query for user's personas only
+  // Show ALL user's personas without any filtering
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['my-personas', user?.id],
+    queryKey: ['my-personas-show-all', user?.id],
     queryFn: async () => {
       if (!user?.id) {
         console.log("No user ID available for my personas");
@@ -43,15 +43,14 @@ const MyPersonasList = ({
       }
       
       console.log("Fetching my personas for user:", user.id);
-      const data = await getV4Personas(user.id, { allowIncomplete: true });
+      const data = await getMyV4PersonasShowAll(user.id);
       console.log("My personas count:", data?.length || 0);
       
       return data;
     },
     enabled: !!user?.id && !authLoading, // Only run when user is loaded
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: true,
-    refetchOnWindowFocus: true
+    retry: 1
   });
 
   // Update the parent component with loaded personas

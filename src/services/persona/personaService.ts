@@ -45,3 +45,20 @@ export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
   if (error) throw error;
   return (data ?? []) as unknown as V4Persona[];
 }
+
+/**
+ * Fetches ALL personas owned by a user from v4_personas (no validation filtering)
+ * Used for "My Personas" view to show everything the user owns
+ */
+export async function getMyV4PersonasShowAll(userId: string): Promise<V4Persona[]> {
+  if (!userId) throw new Error('Missing userId');
+  
+  const { data, error } = await supabase
+    .from('v4_personas')
+    .select('id, persona_id, name, schema_version, full_profile, conversation_summary, created_at, is_public, user_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as V4Persona[];
+}

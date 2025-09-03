@@ -21,7 +21,7 @@ export { enhancePersona } from './enhancePersona';
 export { bulkEnhancePersonas } from './bulkEnhancePersonas';
 
 // Re-export persona service functions
-export { getPublicV4Personas, getPublicV4PersonasShowAll } from './personaService';
+export { getPublicV4Personas, getPublicV4PersonasShowAll, getMyV4PersonasShowAll } from './personaService';
 
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';
