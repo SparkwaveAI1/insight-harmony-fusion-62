@@ -56,3 +56,24 @@ export const updateQueueStatus = async (id: string, status: string) => {
   }
   return data;
 };
+
+export const parsePersonaDescription = (text: string) => {
+  const trimmedText = text.trim();
+  
+  // Extract name from first line (remove ** markdown)
+  const lines = trimmedText.split('\n');
+  const firstLine = lines[0] || '';
+  const name = firstLine.replace(/\*\*/g, '').trim() || 'Unnamed Persona';
+  
+  // Extract collections if they exist
+  const collectionsMatch = trimmedText.match(/\*\*Collections:\*\*\s*(.+?)(?:\n|$)/i);
+  const collections = collectionsMatch 
+    ? collectionsMatch[1].split(',').map(c => c.trim()).filter(c => c.length > 0)
+    : [];
+  
+  return {
+    name,
+    description: trimmedText,
+    collections
+  };
+};
