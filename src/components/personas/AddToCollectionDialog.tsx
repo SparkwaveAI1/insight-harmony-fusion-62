@@ -38,7 +38,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [creatingCollection, setCreatingCollection] = useState(false);
 
   useEffect(() => {
-    // Only log and fetch when dialog actually opens
+    // Only fetch when dialog opens and user is authenticated
     if (open && user?.id && !authLoading) {
       console.log('Dialog opened for user:', user.id);
       fetchCollections();
