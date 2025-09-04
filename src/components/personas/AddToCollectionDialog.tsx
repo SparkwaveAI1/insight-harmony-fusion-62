@@ -39,25 +39,22 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
 
   useEffect(() => {
     if (open && user?.id && !authLoading) {
-      console.log('Fetching collections for user:', user.id);
+      console.log('📋 useEffect: Triggering fetchCollections');
       fetchCollections();
     }
   }, [open, user?.id, authLoading]);
 
   const fetchCollections = async () => {
+    console.log('📋 fetchCollections: Starting...');
     try {
       setLoading(true);
-      console.log('🔍 fetchCollections() started');
+      console.log('📋 fetchCollections: Calling getUserCollections...');
+      
       const collectionsData = await getUserCollections();
-      console.log('🔍 collectionsData received:', {
-        length: collectionsData?.length,
-        isArray: Array.isArray(collectionsData),
-        data: collectionsData
-      });
+      console.log('📋 fetchCollections: Got', collectionsData?.length, 'collections');
       
       setCollections(collectionsData);
-      console.log('🔍 setCollections() called with:', collectionsData?.length, 'collections');
-
+      
       // Check which collections already contain this persona
       const selected = new Set<string>();
       for (const collection of collectionsData) {
@@ -67,12 +64,11 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
         }
       }
       setSelectedCollections(selected);
-      console.log('🔍 setSelectedCollections() called with:', selected.size, 'selected');
+      console.log('📋 fetchCollections: Completed successfully');
     } catch (error) {
-      console.error('Error fetching collections:', error);
+      console.error('📋 fetchCollections: ERROR:', error);
     } finally {
       setLoading(false);
-      console.log('🔍 setLoading(false) called');
     }
   };
 
@@ -142,15 +138,6 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
           </div>
 
           {/* Collection list */}
-          {(() => {
-            console.log('🔍 Render state:', {
-              authLoading,
-              loading,
-              collectionsLength: collections.length,
-              collections: collections
-            });
-            return null;
-          })()}
           {authLoading || loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
