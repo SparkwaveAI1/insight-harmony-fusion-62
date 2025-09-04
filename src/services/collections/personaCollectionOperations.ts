@@ -94,16 +94,17 @@ export const isPersonaInCollection = async (
   try {
     const { data, error } = await supabase
       .from('collection_personas')
-      .select('*')
+      .select('id')
       .eq('collection_id', collectionId)
       .eq('persona_id', personaId)
-      .single();
+      .limit(1);
 
     if (error) {
+      console.error('Error checking if persona is in collection:', error);
       return false;
     }
 
-    return !!data;
+    return data && data.length > 0;
   } catch (error) {
     console.error('Error checking if persona is in collection:', error);
     return false;
