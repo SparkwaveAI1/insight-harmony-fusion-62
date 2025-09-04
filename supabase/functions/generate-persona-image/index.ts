@@ -2,10 +2,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { buildImagePrompt } from "./promptBuilder.ts";
-import { generateImageWithOpenAI } from "./openaiService.ts";
+import { generateImageWithGemini } from "./geminiService.ts";
 import { uploadImageToStorage, updatePersonaWithImageUrl } from "./imageUploadService.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -16,8 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured in environment variables");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured in environment variables");
     }
 
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -33,8 +33,8 @@ serve(async (req) => {
     // Build the image prompt
     const imagePrompt = buildImagePrompt(personaData);
     
-    // Generate image with OpenAI
-    const base64Image = await generateImageWithOpenAI(imagePrompt, OPENAI_API_KEY);
+    // Generate image with Gemini
+    const base64Image = await generateImageWithGemini(imagePrompt, GEMINI_API_KEY);
     
     // Upload image to Supabase storage
     const publicUrl = await uploadImageToStorage(
