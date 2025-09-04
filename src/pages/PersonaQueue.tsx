@@ -476,6 +476,8 @@ const PersonaQueue = () => {
         await fail(`Image missing after Stage 3: profile_image_url=${finalFresh?.profile_image_url}`);
       }
       
+      // ✅ INVARIANT: Collections are only added AFTER persona is fully complete
+      // This ensures no partial personas end up in collections
       await updateQueueStatusSafe(item.id, 'completed', personaId);
       console.log('🏁 Processing completed successfully for:', item.name);
       
