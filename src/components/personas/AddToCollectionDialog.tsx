@@ -37,16 +37,42 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [newCollectionName, setNewCollectionName] = useState("");
   const [creatingCollection, setCreatingCollection] = useState(false);
 
+  // Debug logging for auth state
+  console.log('AddToCollectionDialog Debug:', {
+    open,
+    user: !!user,
+    authLoading,
+    userId: user?.id,
+    collectionsLength: collections.length,
+    loading,
+    timestamp: new Date().toISOString()
+  });
+
   useEffect(() => {
+    console.log('useEffect triggered:', { open, user: !!user, authLoading, userId: user?.id });
     if (open && user && !authLoading) {
+      console.log('Calling fetchCollections...');
       fetchCollections();
+    } else {
+      console.log('Skipping fetchCollections:', { 
+        open, 
+        hasUser: !!user, 
+        authLoading, 
+        reason: !open ? 'dialog closed' : !user ? 'no user' : authLoading ? 'auth loading' : 'unknown'
+      });
     }
   }, [open, user, authLoading]);
 
   const fetchCollections = async () => {
+    console.log('fetchCollections started');
     try {
       setLoading(true);
+      console.log('Calling getUserCollections...');
       const collectionsData = await getUserCollections();
+      console.log('getUserCollections response:', { 
+        count: collectionsData?.length, 
+        collections: collectionsData 
+      });
       setCollections(collectionsData);
 
       // Check which collections already contain this persona
@@ -57,10 +83,12 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
           selected.add(collection.id);
         }
       }
+      console.log('Selected collections:', selected);
       setSelectedCollections(selected);
     } catch (error) {
       console.error('Error fetching collections:', error);
     } finally {
+      console.log('fetchCollections completed, setting loading to false');
       setLoading(false);
     }
   };
