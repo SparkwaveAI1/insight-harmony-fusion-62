@@ -145,17 +145,14 @@ export async function getAllPersonas(): Promise<V4Persona[]> {
       console.log(`🔍 Public personas in result: ${publicCount}`);
     }
     
-    // 🔒 Validate all personas are V4 with trait profiles
+    // 🔒 Validate all personas are V4 (trait_profile optional for compatibility)
     const validatedPersonas = (v4Personas || []).filter(persona => {
       try {
         if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
           console.warn(`Filtering out non-V4 persona: ${persona.persona_id} (schema_version=${persona.schema_version})`);
           return false;
         }
-        if (!persona.full_profile || !(persona.full_profile as any)?.trait_profile) {
-          console.warn(`Filtering out V4 persona without trait_profile: ${persona.persona_id}`);
-          return false;
-        }
+        // Allow V4 personas with or without trait_profile for compatibility
         return true;
       } catch (error) {
         console.warn(`Filtering out invalid persona: ${persona.persona_id}`, error);
