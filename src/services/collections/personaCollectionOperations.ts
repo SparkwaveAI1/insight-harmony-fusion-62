@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Collection, CollectionWithPersonaCount } from './types';
 import { getV4Personas } from '@/services/v4-persona/getV4Personas';
+import { V4Persona } from '@/types/persona-v4';
 
 /**
  * Add a persona to a collection
@@ -127,6 +128,70 @@ export const getPersonasInCollection = async (collectionId: string) => {
     return data.map(item => item.persona_id);
   } catch (error) {
     console.error('Error getting personas in collection:', error);
+    return [];
+  }
+};
+
+/**
+ * Get all personas in a collection with their full details
+ */
+export const getPersonasInCollectionWithDetails = async (collectionId: string): Promise<V4Persona[]> => {
+  try {
+    // First get the persona IDs in the collection
+    const { data: collectionPersonas, error: collectionError } = await supabase
+      .from('collection_personas')
+      .select('persona_id')
+      .eq('collection_id', collectionId);
+
+    if (collectionError) {
+      console.error('Error getting persona IDs from collection:', collectionError);
+      return [];
+    }
+
+    if (!collectionPersonas || collectionPersonas.length === 0) {
+      return [];
+    }
+
+    const personaIds = collectionPersonas.map(cp => cp.persona_id);
+
+    // Now get the full persona details for those IDs
+    const { data: v4Personas, error: personasError } = await supabase
+      .from('v4_personas')
+      .select('*')
+      .in('persona_id', personaIds)
+      .eq('creation_completed', true);
+
+    if (personasError) {
+      console.error('Error getting v4_personas details:', personasError);
+      return [];
+    }
+
+    // Transform the data to match the V4Persona format
+    return (v4Personas || []).map(v4Persona => {
+      const fullProfile = v4Persona.full_profile || {};
+      const demographics = typeof fullProfile === 'object' && fullProfile !== null 
+        ? (fullProfile as any).demographics || {} 
+        : {};
+      
+      return {
+        id: v4Persona.id,
+        persona_id: v4Persona.persona_id,
+        name: v4Persona.name,
+        user_id: v4Persona.user_id,
+        schema_version: v4Persona.schema_version || 'v4.0',
+        full_profile: v4Persona.full_profile as any,
+        conversation_summary: v4Persona.conversation_summary as any,
+        creation_stage: v4Persona.creation_stage || 'completed',
+        creation_completed: v4Persona.creation_completed,
+        created_at: v4Persona.created_at,
+        updated_at: v4Persona.updated_at,
+        is_public: v4Persona.is_public,
+        profile_image_url: v4Persona.profile_image_url,
+        metadata: demographics
+      } as V4Persona;
+    });
+  } catch (error) {
+    console.error('Error getting personas in collection with details:', error);
     return [];
   }
 };

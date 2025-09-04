@@ -27,11 +27,11 @@ import {
 import {
   getCollectionById,
   deleteCollection,
-  getPersonasInCollection,
-} from "@/services/collections"; 
+  getPersonasInCollectionWithDetails,
+} from "@/services/collections";
 import { Collection } from "@/services/collections/types";
 import { V4Persona } from "@/types/persona-v4";
-import { getAllPersonas } from "@/services/persona";
+
 import AddPersonasToCollectionDialog from "@/components/personas/AddPersonasToCollectionDialog";
 import { EditCollectionDialog } from "@/components/collections/EditCollectionDialog";
 
@@ -84,27 +84,8 @@ const CollectionDetail = () => {
   const loadPersonas = async (collectionId: string) => {
     setIsLoading(true);
     try {
-      const personaIds = await getPersonasInCollection(collectionId);
-      if (personaIds && personaIds.length > 0) {
-        // Fetch all personas to filter by IDs in collection
-        const allPersonas = await getAllPersonas();
-        const filteredPersonas = allPersonas.filter((persona) =>
-          personaIds.includes(persona.persona_id)
-        );
-        
-        // Check for orphaned references and warn
-        const foundIds = filteredPersonas.map(p => p.persona_id);
-        const orphanedIds = personaIds.filter(id => !foundIds.includes(id));
-        
-        if (orphanedIds.length > 0) {
-          console.warn(`Found ${orphanedIds.length} orphaned persona references in collection ${collectionId}:`, orphanedIds);
-          // Could optionally show a toast here: toast.warning(`${orphanedIds.length} personas in this collection no longer exist`);
-        }
-        
-        setPersonas(filteredPersonas);
-      } else {
-        setPersonas([]); // No personas in collection
-      }
+      const collectionPersonas = await getPersonasInCollectionWithDetails(collectionId);
+      setPersonas(collectionPersonas);
     } catch (error) {
       console.error("Error loading personas in collection:", error);
       toast.error("Failed to load personas in collection");
