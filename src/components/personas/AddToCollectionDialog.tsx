@@ -42,20 +42,25 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   }, [open]);
 
   const fetchCollections = async () => {
-    setLoading(true);
-    const collectionsData = await getUserCollections();
-    setCollections(collectionsData);
+    try {
+      setLoading(true);
+      const collectionsData = await getUserCollections();
+      setCollections(collectionsData);
 
-    // Check which collections already contain this persona
-    const selected = new Set<string>();
-    for (const collection of collectionsData) {
-      const isInCollection = await isPersonaInCollection(collection.id, personaId);
-      if (isInCollection) {
-        selected.add(collection.id);
+      // Check which collections already contain this persona
+      const selected = new Set<string>();
+      for (const collection of collectionsData) {
+        const isInCollection = await isPersonaInCollection(collection.id, personaId);
+        if (isInCollection) {
+          selected.add(collection.id);
+        }
       }
+      setSelectedCollections(selected);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    } finally {
+      setLoading(false);
     }
-    setSelectedCollections(selected);
-    setLoading(false);
   };
 
   const handleToggleCollection = async (collectionId: string) => {
