@@ -261,8 +261,26 @@ const PersonaQueue = () => {
 
       let personaId = item.persona_id ?? null;
 
+      // === STEP 2: Resume Logic - Fetch fresh queue row to check existing persona_id ===
+      const { data: queueRow } = await supabase
+        .from('persona_creation_queue')
+        .select('status, persona_id, collections')
+        .eq('id', item.id)
+        .single();
+
+      if (queueRow?.persona_id) {
+        personaId = queueRow.persona_id;
+        console.log('📋 Resume detected - existing persona_id:', personaId);
+        
+        // Skip to correct stage based on current status
+        if (queueRow.status === 'completed') {
+          console.log('✅ Item already completed, skipping');
+          return;
+        }
+      }
+
       // === Stage 1: Create (idempotent) ===
-      if (item.status === 'processing' || item.status === 'processing_stage1') {
+      if (!personaId && (item.status === 'processing' || item.status === 'processing_stage1')) {
         if (!personaId) {
           console.log('🎯 Starting V4 persona creation step 1...');
           
@@ -285,12 +303,15 @@ const PersonaQueue = () => {
             await fail(`V4 Call 1 failed: ${call1Response.error}`);
           }
 
-          // Invariant: must return persona_id
+          // === STEP 1: Validate and persist persona_id after Stage 1 ===
           personaId = call1Response.persona_id;
-          if (!personaId) {
-            await fail('Create returned no persona_id (silent failure from edge)');
+          
+          // Guard: only accept real V4 ids; never write queue uuid by accident
+          if (!personaId || !String(personaId).startsWith('v4_')) {
+            await fail(`Stage1 returned non-v4 persona_id: ${personaId}`);
           }
 
+          // Persist immediately, and advance status
           await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
           
           // 🔒 Fetch the created persona from DB and enforce V4 schema
@@ -328,8 +349,8 @@ const PersonaQueue = () => {
       }
 
       // === Stage 2: Enrich / finalize metadata ===
-      // Run Stage 2 if we just completed Stage 1 OR if resuming from Stage 2
-      if (item.status === 'processing' || item.status === 'processing_stage1' || item.status === 'processing_stage2') {
+      // Run Stage 2 if we have persona_id and need to complete Stage 2
+      if (personaId && (queueRow?.status === 'processing_stage1' || queueRow?.status === 'processing_stage2')) {
         // Guard: must have personaId by now
         if (!personaId) {
           await fail('Missing persona_id before stage 2');
@@ -373,8 +394,8 @@ const PersonaQueue = () => {
       }
 
       // === Stage 3: Image / attachments ===
-      // Run Stage 3 if we just completed Stage 2 OR if resuming from Stage 3
-      if (item.status === 'processing' || item.status === 'processing_stage1' || item.status === 'processing_stage2' || item.status === 'processing_stage3') {
+      // Run Stage 3 if we have persona_id and need to complete Stage 3
+      if (personaId && (queueRow?.status === 'processing_stage2' || queueRow?.status === 'processing_stage3')) {
         if (!personaId) {
           await fail('Missing persona_id before stage 3');
         }
@@ -446,9 +467,13 @@ const PersonaQueue = () => {
         ts: new Date().toISOString(),
       });
       
-      // ✅ Only mark queue complete when persona is actually finished
-      if (!finalFresh?.creation_completed) {
+      // === STEP 3: Hard validation before completion ===
+      // Hard invariant: only complete when truly done
+      if (finalFresh?.creation_completed !== true && finalFresh?.creation_stage !== 'completed') {
         await fail(`Pipeline not complete after Stage 3: creation_completed=${finalFresh?.creation_completed}, creation_stage=${finalFresh?.creation_stage}`);
+      }
+      if (!finalFresh?.profile_image_url) {
+        await fail(`Image missing after Stage 3: profile_image_url=${finalFresh?.profile_image_url}`);
       }
       
       await updateQueueStatusSafe(item.id, 'completed', personaId);
