@@ -38,39 +38,35 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [creatingCollection, setCreatingCollection] = useState(false);
 
   const fetchCollections = useCallback(async () => {
-    console.log('📋 fetchCollections: Starting...');
+    if (!user?.id || authLoading) return; // Exit early if not ready
+    
     try {
       setLoading(true);
-      console.log('📋 fetchCollections: Calling getUserCollections...');
-      
       const collectionsData = await getUserCollections();
-      console.log('📋 fetchCollections: Got', collectionsData?.length, 'collections');
-      
-      setCollections(collectionsData);
+      setCollections(collectionsData || []); // Handle null/undefined
       
       // Check which collections already contain this persona
       const selected = new Set<string>();
-      for (const collection of collectionsData) {
+      for (const collection of collectionsData || []) {
         const isInCollection = await isPersonaInCollection(collection.id, personaId);
         if (isInCollection) {
           selected.add(collection.id);
         }
       }
       setSelectedCollections(selected);
-      console.log('📋 fetchCollections: Completed successfully');
+      setLoading(false);
     } catch (error) {
-      console.error('📋 fetchCollections: ERROR:', error);
-    } finally {
+      console.error('Error fetching collections:', error);
+      setCollections([]);
       setLoading(false);
     }
-  }, [personaId]);
+  }, [user?.id, authLoading, personaId]);
 
   useEffect(() => {
-    if (open && user?.id && !authLoading) {
-      console.log('📋 useEffect: Triggering fetchCollections');
+    if (open && user?.id && !authLoading && collections.length === 0) {
       fetchCollections();
     }
-  }, [open, user?.id, authLoading, fetchCollections]);
+  }, [open, user?.id, authLoading]); // Don't include collections or fetchCollections in dependencies
 
   const handleToggleCollection = async (collectionId: string) => {
     const newSelected = new Set(selectedCollections);
@@ -109,10 +105,6 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
       }
     }
   };
-
-  // Debug logs for UI rendering
-  console.log('🎯 Dialog render:', { loading, authLoading, collectionsCount: collections.length });
-  console.log('🎯 Collections data:', collections.slice(0,2)); // Show first 2 collections
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
