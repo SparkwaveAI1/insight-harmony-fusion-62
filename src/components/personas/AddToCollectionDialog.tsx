@@ -37,16 +37,13 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [newCollectionName, setNewCollectionName] = useState("");
   const [creatingCollection, setCreatingCollection] = useState(false);
 
-  // Debug logging for auth state
-  console.log('AddToCollectionDialog Debug:', {
-    open,
-    user: !!user,
-    authLoading,
-    userId: user?.id,
-    collectionsLength: collections.length,
-    loading,
-    timestamp: new Date().toISOString()
-  });
+  // Only log when dialog actually opens
+  if (open && user && !authLoading && collections.length === 0 && loading) {
+    console.log('🎯 DIALOG OPENING - About to fetch collections:', {
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+  }
 
   useEffect(() => {
     console.log('useEffect triggered:', { open, user: !!user, authLoading, userId: user?.id });
