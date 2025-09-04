@@ -260,6 +260,7 @@ const PersonaQueue = () => {
       console.log('📋 Claimed queue item:', item.name, 'Status:', item.status);
 
       let personaId = item.persona_id ?? null;
+      let currentStatus = item.status; // Track current status locally
 
       // === STEP 2: Resume Logic - Fetch fresh queue row to check existing persona_id ===
       const { data: queueRow } = await supabase
@@ -270,6 +271,7 @@ const PersonaQueue = () => {
 
       if (queueRow?.persona_id) {
         personaId = queueRow.persona_id;
+        currentStatus = queueRow.status; // Use actual current status
         console.log('📋 Resume detected - existing persona_id:', personaId);
         
         // Skip to correct stage based on current status
@@ -280,7 +282,7 @@ const PersonaQueue = () => {
       }
 
       // === Stage 1: Create (idempotent) ===
-      if (!personaId && (item.status === 'processing' || item.status === 'processing_stage1')) {
+      if (!personaId && (currentStatus === 'processing' || currentStatus === 'processing_stage1')) {
         if (!personaId) {
           console.log('🎯 Starting V4 persona creation step 1...');
           
@@ -313,6 +315,7 @@ const PersonaQueue = () => {
 
           // Persist immediately, and advance status
           await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
+          currentStatus = 'processing_stage1'; // Update local status
           
           // 🔒 Fetch the created persona from DB and enforce V4 schema
           const { data: fresh, error } = await supabase
@@ -345,12 +348,13 @@ const PersonaQueue = () => {
         } else {
           console.log('📋 Persona already exists, skipping stage 1:', personaId);
           await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
+          currentStatus = 'processing_stage1'; // Update local status
         }
       }
 
       // === Stage 2: Enrich / finalize metadata ===
       // Run Stage 2 if we have persona_id and need to complete Stage 2
-      if (personaId && (queueRow?.status === 'processing_stage1' || queueRow?.status === 'processing_stage2')) {
+      if (personaId && (currentStatus === 'processing_stage1' || currentStatus === 'processing_stage2')) {
         // Guard: must have personaId by now
         if (!personaId) {
           await fail('Missing persona_id before stage 2');
@@ -370,6 +374,7 @@ const PersonaQueue = () => {
           await fail('Stage 2 completed but returned no persona_id');
         }
         await updateQueueStatusSafe(item.id, 'processing_stage2', personaId);
+        currentStatus = 'processing_stage2'; // Update local status
         
         // DIAGNOSTIC: Fetch persona from DB after Stage 2
         const { data: fresh2, error: error2 } = await supabase
@@ -395,7 +400,7 @@ const PersonaQueue = () => {
 
       // === Stage 3: Image / attachments ===
       // Run Stage 3 if we have persona_id and need to complete Stage 3
-      if (personaId && (queueRow?.status === 'processing_stage2' || queueRow?.status === 'processing_stage3')) {
+      if (personaId && (currentStatus === 'processing_stage2' || currentStatus === 'processing_stage3')) {
         if (!personaId) {
           await fail('Missing persona_id before stage 3');
         }
@@ -414,6 +419,7 @@ const PersonaQueue = () => {
           await fail('Stage 3 completed but returned no persona_id');
         }
         await updateQueueStatusSafe(item.id, 'processing_stage3', personaId);
+        currentStatus = 'processing_stage3'; // Update local status
         
         // DIAGNOSTIC: Fetch persona from DB after Stage 3
         const { data: fresh3, error: error3 } = await supabase
