@@ -9,6 +9,7 @@ import {
 import Button from "@/components/ui-custom/Button";
 import { Input } from "@/components/ui/input";
 import { Plus, Check } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Collection,
   getUserCollections,
@@ -29,6 +30,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   onOpenChange,
   personaId,
 }) => {
+  const { user, isLoading: authLoading } = useAuth();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set());
@@ -36,10 +38,10 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [creatingCollection, setCreatingCollection] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (open && user && !authLoading) {
       fetchCollections();
     }
-  }, [open]);
+  }, [open, user, authLoading]);
 
   const fetchCollections = async () => {
     try {
@@ -129,7 +131,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
           </div>
 
           {/* Collection list */}
-          {loading ? (
+          {authLoading || loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-10 rounded-md bg-muted/30 animate-pulse"></div>
