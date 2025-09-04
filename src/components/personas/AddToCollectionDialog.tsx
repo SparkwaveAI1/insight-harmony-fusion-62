@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,14 +37,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [newCollectionName, setNewCollectionName] = useState("");
   const [creatingCollection, setCreatingCollection] = useState(false);
 
-  useEffect(() => {
-    if (open && user?.id && !authLoading) {
-      console.log('📋 useEffect: Triggering fetchCollections');
-      fetchCollections();
-    }
-  }, [open, user?.id, authLoading]);
-
-  const fetchCollections = async () => {
+  const fetchCollections = useCallback(async () => {
     console.log('📋 fetchCollections: Starting...');
     try {
       setLoading(true);
@@ -70,7 +63,14 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [personaId]);
+
+  useEffect(() => {
+    if (open && user?.id && !authLoading) {
+      console.log('📋 useEffect: Triggering fetchCollections');
+      fetchCollections();
+    }
+  }, [open, user?.id, authLoading, fetchCollections]);
 
   const handleToggleCollection = async (collectionId: string) => {
     const newSelected = new Set(selectedCollections);
