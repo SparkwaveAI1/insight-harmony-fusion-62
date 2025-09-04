@@ -47,8 +47,16 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const fetchCollections = async () => {
     try {
       setLoading(true);
+      console.log('🔍 fetchCollections() started');
       const collectionsData = await getUserCollections();
+      console.log('🔍 collectionsData received:', {
+        length: collectionsData?.length,
+        isArray: Array.isArray(collectionsData),
+        data: collectionsData
+      });
+      
       setCollections(collectionsData);
+      console.log('🔍 setCollections() called with:', collectionsData?.length, 'collections');
 
       // Check which collections already contain this persona
       const selected = new Set<string>();
@@ -59,10 +67,12 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
         }
       }
       setSelectedCollections(selected);
+      console.log('🔍 setSelectedCollections() called with:', selected.size, 'selected');
     } catch (error) {
       console.error('Error fetching collections:', error);
     } finally {
       setLoading(false);
+      console.log('🔍 setLoading(false) called');
     }
   };
 
@@ -132,6 +142,15 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
           </div>
 
           {/* Collection list */}
+          {(() => {
+            console.log('🔍 Render state:', {
+              authLoading,
+              loading,
+              collectionsLength: collections.length,
+              collections: collections
+            });
+            return null;
+          })()}
           {authLoading || loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
