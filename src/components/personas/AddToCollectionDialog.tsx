@@ -141,7 +141,40 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
             </Button>
           </div>
 
-          {/* Collection list */}
+          {/* Collection list - TEMPORARY DEBUG VERSION */}
+          {collections.length > 0 && (
+            <div>
+              <p>🎯 Found {collections.length} collections!</p>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                {collections.map((collection) => (
+                  <div
+                    key={collection.id}
+                    className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors ${
+                      selectedCollections.has(collection.id)
+                        ? "bg-primary/10 border-primary/30 border"
+                        : "bg-muted/20 hover:bg-muted/30"
+                    }`}
+                    onClick={() => handleToggleCollection(collection.id)}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{collection.name}</span>
+                      {collection.description && (
+                        <span className="text-xs text-muted-foreground line-clamp-1">
+                          {collection.description}
+                        </span>
+                      )}
+                    </div>
+                    {selectedCollections.has(collection.id) && (
+                      <Check className="h-4 w-4 text-primary" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* ORIGINAL CONDITIONAL LOGIC (commented out for debugging) */}
+          {/*
           {authLoading || loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
@@ -180,6 +213,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
               ))}
             </div>
           )}
+          */}
         </div>
         
         <DialogFooter>
