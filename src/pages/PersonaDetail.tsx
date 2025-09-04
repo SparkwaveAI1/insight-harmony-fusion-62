@@ -105,11 +105,7 @@ const PersonaDetail = () => {
               ) : (
                 // V4 Persona - Use dedicated V4 display with V4 badge
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default">V4</Badge>
-                    <span className="text-sm text-muted-foreground">Enhanced persona with rich trait data</span>
-                  </div>
-                  <V4PersonaDisplay 
+                  <V4PersonaDisplay
                     persona={persona as V4Persona}
                     isOwner={isOwner}
                     isPublic={isPublic}
