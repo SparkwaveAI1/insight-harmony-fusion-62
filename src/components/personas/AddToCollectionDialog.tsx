@@ -110,6 +110,10 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
     }
   };
 
+  // Debug logs for UI rendering
+  console.log('🎯 Dialog render:', { loading, authLoading, collectionsCount: collections.length });
+  console.log('🎯 Collections data:', collections.slice(0,2)); // Show first 2 collections
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
