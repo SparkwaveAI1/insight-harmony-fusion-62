@@ -268,6 +268,15 @@ export function usePersonaDetail() {
           setPersona(prev => prev ? { ...prev, profile_image_url: imageUrl } : null);
         }
         console.log("Updated persona in state with new image URL:", imageUrl);
+        
+        // Invalidate React Query cache to refresh persona lists on library pages
+        console.log('🔄 Invalidating persona queries to refresh lists...');
+        queryClient.invalidateQueries({ queryKey: ['personas'] });
+        queryClient.invalidateQueries({ queryKey: ['myPersonas'] });
+        queryClient.invalidateQueries({ queryKey: ['publicPersonas'] });
+        queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
+        
         return imageUrl;
       } else {
         toast.error("Failed to generate profile image");
