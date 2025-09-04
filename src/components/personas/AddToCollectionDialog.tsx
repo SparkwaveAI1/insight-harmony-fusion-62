@@ -38,23 +38,16 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [creatingCollection, setCreatingCollection] = useState(false);
 
   useEffect(() => {
-    // Only fetch when dialog opens and user is authenticated
     if (open && user?.id && !authLoading) {
-      console.log('Dialog opened for user:', user.id);
+      console.log('Fetching collections for user:', user.id);
       fetchCollections();
     }
   }, [open, user?.id, authLoading]);
 
   const fetchCollections = async () => {
-    console.log('fetchCollections started');
     try {
       setLoading(true);
-      console.log('Calling getUserCollections...');
       const collectionsData = await getUserCollections();
-      console.log('getUserCollections response:', { 
-        count: collectionsData?.length, 
-        collections: collectionsData 
-      });
       setCollections(collectionsData);
 
       // Check which collections already contain this persona
@@ -65,12 +58,10 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
           selected.add(collection.id);
         }
       }
-      console.log('Selected collections:', selected);
       setSelectedCollections(selected);
     } catch (error) {
       console.error('Error fetching collections:', error);
     } finally {
-      console.log('fetchCollections completed, setting loading to false');
       setLoading(false);
     }
   };
