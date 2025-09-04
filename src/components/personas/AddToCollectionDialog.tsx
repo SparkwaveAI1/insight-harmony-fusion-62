@@ -37,28 +37,13 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   const [newCollectionName, setNewCollectionName] = useState("");
   const [creatingCollection, setCreatingCollection] = useState(false);
 
-  // Only log when dialog actually opens
-  if (open && user && !authLoading && collections.length === 0 && loading) {
-    console.log('🎯 DIALOG OPENING - About to fetch collections:', {
-      userId: user?.id,
-      timestamp: new Date().toISOString()
-    });
-  }
-
   useEffect(() => {
-    console.log('useEffect triggered:', { open, user: !!user, authLoading, userId: user?.id });
-    if (open && user && !authLoading) {
-      console.log('Calling fetchCollections...');
+    // Only log and fetch when dialog actually opens
+    if (open && user?.id && !authLoading) {
+      console.log('Dialog opened for user:', user.id);
       fetchCollections();
-    } else {
-      console.log('Skipping fetchCollections:', { 
-        open, 
-        hasUser: !!user, 
-        authLoading, 
-        reason: !open ? 'dialog closed' : !user ? 'no user' : authLoading ? 'auth loading' : 'unknown'
-      });
     }
-  }, [open, user, authLoading]);
+  }, [open, user?.id, authLoading]);
 
   const fetchCollections = async () => {
     console.log('fetchCollections started');
