@@ -491,13 +491,30 @@ const PersonaQueue = () => {
       
       // Auto-assign to collections if specified
       if (item.collections && item.collections.length > 0) {
-        for (const collectionId of item.collections) {
-          try {
-            await addPersonaToCollection(collectionId, personaId);
-            console.log(`Assigned persona to collection: ${collectionId}`);
-          } catch (error) {
-            console.error('Failed to assign to collection:', collectionId, error);
+        // Step 1: Get user's collections and find matching names
+        const { data: userCollections } = await supabase
+          .from('collections')
+          .select('id, name')
+          .eq('user_id', user.id)
+          .in('name', item.collections);
+
+        // Step 2: Assign to matching collections
+        if (userCollections && userCollections.length > 0) {
+          for (const collection of userCollections) {
+            try {
+              await addPersonaToCollection(collection.id, personaId);
+              console.log(`Assigned persona to collection: ${collection.name}`);
+            } catch (error) {
+              console.error('Failed to assign to collection:', collection.name, error);
+            }
           }
+        }
+        
+        // Log any collections that weren't found
+        const foundNames = userCollections?.map(c => c.name) || [];
+        const notFound = item.collections.filter(name => !foundNames.includes(name));
+        if (notFound.length > 0) {
+          console.warn('Collections not found:', notFound);
         }
       }
       
