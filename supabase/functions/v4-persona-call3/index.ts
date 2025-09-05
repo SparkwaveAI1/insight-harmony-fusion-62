@@ -27,7 +27,7 @@ serve(async (req) => {
     const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
       .select('*')
-      .eq('id', persona_id)
+      .eq('persona_id', persona_id)
       .single()
 
     if (fetchError) {
