@@ -168,7 +168,7 @@ CRITICAL REQUIREMENTS:
     return new Response(
       JSON.stringify({ 
         success: true,
-        persona_id: updatedPersona[0].id,
+        persona_id: updatedPersona[0].persona_id,
         persona_name: updatedPersona[0].name,
         stage: 'completed'
       }),
