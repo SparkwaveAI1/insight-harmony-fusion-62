@@ -98,6 +98,8 @@ export function usePersonaDetail() {
         queryClient.invalidateQueries({ queryKey: ['personas'] });
         queryClient.invalidateQueries({ queryKey: ['myPersonas'] });
         queryClient.invalidateQueries({ queryKey: ['publicPersonas'] });
+        queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
         
         // Small delay to ensure cache invalidation completes before navigation
         setTimeout(() => {
