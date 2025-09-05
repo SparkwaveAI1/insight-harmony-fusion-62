@@ -14,6 +14,232 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_credit_ledger: {
+        Row: {
+          action_ref: string | null
+          action_type: string | null
+          created_at: string
+          credits_delta: number
+          idempotency_key: string | null
+          ledger_id: string
+          metadata: Json
+          org_id: string | null
+          source: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          action_ref?: string | null
+          action_type?: string | null
+          created_at?: string
+          credits_delta: number
+          idempotency_key?: string | null
+          ledger_id?: string
+          metadata?: Json
+          org_id?: string | null
+          source: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          action_ref?: string | null
+          action_type?: string | null
+          created_at?: string
+          credits_delta?: number
+          idempotency_key?: string | null
+          ledger_id?: string
+          metadata?: Json
+          org_id?: string | null
+          source?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_feature_access: {
+        Row: {
+          enabled: boolean
+          feature_id: string
+          feature_key: string
+          plan_id: string
+          thresholds: Json
+        }
+        Insert: {
+          enabled?: boolean
+          feature_id?: string
+          feature_key: string
+          plan_id: string
+          thresholds?: Json
+        }
+        Update: {
+          enabled?: boolean
+          feature_id?: string
+          feature_key?: string
+          plan_id?: string
+          thresholds?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_feature_access_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["plan_id"]
+          },
+        ]
+      }
+      billing_plans: {
+        Row: {
+          created_at: string | null
+          included_credits: number
+          is_active: boolean
+          name: string
+          plan_id: string
+          price_usd: number
+        }
+        Insert: {
+          created_at?: string | null
+          included_credits?: number
+          is_active?: boolean
+          name: string
+          plan_id?: string
+          price_usd?: number
+        }
+        Update: {
+          created_at?: string | null
+          included_credits?: number
+          is_active?: boolean
+          name?: string
+          plan_id?: string
+          price_usd?: number
+        }
+        Relationships: []
+      }
+      billing_price_book: {
+        Row: {
+          action_type: string
+          credits_cost: number
+          effective_from: string
+          effective_to: string | null
+          grace_pct: number
+          is_active: boolean
+          model: string | null
+          price_id: string
+        }
+        Insert: {
+          action_type: string
+          credits_cost: number
+          effective_from?: string
+          effective_to?: string | null
+          grace_pct?: number
+          is_active?: boolean
+          model?: string | null
+          price_id?: string
+        }
+        Update: {
+          action_type?: string
+          credits_cost?: number
+          effective_from?: string
+          effective_to?: string | null
+          grace_pct?: number
+          is_active?: boolean
+          model?: string | null
+          price_id?: string
+        }
+        Relationships: []
+      }
+      billing_profiles: {
+        Row: {
+          auto_renew: boolean
+          created_at: string | null
+          plan_id: string | null
+          renewal_date: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          created_at?: string | null
+          plan_id?: string | null
+          renewal_date?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_renew?: boolean
+          created_at?: string | null
+          plan_id?: string | null
+          renewal_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_profiles_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["plan_id"]
+          },
+        ]
+      }
+      billing_transactions: {
+        Row: {
+          amount_usd: number | null
+          created_at: string
+          credits_purchased: number | null
+          provider: string | null
+          provider_ref: string | null
+          transaction_id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount_usd?: number | null
+          created_at?: string
+          credits_purchased?: number | null
+          provider?: string | null
+          provider_ref?: string | null
+          transaction_id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount_usd?: number | null
+          created_at?: string
+          credits_purchased?: number | null
+          provider?: string | null
+          provider_ref?: string | null
+          transaction_id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_usage_log: {
+        Row: {
+          action_type: string
+          created_at: string
+          credits_spent: number
+          metadata: Json
+          usage_id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          credits_spent: number
+          metadata?: Json
+          usage_id?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          credits_spent?: number
+          metadata?: Json
+          usage_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       collection_personas: {
         Row: {
           added_at: string
@@ -1125,6 +1351,20 @@ export type Database = {
       }
     }
     Views: {
+      billing_credit_available: {
+        Row: {
+          available: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      billing_credit_balances: {
+        Row: {
+          balance: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       personas_union: {
         Row: {
           created_at: string | null
@@ -1157,6 +1397,36 @@ export type Database = {
       }
     }
     Functions: {
+      billing_available_credits: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      billing_finalize_credits: {
+        Args: {
+          p_credits_final?: number
+          p_ledger_id: string
+          p_usage_metadata?: Json
+        }
+        Returns: string
+      }
+      billing_reserve_credits: {
+        Args: {
+          p_action_type: string
+          p_idempotency_key?: string
+          p_org_id?: string
+          p_required_credits: number
+          p_user_id: string
+        }
+        Returns: {
+          available_after: number
+          available_before: number
+          ledger_id: string
+        }[]
+      }
+      billing_reverse_credits: {
+        Args: { p_ledger_id: string }
+        Returns: undefined
+      }
       cleanup_orphaned_persona_references: {
         Args: Record<PropertyKey, never>
         Returns: {
