@@ -97,15 +97,18 @@ const PersonaQueue = () => {
     if (!user) return;
 
     try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const probeName = `Queue Probe ${timestamp}`;
+      
       await addToQueue(
         user.id,
-        'Test Person',
-        'Test description',
-        ['Test Collection']
+        probeName,
+        'A test probe persona to observe queue behavior and trace logging',
+        []
       );
       toast({
         title: "Success",
-        description: "Test item added to queue",
+        description: `Added "${probeName}" to queue`,
       });
       loadQueueItems(); // Refresh the list
     } catch (error) {
