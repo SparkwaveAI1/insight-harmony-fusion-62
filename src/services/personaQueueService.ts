@@ -120,7 +120,7 @@ export const parsePersonaDescription = (text: string) => {
   const name = firstLine.replace(/\*\*/g, '').trim() || 'Unnamed Persona';
   
   // Extract collections if they exist
-  const collectionsMatch = trimmedText.match(/\*\*Collections:\*\*\s*(.+?)(?:\n|$)/i);
+  const collectionsMatch = trimmedText.match(/(?:\*\*)?Collections:(?:\*\*)?\s*(.+?)(?:\n|$)/i);
   const collections = collectionsMatch 
     ? collectionsMatch[1].split(',').map(c => c.trim()).filter(c => c.length > 0)
     : [];
