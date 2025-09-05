@@ -416,8 +416,7 @@ const PersonaQueue = () => {
           await fail(`Stage3 failed: ${call3Response.error || 'unknown'}`);
         }
         
-        // Update personaId if call3 returns a different one
-        personaId = call3Response.persona_id || personaId;
+        // Keep original personaId from Stage 1
         if (!personaId) {
           await fail('Stage 3 completed but returned no persona_id');
         }
