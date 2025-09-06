@@ -34,37 +34,28 @@ export function AdminBillingUsers() {
       setLoading(true);
       console.log("🔍 [ADMIN] Searching users with query:", searchQuery);
 
-      // Since we can't directly query auth.users, we'll search through billing_profiles first
-      // to get user IDs, then get user details
-      const { data: profiles, error: profilesError } = await supabase
-        .from('billing_profiles')
-        .select('user_id')
-        .eq('user_id', searchQuery); // Try exact user ID match first
+      // Call the secure admin search endpoint
+      const { data, error } = await supabase.functions.invoke('admin-search-users', {
+        body: { query: searchQuery.trim() }
+      });
 
-      if (profilesError) {
-        console.error("❌ [ADMIN] Error searching billing profiles:", profilesError);
+      if (error) {
+        console.error("❌ [ADMIN] Error calling search function:", error);
+        throw new Error(error.message || "Search failed");
       }
 
-      // For demo purposes, create mock users based on search
-      // In a real implementation, you'd need a server-side function to search auth.users
-      const mockUsers: User[] = [];
-      
-      if (searchQuery.includes('@')) {
-        // Email search - create mock user
-        mockUsers.push({
-          id: "demo-user-id",
-          email: searchQuery.toLowerCase(),
-        });
-      } else {
-        // UUID search - create mock user
-        mockUsers.push({
-          id: searchQuery,
-          email: "user@example.com",
-        });
+      if (!data?.users) {
+        console.error("❌ [ADMIN] Invalid response format:", data);
+        throw new Error("Invalid response from search");
       }
 
-      console.log("✅ [ADMIN] Mock users found:", mockUsers);
-      setUsers(mockUsers);
+      const foundUsers: User[] = data.users.map((u: any) => ({
+        id: u.id,
+        email: u.email,
+      }));
+
+      console.log("✅ [ADMIN] Users found:", foundUsers);
+      setUsers(foundUsers);
 
     } catch (err) {
       console.error("❌ [ADMIN] Error searching users:", err);
