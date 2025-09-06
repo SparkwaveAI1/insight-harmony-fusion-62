@@ -10,6 +10,7 @@ import {
   Mail,
   BookOpen,
   Shield,
+  CreditCard,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -17,6 +18,11 @@ export const navigationMenuItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Billing",
+    url: "/dashboard/billing",
+    icon: CreditCard,
   },
   {
     title: "Persona Library",

@@ -11,6 +11,7 @@ import PersonaViewer from "./pages/PersonaViewer";
 import PersonaChat from "./pages/PersonaChat";
 import PersonaDetail from "./pages/PersonaDetail";
 import Dashboard from "./pages/Dashboard";
+import Billing from "./pages/Billing";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ConversationDetail from "./pages/ConversationDetail";
@@ -123,6 +124,7 @@ function App() {
                 
                 {/* Protected Routes - Require authentication */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
                 <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
                 <Route path="/persona-library" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
                 <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
