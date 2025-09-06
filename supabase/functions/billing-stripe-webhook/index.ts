@@ -31,53 +31,52 @@ async function verifyStripeSignature(req: Request): Promise<Stripe.Event> {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log("🎉 Processing checkout.session.completed:", session.id);
   
+  // Only handle payment mode (credit packs) for Task 3C
+  if (session.mode !== "payment") {
+    console.log(`ℹ️ Ignoring ${session.mode} session - only handling credit packs in Task 3C`);
+    return;
+  }
+
   const userId = session.client_reference_id || session.metadata?.user_id;
+  const credits = Number(session.metadata?.credits || 0);
+  
   if (!userId) {
     throw new Error("No user_id found in session");
   }
+  
+  if (credits <= 0) {
+    throw new Error("Invalid credits amount");
+  }
 
-  if (session.mode === "payment") {
-    // Credit pack purchase
-    const credits = Number(session.metadata?.credits || 0);
-    if (credits > 0) {
-      console.log(`💳 Processing credit pack purchase: ${credits} credits for user ${userId}`);
-      
-      // Record transaction
-      await supabase.from("billing_transactions").insert({
-        user_id: userId,
-        amount_usd: (session.amount_total || 0) / 100,
-        credits_purchased: credits,
-        type: "credit_pack",
-        provider: "stripe",
-        provider_ref: session.id,
-      });
+  console.log(`💳 Processing credit pack purchase: ${credits} credits for user ${userId}`);
+  
+  try {
+    // Record transaction (with idempotency protection via unique constraint)
+    await supabase.from("billing_transactions").insert({
+      user_id: userId,
+      amount_usd: (session.amount_total || 0) / 100,
+      credits_purchased: credits,
+      type: "credit_pack",
+      provider: "stripe",
+      provider_ref: session.id,
+    });
 
-      // Grant credits
-      await supabase.from("billing_credit_ledger").insert({
-        user_id: userId,
-        credits_delta: credits,
-        source: "credit_pack",
-        status: "settled",
-        metadata: { stripe_session: session.id },
-      });
+    // Grant credits
+    await supabase.from("billing_credit_ledger").insert({
+      user_id: userId,
+      credits_delta: credits,
+      source: "credit_pack",
+      status: "settled",
+      metadata: { stripe_session: session.id },
+    });
 
-      console.log(`✅ Granted ${credits} credits to user ${userId}`);
+    console.log(`✅ Granted ${credits} credits to user ${userId}`);
+  } catch (error: any) {
+    if (error.message?.includes('duplicate') || error.code === '23505') {
+      console.log(`ℹ️ Duplicate webhook for session ${session.id} - already processed`);
+      return; // Idempotency - already processed
     }
-  } else if (session.mode === "subscription") {
-    // Subscription setup - credits will be granted on first invoice.paid
-    const planId = session.metadata?.plan_id;
-    if (planId) {
-      console.log(`📋 Setting up subscription for user ${userId}, plan ${planId}`);
-      
-      // Update billing profile
-      await supabase.from("billing_profiles").upsert({
-        user_id: userId,
-        plan_id: planId,
-        stripe_customer_id: session.customer as string,
-      });
-
-      console.log(`✅ Updated billing profile for user ${userId}`);
-    }
+    throw error;
   }
 }
 
@@ -243,26 +242,14 @@ serve(async (req) => {
     const event = await verifyStripeSignature(req);
     console.log("🔒 Webhook signature verified, event type:", event.type);
 
-    // Handle different event types
+    // Handle only checkout.session.completed for credit packs (Task 3C scope)
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
         break;
 
-      case "invoice.paid":
-        await handleInvoicePaid(event.data.object as Stripe.Invoice);
-        break;
-
-      case "invoice.payment_failed":
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-        break;
-
-      case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-        break;
-
       default:
-        console.log(`ℹ️ Unhandled event type: ${event.type}`);
+        console.log(`ℹ️ Unhandled event type: ${event.type} - Task 3C only handles checkout.session.completed`);
     }
 
     return new Response(
