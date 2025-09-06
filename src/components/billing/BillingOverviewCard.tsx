@@ -6,6 +6,7 @@ import { CreditCard, TrendingUp, Loader2, Calendar, Coins } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateString } from "@/lib/utils";
+import { CreditPackPicker } from "./CreditPackPicker";
 
 interface BillingData {
   balance: number;
@@ -22,94 +23,95 @@ export function BillingOverviewCard() {
   const [billingData, setBillingData] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreditPicker, setShowCreditPicker] = useState(false);
 
-  useEffect(() => {
+  const fetchBillingData = async () => {
     if (!user?.id) return;
 
-    const fetchBillingData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        console.log("🔍 [BILLING] Fetching billing data for user:", user.id);
+      console.log("🔍 [BILLING] Fetching billing data for user:", user.id);
 
-        // 1. Get balance (using the correct view name)
-        console.log("🔍 [BILLING] Query 1: Getting credit balance");
-        const { data: balanceData, error: balanceError } = await supabase
-          .from('billing_credit_available')
-          .select('available')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      // 1. Get balance (using the correct view name)
+      console.log("🔍 [BILLING] Query 1: Getting credit balance");
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('billing_credit_available')
+        .select('available')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        if (balanceError) {
-          console.error("❌ [BILLING] Balance query error:", balanceError);
-        } else {
-          console.log("✅ [BILLING] Balance query result:", balanceData);
-        }
-
-        // 2. Get plan & renewal
-        console.log("🔍 [BILLING] Query 2: Getting plan and renewal info");
-        const { data: planData, error: planError } = await supabase
-          .from('billing_profiles')
-          .select(`
-            renewal_date,
-            auto_renew,
-            billing_plans(
-              name,
-              included_credits,
-              price_usd
-            )
-          `)
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (planError) {
-          console.error("❌ [BILLING] Plan query error:", planError);
-        } else {
-          console.log("✅ [BILLING] Plan query result:", planData);
-        }
-
-        // 3. Get usage-to-date (current month)
-        console.log("🔍 [BILLING] Query 3: Getting usage for current period");
-        const { data: usageData, error: usageError } = await supabase
-          .from('billing_usage_log')
-          .select('credits_spent')
-          .eq('user_id', user.id)
-          .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
-          .lt('created_at', new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString());
-
-        if (usageError) {
-          console.error("❌ [BILLING] Usage query error:", usageError);
-        } else {
-          console.log("✅ [BILLING] Usage query result:", usageData);
-        }
-
-        // Calculate total usage
-        const totalUsage = usageData?.reduce((sum, entry) => sum + (entry.credits_spent || 0), 0) || 0;
-        console.log("📊 [BILLING] Total usage calculated:", totalUsage);
-
-        // Combine data
-        const combinedData: BillingData = {
-          balance: balanceData?.available || 0,
-          plan_name: planData?.billing_plans?.name || null,
-          included_credits: planData?.billing_plans?.included_credits || null,
-          price_usd: planData?.billing_plans?.price_usd || null,
-          renewal_date: planData?.renewal_date || null,
-          auto_renew: planData?.auto_renew || null,
-          used_this_period: totalUsage
-        };
-
-        console.log("📋 [BILLING] Final combined data:", combinedData);
-        setBillingData(combinedData);
-
-      } catch (err) {
-        console.error("❌ [BILLING] Error fetching billing data:", err);
-        setError(err instanceof Error ? err.message : 'Failed to load billing data');
-      } finally {
-        setLoading(false);
+      if (balanceError) {
+        console.error("❌ [BILLING] Balance query error:", balanceError);
+      } else {
+        console.log("✅ [BILLING] Balance query result:", balanceData);
       }
-    };
 
+      // 2. Get plan & renewal
+      console.log("🔍 [BILLING] Query 2: Getting plan and renewal info");
+      const { data: planData, error: planError } = await supabase
+        .from('billing_profiles')
+        .select(`
+          renewal_date,
+          auto_renew,
+          billing_plans(
+            name,
+            included_credits,
+            price_usd
+          )
+        `)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (planError) {
+        console.error("❌ [BILLING] Plan query error:", planError);
+      } else {
+        console.log("✅ [BILLING] Plan query result:", planData);
+      }
+
+      // 3. Get usage-to-date (current month)
+      console.log("🔍 [BILLING] Query 3: Getting usage for current period");
+      const { data: usageData, error: usageError } = await supabase
+        .from('billing_usage_log')
+        .select('credits_spent')
+        .eq('user_id', user.id)
+        .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+        .lt('created_at', new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString());
+
+      if (usageError) {
+        console.error("❌ [BILLING] Usage query error:", usageError);
+      } else {
+        console.log("✅ [BILLING] Usage query result:", usageData);
+      }
+
+      // Calculate total usage
+      const totalUsage = usageData?.reduce((sum, entry) => sum + (entry.credits_spent || 0), 0) || 0;
+      console.log("📊 [BILLING] Total usage calculated:", totalUsage);
+
+      // Combine data
+      const combinedData: BillingData = {
+        balance: balanceData?.available || 0,
+        plan_name: planData?.billing_plans?.name || null,
+        included_credits: planData?.billing_plans?.included_credits || null,
+        price_usd: planData?.billing_plans?.price_usd || null,
+        renewal_date: planData?.renewal_date || null,
+        auto_renew: planData?.auto_renew || null,
+        used_this_period: totalUsage
+      };
+
+      console.log("📋 [BILLING] Final combined data:", combinedData);
+      setBillingData(combinedData);
+
+    } catch (err) {
+      console.error("❌ [BILLING] Error fetching billing data:", err);
+      setError(err instanceof Error ? err.message : 'Failed to load billing data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBillingData();
   }, [user?.id]);
 
@@ -236,7 +238,7 @@ export function BillingOverviewCard() {
         <div className="flex gap-3 pt-4">
           <Button 
             size="sm" 
-            onClick={() => console.log("TODO: Buy credits")}
+            onClick={() => setShowCreditPicker(true)}
             className="flex-1"
           >
             <TrendingUp className="h-4 w-4 mr-2" />
@@ -253,6 +255,12 @@ export function BillingOverviewCard() {
           </Button>
         </div>
       </CardContent>
+
+      <CreditPackPicker 
+        open={showCreditPicker} 
+        onOpenChange={setShowCreditPicker}
+        onPurchaseComplete={fetchBillingData}
+      />
     </Card>
   );
 }
