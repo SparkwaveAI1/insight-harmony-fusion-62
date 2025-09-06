@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateString } from "@/lib/utils";
 import { CreditPackPicker } from "./CreditPackPicker";
+import { SubscriptionPlanPicker } from "./SubscriptionPlanPicker";
 
 interface BillingData {
   balance: number;
@@ -24,6 +25,7 @@ export function BillingOverviewCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreditPicker, setShowCreditPicker] = useState(false);
+  const [showPlanPicker, setShowPlanPicker] = useState(false);
 
   const fetchBillingData = async () => {
     if (!user?.id) return;
@@ -247,7 +249,7 @@ export function BillingOverviewCard() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => console.log("TODO: Upgrade plan")}
+            onClick={() => setShowPlanPicker(true)}
             className="flex-1"
           >
             <CreditCard className="h-4 w-4 mr-2" />
@@ -259,6 +261,12 @@ export function BillingOverviewCard() {
       <CreditPackPicker 
         open={showCreditPicker} 
         onOpenChange={setShowCreditPicker}
+        onPurchaseComplete={fetchBillingData}
+      />
+
+      <SubscriptionPlanPicker 
+        open={showPlanPicker} 
+        onOpenChange={setShowPlanPicker}
         onPurchaseComplete={fetchBillingData}
       />
     </Card>
