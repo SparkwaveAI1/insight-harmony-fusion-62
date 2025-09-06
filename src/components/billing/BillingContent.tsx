@@ -1,4 +1,5 @@
 import { BillingOverviewCard } from "./BillingOverviewCard";
+import { RecentActivity } from "./RecentActivity";
 
 export function BillingContent() {
   return (
@@ -12,6 +13,7 @@ export function BillingContent() {
       
       <div className="grid gap-6">
         <BillingOverviewCard />
+        <RecentActivity />
       </div>
     </div>
   );
