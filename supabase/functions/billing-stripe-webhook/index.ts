@@ -252,8 +252,12 @@ serve(async (req) => {
         await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
 
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        break;
+
       default:
-        console.log(`ℹ️ Unhandled event type: ${event.type} - Task 3C handles checkout.session.completed, Task 3D handles invoice.paid`);
+        console.log(`ℹ️ Unhandled event type: ${event.type} - Task 3C handles checkout.session.completed, Task 3D handles invoice.paid, Task 3E handles customer.subscription.deleted`);
     }
 
     return new Response(
