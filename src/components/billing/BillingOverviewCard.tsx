@@ -33,11 +33,11 @@ export function BillingOverviewCard() {
 
         console.log("🔍 [BILLING] Fetching billing data for user:", user.id);
 
-        // 1. Get balance
+        // 1. Get balance (using the correct view name)
         console.log("🔍 [BILLING] Query 1: Getting credit balance");
         const { data: balanceData, error: balanceError } = await supabase
-          .from('billing_credit_balances')
-          .select('balance')
+          .from('billing_credit_available')
+          .select('available')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -54,7 +54,7 @@ export function BillingOverviewCard() {
           .select(`
             renewal_date,
             auto_renew,
-            billing_plans!inner(
+            billing_plans(
               name,
               included_credits,
               price_usd
@@ -90,7 +90,7 @@ export function BillingOverviewCard() {
 
         // Combine data
         const combinedData: BillingData = {
-          balance: balanceData?.balance || 0,
+          balance: balanceData?.available || 0,
           plan_name: planData?.billing_plans?.name || null,
           included_credits: planData?.billing_plans?.included_credits || null,
           price_usd: planData?.billing_plans?.price_usd || null,
