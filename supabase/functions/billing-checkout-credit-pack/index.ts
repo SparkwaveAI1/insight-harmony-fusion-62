@@ -19,9 +19,9 @@ const supabase = createClient(
 
 // Credit pack configurations
 const CREDIT_PACKS = {
-  "CREDITS_100": { credits: 100, price: 10.00, name: "100 Credits Pack" },
-  "CREDITS_500": { credits: 500, price: 45.00, name: "500 Credits Pack" },
-  "CREDITS_1000": { credits: 1000, price: 80.00, name: "1000 Credits Pack" },
+  CREDITS_100: { name: "100 Credits", credits: 100, priceUSD: 10 },
+  CREDITS_500: { name: "500 Credits", credits: 500, priceUSD: 45 },
+  CREDITS_1000: { name: "1000 Credits", credits: 1000, priceUSD: 80 },
 } as const;
 
 serve(async (req) => {
@@ -32,7 +32,7 @@ serve(async (req) => {
 
   try {
     console.log("🚀 Starting credit pack checkout creation");
-    const { userId, packType, successUrl, cancelUrl } = await req.json();
+    const { userId, packType } = await req.json();
     
     console.log("📝 Request params:", { userId, packType });
 
@@ -101,17 +101,16 @@ serve(async (req) => {
               name: pack.name,
               description: `${pack.credits} credits for your account`,
             },
-            unit_amount: Math.round(pack.price * 100), // Convert to cents
+            unit_amount: Math.round(pack.priceUSD * 100), // Convert to cents
           },
           quantity: 1,
         },
       ],
-      success_url: successUrl || `${req.headers.get("origin")}/billing/success`,
-      cancel_url: cancelUrl || `${req.headers.get("origin")}/billing/cancel`,
+      success_url: `${req.headers.get("origin")}/billing/success`,
+      cancel_url: `${req.headers.get("origin")}/billing/cancel`,
       client_reference_id: userId,
       metadata: {
         user_id: userId,
-        pack_type: packType,
         credits: pack.credits.toString(),
       },
     });
@@ -121,8 +120,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         ok: true, 
-        sessionId: session.id,
         url: session.url,
+        sessionId: session.id,
       }),
       { 
         headers: { 
