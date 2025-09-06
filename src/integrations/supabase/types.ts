@@ -154,6 +154,7 @@ export type Database = {
           created_at: string | null
           plan_id: string | null
           renewal_date: string | null
+          stripe_customer_id: string | null
           user_id: string
         }
         Insert: {
@@ -161,6 +162,7 @@ export type Database = {
           created_at?: string | null
           plan_id?: string | null
           renewal_date?: string | null
+          stripe_customer_id?: string | null
           user_id: string
         }
         Update: {
@@ -168,11 +170,53 @@ export type Database = {
           created_at?: string | null
           plan_id?: string | null
           renewal_date?: string | null
+          stripe_customer_id?: string | null
           user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "billing_profiles_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "billing_plans"
+            referencedColumns: ["plan_id"]
+          },
+        ]
+      }
+      billing_states: {
+        Row: {
+          created_at: string
+          dunning_stage: number
+          last_invoice_id: string | null
+          plan_id: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dunning_stage?: number
+          last_invoice_id?: string | null
+          plan_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dunning_stage?: number
+          last_invoice_id?: string | null
+          plan_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_states_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "billing_plans"
