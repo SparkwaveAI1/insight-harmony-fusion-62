@@ -9,8 +9,32 @@ const supabase = createClient(
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Lookup credits cost from price book
+async function getCreditsRequired(actionType: string): Promise<number> {
+  const { data: price, error } = await supabase
+    .from("billing_price_book")
+    .select("credits_cost")
+    .eq("action_type", actionType)
+    .eq("is_active", true)
+    .order("effective_from", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  
+  if (error) {
+    console.error("Error fetching price:", error);
+    throw new Error(`Failed to lookup pricing for action: ${actionType}`);
+  }
+  
+  if (!price?.credits_cost) {
+    throw new Error(`Unpriced action type: ${actionType}`);
+  }
+  
+  return price.credits_cost;
+}
 
 // Stub action (replace later with real logic)
 async function performAction(actionType: string, payload: any) {
@@ -31,6 +55,16 @@ async function performAction(actionType: string, payload: any) {
   };
 }
 
+// Perform action with timeout protection
+async function performActionWithTimeout(actionType: string, payload: any, timeoutMs: number = 30000) {
+  return Promise.race([
+    performAction(actionType, payload),
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Action timeout")), timeoutMs)
+    )
+  ]);
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -48,6 +82,11 @@ serve(async (req) => {
       throw new Error("Missing required params: userId, actionType");
     }
 
+    // Get dynamic pricing
+    console.log("💲 Looking up credits required...");
+    const requiredCredits = await getCreditsRequired(actionType);
+    console.log(`📊 Credits required for ${actionType}: ${requiredCredits}`);
+
     // 1. Reserve credits
     console.log("💰 Reserving credits...");
     const { data: reservation, error: reserveError } = await supabase.rpc(
@@ -55,7 +94,7 @@ serve(async (req) => {
       {
         p_user_id: userId,
         p_action_type: actionType,
-        p_required_credits: 1, // TODO: lookup in billing_price_book based on actionType
+        p_required_credits: requiredCredits,
         p_idempotency_key: idempotencyKey,
       }
     );
@@ -69,9 +108,9 @@ serve(async (req) => {
 
     let usageId: string | null = null;
     try {
-      // 2. Perform actual work
+      // 2. Perform actual work with timeout protection
       console.log("🔧 Executing action...");
-      const result = await performAction(actionType, actionPayload);
+      const result = await performActionWithTimeout(actionType, actionPayload);
       console.log("✅ Action completed:", result);
 
       // 3. Finalize the reservation (mark as settled and log usage)
@@ -102,7 +141,7 @@ serve(async (req) => {
           result, 
           usageId,
           ledgerId: reservation.ledger_id,
-          creditsUsed: 1
+          creditsUsed: requiredCredits
         }),
         { 
           headers: { 
