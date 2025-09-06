@@ -25,7 +25,7 @@ serve(async (req) => {
 
   try {
     console.log("🚀 Starting subscription checkout creation");
-    const { userId, planId, successUrl, cancelUrl } = await req.json();
+    const { userId, planId } = await req.json();
     
     console.log("📝 Request params:", { userId, planId });
 
@@ -37,18 +37,14 @@ serve(async (req) => {
     // Get plan details
     const { data: plan, error: planError } = await supabase
       .from("billing_plans")
-      .select("name, price_usd, included_credits")
+      .select("*")
       .eq("plan_id", planId)
       .eq("is_active", true)
-      .maybeSingle();
+      .single();
 
-    if (planError) {
-      console.error("❌ Plan lookup failed:", planError);
-      throw new Error("Failed to lookup plan");
-    }
-
-    if (!plan) {
-      throw new Error("Plan not found or not active");
+    if (planError || !plan) {
+      console.error("Plan fetch error:", planError);
+      throw new Error("Invalid or inactive plan");
     }
 
     console.log("📋 Plan details:", plan);
@@ -85,7 +81,6 @@ serve(async (req) => {
         .upsert({
           user_id: userId,
           stripe_customer_id: customerId,
-          plan_id: planId,
         });
 
       console.log("✅ Created new Stripe customer:", customerId);
@@ -103,8 +98,8 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${plan.name} Plan`,
-              description: `Includes ${plan.included_credits} credits per month`,
+              name: plan.name,
+              description: `${plan.included_credits} credits included monthly`,
             },
             unit_amount: Math.round(plan.price_usd * 100), // Convert to cents
             recurring: { interval: "month" },
@@ -112,8 +107,8 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      success_url: successUrl || `${req.headers.get("origin")}/billing/success`,
-      cancel_url: cancelUrl || `${req.headers.get("origin")}/billing/cancel`,
+      success_url: `${req.headers.get("origin")}/billing/success`,
+      cancel_url: `${req.headers.get("origin")}/billing/cancel`,
       client_reference_id: userId,
       metadata: {
         user_id: userId,
@@ -127,8 +122,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         ok: true, 
-        sessionId: session.id,
         url: session.url,
+        sessionId: session.id,
       }),
       { 
         headers: { 
