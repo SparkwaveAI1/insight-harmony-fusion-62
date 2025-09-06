@@ -248,8 +248,12 @@ serve(async (req) => {
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
         break;
 
+      case "invoice.paid":
+        await handleInvoicePaid(event.data.object as Stripe.Invoice);
+        break;
+
       default:
-        console.log(`ℹ️ Unhandled event type: ${event.type} - Task 3C only handles checkout.session.completed`);
+        console.log(`ℹ️ Unhandled event type: ${event.type} - Task 3C handles checkout.session.completed, Task 3D handles invoice.paid`);
     }
 
     return new Response(
