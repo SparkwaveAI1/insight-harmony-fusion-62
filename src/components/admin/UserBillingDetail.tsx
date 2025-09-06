@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateString } from "@/lib/utils";
 import { RecentActivity } from "../billing/RecentActivity";
+import { CreditAdjustmentDialog } from "./CreditAdjustmentDialog";
 
 interface BillingProfile {
   plan_name: string | null;
@@ -147,9 +148,17 @@ export function UserBillingDetail({ userId, userEmail }: UserBillingDetailProps)
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Current Balance</p>
-              <p className="text-lg font-semibold text-primary">
-                {balance} credits
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-lg font-semibold text-primary">
+                  {balance} credits
+                </p>
+                <CreditAdjustmentDialog
+                  userId={userId}
+                  userEmail={userEmail}
+                  currentBalance={balance}
+                  onSuccess={fetchUserBillingData}
+                />
+              </div>
             </div>
           </div>
 
