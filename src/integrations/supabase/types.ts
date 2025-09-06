@@ -1512,6 +1512,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_users_renewing_in_days: {
+        Args: { days_ahead: number }
+        Returns: {
+          email: string
+          id: string
+          plan_name: string
+          price_usd: number
+          renewal_date: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
