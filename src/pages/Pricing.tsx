@@ -36,8 +36,8 @@ const PLANS: Record<string, PlanType> = {
     ],
     priceMonthly: 29,
     priceYearly: 290,
-    priceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_STARTER_M,
-    priceIdYearly: process.env.NEXT_PUBLIC_STRIPE_STARTER_Y,
+    priceIdMonthly: "price_starter_monthly",
+    priceIdYearly: "price_starter_yearly",
   },
   pro: {
     name: "Professional",
@@ -52,8 +52,8 @@ const PLANS: Record<string, PlanType> = {
     ],
     priceMonthly: 79,
     priceYearly: 790,
-    priceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRO_M,
-    priceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRO_Y,
+    priceIdMonthly: "price_pro_monthly",
+    priceIdYearly: "price_pro_yearly",
     popular: true,
   },
   enterprise: {
