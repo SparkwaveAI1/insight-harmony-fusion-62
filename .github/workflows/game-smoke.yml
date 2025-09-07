@@ -1,50 +1,45 @@
-name: GAME SDK Smoke Tests
+name: GAME SDK Smokes
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: {}  # lets you run it manually
 
 jobs:
-  smoke-tests:
+  smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Check out repo
         uses: actions/checkout@v4
 
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install deps (ci, with fallback)
+      - name: Install deps
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm i
-          else
-            npm i
-          fi
+          npm ci || npm i --no-audit --no-fund --legacy-peer-deps
 
-      # ---- GAME API key is injected here for both runs ----
-      - name: Run smoke.ts
+      - name: Run GAME smoke
         env:
           GAME_API_KEY: ${{ secrets.GAME_API_KEY }}
         run: |
-          npx -y tsx scripts/game/smoke.ts | tee smoke.log
+          npx tsx scripts/game/smoke.ts
 
-      - name: Run twitter.ts
+      - name: Run Twitter smoke
         env:
           GAME_API_KEY: ${{ secrets.GAME_API_KEY }}
         run: |
-          npx -y tsx scripts/game/twitter.ts | tee twitter.log
+          npx tsx scripts/game/twitter.ts
 
-      - name: Upload logs
+      - name: Upload logs (optional)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: game-smoke-logs
           path: |
-            smoke.log
-            twitter.log
+            **/*.log
+            **/logs/**
