@@ -29,6 +29,12 @@ interface AuditLogEntry {
   source_table: 'transaction' | 'ledger';
 }
 
+interface AuditResponse {
+  data: AuditLogEntry[];
+  next_cursor?: string;
+  has_more: boolean;
+}
+
 export function AdminBillingAuditLog() {
   const [auditData, setAuditData] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,7 +211,7 @@ export function AdminBillingAuditLog() {
             </Select>
           </div>
           <div className="flex items-end gap-2">
-            <Button onClick={fetchAuditLog} className="flex-1">
+            <Button onClick={() => fetchAuditLog(true)} className="flex-1">
               <Search className="h-4 w-4 mr-2" />
               Search
             </Button>
