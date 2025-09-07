@@ -211,7 +211,7 @@ export function AdminBillingAuditLog() {
             </Select>
           </div>
           <div className="flex items-end gap-2">
-            <Button onClick={() => fetchAuditLog(true)} className="flex-1">
+            <Button onClick={fetchAuditLog} className="flex-1">
               <Search className="h-4 w-4 mr-2" />
               Search
             </Button>

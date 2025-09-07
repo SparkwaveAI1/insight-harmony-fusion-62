@@ -4,7 +4,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -59,11 +60,13 @@ serve(async (req) => {
     const method = req.method;
     
     if (method === 'GET') {
-      // Get alerts with optional filters
+      const startTime = Date.now();
       const url = new URL(req.url);
-      const status = url.searchParams.get('status') || 'active';
       const severity = url.searchParams.get('severity');
+      const status = url.searchParams.get('status') || 'active';
+      const type = url.searchParams.get('type');
       const limit = parseInt(url.searchParams.get('limit') || '50');
+      const cursor = url.searchParams.get('cursor');
 
       let query = supabaseAdmin
         .from('admin_alerts')
@@ -74,22 +77,45 @@ serve(async (req) => {
       if (status && status !== 'all') {
         query = query.eq('status', status);
       }
-
-      if (severity) {
+      if (severity && severity !== 'all') {
         query = query.eq('severity', severity);
+      }
+      if (type && type !== 'all') {
+        query = query.eq('type', type);
+      }
+      
+      // Cursor pagination
+      if (cursor) {
+        const [timestamp, id] = cursor.split('|');
+        query = query.or(`created_at.lt.${timestamp},and(created_at.eq.${timestamp},id.lt.${id})`);
       }
 
       const { data: alerts, error } = await query;
 
       if (error) {
-        console.error('❌ [ALERTS] Error fetching alerts:', error);
-        throw error;
+        console.error('❌ [ALERTS] Database error:', error);
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch alerts' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
-      console.log(`✅ [ALERTS] Retrieved ${alerts.length} alerts`);
-      return new Response(JSON.stringify({ alerts }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      // Generate next cursor if we have results
+      const nextCursor = alerts && alerts.length === limit 
+        ? `${alerts[alerts.length - 1].created_at}|${alerts[alerts.length - 1].id}`
+        : null;
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ [ALERTS] Retrieved ${alerts?.length || 0} alerts in ${duration}ms`);
+      
+      return new Response(
+        JSON.stringify({ 
+          data: alerts || [], 
+          next_cursor: nextCursor,
+          has_more: alerts ? alerts.length === limit : false
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (method === 'PATCH') {
@@ -172,7 +198,14 @@ serve(async (req) => {
 
       if (error) {
         console.error('❌ [ALERTS] Error creating alert:', error);
-        throw error;
+        // Ignore unique constraint violations (23505) as they're expected for idempotency
+        if (error.code !== '23505') {
+          throw error;
+        }
+        console.log('ℹ️ [ALERTS] Duplicate alert ignored (idempotency)');
+        return new Response(JSON.stringify({ alert: null, message: 'Duplicate alert ignored' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
 
       console.log(`✅ [ALERTS] Manual alert created by admin ${user.email}`);

@@ -4,7 +4,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,7 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🔍 [AUDIT] Admin audit log request received');
+    const startTime = Date.now();
+    console.log('🔍 [AUDIT-LOG] Admin audit log request received');
 
     // Initialize Supabase client with service role
     const supabaseAdmin = createClient(
@@ -27,7 +29,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
 
     if (userError || !user) {
-      console.error('❌ [AUDIT] Authentication failed:', userError);
+      console.error('❌ [AUDIT-LOG] Authentication failed:', userError);
       return new Response('Unauthorized', { 
         status: 401, 
         headers: corsHeaders 
@@ -35,172 +37,154 @@ serve(async (req) => {
     }
 
     // Admin emails check
-    const ADMIN_EMAILS = Deno.env.get('ADMIN_EMAILS')?.split(',').map(s => s.trim().toLowerCase()) ?? [
-      "cumbucotrader@gmail.com", 
-      "scott@sparkwave-ai.com"
-    ];
+    const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
 
-    if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
-      console.error(`❌ [AUDIT] User ${user.email} is not an admin`);
+    if (ADMIN_EMAILS.length === 0) {
+      console.error('❌ [AUDIT-LOG] No admin emails configured');
+      return new Response('Admin emails not configured', { 
+        status: 500, 
+        headers: corsHeaders 
+      });
+    }
+
+    if (!user.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      console.error(`❌ [AUDIT-LOG] User ${user.email} is not an admin`);
       return new Response('Forbidden - Admin access required', { 
         status: 403, 
         headers: corsHeaders 
       });
     }
 
-    console.log(`✅ [AUDIT] Admin access verified for: ${user.email}`);
-
-    // Parse query parameters
+    console.log(`✅ [AUDIT-LOG] Admin access verified for: ${user.email}`);
+    
     const url = new URL(req.url);
     const userFilter = url.searchParams.get('user_filter') || '';
-    const startDate = url.searchParams.get('start_date') || '';
-    const endDate = url.searchParams.get('end_date') || '';
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
     const eventType = url.searchParams.get('event_type') || 'all';
     const limit = parseInt(url.searchParams.get('limit') || '100');
+    const cursor = url.searchParams.get('cursor');
 
-    console.log('🔍 [AUDIT] Filters:', { userFilter, startDate, endDate, eventType, limit });
+    console.log('🔍 [AUDIT-LOG] Filters:', { userFilter, startDate, endDate, eventType, limit });
 
-    // Build queries for both tables
-    let transactionsQuery = supabaseAdmin
-      .from('billing_transactions')
-      .select(`
-        transaction_id as id,
-        user_id,
-        type,
-        amount_usd,
-        credits_purchased,
-        provider,
-        provider_ref,
-        created_at,
-        'transaction' as source_table
-      `)
-      .order('created_at', { ascending: false });
+    // Build combined query with filters
+    let combinedData: any[] = [];
 
-    let ledgerQuery = supabaseAdmin
-      .from('billing_credit_ledger')
-      .select(`
-        ledger_id as id,
-        user_id,
-        action_type as type,
-        credits_delta,
-        source,
-        status,
-        metadata,
-        created_at,
-        'ledger' as source_table
-      `)
-      .order('created_at', { ascending: false });
+    if (eventType === 'all' || eventType === 'transactions') {
+      let transactionQuery = supabaseAdmin
+        .from('billing_transactions')
+        .select(`
+          transaction_id as id,
+          user_id,
+          type,
+          amount_usd,
+          credits_purchased,
+          provider,
+          created_at
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-    // Apply filters
-    if (userFilter) {
-    // For user filter, we need to handle both email and user_id
-        if (userFilter.includes('@')) {
-          // It's an email, need to get user_id first - limit results and require minimum length
-          if (userFilter.length < 3) {
-            return new Response(JSON.stringify({ 
-              error: 'Email filter too short',
-              message: 'Email filter must be at least 3 characters'
-            }), {
-              status: 400,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-          }
-          
-          const { data: userProfiles } = await supabaseAdmin.auth.admin.listUsers({
-            page: 1,
-            perPage: 20
-          });
-          const matchingUser = userProfiles?.users.find(u => 
-            u.email?.toLowerCase().includes(userFilter.toLowerCase())
-          );
-        if (matchingUser) {
-          transactionsQuery = transactionsQuery.eq('user_id', matchingUser.id);
-          ledgerQuery = ledgerQuery.eq('user_id', matchingUser.id);
-        } else {
-          // No matching user found, return empty results
-          return new Response(JSON.stringify({ data: [] }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
+      if (userFilter) {
+        transactionQuery = transactionQuery.or(`user_id.eq.${userFilter}`);
+      }
+      if (startDate) {
+        transactionQuery = transactionQuery.gte('created_at', startDate);
+      }
+      if (endDate) {
+        transactionQuery = transactionQuery.lte('created_at', endDate);
+      }
+      
+      // Cursor pagination for transactions
+      if (cursor) {
+        const [timestamp, id] = cursor.split('|');
+        transactionQuery = transactionQuery.or(`created_at.lt.${timestamp},and(created_at.eq.${timestamp},transaction_id.lt.${id})`);
+      }
+
+      const { data: transactions, error: transError } = await transactionQuery;
+      if (transError) {
+        console.error('❌ [AUDIT-LOG] Transaction query error:', transError);
       } else {
-        // Assume it's a user_id
-        transactionsQuery = transactionsQuery.eq('user_id', userFilter);
-        ledgerQuery = ledgerQuery.eq('user_id', userFilter);
+        combinedData.push(...(transactions || []).map(t => ({
+          ...t,
+          source_table: 'transaction' as const,
+          user_email: '', // Will be filled later
+          status: null,
+          metadata: null
+        })));
       }
     }
 
-    if (startDate) {
-      transactionsQuery = transactionsQuery.gte('created_at', startDate);
-      ledgerQuery = ledgerQuery.gte('created_at', startDate);
-    }
+    if (eventType === 'all' || eventType === 'adjustments') {
+      let ledgerQuery = supabaseAdmin
+        .from('billing_credit_ledger')
+        .select(`
+          ledger_id as id,
+          user_id,
+          action_type as type,
+          credits_delta,
+          source,
+          status,
+          metadata,
+          created_at
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-    if (endDate) {
-      transactionsQuery = transactionsQuery.lte('created_at', endDate);
-      ledgerQuery = ledgerQuery.lte('created_at', endDate);
-    }
+      if (userFilter) {
+        ledgerQuery = ledgerQuery.or(`user_id.eq.${userFilter}`);
+      }
+      if (startDate) {
+        ledgerQuery = ledgerQuery.gte('created_at', startDate);
+      }
+      if (endDate) {
+        ledgerQuery = ledgerQuery.lte('created_at', endDate);
+      }
+      
+      // Cursor pagination for ledger
+      if (cursor) {
+        const [timestamp, id] = cursor.split('|');
+        ledgerQuery = ledgerQuery.or(`created_at.lt.${timestamp},and(created_at.eq.${timestamp},ledger_id.lt.${id})`);
+      }
 
-    // Apply event type filter
-    if (eventType !== 'all') {
-      if (eventType === 'transactions') {
-        ledgerQuery = ledgerQuery.limit(0); // Exclude ledger
-      } else if (eventType === 'adjustments') {
-        transactionsQuery = transactionsQuery.limit(0); // Exclude transactions
-        ledgerQuery = ledgerQuery.eq('source', 'admin_adjustment');
+      const { data: ledger, error: ledgerError } = await ledgerQuery;
+      if (ledgerError) {
+        console.error('❌ [AUDIT-LOG] Ledger query error:', ledgerError);
       } else {
-        // Specific transaction type
-        transactionsQuery = transactionsQuery.eq('type', eventType);
-        ledgerQuery = ledgerQuery.limit(0); // Exclude ledger
+        combinedData.push(...(ledger || []).map(l => ({
+          ...l,
+          source_table: 'ledger' as const,
+          user_email: '', // Will be filled later
+          amount_usd: null,
+          credits_purchased: null,
+          provider: null
+        })));
       }
     }
 
-    // Apply limits
-    transactionsQuery = transactionsQuery.limit(Math.min(limit, 500));
-    ledgerQuery = ledgerQuery.limit(Math.min(limit, 500));
+    // Sort combined data by created_at desc and limit
+    combinedData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    combinedData = combinedData.slice(0, limit);
 
-    // Execute queries
-    const [transactionsResult, ledgerResult] = await Promise.all([
-      transactionsQuery,
-      ledgerQuery
-    ]);
+    // Generate next cursor if we have results
+    const nextCursor = combinedData.length === limit 
+      ? `${combinedData[combinedData.length - 1].created_at}|${combinedData[combinedData.length - 1].id}`
+      : null;
 
-    if (transactionsResult.error) {
-      console.error('❌ [AUDIT] Transactions query error:', transactionsResult.error);
-      throw transactionsResult.error;
-    }
-
-    if (ledgerResult.error) {
-      console.error('❌ [AUDIT] Ledger query error:', ledgerResult.error);
-      throw ledgerResult.error;
-    }
-
-    // Combine and sort results
-    const combinedData = [
-      ...(transactionsResult.data || []),
-      ...(ledgerResult.data || [])
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-     .slice(0, limit);
-
-    // Get user emails for the results
-    const userIds = [...new Set(combinedData.map(item => item.user_id))];
-    const { data: userProfiles } = await supabaseAdmin.auth.admin.listUsers();
-    const userEmailMap = {};
-    userProfiles?.users.forEach(user => {
-      if (userIds.includes(user.id)) {
-        userEmailMap[user.id] = user.email;
-      }
-    });
-
-    // Enrich data with user emails
-    const enrichedData = combinedData.map(item => ({
-      ...item,
-      user_email: userEmailMap[item.user_id] || 'Unknown'
-    }));
-
-    console.log(`✅ [AUDIT] Retrieved ${enrichedData.length} audit records`);
-
-    return new Response(JSON.stringify({ data: enrichedData }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    const duration = Date.now() - startTime;
+    console.log(`✅ [AUDIT-LOG] Retrieved ${combinedData.length} audit records in ${duration}ms`);
+    
+    return new Response(
+      JSON.stringify({ 
+        data: combinedData,
+        next_cursor: nextCursor,
+        has_more: combinedData.length === limit
+      }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('❌ [AUDIT] Error:', error);

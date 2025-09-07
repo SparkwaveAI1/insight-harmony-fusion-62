@@ -4,7 +4,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,6 +14,7 @@ serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     console.log('📊 [STATS] Admin billing stats request received');
 
     // Initialize Supabase client with service role
@@ -60,7 +62,8 @@ serve(async (req) => {
     const url = new URL(req.url);
     const days = parseInt(url.searchParams.get('days') || '30');
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    startDate.setUTCDate(startDate.getUTCDate() - days);
+    startDate.setUTCHours(0, 0, 0, 0);
     const endDate = new Date();
 
     console.log(`📊 [STATS] Fetching stats for last ${days} days`);
@@ -192,10 +195,12 @@ serve(async (req) => {
       recentActivity: recentActivity.data || []
     };
 
-    console.log('✅ [STATS] Stats generated successfully');
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    const duration = Date.now() - startTime;
+    console.log(`✅ [STATS] Stats compiled for ${days} days in ${duration}ms`);
+    return new Response(
+      JSON.stringify(response),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('❌ [STATS] Error:', error);

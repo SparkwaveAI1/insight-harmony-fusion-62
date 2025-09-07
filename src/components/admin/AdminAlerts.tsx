@@ -125,16 +125,12 @@ export function AdminAlerts() {
       setCheckingAlerts(true);
       console.log('🔍 [ALERTS] Checking for new alert conditions...');
 
-      const session = (await supabase.auth.getSession()).data.session;
-      if (!session?.access_token) {
-        console.error('❌ [ALERTS] No valid session found');
-        return;
-      }
+      const { token, base } = await getBearerAndBase(supabase);
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-check-alerts`, {
+      const response = await retryFetch(`${base}/functions/v1/admin-check-alerts`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -148,10 +144,23 @@ export function AdminAlerts() {
       
       if (data.newAlertsCount > 0) {
         // Refresh alerts list to show new alerts
-        await fetchAlerts();
+        await fetchAlerts(true);
       }
     } catch (error) {
       console.error('❌ [ALERTS] Failed to check alerts:', error);
+      if (error instanceof Error && error.message === 'NO_SESSION') {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to access admin features",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to check for new alerts",
+          variant: "destructive",
+        });
+      }
     } finally {
       setCheckingAlerts(false);
     }
@@ -161,16 +170,12 @@ export function AdminAlerts() {
     try {
       console.log(`🔔 [ALERTS] ${action}ing alert:`, alertId);
 
-      const session = (await supabase.auth.getSession()).data.session;
-      if (!session?.access_token) {
-        console.error('❌ [ALERTS] No valid session found');
-        return;
-      }
+      const { token, base } = await getBearerAndBase(supabase);
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-manage-alerts`, {
+      const response = await retryFetch(`${base}/functions/v1/admin-manage-alerts`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ alertId, action })
@@ -190,6 +195,19 @@ export function AdminAlerts() {
       ));
     } catch (error) {
       console.error(`❌ [ALERTS] Failed to ${action} alert:`, error);
+      if (error instanceof Error && error.message === 'NO_SESSION') {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to access admin features",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to ${action} alert`,
+          variant: "destructive",
+        });
+      }
     }
   };
 
