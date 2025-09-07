@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, MapPin, Briefcase, User } from "lucide-react";
 import {
@@ -40,6 +40,11 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   const navigate = useNavigate();
   const isOwner = user?.id === persona.user_id;
   const [isPublic, setIsPublic] = useState(persona.is_public);
+
+  // Sync local state with prop changes
+  useEffect(() => {
+    setIsPublic(persona.is_public);
+  }, [persona.is_public]);
 
   const handleVisibilityChange = async () => {
     if (!isOwner) {
@@ -203,8 +208,8 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       
       <CardFooter className="flex items-center justify-between pt-0">
         <div className="flex items-center gap-2">
-          <Badge variant={persona.is_public ? "default" : "secondary"}>
-            {persona.is_public ? "Public" : "Private"}
+          <Badge variant={isPublic ? "default" : "secondary"}>
+            {isPublic ? "Public" : "Private"}
           </Badge>
         </div>
         <div className="flex gap-2">
