@@ -5,29 +5,46 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   smoke-tests:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install deps (ci, with fallback)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci || npm i
+          else
+            npm i
+          fi
 
-      - name: Run smoke test
-        run: npm run smoke
+      # ---- GAME API key is injected here for both runs ----
+      - name: Run smoke.ts
         env:
           GAME_API_KEY: ${{ secrets.GAME_API_KEY }}
+        run: |
+          npx -y tsx scripts/game/smoke.ts | tee smoke.log
 
-      - name: Run Twitter smoke test
-        run: npm run twitter-smoke
+      - name: Run twitter.ts
         env:
           GAME_API_KEY: ${{ secrets.GAME_API_KEY }}
+        run: |
+          npx -y tsx scripts/game/twitter.ts | tee twitter.log
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-smoke-logs
+          path: |
+            smoke.log
+            twitter.log
