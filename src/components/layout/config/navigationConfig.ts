@@ -11,6 +11,7 @@ import {
   BookOpen,
   Shield,
   CreditCard,
+  DollarSign,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -81,6 +82,11 @@ export const headerNavItems = [
     title: "Personas",
     href: "/dashboard",
     icon: Users,
+  },
+  {
+    title: "Pricing",
+    href: "/pricing",
+    icon: DollarSign,
   },
   {
     title: "Contact",

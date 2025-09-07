@@ -29,6 +29,7 @@ import ResearchResults from "./pages/ResearchResults";
 import Auth from "./pages/Auth";
 import UserProfile from "./pages/UserProfile";
 import Contact from "./pages/Contact";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import PersonaQueue from "./pages/PersonaQueue";
@@ -102,6 +103,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/sign-in" element={<Auth />} />
+                <Route path="/pricing" element={<Pricing />} />
                 <Route path="/contact" element={<Contact />} />
                 
                 {/* Documentation - Protected Route */}
