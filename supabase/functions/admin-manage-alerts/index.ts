@@ -3,8 +3,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+  'Vary': 'Origin',
+  'Cache-Control': 'no-store',
 };
 
 serve(async (req) => {
@@ -72,6 +74,7 @@ serve(async (req) => {
         .from('admin_alerts')
         .select('*')
         .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
         .limit(limit);
 
       if (status && status !== 'all') {
@@ -84,10 +87,11 @@ serve(async (req) => {
         query = query.eq('type', type);
       }
       
-      // Cursor pagination
+      // Cursor pagination with proper two-key ordering
       if (cursor) {
         const [timestamp, id] = cursor.split('|');
-        query = query.or(`created_at.lt.${timestamp},and(created_at.eq.${timestamp},id.lt.${id})`);
+        const cursorFilter = `created_at.lt.${timestamp},and(created_at.eq.${timestamp},id.lt.${id})`;
+        query = query.or(cursorFilter);
       }
 
       const { data: alerts, error } = await query;

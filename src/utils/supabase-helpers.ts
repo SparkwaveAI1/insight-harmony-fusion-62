@@ -1,13 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export async function getBearerAndBase(supabase: SupabaseClient) {
-  const session = (await supabase.auth.getSession()).data.session;
+  const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     throw new Error('NO_SESSION');
   }
   return { 
     token: session.access_token, 
-    base: "https://wgerdrdsuusnrdnwwelt.supabase.co" 
+    base: "https://wgerdrdsuusnrdnwwelt.supabase.co"
   };
 }
 
