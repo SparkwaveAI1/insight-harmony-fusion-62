@@ -1,15 +1,7 @@
 import { BillingOverviewCard } from "./BillingOverviewCard";
 import { RecentActivity } from "./RecentActivity";
-import { OverageWarningBanner } from "./OverageWarningBanner";
-import { useState } from "react";
 
 export function BillingContent() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
-  };
-
   return (
     <div className="space-y-8">
       <div>
@@ -20,15 +12,7 @@ export function BillingContent() {
       </div>
       
       <div className="grid gap-6">
-        <BillingOverviewCard 
-          key={refreshTrigger}
-          renderOverageWarning={(billingData) => (
-            <OverageWarningBanner 
-              billingData={billingData} 
-              onRefresh={handleRefresh} 
-            />
-          )}
-        />
+        <BillingOverviewCard />
         <RecentActivity />
       </div>
     </div>

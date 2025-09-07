@@ -4,15 +4,12 @@ import { BarChart3, Users, Folder, Activity, Loader2, MessageSquare, ArrowRight,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRecentActivity } from "@/hooks/useRecentActivity";
-import { useBillingData } from "@/hooks/useBillingData";
-import { OverageWarningBanner } from "@/components/billing/OverageWarningBanner";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import { getUserProjectsWithCount, getUserCollectionsWithCount } from "@/services/collections";
 
 export function DashboardContent() {
   const { activities, isLoading: activitiesLoading } = useRecentActivity();
-  const { billingData, refetch: refetchBilling } = useBillingData();
   const [projects, setProjects] = useState<any[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,14 +50,6 @@ export function DashboardContent() {
           Welcome to your PersonaAI dashboard. View your insights, manage your personas, and explore your research data.
         </p>
       </div>
-
-      {/* Overage Warning Banner */}
-      {billingData && (
-        <OverageWarningBanner 
-          billingData={billingData} 
-          onRefresh={refetchBilling} 
-        />
-      )}
 
       {/* Enhanced Quick Actions */}
       <div className="space-y-6">

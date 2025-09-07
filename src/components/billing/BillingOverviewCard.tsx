@@ -19,11 +19,7 @@ interface BillingData {
   used_this_period: number;
 }
 
-interface BillingOverviewCardProps {
-  renderOverageWarning?: (billingData: BillingData) => React.ReactNode;
-}
-
-export function BillingOverviewCard({ renderOverageWarning }: BillingOverviewCardProps) {
+export function BillingOverviewCard() {
   const { user } = useAuth();
   const [billingData, setBillingData] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -169,17 +165,13 @@ export function BillingOverviewCard({ renderOverageWarning }: BillingOverviewCar
     : 0;
 
   return (
-    <>
-      {/* Overage Warning Banner */}
-      {billingData && renderOverageWarning?.(billingData)}
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Billing Overview
-          </CardTitle>
-        </CardHeader>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5" />
+          Billing Overview
+        </CardTitle>
+      </CardHeader>
       <CardContent className="space-y-6">
         {/* Plan Info */}
         <div className="flex items-center justify-between">
@@ -265,7 +257,6 @@ export function BillingOverviewCard({ renderOverageWarning }: BillingOverviewCar
           </Button>
         </div>
       </CardContent>
-    </Card>
 
       <CreditPackPicker 
         open={showCreditPicker} 
@@ -278,6 +269,6 @@ export function BillingOverviewCard({ renderOverageWarning }: BillingOverviewCar
         onOpenChange={setShowPlanPicker}
         onPurchaseComplete={fetchBillingData}
       />
-    </>
+    </Card>
   );
 }
