@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PersonaEnhancementTools } from "./PersonaEnhancementTools";
 import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
 import { AdminBillingUsers } from "./AdminBillingUsers";
+import { AdminBillingAuditLog } from "./AdminBillingAuditLog";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -53,6 +54,9 @@ export function AdminDashboard() {
 
       {/* Admin Billing Users */}
       <AdminBillingUsers />
+
+      {/* Admin Billing Audit Log */}
+      <AdminBillingAuditLog />
 
       {/* Enhancement Tools */}
       <PersonaEnhancementTools />
