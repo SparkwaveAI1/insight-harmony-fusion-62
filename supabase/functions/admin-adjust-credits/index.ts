@@ -50,16 +50,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if user is admin (you may need to adjust this check based on your auth setup)
-    const { data: adminCheck, error: adminError } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .single();
+    // Admin emails check (same as admin-search-users)
+    const ADMIN_EMAILS = [
+      "cumbucotrader@gmail.com", 
+      "scott@sparkwave-ai.com",
+    ];
 
-    if (adminError || !adminCheck) {
-      console.error('❌ [ADMIN] User is not admin:', user.id);
+    if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
+      console.error(`❌ [ADMIN] User ${user.email} is not an admin`);
       return new Response('Forbidden - Admin access required', { 
         status: 403, 
         headers: corsHeaders 
