@@ -43,20 +43,25 @@ export function AdminBillingAuditLog() {
 
       const queryParams = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
+        if (value && value !== 'all') queryParams.append(key, value);
       });
 
-      const { data, error } = await supabase.functions.invoke('admin-audit-log', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/admin-audit-log?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      });
+      );
 
-      if (error) {
-        console.error('❌ [AUDIT] Error fetching audit log:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
 
       console.log('✅ [AUDIT] Audit log data received:', data);
       setAuditData(data.data || []);

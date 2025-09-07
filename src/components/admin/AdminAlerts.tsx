@@ -40,14 +40,22 @@ export function AdminAlerts() {
       if (filter.status !== 'all') queryParams.append('status', filter.status);
       if (filter.severity !== 'all') queryParams.append('severity', filter.severity);
 
-      const { data, error } = await supabase.functions.invoke('admin-manage-alerts', {
-        method: 'GET'
-      });
+      const response = await fetch(
+        `https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/admin-manage-alerts?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (error) {
-        console.error('❌ [ALERTS] Error fetching alerts:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
 
       console.log('✅ [ALERTS] Alerts received:', data);
       setAlerts(data.alerts || []);

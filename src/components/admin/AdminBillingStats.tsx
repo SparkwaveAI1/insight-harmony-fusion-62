@@ -37,15 +37,24 @@ export function AdminBillingStats() {
       setLoading(true);
       console.log('📊 [STATS] Fetching billing stats for period:', period);
 
-      const { data, error } = await supabase.functions.invoke('admin-billing-stats', {
-        method: 'GET',
-        body: JSON.stringify({ days: parseInt(period) })
-      });
+      // Use query params for GET request
+      const queryParams = new URLSearchParams({ days: period }).toString();
+      const response = await fetch(
+        `https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/admin-billing-stats?${queryParams}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (error) {
-        console.error('❌ [STATS] Error fetching stats:', error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
 
       console.log('✅ [STATS] Stats data received:', data);
       setStats(data);

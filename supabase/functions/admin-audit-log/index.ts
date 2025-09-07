@@ -35,9 +35,9 @@ serve(async (req) => {
     }
 
     // Admin emails check
-    const ADMIN_EMAILS = [
+    const ADMIN_EMAILS = Deno.env.get('ADMIN_EMAILS')?.split(',').map(s => s.trim().toLowerCase()) ?? [
       "cumbucotrader@gmail.com", 
-      "scott@sparkwave-ai.com",
+      "scott@sparkwave-ai.com"
     ];
 
     if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
