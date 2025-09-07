@@ -4,6 +4,7 @@ import { PersonaEnhancementTools } from "./PersonaEnhancementTools";
 import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
 import { AdminBillingUsers } from "./AdminBillingUsers";
 import { AdminBillingAuditLog } from "./AdminBillingAuditLog";
+import { AdminBillingStats } from "./AdminBillingStats";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -48,6 +49,9 @@ export function AdminDashboard() {
         </CardHeader>
       </Card>
 
+
+      {/* Admin Billing Stats */}
+      <AdminBillingStats />
 
       {/* Persona Completeness Analysis */}
       <PersonaCompletenessAnalysis />
