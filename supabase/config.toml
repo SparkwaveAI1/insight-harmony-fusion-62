@@ -17,3 +17,9 @@ verify_jwt = true
 
 [functions.admin-billing-stats]
 verify_jwt = true
+
+[functions.admin-check-alerts]
+verify_jwt = true
+
+[functions.admin-manage-alerts]
+verify_jwt = true

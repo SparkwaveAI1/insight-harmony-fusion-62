@@ -5,6 +5,7 @@ import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
 import { AdminBillingUsers } from "./AdminBillingUsers";
 import { AdminBillingAuditLog } from "./AdminBillingAuditLog";
 import { AdminBillingStats } from "./AdminBillingStats";
+import { AdminAlerts } from "./AdminAlerts";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -49,6 +50,9 @@ export function AdminDashboard() {
         </CardHeader>
       </Card>
 
+
+      {/* Admin Alerts */}
+      <AdminAlerts />
 
       {/* Admin Billing Stats */}
       <AdminBillingStats />
