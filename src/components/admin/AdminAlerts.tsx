@@ -8,6 +8,9 @@ import { Loader2, AlertTriangle, Bell, CheckCircle, X, RefreshCw } from "lucide-
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
 
+// Get base URL for functions
+const SUPABASE_URL = "https://wgerdrdsuusnrdnwwelt.supabase.co";
+
 interface AdminAlert {
   id: string;
   type: string;
@@ -36,16 +39,23 @@ export function AdminAlerts() {
       setLoading(true);
       console.log('🔔 [ALERTS] Fetching alerts with filters:', filter);
 
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session?.access_token) {
+        console.error('❌ [ALERTS] No valid session found');
+        return;
+      }
+
       const queryParams = new URLSearchParams();
       if (filter.status !== 'all') queryParams.append('status', filter.status);
       if (filter.severity !== 'all') queryParams.append('severity', filter.severity);
-
+      queryParams.append('limit', '50');
+      
       const response = await fetch(
-        `https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/admin-manage-alerts?${queryParams.toString()}`,
+        `${SUPABASE_URL}/functions/v1/admin-manage-alerts?${queryParams.toString()}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -71,15 +81,25 @@ export function AdminAlerts() {
       setCheckingAlerts(true);
       console.log('🔍 [ALERTS] Checking for new alert conditions...');
 
-      const { data, error } = await supabase.functions.invoke('admin-check-alerts', {
-        method: 'POST'
-      });
-
-      if (error) {
-        console.error('❌ [ALERTS] Error checking alerts:', error);
-        throw error;
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session?.access_token) {
+        console.error('❌ [ALERTS] No valid session found');
+        return;
       }
 
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-check-alerts`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       console.log('✅ [ALERTS] Alert check completed:', data);
       
       if (data.newAlertsCount > 0) {
@@ -97,14 +117,23 @@ export function AdminAlerts() {
     try {
       console.log(`🔔 [ALERTS] ${action}ing alert:`, alertId);
 
-      const { data, error } = await supabase.functions.invoke('admin-manage-alerts', {
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session?.access_token) {
+        console.error('❌ [ALERTS] No valid session found');
+        return;
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-manage-alerts`, {
         method: 'PATCH',
-        body: { alertId, action }
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ alertId, action })
       });
 
-      if (error) {
-        console.error(`❌ [ALERTS] Error ${action}ing alert:`, error);
-        throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       console.log(`✅ [ALERTS] Alert ${action}ed successfully`);

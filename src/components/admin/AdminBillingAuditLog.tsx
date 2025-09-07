@@ -10,6 +10,9 @@ import { Loader2, Download, Search, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
+// Get base URL for functions
+const SUPABASE_URL = "https://wgerdrdsuusnrdnwwelt.supabase.co";
+
 interface AuditLogEntry {
   id: string;
   user_id: string;
@@ -41,17 +44,32 @@ export function AdminBillingAuditLog() {
       setLoading(true);
       console.log('🔍 [AUDIT] Fetching audit log with filters:', filters);
 
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session?.access_token) {
+        console.error('❌ [AUDIT] No valid session found');
+        return;
+      }
+
+      // Normalize dates to UTC for consistency
       const queryParams = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== 'all') queryParams.append(key, value);
+        if (value && value !== 'all') {
+          if (key.includes('date') && value) {
+            // Ensure UTC format for date filters
+            queryParams.append(key, new Date(value).toISOString());
+          } else {
+            queryParams.append(key, value);
+          }
+        }
       });
-
+      queryParams.append('limit', '100');
+      
       const response = await fetch(
-        `https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/admin-audit-log?${queryParams.toString()}`,
+        `${SUPABASE_URL}/functions/v1/admin-audit-log?${queryParams.toString()}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
           }
         }

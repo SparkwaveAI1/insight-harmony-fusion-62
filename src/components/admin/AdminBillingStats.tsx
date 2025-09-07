@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, TrendingUp, CreditCard, Users, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
+// Get base URL for functions
+const SUPABASE_URL = "https://wgerdrdsuusnrdnwwelt.supabase.co";
+
 interface BillingStats {
   summary: {
     creditsGranted: number;
@@ -37,14 +40,21 @@ export function AdminBillingStats() {
       setLoading(true);
       console.log('📊 [STATS] Fetching billing stats for period:', period);
 
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session?.access_token) {
+        console.error('❌ [STATS] No valid session found');
+        return;
+      }
+
       // Use query params for GET request
       const queryParams = new URLSearchParams({ days: period }).toString();
+      
       const response = await fetch(
-        `https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/admin-billing-stats?${queryParams}`,
+        `${SUPABASE_URL}/functions/v1/admin-billing-stats?${queryParams}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json'
           }
         }

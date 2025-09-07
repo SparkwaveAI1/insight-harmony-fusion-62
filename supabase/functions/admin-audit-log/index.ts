@@ -93,13 +93,26 @@ serve(async (req) => {
 
     // Apply filters
     if (userFilter) {
-      // For user filter, we need to handle both email and user_id
-      if (userFilter.includes('@')) {
-        // It's an email, need to get user_id first
-        const { data: userProfiles } = await supabaseAdmin.auth.admin.listUsers();
-        const matchingUser = userProfiles?.users.find(u => 
-          u.email?.toLowerCase().includes(userFilter.toLowerCase())
-        );
+    // For user filter, we need to handle both email and user_id
+        if (userFilter.includes('@')) {
+          // It's an email, need to get user_id first - limit results and require minimum length
+          if (userFilter.length < 3) {
+            return new Response(JSON.stringify({ 
+              error: 'Email filter too short',
+              message: 'Email filter must be at least 3 characters'
+            }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          
+          const { data: userProfiles } = await supabaseAdmin.auth.admin.listUsers({
+            page: 1,
+            perPage: 20
+          });
+          const matchingUser = userProfiles?.users.find(u => 
+            u.email?.toLowerCase().includes(userFilter.toLowerCase())
+          );
         if (matchingUser) {
           transactionsQuery = transactionsQuery.eq('user_id', matchingUser.id);
           ledgerQuery = ledgerQuery.eq('user_id', matchingUser.id);

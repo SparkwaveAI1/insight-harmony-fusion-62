@@ -35,12 +35,20 @@ serve(async (req) => {
     }
 
     // Admin emails check
-    const ADMIN_EMAILS = Deno.env.get('ADMIN_EMAILS')?.split(',').map(s => s.trim().toLowerCase()) ?? [
-      "cumbucotrader@gmail.com", 
-      "scott@sparkwave-ai.com"
-    ];
+    const ADMIN_EMAILS = (Deno.env.get('ADMIN_EMAILS') ?? '')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
 
-    if (!user.email || !ADMIN_EMAILS.includes(user.email)) {
+    if (ADMIN_EMAILS.length === 0) {
+      console.error('❌ [STATS] No admin emails configured');
+      return new Response('Admin emails not configured', { 
+        status: 500, 
+        headers: corsHeaders 
+      });
+    }
+
+    if (!user.email || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
       console.error(`❌ [STATS] User ${user.email} is not an admin`);
       return new Response('Forbidden - Admin access required', { 
         status: 403, 
