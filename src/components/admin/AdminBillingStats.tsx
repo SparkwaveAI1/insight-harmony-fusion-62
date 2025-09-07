@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, TrendingUp, CreditCard, Users, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import { getBearerAndBase, retryFetch } from "@/utils/supabase-helpers";
 
-// Get base URL for functions
-const SUPABASE_URL = "https://wgerdrdsuusnrdnwwelt.supabase.co";
 
 interface BillingStats {
   summary: {
@@ -34,27 +34,22 @@ export function AdminBillingStats() {
   const [stats, setStats] = useState<BillingStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30');
+  const { toast } = useToast();
 
   const fetchStats = async () => {
     try {
       setLoading(true);
       console.log('📊 [STATS] Fetching billing stats for period:', period);
 
-      const session = (await supabase.auth.getSession()).data.session;
-      if (!session?.access_token) {
-        console.error('❌ [STATS] No valid session found');
-        return;
-      }
-
-      // Use query params for GET request
-      const queryParams = new URLSearchParams({ days: period }).toString();
+      const { token, base } = await getBearerAndBase(supabase);
+      const queryParams = new URLSearchParams({ days: period });
       
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/admin-billing-stats?${queryParams}`,
+      const response = await retryFetch(
+        `${base}/functions/v1/admin-billing-stats?${queryParams.toString()}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -70,6 +65,19 @@ export function AdminBillingStats() {
       setStats(data);
     } catch (error) {
       console.error('❌ [STATS] Failed to fetch stats:', error);
+      if (error instanceof Error && error.message === 'NO_SESSION') {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to access admin features",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch billing statistics",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

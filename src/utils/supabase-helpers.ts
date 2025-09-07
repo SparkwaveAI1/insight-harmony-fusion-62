@@ -7,7 +7,7 @@ export async function getBearerAndBase(supabase: SupabaseClient) {
   }
   return { 
     token: session.access_token, 
-    base: supabase.supabaseUrl as string 
+    base: "https://wgerdrdsuusnrdnwwelt.supabase.co" 
   };
 }
 

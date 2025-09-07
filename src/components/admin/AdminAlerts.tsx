@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, AlertTriangle, Bell, CheckCircle, X, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { getBearerAndBase, retryFetch } from "@/utils/supabase-helpers";
 
-// Get base URL for functions
-const SUPABASE_URL = "https://wgerdrdsuusnrdnwwelt.supabase.co";
 
 interface AdminAlert {
   id: string;
@@ -25,37 +25,53 @@ interface AdminAlert {
   dismissed_by?: string;
 }
 
+interface AlertsResponse {
+  data: AdminAlert[];
+  next_cursor?: string;
+  has_more: boolean;
+}
+
 export function AdminAlerts() {
   const [alerts, setAlerts] = useState<AdminAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [checkingAlerts, setCheckingAlerts] = useState(false);
   const [filter, setFilter] = useState({
     status: 'active',
     severity: 'all'
   });
+  const { toast } = useToast();
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = async (resetList = true) => {
     try {
-      setLoading(true);
+      if (resetList) {
+        setLoading(true);
+        setCursor(null);
+        setHasMore(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
       console.log('🔔 [ALERTS] Fetching alerts with filters:', filter);
 
-      const session = (await supabase.auth.getSession()).data.session;
-      if (!session?.access_token) {
-        console.error('❌ [ALERTS] No valid session found');
-        return;
-      }
+      const { token, base } = await getBearerAndBase(supabase);
 
       const queryParams = new URLSearchParams();
       if (filter.status !== 'all') queryParams.append('status', filter.status);
       if (filter.severity !== 'all') queryParams.append('severity', filter.severity);
       queryParams.append('limit', '50');
+      if (!resetList && cursor) {
+        queryParams.append('cursor', cursor);
+      }
       
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/admin-manage-alerts?${queryParams.toString()}`,
+      const response = await retryFetch(
+        `${base}/functions/v1/admin-manage-alerts?${queryParams.toString()}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         }
@@ -65,14 +81,42 @@ export function AdminAlerts() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const result: AlertsResponse = await response.json();
 
-      console.log('✅ [ALERTS] Alerts received:', data);
-      setAlerts(data.alerts || []);
+      console.log('✅ [ALERTS] Alerts received:', result);
+      
+      if (resetList) {
+        setAlerts(result.data || []);
+      } else {
+        setAlerts(prev => [...prev, ...(result.data || [])]);
+      }
+      
+      setCursor(result.next_cursor || null);
+      setHasMore(result.has_more || false);
     } catch (error) {
       console.error('❌ [ALERTS] Failed to fetch alerts:', error);
+      if (error instanceof Error && error.message === 'NO_SESSION') {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to access admin features",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to fetch alerts",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreAlerts = () => {
+    if (!loadingMore && hasMore && cursor) {
+      fetchAlerts(false);
     }
   };
 
@@ -179,6 +223,10 @@ export function AdminAlerts() {
 
   useEffect(() => {
     fetchAlerts();
+  }, []);
+
+  useEffect(() => {
+    fetchAlerts(true);
   }, [filter]);
 
   // Auto-check for alerts every 5 minutes
