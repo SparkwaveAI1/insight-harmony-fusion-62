@@ -4,64 +4,172 @@ import Section from "@/components/ui-custom/Section";
 import Reveal from "@/components/ui-custom/Reveal";
 import Footer from "@/components/sections/Footer";
 import Button from "@/components/ui-custom/Button";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Zap, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import Card from "@/components/ui-custom/Card";
+import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+type PlanType = {
+  name: string;
+  description: string;
+  features: string[];
+  priceMonthly: number | null;
+  priceYearly: number | null;
+  priceIdMonthly?: string;
+  priceIdYearly?: string;
+  popular?: boolean;
+  contact?: boolean;
+};
+
+const PLANS: Record<string, PlanType> = {
+  starter: {
+    name: "Starter",
+    description: "Perfect for individuals and small teams getting started with AI research.",
+    features: [
+      "5 AI focus groups per month",
+      "1 custom AI persona",
+      "Basic analytics dashboard",
+      "Email support"
+    ],
+    priceMonthly: 29,
+    priceYearly: 290,
+    priceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_STARTER_M,
+    priceIdYearly: process.env.NEXT_PUBLIC_STRIPE_STARTER_Y,
+  },
+  pro: {
+    name: "Professional",
+    description: "Ideal for growing businesses and research teams.",
+    features: [
+      "15 AI focus groups per month",
+      "3 custom AI personas",
+      "Advanced analytics dashboard",
+      "Priority email support",
+      "API access",
+      "Custom integrations"
+    ],
+    priceMonthly: 79,
+    priceYearly: 790,
+    priceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRO_M,
+    priceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRO_Y,
+    popular: true,
+  },
+  enterprise: {
+    name: "Enterprise",
+    description: "Tailored solutions for large teams and organizations.",
+    features: [
+      "Unlimited AI focus groups",
+      "Unlimited custom AI personas",
+      "Enterprise analytics dashboard",
+      "Dedicated account manager",
+      "Custom API integration",
+      "SSO and advanced security features",
+      "Priority support"
+    ],
+    priceMonthly: null,
+    priceYearly: null,
+    contact: true,
+  },
+};
 
 const PricingTier = ({ 
-  title, 
-  price, 
-  description, 
-  features, 
-  buttonText, 
-  buttonLink, 
-  isPopular = false 
+  plan,
+  isYearly,
+  onCheckout
 }: { 
-  title: string; 
-  price: string; 
-  description: string; 
-  features: string[]; 
-  buttonText: string; 
-  buttonLink: string; 
-  isPopular?: boolean;
+  plan: PlanType;
+  isYearly: boolean;
+  onCheckout: (priceId: string) => void;
 }) => {
+  const price = plan.contact ? "Custom" : isYearly ? plan.priceYearly : plan.priceMonthly;
+  const priceId = isYearly ? plan.priceIdYearly : plan.priceIdMonthly;
+  const savings = plan.priceMonthly && plan.priceYearly ? 
+    Math.round(((plan.priceMonthly * 12 - plan.priceYearly) / (plan.priceMonthly * 12)) * 100) : 0;
+
   return (
-    <Card className={`p-8 flex flex-col h-full ${isPopular ? 'border-primary border-2' : ''}`}>
-      {isPopular && (
-        <div className="bg-primary/10 text-primary text-sm font-medium px-3 py-1 rounded-full w-fit mb-4">
-          Most Popular
+    <Card className={`p-8 flex flex-col h-full relative ${plan.popular ? 'border-primary border-2' : ''}`}>
+      {plan.popular && (
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+          <div className="bg-primary text-white text-sm font-medium px-4 py-2 rounded-full flex items-center gap-1">
+            <Star className="h-4 w-4" />
+            Most Popular
+          </div>
         </div>
       )}
-      <h3 className="text-2xl font-bold mb-2 font-plasmik">{title}</h3>
+      
+      <h3 className="text-2xl font-bold mb-2 font-plasmik">{plan.name}</h3>
+      
       <div className="mb-4">
-        <span className="text-3xl font-bold">{price}</span>
-        {price !== 'Custom' && <span className="text-muted-foreground">/month</span>}
+        {plan.contact ? (
+          <span className="text-3xl font-bold">Custom</span>
+        ) : (
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-bold">${price}</span>
+            <span className="text-muted-foreground">/{isYearly ? 'year' : 'month'}</span>
+          </div>
+        )}
+        {isYearly && savings > 0 && (
+          <div className="text-sm text-green-600 font-medium">
+            Save {savings}% annually
+          </div>
+        )}
       </div>
-      <p className="text-muted-foreground mb-6">{description}</p>
+      
+      <p className="text-muted-foreground mb-6">{plan.description}</p>
       
       <div className="space-y-3 mb-8 flex-grow">
-        {features.map((feature, index) => (
+        {plan.features.map((feature, index) => (
           <div key={index} className="flex items-start gap-2">
             <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-            <span>{feature}</span>
+            <span className="text-sm">{feature}</span>
           </div>
         ))}
       </div>
       
-      <Link to={buttonLink}>
+      {plan.contact ? (
+        <Link to="/contact">
+          <Button className="w-full group" variant="outline">
+            Contact Sales
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </Link>
+      ) : (
         <Button 
           className="w-full group" 
-          variant={isPopular ? "primary" : "outline"}
+          variant={plan.popular ? "primary" : "outline"}
+          onClick={() => priceId && onCheckout(priceId)}
+          disabled={!priceId}
         >
-          {buttonText}
-          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          Get Started
+          <Zap className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
-      </Link>
+      )}
     </Card>
   );
 };
 
 const Pricing = () => {
+  const [isYearly, setIsYearly] = useState(false);
+
+  const handleCheckout = async (priceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('billing-checkout-subscription', {
+        body: { priceId }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -90,6 +198,28 @@ const Pricing = () => {
                   From individual researchers to enterprise teams, we have flexible pricing options to scale with your needs.
                 </p>
               </Reveal>
+
+              {/* Billing Toggle */}
+              <Reveal delay={300}>
+                <div className="flex items-center justify-center gap-4 mb-8">
+                  <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    Monthly
+                  </span>
+                  <Switch
+                    checked={isYearly}
+                    onCheckedChange={setIsYearly}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                  <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    Yearly
+                  </span>
+                  {isYearly && (
+                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      Save up to 20%
+                    </span>
+                  )}
+                </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -100,53 +230,25 @@ const Pricing = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <Reveal>
                 <PricingTier
-                  title="Basic"
-                  price="$XX"
-                  description="Perfect for individuals and small teams getting started with AI research."
-                  features={[
-                    "5 AI focus groups per month",
-                    "1 custom AI persona",
-                    "Basic analytics dashboard",
-                    "Email support"
-                  ]}
-                  buttonText="Get Started"
-                  buttonLink="/contact"
+                  plan={PLANS.starter}
+                  isYearly={isYearly}
+                  onCheckout={handleCheckout}
                 />
               </Reveal>
               
               <Reveal delay={200}>
                 <PricingTier
-                  title="Professional"
-                  price="$XX"
-                  description="Ideal for growing businesses and research teams."
-                  features={[
-                    "15 AI focus groups per month",
-                    "3 custom AI personas",
-                    "Advanced analytics dashboard",
-                    "Priority email support",
-                    "API access"
-                  ]}
-                  buttonText="Try Professional"
-                  buttonLink="/contact"
-                  isPopular={true}
+                  plan={PLANS.pro}
+                  isYearly={isYearly}
+                  onCheckout={handleCheckout}
                 />
               </Reveal>
               
               <Reveal delay={400}>
                 <PricingTier
-                  title="Enterprise"
-                  price="Custom"
-                  description="Tailored solutions for large teams and organizations."
-                  features={[
-                    "Unlimited AI focus groups",
-                    "Unlimited custom AI personas",
-                    "Enterprise analytics dashboard",
-                    "Dedicated account manager",
-                    "Custom API integration",
-                    "SSO and advanced security features"
-                  ]}
-                  buttonText="Contact Sales"
-                  buttonLink="/contact"
+                  plan={PLANS.enterprise}
+                  isYearly={isYearly}
+                  onCheckout={handleCheckout}
                 />
               </Reveal>
             </div>
