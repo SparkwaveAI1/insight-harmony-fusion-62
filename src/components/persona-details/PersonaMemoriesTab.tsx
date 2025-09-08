@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Tag, MessageCircle, BookOpen, FileText, Globe } from 'lucide-react';
+import { Clock, Tag, MessageCircle, BookOpen, FileText, Globe, Circle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface PersonaMemoriesTabProps {
@@ -58,7 +58,11 @@ export default function PersonaMemoriesTab({ personaId }: PersonaMemoriesTabProp
         includeGlobal: true,
       });
       
-      setAllMemories(prev => [...prev, ...result.data]);
+      setAllMemories(prev => {
+        const seen = new Set(prev.map(m => m.id));
+        const next = result.data.filter(m => !seen.has(m.id));
+        return [...prev, ...next];
+      });
       setCursor(result.next_cursor);
     } catch (err) {
       console.error('Failed to load more memories:', err);
@@ -128,8 +132,8 @@ export default function PersonaMemoriesTab({ personaId }: PersonaMemoriesTabProp
       ) : (
         <div className="space-y-4">
           {memories.map((memory) => {
-            const Icon = typeIcons[memory.type];
-            const typeColor = typeColors[memory.type];
+            const Icon = typeIcons[memory.type] ?? Circle;
+            const typeColor = typeColors[memory.type] ?? 'bg-gray-100 text-gray-800';
             
             return (
               <Card key={memory.id}>
@@ -148,12 +152,12 @@ export default function PersonaMemoriesTab({ personaId }: PersonaMemoriesTabProp
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                    {memory.content.text || 'No preview available'}
+                    {memory?.content?.text ?? 'No preview available'}
                   </p>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      {memory.tags && memory.tags.length > 0 && (
+                      {Array.isArray(memory.tags) && memory.tags.length > 0 && (
                         <div className="flex items-center gap-1">
                           <Tag className="w-3 h-3 text-muted-foreground" />
                           <div className="flex gap-1">

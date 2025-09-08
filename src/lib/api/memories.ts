@@ -64,7 +64,7 @@ export async function listPersonaMemories(
 export async function listPersonaCollections(
   supabase: SupabaseClient, 
   personaId: string
-): Promise<CollectionsResponse> {
+): Promise<{ data: Array<{ id: string; name: string; description?: string | null; created_at: string }> }> {
   const { token, base } = await getBearerAndBase(supabase);
   const q = new URLSearchParams({ persona_id: personaId }).toString();
   
