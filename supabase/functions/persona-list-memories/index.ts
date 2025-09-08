@@ -15,7 +15,8 @@ serve(async (req) => {
 
   const url = new URL(req.url);
   const personaId = url.searchParams.get("persona_id");
-  const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "20"), 100);
+  const rawLimit = Number(url.searchParams.get("limit") ?? "20");
+  const limit = Math.min(Math.max(1, Number.isFinite(rawLimit) ? rawLimit : 20), 100);
   const cursor = url.searchParams.get("cursor"); // "<iso>|<id>"
   const type = url.searchParams.get("type");     // optional
   const tag = url.searchParams.get("tag");       // optional
@@ -40,11 +41,15 @@ serve(async (req) => {
     }
   );
 
-  // parse cursor
+  // Parse cursor safely
   let cursorIso: string | null = null;
   let cursorId: string | null = null;
-  if (cursor && cursor.includes("|")) {
-    [cursorIso, cursorId] = cursor.split("|");
+  if (cursor && cursor.includes('|')) {
+    const [iso, id] = cursor.split('|');
+    if (!Number.isNaN(Date.parse(iso)) && id) {
+      cursorIso = iso;
+      cursorId = id;
+    }
   }
 
   // persona memories
