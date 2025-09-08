@@ -521,6 +521,36 @@ export type Database = {
         }
         Relationships: []
       }
+      global_memories: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          tags: string[] | null
+          title: string | null
+          type: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string | null
+          type: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       knowledge_base_documents: {
         Row: {
           content: string | null
@@ -839,6 +869,42 @@ export type Database = {
           status?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      persona_memories: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          persona_id: string
+          source: string | null
+          tags: string[] | null
+          title: string | null
+          type: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          persona_id: string
+          source?: string | null
+          tags?: string[] | null
+          title?: string | null
+          type: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          persona_id?: string
+          source?: string | null
+          tags?: string[] | null
+          title?: string | null
+          type?: string
         }
         Relationships: []
       }

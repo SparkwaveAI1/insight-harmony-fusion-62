@@ -23,3 +23,9 @@ verify_jwt = true
 
 [functions.admin-manage-alerts]
 verify_jwt = true
+
+[functions.persona-list-memories]
+verify_jwt = false
+
+[functions.persona-list-collections]
+verify_jwt = false
