@@ -12,6 +12,8 @@ import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle'
 import DeletePersonaButton from '../persona-details/DeletePersonaButton';
 import PersonaImageGenerationDialog from '../persona-details/PersonaImageGenerationDialog';
 import { V4PersonaCompletionCard } from '@/components/persona-details/V4PersonaCompletionCard';
+import PersonaMemoriesTab from '../persona-details/PersonaMemoriesTab';
+import PersonaCollectionsTab from '../persona-details/PersonaCollectionsTab';
 import { useNavigate } from 'react-router-dom';
 
 interface V4PersonaDisplayProps {
@@ -426,13 +428,15 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
       
       {/* Tabbed Content */}
       <Tabs defaultValue="demographics" className="w-full">
-        <TabsList className="grid grid-cols-7 w-full mb-8">
+        <TabsList className="grid grid-cols-9 w-full mb-8">
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
           <TabsTrigger value="motivation">Motivation</TabsTrigger>
           <TabsTrigger value="communication">Communication</TabsTrigger>
           <TabsTrigger value="traits">Traits</TabsTrigger>
           <TabsTrigger value="emotional">Emotional</TabsTrigger>
           <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
+          <TabsTrigger value="memories">Memories</TabsTrigger>
+          <TabsTrigger value="collections">Collections</TabsTrigger>
           <TabsTrigger value="surveys">Surveys</TabsTrigger>
         </TabsList>
 
@@ -458,6 +462,14 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
 
         <TabsContent value="knowledge" className="space-y-6">
           {renderKnowledge()}
+        </TabsContent>
+
+        <TabsContent value="memories" className="space-y-6">
+          <PersonaMemoriesTab personaId={persona.persona_id} />
+        </TabsContent>
+
+        <TabsContent value="collections" className="space-y-6">
+          <PersonaCollectionsTab personaId={persona.persona_id} />
         </TabsContent>
 
         <TabsContent value="surveys" className="space-y-6">
