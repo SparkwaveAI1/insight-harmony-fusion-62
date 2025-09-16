@@ -66,19 +66,17 @@ class V4TraitRelevanceAnalyzer {
     // 1. CLASSIFY THE TURN
     const classification = this.classifyTurn(userInput);
 
-    // 2. ANALYZE TRAIT RELEVANCE
-    for (const traitPath of this.V4_TRAIT_PATHS) {
-      const score = this.calculateTraitRelevance(input, traitPath, fullProfile);
+    // 2. ANALYZE TRAIT RELEVANCE - SCAN ALL TRAITS DYNAMICALLY
+    const allTraits = this.extractAllTraits(fullProfile);
+    for (const traitData of allTraits) {
+      const score = this.calculateDynamicTraitRelevance(input, traitData, fullProfile);
       if (score > 0.3) { // Relevance threshold
-        const traitValue = this.getNestedValue(fullProfile, traitPath.path);
-        if (traitValue !== undefined) {
-          selectedTraits.push({
-            trait: traitPath.path,
-            score: score,
-            relevance_reason: this.getRelevanceReason(input, traitPath),
-            data_value: traitValue
-          });
-        }
+        selectedTraits.push({
+          trait: traitData.path,
+          score: score,
+          relevance_reason: this.getDynamicRelevanceReason(input, traitData),
+          data_value: traitData.value
+        });
       }
     }
 
@@ -175,6 +173,77 @@ class V4TraitRelevanceAnalyzer {
     const matches = inputWords.filter(word => content.includes(word));
     
     return Math.min(matches.length / inputWords.length, 1.0);
+  }
+
+  static extractAllTraits(fullProfile) {
+    const traits = [];
+    
+    function extractTraitsRecursive(obj, path = '') {
+      if (!obj || typeof obj !== 'object') return;
+      
+      for (const [key, value] of Object.entries(obj)) {
+        const currentPath = path ? `${path}.${key}` : key;
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          extractTraitsRecursive(value, currentPath);
+        } else if (value !== null && value !== undefined && value !== '') {
+          traits.push({
+            path: currentPath,
+            value: value,
+            type: Array.isArray(value) ? 'array' : typeof value
+          });
+        }
+      }
+    }
+    
+    extractTraitsRecursive(fullProfile);
+    return traits;
+  }
+
+  static calculateDynamicTraitRelevance(userInput, traitData, fullProfile) {
+    let score = 0;
+    
+    // Base relevance from path keywords
+    const pathKeywords = traitData.path.toLowerCase().split('.');
+    const inputWords = userInput.toLowerCase().split(/\s+/);
+    
+    const pathMatches = pathKeywords.filter(keyword => 
+      inputWords.some(word => word.includes(keyword) || keyword.includes(word))
+    );
+    
+    if (pathMatches.length > 0) {
+      score += 0.6 * (pathMatches.length / pathKeywords.length);
+    }
+    
+    // Content relevance
+    const contentScore = this.checkContentRelevance(userInput, traitData.value);
+    score += contentScore * 0.4;
+    
+    // Boost score for critical trait categories
+    if (traitData.path.includes('emotional_profile') || 
+        traitData.path.includes('explosive_triggers') ||
+        traitData.path.includes('forbidden_phrases') ||
+        traitData.path.includes('knowledge_profile') ||
+        traitData.path.includes('political_identity')) {
+      score *= 1.2;
+    }
+    
+    return Math.min(score, 1.0);
+  }
+
+  static getDynamicRelevanceReason(userInput, traitData) {
+    const pathKeywords = traitData.path.toLowerCase().split('.');
+    const inputWords = userInput.toLowerCase().split(/\s+/);
+    
+    const matches = pathKeywords.filter(keyword => 
+      inputWords.some(word => word.includes(keyword) || keyword.includes(word))
+    );
+    
+    if (matches.length > 0) {
+      return `Path relevance: ${matches.join(', ')}`;
+    }
+    
+    return 'Content similarity detected';
   }
 
   static getNestedValue(obj, path) {
@@ -540,13 +609,7 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
 `;
   }
 
-  // LINGUISTIC SIGNATURE INTEGRATION
-  if (linguistic.signature_phrases.length > 0) {
-    instructions += `
-Natural speech patterns: ${linguistic.signature_phrases.join(', ')}
-Use these patterns sparingly (max once per response).
-`;
-  }
+  // LINGUISTIC SIGNATURE INTEGRATION - SIGNATURE PHRASES REMOVED
 
   if (linguistic.forbidden_expressions.length > 0) {
     instructions += `AVOID these expressions: ${linguistic.forbidden_expressions.join(', ')}
