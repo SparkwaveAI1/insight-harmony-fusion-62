@@ -1,6 +1,48 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
+// Function to resize image to optimize file size
+async function resizeImage(base64Image: string, maxSize: number = 400): Promise<string> {
+  try {
+    // Create canvas and context
+    const canvas = new OffscreenCanvas(maxSize, maxSize);
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      throw new Error('Could not get canvas context');
+    }
+    
+    // Convert base64 to image
+    const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
+    const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
+    const imageBitmap = await createImageBitmap(imageBlob);
+    
+    // Calculate scaling to maintain aspect ratio
+    const { width: originalWidth, height: originalHeight } = imageBitmap;
+    const scale = Math.min(maxSize / originalWidth, maxSize / originalHeight);
+    const newWidth = originalWidth * scale;
+    const newHeight = originalHeight * scale;
+    
+    // Set canvas size to the new dimensions
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    
+    // Draw and resize image
+    ctx.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
+    
+    // Convert back to blob and then base64
+    const resizedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
+    const resizedBuffer = await resizedBlob.arrayBuffer();
+    const resizedBase64 = btoa(String.fromCharCode(...new Uint8Array(resizedBuffer)));
+    
+    console.log(`Resized image from ${originalWidth}x${originalHeight} to ${newWidth}x${newHeight}`);
+    return resizedBase64;
+  } catch (error) {
+    console.warn('Failed to resize image, using original:', error);
+    return base64Image; // Fallback to original
+  }
+}
+
 export async function uploadImageToStorage(
   base64Image: string, 
   personaId: string, 
@@ -12,13 +54,16 @@ export async function uploadImageToStorage(
   // Initialize Supabase client with service role key for server-side operations
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   
-  // Convert base64 to blob
-  const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
-  const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
+  // Resize image for optimization (400px max, JPEG format)
+  const resizedBase64 = await resizeImage(base64Image, 400);
   
-  // Generate a unique file name
+  // Convert resized base64 to blob
+  const imageBuffer = Uint8Array.from(atob(resizedBase64), c => c.charCodeAt(0));
+  const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
+  
+  // Generate a unique file name with .jpg extension
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fileName = `${personaId}_${timestamp}.png`;
+  const fileName = `${personaId}_${timestamp}.jpg`;
   
   console.log(`Uploading to storage with filename: ${fileName}`);
   
@@ -27,7 +72,7 @@ export async function uploadImageToStorage(
     .storage
     .from('persona-images')
     .upload(fileName, imageBlob, {
-      contentType: 'image/png',
+      contentType: 'image/jpeg',
       upsert: false,
       cacheControl: '3600'
     });
