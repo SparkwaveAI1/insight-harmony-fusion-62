@@ -1600,6 +1600,10 @@ export type Database = {
           persona_id: string
         }[]
       }
+      fix_orphaned_persona_queue_items: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_participant_identifier: {
         Args: Record<PropertyKey, never>
         Returns: string
