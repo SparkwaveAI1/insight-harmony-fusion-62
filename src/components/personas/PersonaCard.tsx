@@ -104,6 +104,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
               src={persona.profile_image_url} 
               alt={persona.name}
               className="object-cover rounded-lg"
+              loading="lazy"
             />
             <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg text-lg">
               {initials}
