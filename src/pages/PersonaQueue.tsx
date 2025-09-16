@@ -15,7 +15,8 @@ import {
   updateQueueStatus, 
   updateQueueStatusSafe, 
   parsePersonaDescription, 
-  popNextQueueItem 
+  popNextQueueItem,
+  forceFailQueueItem
 } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
@@ -163,6 +164,24 @@ const PersonaQueue = () => {
         title: "Test Failed", 
         description: `Status + persona_id update failed: ${error.message}`, 
         variant: "destructive" 
+      });
+    }
+  };
+
+  const handleManualClear = async (id: string, name: string) => {
+    try {
+      await forceFailQueueItem(id, 'Manually cleared by admin');
+      toast({
+        title: "Success",
+        description: `Cleared ${name} from queue`,
+      });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('Error clearing queue item:', error);
+      toast({
+        title: "Error",
+        description: `Failed to clear ${name}`,
+        variant: "destructive",
       });
     }
   };

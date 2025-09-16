@@ -111,6 +111,16 @@ export const updateQueueStatusSafe = async (
   }
 };
 
+// Force fail a specific queue item by ID
+export const forceFailQueueItem = async (id: string, reason: string = 'Manually failed') => {
+  try {
+    return await updateQueueStatus(id, 'failed', undefined, reason);
+  } catch (error) {
+    console.error('Failed to force fail queue item', { id, reason, error });
+    throw error;
+  }
+};
+
 export const parsePersonaDescription = (text: string) => {
   const trimmedText = text.trim();
   
