@@ -1612,6 +1612,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_queue_health_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          oldest_stuck_item: string
+          processing_time_minutes: number
+          total_pending: number
+          total_processing: number
+          total_stuck: number
+        }[]
+      }
       get_user_projects_with_counts: {
         Args: Record<PropertyKey, never>
         Returns: {

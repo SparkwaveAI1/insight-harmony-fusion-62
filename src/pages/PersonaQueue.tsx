@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { 
   addToQueue, 
   getQueueItems, 
@@ -23,6 +24,9 @@ import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from
 import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
 import { addPersonaToCollection } from '@/services/collections/personaCollectionOperations';
 import { supabase } from '@/integrations/supabase/client';
+import { QueueHealthMonitor } from '@/components/persona-queue/QueueHealthMonitor';
+import { getProcessingTimeText, getStatusColor, getStatusDisplay } from '@/services/queueHealthService';
+import { RefreshCw, Trash2, ExternalLink } from 'lucide-react';
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -59,6 +63,7 @@ const PersonaQueue = () => {
   const [textareaContent, setTextareaContent] = useState('');
   const [processing, setProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Check if user is admin
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -74,6 +79,17 @@ const PersonaQueue = () => {
       loadQueueItems();
     }
   }, [user, isAdmin]);
+
+  // Auto-refresh queue items when processing
+  useEffect(() => {
+    if (!user || !isAdmin || !autoRefresh) return;
+
+    const interval = setInterval(() => {
+      loadQueueItems();
+    }, 3000); // Refresh every 3 seconds during processing
+
+    return () => clearInterval(interval);
+  }, [user, isAdmin, autoRefresh]);
 
   const loadQueueItems = async () => {
     if (!user) return;
@@ -609,10 +625,30 @@ const PersonaQueue = () => {
                   <h1 className="text-3xl font-bold">Persona Queue Admin</h1>
                 </div>
                 
-                <div className="space-y-6 mb-8">
+                <div className="grid lg:grid-cols-4 gap-6 mb-8">
+                  {/* Queue Health Monitor */}
+                  <div className="lg:col-span-1">
+                    <QueueHealthMonitor 
+                      onRefresh={loadQueueItems}
+                      refreshing={loading}
+                    />
+                  </div>
+
                   {/* Text Input Area */}
-                  <div className="bg-card border rounded-lg p-6">
-                    <h2 className="text-xl font-semibold mb-4">Add Personas to Queue</h2>
+                  <div className="lg:col-span-3 bg-card border rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold">Add Personas to Queue</h2>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAutoRefresh(!autoRefresh)}
+                        >
+                          <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
+                          Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
+                        </Button>
+                      </div>
+                    </div>
                     <div className="space-y-4">
                       <Textarea
                         placeholder="Paste persona descriptions here..."
@@ -628,15 +664,15 @@ const PersonaQueue = () => {
                         <Button onClick={onProcessClick} disabled={busy}>
                           {busy ? "Processing..." : "Process Queue"}
                         </Button>
-            <Button onClick={handleTestAdd} variant="outline">
-              Test Add
-            </Button>
-            <Button onClick={testStatusUpdate} variant="outline">
-              Test Status Update
-            </Button>
-            <Button onClick={testStatusWithPersonaId} variant="outline">
-              Test Status + Persona ID
-            </Button>
+                        <Button onClick={handleTestAdd} variant="outline">
+                          Test Add
+                        </Button>
+                        <Button onClick={testStatusUpdate} variant="outline">
+                          Test Status Update
+                        </Button>
+                        <Button onClick={testStatusWithPersonaId} variant="outline">
+                          Test Status + Persona ID
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -644,6 +680,7 @@ const PersonaQueue = () => {
 
                 {loading ? (
                   <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
                     <p>Loading queue items...</p>
                   </div>
                 ) : (
@@ -653,23 +690,78 @@ const PersonaQueue = () => {
                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Status</TableHead>
+                          <TableHead>Processing Time</TableHead>
                           <TableHead>Created At</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {queueItems.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={3} className="text-center py-8">
+                            <TableCell colSpan={5} className="text-center py-8">
                               No queue items found
                             </TableCell>
                           </TableRow>
                         ) : (
                           queueItems.map((item) => (
                             <TableRow key={item.id}>
-                              <TableCell>{item.name}</TableCell>
-                              <TableCell>{item.status}</TableCell>
+                              <TableCell className="font-medium">
+                                {item.name}
+                                {item.persona_id && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    ID: {item.persona_id}
+                                  </div>
+                                )}
+                              </TableCell>
                               <TableCell>
+                                <Badge 
+                                  variant={item.status === 'completed' ? 'default' : 
+                                           item.status === 'failed' ? 'destructive' : 
+                                           item.status.startsWith('processing') ? 'secondary' : 'outline'}
+                                  className={getStatusColor(item.status)}
+                                >
+                                  {getStatusDisplay(item.status)}
+                                </Badge>
+                                {item.error_message && (
+                                  <div className="text-xs text-red-600 mt-1 max-w-xs truncate">
+                                    {item.error_message}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {getProcessingTimeText(item.processing_started_at)}
+                                </div>
+                                {item.attempt_count > 0 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Attempt {item.attempt_count}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
                                 {new Date(item.created_at).toLocaleString()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  {item.persona_id && item.status === 'completed' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => window.open(`/persona/${item.persona_id}`, '_blank')}
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                  {(item.status === 'failed' || item.status.startsWith('processing')) && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleManualClear(item.id, item.name)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))
