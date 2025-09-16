@@ -308,7 +308,7 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-2">Choose Collection</h4>
             <Select value={selectedCollection} onValueChange={setSelectedCollection}>
-              <SelectTrigger>
+              <SelectTrigger className="max-w-md">
                 <SelectValue placeholder="Select a collection..." />
               </SelectTrigger>
               <SelectContent>
