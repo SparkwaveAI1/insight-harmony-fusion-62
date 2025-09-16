@@ -278,13 +278,15 @@ class V4TraitRelevanceAnalyzer {
   }
 
   static calculateBehavioralModifiers(selectedTraits, fullProfile) {
-    // Extract confidence adjustment
+    // Extract confidence adjustment - check selected traits first, then fallback to profile
     const confidenceTraits = selectedTraits.filter(t => t.trait.includes('confidence_level'));
-    const confidenceValue = confidenceTraits.length > 0 ? confidenceTraits[0].data_value : 0.5;
+    const confidenceValue = confidenceTraits.length > 0 ? confidenceTraits[0].data_value : 
+      fullProfile?.communication_style?.voice_foundation?.confidence_level || 0.5;
     
-    // Extract directness level
+    // Extract directness level - check selected traits first, then fallback to profile  
     const directnessTraits = selectedTraits.filter(t => t.trait.includes('directness_level'));
-    const directnessLevel = directnessTraits.length > 0 ? directnessTraits[0].data_value : 'balanced';
+    const directnessLevel = directnessTraits.length > 0 ? directnessTraits[0].data_value :
+      fullProfile?.communication_style?.voice_foundation?.directness_level || 'balanced';
 
     // Determine emotional state from triggers
     const emotionalTraits = selectedTraits.filter(t => 
@@ -292,9 +294,10 @@ class V4TraitRelevanceAnalyzer {
     );
     const emotionalState = emotionalTraits.length > 0 ? 'activated' : 'neutral';
 
-    // Extract formality
+    // Extract formality - check selected traits first, then fallback to profile
     const formalityTraits = selectedTraits.filter(t => t.trait.includes('formality_default'));
-    const formalityShift = formalityTraits.length > 0 ? formalityTraits[0].data_value : 'neutral';
+    const formalityShift = formalityTraits.length > 0 ? formalityTraits[0].data_value :
+      fullProfile?.communication_style?.voice_foundation?.formality_default || 'neutral';
 
     return {
       confidence_adjustment: typeof confidenceValue === 'number' ? confidenceValue : 0.5,
