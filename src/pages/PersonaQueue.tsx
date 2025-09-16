@@ -63,7 +63,6 @@ const PersonaQueue = () => {
   const [textareaContent, setTextareaContent] = useState('');
   const [processing, setProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
 
   // Check if user is admin
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -80,16 +79,6 @@ const PersonaQueue = () => {
     }
   }, [user, isAdmin]);
 
-  // Auto-refresh queue items when processing
-  useEffect(() => {
-    if (!user || !isAdmin || !autoRefresh) return;
-
-    const interval = setInterval(() => {
-      loadQueueItems();
-    }, 3000); // Refresh every 3 seconds during processing
-
-    return () => clearInterval(interval);
-  }, [user, isAdmin, autoRefresh]);
 
   const loadQueueItems = async () => {
     if (!user) return;
@@ -639,14 +628,6 @@ const PersonaQueue = () => {
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-xl font-semibold">Add Personas to Queue</h2>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setAutoRefresh(!autoRefresh)}
-                        >
-                          <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
-                          Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
-                        </Button>
                       </div>
                     </div>
                     <div className="space-y-4">

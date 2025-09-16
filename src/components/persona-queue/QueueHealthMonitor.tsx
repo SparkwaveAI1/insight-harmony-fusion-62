@@ -53,8 +53,6 @@ export const QueueHealthMonitor: React.FC<QueueHealthMonitorProps> = ({ onRefres
 
   useEffect(() => {
     loadHealthStatus();
-    const interval = setInterval(loadHealthStatus, 10000); // Update every 10 seconds
-    return () => clearInterval(interval);
   }, []);
 
   if (!healthStatus) {
