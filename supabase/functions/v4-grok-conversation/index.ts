@@ -802,7 +802,7 @@ serve(async (req) => {
           }
         ],
         stream: false,
-        temperature: 0
+        temperature: 0.4
       })
     })
 
