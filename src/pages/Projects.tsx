@@ -130,8 +130,8 @@ const Projects = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {projects.map((project) => (
                         <div key={project.id} className="group relative">
-                          <Link to={`/projects/${project.id}`} className="block">
-                            <Card className="p-6 h-full transition-transform group-hover:scale-[1.01]">
+                           <Link to={`/projects/${project.id}`} className="block h-full">
+                            <Card className="p-6 h-full transition-transform group-hover:scale-[1.01] flex flex-col">
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center">
                                   <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center mr-3">
@@ -141,13 +141,15 @@ const Projects = () => {
                                 </div>
                               </div>
                               
-                              {project.description && (
-                                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                                  {project.description}
-                                </p>
-                              )}
+                              <div className="flex-1">
+                                {project.description && (
+                                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                                    {project.description}
+                                  </p>
+                                )}
+                              </div>
 
-                              <div className="flex items-center justify-between mt-auto pt-2 text-xs text-muted-foreground">
+                              <div className="flex items-center justify-between pt-4 text-xs text-muted-foreground border-t border-border/50">
                                 <div className="flex items-center">
                                   <MessageSquare className="h-3.5 w-3.5 mr-1" />
                                   <span>{project.conversation_count} conversation{project.conversation_count !== 1 && 's'}</span>
