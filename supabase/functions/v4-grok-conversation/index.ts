@@ -39,7 +39,7 @@ class V4TraitRelevanceAnalyzer {
     // COMMUNICATION STYLE
     { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
     { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
-    { path: 'communication_style.linguistic_signature.signature_phrases', weight: 1.0, contexts: ['all'] },
+    { path: 'communication_style.linguistic_signature.signature_phrases', weight: 0.3, contexts: ['all'] },
     { path: 'communication_style.linguistic_signature.typical_openers', weight: 0.8, contexts: ['conversation', 'greeting'] },
     { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
     { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
@@ -543,7 +543,8 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   // LINGUISTIC SIGNATURE INTEGRATION
   if (linguistic.signature_phrases.length > 0) {
     instructions += `
-Your signature phrases: ${linguistic.signature_phrases.join(', ')}
+Natural speech patterns: ${linguistic.signature_phrases.join(', ')}
+Use these patterns sparingly (max once per response).
 `;
   }
 
