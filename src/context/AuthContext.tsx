@@ -83,24 +83,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const trimmedEmail = email.trim().toLowerCase();
+      const trimmedPassword = password.trim();
+      
+      const { error } = await supabase.auth.signUp({ 
+        email: trimmedEmail, 
+        password: trimmedPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
       if (error) throw error;
       
       // Email confirmations are disabled, so we can show a success message
       toast.success("Account created successfully! You can now sign in.");
     } catch (error: any) {
-      toast.error(error.message || "Error signing up");
+      console.error("Sign up error:", error);
+      toast.error(`Sign up failed: ${error.message || "Unknown error"} (Code: ${error.code || 'N/A'})`);
       throw error;
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("Attempting to sign in with email:", email);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const trimmedEmail = email.trim().toLowerCase();
+      const trimmedPassword = password.trim();
+      
+      console.log("Attempting to sign in with email:", trimmedEmail);
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: trimmedEmail, 
+        password: trimmedPassword 
+      });
       
       if (error) {
-        console.error("Sign in error:", error);
+        console.error("Sign in error:", { code: error.code, message: error.message });
         throw error;
       }
       
@@ -111,7 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Successfully signed in");
     } catch (error: any) {
       console.error("Sign in exception:", error);
-      toast.error(error.message || "Error signing in");
+      toast.error(`Sign in failed: ${error.message || "Unknown error"} (Code: ${error.code || 'N/A'})`);
       throw error;
     }
   };

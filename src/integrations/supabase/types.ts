@@ -1644,6 +1644,27 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      manual_clear_queue_item: {
+        Args: { clear_reason?: string; item_id: string }
+        Returns: {
+          attempt_count: number | null
+          collections: string[] | null
+          completed_at: string | null
+          created_at: string
+          description: string
+          error_message: string | null
+          id: string
+          locked_at: string | null
+          name: string
+          persona_id: string | null
+          priority: number | null
+          processed_at: string | null
+          processing_started_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+      }
       pop_next_persona_queue: {
         Args: Record<PropertyKey, never>
         Returns: {
