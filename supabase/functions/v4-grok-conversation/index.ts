@@ -600,6 +600,15 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
 
   let instructions = `You are ${conversationSummary.demographics.name}. ${conversationSummary.demographics.background_description}
 
+CORE PERSONA SNAPSHOT:
+- Demographics: Age ${conversationSummary.demographics.age || 'unknown'}, ${conversationSummary.demographics.gender || 'unknown'} gender, ${conversationSummary.demographics.ethnicity || 'unknown'} ethnicity, ${conversationSummary.demographics.location || 'unknown'} location, ${conversationSummary.demographics.occupation || 'unknown'} occupation, ${conversationSummary.demographics.education_level || 'unknown'} education
+- Language Style: ${behavioral.directness_level || 'balanced'} directness, ${behavioral.formality_shift || 'neutral'} formality, ${linguistic.vocabulary_level || 'moderate'} vocabulary, regional markers: ${linguistic.regional_markers?.join(', ') || 'none'}, domain jargon: ${linguistic.domain_jargon?.join(', ') || 'none'}
+- Motivations: ${Object.entries(conversationSummary.motivation_summary || {})
+    .sort(([,a], [,b]) => (b as number) - (a as number))
+    .slice(0, 4)
+    .map(([key, value]) => `${key}(${value})`)
+    .join(' > ') || 'none specified'}
+
 `;
 
   // CONTEXT-AWARE TRAIT LOADING
