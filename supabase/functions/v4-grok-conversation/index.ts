@@ -700,7 +700,7 @@ CORE PERSONA SNAPSHOT:
 
   // Add dominant traits with their actual values
   for (const trait of dominantTraits) {
-    instructions += `${trait.trait}: ${JSON.stringify(trait.data_value)} (relevance: ${trait.relevance_reason})
+    instructions += `- ${trait.trait}: ${JSON.stringify(trait.data_value)} (relevance: ${trait.relevance_reason})
 `;
   }
 
