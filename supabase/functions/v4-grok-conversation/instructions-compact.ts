@@ -55,17 +55,6 @@ export function buildV4CompactInstructions(summary: any, fullProfile: any, userI
 }
 
 // Helper functions
-function top3Motivations(summary: any): string[] {
-  const motivations = summary?.motivation_profile ?? {};
-  const entries = Object.entries(motivations)
-    .filter(([key, val]) => typeof val === 'number' && val > 6)
-    .sort(([,a], [,b]) => (b as number) - (a as number))
-    .slice(0, 3)
-    .map(([key]) => key.replace(/_/g, ' '));
-  
-  return entries.length > 0 ? entries : ['achievement', 'security', 'relationships'];
-}
-
 function pickDominantTraits(selectedTraits: any[], fullProfile: any, limit: number): any[] {
   // If selectedTraits exist, use those; otherwise extract from fullProfile
   if (selectedTraits && selectedTraits.length > 0) {
@@ -102,80 +91,60 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, limit: numb
   return traits.slice(0, limit);
 }
 
-function shortVal(value: any): string {
-  if (typeof value === 'string') {
-    return value.length > 30 ? `${value.slice(0, 27)}...` : value;
-  }
-  if (Array.isArray(value)) {
-    return value.slice(0, 2).join(', ');
-  }
-  if (typeof value === 'object' && value !== null) {
-    return Object.keys(value).slice(0, 2).join(', ');
-  }
-  return String(value);
+function shortVal(v: any) {
+  if (v == null) return "n/a";
+  if (typeof v === "string") return v.slice(0, 80);
+  try { return JSON.stringify(v).slice(0, 120); } catch { return "n/a"; }
 }
 
-function shortReason(reason: string): string {
-  if (!reason) return 'relevant';
-  return reason.length > 15 ? `${reason.slice(0, 12)}...` : reason;
+function shortReason(r: any) {
+  if (!r) return "relevant";
+  return String(r).slice(0, 100);
 }
 
-function vocabToLen(vocabLevel: string): string {
-  switch (vocabLevel?.toLowerCase()) {
-    case 'high':
-    case 'advanced':
-      return 'long';
-    case 'low':
-    case 'basic':
-      return 'short';
-    default:
-      return 'medium';
-  }
+function top3Motivations(summary: any) {
+  const mp = summary?.motivation_summary || summary?.motivation_profile?.primary_drivers || {};
+  const entries = Object.entries(mp)
+    .filter(([_, v]) => typeof v === 'number')
+    .sort((a,b)=> (b[1] as number) - (a[1] as number))
+    .slice(0,3)
+    .map(([k]) => k.replace(/_/g,' '));
+  return entries.length ? entries : ["care","security","meaning"];
 }
 
-function personaToDigressProb(fullProfile: any): number {
-  const personality = fullProfile?.personality_contradictions;
-  const attention = fullProfile?.inhibitor_profile?.attention_span;
-  
-  if (personality || attention === 'short') return 0.4;
-  if (attention === 'long') return 0.1;
-  return 0.2;
+function vocabToLen(vocab?: string) {
+  // map vocabulary_level → length bias
+  if (!vocab) return "medium";
+  if (/working|simple/i.test(vocab)) return "short";
+  if (/academic|advanced/i.test(vocab)) return "long";
+  return "medium";
 }
 
-function personaToSelfCorrectProb(fullProfile: any): number {
-  const perfectionism = fullProfile?.inhibitor_profile?.perfectionism;
-  const confidence = fullProfile?.inhibitor_profile?.confidence_level;
-  
-  if (perfectionism === 'high') return 0.4;
-  if (confidence === 'low') return 0.3;
-  if (confidence === 'high') return 0.1;
-  return 0.2;
+// Probabilities (clamped small)
+function personaToDigressProb(fp:any){ 
+  const pace = fp?.communication_style?.voice_foundation?.pace_rhythm;
+  const emo = fp?.communication_style?.voice_foundation?.emotional_expression;
+  let p = 0.15;
+  if (pace === "measured_academic") p += 0.1;
+  if (emo === "high") p += 0.05;
+  return Math.min(0.35, p);
 }
 
-function personaToStoryProb(fullProfile: any): number {
-  const storytelling = fullProfile?.communication_style?.response_architecture?.storytelling_structure;
-  const cultural = fullProfile?.cultural_background?.narrative_style;
-  
-  if (storytelling === 'narrative' || cultural === 'story-driven') return 0.5;
-  if (storytelling === 'analytical') return 0.1;
-  return 0.3;
+function personaToSelfCorrectProb(fp:any){
+  const hedgeCount = fp?.communication_style?.lexical_profile?.hedging_language?.length || 0;
+  return Math.min(0.35, 0.1 + 0.05 * Math.min(hedgeCount,5));
 }
 
-function personaToHumorProb(fullProfile: any): number {
-  const humor = fullProfile?.communication_style?.humor_style;
-  const formality = fullProfile?.communication_style?.voice_foundation?.formality_default;
-  
-  if (humor && humor !== 'none') return 0.3;
-  if (formality === 'formal') return 0.05;
-  if (formality === 'casual') return 0.2;
-  return 0.1;
+function personaToStoryProb(fp:any){
+  const hasStory = !!fp?.communication_style?.response_architecture?.storytelling_structure;
+  return hasStory ? 0.3 : 0.1;
 }
 
-function personaToContradictProb(fullProfile: any): number {
-  const contradictions = fullProfile?.personality_contradictions;
-  const complexity = fullProfile?.cognitive_style?.thinking_complexity;
-  
-  if (contradictions) return 0.4;
-  if (complexity === 'complex') return 0.2;
-  return 0.1;
+function personaToHumorProb(fp:any){
+  const form = fp?.communication_style?.voice_foundation?.formality_default;
+  return form === "casual" ? 0.2 : form === "neutral" ? 0.1 : 0.02;
+}
+
+function personaToContradictProb(fp:any){
+  return fp?.contradictions?.primary_tension ? 0.25 : 0.1;
 }
