@@ -17,11 +17,6 @@ export interface V4GrokConversationResponse {
   persona_name?: string;
   model_used?: string;
   error?: string;
-  prompt_debug?: {
-    instructions?: string;
-    messages?: any[];
-    [key: string]: any;
-  };
 }
 
 // Grok conversation function - same interface as OpenAI version

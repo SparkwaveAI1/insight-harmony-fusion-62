@@ -954,55 +954,15 @@ serve(async (req) => {
     )
 
     // Fetch V4 persona conversation summary AND full_profile for diagnostic
-    // Try both persona_id and id fields for robustness
-    let persona = null;
-    let fetchError = null;
-
-    // First try with persona_id (V4-style ID like v4_1758046443691_6gp01d1fa)
-    const { data: personaByPersonaId, error: errorByPersonaId } = await supabase
+    const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
       .select('conversation_summary, full_profile')
       .eq('persona_id', persona_id)
       .single()
 
-    if (personaByPersonaId && !errorByPersonaId) {
-      persona = personaByPersonaId;
-    } else {
-      // If that fails, try with id field (UUID like e5daef8f-b6f8-4768-9c3a-7e615dc23ee1)
-      const { data: personaById, error: errorById } = await supabase
-        .from('v4_personas')
-        .select('conversation_summary, full_profile')
-        .eq('id', persona_id)
-        .single()
-
-      if (personaById && !errorById) {
-        persona = personaById;
-      } else {
-        fetchError = errorByPersonaId || errorById;
-      }
-    }
-
-    if (fetchError || !persona) {
-      console.error('Error fetching V4 persona for Grok with both persona_id and id:', { 
-        persona_id, 
-        errorByPersonaId, 
-        errorById: fetchError 
-      })
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Persona not found. Tried both persona_id and id fields with value: ${persona_id}`,
-          persona_id_attempted: persona_id,
-          debug_info: {
-            tried_persona_id_field: !!errorByPersonaId,
-            tried_id_field: !!fetchError
-          }
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404 
-        }
-      )
+    if (fetchError) {
+      console.error('Error fetching V4 persona for Grok:', fetchError)
+      throw fetchError
     }
 
     console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
