@@ -57,8 +57,6 @@ import { JobCompletionNotifier } from "./components/persona-creation/JobCompleti
 
 import "./App.css";
 
-// Import the diagnostic test to trigger David Kim conversation
-import './test-david-kim-diagnostic';
 
 // NUCLEAR CACHE BUSTER - Force complete fresh deployment
 const NUCLEAR_BUILD_ID = `NUCLEAR_${Date.now()}_V4_PERSONAS_ONLY`;
