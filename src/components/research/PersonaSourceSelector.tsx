@@ -306,18 +306,11 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
                 <SelectValue placeholder="Select a collection..." />
               </SelectTrigger>
               <SelectContent>
-                {projectCollections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{collection.name}</span>
-                      {collection.description && (
-                        <span className="text-xs text-muted-foreground">
-                          {collection.description}
-                        </span>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
+                 {projectCollections.map((collection) => (
+                   <SelectItem key={collection.id} value={collection.id}>
+                     {collection.name}
+                   </SelectItem>
+                 ))}
               </SelectContent>
             </Select>
           </div>
