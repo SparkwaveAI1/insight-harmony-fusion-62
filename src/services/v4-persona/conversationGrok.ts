@@ -23,19 +23,6 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
   try {
     console.log('Sending V4 Grok message to persona:', request.persona_id);
 
-    // Fire-and-forget: log the prompt for admin monitoring (no schema changes)
-    try {
-      await supabase.functions.invoke('log-grok-prompt', {
-        body: {
-          source: 'v4-grok',
-          persona_id: request.persona_id,
-          user_message: request.user_message,
-          conversation_history: (request.conversation_history || []).slice(-5),
-        }
-      });
-    } catch (e) {
-      console.warn('Non-blocking: failed to log Grok prompt', e);
-    }
 
     const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
       body: {
