@@ -56,19 +56,57 @@ export function buildV4CompactInstructions(summary: any, fullProfile: any, userI
 
 // Helper functions
 function pickDominantTraits(selectedTraits: any[], fullProfile: any, limit: number): any[] {
-  // If selectedTraits exist, use those; otherwise extract from fullProfile
+  // If selectedTraits exist, filter and prioritize them
   if (selectedTraits && selectedTraits.length > 0) {
-    return selectedTraits.slice(0, limit);
+    // Filter out abstract scaffolding traits
+    const filtered = selectedTraits.filter(t => 
+      !t.trait.includes('response_architecture') && 
+      !t.trait.includes('sentence_patterns')
+    );
+    
+    return prioritizeTraits(filtered, fullProfile, limit);
   }
 
   // Fallback: extract key traits from fullProfile
   const traits: any[] = [];
   
+  // Always include 1-2 motivation/goal anchors
+  if (fullProfile?.motivation_profile?.primary_drivers) {
+    const drivers = Object.entries(fullProfile.motivation_profile.primary_drivers)
+      .filter(([_, value]) => typeof value === 'number' && value > 6)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 2);
+    
+    drivers.forEach(([key, value]) => {
+      traits.push({
+        trait: `motivation_${key}`,
+        data_value: value,
+        relevance_reason: 'core motivation driver'
+      });
+    });
+  }
+  
+  // Include 1 identity/knowledge anchor
+  if (fullProfile?.knowledge_profile?.expertise_domains?.length > 0) {
+    traits.push({
+      trait: 'expertise_domains',
+      data_value: fullProfile.knowledge_profile.expertise_domains.slice(0, 3),
+      relevance_reason: 'knowledge identity anchor'
+    });
+  } else if (fullProfile?.identity_salience?.professional_identity) {
+    traits.push({
+      trait: 'professional_identity',
+      data_value: fullProfile.identity_salience.professional_identity,
+      relevance_reason: 'identity anchor'
+    });
+  }
+  
+  // Fill remaining with high-impact traits, excluding scaffolding
   if (fullProfile?.inhibitor_profile?.confidence_level) {
     traits.push({
       trait: 'confidence_level',
       data_value: fullProfile.inhibitor_profile.confidence_level,
-      relevance_reason: 'core personality trait'
+      relevance_reason: 'behavioral modifier'
     });
   }
   
@@ -84,11 +122,43 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, limit: numb
     traits.push({
       trait: 'directness_level',
       data_value: fullProfile.communication_style.voice_foundation.directness_level,
-      relevance_reason: 'communication style'
+      relevance_reason: 'communication foundation'
     });
   }
 
-  return traits.slice(0, limit);
+  return traits.slice(0, Math.min(limit, 6));
+}
+
+function prioritizeTraits(traits: any[], fullProfile: any, limit: number): any[] {
+  // Ensure 1-2 motivation/goal anchors
+  const motivationTraits = traits.filter(t => 
+    t.trait.includes('motivation') || 
+    t.trait.includes('goal') ||
+    t.trait.includes('primary_drivers')
+  ).slice(0, 2);
+  
+  // Ensure 1 identity/knowledge anchor
+  const identityTraits = traits.filter(t => 
+    t.trait.includes('knowledge') || 
+    t.trait.includes('expertise') ||
+    t.trait.includes('identity') ||
+    t.trait.includes('professional')
+  ).slice(0, 1);
+  
+  // Get remaining traits by score, excluding already selected
+  const usedTraits = new Set([...motivationTraits, ...identityTraits].map(t => t.trait));
+  const remainingTraits = traits
+    .filter(t => !usedTraits.has(t.trait))
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+  
+  const selected = [...motivationTraits, ...identityTraits];
+  const remainingSlots = Math.min(limit, 6) - selected.length;
+  
+  if (remainingSlots > 0) {
+    selected.push(...remainingTraits.slice(0, remainingSlots));
+  }
+  
+  return selected.slice(0, Math.min(limit, 6));
 }
 
 function shortVal(v: any) {
