@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Feature flag for realism v1 (default OFF)
+const REALISM_FLAG = Deno.env.get("ENABLE_REALISM_V1") === "true";
+
 // V4-NATIVE TRAIT RELEVANCE ANALYZER
 class V4TraitRelevanceAnalyzer {
   private static readonly V4_TRAIT_PATHS = [
@@ -685,7 +688,7 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
 }
 
 // V4-Native instruction builder using trait analysis results
-function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
+function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any, realismEnabled: boolean = false): string {
   const selectedTraits = v4Analysis.selected_traits;
   const linguistic = v4Analysis.linguistic_signature;
   const behavioral = v4Analysis.behavioral_modifiers;
@@ -846,22 +849,24 @@ Your emotional regulation: You have low emotional control and tend to react stro
     instructions += `What holds you back: ${selectedTraits.psychological_barriers}\n`;
   }
 
-  // Add response instruction with realism fields
-  const directnessLevel = selectedTraits.voice_foundation?.directness_level || 'medium';
-  const formalityDefault = selectedTraits.voice_foundation?.formality_default || 'medium';
-  const paceRhythm = selectedTraits.voice_foundation?.pace_rhythm || 'medium';
-  
-  // Calculate probabilities from traits
-  const sentenceLengthBias = selectedTraits.communication_style?.sentence_structure === 'complex' ? 'long' : 
-                            selectedTraits.communication_style?.sentence_structure === 'simple' ? 'short' : 'medium';
-  const digressionProbability = selectedTraits.personality_contradictions ? 0.4 : 0.1;
-  const selfCorrectionProbability = selectedTraits.perfectionism ? 0.3 : 0.1;
-  const hedgingAllowed = selectedTraits.confidence_level !== 'high';
-  const storyProbability = selectedTraits.communication_style?.storytelling_tendency ? 0.4 : 0.1;
-  const humorProbability = selectedTraits.humor_style ? 0.2 : 0.05;
-  const contradictionProbability = selectedTraits.personality_contradictions ? 0.3 : 0.05;
+  // Response requirements adapted for emotional state
+  if (realismEnabled) {
+    // Add response instruction with realism fields
+    const directnessLevel = selectedTraits.voice_foundation?.directness_level || 'medium';
+    const formalityDefault = selectedTraits.voice_foundation?.formality_default || 'medium';
+    const paceRhythm = selectedTraits.voice_foundation?.pace_rhythm || 'medium';
+    
+    // Calculate probabilities from traits
+    const sentenceLengthBias = selectedTraits.communication_style?.sentence_structure === 'complex' ? 'long' : 
+                              selectedTraits.communication_style?.sentence_structure === 'simple' ? 'short' : 'medium';
+    const digressionProbability = selectedTraits.personality_contradictions ? 0.4 : 0.1;
+    const selfCorrectionProbability = selectedTraits.perfectionism ? 0.3 : 0.1;
+    const hedgingAllowed = selectedTraits.confidence_level !== 'high';
+    const storyProbability = selectedTraits.communication_style?.storytelling_tendency ? 0.4 : 0.1;
+    const humorProbability = selectedTraits.humor_style ? 0.2 : 0.05;
+    const contradictionProbability = selectedTraits.personality_contradictions ? 0.3 : 0.05;
 
-  instructions += `
+    instructions += `
 
 "response_instruction": {
   "format": "2–4 sentences",
@@ -904,6 +909,31 @@ FORBIDDEN IN RESPONSES:
 - "I don't pretend to have answers"
 - "You know what I mean?" (repetitively)
 - "On the other hand..." / "That said..." (diplomatic hedging)`;
+  } else {
+    // Original instructions without realism fields
+    instructions += `
+RESEARCH STUDY CONTEXT:
+You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
+
+STUDY GUIDELINES:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications  
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing of opposing views${selectedTraits.emotional_trigger_activated ? `
+- This topic triggers strong emotions in you - respond authentically with that emotional intensity
+- Be blunt and direct as this is how you naturally react when triggered` : ''}
+
+FORBIDDEN IN RESPONSES:
+- "I'm no expert/scientist/authority" 
+- "As a [job title]" or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)`;
+  }
 
   instructions += `
 
@@ -968,7 +998,8 @@ serve(async (req) => {
     console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
 
     // Build V4-native instructions using trait analysis
-    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
+    const realismEnabled = REALISM_FLAG; // Feature flag control
+    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile, realismEnabled)
     console.log('V4 - Instruction length:', instructions.length)
     
     // MUST contain your structure
