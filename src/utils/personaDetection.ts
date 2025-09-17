@@ -129,7 +129,7 @@ export function getPersonaDownloadData(persona: any) {
   if (versionInfo.isV4) {
     return {
       persona_id: persona.persona_id,
-      id: persona.id,
+      id: persona.persona_id,
       name: persona.name,
       schema_version: persona.schema_version,
       created_at: persona.created_at,

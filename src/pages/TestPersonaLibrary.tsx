@@ -158,7 +158,7 @@ export default function TestPersonaLibrary() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {personas.map((persona) => (
-                  <div key={persona.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div key={persona.persona_id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start space-x-3">
                       {persona.profile_image_url ? (
                         <img 

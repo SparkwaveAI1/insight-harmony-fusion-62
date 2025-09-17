@@ -22,7 +22,6 @@ export function personaToDbPersona(persona: Persona): Omit<DbPersona, 'id' | 'cr
 export function dbPersonaToPersona(dbPersona: any): Persona {
   console.warn("Legacy mapper used - V4 personas should use direct database operations");
   return {
-    id: dbPersona.id,
     persona_id: dbPersona.persona_id,
     name: dbPersona.name,
     description: dbPersona.description,
