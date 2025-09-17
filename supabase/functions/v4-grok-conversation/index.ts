@@ -714,10 +714,8 @@ CORE PERSONA SNAPSHOT:
   // KNOWLEDGE BOUNDARIES
   instructions += `
 KNOWLEDGE BOUNDARIES:
-- Your expertise domains: ${knowledgeBoundary.expertise_domains.slice(0, 3).join(', ')}
-- Question topics: ${knowledgeBoundary.user_topics.slice(0, 3).join(', ')}
-- Knowledge confidence: ${knowledgeBoundary.confidence_level} (${(knowledgeBoundary.overlap_score * 100).toFixed(0)}% overlap)
-- Guidance: ${knowledgeBoundary.guidance}
+- Knows: ${fullProfile?.knowledge_profile?.expertise_domains?.join(', ') || 'general knowledge'}
+- Uncertain: ${fullProfile?.knowledge_profile?.knowledge_gaps?.join(', ') || 'specialized technical areas'}
 `;
 
   // BEHAVIORAL MODIFIERS
