@@ -74,10 +74,35 @@ export async function getV4PersonaById(persona_id: string): Promise<V4Persona | 
       throw error;
     }
 
-    console.log('Retrieved V4 persona:', data?.name);
+    // Extract name from nested structure for V4 personas
+    let personaName = 'Unknown Persona';
+    try {
+      if (data?.conversation_summary && typeof data.conversation_summary === 'object') {
+        const summary = data.conversation_summary as any;
+        personaName = summary?.demographics?.name || data?.name || 'Unknown Persona';
+      } else {
+        personaName = data?.name || 'Unknown Persona';
+      }
+    } catch (e) {
+      console.warn('Error extracting persona name:', e);
+      personaName = data?.name || 'Unknown Persona';
+    }
+    console.log('Retrieved V4 persona:', personaName);
     
     // 🔒 Validate persona is V4 with core fields
     const validatedPersona = ensureV4PersonaCore(data);
+    
+    // Set the extracted name on the persona object for easy access
+    try {
+      if (validatedPersona && validatedPersona.conversation_summary && typeof validatedPersona.conversation_summary === 'object') {
+        const summary = validatedPersona.conversation_summary as any;
+        if (summary?.demographics?.name) {
+          validatedPersona.name = summary.demographics.name;
+        }
+      }
+    } catch (e) {
+      console.warn('Error setting persona name:', e);
+    }
     
     return validatedPersona as unknown as V4Persona;
 
