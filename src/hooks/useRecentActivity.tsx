@@ -32,7 +32,7 @@ export function useRecentActivity() {
         // Fetch recent V4 personas (created or updated) for the current user
         const { data: personas, error: personasError } = await supabase
           .from('v4_personas')
-          .select('id, persona_id, name, created_at')
+          .select('persona_id, name, created_at')
           .eq('user_id', user.id) // Filter by user ID
           .order('created_at', { ascending: false })
           .limit(3);
@@ -95,7 +95,7 @@ export function useRecentActivity() {
 
         // Transform the data into activity items
         const personaActivities: Activity[] = (personas || []).map(persona => ({
-          id: persona.id,
+          id: persona.persona_id,
           type: 'persona',
           title: 'Persona created',
           description: `You created "${persona.name}"`,

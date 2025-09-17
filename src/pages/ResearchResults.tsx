@@ -60,10 +60,12 @@ const ResearchResults = () => {
         // Fallback persona with ID + name format
         return {
           persona_id: personaId,
-          id: personaId,
           name: `Persona ${personaId}`,
           creation_date: '',
           created_at: '',
+          updated_at: '',
+          user_id: '',
+          is_public: false,
           metadata: {},
           trait_profile: {},
           simulation_directives: {},

@@ -6,7 +6,6 @@ import { InterviewSection } from './interview';
 
 export interface Persona {
   persona_id: string;
-  id: string;
   name: string;
   description?: string;
   created_at: string;

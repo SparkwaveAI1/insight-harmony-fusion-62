@@ -175,7 +175,6 @@ export const getPersonasInCollectionWithDetails = async (collectionId: string): 
         : {};
       
       return {
-        id: v4Persona.id,
         persona_id: v4Persona.persona_id,
         name: v4Persona.name,
         user_id: v4Persona.user_id,
@@ -227,7 +226,6 @@ export const getPersonasNotInCollection = async (collectionId: string, userId: s
 
     // Convert V4 personas to legacy format for consistency
     const convertedV4Personas = availableV4Personas.map(v4Persona => ({
-      id: v4Persona.id,
       persona_id: v4Persona.persona_id,
       name: v4Persona.name,
       description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,

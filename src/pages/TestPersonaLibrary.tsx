@@ -44,7 +44,7 @@ export default function TestPersonaLibrary() {
         // Direct query to v4_personas table - completely bypassing existing services
         const { data, error: queryError } = await supabase
           .from('v4_personas')
-          .select('id, persona_id, name, user_id, is_public, created_at, profile_image_url')
+          .select('persona_id, name, user_id, is_public, created_at, profile_image_url')
           .eq('is_public', true)
           .limit(10);
         
@@ -55,14 +55,17 @@ export default function TestPersonaLibrary() {
         } else {
           console.log('✅ V4 Personas query successful:', data?.length || 0, 'personas found');
           results.push(`✅ Query successful: ${data?.length || 0} public personas found`);
-          setPersonas(data || []);
+          setPersonas(data?.map(p => ({
+            ...p,
+            id: p.persona_id // Use persona_id as id for V4Persona compatibility
+          })) || []);
         }
         
         // Test private personas for current user
         console.log('🔐 Testing user-specific personas...');
         const { data: userPersonas, error: userError } = await supabase
           .from('v4_personas')
-          .select('id, persona_id, name, user_id, is_public, created_at')
+          .select('persona_id, name, user_id, is_public, created_at, updated_at, schema_version, full_profile, conversation_summary, creation_stage, creation_completed, profile_image_url')
           .limit(5);
         
         if (userError) {

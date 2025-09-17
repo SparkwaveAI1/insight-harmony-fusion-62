@@ -52,7 +52,6 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
         const backgroundDescription = demographics?.background_description;
         
         const convertedPersona: Persona = {
-          id: v4Data.id,
           persona_id: v4Data.persona_id,
           name: v4Data.name,
           description: backgroundDescription || `${v4Data.name}`,

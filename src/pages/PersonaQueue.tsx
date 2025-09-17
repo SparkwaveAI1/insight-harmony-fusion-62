@@ -347,7 +347,7 @@ const PersonaQueue = () => {
           // 🔒 Fetch the created persona from DB and enforce V4 schema
           const { data: fresh, error } = await supabase
             .from('v4_personas')
-            .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+            .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
             .eq('persona_id', personaId)
             .maybeSingle();
 
@@ -406,7 +406,7 @@ const PersonaQueue = () => {
         // DIAGNOSTIC: Fetch persona from DB after Stage 2
         const { data: fresh2, error: error2 } = await supabase
           .from('v4_personas')
-          .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+          .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
           .eq('persona_id', personaId)
           .maybeSingle();
 
@@ -450,7 +450,7 @@ const PersonaQueue = () => {
         // DIAGNOSTIC: Fetch persona from DB after Stage 3
         const { data: fresh3, error: error3 } = await supabase
           .from('v4_personas')
-          .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+          .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
           .eq('persona_id', personaId)
           .maybeSingle();
 
@@ -477,7 +477,7 @@ const PersonaQueue = () => {
       // DIAGNOSTIC: Final trace before marking completed and navigating
       const { data: finalFresh, error: finalError } = await supabase
         .from('v4_personas')
-        .select('id, persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+        .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
         .eq('persona_id', personaId)
         .maybeSingle();
 

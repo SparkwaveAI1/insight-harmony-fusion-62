@@ -32,7 +32,7 @@ export function usePersonaStats() {
 
       const { data: personas, error } = await supabase
         .from('v4_personas')
-        .select('id, full_profile, conversation_summary')
+        .select('persona_id, full_profile, conversation_summary')
         .eq('user_id', user.id);
 
       if (error) {

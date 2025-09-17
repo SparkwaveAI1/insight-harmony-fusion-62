@@ -261,7 +261,6 @@ export interface V4ConversationSummary {
 
 // MAIN V4 PERSONA INTERFACE
 export interface V4Persona {
-  id: string;
   persona_id: string;
   name: string;
   user_id: string;

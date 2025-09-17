@@ -36,7 +36,6 @@ export async function importPersonaFromJSON(jsonData: any): Promise<Persona | nu
       persona = {
         // New generated IDs
         persona_id: newPersonaId,
-        id: newId,
         
         // Core persona data from import
         name: jsonData.name,

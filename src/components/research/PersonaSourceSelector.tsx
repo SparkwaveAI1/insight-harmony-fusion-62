@@ -124,13 +124,12 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
             // Get V4 personas from collection
             const v4PersonasData = await getPersonasInCollectionWithDetails(selectedCollection);
             const v4Personas = v4PersonasData.map(v4Persona => ({
-              id: v4Persona.id,
               persona_id: v4Persona.persona_id,
               name: v4Persona.name,
               description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
               user_id: v4Persona.user_id,
               is_public: false,
-              created_at: v4Persona.created_at || '',
+              updated_at: v4Persona.updated_at || '',
               metadata: {},
               trait_profile: {},
               behavioral_modulation: {},
@@ -160,13 +159,13 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           // Get V4 personas
           const v4PersonasData = await getV4Personas(user.id);
           const v4Personas = v4PersonasData.map(v4Persona => ({
-            id: v4Persona.id,
             persona_id: v4Persona.persona_id,
             name: v4Persona.name,
             description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
             user_id: v4Persona.user_id,
             is_public: false,
             created_at: v4Persona.created_at || '',
+            updated_at: v4Persona.updated_at || '',
             metadata: {},
             trait_profile: {},
             behavioral_modulation: {},

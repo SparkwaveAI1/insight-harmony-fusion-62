@@ -132,7 +132,6 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
           if (v4Persona) {
             // Convert V4 persona to legacy persona format for consistency
             mappedPersonas.push({
-              id: v4Persona.id,
               persona_id: v4Persona.persona_id,
               name: v4Persona.name,
               description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
