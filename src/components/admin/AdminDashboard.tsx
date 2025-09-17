@@ -6,6 +6,7 @@ import { AdminBillingUsers } from "./AdminBillingUsers";
 import { AdminBillingAuditLog } from "./AdminBillingAuditLog";
 import { AdminBillingStats } from "./AdminBillingStats";
 import { AdminAlerts } from "./AdminAlerts";
+import { GrokPromptMonitor } from "../dashboard/GrokPromptMonitor";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -53,6 +54,9 @@ export function AdminDashboard() {
 
       {/* Admin Alerts */}
       <AdminAlerts />
+
+      {/* Grok Prompt Monitor */}
+      <GrokPromptMonitor />
 
       {/* Admin Billing Stats */}
       <AdminBillingStats />
