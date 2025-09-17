@@ -146,9 +146,8 @@ export function GrokPromptMonitor() {
                     <div><span className="text-accent font-medium">Persona:</span> {conversation.persona_name}</div>
                     <div><span className="text-accent font-medium">User Question:</span> {conversation.user_message}</div>
                     <div><span className="text-accent font-medium">System Prompt:</span></div>
-                    <div className="ml-4 bg-muted/50 p-2 rounded text-xs max-h-32 overflow-y-auto whitespace-pre-wrap">
-                      {conversation.response.substring(0, 1000)}
-                      {conversation.response.length > 1000 && '...'}
+                    <div className="ml-4 bg-muted/50 p-2 rounded text-xs max-h-96 overflow-y-auto whitespace-pre-wrap font-mono">
+                      {conversation.response}
                     </div>
                   </div>
                   
