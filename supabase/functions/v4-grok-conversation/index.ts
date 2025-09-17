@@ -962,16 +962,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch V4 persona conversation summary AND full_profile for diagnostic
+    // Robust persona lookup with dual-column fallback to prevent "0 rows" errors
+    const rawId = persona_id;
+    const isUuid = /^[0-9a-f-]{8}-[0-9a-f-]{4}-[0-9a-f-]{4}-[0-9a-f-]{4}-[0-9a-f-]{12}$/i.test(rawId);
+
     const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
       .select('conversation_summary, full_profile')
-      .eq('persona_id', persona_id)
-      .single()
+      .or(isUuid ? `id.eq.${rawId},persona_id.eq.${rawId}` : `persona_id.eq.${rawId},id.eq.${rawId}`)
+      .maybeSingle();
+
+    if (!persona) {
+      console.error('Persona not found with dual-column lookup:', { rawId, isUuid });
+      return new Response(JSON.stringify({ 
+        error: "Persona not found",
+        tried: { rawId, isUuid, columnsTried: ["id", "persona_id"] },
+        realism_enabled: REALISM_FLAG
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     if (fetchError) {
       console.error('Error fetching V4 persona for Grok:', fetchError)
-      throw fetchError
+      return new Response(JSON.stringify({ 
+        error: "Database error",
+        details: fetchError.message,
+        realism_enabled: REALISM_FLAG
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
     console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
