@@ -738,6 +738,9 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
         "You know what I mean? (repetitive)",
         "On the other hand...",
         "That said...",
+        "From my experience",
+        "To begin with",
+        "Let's consider the data",
         ...(linguistic.forbidden_expressions || [])
       ]
     },
@@ -764,11 +767,11 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
       language_style: {
         formality: fullProfile?.communication_style?.formality || "neutral",
         directness: fullProfile?.communication_style?.directness || "balanced",
-        signature_phrases: linguistic.signature_phrases || [],
         forbidden_expressions: linguistic.forbidden_expressions || [],
-        typical_openers: linguistic.typical_openers || [],
-        conversation_enders: linguistic.conversation_enders || [],
-        sentence_patterns: linguistic.sentence_patterns || []
+        domain_jargon: fullProfile?.communication_style?.lexical_profile?.domain_jargon || 
+                      fullProfile?.demographics?.occupation || 
+                      conversationSummary?.demographics?.occupation || 
+                      []
       },
       motivations: motivations,
       relevant_traits_for_query: relevantTraits,
@@ -1051,7 +1054,8 @@ serve(async (req) => {
         linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
         behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
         persona_name: persona.conversation_summary.demographics.name,
-        model_used: 'grok-4-latest'
+        model_used: 'grok-4-latest',
+        prompt_debug: include_prompt ? { instructions: instructions } : undefined
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
