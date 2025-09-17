@@ -1,5 +1,5 @@
 import { V4FullProfile } from '../types/persona-v4';
-import { V4TraitPath, V4TraitScore, V4TraitAnalysisResult, TurnClassification, KnowledgeBoundary } from '../types/voicepack';
+import { V4TraitPath, V4TraitScore, V4TraitAnalysisResult, TurnClassification, KnowledgeBoundary } from '../types/trait-analysis';
 
 // V4-NATIVE TRAIT RELEVANCE ANALYZER
 export class V4TraitRelevanceAnalyzer {
