@@ -680,43 +680,83 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   const classification = v4Analysis.context_classification;
   const knowledgeBoundary = v4Analysis.knowledge_boundary;
 
-  let instructions = `You are ${conversationSummary.demographics.name}. ${conversationSummary.demographics.background_description}
-
-CORE PERSONA SNAPSHOT:
-- Demographics: Age ${conversationSummary.demographics.age || 'unknown'}, ${conversationSummary.demographics.gender || 'unknown'} gender, ${conversationSummary.demographics.ethnicity || 'unknown'} ethnicity, ${conversationSummary.demographics.location || 'unknown'} location, ${conversationSummary.demographics.occupation || 'unknown'} occupation, ${conversationSummary.demographics.education_level || 'unknown'} education
-- Language Style: ${behavioral.directness_level || 'balanced'} directness, ${behavioral.formality_shift || 'neutral'} formality, ${linguistic.vocabulary_level || 'moderate'} vocabulary, regional markers: ${linguistic.regional_markers?.join(', ') || 'none'}, domain jargon: ${linguistic.domain_jargon?.join(', ') || 'none'}
-- Motivations: ${Object.entries(conversationSummary.motivation_summary || {})
-    .sort(([,a], [,b]) => (b as number) - (a as number))
-    .slice(0, 4)
-    .map(([key, value]) => `${key}(${value})`)
-    .join(' > ') || 'none specified'}
-
-`;
-
   // CONTEXT-AWARE TRAIT LOADING
   const dominantTraits = pickDominantTraits(selectedTraits, fullProfile);
-  instructions += `RELEVANT TRAITS FOR THIS CONVERSATION:
-`;
 
-  // Add dominant traits with their actual values
-  for (const trait of dominantTraits) {
-    instructions += `- ${trait.trait}: ${JSON.stringify(trait.data_value)} (relevance: ${trait.relevance_reason})
-`;
-  }
+  const promptStructure = {
+    system_context: {
+      research_study: "You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.",
+      study_guidelines: [
+        "Give your genuine opinion directly without disclaimers",
+        "Keep responses concise (2–4 sentences maximum)",
+        "Never acknowledge knowledge limitations or mention your expertise level",
+        "Don't explain your background or qualifications",
+        "Focus only on your actual viewpoint",
+        "Use natural speech patterns from your background",
+        "State opinions clearly without diplomatic balancing",
+        `Match the conversation intent (${classification.intent}) and sensitivity level (${classification.sensitivity})`,
+        `Directness level: ${behavioral.directness_level}`,
+        `Emotional state: ${behavioral.emotional_state}`,
+        `Stay focused on topics: ${classification.topics.join(', ')}`
+      ],
+      forbidden_phrases: [
+        "I'm no expert/scientist/authority",
+        "As a [job title]...",
+        "That's just my take/opinion",
+        "I don't pretend to have answers",
+        "You know what I mean? (repetitive)",
+        "On the other hand...",
+        "That said...",
+        ...(linguistic.forbidden_expressions || [])
+      ]
+    },
+    conversation_engine_rules: {
+      priority_1: "Language first — ensure authentic style, tone, and lexical markers from persona profile",
+      priority_2: "Motivations prioritized — draw on motivation_profile before other factors",
+      priority_3: "Core demographics passed explicitly (age, gender, ethnicity, region, occupation)",
+      priority_4: "Scan ALL traits (personality, emotional, moral foundations, inhibitors, contradictions)",
+      priority_5: "Select only the most relevant traits for this query and pass them in structured form",
+      priority_6: "Articulate relevant knowledge boundaries (what persona is likely to know vs not know)"
+    },
+    input_query: userInput,
+    persona_package: {
+      identity: {
+        name: conversationSummary.demographics.name,
+        age: conversationSummary.demographics.age,
+        gender: conversationSummary.demographics.gender,
+        ethnicity: conversationSummary.demographics.ethnicity,
+        location: conversationSummary.demographics.location,
+        occupation: conversationSummary.demographics.occupation,
+        relationship_status: conversationSummary.demographics.relationship_status,
+        dependents: conversationSummary.demographics.dependents
+      },
+      language_style: {
+        regional_markers: linguistic.regional_markers || [],
+        vocabulary_level: linguistic.vocabulary_level || 'moderate',
+        signature_phrases: linguistic.signature_phrases || [],
+        forbidden: linguistic.forbidden_expressions || []
+      },
+      motivations: conversationSummary.motivation_summary || {},
+      relevant_traits_for_query: dominantTraits.reduce((acc, trait) => {
+        acc[trait.trait] = {
+          value: trait.data_value,
+          relevance: trait.relevance_reason
+        };
+        return acc;
+      }, {}),
+      knowledge_boundaries: {
+        knows: fullProfile?.knowledge_profile?.expertise_domains || ['general knowledge'],
+        uncertain: fullProfile?.knowledge_profile?.knowledge_gaps || ['specialized technical areas']
+      }
+    },
+    response_instruction: {
+      format: "2–4 sentences maximum",
+      style: `authentic, ${behavioral.directness_level} directness, ${behavioral.emotional_state} emotion`,
+      focus: `Express ${conversationSummary.demographics.name}'s perspective based on motivations and relevant traits`
+    }
+  };
 
-  // LINGUISTIC SIGNATURE INTEGRATION - SIGNATURE PHRASES REMOVED
-
-  if (linguistic.forbidden_expressions.length > 0) {
-    instructions += `AVOID these expressions: ${linguistic.forbidden_expressions.join(', ')}
-`;
-  }
-
-  // KNOWLEDGE BOUNDARIES
-  instructions += `
-KNOWLEDGE BOUNDARIES:
-- Knows: ${fullProfile?.knowledge_profile?.expertise_domains?.join(', ') || 'general knowledge'}
-- Uncertain: ${fullProfile?.knowledge_profile?.knowledge_gaps?.join(', ') || 'specialized technical areas'}
-`;
+  return JSON.stringify(promptStructure, null, 2);
 
   // BEHAVIORAL MODIFIERS
   instructions += `
