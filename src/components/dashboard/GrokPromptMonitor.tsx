@@ -58,7 +58,7 @@ export function GrokPromptMonitor() {
             created_at: row.created_at,
             persona_name: personaName,
             user_message: meta.user_message || '',
-            response: meta.user_message || '', // reuse field to display prompt snippet
+            response: meta.system_instructions || meta.user_message || '', // Show full system prompt
             traits_selected: [],
             prompt_structure: null,
           };
@@ -144,10 +144,11 @@ export function GrokPromptMonitor() {
                   </div>
                   <div className="mt-2 space-y-1 text-muted-foreground">
                     <div><span className="text-accent font-medium">Persona:</span> {conversation.persona_name}</div>
-                    <div><span className="text-accent font-medium">Prompt:</span></div>
-                    <div className="ml-4 bg-muted/50 p-2 rounded text-xs max-h-20 overflow-y-auto">
-                      {conversation.response.substring(0, 200)}
-                      {conversation.response.length > 200 && '...'}
+                    <div><span className="text-accent font-medium">User Question:</span> {conversation.user_message}</div>
+                    <div><span className="text-accent font-medium">System Prompt:</span></div>
+                    <div className="ml-4 bg-muted/50 p-2 rounded text-xs max-h-32 overflow-y-auto whitespace-pre-wrap">
+                      {conversation.response.substring(0, 1000)}
+                      {conversation.response.length > 1000 && '...'}
                     </div>
                   </div>
                   

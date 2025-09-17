@@ -30,6 +30,7 @@ serve(async (req) => {
       persona_id,
       persona_name,
       user_message,
+      system_instructions,
       conversation_id,
       conversation_history = [],
       extra = {},
@@ -50,6 +51,7 @@ serve(async (req) => {
       persona_id,
       persona_name,
       user_message,
+      system_instructions,
       conversation_id,
       conversation_history: Array.isArray(conversation_history)
         ? conversation_history.slice(-5)

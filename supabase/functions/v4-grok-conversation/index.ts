@@ -1006,6 +1006,23 @@ serve(async (req) => {
       )
     }
 
+    // Log the full system prompt for admin monitoring
+    try {
+      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))
+      await supabaseAdmin.functions.invoke('log-grok-prompt', {
+        body: {
+          source: 'v4-grok',
+          persona_id: persona_id,
+          persona_name: persona.conversation_summary.demographics.name,
+          user_message: user_message,
+          system_instructions: instructions,
+          conversation_history: (conversation_history || []).slice(-5),
+        }
+      })
+    } catch (e) {
+      console.warn('Non-blocking: failed to log Grok prompt', e)
+    }
+
     // Call Grok API with trait-specific instructions
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
