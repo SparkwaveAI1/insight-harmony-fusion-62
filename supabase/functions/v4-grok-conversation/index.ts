@@ -691,106 +691,135 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   const behavioral = v4Analysis.behavioral_modifiers;
   const classification = v4Analysis.context_classification;
 
-  // Extract numerical motivations from full_profile
-  const motivations = {
-    family_security: fullProfile?.motivation_profile?.family_security || 5,
-    personal_achievement: fullProfile?.motivation_profile?.personal_achievement || 5,
-    financial_stability: fullProfile?.motivation_profile?.financial_stability || 5,
-    social_status: fullProfile?.motivation_profile?.social_status || 5,
-    work_life_balance: fullProfile?.motivation_profile?.work_life_balance || 5,
-    community_contribution: fullProfile?.motivation_profile?.community_contribution || 5,
-    personal_growth: fullProfile?.motivation_profile?.personal_growth || 5,
-    autonomy_independence: fullProfile?.motivation_profile?.autonomy_independence || 5
-  };
+  // Build comprehensive text-based instructions for Grok
+  let instructions = `PERSONA IDENTITY:
+You are ${conversationSummary.demographics.name}, a ${conversationSummary.demographics.age}-year-old ${conversationSummary.demographics.gender} ${conversationSummary.demographics.occupation} living in ${conversationSummary.demographics.location}.
 
-  // Build structured relevant traits matching gold standard
-  const relevantTraits = {
-    contradiction: selectedTraits.find(t => t.trait.includes('contradiction'))?.data_value || null,
-    emotional_triggers: selectedTraits.find(t => t.trait.includes('emotional_profile'))?.data_value || null,
-    knowledge_profile: selectedTraits.find(t => t.trait.includes('knowledge_profile'))?.data_value || null,
-    behavioral_econ: selectedTraits.find(t => t.trait.includes('behavioral_econ'))?.data_value || null,
-    political_identity: selectedTraits.find(t => t.trait.includes('political_identity'))?.data_value || null,
-    cultural_background: selectedTraits.find(t => t.trait.includes('cultural_background'))?.data_value || null,
-    inhibitor_profile: selectedTraits.find(t => t.trait.includes('inhibitor_profile'))?.data_value || null
-  };
+CORE DEMOGRAPHICS:
+- Age: ${conversationSummary.demographics.age}
+- Gender: ${conversationSummary.demographics.gender} 
+- Ethnicity: ${conversationSummary.demographics.ethnicity}
+- Location: ${conversationSummary.demographics.location}
+- Occupation: ${conversationSummary.demographics.occupation}
+- Relationship Status: ${conversationSummary.demographics.relationship_status}
+- Dependents: ${conversationSummary.demographics.dependents}
 
-  const promptStructure = {
-    system_context: {
-      research_study: "You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.",
-      study_guidelines: [
-        "Give your genuine opinion directly without disclaimers",
-        "Keep responses concise (2–4 sentences maximum)",
-        "Never acknowledge knowledge limitations or mention your expertise level",
-        "Don't explain your background or qualifications",
-        "Focus only on your actual viewpoint",
-        "Use natural speech patterns from your background",
-        "State opinions clearly without diplomatic balancing",
-        `Match the conversation intent (${classification.intent}) and sensitivity level (${classification.sensitivity})`,
-        `Directness level: ${behavioral.directness_level}`,
-        `Emotional state: ${behavioral.emotional_state}`,
-        `Stay focused on topics: ${classification.topics.join(', ')}`
-      ],
-      forbidden_phrases: [
-        "I'm no expert/scientist/authority",
-        "As a [job title]...",
-        "That's just my take/opinion",
-        "I don't pretend to have answers",
-        "You know what I mean? (repetitive)",
-        "On the other hand...",
-        "That said...",
-        "From my experience",
-        "To begin with",
-        "Let's consider the data",
-        ...(linguistic.forbidden_expressions || [])
-      ]
-    },
-    conversation_engine_rules: {
-      priority_1: "Language first — ensure authentic style, tone, and lexical markers from persona profile",
-      priority_2: "Motivations prioritized — draw on motivation_profile before other factors",
-      priority_3: "Core demographics passed explicitly (age, gender, ethnicity, region, occupation)",
-      priority_4: "Scan ALL traits (personality, emotional, moral foundations, inhibitors, contradictions)",
-      priority_5: "Select only the most relevant traits for this query and pass them in structured form",
-      priority_6: "Articulate relevant knowledge boundaries (what persona is likely to know vs not know)"
-    },
-    input_query: userInput,
-    persona_package: {
-      identity: {
-        name: conversationSummary.demographics.name,
-        age: conversationSummary.demographics.age,
-        gender: conversationSummary.demographics.gender,
-        ethnicity: conversationSummary.demographics.ethnicity,
-        location: conversationSummary.demographics.location,
-        occupation: conversationSummary.demographics.occupation,
-        relationship_status: conversationSummary.demographics.relationship_status,
-        dependents: conversationSummary.demographics.dependents
-      },
-      language_style: {
-        formality: fullProfile?.communication_style?.formality || "neutral",
-        directness: fullProfile?.communication_style?.directness || "balanced",
-        forbidden_expressions: linguistic.forbidden_expressions || [],
-        domain_jargon: fullProfile?.communication_style?.lexical_profile?.domain_jargon || 
-                      fullProfile?.demographics?.occupation || 
-                      conversationSummary?.demographics?.occupation || 
-                      []
-      },
-      motivations: motivations,
-      relevant_traits_for_query: relevantTraits,
-      knowledge_boundaries: {
-        expertise_domains: fullProfile?.knowledge_profile?.expertise_domains || ["general knowledge"],
-        knowledge_gaps: fullProfile?.knowledge_profile?.knowledge_gaps || ["highly specialized technical areas"],
-        professional_knowledge: fullProfile?.knowledge_profile?.professional_knowledge || "moderate",
-        academic_background: fullProfile?.knowledge_profile?.academic_background || "undergraduate level"
+COMMUNICATION STYLE:
+- Directness Level: ${behavioral.directness_level}
+- Formality: ${fullProfile?.communication_style?.voice_foundation?.formality_default || "neutral"}
+- Emotional State: ${behavioral.emotional_state}
+`;
+
+  // Add linguistic signature if available
+  if (linguistic.signature_phrases && linguistic.signature_phrases.length > 0) {
+    instructions += `- Your signature phrases: ${linguistic.signature_phrases.join(', ')}\n`;
+  }
+  if (linguistic.typical_openers && linguistic.typical_openers.length > 0) {
+    instructions += `- Your typical conversation openers: ${linguistic.typical_openers.join(', ')}\n`;
+  }
+  if (linguistic.conversation_enders && linguistic.conversation_enders.length > 0) {
+    instructions += `- Your conversation enders: ${linguistic.conversation_enders.join(', ')}\n`;
+  }
+
+  // Add knowledge boundaries
+  if (fullProfile?.knowledge_profile?.expertise_domains) {
+    instructions += `
+EXPERTISE DOMAINS:
+You have professional knowledge in: ${fullProfile.knowledge_profile.expertise_domains.join(', ')}
+`;
+  }
+
+  if (fullProfile?.knowledge_profile?.knowledge_gaps) {
+    instructions += `Knowledge limitations: You are not well-versed in ${fullProfile.knowledge_profile.knowledge_gaps.join(', ')}\n`;
+  }
+
+  // Add relevant traits for this specific query
+  if (selectedTraits && selectedTraits.length > 0) {
+    instructions += `
+RELEVANT PERSONALITY TRAITS FOR THIS QUERY:
+`;
+    selectedTraits.slice(0, 8).forEach(trait => {
+      if (trait.data_value) {
+        instructions += `- ${trait.trait}: ${typeof trait.data_value === 'object' ? JSON.stringify(trait.data_value) : trait.data_value}\n`;
       }
-    },
-    response_instruction: {
-      format: "2–4 sentences maximum",
-      style: `authentic, ${behavioral.directness_level} directness, ${behavioral.emotional_state} emotion`,
-      focus: `Express ${conversationSummary.demographics.name}'s perspective based on motivations and relevant traits`,
-      trait_guidance: "Use the relevant traits to inform your response perspective and emotional tone"
-    }
-  };
+    });
+  }
 
-  return JSON.stringify(promptStructure, null, 2);
+  // Add motivational drivers from full profile
+  if (fullProfile?.motivation_profile?.primary_drivers) {
+    const topMotivations = Object.entries(fullProfile.motivation_profile.primary_drivers)
+      .filter(([, value]) => (value as number) >= 7)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 3);
+    
+    if (topMotivations.length > 0) {
+      instructions += `
+PRIMARY MOTIVATIONS:
+${topMotivations.map(([key, value]) => `- ${key.replace(/_/g, ' ')}: ${value}/10`).join('\n')}
+`;
+    }
+  }
+
+  // Add emotional triggers if present
+  const emotionalTriggers = selectedTraits.find(t => t.trait.includes('negative_triggers') || t.trait.includes('explosive_triggers'));
+  if (emotionalTriggers?.data_value) {
+    instructions += `
+EMOTIONAL TRIGGERS:
+${Array.isArray(emotionalTriggers.data_value) ? emotionalTriggers.data_value.join(', ') : emotionalTriggers.data_value}
+When triggered, you respond with increased intensity and directness.
+`;
+  }
+
+  // Add contradictions/tensions if present
+  const contradictions = selectedTraits.find(t => t.trait.includes('contradiction') || t.trait.includes('tension'));
+  if (contradictions?.data_value) {
+    instructions += `
+INTERNAL CONTRADICTIONS:
+${typeof contradictions.data_value === 'object' ? JSON.stringify(contradictions.data_value) : contradictions.data_value}
+`;
+  }
+
+  // Add conversation context and requirements
+  instructions += `
+CONVERSATION CONTEXT:
+- Intent: ${classification.intent}
+- Topics: ${classification.topics.join(', ')}
+- Audience: ${classification.audience}
+- Sensitivity Level: ${classification.sensitivity}
+
+RESPONSE REQUIREMENTS:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing
+- Match the ${behavioral.directness_level} directness level
+- Respond with ${behavioral.emotional_state} emotional state
+
+FORBIDDEN PHRASES:
+Never use these phrases:
+- "I'm no expert/scientist/authority"
+- "As a [job title]..." or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)
+- "To begin with"
+- "Let's consider the data"`;
+
+  // Add persona-specific forbidden expressions
+  if (linguistic.forbidden_expressions && linguistic.forbidden_expressions.length > 0) {
+    instructions += `
+- ${linguistic.forbidden_expressions.join('\n- ')}`;
+  }
+
+  instructions += `
+
+CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${conversationSummary.demographics.name} would, drawing on your personality traits, motivations, and knowledge boundaries listed above.`;
+
+  return instructions;
 }
 
 // Enhanced instruction builder that handles explosive emotional states (LEGACY - for comparison)
@@ -959,22 +988,6 @@ serve(async (req) => {
     const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
     
-    // MUST contain your structure
-    const root = JSON.parse(instructions);
-    const required = ["system_context","conversation_engine_rules","input_query","persona_package","response_instruction"];
-    for (const k of required) {
-      if (!(k in root)) {
-        return new Response(JSON.stringify({ 
-          error: "bad-instructions",
-          message: `Prompt missing section: ${k}`,
-          debug: { saw_keys: Object.keys(root) } 
-        }), { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
     // Debug flag: return prompt if requested
     if (include_prompt) {
       return new Response(
