@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { sendV4GrokMessage } from '@/services/v4-persona/conversationGrok';
+import { supabase } from '@/integrations/supabase/client';
 
 export const DebugPrompt = () => {
   const [prompt, setPrompt] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [personaInput, setPersonaInput] = useState<string>('Samuel Ortiz');
 
   const getPrompt = async () => {
     setLoading(true);
     try {
+      // Resolve persona by name/UUID/V4 ID
+      const input = personaInput.trim();
+      const { data } = await supabase
+        .from('v4_personas')
+        .select('persona_id')
+        .or(`persona_id.eq.${input},id.eq.${input},name.ilike.%${input}%`)
+        .limit(1);
+      
+      const persona_id = data?.[0]?.persona_id ?? input;
+
       const response = await sendV4GrokMessage({
-        persona_id: "e5daef8f-b6f8-4768-9c3a-7e615dc23ee1", // Samuel Ortiz
+        persona_id,
         user_message: "What do you think about AI in radiology?",
         conversation_history: [],
         include_prompt: true
@@ -40,9 +53,17 @@ export const DebugPrompt = () => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <Button onClick={getPrompt} disabled={loading}>
-        {loading ? 'Getting Prompt...' : 'Get Raw Prompt'}
-      </Button>
+      <div className="flex gap-2 mb-4">
+        <Input
+          placeholder="Persona name, UUID, or v4_* ID"
+          value={personaInput}
+          onChange={(e) => setPersonaInput(e.target.value)}
+          className="flex-1"
+        />
+        <Button onClick={getPrompt} disabled={loading}>
+          {loading ? 'Getting Prompt...' : 'Get Raw Prompt'}
+        </Button>
+      </div>
       
       {prompt && (
         <div className="mt-4">
