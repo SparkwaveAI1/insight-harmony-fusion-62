@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { getPersonaDisplayName, isV4PersonaId } from "@/utils/personaHelpers";
 
 interface GrokConversation {
   id: string;
@@ -36,19 +37,33 @@ export function GrokPromptMonitor() {
         return;
       }
 
-      // Transform the data into our format
-      const grokConversations: GrokConversation[] = messages?.map((row: any) => {
-        const meta = row.metadata || {};
-        return {
-          id: row.id,
-          created_at: row.created_at,
-          persona_name: meta.persona_name || meta.persona_id || 'Unknown Persona',
-          user_message: meta.user_message || '',
-          response: meta.user_message || '', // reuse field to display prompt snippet
-          traits_selected: [],
-          prompt_structure: null,
-        };
-      }) || [];
+      // Transform the data into our format with proper persona name resolution
+      const grokConversations: GrokConversation[] = await Promise.all(
+        (messages || []).map(async (row: any) => {
+          const meta = row.metadata || {};
+          let personaName = 'Unknown Persona';
+          
+          // Try to get persona name from metadata first
+          if (meta.persona_name) {
+            personaName = meta.persona_name;
+          } else if (meta.persona_id && isV4PersonaId(meta.persona_id)) {
+            // Fetch actual persona name if we have a valid ID
+            personaName = await getPersonaDisplayName(meta.persona_id);
+          } else if (meta.persona_id) {
+            personaName = `Invalid ID: ${meta.persona_id}`;
+          }
+          
+          return {
+            id: row.id,
+            created_at: row.created_at,
+            persona_name: personaName,
+            user_message: meta.user_message || '',
+            response: meta.user_message || '', // reuse field to display prompt snippet
+            traits_selected: [],
+            prompt_structure: null,
+          };
+        })
+      );
 
       setConversations(grokConversations);
     } catch (error) {

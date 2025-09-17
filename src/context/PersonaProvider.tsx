@@ -1,10 +1,11 @@
 
 import React, { createContext, useState, useEffect } from "react";
 import { Persona } from "@/services/persona/types";
+import { V4Persona } from "@/types/persona-v4";
 import { useAuth } from "./AuthContext";
 import { PersonaContextType } from "./PersonaContext.types";
-import { getAllPersonas } from "@/services/persona"; // Updated import path
-import { personaCache } from '@/components/persona-chat/utils/personaCache';
+import { getV4Personas, getV4PersonaById } from "@/services/v4-persona/getV4Personas";
+import { getPersonaByPersonaId } from "@/services/persona/operations/getPersonas";
 
 export const PersonaContext = createContext<PersonaContextType | undefined>(undefined);
 
@@ -22,20 +23,47 @@ export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) =>
 
   useEffect(() => {
     const loadPersonas = async () => {
+      if (!user) {
+        setPersonas([]);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       try {
-        const allPersonas = await getAllPersonas();
-        if (user) {
-          // Filter personas by user_id
-          const userPersonas = allPersonas.filter(persona => persona.user_id === user.id);
-          setPersonas(userPersonas);
-        } else {
-          setPersonas(allPersonas);
-        }
+        // Use V4 personas service exclusively
+        const v4Personas = await getV4Personas(user.id);
+        
+        // Convert V4Persona to Persona format for compatibility
+        const convertedPersonas: Persona[] = v4Personas.map(v4p => ({
+          persona_id: v4p.persona_id,
+          name: v4p.name,
+          description: v4p.conversation_summary?.demographics?.background_description || `${v4p.name}`,
+          user_id: v4p.user_id,
+          is_public: v4p.is_public || false,
+          created_at: v4p.created_at || '',
+          updated_at: v4p.updated_at || '',
+          profile_image_url: v4p.profile_image_url,
+          schema_version: v4p.schema_version,
+          full_profile: v4p.full_profile,
+          conversation_summary: v4p.conversation_summary,
+          // Legacy fields (empty/null for compatibility)
+          metadata: null,
+          trait_profile: null,
+          behavioral_modulation: {},
+          linguistic_profile: {},
+          emotional_triggers: null,
+          preinterview_tags: [],
+          simulation_directives: {},
+          interview_sections: [],
+          prompt: null
+        }));
+        
+        setPersonas(convertedPersonas);
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
         setError(error);
+        console.error('Error loading V4 personas:', error);
       } finally {
         setIsLoading(false);
       }
@@ -48,22 +76,15 @@ export const PersonaProvider: React.FC<PersonaProviderProps> = ({ children }) =>
     try {
       setIsLoading(true);
       
-      // Check cache first for faster loading
-      const cachedPersona = personaCache.get(personaId);
-      if (cachedPersona) {
-        setActivePersona(cachedPersona);
-        setIsLoading(false);
-        return cachedPersona;
+      // First check current list
+      const existingPersona = personas.find(p => p.persona_id === personaId);
+      if (existingPersona) {
+        setActivePersona(existingPersona);
+        return existingPersona;
       }
       
-      // Find the persona in the current list or fetch it
-      const persona = personas.find(p => p.persona_id === personaId) || null;
-      
-      if (persona) {
-        // Cache for future use
-        personaCache.set(personaId, persona);
-      }
-      
+      // Fetch directly from V4 service using backward-compatible wrapper
+      const persona = await getPersonaByPersonaId(personaId);
       setActivePersona(persona);
       return persona;
     } catch (err) {

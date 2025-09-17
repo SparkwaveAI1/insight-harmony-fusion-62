@@ -4,20 +4,17 @@ import { deleteV4Persona } from '@/services/v4-persona/deleteV4Persona';
 // Script to delete specific personas
 async function deleteTargetPersonas() {
   console.log('Starting persona deletion...');
+  console.log('❌ This script contains hardcoded persona IDs and should not be used.');
+  console.log('Use the admin interface or fetch persona IDs dynamically instead.');
   
-  // Delete Ethan Kaplan (V3 persona)
-  const ethanResult = await deletePersona(''); // We don't have the ID, need to find it
-  console.log('Ethan Kaplan deletion result:', ethanResult);
+  // Example of proper approach:
+  // const personas = await getV4Personas(userId);
+  // const targetPersona = personas.find(p => p.name === 'Target Name');
+  // if (targetPersona) {
+  //   await deleteV4Persona(targetPersona.persona_id);
+  // }
   
-  // Delete Jason Miller V4 personas
-  const jasonResults = await Promise.all([
-    deleteV4Persona('v4_1755817699963_bmdjk22vv'),
-    deleteV4Persona('v4_1755817780523_pibiy44qi')
-  ]);
-  
-  console.log('Jason Miller deletion results:', jasonResults);
-  
-  console.log('Persona deletion complete');
+  console.log('Persona deletion script disabled - use dynamic ID resolution');
 }
 
 // Run the deletion
