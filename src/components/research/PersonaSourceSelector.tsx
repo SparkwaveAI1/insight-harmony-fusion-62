@@ -9,7 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import { Persona } from '@/services/persona/types';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectCollections } from '@/services/collections/projectCollectionOperations';
-import { getPersonasByCollectionForListing, getPersonasForListing } from '@/services/persona/operations/getPersonas';
+import { getPersonasInCollectionWithDetails } from '@/services/collections/personaCollectionOperations';
+import { getPersonasForListing } from '@/services/persona/operations/getPersonas';
 import { Collection } from '@/services/collections/types';
 import { getV4Personas } from '@/services/v4-persona/getV4Personas';
 
@@ -120,38 +121,31 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
       switch (selectedSource) {
         case 'project-collections':
           if (selectedCollection) {
-            // Get legacy personas from collection
-            const legacyPersonas = await getPersonasByCollectionForListing(selectedCollection);
+            // Get V4 personas from collection
+            const v4PersonasData = await getPersonasInCollectionWithDetails(selectedCollection);
+            const v4Personas = v4PersonasData.map(v4Persona => ({
+              id: v4Persona.id,
+              persona_id: v4Persona.persona_id,
+              name: v4Persona.name,
+              description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
+              user_id: v4Persona.user_id,
+              is_public: false,
+              created_at: v4Persona.created_at || '',
+              metadata: {},
+              trait_profile: {},
+              behavioral_modulation: {},
+              linguistic_profile: {},
+              emotional_triggers: null,
+              preinterview_tags: [],
+              simulation_directives: {},
+              interview_sections: [],
+              prompt: null
+            } as Persona));
             
-            // Get V4 personas that might be in this collection
-            if (user?.id) {
-              const v4PersonasData = await getV4Personas(user.id);
-              const v4Personas = v4PersonasData.map(v4Persona => ({
-                id: v4Persona.id,
-                persona_id: v4Persona.persona_id,
-                name: v4Persona.name,
-                description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
-                user_id: v4Persona.user_id,
-                is_public: false,
-                created_at: v4Persona.created_at || '',
-                metadata: {},
-                trait_profile: {},
-                behavioral_modulation: {},
-                linguistic_profile: {},
-                emotional_triggers: null,
-                preinterview_tags: [],
-                simulation_directives: {},
-                interview_sections: [],
-                prompt: null
-              } as Persona));
-              
-              // Combine and sort by creation date
-              personas = [...legacyPersonas, ...v4Personas].sort((a, b) => 
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-              );
-            } else {
-              personas = legacyPersonas;
-            }
+            // Sort by creation date
+            personas = v4Personas.sort((a, b) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
           }
           break;
           
