@@ -1024,6 +1024,21 @@ serve(async (req) => {
     const instructions = REALISM_FLAG
       ? buildV4CompactInstructions(persona.conversation_summary, persona.full_profile, user_message)
       : buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile, false);
+    
+    // Enforce token budget (fail-fast)
+    const approxTokenCount = (text: string) => Math.ceil(text.length / 4);
+    const tokenCount = approxTokenCount(instructions);
+    if (REALISM_FLAG && tokenCount > 900) {
+      return new Response(JSON.stringify({ 
+        error: "Prompt too large", 
+        tokenCount, 
+        realism_enabled: true 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
     console.log('V4 - Instruction length:', instructions.length)
     
     // MUST contain your structure
@@ -1051,7 +1066,7 @@ serve(async (req) => {
           traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
           persona_name: persona.conversation_summary.demographics.name,
           model_used: 'grok-debug',
-          prompt_debug: { instructions }
+          prompt_debug: { instructions, token_count: tokenCount }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1122,7 +1137,7 @@ serve(async (req) => {
         behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
         persona_name: persona.conversation_summary.demographics.name,
         model_used: 'grok-4-latest',
-        prompt_debug: include_prompt ? { instructions: instructions } : undefined
+        prompt_debug: include_prompt ? { instructions: instructions, token_count: tokenCount } : undefined
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
