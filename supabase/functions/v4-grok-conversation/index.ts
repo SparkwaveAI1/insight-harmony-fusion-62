@@ -943,56 +943,26 @@ serve(async (req) => {
   }
 
   try {
-    // Parse body
     const body = await req.json()
-    const ident = String(body.persona_id ?? '').trim()
-    const { user_message, conversation_history, include_prompt } = body
+    const { persona_id, user_message, conversation_history, include_prompt } = body
     
-    console.log('V4 GROK Conversation Engine - Processing:', ident)
-
-    if (!ident) {
-      return new Response(JSON.stringify({
-        error: 'bad-request',
-        message: 'persona_id (UUID or v4_*) is required'
-      }), {
-        status: 400,
-        headers: corsHeaders
-      })
-    }
-
-    // Tiny guard against OR injection (PostgREST .or is string-based)
-    if (/[),]/.test(ident)) {
-      return new Response(JSON.stringify({
-        error: 'bad-request',
-        message: 'invalid identifier'
-      }), {
-        status: 400,
-        headers: corsHeaders
-      })
-    }
+    console.log('V4 GROK Conversation Engine - Processing:', persona_id)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // One query: match either column
-    const { data: persona, error: personaErr } = await supabase
+    // Fetch V4 persona conversation summary AND full_profile for diagnostic
+    const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
       .select('conversation_summary, full_profile')
-      .or(`persona_id.eq.${ident},id.eq.${ident}`)
-      .limit(1)
-      .maybeSingle() // returns null data on 0 rows, no exception
+      .eq('persona_id', persona_id)
+      .single()
 
-    if (personaErr || !persona) {
-      return new Response(JSON.stringify({
-        error: 'persona-not-found',
-        identifier: ident,
-        tried_columns: ['persona_id', 'id']
-      }), {
-        status: 404,
-        headers: corsHeaders
-      })
+    if (fetchError) {
+      console.error('Error fetching V4 persona for Grok:', fetchError)
+      throw fetchError
     }
 
     console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
@@ -1091,24 +1061,18 @@ serve(async (req) => {
 
     const personaResponse = grokData.choices[0].message.content
 
-    const result = { 
-      success: true,
-      response: personaResponse,
-      traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
-      traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
-      context_classification: v4TraitAnalysis.context_classification,
-      linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
-      behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
-      persona_name: persona.conversation_summary.demographics.name,
-      model_used: 'grok-4-latest'
-    }
-
-    if (include_prompt) {
-      result.prompt_debug = { instructions }
-    }
-
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({ 
+        success: true,
+        response: personaResponse,
+        traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+        traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
+        context_classification: v4TraitAnalysis.context_classification,
+        linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
+        behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
+        persona_name: persona.conversation_summary.demographics.name,
+        model_used: 'grok-4-latest'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

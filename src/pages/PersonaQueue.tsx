@@ -27,7 +27,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { QueueHealthMonitor } from '@/components/persona-queue/QueueHealthMonitor';
 import { getProcessingTimeText, getStatusColor, getStatusDisplay } from '@/services/queueHealthService';
 import { RefreshCw, Trash2, ExternalLink } from 'lucide-react';
-import { DebugPrompt } from '@/components/DebugPrompt';
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -622,12 +621,6 @@ const PersonaQueue = () => {
                       onRefresh={loadQueueItems}
                       refreshing={loading}
                     />
-                  </div>
-
-                   {/* Debug Prompt Tool */}
-                  <div className="lg:col-span-3 bg-card border rounded-lg p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Debug Prompt Tool</h2>
-                    <DebugPrompt />
                   </div>
 
                   {/* Text Input Area */}

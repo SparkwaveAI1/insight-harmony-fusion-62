@@ -7,7 +7,6 @@ export interface V4GrokConversationRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
-  include_prompt?: boolean;
 }
 
 export interface V4GrokConversationResponse {
@@ -28,8 +27,7 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
       body: {
         persona_id: request.persona_id,
         user_message: request.user_message,
-        conversation_history: request.conversation_history || [],
-        include_prompt: request.include_prompt
+        conversation_history: request.conversation_history || []
       }
     });
 
