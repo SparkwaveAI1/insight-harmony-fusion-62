@@ -1124,12 +1124,19 @@ serve(async (req) => {
       throw new Error('Invalid response structure from Grok API - no message content')
     }
 
-    const personaResponse = grokData.choices[0].message.content
+    const raw = grokData.choices[0].message.content
+    const finalText = REALISM_FLAG
+      ? applyBehavioralRealism(
+          raw,
+          parseStyle(instructions),
+          parseDomainJargon(instructions)
+        )
+      : raw;
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        response: personaResponse,
+        response: finalText,
         traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
         traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
         context_classification: v4TraitAnalysis.context_classification,
@@ -1156,3 +1163,127 @@ serve(async (req) => {
     )
   }
 })
+
+// Behavioral Realism Post-Processor (flag-gated)
+function applyBehavioralRealism(raw: string, style: any, domainJargon: string[]): string {
+  let text = raw.trim();
+  
+  // Replace banned openers in sentence 1 only
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  if (sentences.length > 0) {
+    const bannedOpeners = ['In my experience', 'To begin with', 'Let me start by saying'];
+    for (const banned of bannedOpeners) {
+      if (sentences[0].startsWith(banned)) {
+        sentences[0] = sentences[0].replace(banned, '').trim();
+        if (!sentences[0].match(/^[A-Z]/)) {
+          sentences[0] = sentences[0].charAt(0).toUpperCase() + sentences[0].slice(1);
+        }
+      }
+    }
+  }
+  
+  // Ensure ≥ lexMin domain terms
+  const currentJargonCount = domainJargon.filter(term => 
+    text.toLowerCase().includes(term.toLowerCase())
+  ).length;
+  
+  if (currentJargonCount < style.lexMin && domainJargon.length > 0) {
+    const missingTerms = domainJargon.slice(0, style.lexMin - currentJargonCount);
+    if (missingTerms.length > 0) {
+      text += ` (${missingTerms.join(', ')})`;
+    }
+  }
+  
+  // Inject behavioral modifications with probabilities (at most one)
+  const rand = Math.random();
+  let injected = false;
+  
+  if (!injected && rand < style.dig) {
+    text = 'Anyway, ' + text.charAt(0).toLowerCase() + text.slice(1);
+    injected = true;
+  }
+  
+  if (!injected && rand < style.selfcorr) {
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    if (sentences.length > 1) {
+      sentences.splice(1, 0, 'Actually—let me rephrase that.');
+      text = sentences.join(' ');
+      injected = true;
+    }
+  }
+  
+  if (!injected && rand < style.story) {
+    text = 'Last week we saw something similar. ' + text;
+    injected = true;
+  }
+  
+  if (!injected && rand < style.humor && style.form !== 'formal') {
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    if (sentences.length > 0) {
+      sentences[sentences.length - 1] += ' (Well, mostly anyway.)';
+      text = sentences.join(' ');
+      injected = true;
+    }
+  }
+  
+  if (!injected && rand < style.contr) {
+    text = 'Part of me thinks ' + text.charAt(0).toLowerCase() + text.slice(1);
+    injected = true;
+  }
+  
+  // Re-enforce 2–4 sentences
+  const finalSentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+  if (finalSentences.length > 4) {
+    text = finalSentences.slice(0, 4).join(' ');
+  } else if (finalSentences.length < 2) {
+    // If too short, don't modify further
+  }
+  
+  return text;
+}
+
+function parseStyle(instructions: string): any {
+  try {
+    const parsed = JSON.parse(instructions);
+    if (REALISM_FLAG && parsed.style) {
+      return {
+        dir: parsed.style.dir || 'medium',
+        form: parsed.style.form || 'medium', 
+        len: parsed.style.len || 'medium',
+        dig: parsed.style.dig || 0.15,
+        selfcorr: parsed.style.selfcorr || 0.1,
+        story: parsed.style.story || 0.1,
+        humor: parsed.style.humor || 0.1,
+        contr: parsed.style.contr || 0.1,
+        lexMin: parsed.style.lexMin || 2
+      };
+    }
+  } catch (e) {
+    // Fallback for non-compact instructions
+  }
+  
+  return {
+    dir: 'medium',
+    form: 'medium',
+    len: 'medium', 
+    dig: 0.15,
+    selfcorr: 0.1,
+    story: 0.1,
+    humor: 0.1,
+    contr: 0.1,
+    lexMin: 2
+  };
+}
+
+function parseDomainJargon(instructions: string): string[] {
+  try {
+    const parsed = JSON.parse(instructions);
+    if (REALISM_FLAG && parsed.lang?.dj) {
+      return Array.isArray(parsed.lang.dj) ? parsed.lang.dj : [];
+    }
+  } catch (e) {
+    // Fallback for non-compact instructions
+  }
+  
+  return [];
+}
