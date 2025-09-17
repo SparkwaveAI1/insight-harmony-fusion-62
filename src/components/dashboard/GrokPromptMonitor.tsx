@@ -23,23 +23,11 @@ export function GrokPromptMonitor() {
   const fetchRecentGrokConversations = async () => {
     setIsLoading(true);
     try {
-      // Get recent conversations that have persona_ids (indicating they used Grok)
+      // Read recent logged Grok prompts from admin_alerts
       const { data: messages, error } = await supabase
-        .from('conversation_messages')
-        .select(`
-          id,
-          created_at,
-          content,
-          role,
-          responding_persona_id,
-          conversation:conversations(
-            id,
-            title,
-            persona_ids
-          )
-        `)
-        .eq('role', 'assistant')
-        .not('responding_persona_id', 'is', null)
+        .from('admin_alerts')
+        .select(`id, created_at, message, metadata`)
+        .eq('type', 'grok_prompt')
         .order('created_at', { ascending: false })
         .limit(15);
 
@@ -49,15 +37,18 @@ export function GrokPromptMonitor() {
       }
 
       // Transform the data into our format
-      const grokConversations: GrokConversation[] = messages?.map(msg => ({
-        id: msg.id,
-        created_at: msg.created_at,
-        persona_name: msg.responding_persona_id || 'Unknown Persona',
-        user_message: 'Recent conversation', // We'd need to get the previous user message
-        response: msg.content,
-        traits_selected: [], // This would come from the Grok function logs
-        prompt_structure: null // This would come from the Grok function logs
-      })) || [];
+      const grokConversations: GrokConversation[] = messages?.map((row: any) => {
+        const meta = row.metadata || {};
+        return {
+          id: row.id,
+          created_at: row.created_at,
+          persona_name: meta.persona_name || meta.persona_id || 'Unknown Persona',
+          user_message: meta.user_message || '',
+          response: meta.user_message || '', // reuse field to display prompt snippet
+          traits_selected: [],
+          prompt_structure: null,
+        };
+      }) || [];
 
       setConversations(grokConversations);
     } catch (error) {
@@ -84,8 +75,8 @@ export function GrokPromptMonitor() {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'conversation_messages',
-          filter: 'role=eq.assistant'
+          table: 'admin_alerts',
+          filter: 'type=eq.grok_prompt'
         },
         () => {
           fetchRecentGrokConversations();
@@ -109,7 +100,7 @@ export function GrokPromptMonitor() {
           <div>
             <CardTitle className="text-lg">Grok Prompt Monitor</CardTitle>
             <CardDescription className="text-sm">
-              Real-time view of prompts sent to Grok
+              Real-time view of prompts sent to Grok (admin-only)
             </CardDescription>
           </div>
         </div>
@@ -124,12 +115,12 @@ export function GrokPromptMonitor() {
       
       {!isCollapsed && (
         <CardContent className="pt-0">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2">Loading Grok conversations...</span>
-            </div>
-          ) : conversations.length > 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="ml-2">Loading Grok prompt logs...</span>
+              </div>
+            ) : conversations.length > 0 ? (
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {conversations.map((conversation, index) => (
                 <div key={conversation.id} className="font-mono text-sm">
@@ -138,7 +129,7 @@ export function GrokPromptMonitor() {
                   </div>
                   <div className="mt-2 space-y-1 text-muted-foreground">
                     <div><span className="text-accent font-medium">Persona:</span> {conversation.persona_name}</div>
-                    <div><span className="text-accent font-medium">Response:</span></div>
+                    <div><span className="text-accent font-medium">Prompt:</span></div>
                     <div className="ml-4 bg-muted/50 p-2 rounded text-xs max-h-20 overflow-y-auto">
                       {conversation.response.substring(0, 200)}
                       {conversation.response.length > 200 && '...'}

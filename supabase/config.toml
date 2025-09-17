@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.persona-list-collections]
 verify_jwt = false
+
+[functions.log-grok-prompt]
+verify_jwt = false
