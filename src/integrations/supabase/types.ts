@@ -1458,7 +1458,6 @@ export type Database = {
       }
       v4_personas: {
         Row: {
-          conversation_summary: Json
           created_at: string | null
           creation_completed: boolean | null
           creation_stage: string | null
@@ -1472,7 +1471,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          conversation_summary?: Json
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
@@ -1486,7 +1484,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          conversation_summary?: Json
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
