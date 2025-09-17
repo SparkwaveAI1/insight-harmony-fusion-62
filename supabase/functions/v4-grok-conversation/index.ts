@@ -943,7 +943,8 @@ serve(async (req) => {
   }
 
   try {
-    const { persona_id, user_message, conversation_history } = await req.json()
+    const body = await req.json()
+    const { persona_id, user_message, conversation_history, include_prompt } = body
     
     console.log('V4 GROK Conversation Engine - Processing:', persona_id)
 
@@ -992,7 +993,7 @@ serve(async (req) => {
     console.log('V4 - Instruction length:', instructions.length)
 
     // Debug flag: return prompt if requested
-    if (body.include_prompt) {
+    if (include_prompt) {
       return new Response(
         JSON.stringify({
           success: true,
