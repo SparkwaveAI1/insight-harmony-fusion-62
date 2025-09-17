@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { buildV4CompactInstructions } from './instructions-compact.ts'
 
 // Feature flag for realism v1 (default OFF)
 const REALISM_FLAG = Deno.env.get("ENABLE_REALISM_V1") === "true";
@@ -1020,8 +1021,9 @@ serve(async (req) => {
     console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
 
     // Build V4-native instructions using trait analysis
-    const realismEnabled = REALISM_FLAG; // Feature flag control
-    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile, realismEnabled)
+    const instructions = REALISM_FLAG
+      ? buildV4CompactInstructions(persona.conversation_summary, persona.full_profile, user_message)
+      : buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile, false);
     console.log('V4 - Instruction length:', instructions.length)
     
     // MUST contain your structure
