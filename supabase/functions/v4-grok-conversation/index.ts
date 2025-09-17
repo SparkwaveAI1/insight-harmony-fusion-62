@@ -677,7 +677,7 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
   );
 
   // Fill remaining slots with top-scoring selected traits
-  const remainingSlots = k - chosen.length;
+  const remainingSlots = Math.min(k - chosen.length, k - 4); // Ensure 4-6 total
   chosen.push(...filteredTraits.slice(0, remainingSlots));
 
   // Return 4-6 total (never 8+)
