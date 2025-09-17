@@ -976,6 +976,24 @@ serve(async (req) => {
     const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
 
+    // Debug flag: return prompt if requested
+    if (body.include_prompt) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          response: 'Debug mode: Prompt returned',
+          traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+          persona_name: persona.conversation_summary.demographics.name,
+          model_used: 'grok-debug',
+          prompt_debug: { instructions }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
     // Call Grok API with trait-specific instructions
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
