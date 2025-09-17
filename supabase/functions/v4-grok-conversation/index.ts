@@ -653,23 +653,35 @@ function selectContextAnchor(fullProfile: any): any {
 function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any[] {
   const chosen = [];
 
-  // 1–2 from motivations/goals
+  // 1–2 motivation/goal traits (always include)
   chosen.push(...selectMotivationTraits(fullProfile));
 
-  // 1 from identity_salience or knowledge_profile
+  // 1 identity/knowledge anchor (always include)
   const contextAnchor = selectContextAnchor(fullProfile);
   if (contextAnchor) {
     chosen.push(contextAnchor);
   }
 
-  // Remaining: top scoring from selectedTraits
-  const remainingSlots = k - chosen.length;
+  // Filter out abstract scaffolding traits
+  const abstractTraits = [
+    'response_architecture', 
+    'storytelling_structure', 
+    'communication_framework',
+    'discourse_management',
+    'meta_communication'
+  ];
+  
   const filteredTraits = selectedTraits.filter(trait => 
-    !chosen.some(c => c.trait === trait.trait)
+    !chosen.some(c => c.trait === trait.trait) &&
+    !abstractTraits.some(abstract => trait.trait.includes(abstract))
   );
+
+  // Fill remaining slots with top-scoring selected traits
+  const remainingSlots = Math.min(k - chosen.length, k - 4); // Ensure 4-6 total
   chosen.push(...filteredTraits.slice(0, remainingSlots));
 
-  return chosen.slice(0, k);
+  // Return 4-6 total (never 8+)
+  return chosen.slice(0, Math.min(k, 6));
 }
 
 // V4-Native instruction builder using trait analysis results
@@ -752,7 +764,10 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
     response_instruction: {
       format: "2–4 sentences maximum",
       style: `authentic, ${behavioral.directness_level} directness, ${behavioral.emotional_state} emotion`,
-      focus: `Express ${conversationSummary.demographics.name}'s perspective based on motivations and relevant traits`
+      focus: `Express ${conversationSummary.demographics.name}'s perspective based on motivations and relevant traits`,
+      trait_guidance: `
+RELEVANT TRAITS FOR THIS CONVERSATION:
+${dominantTraits.map(trait => `- ${trait.trait}: ${typeof trait.data_value === 'object' ? JSON.stringify(trait.data_value) : trait.data_value} (relevance: ${trait.relevance_reason})`).join('\n')}`
     }
   };
 
