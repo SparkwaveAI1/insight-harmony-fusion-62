@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
@@ -14,8 +14,21 @@ const queryClient = new QueryClient();
 
 const PersonaChat = () => {
   const { personaId } = useParams<{ personaId: string }>();
+  const navigate = useNavigate();
+
+  // Redirect UUIDs to proper V4 persona IDs
+  useEffect(() => {
+    if (personaId && !personaId.startsWith('v4_')) {
+      // If it's a UUID, redirect to persona viewer to find the correct V4 ID
+      navigate('/persona-viewer', { replace: true });
+    }
+  }, [personaId, navigate]);
 
   if (!personaId) {
+    return <Navigate to="/persona-viewer" replace />;
+  }
+
+  if (!personaId.startsWith('v4_')) {
     return <Navigate to="/persona-viewer" replace />;
   }
 
