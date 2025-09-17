@@ -1,5 +1,5 @@
 
-import { Persona } from "@/services/persona/types";
+import { Persona } from "@/services/persona/types/persona";
 
 export interface PersonaContextType {
   // All personas

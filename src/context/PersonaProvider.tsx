@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect } from "react";
-import { Persona } from "@/services/persona/types";
+import { Persona } from "@/services/persona/types/persona";
 import { V4Persona } from "@/types/persona-v4";
 import { useAuth } from "./AuthContext";
 import { PersonaContextType } from "./PersonaContext.types";
