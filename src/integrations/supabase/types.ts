@@ -1463,7 +1463,6 @@ export type Database = {
           creation_completed: boolean | null
           creation_stage: string | null
           full_profile: Json
-          id: string
           is_public: boolean
           name: string
           persona_id: string
@@ -1478,7 +1477,6 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           full_profile?: Json
-          id?: string
           is_public?: boolean
           name: string
           persona_id: string
@@ -1493,7 +1491,6 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           full_profile?: Json
-          id?: string
           is_public?: boolean
           name?: string
           persona_id?: string
