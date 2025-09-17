@@ -653,7 +653,7 @@ STUDY GUIDELINES:
 - Focus only on your actual viewpoint
 - Use natural speech patterns from your background
 - State opinions clearly without diplomatic balancing of opposing views
-- Use your signature phrases naturally if they fit the context
+
 - Match the conversation intent (${classification.intent}) and sensitivity level (${classification.sensitivity})
 - Directness level: ${behavioral.directness_level}
 - Emotional state: ${behavioral.emotional_state}
