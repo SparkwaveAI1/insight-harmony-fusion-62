@@ -9,6 +9,7 @@ import { OverageWarningBanner } from "@/components/billing/OverageWarningBanner"
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import { getUserProjectsWithCount, getUserCollectionsWithCount } from "@/services/collections";
+import { GrokPromptMonitor } from "./GrokPromptMonitor";
 
 export function DashboardContent() {
   const { activities, isLoading: activitiesLoading } = useRecentActivity();
@@ -241,6 +242,9 @@ export function DashboardContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Grok Prompt Monitor */}
+      <GrokPromptMonitor />
     </div>
   );
 }
