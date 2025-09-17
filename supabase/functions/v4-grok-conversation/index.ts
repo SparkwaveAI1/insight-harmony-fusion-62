@@ -590,8 +590,90 @@ function extractFamilyContent(motivationSummary: string): string {
   return familySentences.join('. ').trim();
 }
 
+// Helper functions for dominant trait selection
+function selectMotivationTraits(fullProfile: any): any[] {
+  const chosen = [];
+  const motivationProfile = fullProfile?.motivation_profile;
+  
+  if (motivationProfile?.primary_drivers) {
+    const topMotivations = Object.entries(motivationProfile.primary_drivers)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 2);
+    
+    for (const [key, value] of topMotivations) {
+      chosen.push({
+        trait: `motivation.${key}`,
+        data_value: value,
+        relevance_reason: 'top motivation driver'
+      });
+    }
+  }
+  
+  if (motivationProfile?.goal_orientation?.primary_goals?.[0]) {
+    chosen.push({
+      trait: 'goal_orientation.primary_goal',
+      data_value: motivationProfile.goal_orientation.primary_goals[0],
+      relevance_reason: 'primary life goal'
+    });
+  }
+  
+  return chosen.slice(0, 2);
+}
+
+function selectContextAnchor(fullProfile: any): any {
+  const identitySalience = fullProfile?.identity_salience;
+  const knowledgeProfile = fullProfile?.knowledge_profile;
+  
+  // Check for strong cultural/professional identity
+  if (identitySalience?.community_identities) {
+    const strongestIdentity = identitySalience.community_identities
+      .sort((a: any, b: any) => (b.salience || 0) - (a.salience || 0))[0];
+    
+    if (strongestIdentity?.salience > 0.6) {
+      return {
+        trait: `identity_salience.${strongestIdentity.type}`,
+        data_value: strongestIdentity,
+        relevance_reason: 'strong identity anchor'
+      };
+    }
+  }
+  
+  // Fallback to expertise domain
+  if (knowledgeProfile?.expertise_domains?.[0]) {
+    return {
+      trait: 'knowledge_profile.primary_expertise',
+      data_value: knowledgeProfile.expertise_domains[0],
+      relevance_reason: 'primary expertise domain'
+    };
+  }
+  
+  return null;
+}
+
+function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any[] {
+  const chosen = [];
+
+  // 1–2 from motivations/goals
+  chosen.push(...selectMotivationTraits(fullProfile));
+
+  // 1 from identity_salience or knowledge_profile
+  const contextAnchor = selectContextAnchor(fullProfile);
+  if (contextAnchor) {
+    chosen.push(contextAnchor);
+  }
+
+  // Remaining: top scoring from selectedTraits
+  const remainingSlots = k - chosen.length;
+  const filteredTraits = selectedTraits.filter(trait => 
+    !chosen.some(c => c.trait === trait.trait)
+  );
+  chosen.push(...filteredTraits.slice(0, remainingSlots));
+
+  return chosen.slice(0, k);
+}
+
 // V4-Native instruction builder using trait analysis results
-function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string): string {
+function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
   const selectedTraits = v4Analysis.selected_traits;
   const linguistic = v4Analysis.linguistic_signature;
   const behavioral = v4Analysis.behavioral_modifiers;
@@ -612,11 +694,12 @@ CORE PERSONA SNAPSHOT:
 `;
 
   // CONTEXT-AWARE TRAIT LOADING
+  const dominantTraits = pickDominantTraits(selectedTraits, fullProfile);
   instructions += `RELEVANT TRAITS FOR THIS CONVERSATION:
 `;
 
-  // Add top-scoring traits with their actual values
-  for (const trait of selectedTraits.slice(0, 8)) {
+  // Add dominant traits with their actual values
+  for (const trait of dominantTraits) {
     instructions += `${trait.trait}: ${JSON.stringify(trait.data_value)} (relevance: ${trait.relevance_reason})
 `;
   }
@@ -852,7 +935,7 @@ serve(async (req) => {
     console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
 
     // Build V4-native instructions using trait analysis
-    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message)
+    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
 
     // Call Grok API with trait-specific instructions
