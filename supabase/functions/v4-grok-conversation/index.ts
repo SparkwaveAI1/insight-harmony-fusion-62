@@ -690,10 +690,29 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   const linguistic = v4Analysis.linguistic_signature;
   const behavioral = v4Analysis.behavioral_modifiers;
   const classification = v4Analysis.context_classification;
-  const knowledgeBoundary = v4Analysis.knowledge_boundary;
 
-  // CONTEXT-AWARE TRAIT LOADING
-  const dominantTraits = pickDominantTraits(selectedTraits, fullProfile);
+  // Extract numerical motivations from full_profile
+  const motivations = {
+    family_security: fullProfile?.motivation_profile?.family_security || 5,
+    personal_achievement: fullProfile?.motivation_profile?.personal_achievement || 5,
+    financial_stability: fullProfile?.motivation_profile?.financial_stability || 5,
+    social_status: fullProfile?.motivation_profile?.social_status || 5,
+    work_life_balance: fullProfile?.motivation_profile?.work_life_balance || 5,
+    community_contribution: fullProfile?.motivation_profile?.community_contribution || 5,
+    personal_growth: fullProfile?.motivation_profile?.personal_growth || 5,
+    autonomy_independence: fullProfile?.motivation_profile?.autonomy_independence || 5
+  };
+
+  // Build structured relevant traits matching gold standard
+  const relevantTraits = {
+    contradiction: selectedTraits.find(t => t.trait.includes('contradiction'))?.data_value || null,
+    emotional_triggers: selectedTraits.find(t => t.trait.includes('emotional_profile'))?.data_value || null,
+    knowledge_profile: selectedTraits.find(t => t.trait.includes('knowledge_profile'))?.data_value || null,
+    behavioral_econ: selectedTraits.find(t => t.trait.includes('behavioral_econ'))?.data_value || null,
+    political_identity: selectedTraits.find(t => t.trait.includes('political_identity'))?.data_value || null,
+    cultural_background: selectedTraits.find(t => t.trait.includes('cultural_background'))?.data_value || null,
+    inhibitor_profile: selectedTraits.find(t => t.trait.includes('inhibitor_profile'))?.data_value || null
+  };
 
   const promptStructure = {
     system_context: {
@@ -743,87 +762,32 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
         dependents: conversationSummary.demographics.dependents
       },
       language_style: {
-        regional_markers: linguistic.regional_markers || [],
-        vocabulary_level: linguistic.vocabulary_level || 'moderate',
+        formality: fullProfile?.communication_style?.formality || "neutral",
+        directness: fullProfile?.communication_style?.directness || "balanced",
         signature_phrases: linguistic.signature_phrases || [],
-        forbidden: linguistic.forbidden_expressions || []
+        forbidden_expressions: linguistic.forbidden_expressions || [],
+        typical_openers: linguistic.typical_openers || [],
+        conversation_enders: linguistic.conversation_enders || [],
+        sentence_patterns: linguistic.sentence_patterns || []
       },
-      motivations: conversationSummary.motivation_summary || {},
-      relevant_traits_for_query: dominantTraits.reduce((acc, trait) => {
-        acc[trait.trait] = {
-          value: trait.data_value,
-          relevance: trait.relevance_reason
-        };
-        return acc;
-      }, {}),
+      motivations: motivations,
+      relevant_traits_for_query: relevantTraits,
       knowledge_boundaries: {
-        knows: fullProfile?.knowledge_profile?.expertise_domains || ['general knowledge'],
-        uncertain: fullProfile?.knowledge_profile?.knowledge_gaps || ['specialized technical areas']
+        expertise_domains: fullProfile?.knowledge_profile?.expertise_domains || ["general knowledge"],
+        knowledge_gaps: fullProfile?.knowledge_profile?.knowledge_gaps || ["highly specialized technical areas"],
+        professional_knowledge: fullProfile?.knowledge_profile?.professional_knowledge || "moderate",
+        academic_background: fullProfile?.knowledge_profile?.academic_background || "undergraduate level"
       }
     },
     response_instruction: {
       format: "2–4 sentences maximum",
       style: `authentic, ${behavioral.directness_level} directness, ${behavioral.emotional_state} emotion`,
       focus: `Express ${conversationSummary.demographics.name}'s perspective based on motivations and relevant traits`,
-      trait_guidance: `
-RELEVANT TRAITS FOR THIS CONVERSATION:
-${dominantTraits.map(trait => `- ${trait.trait}: ${typeof trait.data_value === 'object' ? JSON.stringify(trait.data_value) : trait.data_value} (relevance: ${trait.relevance_reason})`).join('\n')}`
+      trait_guidance: "Use the relevant traits to inform your response perspective and emotional tone"
     }
   };
 
   return JSON.stringify(promptStructure, null, 2);
-
-  // BEHAVIORAL MODIFIERS
-  instructions += `
-BEHAVIORAL CONTEXT:
-- Confidence level: ${behavioral.confidence_adjustment}
-- Directness: ${behavioral.directness_level}
-- Emotional state: ${behavioral.emotional_state}
-- Formality: ${behavioral.formality_shift}
-- Conversation intent: ${classification.intent}
-- Topics detected: ${classification.topics.join(', ')}
-- Sensitivity level: ${classification.sensitivity}
-`;
-
-  // RESEARCH STUDY CONTEXT
-  instructions += `
-RESEARCH STUDY CONTEXT:
-You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
-
-STUDY GUIDELINES:
-- Give your genuine opinion directly without disclaimers
-- Keep responses concise (2-4 sentences maximum)
-- Never acknowledge knowledge limitations or mention your expertise level
-- Don't explain your background or qualifications  
-- Focus only on your actual viewpoint
-- Use natural speech patterns from your background
-- State opinions clearly without diplomatic balancing of opposing views
-
-- Match the conversation intent (${classification.intent}) and sensitivity level (${classification.sensitivity})
-- Directness level: ${behavioral.directness_level}
-- Emotional state: ${behavioral.emotional_state}
-- Keep response focused and relevant to detected topics: ${classification.topics.join(', ')}
-
-FORBIDDEN IN RESPONSES:
-- "I'm no expert/scientist/authority" 
-- "As a [job title]" or "From my experience as..."
-- "That's just my take/opinion"
-- "I don't pretend to have answers"
-- "You know what I mean?" (repetitively)
-- "On the other hand..." / "That said..." (diplomatic hedging)
-`;
-
-  if (linguistic.forbidden_expressions.length > 0) {
-    instructions += `- CRITICAL: Never use these phrases: ${linguistic.forbidden_expressions.join(', ')}
-`;
-  }
-
-  instructions += `
-USER: "${userInput}"
-
-Your response:`;
-
-  return instructions;
 }
 
 // Enhanced instruction builder that handles explosive emotional states (LEGACY - for comparison)
