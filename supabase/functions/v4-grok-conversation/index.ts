@@ -1,9 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { buildV4CompactInstructions } from './instructions-compact.ts'
-
-// Feature flag for realism v1 (default OFF)
-const REALISM_FLAG = Deno.env.get("ENABLE_REALISM_V1") === "true";
 
 // V4-NATIVE TRAIT RELEVANCE ANALYZER
 class V4TraitRelevanceAnalyzer {
@@ -689,7 +685,7 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
 }
 
 // V4-Native instruction builder using trait analysis results
-function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any, realismEnabled: boolean = false): string {
+function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
   const selectedTraits = v4Analysis.selected_traits;
   const linguistic = v4Analysis.linguistic_signature;
   const behavioral = v4Analysis.behavioral_modifiers;
@@ -851,67 +847,7 @@ Your emotional regulation: You have low emotional control and tend to react stro
   }
 
   // Response requirements adapted for emotional state
-  if (realismEnabled) {
-    // Add response instruction with realism fields
-    const directnessLevel = selectedTraits.voice_foundation?.directness_level || 'medium';
-    const formalityDefault = selectedTraits.voice_foundation?.formality_default || 'medium';
-    const paceRhythm = selectedTraits.voice_foundation?.pace_rhythm || 'medium';
-    
-    // Calculate probabilities from traits
-    const sentenceLengthBias = selectedTraits.communication_style?.sentence_structure === 'complex' ? 'long' : 
-                              selectedTraits.communication_style?.sentence_structure === 'simple' ? 'short' : 'medium';
-    const digressionProbability = selectedTraits.personality_contradictions ? 0.4 : 0.1;
-    const selfCorrectionProbability = selectedTraits.perfectionism ? 0.3 : 0.1;
-    const hedgingAllowed = selectedTraits.confidence_level !== 'high';
-    const storyProbability = selectedTraits.communication_style?.storytelling_tendency ? 0.4 : 0.1;
-    const humorProbability = selectedTraits.humor_style ? 0.2 : 0.05;
-    const contradictionProbability = selectedTraits.personality_contradictions ? 0.3 : 0.05;
-
-    instructions += `
-
-"response_instruction": {
-  "format": "2–4 sentences",
-  "style": "authentic; respect directness/formality/pace",
-  "lexicon_requirements": {
-    "use_domain_jargon_min": 2
-  },
-  "style_constraints": {
-    "directness": "${directnessLevel}",
-    "formality": "${formalityDefault}",
-    "pace_rhythm": "${paceRhythm}",
-    "sentence_length_bias": "${sentenceLengthBias}",
-    "digression_probability": ${digressionProbability},
-    "self_correction_probability": ${selfCorrectionProbability},
-    "hedging_allowed": ${hedgingAllowed},
-    "story_probability": ${storyProbability},
-    "humor_probability": ${humorProbability},
-    "contradiction_probability": ${contradictionProbability}
-  }
-}
-
-RESEARCH STUDY CONTEXT:
-You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
-
-STUDY GUIDELINES:
-- Follow the response_instruction style constraints above exactly
-- Give your genuine opinion directly without disclaimers
-- Never acknowledge knowledge limitations or mention your expertise level
-- Don't explain your background or qualifications  
-- Focus only on your actual viewpoint
-- Use natural speech patterns from your background
-- State opinions clearly without diplomatic balancing of opposing views${selectedTraits.emotional_trigger_activated ? `
-- This topic triggers strong emotions in you - respond authentically with that emotional intensity
-- Be blunt and direct as this is how you naturally react when triggered` : ''}
-
-FORBIDDEN IN RESPONSES:
-- "I'm no expert/scientist/authority" 
-- "As a [job title]" or "From my experience as..."
-- "That's just my take/opinion"
-- "I don't pretend to have answers"
-- "You know what I mean?" (repetitively)
-- "On the other hand..." / "That said..." (diplomatic hedging)`;
-  } else {
-    // Original instructions without realism fields
+  if (selectedTraits.emotional_trigger_activated) {
     instructions += `
 RESEARCH STUDY CONTEXT:
 You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
@@ -923,9 +859,30 @@ STUDY GUIDELINES:
 - Don't explain your background or qualifications  
 - Focus only on your actual viewpoint
 - Use natural speech patterns from your background
-- State opinions clearly without diplomatic balancing of opposing views${selectedTraits.emotional_trigger_activated ? `
+- State opinions clearly without diplomatic balancing of opposing views
 - This topic triggers strong emotions in you - respond authentically with that emotional intensity
-- Be blunt and direct as this is how you naturally react when triggered` : ''}
+- Be blunt and direct as this is how you naturally react when triggered
+
+FORBIDDEN IN RESPONSES:
+- "I'm no expert/scientist/authority" 
+- "As a [job title]" or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)`;
+  } else {
+    instructions += `
+RESEARCH STUDY CONTEXT:
+You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
+
+STUDY GUIDELINES:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications  
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing of opposing views
 
 FORBIDDEN IN RESPONSES:
 - "I'm no expert/scientist/authority" 
@@ -963,38 +920,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Robust persona lookup with dual-column fallback to prevent "0 rows" errors
-    const rawId = persona_id;
-    const isUuid = /^[0-9a-f-]{8}-[0-9a-f-]{4}-[0-9a-f-]{4}-[0-9a-f-]{4}-[0-9a-f-]{12}$/i.test(rawId);
-
+    // Fetch V4 persona conversation summary AND full_profile for diagnostic
     const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
       .select('conversation_summary, full_profile')
-      .or(isUuid ? `id.eq.${rawId},persona_id.eq.${rawId}` : `persona_id.eq.${rawId},id.eq.${rawId}`)
-      .maybeSingle();
-
-    if (!persona) {
-      console.error('Persona not found with dual-column lookup:', { rawId, isUuid });
-      return new Response(JSON.stringify({ 
-        error: "Persona not found",
-        tried: { rawId, isUuid, columnsTried: ["id", "persona_id"] },
-        realism_enabled: REALISM_FLAG
-      }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+      .eq('persona_id', persona_id)
+      .single()
 
     if (fetchError) {
       console.error('Error fetching V4 persona for Grok:', fetchError)
-      return new Response(JSON.stringify({ 
-        error: "Database error",
-        details: fetchError.message,
-        realism_enabled: REALISM_FLAG
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      throw fetchError
     }
 
     console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
@@ -1021,24 +956,7 @@ serve(async (req) => {
     console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
 
     // Build V4-native instructions using trait analysis
-    const instructions = REALISM_FLAG
-      ? buildV4CompactInstructions(persona.conversation_summary, persona.full_profile, user_message)
-      : buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile, false);
-    
-    // Enforce token budget (fail-fast)
-    const approxTokenCount = (text: string) => Math.ceil(text.length / 4);
-    const tokenCount = approxTokenCount(instructions);
-    if (REALISM_FLAG && tokenCount > 900) {
-      return new Response(JSON.stringify({ 
-        error: "Prompt too large", 
-        tokenCount, 
-        realism_enabled: true 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-    
+    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
     
     // MUST contain your structure
@@ -1066,7 +984,7 @@ serve(async (req) => {
           traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
           persona_name: persona.conversation_summary.demographics.name,
           model_used: 'grok-debug',
-          prompt_debug: { instructions, token_count: tokenCount }
+          prompt_debug: { instructions }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1124,19 +1042,12 @@ serve(async (req) => {
       throw new Error('Invalid response structure from Grok API - no message content')
     }
 
-    const raw = grokData.choices[0].message.content
-    const finalText = REALISM_FLAG
-      ? applyBehavioralRealism(
-          raw,
-          parseStyle(instructions),
-          parseDomainJargon(instructions)
-        )
-      : raw;
+    const personaResponse = grokData.choices[0].message.content
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        response: finalText,
+        response: personaResponse,
         traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
         traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
         context_classification: v4TraitAnalysis.context_classification,
@@ -1144,7 +1055,7 @@ serve(async (req) => {
         behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
         persona_name: persona.conversation_summary.demographics.name,
         model_used: 'grok-4-latest',
-        prompt_debug: include_prompt ? { instructions: instructions, token_count: tokenCount } : undefined
+        prompt_debug: include_prompt ? { instructions: instructions } : undefined
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1163,127 +1074,3 @@ serve(async (req) => {
     )
   }
 })
-
-// Behavioral Realism Post-Processor (flag-gated)
-function applyBehavioralRealism(raw: string, style: any, domainJargon: string[]): string {
-  let text = raw.trim();
-  
-  // Replace banned openers in sentence 1 only
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  if (sentences.length > 0) {
-    const bannedOpeners = ['In my experience', 'To begin with', 'Let me start by saying'];
-    for (const banned of bannedOpeners) {
-      if (sentences[0].startsWith(banned)) {
-        sentences[0] = sentences[0].replace(banned, '').trim();
-        if (!sentences[0].match(/^[A-Z]/)) {
-          sentences[0] = sentences[0].charAt(0).toUpperCase() + sentences[0].slice(1);
-        }
-      }
-    }
-  }
-  
-  // Ensure ≥ lexMin domain terms
-  const currentJargonCount = domainJargon.filter(term => 
-    text.toLowerCase().includes(term.toLowerCase())
-  ).length;
-  
-  if (currentJargonCount < style.lexMin && domainJargon.length > 0) {
-    const missingTerms = domainJargon.slice(0, style.lexMin - currentJargonCount);
-    if (missingTerms.length > 0) {
-      text += ` (${missingTerms.join(', ')})`;
-    }
-  }
-  
-  // Inject behavioral modifications with probabilities (at most one)
-  const rand = Math.random();
-  let injected = false;
-  
-  if (!injected && rand < style.dig) {
-    text = 'Anyway, ' + text.charAt(0).toLowerCase() + text.slice(1);
-    injected = true;
-  }
-  
-  if (!injected && rand < style.selfcorr) {
-    const sentences = text.split(/(?<=[.!?])\s+/);
-    if (sentences.length > 1) {
-      sentences.splice(1, 0, 'Actually—let me rephrase that.');
-      text = sentences.join(' ');
-      injected = true;
-    }
-  }
-  
-  if (!injected && rand < style.story) {
-    text = 'Last week we saw something similar. ' + text;
-    injected = true;
-  }
-  
-  if (!injected && rand < style.humor && style.form !== 'formal') {
-    const sentences = text.split(/(?<=[.!?])\s+/);
-    if (sentences.length > 0) {
-      sentences[sentences.length - 1] += ' (Well, mostly anyway.)';
-      text = sentences.join(' ');
-      injected = true;
-    }
-  }
-  
-  if (!injected && rand < style.contr) {
-    text = 'Part of me thinks ' + text.charAt(0).toLowerCase() + text.slice(1);
-    injected = true;
-  }
-  
-  // Re-enforce 2–4 sentences
-  const finalSentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-  if (finalSentences.length > 4) {
-    text = finalSentences.slice(0, 4).join(' ');
-  } else if (finalSentences.length < 2) {
-    // If too short, don't modify further
-  }
-  
-  return text;
-}
-
-function parseStyle(instructions: string): any {
-  try {
-    const parsed = JSON.parse(instructions);
-    if (REALISM_FLAG && parsed.style) {
-      return {
-        dir: parsed.style.dir || 'medium',
-        form: parsed.style.form || 'medium', 
-        len: parsed.style.len || 'medium',
-        dig: parsed.style.dig || 0.15,
-        selfcorr: parsed.style.selfcorr || 0.1,
-        story: parsed.style.story || 0.1,
-        humor: parsed.style.humor || 0.1,
-        contr: parsed.style.contr || 0.1,
-        lexMin: parsed.style.lexMin || 2
-      };
-    }
-  } catch (e) {
-    // Fallback for non-compact instructions
-  }
-  
-  return {
-    dir: 'medium',
-    form: 'medium',
-    len: 'medium', 
-    dig: 0.15,
-    selfcorr: 0.1,
-    story: 0.1,
-    humor: 0.1,
-    contr: 0.1,
-    lexMin: 2
-  };
-}
-
-function parseDomainJargon(instructions: string): string[] {
-  try {
-    const parsed = JSON.parse(instructions);
-    if (REALISM_FLAG && parsed.lang?.dj) {
-      return Array.isArray(parsed.lang.dj) ? parsed.lang.dj : [];
-    }
-  } catch (e) {
-    // Fallback for non-compact instructions
-  }
-  
-  return [];
-}
