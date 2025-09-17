@@ -991,6 +991,22 @@ serve(async (req) => {
     // Build V4-native instructions using trait analysis
     const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
+    
+    // MUST contain your structure
+    const root = JSON.parse(instructions);
+    const required = ["system_context","conversation_engine_rules","input_query","persona_package","response_instruction"];
+    for (const k of required) {
+      if (!(k in root)) {
+        return new Response(JSON.stringify({ 
+          error: "bad-instructions",
+          message: `Prompt missing section: ${k}`,
+          debug: { saw_keys: Object.keys(root) } 
+        }), { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
 
     // Debug flag: return prompt if requested
     if (include_prompt) {
