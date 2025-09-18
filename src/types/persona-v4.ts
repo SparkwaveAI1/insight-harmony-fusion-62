@@ -269,24 +269,263 @@ export interface V4PromptShaping {
   };
 }
 
-// COMPLETE V4 FULL PROFILE (UPDATED)
+// COMPLETE V4 FULL PROFILE (UPDATED TO MATCH USER'S EXPECTED STRUCTURE)
 export interface V4FullProfile {
-  identity: V4Identity;
-  motivation_profile: V4MotivationProfile;
-  education_level: V4EducationLevel;
-  income_bracket: V4IncomeBracket;
-  humor_profile: V4HumorProfile;
-  truth_honesty_profile: V4TruthHonestyProfile;
-  bias_profile: V4BiasProfile;
-  cognitive_profile: V4CognitiveProfile;
-  money_profile: V4MoneyProfile;
-  daily_life: V4DailyLife;
-  communication_style: V4CommunicationStyle;
-  emotional_profile: V4EmotionalProfile;
-  contradictions: V4Contradictions;
-  narratives: V4Narratives;
-  sexuality_profile: V4SexualityProfile;
-  prompt_shaping: V4PromptShaping;
+  identity: {
+    name: string;
+    age: number;
+    gender: string;
+    pronouns: string;
+    ethnicity: string;
+    nationality: string;
+    occupation: string;
+    relationship_status: string;
+    dependents: number;
+    education_level: string;
+    income_bracket: string;
+    location: {
+      city: string;
+      region: string;
+      country: string;
+      urbanicity: string;
+    };
+  };
+  daily_life: {
+    primary_activities: {
+      work: number;
+      family_time: number;
+      personal_care: number;
+      personal_interests: number;
+      social_interaction: number;
+    };
+    schedule_blocks: Array<{
+      start: string;
+      end: string;
+      activity: string;
+      setting: string;
+    }>;
+    time_sentiment: {
+      work: string;
+      family: string;
+      personal: string;
+    };
+    screen_time_summary: string;
+    mental_preoccupations: string[];
+  };
+  health_profile: {
+    bmi_category: string;
+    chronic_conditions: string[];
+    mental_health_flags: string[];
+    medications: string[];
+    adherence_level: string;
+    sleep_hours: number;
+    substance_use: {
+      alcohol: string;
+      cigarettes: string;
+      vaping: string;
+      marijuana: string;
+    };
+    fitness_level: string;
+    diet_pattern: string;
+  };
+  relationships: {
+    household: {
+      status: string;
+      harmony_level: string;
+      dependents: number;
+    };
+    caregiving_roles: string[];
+    friend_network: {
+      size: string;
+      frequency: string;
+      anchor_contexts: string[];
+    };
+    pets: string[];
+  };
+  money_profile: {
+    attitude_toward_money: string;
+    earning_context: string;
+    spending_style: string;
+    savings_investing_habits: {
+      emergency_fund_months: number;
+      retirement_contributions: string;
+      investing_style: string;
+    };
+    debt_posture: string;
+    financial_stressors: string[];
+    money_conflicts: string;
+    generosity_profile: string;
+  };
+  motivation_profile: {
+    primary_motivation_labels: string[];
+    deal_breakers: string[];
+    primary_drivers: {
+      care: number;
+      family: number;
+      status: number;
+      mastery: number;
+      meaning: number;
+      novelty: number;
+      security: number;
+      belonging: number;
+      self_interest: number;
+    };
+    goal_orientation: {
+      strength: number;
+      time_horizon: string;
+      primary_goals: string[];
+      goal_flexibility: number;
+    };
+    want_vs_should_tension: {
+      major_conflicts: string[];
+      default_resolution: string;
+    };
+  };
+  communication_style: {
+    regional_register: {
+      region: string;
+      urbanicity: string;
+      dialect_hints: string[];
+    };
+    voice_foundation: {
+      formality: string;
+      directness: string;
+      pace_rhythm: string;
+      positivity: string;
+      empathy_level: number;
+      honesty_style: string;
+      charisma_level: number;
+      // Legacy compatibility
+      directness_level?: string;
+      formality_default?: string;
+      emotional_expression?: string;
+    };
+    style_markers: {
+      metaphor_domains: string[];
+      aphorism_register: string;
+      storytelling_vs_bullets: number;
+      humor_style: string;
+      code_switching_contexts: string[];
+    };
+    context_switches: {
+      work: {
+        formality: string;
+        directness: string;
+      };
+      home: {
+        formality: string;
+        directness: string;
+      };
+      online: {
+        formality: string;
+        directness: string;
+      };
+    };
+    authenticity_filters: {
+      avoid_registers: string[];
+      embrace_registers: string[];
+      personality_anchors: string[];
+      // Legacy compatibility
+      forbidden_phrases?: string[];
+    };
+    // Legacy compatibility
+    linguistic_signature?: any;
+  };
+  humor_profile: {
+    frequency: string;
+    style: string[];
+    boundaries: string[];
+    targets: string[];
+    use_cases: string[];
+  };
+  truth_honesty_profile: {
+    baseline_honesty: number;
+    situational_variance: {
+      work: number;
+      home: number;
+      public: number;
+    };
+    typical_distortions: string[];
+    red_lines: string[];
+    pressure_points: string[];
+    confession_style: string;
+  };
+  bias_profile: {
+    cognitive: {
+      status_quo: number;
+      loss_aversion: number;
+      confirmation: number;
+      anchoring: number;
+      availability: number;
+      optimism: number;
+      sunk_cost: number;
+      overconfidence: number;
+    };
+    mitigations: string[];
+  };
+  cognitive_profile: {
+    verbal_fluency: number;
+    abstract_reasoning: number;
+    problem_solving_orientation: string;
+    thought_coherence: number;
+  };
+  emotional_profile: {
+    stress_responses: string[];
+    negative_triggers: string[];
+    positive_triggers: string[];
+    explosive_triggers: string[];
+    emotional_regulation: string;
+  };
+  attitude_narrative: string;
+  political_narrative: string;
+  adoption_profile: {
+    buyer_power: number;
+    adoption_influence: number;
+    risk_tolerance: number;
+    change_friction: number;
+    expected_objections: string[];
+    proof_points_needed: string[];
+  };
+  prompt_shaping: {
+    voice_foundation: {
+      formality: string;
+      directness: string;
+      pace_rhythm: string;
+      positivity: string;
+      empathy_level: number;
+    };
+    style_markers: {
+      metaphor_domains: string[];
+      humor_style: string;
+      storytelling_vs_bullets: number;
+    };
+    primary_motivations: string[];
+    deal_breakers: string[];
+    honesty_vector: {
+      baseline: number;
+      work: number;
+      home: number;
+      public: number;
+      distortions: string[];
+    };
+    bias_vector: {
+      top_cognitive: string[];
+      top_social: string[];
+      mitigation_playbook: string[];
+    };
+    context_switches: {
+      work: string;
+      home: string;
+      online: string;
+    };
+    current_focus: string;
+  };
+  
+  // Legacy compatibility fields for backward compatibility with old components
+  knowledge_profile?: any;
+  sexuality_profile?: any;
+  contradictions?: any;
+  narratives?: any;
 }
 
 // CONVERSATION SUMMARY (for conversation engine)
@@ -343,6 +582,7 @@ export interface V4Persona {
   is_public: boolean;
   
   full_profile: V4FullProfile;
+  conversation_summary?: V4ConversationSummary | string | any; // Allow flexible type for now
   
   // New generated fields
   education_level?: string;

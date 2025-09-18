@@ -110,35 +110,53 @@ function analyzeTraitCompleteness(persona: any) {
   const profile = persona.full_profile;
   const missingTraits = [];
 
-  // Required trait categories
+  // Required trait categories based on new structure
   const requiredTraits = [
-    'big_five',
-    'moral_foundations', 
-    'behavioral_economics',
-    'cultural_dimensions',
-    'social_identity',
-    'bias_profile'
+    'identity',
+    'daily_life',
+    'health_profile',
+    'relationships',
+    'money_profile',
+    'motivation_profile',
+    'communication_style',
+    'humor_profile',
+    'truth_honesty_profile',
+    'bias_profile',
+    'cognitive_profile',
+    'emotional_profile',
+    'attitude_narrative',
+    'political_narrative',
+    'adoption_profile',
+    'prompt_shaping'
   ];
 
   for (const trait of requiredTraits) {
-    if (!profile || !profile[trait] || Object.keys(profile[trait] || {}).length === 0) {
-      missingTraits.push(trait);
+    if (trait === 'attitude_narrative' || trait === 'political_narrative') {
+      // String traits
+      if (!profile || !profile[trait] || typeof profile[trait] !== 'string' || profile[trait].trim() === '') {
+        missingTraits.push(trait);
+      }
+    } else {
+      // Object traits
+      if (!profile || !profile[trait] || typeof profile[trait] !== 'object' || Object.keys(profile[trait] || {}).length === 0) {
+        missingTraits.push(trait);
+      }
     }
   }
 
-  // Check for incomplete traits
+  // Check for incomplete traits - just count missing required fields
   const incompleteTraits = [];
   
-  if (profile?.big_five) {
-    const requiredBigFive = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism'];
-    const missing = requiredBigFive.filter(trait => !profile.big_five[trait]);
-    if (missing.length > 0) incompleteTraits.push({ category: 'big_five', missing });
-  }
-
-  if (profile?.moral_foundations) {
-    const requiredMoral = ['care', 'fairness', 'loyalty', 'authority', 'sanctity', 'liberty'];
-    const missing = requiredMoral.filter(trait => !profile.moral_foundations[trait]);
-    if (missing.length > 0) incompleteTraits.push({ category: 'moral_foundations', missing });
+  // Check identity completeness
+  if (profile?.identity) {
+    const requiredIdentity = ['name', 'age', 'gender', 'occupation', 'location'];
+    const missing = requiredIdentity.filter(field => {
+      if (field === 'location') {
+        return !profile.identity.location || !profile.identity.location.city;
+      }
+      return !profile.identity[field] || profile.identity[field] === '';
+    });
+    if (missing.length > 0) incompleteTraits.push({ category: 'identity', missing });
   }
 
   return {
@@ -153,16 +171,47 @@ async function fillMissingTraitsWithAI(persona: any, missingTraits: string[]) {
 
 Given a persona's existing profile, generate the missing trait categories with realistic, psychologically coherent values.
 
-IMPORTANT: Return ONLY valid JSON that can be merged with existing profile. Use numeric values between 0-1 for all traits.
+IMPORTANT: Return ONLY valid JSON that can be merged with existing profile. Follow this exact structure:
 
-Required format for each trait category:
-
-big_five: { openness: 0.7, conscientiousness: 0.6, extraversion: 0.8, agreeableness: 0.5, neuroticism: 0.3 }
-moral_foundations: { care: 0.8, fairness: 0.7, loyalty: 0.6, authority: 0.4, sanctity: 0.3, liberty: 0.9 }
-behavioral_economics: { risk_tolerance: 0.6, loss_aversion: 0.7, present_bias: 0.4, overconfidence: 0.5 }
-cultural_dimensions: { individualism: 0.8, power_distance: 0.3, uncertainty_avoidance: 0.5, masculinity: 0.6 }
-social_identity: { group_identification: 0.6, social_dominance: 0.4, system_justification: 0.5 }
-bias_profile: { cognitive: { confirmation_bias: 0.6, availability_heuristic: 0.5, anchoring: 0.4 } }`;
+{
+  "identity": {
+    "name": "", "age": 0, "gender": "", "pronouns": "", "ethnicity": "", "nationality": "",
+    "occupation": "", "relationship_status": "", "dependents": 0,
+    "education_level": "", "income_bracket": "",
+    "location": { "city": "", "region": "", "country": "United States", "urbanicity": "urban" }
+  },
+  "daily_life": {
+    "primary_activities": { "work": 0, "family_time": 0, "personal_care": 0, "personal_interests": 0, "social_interaction": 0 },
+    "schedule_blocks": [ { "start": "08:00", "end": "17:00", "activity": "", "setting": "" } ],
+    "time_sentiment": { "work": "", "family": "", "personal": "" },
+    "screen_time_summary": "",
+    "mental_preoccupations": []
+  },
+  "health_profile": {
+    "bmi_category": "", "chronic_conditions": [], "mental_health_flags": [], "medications": [],
+    "adherence_level": "", "sleep_hours": 0,
+    "substance_use": { "alcohol": "", "cigarettes": "", "vaping": "", "marijuana": "" },
+    "fitness_level": "", "diet_pattern": ""
+  },
+  "relationships": {
+    "household": { "status": "", "harmony_level": "", "dependents": 0 },
+    "caregiving_roles": [], "friend_network": { "size": "", "frequency": "", "anchor_contexts": [] },
+    "pets": []
+  },
+  "money_profile": {
+    "attitude_toward_money": "", "earning_context": "", "spending_style": "",
+    "savings_investing_habits": { "emergency_fund_months": 0, "retirement_contributions": "", "investing_style": "" },
+    "debt_posture": "", "financial_stressors": [], "money_conflicts": "", "generosity_profile": ""
+  },
+  "motivation_profile": {
+    "primary_motivation_labels": [], "deal_breakers": [],
+    "primary_drivers": { "care": 0, "family": 0, "status": 0, "mastery": 0, "meaning": 0, "novelty": 0, "security": 0, "belonging": 0, "self_interest": 0 },
+    "goal_orientation": { "strength": 0, "time_horizon": "", "primary_goals": [], "goal_flexibility": 0 },
+    "want_vs_should_tension": { "major_conflicts": [], "default_resolution": "" }
+  },
+  "attitude_narrative": "String description of overall attitude and worldview",
+  "political_narrative": "String description of political views and influences"
+}`;
 
   const userPrompt = `Persona: ${persona.name}
 Existing profile: ${JSON.stringify(persona.full_profile, null, 2)}

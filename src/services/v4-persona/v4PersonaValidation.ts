@@ -98,22 +98,38 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
 
   const requiredTraits = [
     'identity',
+    'daily_life',
+    'health_profile',
+    'relationships',
+    'money_profile',
     'motivation_profile',
+    'communication_style',
     'humor_profile',
     'truth_honesty_profile',
     'bias_profile',
     'cognitive_profile',
-    'daily_life',
-    'communication_style',
     'emotional_profile',
-    'sexuality_profile'
+    'attitude_narrative',
+    'political_narrative',
+    'adoption_profile',
+    'prompt_shaping'
   ];
 
   let validTraitCount = 0;
   
   for (const trait of requiredTraits) {
-    if (!fullProfile[trait as keyof V4FullProfile] || 
-        typeof fullProfile[trait as keyof V4FullProfile] !== 'object') {
+    const traitValue = fullProfile[trait as keyof V4FullProfile];
+    
+    // Handle string traits like attitude_narrative and political_narrative
+    if (trait === 'attitude_narrative' || trait === 'political_narrative') {
+      if (!traitValue || typeof traitValue !== 'string' || traitValue.trim() === '') {
+        missingTraits.push(trait);
+      } else {
+        validTraitCount++;
+      }
+    }
+    // Handle object traits
+    else if (!traitValue || typeof traitValue !== 'object') {
       missingTraits.push(trait);
     } else {
       // Basic validation for key fields within each trait
@@ -130,7 +146,7 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
   }
 
   console.log(`V4 full_profile validation: ${validTraitCount}/${requiredTraits.length} traits valid`);
-  return validTraitCount >= 7; // Require at least 7 out of 10 traits to be present
+  return validTraitCount >= 14; // Require at least 14 out of 16 traits to be present (strict validation)
 }
 
 
@@ -139,22 +155,31 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
  */
 function validateIdentity(identity: any): boolean {
   if (!identity) return false;
-  const required = ['name', 'age', 'gender', 'occupation'];
-  return required.every(field => identity[field] && identity[field] !== '');
+  const required = ['name', 'age', 'gender', 'occupation', 'location'];
+  return required.every(field => {
+    if (field === 'location') {
+      return identity.location && identity.location.city && identity.location.region && identity.location.country;
+    }
+    return identity[field] !== undefined && identity[field] !== '' && identity[field] !== 0;
+  });
 }
 
 function validateMotivationProfile(motivation: any): boolean {
   if (!motivation) return false;
   return motivation.primary_drivers && 
          motivation.goal_orientation && 
-         motivation.want_vs_should_tension;
+         motivation.want_vs_should_tension &&
+         motivation.primary_motivation_labels &&
+         motivation.deal_breakers;
 }
 
 function validateCommunicationStyle(communication: any): boolean {
   if (!communication) return false;
   return communication.voice_foundation && 
-         communication.linguistic_signature && 
-         communication.response_architecture;
+         communication.style_markers && 
+         communication.context_switches &&
+         communication.authenticity_filters &&
+         communication.regional_register;
 }
 
 /**

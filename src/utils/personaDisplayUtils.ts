@@ -23,7 +23,7 @@ export function getPersonaAge(persona: V4Persona): number | undefined {
   if (persona.full_profile?.identity?.age) {
     return typeof persona.full_profile.identity.age === 'number' 
       ? persona.full_profile.identity.age 
-      : parseInt(persona.full_profile.identity.age.toString());
+      : parseInt(String(persona.full_profile.identity.age));
   }
   return undefined;
 }
