@@ -23,26 +23,28 @@ serve(async (req) => {
 
     // Extract and validate inputs
     const userInputs = {
-      role: requestBody.role || 'professional',
-      region: requestBody.region && requestBody.region !== 'any' ? requestBody.region : 'California', 
-      urbanicity: requestBody.urbanicity && requestBody.urbanicity !== 'any' ? requestBody.urbanicity : 'urban',
-      age_range: requestBody.age_range && requestBody.age_range !== 'any' ? requestBody.age_range : '25-35',
-      ethnicity: requestBody.ethnicity && requestBody.ethnicity !== 'any' ? requestBody.ethnicity : null,
+      role: requestBody.role || null,
+      region: requestBody.region && requestBody.region !== 'any' ? requestBody.region : null,
+      urbanicity: requestBody.urbanicity && requestBody.urbanicity !== 'any' ? requestBody.urbanicity : null,
+      age_range: requestBody.age_range && requestBody.age_range !== 'any' ? requestBody.age_range : null,
+      ethnicity: requestBody.ethnicity || null,
       income_bracket: requestBody.income_bracket || null,
       coherence_target: requestBody.coherence_target || 0.7,
       education_level: requestBody.education_level || null,
       relationship_status: requestBody.relationship_status || null,
-      name_preference: requestBody.name_preference || null
+      name_preference: requestBody.name_preference || null,
+      gender: requestBody.gender || null
     };
 
     console.log('Processed user inputs:', userInputs);
 
-    // Build enhanced user prompt that explicitly includes all user specifications
+    // Build enhanced user prompt that explicitly includes only user-specified fields
     const userPrompt = `Generate persona with these EXACT specifications:
 
-Role/Occupation: ${userInputs.role}
-Location: ${userInputs.region} (${userInputs.urbanicity})
-Age Range: ${userInputs.age_range}
+${userInputs.role ? `Role/Occupation: ${userInputs.role}` : ''}
+${(userInputs.region || userInputs.urbanicity) ? `Location: ${userInputs.region || 'unspecified'}${userInputs.urbanicity ? ` (${userInputs.urbanicity})` : ''}` : ''}
+${userInputs.age_range ? `Age Range: ${userInputs.age_range}` : ''}
+${userInputs.gender ? `GENDER (REQUIRED): ${userInputs.gender}` : ''}
 ${userInputs.name_preference ? `NAME (REQUIRED): ${userInputs.name_preference}` : ''}
 ${userInputs.ethnicity ? `ETHNICITY (REQUIRED): ${userInputs.ethnicity}` : ''}
 ${userInputs.income_bracket ? `Income Bracket: ${userInputs.income_bracket}` : ''}
@@ -51,11 +53,10 @@ ${userInputs.relationship_status ? `Relationship Status: ${userInputs.relationsh
 Thought Coherence Target: ${userInputs.coherence_target}
 
 CRITICAL REQUIREMENTS:
-- Use the EXACT name specified above if provided
-- Use the EXACT ethnicity specified above if provided
-- Place the role in identity.occupation
-- Match location details exactly
-- Ensure age falls within the specified range
+- If a field above is marked REQUIRED, use it EXACTLY as provided
+- Place the role in identity.occupation when provided
+- Match location details when provided
+- Ensure age falls within the specified range when provided
 - Include ALL required fields from the system prompt
 - Make persona internally consistent
 
@@ -384,21 +385,52 @@ Return ONLY the complete JSON object with all sections filled.`;
     // Validate and fix the persona data
     try {
       personaData = validateAndFixPersonaData(personaData, userInputs);
-      
-      // Verify critical user inputs were preserved
+
+      // Strictly preserve user-specified fields
+      if (userInputs.name_preference) {
+        personaData.identity.name = userInputs.name_preference;
+      }
+
       if (userInputs.ethnicity && personaData.identity.ethnicity !== userInputs.ethnicity) {
         console.warn(`Ethnicity mismatch: expected ${userInputs.ethnicity}, got ${personaData.identity.ethnicity}`);
-        // Force the correct ethnicity
         personaData.identity.ethnicity = userInputs.ethnicity;
       }
-      
-      if (personaData.identity.occupation !== userInputs.role) {
+
+      if (userInputs.role && personaData.identity.occupation !== userInputs.role) {
         console.warn(`Role mismatch: expected ${userInputs.role}, got ${personaData.identity.occupation}`);
         personaData.identity.occupation = userInputs.role;
       }
-      
+
+      if (userInputs.gender) {
+        personaData.identity.gender = userInputs.gender;
+        // Align pronouns with gender when possible
+        const pronounMap: Record<string, string> = { male: 'he/him', female: 'she/her', 'non-binary': 'they/them' };
+        personaData.identity.pronouns = pronounMap[userInputs.gender] || personaData.identity.pronouns;
+      }
+
+      if (userInputs.region || userInputs.urbanicity) {
+        personaData.identity.location = personaData.identity.location || { city: '', region: '', country: 'United States', urbanicity: '' };
+        if (userInputs.region) personaData.identity.location.region = userInputs.region;
+        if (userInputs.urbanicity) personaData.identity.location.urbanicity = userInputs.urbanicity;
+      }
+
+      if (userInputs.age_range && typeof personaData.identity.age === 'number') {
+        const range = String(userInputs.age_range);
+        let min = 18, max = 90;
+        if (range.includes('+')) {
+          const base = parseInt(range);
+          if (!Number.isNaN(base)) min = base;
+        } else if (range.includes('-')) {
+          const [a, b] = range.split('-').map((n: string) => parseInt(n.trim(), 10));
+          if (!Number.isNaN(a) && !Number.isNaN(b)) { min = a; max = b; }
+        }
+        if (personaData.identity.age < min || personaData.identity.age > max) {
+          personaData.identity.age = Math.round((min + max) / 2);
+        }
+      }
+
       console.log(`Validated persona with name: "${personaData.identity.name}", ethnicity: "${personaData.identity.ethnicity}"`);
-      
+
     } catch (validationError) {
       console.error('Persona validation failed:', validationError);
       throw validationError;

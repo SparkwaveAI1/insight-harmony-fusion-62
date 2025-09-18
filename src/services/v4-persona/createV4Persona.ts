@@ -25,6 +25,7 @@ export interface CreateV4PersonaRequest {
   user_id?: string; // Still needed for database storage
   user_prompt?: string; // Keep for backward compatibility
   name_preference?: string; // Add name preference
+  gender?: 'male' | 'female' | 'non-binary';
 }
 
 export interface CreateV4PersonaResponse {
@@ -52,14 +53,16 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
     
     // Parse user_prompt if it's a simple text, or use structured parameters
     let personaParams = {
-      role: request.role || 'professional',
-      region: request.region || 'California',
-      urbanicity: request.urbanicity || 'urban', 
-      age_range: request.age_range || '25-35',
-      ethnicity: request.ethnicity,
-      income_bracket: request.income_bracket,
+      // Only pass fields explicitly set by the user; treat "any"/empty as undefined so the server doesn't force defaults
+      role: request.role || undefined,
+      region: request.region && request.region !== 'any' ? request.region : undefined,
+      urbanicity: request.urbanicity && request.urbanicity !== 'any' ? request.urbanicity : undefined,
+      age_range: request.age_range && request.age_range !== 'any' ? request.age_range : undefined,
+      ethnicity: request.ethnicity || undefined,
+      income_bracket: request.income_bracket || undefined,
       coherence_target: request.coherence_target || 0.7,
-      name_preference: request.name_preference
+      name_preference: request.name_preference || undefined,
+      gender: request.gender
     };
 
     // If user_prompt is provided, try to extract parameters from it
