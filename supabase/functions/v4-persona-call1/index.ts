@@ -84,19 +84,22 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    // Call OpenAI to generate compliant V4 persona
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `Generate a complete V4 persona that EXACTLY follows the new validation schema. Return ONLY valid JSON without any markdown formatting, explanations, or code blocks.
+    // Call OpenAI to generate compliant V4 persona with enhanced parameters
+    let openaiResponse
+    try {
+      console.log('Attempting persona generation with gpt-4o-mini (12K tokens)...')
+      openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `Generate a complete V4 persona that EXACTLY follows the new validation schema. Return ONLY valid JSON without any markdown formatting, explanations, or code blocks.
 
 CRITICAL: The response must include ALL required fields and NEVER include any banned fields.
 
@@ -379,34 +382,128 @@ CRITICAL INSTRUCTIONS:
 - Arrays can be empty [] if appropriate
 - Generate diverse, authentic personas
 - Return ONLY the JSON object, no explanations or markdown`
-          },
-          {
-            role: 'user',
-            content: user_prompt
-          }
-        ],
-        temperature: 0.8,
-        max_tokens: 4000
+            },
+            {
+              role: 'user',
+              content: user_prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 12000,
+          response_format: { type: "json_object" }
+        })
       })
-    })
+
+      // Check if the primary request was successful
+      if (!openaiResponse.ok) {
+        const errorData = await openaiResponse.json()
+        console.warn('Primary gpt-4o-mini request failed:', errorData.error?.message)
+        
+        // Fallback to gpt-4o with smaller token limit but higher reliability
+        console.log('Attempting fallback with gpt-4o (8K tokens)...')
+        openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: `Generate a complete V4 persona that EXACTLY follows the new validation schema. Return ONLY valid JSON without any markdown formatting, explanations, or code blocks.
+
+CRITICAL: The response must include ALL required fields and NEVER include any banned fields.
+
+REQUIRED FIELDS (ALL MUST BE PRESENT):
+- identity, daily_life, health_profile, relationships, money_profile
+- motivation_profile, communication_style, humor_profile, truth_honesty_profile
+- bias_profile, cognitive_profile, emotional_profile, attitude_narrative
+- political_narrative, adoption_profile, prompt_shaping, sexuality_profile
+
+BANNED FIELDS (NEVER INCLUDE):
+- big_five, social_identity, inhibitor_profile, cultural_dimensions
+- behavioral_economics, identity_salience, knowledge_profile, contradictions
+- attitude_snapshot, political_signals, linguistic_signature, signature_phrases
+- physical_profile
+
+Generate the complete persona structure with all fields populated realistically.
+
+CRITICAL INSTRUCTIONS:
+- Avoid midline values (0.5) - create distinctive personalities
+- Ensure internal consistency across all traits
+- Make each field realistic and specific
+- Numbers must be between 0 and 1 where specified
+- Arrays can be empty [] if appropriate
+- Generate diverse, authentic personas
+- Return ONLY the JSON object, no explanations or markdown`
+              },
+              {
+                role: 'user',
+                content: user_prompt
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 8000,
+            response_format: { type: "json_object" }
+          })
+        })
+
+        if (!openaiResponse.ok) {
+          const fallbackErrorData = await openaiResponse.json()
+          throw new Error(`Both OpenAI requests failed. Primary: ${errorData.error?.message}, Fallback: ${fallbackErrorData.error?.message}`)
+        }
+        
+        console.log('✅ Fallback gpt-4o request successful')
+      } else {
+        console.log('✅ Primary gpt-4o-mini request successful')
+      }
+      
+    } catch (fetchError) {
+      console.error('OpenAI API request failed:', fetchError)
+      throw new Error(`OpenAI API request failed: ${fetchError.message}`)
+    }
 
     const openaiData = await openaiResponse.json()
-    console.log('OpenAI response received')
+    console.log('OpenAI response received, content length:', openaiData.choices[0].message.content.length)
 
     const rawContent = openaiData.choices[0].message.content
-    console.log('Raw OpenAI content length:', rawContent.length)
+    console.log('Raw OpenAI response preview:', rawContent.slice(0, 200) + '...')
+    console.log('Raw OpenAI response ends with:', rawContent.slice(-100))
 
+    // Enhanced JSON extraction with validation
     const cleanedContent = extractJSONFromMarkdown(rawContent)
-    console.log('Cleaned content for parsing')
+    console.log('Cleaned content length:', cleanedContent.length)
+    
+    // Validate response completeness before parsing
+    const trimmedContent = cleanedContent.trim()
+    if (!trimmedContent.startsWith('{') || !trimmedContent.endsWith('}')) {
+      console.error('Response does not appear to be complete JSON')
+      console.error('Starts with:', trimmedContent.slice(0, 50))
+      console.error('Ends with:', trimmedContent.slice(-50))
+      throw new Error('OpenAI response appears to be truncated or malformed - missing JSON structure')
+    }
 
     let generatedPersona
     try {
       generatedPersona = JSON.parse(cleanedContent)
-      console.log('Successfully parsed persona JSON')
+      console.log('✅ Successfully parsed persona JSON')
+      console.log('Parsed persona has keys:', Object.keys(generatedPersona))
     } catch (parseError) {
-      console.error('JSON parsing failed:', parseError)
-      console.error('Content that failed to parse:', cleanedContent.slice(0, 500))
-      throw new Error(`Failed to parse OpenAI response as JSON: ${parseError.message}`)
+      console.error('❌ JSON parsing failed:', parseError.message)
+      console.error('Content length:', cleanedContent.length)
+      console.error('Content preview (first 500 chars):', cleanedContent.slice(0, 500))
+      console.error('Content preview (last 500 chars):', cleanedContent.slice(-500))
+      
+      // Try to identify the specific issue
+      if (cleanedContent.includes('```')) {
+        throw new Error('Failed to parse OpenAI response: Response contains markdown formatting that could not be cleaned')
+      } else if (cleanedContent.length < 1000) {
+        throw new Error('Failed to parse OpenAI response: Response appears to be too short/truncated')
+      } else {
+        throw new Error(`Failed to parse OpenAI response as JSON: ${parseError.message}`)
+      }
     }
 
     // Validate the generated persona
