@@ -34,18 +34,9 @@ serve(async (req) => {
     const systemPrompt = `Generate a detailed U.S. adult persona as valid JSON with these exact 17 top-level keys:
 identity, daily_life, health_profile, relationships, money_profile, motivation_profile, communication_style, humor_profile, truth_honesty_profile, bias_profile, cognitive_profile, emotional_profile, attitude_narrative, political_narrative, adoption_profile, prompt_shaping, sexuality_profile
 
-
-
-
 CRITICAL: The identity object MUST include a realistic "name" field with first and last name.
 
-
-
-
 BANNED keys (never include): big_five, social_identity, inhibitor_profile, cultural_dimensions, behavioral_economics, identity_salience, knowledge_profile, contradictions, attitude_snapshot, political_signals, linguistic_signature, signature_phrases, physical_profile
-
-
-
 
 Requirements:
 - identity.name MUST be present with realistic first and last name
@@ -55,9 +46,6 @@ Requirements:
 - Internal consistency across all fields
 - cognitive_profile.thought_coherence must be a number
 - Natural language avoiding "As a [profession]" openings
-
-
-
 
 Example identity structure:
 {
@@ -69,9 +57,6 @@ Example identity structure:
     ...
   }
 }
-
-
-
 
 Return ONLY the JSON object, no markdown formatting.`;
 
@@ -326,7 +311,7 @@ function extractJSONFromMarkdown(content: string): any {
   } catch (error) {
     const fixed = jsonStr
       .replace(/,(\s*[}\]])/g, '$1')
-      .replace(/([{,]\s*)(\w+):/g, '$1"$2":");
+      .replace(/([{,]\s*)(\w+):/g, '$1"$2":');
     
     return JSON.parse(fixed);
   }
