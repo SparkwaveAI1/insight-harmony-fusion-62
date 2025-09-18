@@ -55,16 +55,14 @@ export interface V4MotivationProfile {
   };
 }
 
-// 3. INHIBITOR FRAMEWORK
-export interface V4InhibitorProfile {
-  social_cost_sensitivity: number;    // 0.6 - Fear of judgment
-  consequence_aversion: number;       // 0.4 - Fear of negative outcomes
-  confidence_level: number;          // 0.7 - Self-efficacy
-  confirmation_bias: number;         // 0.7 - Information filtering strength
-  honesty_flexibility: number;       // 0.3 - Willingness to bend truth
-  mental_health_factors: string[];   // ["anxiety", "depression", "adhd", "stable"]
-  learned_avoidance: Record<string, number>; // {"public_speaking": 0.8}
-  perfectionism: number;             // 0.2 - Won't act until ideal
+// 3. HUMOR PROFILE
+export interface V4HumorProfile {
+  humor_style: string[];             // ["sarcastic", "self_deprecating", "observational", "dry", "physical"]
+  humor_frequency: number;           // 0.0-1.0 - How often they use humor
+  humor_appropriateness: number;     // 0.0-1.0 - Social awareness of timing
+  preferred_targets: string[];       // ["self", "situations", "public_figures", "friends"]
+  humor_boundaries: string[];        // ["no_personal_attacks", "no_religious_jokes", "family_off_limits"]
+  laugh_triggers: string[];          // ["absurdity", "clever_wordplay", "physical_comedy"]
 }
 
 // 4. TRUTH/HONESTY RELATIONSHIP
@@ -82,33 +80,57 @@ export interface V4TruthHonestyProfile {
   lie_types_willing: string[];       // ["white_lies", "omission", "exaggeration"]
 }
 
-// 5. POLITICS & COMMUNITY IDENTITY
-export interface V4IdentitySalience {
-  political_identity: {
-    orientation: string;             // "conservative", "liberal", "libertarian", "apolitical"
-    strength: number;                // 0.6 - How much politics affects responses
-    key_issues: string[];            // ["gun_rights", "taxes", "immigration"]
-    tribal_loyalty: number;          // 0.7 - In-group vs out-group sensitivity
-  };
-  community_identities: Array<{
-    type: string;                    // "veteran", "parent", "southern"
-    salience: number;                // 0.8 - How much this identity affects responses
-    triggers: string[];              // ["military_service", "parenting"]
-  }>;
-  cultural_background: string;       // "Southern US working class veteran culture"
+// 5. BIAS PROFILE  
+export interface V4BiasProfile {
+  confirmation_bias: number;         // 0.0-1.0 - Information filtering strength
+  anchoring_bias: number;            // 0.0-1.0 - Over-reliance on first information
+  availability_bias: number;         // 0.0-1.0 - Judging by recent/memorable examples
+  social_desirability_bias: number;  // 0.0-1.0 - Tendency to give socially acceptable answers
+  in_group_bias: number;             // 0.0-1.0 - Favoritism toward similar people
+  authority_bias: number;            // 0.0-1.0 - Deference to perceived authority
+  bias_blind_spot: number;           // 0.0-1.0 - Awareness of own biases (inverse)
 }
 
-// 6. KNOWLEDGE & EXPERTISE
-export interface V4KnowledgeProfile {
-  education_level: string;           // "high_school", "some_college", "bachelors"
-  vocabulary_ceiling: string;        // "working_class", "professional", "academic"
-  expertise_domains: string[];       // ["electrical_systems", "mma_training"]
-  knowledge_gaps: string[];          // ["finance", "technology", "academic_theory"]
-  learning_style: string;            // "hands_on", "theoretical", "social"
-  source_preferences: string[];      // ["personal_experience", "youtube", "books"]
+// 6. EDUCATION LEVEL (standalone)
+export interface V4EducationLevel {
+  level: string;                     // "high_school", "some_college", "bachelors", "masters", "doctorate"
+  institution_type: string;          // "public", "private", "community_college", "trade_school"
+  completion_status: string;         // "completed", "some_coursework", "dropped_out"
+  field_of_study?: string;           // "electrical_engineering", "liberal_arts", etc.
 }
 
-// 7. DAILY LIFE & ATTENTION DIET
+// 7. INCOME BRACKET
+export interface V4IncomeBracket {
+  annual_income: string;             // "under_30k", "30k_50k", "50k_75k", "75k_100k", "100k_150k", "150k_plus"
+  income_stability: string;          // "stable", "variable", "seasonal", "uncertain"
+  primary_income_source: string;     // "salary", "hourly", "contract", "business", "mixed"
+  financial_stress_level: number;    // 0.0-1.0 scale
+}
+
+// 6. COGNITIVE PROFILE
+export interface V4CognitiveProfile {
+  thought_coherence: number;         // 0.0-1.0 - How logically connected their thoughts are
+  processing_speed: string;          // "slow_deliberate", "moderate", "fast_intuitive"
+  attention_span: string;            // "short", "moderate", "long", "hyper_focused"
+  working_memory: string;            // "limited", "average", "strong"
+  cognitive_flexibility: number;     // 0.0-1.0 - Ability to switch between concepts
+  abstract_thinking: number;         // 0.0-1.0 - Comfort with abstract concepts
+  pattern_recognition: number;       // 0.0-1.0 - Ability to see patterns and connections
+}
+
+// 7. EXPANDED MONEY PROFILE
+export interface V4MoneyProfile {
+  spending_style: string;            // "frugal", "balanced", "generous", "impulsive"
+  financial_priorities: string[];    // ["emergency_fund", "family_security", "experiences", "status"]
+  money_relationship: string;        // "tool", "security", "freedom", "stress_source", "status_symbol"
+  spending_triggers: string[];       // ["family_needs", "good_deals", "peer_pressure", "emotional_stress"]
+  financial_decision_making: string; // "research_heavy", "intuitive", "partner_collaborative", "impulsive"
+  budgeting_approach: string;        // "strict_tracker", "rough_guidelines", "intuitive", "avoidant"
+  investment_comfort: number;        // 0.0-1.0 - Comfort with financial risk
+  generosity_patterns: string[];     // ["family_first", "charitable_causes", "friends_in_need", "community"]
+}
+
+// 8. DAILY LIFE & ATTENTION DIET
 export interface V4DailyLife {
   primary_activities: {
     work: number;                    // 8 - hours per day
@@ -123,7 +145,7 @@ export interface V4DailyLife {
   mental_preoccupations: string[];   // ["work_deadlines", "son_school_performance"]
 }
 
-// 8. COMMUNICATION STYLE (DETAILED)
+// 9. COMMUNICATION STYLE (DETAILED)
 export interface V4CommunicationStyle {
   voice_foundation: {
     directness_level: string;        // "blunt", "direct", "balanced", "diplomatic"
@@ -161,7 +183,7 @@ export interface V4CommunicationStyle {
   };
 }
 
-// 9. EMOTIONAL TRIGGERS
+// 10. EMOTIONAL TRIGGERS
 export interface V4EmotionalProfile {
   positive_triggers: string[];       // ["team_success", "skill_improvement"]
   negative_triggers: string[];       // ["time_wasting", "disrespect"]
@@ -170,7 +192,7 @@ export interface V4EmotionalProfile {
   stress_responses: string[];        // ["becomes_more_direct", "withdraws"]
 }
 
-// 10. INTERNAL CONTRADICTIONS
+// 11. INTERNAL CONTRADICTIONS
 export interface V4Contradictions {
   primary_tension: {
     description: string;             // "Values patience but impatient with bureaucracy"
@@ -184,7 +206,31 @@ export interface V4Contradictions {
   }>;
 }
 
-// 11. SEXUALITY PROFILE
+// 12. NARRATIVES (consolidated attitude/political)
+export interface V4Narratives {
+  political_orientation: {
+    stance: string;                  // "conservative", "liberal", "libertarian", "apolitical", "mixed"
+    strength: number;                // 0.0-1.0 - How much politics affects responses
+    key_issues: string[];            // ["gun_rights", "taxes", "immigration"]
+    tribal_loyalty: number;          // 0.0-1.0 - In-group vs out-group sensitivity
+  };
+  
+  worldview_narratives: Array<{
+    theme: string;                   // "individual_responsibility", "systemic_inequality", "traditional_values"
+    strength: number;                // 0.0-1.0 - How central this narrative is
+    triggers: string[];              // ["welfare", "crime", "education"]
+    manifestation: string;           // How this shows up in responses
+  }>;
+  
+  cultural_identity: {
+    primary_identity: string;        // "southern_conservative", "urban_progressive", "rural_libertarian"
+    identity_markers: string[];      // ["veteran", "parent", "working_class"]
+    community_loyalties: string[];   // ["military", "church", "union"]
+    cultural_triggers: string[];     // ["disrespect_to_flag", "attacks_on_family_values"]
+  };
+}
+
+// 13. SEXUALITY PROFILE
 export interface V4SexualityProfile {
   orientation: string;               // "heterosexual", "homosexual", "bisexual"
   expression_style: string;          // "private", "selective", "open"
@@ -200,19 +246,47 @@ export interface V4SexualityProfile {
   };
 }
 
-// COMPLETE V4 FULL PROFILE
+// 14. PROMPT SHAPING (systemic)
+export interface V4PromptShaping {
+  thought_coherence_rules: {
+    require_logical_flow: boolean;   // true - Responses must show logical progression
+    allow_contradictions: boolean;   // false - Flag internal contradictions
+    stream_of_consciousness: number; // 0.0-1.0 - How much rambling is allowed
+  };
+  
+  natural_speech_rules: {
+    require_roughness: boolean;      // true - Must include natural speech patterns
+    filler_words: string[];         // ["um", "uh", "you know", "like"]
+    self_corrections: boolean;       // true - Allow mid-sentence corrections
+    incomplete_thoughts: boolean;    // true - Allow trailing off
+    repetition_patterns: string[];  // ["emphasis_repetition", "clarification_repetition"]
+  };
+  
+  authenticity_enforcement: {
+    forbidden_ai_markers: string[]; // ["As an AI", "I understand", "It's important to note"]
+    required_personality_anchors: string[]; // ["personal_experience", "specific_examples"]
+    voice_consistency_check: boolean; // true - Flag out-of-character responses
+  };
+}
+
+// COMPLETE V4 FULL PROFILE (UPDATED)
 export interface V4FullProfile {
   identity: V4Identity;
   motivation_profile: V4MotivationProfile;
-  inhibitor_profile: V4InhibitorProfile;
+  education_level: V4EducationLevel;
+  income_bracket: V4IncomeBracket;
+  humor_profile: V4HumorProfile;
   truth_honesty_profile: V4TruthHonestyProfile;
-  identity_salience: V4IdentitySalience;
-  knowledge_profile: V4KnowledgeProfile;
+  bias_profile: V4BiasProfile;
+  cognitive_profile: V4CognitiveProfile;
+  money_profile: V4MoneyProfile;
   daily_life: V4DailyLife;
   communication_style: V4CommunicationStyle;
   emotional_profile: V4EmotionalProfile;
   contradictions: V4Contradictions;
+  narratives: V4Narratives;
   sexuality_profile: V4SexualityProfile;
+  prompt_shaping: V4PromptShaping;
 }
 
 // CONVERSATION SUMMARY (for conversation engine)
@@ -234,12 +308,12 @@ export interface V4ConversationSummary {
   inhibitor_summary: string;         // "Moderately sensitive to social judgment..."
   truth_flexibility_summary: string; // "Generally honest but willing to omit details..."
   
-  knowledge_profile: {
-    education_level: string;
-    expertise_domains: string[];
-    knowledge_gaps: string[];
-    vocabulary_ceiling: string;
-  };
+  education_summary: string;          // "High school graduate, trade school certified"
+  income_summary: string;            // "Middle class, stable contractor income"
+  humor_summary: string;             // "Dry, sarcastic humor with military edge"
+  bias_summary: string;              // "Strong confirmation bias, moderate authority deference"
+  cognitive_summary: string;         // "High thought coherence, practical problem-solving"
+  money_summary: string;             // "Frugal spender, family-focused financial priorities"
   
   voice_summary: string;             // "Direct, military-influenced communication..."
   
