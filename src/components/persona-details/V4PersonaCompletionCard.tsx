@@ -6,9 +6,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { 
-  validateV4PersonaCompleteness, 
-  getV4PersonaCompletionStatus,
-  needsV4PersonaCompletion 
+  validatePersona,
+  hasRequiredKeys
 } from '@/services/v4-persona/v4PersonaValidation';
 import { 
   completeV4Persona, 
@@ -24,13 +23,13 @@ interface V4PersonaCompletionCardProps {
 export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4PersonaCompletionCardProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   
-  const validation = validateV4PersonaCompleteness(persona);
-  const needsCompletion = needsV4PersonaCompletion(persona);
-  const status = getV4PersonaCompletionStatus(persona);
+  const validation = validatePersona(persona.full_profile || {});
+  const needsCompletion = !validation.isValid || !persona.creation_completed;
+  const status = persona.creation_completed ? 'Complete' : (persona.creation_stage || 'Incomplete');
   const recommendation = getV4PersonaCompletionRecommendation(persona);
 
   // Don't show card if persona is complete
-  if (validation.isComplete) {
+  if (validation.isValid && persona.creation_completed) {
     return null;
   }
 
@@ -60,7 +59,7 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
   };
 
   const getStatusIcon = () => {
-    if (validation.isComplete) {
+    if (validation.isValid && persona.creation_completed) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     }
     if (validation.errors.length > 0) {
@@ -70,7 +69,7 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
   };
 
   const getStatusVariant = () => {
-    if (validation.isComplete) return "default";
+    if (validation.isValid && persona.creation_completed) return "default";
     if (validation.errors.length > 0) return "destructive";
     return "secondary";
   };
@@ -97,21 +96,21 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
         <div className="space-y-2">
           <h4 className="font-medium text-sm">Current Status:</h4>
           <div className="text-sm text-muted-foreground">
-            <div>Stage: <code className="bg-muted px-1 py-0.5 rounded">{validation.stage}</code></div>
-            <div>Creation completed: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.isCreationCompleted)}</code></div>
-            <div>Has full profile: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.hasFullProfile)}</code></div>
-            <div>Has required traits: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.hasRequiredTraits)}</code></div>
+            <div>Stage: <code className="bg-muted px-1 py-0.5 rounded">{persona.creation_stage || 'Unknown'}</code></div>
+            <div>Creation completed: <code className="bg-muted px-1 py-0.5 rounded">{String(persona.creation_completed || false)}</code></div>
+            <div>Has full profile: <code className="bg-muted px-1 py-0.5 rounded">{String(!!persona.full_profile)}</code></div>
+            <div>Validation score: <code className="bg-muted px-1 py-0.5 rounded">{validation.completenessScore.toFixed(2)}</code></div>
           </div>
         </div>
 
-        {/* Missing Traits */}
-        {validation.completeness.missingTraits.length > 0 && (
+        {/* Validation errors showing specific missing fields */}
+        {validation.errors.length > 0 && (
           <div className="space-y-2">
-            <h4 className="font-medium text-sm">Missing Traits:</h4>
+            <h4 className="font-medium text-sm">Missing or Invalid Fields:</h4>
             <div className="flex flex-wrap gap-1">
-              {validation.completeness.missingTraits.map(trait => (
-                <Badge key={trait} variant="outline" className="text-xs">
-                  {trait}
+              {validation.errors.map((error, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {error.replace('Missing required field: ', '').replace('Missing ', '')}
                 </Badge>
               ))}
             </div>

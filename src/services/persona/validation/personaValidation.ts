@@ -12,7 +12,7 @@ export interface PersonaValidationResult {
 }
 
 import { detectPersonaVersion, isV4Persona } from '@/utils/personaDetection';
-import { validateV4PersonaCompleteness } from '@/services/v4-persona/v4PersonaValidation';
+import { validatePersona } from '@/services/v4-persona/v4PersonaValidation';
 
 export function validatePersonaCompleteness(persona: any): PersonaValidationResult {
   const errors: string[] = [];
@@ -29,17 +29,17 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
   // Handle V4 personas with proper validation
   if (versionInfo.isV4) {
     console.log("Validating V4 persona with dedicated V4 validation");
-    const v4Validation = validateV4PersonaCompleteness(persona);
+    const v4Validation = validatePersona(persona.full_profile || {});
     
     return {
       isValid: v4Validation.isValid,
       errors: v4Validation.errors,
       warnings: v4Validation.warnings,
       completeness: {
-        hasRealTraits: v4Validation.completeness.hasFullProfile,
-        hasEmotionalTriggers: v4Validation.completeness.hasFullProfile,
-        hasInterviewResponses: v4Validation.completeness.hasRequiredTraits,
-        hasMetadata: v4Validation.completeness.isCreationCompleted
+        hasRealTraits: v4Validation.completenessScore > 0.8,
+        hasEmotionalTriggers: !!persona.full_profile?.emotional_profile,
+        hasInterviewResponses: true, // V4 doesn't use traditional interview sections
+        hasMetadata: !!persona.full_profile?.identity
       }
     };
   }

@@ -1,227 +1,182 @@
-import { V4Persona, V4FullProfile } from '@/types/persona-v4';
+// New validation system - replace existing validation completely
 
-export interface V4PersonaValidationResult {
+// Quick JSON Schema guard for top-level structure
+const PERSONA_SCHEMA = {
+  type: "object",
+  required: [
+    "identity", "daily_life", "health_profile", "relationships", "money_profile",
+    "motivation_profile", "communication_style", "humor_profile", "truth_honesty_profile",
+    "bias_profile", "cognitive_profile", "emotional_profile", "attitude_narrative",
+    "political_narrative", "adoption_profile", "prompt_shaping", "sexuality_profile"
+  ],
+  additionalProperties: false
+};
+
+// BANNED fields that should never appear anywhere
+const BANNED_KEYS = [
+  'big_five', 'social_identity', 'inhibitor_profile', 'cultural_dimensions', 
+  'behavioral_economics', 'identity_salience', 'knowledge_profile', 'contradictions',
+  'attitude_snapshot', 'political_signals', 'linguistic_signature', 'signature_phrases',
+  'physical_profile'
+];
+
+interface ValidationResult {
   isValid: boolean;
-  isComplete: boolean;
   errors: string[];
   warnings: string[];
-  completeness: {
-    hasFullProfile: boolean;
-    hasRequiredTraits: boolean;
-    isCreationCompleted: boolean;
-    hasAllRequiredTraits: boolean;
-    missingTraits: string[];
-  };
-  stage: 'not_started' | 'detailed_traits' | 'summary_generation' | 'completed' | 'error';
+  completenessScore: number;
 }
 
-/**
- * Validates V4 persona completeness and identifies missing components
- */
-export function validateV4PersonaCompleteness(persona: V4Persona): V4PersonaValidationResult {
-  console.log('=== V4 PERSONA VALIDATION ===');
-  console.log('Persona:', persona.name, '(', persona.persona_id, ')');
-  console.log('Creation stage:', persona.creation_stage);
-  console.log('Creation completed:', persona.creation_completed);
-
+function validatePersona(persona: any): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const missingTraits: string[] = [];
 
-  // Check creation stage and completion status
-  const stage = persona.creation_stage || 'completed'; // Default to completed if not set
-  const isCreationCompleted = persona.creation_completed !== false; // Default to true if not explicitly false
-
-  // Check if basic data exists
-  const hasFullProfile = !!(persona.full_profile && typeof persona.full_profile === 'object');
-  const hasRequiredTraits = hasFullProfile ? validateFullProfile(persona.full_profile, missingTraits) : false;
-  
-  // Only flag as incomplete if clearly missing core data or explicitly marked as incomplete
-  if (stage === 'not_started') {
-    errors.push('V4 persona creation has not been started');
-  } else if (stage === 'detailed_traits' && !hasFullProfile) {
-    errors.push('V4 persona stuck at detailed_traits stage - full_profile generation failed');
-  } else if (persona.creation_completed === false && stage === 'detailed_traits') {
-    warnings.push(`V4 persona creation marked as incomplete at stage: ${stage}`);
+  // Check for banned keys anywhere in the object
+  function checkForBannedKeys(obj: any, path = ''): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      if (BANNED_KEYS.includes(key)) {
+        errors.push(`Banned key found: ${currentPath}`);
+      }
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        checkForBannedKeys(value, currentPath);
+      }
+    }
   }
 
-  if (!hasFullProfile && stage !== 'not_started') {
-    errors.push('V4 persona missing full_profile data');
+  checkForBannedKeys(persona);
+
+  // Check required top-level fields
+  for (const field of PERSONA_SCHEMA.required) {
+    if (!persona[field]) {
+      errors.push(`Missing required field: ${field}`);
+    }
   }
 
-  if (hasFullProfile && !hasRequiredTraits) {
-    warnings.push('V4 persona missing required trait categories');
+  // Hard stops - critical validations
+  if (persona.identity) {
+    if (!persona.identity.education_level) {
+      errors.push('Missing identity.education_level');
+    }
+    if (!persona.identity.income_bracket) {
+      errors.push('Missing identity.income_bracket');
+    }
+    if (!persona.identity.location?.urbanicity) {
+      errors.push('Missing identity.location.urbanicity');
+    }
+    
+    // Age validation
+    if (persona.identity.age && (persona.identity.age < 18 || persona.identity.age > 100)) {
+      errors.push(`Invalid age: ${persona.identity.age}`);
+    }
   }
 
-  // A persona is complete if:
-  // 1. It has full_profile data AND
-  // 2. Has required traits AND
-  // 3. Either creation_completed is true OR stage is 'completed' OR creation_completed is not explicitly false
-  const isComplete = hasFullProfile && hasRequiredTraits && (isCreationCompleted || stage === 'completed');
-  const isValid = errors.length === 0;
+  if (persona.cognitive_profile && typeof persona.cognitive_profile.thought_coherence !== 'number') {
+    errors.push('Missing or invalid cognitive_profile.thought_coherence');
+  }
 
-  console.log('V4 validation result:', {
-    isValid,
-    isComplete,
-    errorCount: errors.length,
-    warningCount: warnings.length,
-    stage,
-    hasFullProfile,
-    hasRequiredTraits,
-    isCreationCompleted
+  // Daily activities validation
+  if (persona.daily_life?.primary_activities) {
+    const activities = persona.daily_life.primary_activities;
+    let totalHours = 0;
+    
+    for (const hours of Object.values(activities)) {
+      if (typeof hours === 'number') {
+        totalHours += hours;
+      } else if (typeof hours === 'string') {
+        totalHours += parseFloat(hours) || 0;
+      }
+    }
+    
+    if (totalHours > 30) { // Allow some flexibility but catch obvious errors
+      errors.push(`Daily activities total ${totalHours} hours - unrealistic`);
+    }
+  }
+
+  // Numeric range validations
+  const numericFields = [
+    { path: 'motivation_profile.primary_drivers', fields: ['care', 'family', 'status', 'mastery', 'meaning', 'novelty', 'security', 'belonging', 'self_interest'] },
+    { path: 'truth_honesty_profile', fields: ['baseline_honesty'] },
+    { path: 'truth_honesty_profile.situational_variance', fields: ['work', 'home', 'public'] },
+    { path: 'bias_profile.cognitive', fields: ['status_quo', 'loss_aversion', 'confirmation', 'anchoring', 'availability', 'optimism', 'sunk_cost', 'overconfidence'] },
+    { path: 'cognitive_profile', fields: ['verbal_fluency', 'abstract_reasoning', 'thought_coherence'] },
+    { path: 'adoption_profile', fields: ['buyer_power', 'adoption_influence', 'risk_tolerance', 'change_friction'] },
+    { path: 'communication_style.voice_foundation', fields: ['empathy_level', 'charisma_level'] }
+  ];
+
+  numericFields.forEach(({ path, fields }) => {
+    const obj = path.split('.').reduce((current, key) => current?.[key], persona);
+    if (obj) {
+      fields.forEach(field => {
+        const value = obj[field];
+        if (typeof value === 'number' && (value < 0 || value > 1)) {
+          errors.push(`${path}.${field} must be between 0 and 1, got ${value}`);
+        }
+      });
+    }
   });
 
+  // Check for empty values that should be filled
+  function checkForEmptyValues(obj: any, path = ''): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      if (value === '' || value === null) {
+        warnings.push(`Empty value at ${currentPath} - should be filled`);
+      } else if (Array.isArray(value) && value.length === 0 && !['pets', 'topics_off_limits'].includes(key)) {
+        warnings.push(`Empty array at ${currentPath} - may need content`);
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        checkForEmptyValues(value, currentPath);
+      }
+    }
+  }
+
+  checkForEmptyValues(persona);
+
+  // Check for bloated prompt_shaping
+  if (persona.prompt_shaping) {
+    const allowedPromptShapingKeys = [
+      'voice_foundation', 'style_markers', 'primary_motivations', 'deal_breakers',
+      'honesty_vector', 'bias_vector', 'context_switches', 'current_focus'
+    ];
+    
+    const extraKeys = Object.keys(persona.prompt_shaping).filter(key => !allowedPromptShapingKeys.includes(key));
+    if (extraKeys.length > 0) {
+      errors.push(`prompt_shaping has disallowed keys: ${extraKeys.join(', ')}`);
+    }
+  }
+
   return {
-    isValid,
-    isComplete,
+    isValid: errors.length === 0,
     errors,
     warnings,
-    completeness: {
-      hasFullProfile,
-      hasRequiredTraits,
-      isCreationCompleted,
-      hasAllRequiredTraits: hasRequiredTraits,
-      missingTraits
-    },
-    stage: stage as any
+    completenessScore: Math.max(0, 1 - (errors.length * 0.1) - (warnings.length * 0.02))
   };
 }
 
-/**
- * Validates the full_profile structure and identifies missing traits
- */
-function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]): boolean {
-  if (!fullProfile || typeof fullProfile !== 'object') {
-    missingTraits.push('full_profile');
+function hasBannedKeys(persona: any): boolean {
+  function checkRecursive(obj: any): boolean {
+    for (const [key, value] of Object.entries(obj)) {
+      if (BANNED_KEYS.includes(key)) {
+        return true;
+      }
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        if (checkRecursive(value)) {
+          return true;
+        }
+      }
+    }
     return false;
   }
-
-  const requiredTraits = [
-    'identity',
-    'daily_life',
-    'health_profile',
-    'relationships',
-    'money_profile',
-    'motivation_profile',
-    'communication_style',
-    'humor_profile',
-    'truth_honesty_profile',
-    'bias_profile',
-    'cognitive_profile',
-    'emotional_profile',
-    'attitude_narrative',
-    'political_narrative',
-    'adoption_profile',
-    'prompt_shaping',
-    'sexuality_profile'
-  ];
-
-  let validTraitCount = 0;
   
-  for (const trait of requiredTraits) {
-    const traitValue = fullProfile[trait as keyof V4FullProfile];
-    
-    // Handle string traits like attitude_narrative and political_narrative
-    if (trait === 'attitude_narrative' || trait === 'political_narrative') {
-      if (!traitValue || typeof traitValue !== 'string' || traitValue.trim() === '') {
-        missingTraits.push(trait);
-      } else {
-        validTraitCount++;
-      }
-    }
-    // Handle object traits
-    else if (!traitValue || typeof traitValue !== 'object') {
-      missingTraits.push(trait);
-    } else {
-      // Basic validation for key fields within each trait
-      if (trait === 'identity' && validateIdentity(fullProfile.identity)) {
-        validTraitCount++;
-      } else if (trait === 'motivation_profile' && validateMotivationProfile(fullProfile.motivation_profile)) {
-        validTraitCount++;
-      } else if (trait === 'communication_style' && validateCommunicationStyle(fullProfile.communication_style)) {
-        validTraitCount++;
-      } else if (trait !== 'identity' && trait !== 'motivation_profile' && trait !== 'communication_style') {
-        validTraitCount++;
-      }
-    }
-  }
-
-  console.log(`V4 full_profile validation: ${validTraitCount}/${requiredTraits.length} traits valid`);
-  return validTraitCount >= 16; // Require ALL 17 traits to be present (strict validation)
+  return checkRecursive(persona);
 }
 
-
-/**
- * Helper validation functions for specific trait categories
- */
-function validateIdentity(identity: any): boolean {
-  if (!identity) return false;
-  const required = ['name', 'age', 'gender', 'occupation', 'location'];
-  return required.every(field => {
-    if (field === 'location') {
-      return identity.location && identity.location.city && identity.location.region && identity.location.country;
-    }
-    return identity[field] !== undefined && identity[field] !== '' && identity[field] !== 0;
-  });
+function hasRequiredKeys(persona: any): boolean {
+  return PERSONA_SCHEMA.required.every(key => persona.hasOwnProperty(key));
 }
 
-function validateMotivationProfile(motivation: any): boolean {
-  if (!motivation) return false;
-  return motivation.primary_drivers && 
-         motivation.goal_orientation && 
-         motivation.want_vs_should_tension &&
-         motivation.primary_motivation_labels &&
-         motivation.deal_breakers;
-}
-
-function validateCommunicationStyle(communication: any): boolean {
-  if (!communication) return false;
-  return communication.voice_foundation && 
-         communication.style_markers && 
-         communication.context_switches &&
-         communication.authenticity_filters &&
-         communication.regional_register;
-}
-
-/**
- * Checks if a V4 persona needs completion (stuck at intermediate stage)
- */
-export function needsV4PersonaCompletion(persona: V4Persona): boolean {
-  const validation = validateV4PersonaCompleteness(persona);
-  
-  // Needs completion if:
-  // 1. Not completed but has some progress (stuck at intermediate stage)
-  // 2. Has errors but isn't completely failed
-  return !validation.isComplete && 
-         validation.stage === 'detailed_traits' &&
-         validation.completeness.hasFullProfile; // Has some progress
-}
-
-/**
- * Gets user-friendly description of what's missing from a V4 persona
- */
-export function getV4PersonaCompletionStatus(persona: V4Persona): string {
-  const validation = validateV4PersonaCompleteness(persona);
-  
-  if (validation.isComplete) {
-    return 'Complete';
-  }
-  
-  if (validation.stage === 'not_started') {
-    return 'Not started';
-  }
-  
-  if (validation.stage === 'detailed_traits') {
-    if (!validation.completeness.hasFullProfile) {
-      return 'Detailed traits generation failed';
-    } else if (!validation.completeness.hasRequiredTraits) {
-      return 'Missing required trait categories';
-    }
-  }
-  
-  if (validation.errors.length > 0) {
-    return `Incomplete: ${validation.errors[0]}`;
-  }
-  
-  return 'Incomplete';
-}
+export { validatePersona, hasBannedKeys, hasRequiredKeys, BANNED_KEYS };
+export type { ValidationResult };

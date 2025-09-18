@@ -1,7 +1,7 @@
 import { V4Persona } from '@/types/persona-v4';
 import { createV4PersonaCall2 } from './createV4Persona';
 import { getV4PersonaById } from './getV4Personas';
-import { validateV4PersonaCompleteness, needsV4PersonaCompletion } from './v4PersonaValidation';
+import { validatePersona, hasRequiredKeys } from './v4PersonaValidation';
 
 export interface V4PersonaCompletionResult {
   success: boolean;
@@ -33,9 +33,9 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
     });
 
     // Validate what's missing
-    const validation = validateV4PersonaCompleteness(currentPersona);
+    const validation = validatePersona(currentPersona.full_profile || {});
     
-    if (validation.isComplete) {
+    if (validation.isValid && currentPersona.creation_completed) {
       return {
         success: true,
         persona: currentPersona,
@@ -45,8 +45,8 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
 
     // Determine what completion step is needed
     if (currentPersona.creation_stage === 'detailed_traits' && 
-        validation.completeness.hasFullProfile &&
-        !validation.completeness.hasRequiredTraits) {
+        currentPersona.full_profile &&
+        !currentPersona.creation_completed) {
       
       console.log('🔄 Persona needs summary generation (Call 2)');
       
@@ -72,7 +72,7 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
     }
 
     // Handle other incomplete states
-    if (currentPersona.creation_stage === 'not_started' || !validation.completeness.hasFullProfile) {
+    if (currentPersona.creation_stage === 'not_started' || !currentPersona.full_profile) {
       return {
         success: false,
         error: 'Persona needs full regeneration - detailed traits are missing or failed',
@@ -146,7 +146,10 @@ export async function completeMultipleV4Personas(personaIds: string[]): Promise<
  * Finds all incomplete V4 personas for a user
  */
 export async function findIncompleteV4Personas(userPersonas: V4Persona[]): Promise<V4Persona[]> {
-  const incompletePersonas = userPersonas.filter(persona => needsV4PersonaCompletion(persona));
+  const incompletePersonas = userPersonas.filter(persona => {
+    const validation = validatePersona(persona.full_profile || {});
+    return !validation.isValid || !persona.creation_completed;
+  });
   
   console.log(`Found ${incompletePersonas.length} incomplete V4 personas out of ${userPersonas.length} total`);
   
@@ -161,9 +164,9 @@ export function getV4PersonaCompletionRecommendation(persona: V4Persona): {
   recommendation: string;
   actionRequired: string;
 } {
-  const validation = validateV4PersonaCompleteness(persona);
+  const validation = validatePersona(persona.full_profile || {});
   
-  if (validation.isComplete) {
+  if (validation.isValid && persona.creation_completed) {
     return {
       canComplete: false,
       recommendation: 'Persona is already complete',
@@ -171,7 +174,7 @@ export function getV4PersonaCompletionRecommendation(persona: V4Persona): {
     };
   }
   
-  if (validation.stage === 'detailed_traits' && validation.completeness.hasFullProfile) {
+  if (persona.creation_stage === 'detailed_traits' && persona.full_profile) {
     return {
       canComplete: true,
       recommendation: 'Persona has detailed traits but needs conversation summary generation',
@@ -179,7 +182,7 @@ export function getV4PersonaCompletionRecommendation(persona: V4Persona): {
     };
   }
   
-  if (validation.stage === 'summary_generation') {
+  if (persona.creation_stage === 'summary_generation') {
     return {
       canComplete: true,
       recommendation: 'Summary generation was interrupted and can be retried',
@@ -187,7 +190,7 @@ export function getV4PersonaCompletionRecommendation(persona: V4Persona): {
     };
   }
   
-  if (!validation.completeness.hasFullProfile) {
+  if (!persona.full_profile) {
     return {
       canComplete: false,
       recommendation: 'Persona needs to be regenerated from scratch - detailed traits are missing',
