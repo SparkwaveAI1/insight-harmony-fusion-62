@@ -34,20 +34,44 @@ serve(async (req) => {
     const systemPrompt = `Generate a detailed U.S. adult persona as valid JSON with these exact 17 top-level keys:
 identity, daily_life, health_profile, relationships, money_profile, motivation_profile, communication_style, humor_profile, truth_honesty_profile, bias_profile, cognitive_profile, emotional_profile, attitude_narrative, political_narrative, adoption_profile, prompt_shaping, sexuality_profile
 
+
+
+
+CRITICAL: The identity object MUST include a realistic "name" field with first and last name.
+
+
+
+
 BANNED keys (never include): big_five, social_identity, inhibitor_profile, cultural_dimensions, behavioral_economics, identity_salience, knowledge_profile, contradictions, attitude_snapshot, political_signals, linguistic_signature, signature_phrases, physical_profile
 
+
+
+
 Requirements:
+- identity.name MUST be present with realistic first and last name
+- identity.education_level, identity.income_bracket, identity.location.urbanicity are required
 - All numeric values 0-1 scale where applicable
 - Realistic demographics (26% normal weight, 30% overweight, 44% obese)
 - Internal consistency across all fields
+- cognitive_profile.thought_coherence must be a number
 - Natural language avoiding "As a [profession]" openings
-- Regional dialect hints in communication_style
 
-Critical fields that MUST be present:
-- identity.education_level, identity.income_bracket, identity.location.urbanicity
-- cognitive_profile.thought_coherence (number)
-- All motivation_profile.primary_drivers as numbers 0-1
-- sexuality_profile with safe defaults
+
+
+
+Example identity structure:
+{
+  "identity": {
+    "name": "Sarah Martinez",
+    "age": 32,
+    "gender": "female",
+    "pronouns": "she/her",
+    ...
+  }
+}
+
+
+
 
 Return ONLY the JSON object, no markdown formatting.`;
 
