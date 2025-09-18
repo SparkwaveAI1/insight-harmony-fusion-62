@@ -1461,12 +1461,15 @@ export type Database = {
           created_at: string | null
           creation_completed: boolean | null
           creation_stage: string | null
+          education_level: string | null
           full_profile: Json
+          income_bracket: string | null
           is_public: boolean
           name: string
           persona_id: string
           profile_image_url: string | null
           schema_version: string
+          thought_coherence: number | null
           updated_at: string | null
           user_id: string
         }
@@ -1474,12 +1477,15 @@ export type Database = {
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
+          education_level?: string | null
           full_profile?: Json
+          income_bracket?: string | null
           is_public?: boolean
           name: string
           persona_id: string
           profile_image_url?: string | null
           schema_version?: string
+          thought_coherence?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -1487,12 +1493,15 @@ export type Database = {
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
+          education_level?: string | null
           full_profile?: Json
+          income_bracket?: string | null
           is_public?: boolean
           name?: string
           persona_id?: string
           profile_image_url?: string | null
           schema_version?: string
+          thought_coherence?: number | null
           updated_at?: string | null
           user_id?: string
         }
