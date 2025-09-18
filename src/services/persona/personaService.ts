@@ -12,7 +12,7 @@ export interface GetPublicV4PersonasOptions {
 export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Promise<V4Persona[]> {
   const { data, error } = await supabase
     .from('v4_personas')
-    .select('persona_id, name, schema_version, full_profile, conversation_summary, created_at, is_public')
+    .select('persona_id, name, schema_version, full_profile, created_at, is_public')
     .eq('is_public', true)
     .order('created_at', { ascending: false });
 
@@ -38,7 +38,7 @@ export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Pr
 export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
   const { data, error } = await supabase
     .from('v4_personas')
-    .select('persona_id, name, schema_version, full_profile, conversation_summary, created_at, is_public, profile_image_url')
+    .select('persona_id, name, schema_version, full_profile, created_at, is_public, profile_image_url')
     .eq('is_public', true)
     .order('created_at', { ascending: false });
 
@@ -55,7 +55,7 @@ export async function getMyV4PersonasShowAll(userId: string): Promise<V4Persona[
   
   const { data, error } = await supabase
     .from('v4_personas')
-    .select('persona_id, name, schema_version, full_profile, conversation_summary, created_at, is_public, user_id, profile_image_url')
+    .select('persona_id, name, schema_version, full_profile, created_at, is_public, user_id, profile_image_url')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 

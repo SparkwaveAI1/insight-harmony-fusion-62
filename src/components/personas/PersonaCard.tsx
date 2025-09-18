@@ -79,20 +79,24 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
-  // Get description from V4 persona
+  // Get description from V4 persona full_profile
   const getDescription = () => {
-    if (persona.conversation_summary?.demographics?.background_description) {
-      return persona.conversation_summary.demographics.background_description;
+    const fullProfile = persona.full_profile as any;
+    const demographics = fullProfile?.demographics;
+    if (demographics?.background_description) {
+      return demographics.background_description;
     }
     return "No description available";
   };
 
   const description = getDescription();
   
-  // Get V4 persona data
-  const age = persona.conversation_summary?.demographics?.age || 'Not specified';
-  const location = persona.conversation_summary?.demographics?.location || 'Not specified';
-  const occupation = persona.conversation_summary?.demographics?.occupation || 'Not specified';
+  // Get V4 persona data from full_profile
+  const fullProfile = persona.full_profile as any;
+  const demographics = fullProfile?.demographics || {};
+  const age = demographics?.age || 'Not specified';
+  const location = demographics?.location || 'Not specified';
+  const occupation = demographics?.occupation || 'Not specified';
 
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">

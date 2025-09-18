@@ -45,10 +45,9 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           throw new Error(`Non-V4 persona fetched (schema_version=${v4Data.schema_version ?? 'missing'})`);
         }
         
-        // Extract trait data from full_profile instead of clobbering with {}
-        const fullProfile = (v4Data.full_profile as any) || {};
-        const conversationSummary = v4Data.conversation_summary as any;
-        const demographics = conversationSummary?.demographics;
+        // Extract trait data from full_profile 
+        const fullProfile = v4Data.full_profile as any;
+        const demographics = fullProfile?.demographics || {};
         const backgroundDescription = demographics?.background_description;
         
         const convertedPersona: Persona = {
@@ -73,7 +72,7 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           // Preserve V4 fields for correct detection
           schema_version: v4Data.schema_version,
           full_profile: v4Data.full_profile,
-          conversation_summary: (conversationSummary || {}) as any
+          conversation_summary: null // Field removed from schema
         };
         
         return convertedPersona;

@@ -32,7 +32,7 @@ export function usePersonaStats() {
 
       const { data: personas, error } = await supabase
         .from('v4_personas')
-        .select('persona_id, full_profile, conversation_summary')
+        .select('persona_id, full_profile')
         .eq('user_id', user.id);
 
       if (error) {
@@ -87,9 +87,8 @@ export function usePersonaStats() {
           missingEducation++;
         }
 
-        // Check for brief descriptions using conversation_summary
-        const conversationSummary = persona.conversation_summary as any || {};
-        const backgroundDescription = conversationSummary.demographics?.background_description || '';
+        // Check for brief descriptions using full_profile demographics  
+        const backgroundDescription = demographics.background_description || '';
         if (!backgroundDescription || backgroundDescription.length < 50) {
           briefDescriptions++;
         }

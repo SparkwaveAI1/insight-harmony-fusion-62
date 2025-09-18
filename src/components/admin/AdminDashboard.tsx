@@ -7,6 +7,7 @@ import { AdminBillingAuditLog } from "./AdminBillingAuditLog";
 import { AdminBillingStats } from "./AdminBillingStats";
 import { AdminAlerts } from "./AdminAlerts";
 import { GrokPromptMonitor } from "../dashboard/GrokPromptMonitor";
+import { PersonaTraitFiller } from "./PersonaTraitFiller";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -63,6 +64,9 @@ export function AdminDashboard() {
 
       {/* Persona Completeness Analysis */}
       <PersonaCompletenessAnalysis />
+
+      {/* Persona Trait Filler */}
+      <PersonaTraitFiller />
 
       {/* Admin Billing Users */}
       <AdminBillingUsers />
