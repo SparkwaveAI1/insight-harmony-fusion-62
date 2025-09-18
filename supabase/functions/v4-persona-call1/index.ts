@@ -24,10 +24,10 @@ serve(async (req) => {
     // Extract and validate inputs
     const userInputs = {
       role: requestBody.role || 'professional',
-      region: requestBody.region || 'California', 
-      urbanicity: requestBody.urbanicity || 'urban',
-      age_range: requestBody.age_range || '25-35',
-      ethnicity: requestBody.ethnicity || null,
+      region: requestBody.region && requestBody.region !== 'any' ? requestBody.region : 'California', 
+      urbanicity: requestBody.urbanicity && requestBody.urbanicity !== 'any' ? requestBody.urbanicity : 'urban',
+      age_range: requestBody.age_range && requestBody.age_range !== 'any' ? requestBody.age_range : '25-35',
+      ethnicity: requestBody.ethnicity && requestBody.ethnicity !== 'any' ? requestBody.ethnicity : null,
       income_bracket: requestBody.income_bracket || null,
       coherence_target: requestBody.coherence_target || 0.7,
       education_level: requestBody.education_level || null,

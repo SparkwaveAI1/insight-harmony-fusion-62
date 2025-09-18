@@ -315,7 +315,7 @@ export function V4PersonaCreator() {
                   <SelectValue placeholder="Select ethnicity" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any</SelectItem>
+                  <SelectItem value="any">Any</SelectItem>
                   <SelectItem value="African American">African American</SelectItem>
                   <SelectItem value="Asian">Asian</SelectItem>
                   <SelectItem value="Caucasian">Caucasian</SelectItem>
@@ -350,7 +350,7 @@ export function V4PersonaCreator() {
                   <SelectValue placeholder="Select age range" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any</SelectItem>
+                  <SelectItem value="any">Any</SelectItem>
                   <SelectItem value="18-25">18-25</SelectItem>
                   <SelectItem value="25-35">25-35</SelectItem>
                   <SelectItem value="35-45">35-45</SelectItem>
@@ -372,7 +372,7 @@ export function V4PersonaCreator() {
                   <SelectValue placeholder="Select region" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any</SelectItem>
+                  <SelectItem value="any">Any</SelectItem>
                   <SelectItem value="California">California</SelectItem>
                   <SelectItem value="Texas">Texas</SelectItem>
                   <SelectItem value="Florida">Florida</SelectItem>
@@ -396,7 +396,7 @@ export function V4PersonaCreator() {
                   <SelectValue placeholder="Select environment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any</SelectItem>
+                  <SelectItem value="any">Any</SelectItem>
                   <SelectItem value="urban">Urban</SelectItem>
                   <SelectItem value="suburban">Suburban</SelectItem>
                   <SelectItem value="rural">Rural</SelectItem>
