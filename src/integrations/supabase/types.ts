@@ -1458,6 +1458,7 @@ export type Database = {
       }
       v4_personas: {
         Row: {
+          conversation_summary: Json | null
           created_at: string | null
           creation_completed: boolean | null
           creation_stage: string | null
@@ -1477,6 +1478,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          conversation_summary?: Json | null
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
@@ -1496,6 +1498,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          conversation_summary?: Json | null
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
@@ -1599,6 +1602,10 @@ export type Database = {
         Returns: {
           cleaned_count: number
         }[]
+      }
+      extract_conversation_summary: {
+        Args: { full_profile_data: Json }
+        Returns: Json
       }
       fail_stale_persona_jobs: {
         Args: Record<PropertyKey, never>
