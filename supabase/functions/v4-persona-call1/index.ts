@@ -175,7 +175,6 @@ Create a realistic, internally consistent persona with these exact structure:
       "linguistic_signature": {
         "sentence_patterns": ["pattern1", "pattern2"],
         "signature_phrases": ["phrase1", "phrase2", "phrase3"],
-        "typical_openers": ["opener1", "opener2"],
         "conversation_enders": ["ender1", "ender2"]
       },
       "lexical_profile": {

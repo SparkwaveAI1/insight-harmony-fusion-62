@@ -40,7 +40,6 @@ class V4TraitRelevanceAnalyzer {
     { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
     { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
     { path: 'communication_style.linguistic_signature.signature_phrases', weight: 0.3, contexts: ['all'] },
-    { path: 'communication_style.linguistic_signature.typical_openers', weight: 0.8, contexts: ['conversation', 'greeting'] },
     { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
     { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
 
@@ -271,7 +270,6 @@ class V4TraitRelevanceAnalyzer {
     return {
       signature_phrases: commStyle?.signature_phrases || [],
       forbidden_expressions: authFilters?.forbidden_phrases || [],
-      typical_openers: commStyle?.typical_openers || [],
       conversation_enders: commStyle?.conversation_enders || [],
       sentence_patterns: commStyle?.sentence_patterns || []
     };
@@ -713,9 +711,6 @@ COMMUNICATION STYLE:
   // Add linguistic signature if available
   if (linguistic.signature_phrases && linguistic.signature_phrases.length > 0) {
     instructions += `- Your signature phrases: ${linguistic.signature_phrases.join(', ')}\n`;
-  }
-  if (linguistic.typical_openers && linguistic.typical_openers.length > 0) {
-    instructions += `- Your typical conversation openers: ${linguistic.typical_openers.join(', ')}\n`;
   }
   if (linguistic.conversation_enders && linguistic.conversation_enders.length > 0) {
     instructions += `- Your conversation enders: ${linguistic.conversation_enders.join(', ')}\n`;

@@ -157,7 +157,6 @@ export interface V4CommunicationStyle {
   linguistic_signature: {
     sentence_patterns: string[];     // ["Short declarative statements"]
     signature_phrases: string[];     // ["bottom line", "roger that"]
-    typical_openers: string[];       // ["Look,", "Here's the deal,"]
     conversation_enders: string[];   // ["Hooah", "Let's execute"]
   };
   

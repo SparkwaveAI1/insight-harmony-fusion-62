@@ -40,7 +40,6 @@ export class V4TraitRelevanceAnalyzer {
     { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
     { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
     { path: 'communication_style.linguistic_signature.signature_phrases', weight: 1.0, contexts: ['all'] },
-    { path: 'communication_style.linguistic_signature.typical_openers', weight: 0.8, contexts: ['conversation', 'greeting'] },
     { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
     { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
 
@@ -210,7 +209,6 @@ export class V4TraitRelevanceAnalyzer {
     return {
       signature_phrases: styleMarkers?.metaphor_domains || [],
       forbidden_expressions: authFilters?.avoid_registers || [],
-      typical_openers: [],
       conversation_enders: [],
       sentence_patterns: []
     };

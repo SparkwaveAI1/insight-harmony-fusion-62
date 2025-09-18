@@ -35,7 +35,6 @@ export interface V4TraitAnalysisResult {
   linguistic_signature: {
     signature_phrases: string[];
     forbidden_expressions: string[];
-    typical_openers: string[];
     conversation_enders: string[];
     sentence_patterns: string[];
   };
