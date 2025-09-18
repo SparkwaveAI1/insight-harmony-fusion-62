@@ -31,7 +31,8 @@ serve(async (req) => {
       income_bracket: requestBody.income_bracket || null,
       coherence_target: requestBody.coherence_target || 0.7,
       education_level: requestBody.education_level || null,
-      relationship_status: requestBody.relationship_status || null
+      relationship_status: requestBody.relationship_status || null,
+      name_preference: requestBody.name_preference || null
     };
 
     console.log('Processed user inputs:', userInputs);
@@ -42,6 +43,7 @@ serve(async (req) => {
 Role/Occupation: ${userInputs.role}
 Location: ${userInputs.region} (${userInputs.urbanicity})
 Age Range: ${userInputs.age_range}
+${userInputs.name_preference ? `NAME (REQUIRED): ${userInputs.name_preference}` : ''}
 ${userInputs.ethnicity ? `ETHNICITY (REQUIRED): ${userInputs.ethnicity}` : ''}
 ${userInputs.income_bracket ? `Income Bracket: ${userInputs.income_bracket}` : ''}
 ${userInputs.education_level ? `Education Level: ${userInputs.education_level}` : ''}
@@ -49,6 +51,7 @@ ${userInputs.relationship_status ? `Relationship Status: ${userInputs.relationsh
 Thought Coherence Target: ${userInputs.coherence_target}
 
 CRITICAL REQUIREMENTS:
+- Use the EXACT name specified above if provided
 - Use the EXACT ethnicity specified above if provided
 - Place the role in identity.occupation
 - Match location details exactly

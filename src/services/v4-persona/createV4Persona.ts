@@ -24,6 +24,7 @@ export interface CreateV4PersonaRequest {
   coherence_target?: number;
   user_id?: string; // Still needed for database storage
   user_prompt?: string; // Keep for backward compatibility
+  name_preference?: string; // Add name preference
 }
 
 export interface CreateV4PersonaResponse {
@@ -39,7 +40,15 @@ export interface CreateV4PersonaResponse {
 
 export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Promise<CreateV4PersonaResponse> {
   try {
-    console.log('🚀 Starting V4 persona creation - Call 1 with optimized system');
+    console.log('🚀 Starting V4 persona creation - Call 1 with form data:', {
+      role: request.role,
+      region: request.region,
+      urbanicity: request.urbanicity,
+      age_range: request.age_range,
+      ethnicity: request.ethnicity,
+      name_preference: request.name_preference,
+      user_prompt: request.user_prompt
+    });
     
     // Parse user_prompt if it's a simple text, or use structured parameters
     let personaParams = {
@@ -49,7 +58,8 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
       age_range: request.age_range || '25-35',
       ethnicity: request.ethnicity,
       income_bracket: request.income_bracket,
-      coherence_target: request.coherence_target || 0.7
+      coherence_target: request.coherence_target || 0.7,
+      name_preference: request.name_preference
     };
 
     // If user_prompt is provided, try to extract parameters from it
@@ -70,13 +80,21 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
         personaParams.role = foundOccupation;
       }
       
-      // Extract location/region
-      const regions = ['california', 'texas', 'florida', 'new york', 'midwest', 'south', 'northeast', 'west'];
-      const foundRegion = regions.find(region => prompt.includes(region));
-      if (foundRegion) {
-        personaParams.region = foundRegion;
+      // Extract ethnicity from prompt
+      const ethnicities = ['african american', 'black', 'asian', 'caucasian', 'white', 'hispanic', 'latino', 'native american', 'pacific islander'];
+      const foundEthnicity = ethnicities.find(eth => prompt.includes(eth));
+      if (foundEthnicity) {
+        personaParams.ethnicity = foundEthnicity.replace('black', 'African American').replace('white', 'Caucasian');
+      }
+      
+      // Extract name preference
+      const nameMatch = prompt.match(/named?\s+(\w+)/i);
+      if (nameMatch) {
+        personaParams.name_preference = nameMatch[1];
       }
     }
+    
+    console.log('📤 Sending to edge function:', personaParams);
     
     const { data, error } = await supabase.functions.invoke('v4-persona-call1', {
       body: personaParams
