@@ -1,0 +1,150 @@
+// Utility functions to safely extract display data from V4 personas
+// This handles the transition from conversation_summary to full_profile structure
+
+import { V4Persona, V4FullProfile } from '@/types/persona-v4';
+
+/**
+ * Safely extract display name from V4 persona
+ */
+export function getPersonaDisplayName(persona: V4Persona): string {
+  // Try full_profile identity first
+  if (persona.full_profile?.identity?.name) {
+    return persona.full_profile.identity.name;
+  }
+  
+  // Fallback to persona name
+  return persona.name;
+}
+
+/**
+ * Safely extract age from V4 persona
+ */
+export function getPersonaAge(persona: V4Persona): number | undefined {
+  if (persona.full_profile?.identity?.age) {
+    return typeof persona.full_profile.identity.age === 'number' 
+      ? persona.full_profile.identity.age 
+      : parseInt(persona.full_profile.identity.age.toString());
+  }
+  return undefined;
+}
+
+/**
+ * Safely extract occupation from V4 persona
+ */
+export function getPersonaOccupation(persona: V4Persona): string | undefined {
+  return persona.full_profile?.identity?.occupation;
+}
+
+/**
+ * Safely extract location from V4 persona
+ */
+export function getPersonaLocation(persona: V4Persona): string | undefined {
+  if (persona.full_profile?.identity?.location) {
+    const loc = persona.full_profile.identity.location;
+    if (typeof loc === 'string') return loc;
+    
+    // Handle location object
+    if (typeof loc === 'object' && loc.city && loc.region) {
+      return `${loc.city}, ${loc.region}`;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Safely extract background description from V4 persona
+ */
+export function getPersonaBackgroundDescription(persona: V4Persona): string | undefined {
+  // Try to generate from available data if no explicit description
+  const age = getPersonaAge(persona);
+  const occupation = getPersonaOccupation(persona);
+  const location = getPersonaLocation(persona);
+  
+  if (age && occupation && location) {
+    return `${age}-year-old ${occupation} from ${location}`;
+  }
+  
+  return undefined;
+}
+
+/**
+ * Check if persona has knowledge in a specific domain
+ * This replaces the old knowledge_profile checks
+ */
+export function hasKnowledgeInDomain(persona: V4Persona, domain: string): boolean {
+  // Since knowledge_profile is removed, we check occupation and other traits
+  const occupation = getPersonaOccupation(persona)?.toLowerCase() || '';
+  const domainLower = domain.toLowerCase();
+  
+  // Simple domain matching based on occupation
+  const domainMapping: Record<string, string[]> = {
+    'technology': ['engineer', 'developer', 'programmer', 'tech', 'software', 'computer'],
+    'finance': ['banker', 'accountant', 'financial', 'analyst', 'investor'],
+    'healthcare': ['doctor', 'nurse', 'physician', 'medical', 'health'],
+    'education': ['teacher', 'professor', 'educator', 'instructor'],
+    'business': ['manager', 'executive', 'entrepreneur', 'consultant'],
+    'construction': ['contractor', 'electrician', 'plumber', 'builder'],
+    'military': ['soldier', 'veteran', 'officer', 'military'],
+    'politics': ['politician', 'government', 'policy', 'civic']
+  };
+  
+  const keywords = domainMapping[domainLower] || [domainLower];
+  return keywords.some(keyword => occupation.includes(keyword));
+}
+
+/**
+ * Get knowledge domains for a persona based on their profile
+ */
+export function getPersonaKnowledgeDomains(persona: V4Persona): string[] {
+  const domains = [];
+  const occupation = getPersonaOccupation(persona)?.toLowerCase() || '';
+  
+  // Infer domains from occupation
+  if (occupation.includes('engineer') || occupation.includes('tech') || occupation.includes('developer')) {
+    domains.push('technology');
+  }
+  if (occupation.includes('financial') || occupation.includes('banker') || occupation.includes('accountant')) {
+    domains.push('finance');
+  }
+  if (occupation.includes('doctor') || occupation.includes('nurse') || occupation.includes('medical')) {
+    domains.push('healthcare');
+  }
+  if (occupation.includes('teacher') || occupation.includes('professor') || occupation.includes('educator')) {
+    domains.push('education');
+  }
+  if (occupation.includes('manager') || occupation.includes('executive') || occupation.includes('business')) {
+    domains.push('business');
+  }
+  if (occupation.includes('contractor') || occupation.includes('electrician') || occupation.includes('construction')) {
+    domains.push('construction');
+  }
+  if (occupation.includes('veteran') || occupation.includes('military') || occupation.includes('soldier')) {
+    domains.push('military');
+  }
+  
+  return domains;
+}
+
+/**
+ * Extract available trait categories from full_profile
+ */
+export function getAvailableTraitCategories(fullProfile: V4FullProfile): string[] {
+  if (!fullProfile) return [];
+  
+  const categories = [];
+  
+  if (fullProfile.identity) categories.push('identity');
+  if (fullProfile.motivation_profile) categories.push('motivation_profile');
+  if (fullProfile.humor_profile) categories.push('humor_profile');
+  if (fullProfile.truth_honesty_profile) categories.push('truth_honesty_profile');
+  if (fullProfile.bias_profile) categories.push('bias_profile');
+  if (fullProfile.cognitive_profile) categories.push('cognitive_profile');
+  if (fullProfile.daily_life) categories.push('daily_life');
+  if (fullProfile.communication_style) categories.push('communication_style');
+  if (fullProfile.emotional_profile) categories.push('emotional_profile');
+  if (fullProfile.sexuality_profile) categories.push('sexuality_profile');
+  if (fullProfile.contradictions) categories.push('contradictions');
+  if (fullProfile.narratives) categories.push('narratives');
+  
+  return categories;
+}

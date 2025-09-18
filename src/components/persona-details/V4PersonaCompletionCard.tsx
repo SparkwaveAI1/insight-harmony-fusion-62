@@ -100,7 +100,7 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
             <div>Stage: <code className="bg-muted px-1 py-0.5 rounded">{validation.stage}</code></div>
             <div>Creation completed: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.isCreationCompleted)}</code></div>
             <div>Has full profile: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.hasFullProfile)}</code></div>
-            <div>Has conversation summary: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.hasConversationSummary)}</code></div>
+            <div>Has required traits: <code className="bg-muted px-1 py-0.5 rounded">{String(validation.completeness.hasRequiredTraits)}</code></div>
           </div>
         </div>
 

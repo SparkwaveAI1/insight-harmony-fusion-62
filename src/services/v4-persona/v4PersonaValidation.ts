@@ -1,4 +1,4 @@
-import { V4Persona, V4FullProfile, V4ConversationSummary } from '@/types/persona-v4';
+import { V4Persona, V4FullProfile } from '@/types/persona-v4';
 
 export interface V4PersonaValidationResult {
   isValid: boolean;
@@ -7,7 +7,7 @@ export interface V4PersonaValidationResult {
   warnings: string[];
   completeness: {
     hasFullProfile: boolean;
-    hasConversationSummary: boolean;
+    hasRequiredTraits: boolean;
     isCreationCompleted: boolean;
     hasAllRequiredTraits: boolean;
     missingTraits: string[];
@@ -32,18 +32,16 @@ export function validateV4PersonaCompleteness(persona: V4Persona): V4PersonaVali
   const stage = persona.creation_stage || 'completed'; // Default to completed if not set
   const isCreationCompleted = persona.creation_completed !== false; // Default to true if not explicitly false
 
-  // Simple validation - just check if basic data exists
+  // Check if basic data exists
   const hasFullProfile = !!(persona.full_profile && typeof persona.full_profile === 'object');
-  const hasConversationSummary = !!(persona.conversation_summary && typeof persona.conversation_summary === 'object');
+  const hasRequiredTraits = hasFullProfile ? validateFullProfile(persona.full_profile, missingTraits) : false;
   
   // Only flag as incomplete if clearly missing core data or explicitly marked as incomplete
   if (stage === 'not_started') {
     errors.push('V4 persona creation has not been started');
   } else if (stage === 'detailed_traits' && !hasFullProfile) {
     errors.push('V4 persona stuck at detailed_traits stage - full_profile generation failed');
-  } else if (stage === 'summary_generation' && !hasConversationSummary) {
-    errors.push('V4 persona stuck at summary_generation stage - conversation_summary generation failed');
-  } else if (persona.creation_completed === false && (stage === 'detailed_traits' || stage === 'summary_generation')) {
+  } else if (persona.creation_completed === false && stage === 'detailed_traits') {
     warnings.push(`V4 persona creation marked as incomplete at stage: ${stage}`);
   }
 
@@ -51,14 +49,15 @@ export function validateV4PersonaCompleteness(persona: V4Persona): V4PersonaVali
     errors.push('V4 persona missing full_profile data');
   }
 
-  if (!hasConversationSummary && stage === 'completed') {
-    warnings.push('V4 persona missing conversation_summary data');
+  if (hasFullProfile && !hasRequiredTraits) {
+    warnings.push('V4 persona missing required trait categories');
   }
 
   // A persona is complete if:
   // 1. It has full_profile data AND
-  // 2. Either creation_completed is true OR stage is 'completed' OR creation_completed is not explicitly false
-  const isComplete = hasFullProfile && (isCreationCompleted || stage === 'completed');
+  // 2. Has required traits AND
+  // 3. Either creation_completed is true OR stage is 'completed' OR creation_completed is not explicitly false
+  const isComplete = hasFullProfile && hasRequiredTraits && (isCreationCompleted || stage === 'completed');
   const isValid = errors.length === 0;
 
   console.log('V4 validation result:', {
@@ -68,7 +67,7 @@ export function validateV4PersonaCompleteness(persona: V4Persona): V4PersonaVali
     warningCount: warnings.length,
     stage,
     hasFullProfile,
-    hasConversationSummary,
+    hasRequiredTraits,
     isCreationCompleted
   });
 
@@ -79,9 +78,9 @@ export function validateV4PersonaCompleteness(persona: V4Persona): V4PersonaVali
     warnings,
     completeness: {
       hasFullProfile,
-      hasConversationSummary,
+      hasRequiredTraits,
       isCreationCompleted,
-      hasAllRequiredTraits: true, // Always true with simplified validation
+      hasAllRequiredTraits: hasRequiredTraits,
       missingTraits
     },
     stage: stage as any
@@ -100,14 +99,13 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
   const requiredTraits = [
     'identity',
     'motivation_profile',
-    'inhibitor_profile',
+    'humor_profile',
     'truth_honesty_profile',
-    'identity_salience',
-    'knowledge_profile',
+    'bias_profile',
+    'cognitive_profile',
     'daily_life',
     'communication_style',
     'emotional_profile',
-    'contradictions',
     'sexuality_profile'
   ];
 
@@ -132,32 +130,9 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
   }
 
   console.log(`V4 full_profile validation: ${validTraitCount}/${requiredTraits.length} traits valid`);
-  return validTraitCount >= 8; // Require at least 8 out of 11 traits to be present
+  return validTraitCount >= 7; // Require at least 7 out of 10 traits to be present
 }
 
-/**
- * Validates the conversation_summary structure
- */
-function validateConversationSummary(conversationSummary: V4ConversationSummary): boolean {
-  if (!conversationSummary || typeof conversationSummary !== 'object') {
-    return false;
-  }
-
-  const requiredFields = [
-    'demographics',
-    'motivation_summary',
-    'voice_summary',
-    'communication_style'
-  ];
-
-  const validFields = requiredFields.filter(field => {
-    const value = conversationSummary[field as keyof V4ConversationSummary];
-    return value && typeof value === 'object' || typeof value === 'string';
-  });
-
-  console.log(`V4 conversation_summary validation: ${validFields.length}/${requiredFields.length} fields valid`);
-  return validFields.length >= 3; // Require at least 3 out of 4 core fields
-}
 
 /**
  * Helper validation functions for specific trait categories
@@ -192,7 +167,7 @@ export function needsV4PersonaCompletion(persona: V4Persona): boolean {
   // 1. Not completed but has some progress (stuck at intermediate stage)
   // 2. Has errors but isn't completely failed
   return !validation.isComplete && 
-         (validation.stage === 'detailed_traits' || validation.stage === 'summary_generation') &&
+         validation.stage === 'detailed_traits' &&
          validation.completeness.hasFullProfile; // Has some progress
 }
 
@@ -213,13 +188,9 @@ export function getV4PersonaCompletionStatus(persona: V4Persona): string {
   if (validation.stage === 'detailed_traits') {
     if (!validation.completeness.hasFullProfile) {
       return 'Detailed traits generation failed';
-    } else if (!validation.completeness.hasConversationSummary) {
-      return 'Ready for summary generation';
+    } else if (!validation.completeness.hasRequiredTraits) {
+      return 'Missing required trait categories';
     }
-  }
-  
-  if (validation.stage === 'summary_generation') {
-    return 'Summary generation in progress';
   }
   
   if (validation.errors.length > 0) {

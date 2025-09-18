@@ -46,7 +46,7 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
     // Determine what completion step is needed
     if (currentPersona.creation_stage === 'detailed_traits' && 
         validation.completeness.hasFullProfile &&
-        !validation.completeness.hasConversationSummary) {
+        !validation.completeness.hasRequiredTraits) {
       
       console.log('🔄 Persona needs summary generation (Call 2)');
       

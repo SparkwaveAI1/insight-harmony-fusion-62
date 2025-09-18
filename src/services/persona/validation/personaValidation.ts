@@ -38,8 +38,8 @@ export function validatePersonaCompleteness(persona: any): PersonaValidationResu
       completeness: {
         hasRealTraits: v4Validation.completeness.hasFullProfile,
         hasEmotionalTriggers: v4Validation.completeness.hasFullProfile,
-        hasInterviewResponses: v4Validation.completeness.hasConversationSummary,
-        hasMetadata: v4Validation.completeness.hasConversationSummary
+        hasInterviewResponses: v4Validation.completeness.hasRequiredTraits,
+        hasMetadata: v4Validation.completeness.isCreationCompleted
       }
     };
   }

@@ -333,7 +333,7 @@ export interface V4ConversationSummary {
   sexuality_summary: string;         // "Private about sexuality, conservative boundaries..."
 }
 
-// MAIN V4 PERSONA INTERFACE
+// MAIN V4 PERSONA INTERFACE (matches database structure)
 export interface V4Persona {
   persona_id: string;
   name: string;
@@ -343,10 +343,14 @@ export interface V4Persona {
   is_public: boolean;
   
   full_profile: V4FullProfile;
-  conversation_summary: V4ConversationSummary;
   
-  creation_stage: 'not_started' | 'detailed_traits' | 'summary_generation' | 'completed';
-  creation_completed: boolean;
+  // New generated fields
+  education_level?: string;
+  income_bracket?: string;
+  thought_coherence?: number;
+  
+  creation_stage?: 'not_started' | 'detailed_traits' | 'summary_generation' | 'completed';
+  creation_completed?: boolean;
   
   created_at: string;
   updated_at: string;
