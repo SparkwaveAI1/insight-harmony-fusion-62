@@ -1462,9 +1462,12 @@ export type Database = {
           creation_completed: boolean | null
           creation_stage: string | null
           education_level: string | null
+          enrichment_status: string | null
+          evidence_notes: string | null
           full_profile: Json
           income_bracket: string | null
           is_public: boolean
+          missing_fields: string[] | null
           name: string
           persona_id: string
           profile_image_url: string | null
@@ -1478,9 +1481,12 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           education_level?: string | null
+          enrichment_status?: string | null
+          evidence_notes?: string | null
           full_profile?: Json
           income_bracket?: string | null
           is_public?: boolean
+          missing_fields?: string[] | null
           name: string
           persona_id: string
           profile_image_url?: string | null
@@ -1494,9 +1500,12 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           education_level?: string | null
+          enrichment_status?: string | null
+          evidence_notes?: string | null
           full_profile?: Json
           income_bracket?: string | null
           is_public?: boolean
+          missing_fields?: string[] | null
           name?: string
           persona_id?: string
           profile_image_url?: string | null
