@@ -269,7 +269,7 @@ export interface V4PromptShaping {
   };
 }
 
-// COMPLETE V4 FULL PROFILE (UPDATED TO MATCH USER'S EXPECTED STRUCTURE)
+// COMPLETE V4 FULL PROFILE (EXACT MATCH TO CUSTOM SCHEMA)
 export interface V4FullProfile {
   identity: {
     name: string;
@@ -395,10 +395,6 @@ export interface V4FullProfile {
       empathy_level: number;
       honesty_style: string;
       charisma_level: number;
-      // Legacy compatibility
-      directness_level?: string;
-      formality_default?: string;
-      emotional_expression?: string;
     };
     style_markers: {
       metaphor_domains: string[];
@@ -425,11 +421,7 @@ export interface V4FullProfile {
       avoid_registers: string[];
       embrace_registers: string[];
       personality_anchors: string[];
-      // Legacy compatibility
-      forbidden_phrases?: string[];
     };
-    // Legacy compatibility
-    linguistic_signature?: any;
   };
   humor_profile: {
     frequency: string;
@@ -520,12 +512,20 @@ export interface V4FullProfile {
     };
     current_focus: string;
   };
-  
-  // Legacy compatibility fields for backward compatibility with old components
-  knowledge_profile?: any;
-  sexuality_profile?: any;
-  contradictions?: any;
-  narratives?: any;
+  sexuality_profile: {
+    orientation: string;
+    expression_style: string;
+    relationship_norms: string;
+    boundaries: {
+      comfort_level: string;
+      topics_off_limits: string[];
+    };
+    linguistic_influences: {
+      flirtation_style: string;
+      humor_boundaries: string;
+      taboo_navigation: string;
+    };
+  };
 }
 
 // CONVERSATION SUMMARY (for conversation engine)

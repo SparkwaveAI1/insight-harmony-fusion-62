@@ -135,13 +135,13 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
         {fullProfile?.communication_style?.voice_foundation && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <strong>Directness:</strong> {fullProfile.communication_style.voice_foundation.directness_level || 'Not specified'}
+              <strong>Directness:</strong> {fullProfile.communication_style.voice_foundation.directness || 'Not specified'}
             </div>
             <div>
-              <strong>Formality:</strong> {fullProfile.communication_style.voice_foundation.formality_default || 'Not specified'}
+              <strong>Formality:</strong> {fullProfile.communication_style.voice_foundation.formality || 'Not specified'}
             </div>
             <div>
-              <strong>Emotional Expression:</strong> {fullProfile.communication_style.voice_foundation.emotional_expression || 'Not specified'}
+              <strong>Empathy Level:</strong> {fullProfile.communication_style.voice_foundation.empathy_level || 'Not specified'}
             </div>
             <div>
               <strong>Pace & Rhythm:</strong> {fullProfile.communication_style.voice_foundation.pace_rhythm || 'Not specified'}
@@ -149,12 +149,12 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
         )}
         
-        {fullProfile?.communication_style?.linguistic_signature?.signature_phrases?.length > 0 && (
+        {fullProfile?.communication_style?.style_markers?.metaphor_domains?.length > 0 && (
           <div>
-            <strong>Signature Phrases:</strong>
+            <strong>Metaphor Domains:</strong>
             <div className="flex flex-wrap gap-2 mt-2">
-              {fullProfile.communication_style.linguistic_signature.signature_phrases.map((phrase, idx) => (
-                <Badge key={idx} variant="outline">"{phrase}"</Badge>
+              {fullProfile.communication_style.style_markers.metaphor_domains.map((domain, idx) => (
+                <Badge key={idx} variant="outline">{domain}</Badge>
               ))}
             </div>
           </div>
@@ -182,7 +182,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
             <div>Motivation: {fullProfile?.motivation_profile ? '✓' : '✗'}</div>
             <div>Communication: {fullProfile?.communication_style ? '✓' : '✗'}</div>
             <div>Emotional: {fullProfile?.emotional_profile ? '✓' : '✗'}</div>
-            <div>Knowledge: {fullProfile?.knowledge_profile ? '✓' : '✗'}</div>
+            <div>Sexuality: {fullProfile?.sexuality_profile ? '✓' : '✗'}</div>
             <div>Daily Life: {fullProfile?.daily_life ? '✓' : '✗'}</div>
           </div>
           
@@ -258,39 +258,31 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
     </Card>
   );
   
-  const renderKnowledge = () => (
+  const renderSexuality = () => (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Knowledge Profile</h3>
+      <h3 className="text-lg font-semibold mb-4">Sexuality Profile</h3>
       <div className="space-y-4">
-        {fullProfile?.knowledge_profile && (
+        {fullProfile?.sexuality_profile && (
           <div className="space-y-3">
             <div>
-              <strong>Education Level:</strong> {fullProfile.knowledge_profile.education_level || 'Not specified'}
+              <strong>Orientation:</strong> {fullProfile.sexuality_profile.orientation || 'Not specified'}
             </div>
             <div>
-              <strong>Vocabulary Level:</strong> {fullProfile.knowledge_profile.vocabulary_ceiling || 'Not specified'}
+              <strong>Expression Style:</strong> {fullProfile.sexuality_profile.expression_style || 'Not specified'}
             </div>
             <div>
-              <strong>Learning Style:</strong> {fullProfile.knowledge_profile.learning_style || 'Not specified'}
+              <strong>Relationship Norms:</strong> {fullProfile.sexuality_profile.relationship_norms || 'Not specified'}
+            </div>
+            <div>
+              <strong>Comfort Level:</strong> {fullProfile.sexuality_profile.boundaries?.comfort_level || 'Not specified'}
             </div>
             
-            {fullProfile.knowledge_profile.expertise_domains?.length > 0 && (
+            {fullProfile.sexuality_profile.boundaries?.topics_off_limits?.length > 0 && (
               <div>
-                <strong>Areas of Expertise:</strong>
+                <strong>Topics Off Limits:</strong>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {fullProfile.knowledge_profile.expertise_domains.map((domain, idx) => (
-                    <Badge key={idx} variant="secondary">{domain}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {fullProfile.knowledge_profile.knowledge_gaps?.length > 0 && (
-              <div>
-                <strong>Knowledge Gaps:</strong>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {fullProfile.knowledge_profile.knowledge_gaps.map((gap, idx) => (
-                    <Badge key={idx} variant="outline">{gap}</Badge>
+                  {fullProfile.sexuality_profile.boundaries.topics_off_limits.map((topic, idx) => (
+                    <Badge key={idx} variant="outline">{topic}</Badge>
                   ))}
                 </div>
               </div>
@@ -460,8 +452,8 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           {renderEmotional()}
         </TabsContent>
 
-        <TabsContent value="knowledge" className="space-y-6">
-          {renderKnowledge()}
+        <TabsContent value="sexuality" className="space-y-6">
+          {renderSexuality()}
         </TabsContent>
 
         <TabsContent value="memories" className="space-y-6">

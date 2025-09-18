@@ -143,8 +143,8 @@ export function getAvailableTraitCategories(fullProfile: V4FullProfile): string[
   if (fullProfile.communication_style) categories.push('communication_style');
   if (fullProfile.emotional_profile) categories.push('emotional_profile');
   if (fullProfile.sexuality_profile) categories.push('sexuality_profile');
-  if (fullProfile.contradictions) categories.push('contradictions');
-  if (fullProfile.narratives) categories.push('narratives');
+  if (fullProfile.attitude_narrative) categories.push('attitude_narrative');
+  if (fullProfile.political_narrative) categories.push('political_narrative');
   
   return categories;
 }

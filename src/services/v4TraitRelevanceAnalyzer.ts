@@ -204,15 +204,15 @@ export class V4TraitRelevanceAnalyzer {
   }
 
   private static extractLinguisticSignature(fullProfile: V4FullProfile): V4TraitAnalysisResult['linguistic_signature'] {
-    const commStyle = fullProfile?.communication_style?.linguistic_signature;
+    const styleMarkers = fullProfile?.communication_style?.style_markers;
     const authFilters = fullProfile?.communication_style?.authenticity_filters;
 
     return {
-      signature_phrases: commStyle?.signature_phrases || [],
-      forbidden_expressions: authFilters?.forbidden_phrases || [],
-      typical_openers: commStyle?.typical_openers || [],
-      conversation_enders: commStyle?.conversation_enders || [],
-      sentence_patterns: commStyle?.sentence_patterns || []
+      signature_phrases: styleMarkers?.metaphor_domains || [],
+      forbidden_expressions: authFilters?.avoid_registers || [],
+      typical_openers: [],
+      conversation_enders: [],
+      sentence_patterns: []
     };
   }
 
@@ -251,7 +251,7 @@ export class V4TraitRelevanceAnalyzer {
     fullProfile: V4FullProfile
   ): KnowledgeBoundary {
     // Extract expertise domains from the persona
-    const expertiseDomains = fullProfile?.knowledge_profile?.expertise_domains || [];
+    const expertiseDomains = [fullProfile?.identity?.occupation || ''];
     
     // Expand topic keywords for better matching
     const expandedTopics = this.expandTopics(userTopics);

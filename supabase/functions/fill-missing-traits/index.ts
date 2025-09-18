@@ -127,7 +127,8 @@ function analyzeTraitCompleteness(persona: any) {
     'attitude_narrative',
     'political_narrative',
     'adoption_profile',
-    'prompt_shaping'
+    'prompt_shaping',
+    'sexuality_profile'
   ];
 
   for (const trait of requiredTraits) {
@@ -209,8 +210,41 @@ IMPORTANT: Return ONLY valid JSON that can be merged with existing profile. Foll
     "goal_orientation": { "strength": 0, "time_horizon": "", "primary_goals": [], "goal_flexibility": 0 },
     "want_vs_should_tension": { "major_conflicts": [], "default_resolution": "" }
   },
+  "communication_style": {
+    "regional_register": { "region": "", "urbanicity": "urban", "dialect_hints": [] },
+    "voice_foundation": { "formality": "", "directness": "", "pace_rhythm": "", "positivity": "", "empathy_level": 0, "honesty_style": "", "charisma_level": 0 },
+    "style_markers": { "metaphor_domains": [], "aphorism_register": "", "storytelling_vs_bullets": 0, "humor_style": "", "code_switching_contexts": [] },
+    "context_switches": { "work": { "formality": "", "directness": "" }, "home": { "formality": "", "directness": "" }, "online": { "formality": "", "directness": "" } },
+    "authenticity_filters": { "avoid_registers": [], "embrace_registers": [], "personality_anchors": [] }
+  },
+  "humor_profile": { "frequency": "", "style": [], "boundaries": [], "targets": [], "use_cases": [] },
+  "truth_honesty_profile": {
+    "baseline_honesty": 0, "situational_variance": { "work": 0, "home": 0, "public": 0 },
+    "typical_distortions": [], "red_lines": [], "pressure_points": [], "confession_style": ""
+  },
+  "bias_profile": {
+    "cognitive": { "status_quo": 0, "loss_aversion": 0, "confirmation": 0, "anchoring": 0, "availability": 0, "optimism": 0, "sunk_cost": 0, "overconfidence": 0 },
+    "mitigations": []
+  },
+  "cognitive_profile": { "verbal_fluency": 0, "abstract_reasoning": 0, "problem_solving_orientation": "", "thought_coherence": 0 },
+  "emotional_profile": { "stress_responses": [], "negative_triggers": [], "positive_triggers": [], "explosive_triggers": [], "emotional_regulation": "" },
   "attitude_narrative": "String description of overall attitude and worldview",
-  "political_narrative": "String description of political views and influences"
+  "political_narrative": "String description of political views and influences",
+  "adoption_profile": { "buyer_power": 0, "adoption_influence": 0, "risk_tolerance": 0, "change_friction": 0, "expected_objections": [], "proof_points_needed": [] },
+  "prompt_shaping": {
+    "voice_foundation": { "formality": "", "directness": "", "pace_rhythm": "", "positivity": "", "empathy_level": 0 },
+    "style_markers": { "metaphor_domains": [], "humor_style": "", "storytelling_vs_bullets": 0 },
+    "primary_motivations": [], "deal_breakers": [],
+    "honesty_vector": { "baseline": 0, "work": 0, "home": 0, "public": 0, "distortions": [] },
+    "bias_vector": { "top_cognitive": [], "top_social": [], "mitigation_playbook": [] },
+    "context_switches": { "work": "", "home": "", "online": "" },
+    "current_focus": ""
+  },
+  "sexuality_profile": {
+    "orientation": "heterosexual", "expression_style": "private", "relationship_norms": "monogamous",
+    "boundaries": { "comfort_level": "moderate", "topics_off_limits": ["intimacy issues"] },
+    "linguistic_influences": { "flirtation_style": "none", "humor_boundaries": "clean", "taboo_navigation": "navigate_carefully" }
+  }
 }`;
 
   const userPrompt = `Persona: ${persona.name}

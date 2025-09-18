@@ -108,19 +108,14 @@ function searchConversationSummary(persona: V4Persona, searchLower: string, weig
     };
   }
 
-  // Expertise domains match
-  if (summary.knowledge_profile?.expertise_domains) {
-    const matchedDomain = summary.knowledge_profile.expertise_domains.find(domain =>
-      typeof domain === 'string' && domain.toLowerCase().includes(searchLower)
-    );
-    if (matchedDomain) {
-      return {
-        persona,
-        score: weights.expertise,
-        matchType: 'expertise',
-        matchedText: matchedDomain
-      };
-    }
+  // Expertise based on occupation
+  if (summary.demographics?.occupation?.toLowerCase().includes(searchLower)) {
+    return {
+      persona,
+      score: weights.expertise,
+      matchType: 'expertise',
+      matchedText: summary.demographics.occupation
+    };
   }
 
   // Other summary fields
@@ -172,14 +167,9 @@ function searchFullProfile(persona: V4Persona, searchLower: string, weights: any
     return { persona, score: weights.location * 0.8, matchType: 'location', matchedText: identity.location.city };
   }
 
-  // Search expertise
-  if (profile.knowledge_profile?.expertise_domains) {
-    const matchedDomain = profile.knowledge_profile.expertise_domains.find(domain =>
-      domain.toLowerCase().includes(searchLower)
-    );
-    if (matchedDomain) {
-      return { persona, score: weights.expertise * 0.8, matchType: 'expertise', matchedText: matchedDomain };
-    }
+  // Search expertise based on occupation
+  if (profile.identity?.occupation?.toLowerCase().includes(searchLower)) {
+    return { persona, score: weights.expertise * 0.8, matchType: 'expertise', matchedText: profile.identity.occupation };
   }
 
   return null;

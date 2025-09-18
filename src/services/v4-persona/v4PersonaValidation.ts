@@ -112,7 +112,8 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
     'attitude_narrative',
     'political_narrative',
     'adoption_profile',
-    'prompt_shaping'
+    'prompt_shaping',
+    'sexuality_profile'
   ];
 
   let validTraitCount = 0;
@@ -146,7 +147,7 @@ function validateFullProfile(fullProfile: V4FullProfile, missingTraits: string[]
   }
 
   console.log(`V4 full_profile validation: ${validTraitCount}/${requiredTraits.length} traits valid`);
-  return validTraitCount >= 14; // Require at least 14 out of 16 traits to be present (strict validation)
+  return validTraitCount >= 16; // Require ALL 17 traits to be present (strict validation)
 }
 
 
