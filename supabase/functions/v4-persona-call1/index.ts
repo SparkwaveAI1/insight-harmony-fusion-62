@@ -85,12 +85,52 @@ function extractJSONFromMarkdown(content: string): any {
   }
 }
 
+// Optimized system prompt that reduces token consumption
+function buildOptimizedSystemPrompt(): string {
+  return `Generate a detailed U.S. adult persona as valid JSON with these exact 17 top-level keys:
+identity, daily_life, health_profile, relationships, money_profile, motivation_profile, communication_style, humor_profile, truth_honesty_profile, bias_profile, cognitive_profile, emotional_profile, attitude_narrative, political_narrative, adoption_profile, prompt_shaping, sexuality_profile
+
+BANNED keys (never include): big_five, social_identity, inhibitor_profile, cultural_dimensions, behavioral_economics, identity_salience, knowledge_profile, contradictions, attitude_snapshot, political_signals, linguistic_signature, signature_phrases, physical_profile
+
+Requirements:
+- All numeric values 0-1 scale where applicable
+- realistic demographics (26% normal weight, 30% overweight, 44% obese)
+- Internal consistency across all fields
+- Natural language avoiding "As a [profession]" openings
+- Regional dialect hints in communication_style
+
+Critical fields that MUST be present:
+- identity.education_level, identity.income_bracket, identity.location.urbanicity
+- cognitive_profile.thought_coherence (number)
+- All motivation_profile.primary_drivers as numbers 0-1
+- sexuality_profile with safe defaults
+
+Return ONLY the JSON object, no markdown formatting.`;
+}
+
+// Build optimized user prompt from parameters
+function buildOptimizedUserPrompt(userPrompt: string): string {
+  // Try to parse structured parameters from user prompt, fallback to direct use
+  try {
+    // If user provided structured data, use it
+    const structured = JSON.parse(userPrompt);
+    return `Role: ${structured.role || 'working professional'}
+Region: ${structured.region || 'United States'} (${structured.urbanicity || 'suburban'})
+Age: ${structured.ageRange || '25-45'}
+${structured.ethnicity ? `Ethnicity: ${structured.ethnicity}` : ''}
+${structured.incomeBracket ? `Income: ${structured.incomeBracket}` : ''}
+Coherence target: ${structured.coherenceTarget || 0.7}`;
+  } catch {
+    // If not structured JSON, create a simplified prompt from the text
+    return `Generate a persona based on: ${userPrompt}`;
+  }
+}
 // Retry logic for persona generation with multiple configurations
-async function generatePersonaWithRetry(systemPrompt: string, userPrompt: string): Promise<any> {
+async function generatePersonaWithRetry(userPrompt: string): Promise<any> {
   const configurations = [
-    { model: "gpt-4o-mini", max_tokens: 12000, attempt: 1 },
-    { model: "gpt-4o-mini", max_tokens: 16000, attempt: 2 },
-    { model: "gpt-4o", max_tokens: 8000, attempt: 3 },  // More expensive but more reliable
+    { model: "gpt-4o-mini", max_tokens: 8000, attempt: 1 },   // Reduced from 12K due to optimized prompt
+    { model: "gpt-4o-mini", max_tokens: 10000, attempt: 2 },  // Reduced from 16K
+    { model: "gpt-4o", max_tokens: 6000, attempt: 3 },        // Reduced from 8K
   ];
 
   let lastError: Error | null = null;
@@ -98,6 +138,13 @@ async function generatePersonaWithRetry(systemPrompt: string, userPrompt: string
   for (const config of configurations) {
     try {
       console.log(`Persona generation attempt ${config.attempt} with ${config.model} (${config.max_tokens} tokens)`);
+      
+      // Use optimized prompts
+      const systemPrompt = buildOptimizedSystemPrompt();
+      const optimizedUserPrompt = buildOptimizedUserPrompt(userPrompt);
+      
+      console.log(`System prompt length: ${systemPrompt.length} chars`);
+      console.log(`User prompt: ${optimizedUserPrompt}`);
       
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -109,7 +156,7 @@ async function generatePersonaWithRetry(systemPrompt: string, userPrompt: string
           model: config.model,
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt }
+            { role: "user", content: optimizedUserPrompt }
           ],
           temperature: 0.7,
           max_tokens: config.max_tokens,
@@ -202,39 +249,12 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    // Generate persona using retry logic with multiple configurations
-    console.log('Starting V4 Call 1 - Persona generation with retry logic')
+    // Generate persona using retry logic with optimized prompts
+    console.log('Starting V4 Call 1 - Persona generation with optimized prompts')
     console.log('User prompt:', user_prompt)
 
-    const systemPrompt = `Generate a complete V4 persona that EXACTLY follows the new validation schema. Return ONLY valid JSON without any markdown formatting, explanations, or code blocks.
-
-CRITICAL: The response must include ALL required fields and NEVER include any banned fields.
-
-REQUIRED FIELDS (ALL MUST BE PRESENT):
-- identity, daily_life, health_profile, relationships, money_profile
-- motivation_profile, communication_style, humor_profile, truth_honesty_profile
-- bias_profile, cognitive_profile, emotional_profile, attitude_narrative
-- political_narrative, adoption_profile, prompt_shaping, sexuality_profile
-
-BANNED FIELDS (NEVER INCLUDE):
-- big_five, social_identity, inhibitor_profile, cultural_dimensions
-- behavioral_economics, identity_salience, knowledge_profile, contradictions
-- attitude_snapshot, political_signals, linguistic_signature, signature_phrases
-- physical_profile
-
-Generate the complete persona structure with all required fields populated realistically.
-
-CRITICAL INSTRUCTIONS:
-- Avoid midline values (0.5) - create distinctive personalities
-- Ensure internal consistency across all traits
-- Make each field realistic and specific
-- Numbers must be between 0 and 1 where specified
-- Arrays can be empty [] if appropriate
-- Generate diverse, authentic personas
-- Return ONLY the JSON object, no explanations or markdown`
-
-    // Use retry logic to generate persona
-    const generatedPersona = await generatePersonaWithRetry(systemPrompt, user_prompt)
+    // Use retry logic to generate persona with optimized prompts
+    const generatedPersona = await generatePersonaWithRetry(user_prompt)
 
     // Validate the generated persona
     console.log('Validating generated persona...')
