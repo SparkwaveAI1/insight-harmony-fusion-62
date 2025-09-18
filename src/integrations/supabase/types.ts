@@ -908,6 +908,60 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_v2: {
+        Row: {
+          age: number | null
+          city: string | null
+          created_at: string
+          data: Json
+          education_level: string | null
+          ethnicity: string | null
+          gender: string | null
+          id: string
+          income_bracket: string | null
+          name: string | null
+          occupation: string | null
+          region: string | null
+          thought_coherence: number | null
+          updated_at: string
+          urbanicity: string | null
+        }
+        Insert: {
+          age?: number | null
+          city?: string | null
+          created_at?: string
+          data: Json
+          education_level?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          id?: string
+          income_bracket?: string | null
+          name?: string | null
+          occupation?: string | null
+          region?: string | null
+          thought_coherence?: number | null
+          updated_at?: string
+          urbanicity?: string | null
+        }
+        Update: {
+          age?: number | null
+          city?: string | null
+          created_at?: string
+          data?: Json
+          education_level?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          id?: string
+          income_bracket?: string | null
+          name?: string | null
+          occupation?: string | null
+          region?: string | null
+          thought_coherence?: number | null
+          updated_at?: string
+          urbanicity?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1641,6 +1695,26 @@ export type Database = {
           renewal_date: string
         }[]
       }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1693,6 +1767,18 @@ export type Database = {
           updated_at: string | null
           user_id: string
         }
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
       }
     }
     Enums: {
