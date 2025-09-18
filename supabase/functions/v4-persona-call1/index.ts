@@ -31,34 +31,223 @@ serve(async (req) => {
       coherence_target = 0.7
     } = requestBody;
 
-    const systemPrompt = `Generate a detailed U.S. adult persona as valid JSON with these exact 17 top-level keys:
+    const systemPrompt = `Generate a complete U.S. adult persona as valid JSON with ALL 17 required top-level sections. Every field listed below MUST be present and filled with realistic data.
+
+REQUIRED TOP-LEVEL SECTIONS (all mandatory):
 identity, daily_life, health_profile, relationships, money_profile, motivation_profile, communication_style, humor_profile, truth_honesty_profile, bias_profile, cognitive_profile, emotional_profile, attitude_narrative, political_narrative, adoption_profile, prompt_shaping, sexuality_profile
 
-CRITICAL: The identity object MUST include a realistic "name" field with first and last name.
-
-BANNED keys (never include): big_five, social_identity, inhibitor_profile, cultural_dimensions, behavioral_economics, identity_salience, knowledge_profile, contradictions, attitude_snapshot, political_signals, linguistic_signature, signature_phrases, physical_profile
-
-Requirements:
-- identity.name MUST be present with realistic first and last name
-- identity.education_level, identity.income_bracket, identity.location.urbanicity are required
-- All numeric values 0-1 scale where applicable
-- Realistic demographics (26% normal weight, 30% overweight, 44% obese)
-- Internal consistency across all fields
-- cognitive_profile.thought_coherence must be a number
-- Natural language avoiding "As a [profession]" openings
-
-Example identity structure:
+IDENTITY SECTION (all fields required):
 {
   "identity": {
-    "name": "Sarah Martinez",
-    "age": 32,
-    "gender": "female",
-    "pronouns": "she/her",
-    ...
+    "name": "[realistic first and last name]",
+    "age": [18-100],
+    "gender": "[male/female/non-binary]",
+    "pronouns": "[appropriate pronouns]",
+    "ethnicity": "[specific ethnicity - use provided ethnicity if specified]",
+    "nationality": "[typically 'American']",
+    "occupation": "[specific job title]",
+    "relationship_status": "[single/married/divorced/partnered]",
+    "dependents": [number],
+    "education_level": "[High School/Bachelor's/Master's/PhD/etc]",
+    "income_bracket": "[specific range like '40,000-60,000']",
+    "location": {
+      "city": "[specific city]",
+      "region": "[state/region]",
+      "country": "United States",
+      "urbanicity": "[urban/suburban/rural]"
+    }
   }
 }
 
-Return ONLY the JSON object, no markdown formatting.`;
+DAILY_LIFE SECTION (all fields required):
+{
+  "daily_life": {
+    "primary_activities": {
+      "work": [hours per day],
+      "family_time": [hours per day],
+      "personal_care": [hours per day],
+      "personal_interests": [hours per day],
+      "social_interaction": [hours per day]
+    },
+    "schedule_blocks": [
+      {
+        "start": "[time like '07:30']",
+        "end": "[time like '17:00']",
+        "activity": "[specific activity]",
+        "setting": "[location]"
+      }
+    ],
+    "time_sentiment": {
+      "work": "[how they feel about work time]",
+      "family": "[how they feel about family time]",
+      "personal": "[how they feel about personal time]"
+    },
+    "screen_time_summary": "[detailed description of screen usage]",
+    "mental_preoccupations": ["[worry 1]", "[worry 2]", "[worry 3]"]
+  }
+}
+
+HEALTH_PROFILE SECTION (all fields required):
+{
+  "health_profile": {
+    "bmi_category": "[normal/overweight/obese]",
+    "chronic_conditions": ["[condition 1 if any]"],
+    "mental_health_flags": ["[flag 1 if any]"],
+    "medications": ["[medication 1 if any]"],
+    "adherence_level": "[perfect/mostly_consistent/inconsistent]",
+    "sleep_hours": [5-12],
+    "substance_use": {
+      "alcohol": "[none/casual/regular/heavy]",
+      "cigarettes": "[none/occasional/regular]",
+      "vaping": "[none/occasional/regular]",
+      "marijuana": "[none/occasional/regular]"
+    },
+    "fitness_level": "[low/moderate/high]",
+    "diet_pattern": "[standard/healthy/restrictive/mixed]"
+  }
+}
+
+RELATIONSHIPS SECTION (all fields required):
+{
+  "relationships": {
+    "household": {
+      "status": "[matches relationship_status]",
+      "harmony_level": "[peaceful/tense/conflicted]",
+      "dependents": [matches identity dependents]
+    },
+    "caregiving_roles": ["[role 1 if any]"],
+    "friend_network": {
+      "size": "[small/medium/large]",
+      "frequency": "[daily/weekly/monthly]",
+      "anchor_contexts": ["[context 1]", "[context 2]"]
+    },
+    "pets": [{"type": "[animal]", "name": "[pet name]"}] OR []
+  }
+}
+
+MONEY_PROFILE SECTION (all fields required):
+{
+  "money_profile": {
+    "attitude_toward_money": "[detailed attitude]",
+    "earning_context": "[how they earn money]",
+    "spending_style": "[how they spend]",
+    "savings_investing_habits": {
+      "emergency_fund_months": [0-12],
+      "retirement_contributions": "[description]",
+      "investing_style": "[description]"
+    },
+    "debt_posture": "[debt situation]",
+    "financial_stressors": ["[stressor 1]", "[stressor 2]"],
+    "money_conflicts": "[any money-related conflicts]",
+    "generosity_profile": "[giving habits]"
+  }
+}
+
+MOTIVATION_PROFILE SECTION (all fields required):
+{
+  "motivation_profile": {
+    "primary_motivation_labels": ["[motivation 1]", "[motivation 2]"],
+    "deal_breakers": ["[deal breaker 1]", "[deal breaker 2]"],
+    "primary_drivers": {
+      "care": [0.0-1.0],
+      "family": [0.0-1.0],
+      "status": [0.0-1.0],
+      "mastery": [0.0-1.0],
+      "meaning": [0.0-1.0],
+      "novelty": [0.0-1.0],
+      "security": [0.0-1.0],
+      "belonging": [0.0-1.0],
+      "self_interest": [0.0-1.0]
+    },
+    "goal_orientation": {
+      "strength": [0.0-1.0],
+      "time_horizon": "[short/medium/long term]",
+      "primary_goals": [
+        {
+          "goal": "[specific goal]",
+          "intensity": [1-10],
+          "timeframe": "[timeframe]"
+        }
+      ],
+      "goal_flexibility": [0.0-1.0]
+    },
+    "want_vs_should_tension": {
+      "major_conflicts": [
+        {
+          "want": "[what they want]",
+          "should": "[what they think they should do]",
+          "trigger_conditions": ["[trigger 1]"],
+          "typical_resolution": "[how they usually resolve it]"
+        }
+      ],
+      "default_resolution": "[their default approach]"
+    }
+  }
+}
+
+COMMUNICATION_STYLE SECTION (all fields required):
+{
+  "communication_style": {
+    "regional_register": {
+      "region": "[matches location region]",
+      "urbanicity": "[matches location urbanicity]",
+      "dialect_hints": ["[hint 1]", "[hint 2]"]
+    },
+    "voice_foundation": {
+      "formality": "[formal/casual/mixed]",
+      "directness": "[direct/diplomatic/indirect]",
+      "pace_rhythm": "[fast/moderate/slow]",
+      "positivity": "[optimistic/realistic/pessimistic]",
+      "empathy_level": [0.0-1.0],
+      "honesty_style": "[blunt/diplomatic/evasive]",
+      "charisma_level": [0.0-1.0]
+    },
+    "style_markers": {
+      "metaphor_domains": ["[domain 1]", "[domain 2]"],
+      "aphorism_register": "[folksy/academic/none]",
+      "storytelling_vs_bullets": [0.0-1.0],
+      "humor_style": "[dry/playful/sarcastic/none]",
+      "code_switching_contexts": ["[context 1]"]
+    },
+    "context_switches": {
+      "work": {
+        "formality": "[work formality level]",
+        "directness": "[work directness level]"
+      },
+      "home": {
+        "formality": "[home formality level]",
+        "directness": "[home directness level]"
+      },
+      "online": {
+        "formality": "[online formality level]",
+        "directness": "[online directness level]"
+      }
+    },
+    "authenticity_filters": {
+      "avoid_registers": ["[register 1]", "[register 2]"],
+      "embrace_registers": ["[register 1]", "[register 2]"],
+      "personality_anchors": ["[anchor 1]", "[anchor 2]"]
+    }
+  }
+}
+
+ALL REMAINING SECTIONS MUST BE COMPLETE:
+- humor_profile (frequency, style, boundaries, targets, use_cases)
+- truth_honesty_profile (baseline_honesty, situational_variance, typical_distortions, red_lines, pressure_points, confession_style)
+- bias_profile (cognitive biases with all 8 types, mitigations)
+- cognitive_profile (verbal_fluency, abstract_reasoning, problem_solving_orientation, thought_coherence)
+- emotional_profile (stress_responses, negative_triggers, positive_triggers, explosive_triggers, emotional_regulation)
+- attitude_narrative (paragraph describing their worldview)
+- political_narrative (paragraph describing their political views)
+- adoption_profile (buyer_power, adoption_influence, risk_tolerance, change_friction, expected_objections, proof_points_needed)
+- prompt_shaping (voice_foundation summary, style_markers summary, primary_motivations, deal_breakers, honesty_vector, bias_vector, context_switches, current_focus)
+- sexuality_profile (orientation, expression_style, relationship_norms, boundaries, linguistic_influences)
+
+BANNED FIELDS: big_five, social_identity, inhibitor_profile, cultural_dimensions, behavioral_economics, identity_salience, knowledge_profile, contradictions, attitude_snapshot, political_signals, linguistic_signature, signature_phrases, physical_profile
+
+CRITICAL: Use the ethnicity specified in user input. Be internally consistent across all fields. All numeric values must be numbers, not strings.
+
+Return ONLY the complete JSON object with all sections filled.`;
 
     const userPrompt = `Role: ${role}
 Region: ${region} (${urbanicity})
