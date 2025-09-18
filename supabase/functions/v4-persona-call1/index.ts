@@ -360,7 +360,8 @@ Coherence target: ${coherence_target}`;
 
     // Validate and fix the persona data
     try {
-      personaData = validateAndFixPersonaData(personaData);
+      const userInputs = { ethnicity, income_bracket, role, region, urbanicity, age_range };
+      personaData = validateAndFixPersonaData(personaData, userInputs);
       
       // Final name check
       if (!personaData.identity?.name || !personaData.identity.name.trim()) {
@@ -408,54 +409,234 @@ Coherence target: ${coherence_target}`;
   }
 });
 
-function validateAndFixPersonaData(personaData: any): any {
-  console.log('Validating persona data...');
+function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any {
+  console.log('🔍 Starting comprehensive persona validation...');
+  const errors: string[] = [];
+  const fixes: string[] = [];
 
-  // Ensure identity.name exists and is valid
-  if (!personaData.identity?.name || typeof personaData.identity.name !== 'string' || !personaData.identity.name.trim()) {
-    console.warn('Missing or invalid identity.name, generating fallback...');
-    
-    const gender = personaData.identity?.gender || 'person';
-    const maleNames = ['James', 'Michael', 'Robert', 'David', 'William'];
-    const femaleNames = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth'];
-    const neutralNames = ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia'];
-    
-    let firstName: string;
-    if (gender.toLowerCase().includes('male') && !gender.toLowerCase().includes('female')) {
-      firstName = maleNames[Math.floor(Math.random() * maleNames.length)];
-    } else if (gender.toLowerCase().includes('female')) {
-      firstName = femaleNames[Math.floor(Math.random() * femaleNames.length)];
+  // Validate all 17 top-level sections
+  const requiredSections = [
+    'identity', 'daily_life', 'health_profile', 'relationships', 'money_profile',
+    'motivation_profile', 'communication_style', 'humor_profile', 'truth_honesty_profile',
+    'bias_profile', 'cognitive_profile', 'emotional_profile', 'attitude_narrative',
+    'political_narrative', 'adoption_profile', 'prompt_shaping', 'sexuality_profile'
+  ];
+
+  for (const section of requiredSections) {
+    if (!personaData[section]) {
+      errors.push(`Missing entire section: ${section}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error('❌ Missing top-level sections:', errors);
+    throw new Error(`Persona generation failed - missing sections: ${errors.join(', ')}`);
+  }
+
+  // Validate IDENTITY section completely
+  if (personaData.identity) {
+    const identityFields = {
+      'name': 'string',
+      'age': 'number', 
+      'gender': 'string',
+      'pronouns': 'string',
+      'ethnicity': 'string',
+      'nationality': 'string',
+      'occupation': 'string',
+      'relationship_status': 'string',
+      'dependents': 'number',
+      'education_level': 'string',
+      'income_bracket': 'string'
+    };
+
+    Object.entries(identityFields).forEach(([field, expectedType]) => {
+      const value = personaData.identity[field];
+      if (value === undefined || value === null) {
+        errors.push(`Missing identity.${field}`);
+      } else if (typeof value !== expectedType) {
+        errors.push(`Invalid type for identity.${field}: expected ${expectedType}, got ${typeof value}`);
+      }
+    });
+
+    // Special validation for location
+    if (!personaData.identity.location || typeof personaData.identity.location !== 'object') {
+      errors.push('Missing or invalid identity.location object');
     } else {
-      firstName = neutralNames[Math.floor(Math.random() * neutralNames.length)];
+      const locationFields = ['city', 'region', 'country', 'urbanicity'];
+      locationFields.forEach(field => {
+        if (!personaData.identity.location[field]) {
+          errors.push(`Missing identity.location.${field}`);
+        }
+      });
     }
-    
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    personaData.identity.name = `${firstName} ${lastName}`;
-    
-    console.log(`Generated name: ${personaData.identity.name}`);
-  }
 
-  // Validate critical fields
-  const criticalFields = {
-    'identity.education_level': personaData.identity?.education_level,
-    'identity.income_bracket': personaData.identity?.income_bracket,
-    'identity.location.urbanicity': personaData.identity?.location?.urbanicity,
-    'cognitive_profile.thought_coherence': personaData.cognitive_profile?.thought_coherence
-  };
+    // Fix missing ethnicity from user input
+    if (userInputs.ethnicity && (!personaData.identity.ethnicity || personaData.identity.ethnicity === 'unspecified')) {
+      personaData.identity.ethnicity = userInputs.ethnicity;
+      fixes.push(`Fixed ethnicity to user-specified: ${userInputs.ethnicity}`);
+    }
 
-  const missingCritical = [];
-  for (const [path, value] of Object.entries(criticalFields)) {
-    if (value === undefined || value === null) {
-      missingCritical.push(path);
+    // Generate missing name if needed
+    if (!personaData.identity.name || !personaData.identity.name.trim()) {
+      const gender = personaData.identity.gender || 'person';
+      const ethnicity = personaData.identity.ethnicity || '';
+      
+      const namesByGenderEthnicity = {
+        'male': {
+          'African American': ['Marcus', 'Jamal', 'Darius', 'Terrell', 'Andre'],
+          'Hispanic': ['Carlos', 'Miguel', 'Diego', 'Luis', 'Rafael'],
+          'Asian': ['David', 'Kevin', 'Michael', 'James', 'Daniel'],
+          'default': ['James', 'Michael', 'Robert', 'David', 'William']
+        },
+        'female': {
+          'African American': ['Jasmine', 'Kenya', 'Alicia', 'Tanya', 'Nicole'],
+          'Hispanic': ['Maria', 'Sofia', 'Isabella', 'Carmen', 'Ana'],
+          'Asian': ['Jennifer', 'Lisa', 'Amy', 'Grace', 'Michelle'],
+          'default': ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth']
+        }
+      };
+
+      const lastNamesByEthnicity = {
+        'African American': ['Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Jackson', 'Thompson', 'White', 'Harris'],
+        'Hispanic': ['Rodriguez', 'Martinez', 'Garcia', 'Lopez', 'Gonzalez', 'Hernandez', 'Perez', 'Sanchez', 'Ramirez', 'Cruz'],
+        'Asian': ['Chen', 'Kim', 'Lee', 'Wang', 'Singh', 'Patel', 'Nguyen', 'Liu', 'Zhang', 'Kumar'],
+        'default': ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez']
+      };
+
+      const genderKey = gender.toLowerCase().includes('female') ? 'female' : 'male';
+      const ethnicityKey = Object.keys(namesByGenderEthnicity[genderKey]).find(key => 
+        ethnicity.toLowerCase().includes(key.toLowerCase().split(' ')[0])
+      ) || 'default';
+
+      const firstNames = namesByGenderEthnicity[genderKey][ethnicityKey];
+      const lastNames = lastNamesByEthnicity[ethnicityKey];
+
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+
+      personaData.identity.name = `${firstName} ${lastName}`;
+      fixes.push(`Generated culturally appropriate name: ${personaData.identity.name}`);
     }
   }
 
-  if (missingCritical.length > 0) {
-    throw new Error(`Generated persona missing critical fields: ${missingCritical.join(', ')}`);
+  // Validate DAILY_LIFE section
+  if (personaData.daily_life) {
+    if (!personaData.daily_life.primary_activities) {
+      errors.push('Missing daily_life.primary_activities');
+    } else {
+      const activityTypes = ['work', 'family_time', 'personal_care', 'personal_interests', 'social_interaction'];
+      activityTypes.forEach(type => {
+        if (typeof personaData.daily_life.primary_activities[type] !== 'number') {
+          errors.push(`Missing or invalid daily_life.primary_activities.${type}`);
+        }
+      });
+    }
+
+    const dailyLifeRequiredFields = ['schedule_blocks', 'time_sentiment', 'screen_time_summary', 'mental_preoccupations'];
+    dailyLifeRequiredFields.forEach(field => {
+      if (!personaData.daily_life[field]) {
+        errors.push(`Missing daily_life.${field}`);
+      }
+    });
   }
 
-  console.log('✅ Persona data validation complete');
+  // Validate HEALTH_PROFILE section
+  if (personaData.health_profile) {
+    const healthRequiredFields = [
+      'bmi_category', 'chronic_conditions', 'mental_health_flags', 'medications',
+      'adherence_level', 'sleep_hours', 'substance_use', 'fitness_level', 'diet_pattern'
+    ];
+    
+    healthRequiredFields.forEach(field => {
+      if (personaData.health_profile[field] === undefined) {
+        errors.push(`Missing health_profile.${field}`);
+      }
+    });
+
+    if (personaData.health_profile.substance_use) {
+      const substanceTypes = ['alcohol', 'cigarettes', 'vaping', 'marijuana'];
+      substanceTypes.forEach(type => {
+        if (!personaData.health_profile.substance_use[type]) {
+          errors.push(`Missing health_profile.substance_use.${type}`);
+        }
+      });
+    }
+  }
+
+  // Validate RELATIONSHIPS section
+  if (personaData.relationships) {
+    if (!personaData.relationships.household) {
+      errors.push('Missing relationships.household');
+    } else {
+      const householdFields = ['status', 'harmony_level', 'dependents'];
+      householdFields.forEach(field => {
+        if (personaData.relationships.household[field] === undefined) {
+          errors.push(`Missing relationships.household.${field}`);
+        }
+      });
+    }
+
+    const relationshipFields = ['caregiving_roles', 'friend_network', 'pets'];
+    relationshipFields.forEach(field => {
+      if (personaData.relationships[field] === undefined) {
+        errors.push(`Missing relationships.${field}`);
+      }
+    });
+  }
+
+  // Validate MONEY_PROFILE section
+  if (personaData.money_profile) {
+    const moneyRequiredFields = [
+      'attitude_toward_money', 'earning_context', 'spending_style', 'savings_investing_habits',
+      'debt_posture', 'financial_stressors', 'money_conflicts', 'generosity_profile'
+    ];
+    
+    moneyRequiredFields.forEach(field => {
+      if (!personaData.money_profile[field]) {
+        errors.push(`Missing money_profile.${field}`);
+      }
+    });
+  }
+
+  // Validate MOTIVATION_PROFILE section
+  if (personaData.motivation_profile) {
+    const motivationRequiredFields = ['primary_motivation_labels', 'deal_breakers', 'primary_drivers', 'goal_orientation', 'want_vs_should_tension'];
+    motivationRequiredFields.forEach(field => {
+      if (!personaData.motivation_profile[field]) {
+        errors.push(`Missing motivation_profile.${field}`);
+      }
+    });
+
+    if (personaData.motivation_profile.primary_drivers) {
+      const driverTypes = ['care', 'family', 'status', 'mastery', 'meaning', 'novelty', 'security', 'belonging', 'self_interest'];
+      driverTypes.forEach(driver => {
+        const value = personaData.motivation_profile.primary_drivers[driver];
+        if (typeof value !== 'number') {
+          errors.push(`Missing or invalid motivation_profile.primary_drivers.${driver}`);
+        }
+      });
+    }
+  }
+
+  // Validate all other required sections
+  const textSections = ['attitude_narrative', 'political_narrative'];
+  textSections.forEach(section => {
+    if (!personaData[section] || typeof personaData[section] !== 'string' || !personaData[section].trim()) {
+      errors.push(`Missing or empty ${section}`);
+    }
+  });
+
+  console.log(`✅ Validation complete. Errors: ${errors.length}, Fixes: ${fixes.length}`);
+  
+  if (errors.length > 0) {
+    console.error('❌ Validation failed:', errors);
+    throw new Error(`Persona validation failed: ${errors.slice(0, 5).join(', ')}${errors.length > 5 ? ' (and more)' : ''}`);
+  }
+
+  if (fixes.length > 0) {
+    console.log('🔧 Applied fixes:', fixes);
+  }
+
   return personaData;
 }
 
