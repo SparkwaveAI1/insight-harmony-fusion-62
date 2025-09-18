@@ -339,7 +339,10 @@ export interface V4FullProfile {
       frequency: string;
       anchor_contexts: string[];
     };
-    pets: string[];
+    pets: Array<{
+      type: string;
+      name: string;
+    }>;
   };
   money_profile: {
     attitude_toward_money: string;
@@ -372,11 +375,20 @@ export interface V4FullProfile {
     goal_orientation: {
       strength: number;
       time_horizon: string;
-      primary_goals: string[];
+      primary_goals: Array<{
+        goal: string;
+        intensity: number;
+        timeframe: string;
+      }>;
       goal_flexibility: number;
     };
     want_vs_should_tension: {
-      major_conflicts: string[];
+      major_conflicts: Array<{
+        want: string;
+        should: string;
+        trigger_conditions: string[];
+        typical_resolution: string;
+      }>;
       default_resolution: string;
     };
   };
