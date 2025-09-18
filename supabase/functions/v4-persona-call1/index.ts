@@ -184,6 +184,22 @@ Coherence target: ${coherence_target}`;
       throw new Error(`All generation attempts failed. Last error: ${lastError?.message}`);
     }
 
+    // Validate and fix the persona data
+    try {
+      personaData = validateAndFixPersonaData(personaData);
+      
+      // Double-check the name is still valid after processing
+      if (!personaData.identity?.name || !personaData.identity.name.trim()) {
+        throw new Error('Failed to ensure valid name in persona data');
+      }
+      
+      console.log(`✅ Validated persona with name: "${personaData.identity.name}"`);
+      
+    } catch (validationError) {
+      console.error('Persona validation failed:', validationError);
+      throw validationError;
+    }
+
     // Normalize numeric values
     personaData = normalizePersonaData(personaData);
 
@@ -217,6 +233,81 @@ Coherence target: ${coherence_target}`;
     });
   }
 });
+
+function validateAndFixPersonaData(personaData: any): any {
+  console.log('Validating persona data...');
+
+  // Ensure identity.name exists and is valid
+  if (!personaData.identity?.name || typeof personaData.identity.name !== 'string' || !personaData.identity.name.trim()) {
+    console.warn('Missing or invalid identity.name, generating fallback...');
+    
+    // Generate name based on other fields
+    const gender = personaData.identity?.gender || 'person';
+    const ethnicity = personaData.identity?.ethnicity || '';
+    const age = personaData.identity?.age || 30;
+    
+    // Simple name generation logic
+    const maleNames = ['James', 'Michael', 'Robert', 'David', 'William', 'John', 'Richard', 'Joseph'];
+    const femaleNames = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica'];
+    const neutralNames = ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Riley', 'Avery', 'Quinn'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+    
+    let firstName: string;
+    if (gender.toLowerCase().includes('male') && !gender.toLowerCase().includes('female')) {
+      firstName = maleNames[Math.floor(Math.random() * maleNames.length)];
+    } else if (gender.toLowerCase().includes('female')) {
+      firstName = femaleNames[Math.floor(Math.random() * femaleNames.length)];
+    } else {
+      firstName = neutralNames[Math.floor(Math.random() * neutralNames.length)];
+    }
+    
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    personaData.identity.name = `${firstName} ${lastName}`;
+    
+    console.log(`Generated name: ${personaData.identity.name}`);
+  }
+
+  // Validate other critical fields
+  const criticalFields = {
+    'identity.education_level': personaData.identity?.education_level,
+    'identity.income_bracket': personaData.identity?.income_bracket,
+    'identity.location.urbanicity': personaData.identity?.location?.urbanicity,
+    'cognitive_profile.thought_coherence': personaData.cognitive_profile?.thought_coherence
+  };
+
+  const missingCritical = [];
+  for (const [path, value] of Object.entries(criticalFields)) {
+    if (value === undefined || value === null) {
+      missingCritical.push(path);
+    }
+  }
+
+  if (missingCritical.length > 0) {
+    console.error('Missing critical fields:', missingCritical);
+    throw new Error(`Generated persona missing critical fields: ${missingCritical.join(', ')}`);
+  }
+
+  // Ensure numeric fields are actually numbers
+  if (typeof personaData.cognitive_profile.thought_coherence !== 'number') {
+    personaData.cognitive_profile.thought_coherence = 0.7; // Safe default
+  }
+
+  // Validate motivation drivers are numbers
+  if (personaData.motivation_profile?.primary_drivers) {
+    const drivers = personaData.motivation_profile.primary_drivers;
+    const driverKeys = ['care', 'family', 'status', 'mastery', 'meaning', 'novelty', 'security', 'belonging', 'self_interest'];
+    
+    driverKeys.forEach(key => {
+      if (typeof drivers[key] !== 'number') {
+        drivers[key] = 0.5; // Safe default
+        console.warn(`Fixed invalid driver value for ${key}`);
+      }
+    });
+  }
+
+  console.log('✅ Persona data validation complete');
+  return personaData;
+}
 
 function extractJSONFromMarkdown(content: string): any {
   let cleaned = content.replace(/```json\s*|\s*```/g, '');
