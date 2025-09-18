@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { validatePersona } from './v4PersonaValidation';
 
 export interface CreateV4PersonaRequest {
   user_prompt: string;
@@ -17,7 +18,7 @@ export interface CreateV4PersonaResponse {
 
 export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Promise<CreateV4PersonaResponse> {
   try {
-    console.log('Starting V4 persona creation - Call 1');
+    console.log('🚀 Starting V4 persona creation - Call 1 with new validation system');
     
     const { data, error } = await supabase.functions.invoke('v4-persona-call1', {
       body: {
@@ -27,15 +28,21 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
     });
 
     if (error) {
-      console.error('Error in Call 1:', error);
+      console.error('❌ Error in Call 1:', error);
       throw error;
     }
 
-    console.log('Call 1 completed successfully:', data);
+    console.log('✅ Call 1 completed successfully - persona should pass new validation:', data);
+    
+    // The validation now happens in the edge function itself
+    if (data.success && data.persona_id) {
+      console.log('🔍 Persona created with new compliant structure');
+    }
+    
     return data;
 
   } catch (error) {
-    console.error('Error creating V4 persona Call 1:', error);
+    console.error('❌ Error creating V4 persona Call 1:', error);
     return {
       success: false,
       stage: 'error',

@@ -8,12 +8,10 @@ const corsHeaders = {
 
 // Helper function to extract JSON from markdown code blocks
 function extractJSONFromMarkdown(text: string): string {
-  // Remove markdown code blocks if present
   const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (jsonMatch) {
     return jsonMatch[1].trim();
   }
-  // Return original text if no markdown blocks found
   return text.trim();
 }
 
@@ -46,7 +44,7 @@ serve(async (req) => {
 
     console.log('Retrieved persona for summary generation')
 
-    // Call OpenAI to generate summaries
+    // Call OpenAI to generate summaries based on new V4 structure
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -58,66 +56,54 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Analyze the complete detailed persona traits and create accurate conversation summaries for all categories.
+            content: `Analyze the complete V4 persona and create accurate conversation summaries for all categories.
 
-TASK: Generate conversation summaries that capture the essence and key patterns from the full_profile.
+TASK: Generate conversation summaries that capture the essence from the new V4 persona structure.
 
 Return valid JSON with this exact structure:
 {
   "conversation_summary": {
      "demographics": {
-       "name": "exact name from full_profile",
-       "age": exact_age_from_full_profile,
-       "occupation": "exact occupation from full_profile",
-       "location": "city, region format",
-       "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, key relationships, and what occupies their daily thoughts"
+       "name": "exact name from identity.name",
+       "age": exact_age_from_identity.age,
+       "occupation": "exact occupation from identity.occupation",
+       "location": "city, region format from identity.location",
+       "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, relationships, and daily life patterns"
      },
-     "physical_description": "Detailed physical description for image generation using EXACT data from physical_profile: height, build, hair, eyes, skin_tone, facial_features, clothing_style, notable_characteristics. If physical_profile exists, use those exact details. Otherwise infer from age, occupation, cultural background, and lifestyle.",
-    "motivation_summary": "Concise qualitative description focusing on top 3-4 primary drivers and how they manifest in decisions. Include goal orientation strength and typical want vs should patterns.",
-    "goal_priorities": "List current goals with intensity: goal_name (intensity_1-10); goal_name (intensity_1-10); goal_name (intensity_1-10)",
-    "want_vs_should_pattern": "Concise description of how they typically resolve conflicts between desires and obligations, including key trigger situations",
-    "inhibitor_summary": "Concise description of main psychological barriers that hold them back, including social sensitivity, risk aversion, confidence issues, and mental health factors",
-    "truth_flexibility_summary": "Concise description of their relationship with honesty - baseline truthfulness, when/how they bend truth, and how self-interest affects their honesty in different contexts",
-    "knowledge_profile": {
-      "education_level": "exact from full_profile",
-      "expertise_domains": "exact array from full_profile",
-      "knowledge_gaps": "exact array from full_profile", 
-      "vocabulary_ceiling": "exact from full_profile"
-    },
-    "voice_summary": "Concise description of their distinctive communication style including directness level, formality, emotional expression, pace, and signature linguistic patterns",
+     "physical_description": "Comprehensive physical description for image generation based on age, occupation, location, health profile, and lifestyle. Include: estimated height/build based on occupation and fitness level, hair/eye details inferred from ethnicity and age, clothing style based on occupation and income, overall appearance reflecting health and lifestyle choices.",
+    "motivation_summary": "Concise description of top motivational drivers from motivation_profile.primary_drivers and how goal_orientation manifests in daily decisions",
+    "goal_priorities": "Format: goal_name (intensity); goal_name (intensity) - from motivation_profile.goal_orientation.primary_goals",
+    "want_vs_should_pattern": "Summary of motivation_profile.want_vs_should_tension patterns and typical resolution style",
+    "relationship_dynamics": "Summary of relationships.household status, friend_network patterns, and caregiving roles", 
+    "health_and_lifestyle": "Summary combining health_profile conditions, fitness level, substance use, and daily_life.primary_activities balance",
+    "financial_context": "Summary of money_profile.attitude_toward_money, spending_style, and key financial stressors or strengths",
     "communication_style": {
-      "directness": "exact from full_profile voice_foundation.directness_level",
-      "formality": "exact from full_profile voice_foundation.formality_default",
-      "signature_phrases": "exact array from full_profile linguistic_signature.signature_phrases",
-      "response_patterns": {
-        "advice": "exact from full_profile response_architecture.advice_structure",
-        "opinion": "exact from full_profile response_architecture.opinion_structure"
-      },
-      "forbidden_expressions": "exact array from full_profile authenticity_filters.forbidden_phrases"
+      "directness": "exact from communication_style.voice_foundation.directness",
+      "formality": "exact from communication_style.voice_foundation.formality",
+      "regional_markers": "exact array from communication_style.regional_register.dialect_hints",
+      "humor_approach": "summary from humor_profile.style and frequency",
+      "authenticity_markers": "exact from communication_style.authenticity_filters.personality_anchors"
     },
-    "emotional_triggers_summary": "Concise summary in format: 'Energized by: [positive triggers]. Frustrated by: [negative triggers]. Explosive reactions to: [explosive triggers]'",
-    "contradictions_summary": "Concise summary of their main internal tensions and contradictions, including when these contradictions surface and how they typically manifest",
-    "sexuality_summary": "Concise summary of their sexuality profile including orientation, expression style, boundaries, and how this influences their communication and social behavior"
+    "emotional_landscape": "Concise summary combining emotional_profile triggers (positive/negative/explosive) with emotional_regulation style",
+    "honesty_and_bias": "Summary of truth_honesty_profile.baseline_honesty, situational_variance patterns, and key bias_profile.cognitive tendencies",
+    "worldview_summary": "Synthesis of attitude_narrative and political_narrative into coherent worldview description",
+    "adoption_characteristics": "Summary of adoption_profile including risk_tolerance, change_friction, and typical objection patterns"
   }
 }
 
 CRITICAL REQUIREMENTS:
-- Summaries must accurately reflect the detailed traits from full_profile, not generic interpretations
-- Extract exact values for communication_style and knowledge_profile fields
+- Summaries must accurately reflect the V4 persona structure, not legacy fields
+- Extract exact values where specified for communication_style fields
 - Make summaries concise but capture essential behavioral patterns
-- Ensure background_description synthesizes multiple trait categories into coherent narrative
+- Ensure background_description synthesizes multiple categories into coherent narrative
+- Generate realistic physical description based on demographics, health, and lifestyle
+- Include details useful for AI image generation
 - Focus on how traits manifest in conversation and decision-making
-- Use EXACT physical details from full_profile.physical_profile if available
-- Generate realistic physical description based on age, ethnicity, occupation, lifestyle AND physical_profile
-- Include details useful for AI image generation: height, build, hair, eyes, skin tone, clothing style
-- Make physical appearance consistent with cultural background and occupation
-- PRESERVE weight/body type information from physical_profile (overweight, slim, muscular, etc.)
-- Consider how lifestyle (exercise habits, work environment, etc.) affects appearance
 - Return ONLY the JSON object, no explanations or markdown`
           },
           {
             role: 'user',
-            content: `Generate summaries for this persona:\n\n${JSON.stringify(persona.full_profile, null, 2)}`
+            content: `Generate summaries for this V4 persona:\n\n${JSON.stringify(persona.full_profile, null, 2)}`
           }
         ],
         temperature: 0.3,
@@ -128,13 +114,11 @@ CRITICAL REQUIREMENTS:
     const openaiData = await openaiResponse.json()
     console.log('Summary generation complete')
 
-    // Get the raw content from OpenAI
     const rawContent = openaiData.choices[0].message.content
-    console.log('Raw OpenAI summary content:', rawContent)
+    console.log('Raw OpenAI summary content length:', rawContent.length)
 
-    // Extract JSON from potential markdown formatting
     const cleanedContent = extractJSONFromMarkdown(rawContent)
-    console.log('Cleaned summary content for parsing:', cleanedContent)
+    console.log('Cleaned summary content for parsing')
 
     let summaryData
     try {
@@ -142,7 +126,7 @@ CRITICAL REQUIREMENTS:
       console.log('Successfully parsed summary JSON')
     } catch (parseError) {
       console.error('Summary JSON parsing failed:', parseError)
-      console.error('Summary content that failed to parse:', cleanedContent)
+      console.error('Summary content that failed to parse:', cleanedContent.slice(0, 500))
       throw new Error(`Failed to parse OpenAI summary response as JSON: ${parseError.message}`)
     }
 
