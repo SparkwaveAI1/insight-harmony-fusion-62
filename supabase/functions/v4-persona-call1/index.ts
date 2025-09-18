@@ -415,9 +415,6 @@ Return ONLY the complete JSON object with all sections filled.`;
     return new Response(JSON.stringify({
       success: true,
       persona_data: personaData,
-      validation_score: validationScore,
-      validation_errors: validationErrors,
-      validation_warnings: validationWarnings,
       user_inputs_preserved: {
         ethnicity: personaData.identity.ethnicity,
         occupation: personaData.identity.occupation,

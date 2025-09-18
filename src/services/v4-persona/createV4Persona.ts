@@ -133,10 +133,7 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
             full_profile: data.persona_data,
             conversation_summary: {},
             creation_stage: 'completed',
-            creation_completed: true,
-            validation_score: 1.0,  // Full score since all validation passed
-            validation_errors: [],
-            validation_warnings: []
+            creation_completed: true
           }
         ])
         .select();
