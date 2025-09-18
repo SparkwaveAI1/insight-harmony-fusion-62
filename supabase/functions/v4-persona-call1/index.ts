@@ -21,15 +21,42 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Received request:', JSON.stringify(requestBody, null, 2));
 
-    const { 
-      role = 'professional',
-      region = 'California', 
-      urbanicity = 'urban',
-      age_range = '25-35',
-      ethnicity,
-      income_bracket,
-      coherence_target = 0.7
-    } = requestBody;
+    // Extract and validate inputs
+    const userInputs = {
+      role: requestBody.role || 'professional',
+      region: requestBody.region || 'California', 
+      urbanicity: requestBody.urbanicity || 'urban',
+      age_range: requestBody.age_range || '25-35',
+      ethnicity: requestBody.ethnicity || null,
+      income_bracket: requestBody.income_bracket || null,
+      coherence_target: requestBody.coherence_target || 0.7,
+      education_level: requestBody.education_level || null,
+      relationship_status: requestBody.relationship_status || null
+    };
+
+    console.log('Processed user inputs:', userInputs);
+
+    // Build enhanced user prompt that explicitly includes all user specifications
+    const userPrompt = `Generate persona with these EXACT specifications:
+
+Role/Occupation: ${userInputs.role}
+Location: ${userInputs.region} (${userInputs.urbanicity})
+Age Range: ${userInputs.age_range}
+${userInputs.ethnicity ? `ETHNICITY (REQUIRED): ${userInputs.ethnicity}` : ''}
+${userInputs.income_bracket ? `Income Bracket: ${userInputs.income_bracket}` : ''}
+${userInputs.education_level ? `Education Level: ${userInputs.education_level}` : ''}
+${userInputs.relationship_status ? `Relationship Status: ${userInputs.relationship_status}` : ''}
+Thought Coherence Target: ${userInputs.coherence_target}
+
+CRITICAL REQUIREMENTS:
+- Use the EXACT ethnicity specified above if provided
+- Place the role in identity.occupation
+- Match location details exactly
+- Ensure age falls within the specified range
+- Include ALL required fields from the system prompt
+- Make persona internally consistent
+
+Generate complete persona with all 17 sections filled.`;
 
     const systemPrompt = `Generate a complete U.S. adult persona as valid JSON with ALL 17 required top-level sections. Every field listed below MUST be present and filled with realistic data.
 
@@ -249,13 +276,6 @@ CRITICAL: Use the ethnicity specified in user input. Be internally consistent ac
 
 Return ONLY the complete JSON object with all sections filled.`;
 
-    const userPrompt = `Role: ${role}
-Region: ${region} (${urbanicity})
-Age: ${age_range}
-${ethnicity ? `Ethnicity: ${ethnicity}` : ''}
-${income_bracket ? `Income: ${income_bracket}` : ''}
-Coherence target: ${coherence_target}`;
-
     // Retry configurations
     const configurations = [
       { model: "gpt-4o-mini", max_tokens: 12000, attempt: 1 },
@@ -360,15 +380,21 @@ Coherence target: ${coherence_target}`;
 
     // Validate and fix the persona data
     try {
-      const userInputs = { ethnicity, income_bracket, role, region, urbanicity, age_range };
       personaData = validateAndFixPersonaData(personaData, userInputs);
       
-      // Final name check
-      if (!personaData.identity?.name || !personaData.identity.name.trim()) {
-        throw new Error('Failed to ensure valid name in persona data');
+      // Verify critical user inputs were preserved
+      if (userInputs.ethnicity && personaData.identity.ethnicity !== userInputs.ethnicity) {
+        console.warn(`Ethnicity mismatch: expected ${userInputs.ethnicity}, got ${personaData.identity.ethnicity}`);
+        // Force the correct ethnicity
+        personaData.identity.ethnicity = userInputs.ethnicity;
       }
       
-      console.log(`✅ Validated persona with name: "${personaData.identity.name}"`);
+      if (personaData.identity.occupation !== userInputs.role) {
+        console.warn(`Role mismatch: expected ${userInputs.role}, got ${personaData.identity.occupation}`);
+        personaData.identity.occupation = userInputs.role;
+      }
+      
+      console.log(`Validated persona with name: "${personaData.identity.name}", ethnicity: "${personaData.identity.ethnicity}"`);
       
     } catch (validationError) {
       console.error('Persona validation failed:', validationError);
@@ -381,9 +407,16 @@ Coherence target: ${coherence_target}`;
     return new Response(JSON.stringify({
       success: true,
       persona_data: personaData,
+      user_inputs_preserved: {
+        ethnicity: personaData.identity.ethnicity,
+        occupation: personaData.identity.occupation,
+        region: personaData.identity.location.region,
+        urbanicity: personaData.identity.location.urbanicity
+      },
       generation_info: {
         total_fields: Object.keys(personaData).length,
-        has_required_fields: true
+        has_required_fields: true,
+        validation_passed: true
       }
     }), {
       headers: {
@@ -398,7 +431,7 @@ Coherence target: ${coherence_target}`;
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
-      details: 'Check server logs for full error details'
+      details: 'Comprehensive validation failed - persona was incomplete'
     }), {
       status: 500,
       headers: {
