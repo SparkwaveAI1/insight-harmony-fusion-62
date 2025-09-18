@@ -7,63 +7,11 @@ function extractPersonaName(personaData: any): string {
     return personaData.identity.name.trim();
   }
 
-  // Secondary: Generate name from other identity fields
-  if (personaData.identity) {
-    let generatedName = '';
-    
-    // Try to construct from occupation and location
-    const occupation = personaData.identity.occupation || 'Professional';
-    const city = personaData.identity.location?.city || 'Unknown';
-    const gender = personaData.identity.gender || 'Person';
-    
-    // Generate appropriate first names based on gender and ethnicity
-    const firstNames = {
-      male: ['James', 'Michael', 'Robert', 'David', 'William', 'Richard', 'Joseph', 'Thomas', 'John', 'Daniel'],
-      female: ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen'],
-      other: ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Riley', 'Avery', 'Quinn', 'Sage', 'Dakota']
-    };
-
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
-
-    const genderKey = gender.toLowerCase() === 'male' ? 'male' : 
-                     gender.toLowerCase() === 'female' ? 'female' : 'other';
-    
-    const firstName = firstNames[genderKey][Math.floor(Math.random() * firstNames[genderKey].length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    
-    generatedName = `${firstName} ${lastName}`;
-    
-    console.log(`Generated name "${generatedName}" from persona identity fields`);
-    return generatedName;
-  }
-
-  // Tertiary: Use role-based name generation
-  if (personaData.role) {
-    const roleBasedNames = {
-      'teacher': 'Ms. Thompson',
-      'engineer': 'Alex Chen',
-      'doctor': 'Dr. Martinez',
-      'nurse': 'Sarah Johnson',
-      'manager': 'Michael Davis',
-      'developer': 'Jordan Kim',
-      'analyst': 'Taylor Brown'
-    };
-
-    const roleLower = personaData.role.toLowerCase();
-    for (const [role, name] of Object.entries(roleBasedNames)) {
-      if (roleLower.includes(role)) {
-        console.log(`Using role-based name "${name}" for role "${personaData.role}"`);
-        return name;
-      }
-    }
-  }
-
-  // Final fallback with timestamp to ensure uniqueness
-  const timestamp = new Date().getTime().toString().slice(-4);
-  const fallbackName = `Persona ${timestamp}`;
+  // This should rarely trigger now due to edge function validation, but keep as safety net
+  console.warn('Edge function validation missed name field, using client fallback');
   
-  console.warn(`Using final fallback name "${fallbackName}" - no name could be extracted from persona data`);
-  return fallbackName;
+  const timestamp = new Date().getTime().toString().slice(-4);
+  return `Generated Persona ${timestamp}`;
 }
 
 export interface CreateV4PersonaRequest {
@@ -145,39 +93,24 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
     if (data.success && data.persona_data && request.user_id) {
       console.log('💾 Storing persona in database...');
       
-      // Extract persona name using robust extraction logic
+      // After getting persona_data from edge function, validate name extraction
       const personaName = extractPersonaName(data.persona_data);
-      
+
       if (!personaName || personaName.trim() === '') {
         throw new Error('Failed to extract valid name from persona data');
       }
 
       console.log(`Extracted persona name: "${personaName}"`);
-
-      // Validate other required fields before database insertion
-      const requiredFields = [
-        'identity.education_level',
-        'identity.income_bracket', 
-        'identity.location.urbanicity',
-        'cognitive_profile.thought_coherence'
-      ];
-
-      for (const fieldPath of requiredFields) {
-        const fieldValue = fieldPath.split('.').reduce((obj, key) => obj?.[key], data.persona_data);
-        if (fieldValue === undefined || fieldValue === null) {
-          console.error(`Missing required field: ${fieldPath}`);
-          throw new Error(`Persona data missing required field: ${fieldPath}`);
-        }
-      }
       
       const persona_id = `v4_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Insert into database with validated name
       const { data: dbData, error: dbError } = await supabase
         .from('v4_personas')
         .insert([
           {
             persona_id,
-            name: personaName,  // Use extracted name
+            name: personaName,  // This should never be null now
             user_id: request.user_id,
             full_profile: data.persona_data,
             conversation_summary: {},

@@ -173,7 +173,7 @@ Coherence target: ${coherence_target}`;
     try {
       personaData = validateAndFixPersonaData(personaData);
       
-      // Double-check the name is still valid after processing
+      // Final name check
       if (!personaData.identity?.name || !personaData.identity.name.trim()) {
         throw new Error('Failed to ensure valid name in persona data');
       }
@@ -226,16 +226,11 @@ function validateAndFixPersonaData(personaData: any): any {
   if (!personaData.identity?.name || typeof personaData.identity.name !== 'string' || !personaData.identity.name.trim()) {
     console.warn('Missing or invalid identity.name, generating fallback...');
     
-    // Generate name based on other fields
     const gender = personaData.identity?.gender || 'person';
-    const ethnicity = personaData.identity?.ethnicity || '';
-    const age = personaData.identity?.age || 30;
-    
-    // Simple name generation logic
-    const maleNames = ['James', 'Michael', 'Robert', 'David', 'William', 'John', 'Richard', 'Joseph'];
-    const femaleNames = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica'];
-    const neutralNames = ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Riley', 'Avery', 'Quinn'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
+    const maleNames = ['James', 'Michael', 'Robert', 'David', 'William'];
+    const femaleNames = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth'];
+    const neutralNames = ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia'];
     
     let firstName: string;
     if (gender.toLowerCase().includes('male') && !gender.toLowerCase().includes('female')) {
@@ -252,7 +247,7 @@ function validateAndFixPersonaData(personaData: any): any {
     console.log(`Generated name: ${personaData.identity.name}`);
   }
 
-  // Validate other critical fields
+  // Validate critical fields
   const criticalFields = {
     'identity.education_level': personaData.identity?.education_level,
     'identity.income_bracket': personaData.identity?.income_bracket,
@@ -268,26 +263,7 @@ function validateAndFixPersonaData(personaData: any): any {
   }
 
   if (missingCritical.length > 0) {
-    console.error('Missing critical fields:', missingCritical);
     throw new Error(`Generated persona missing critical fields: ${missingCritical.join(', ')}`);
-  }
-
-  // Ensure numeric fields are actually numbers
-  if (typeof personaData.cognitive_profile.thought_coherence !== 'number') {
-    personaData.cognitive_profile.thought_coherence = 0.7; // Safe default
-  }
-
-  // Validate motivation drivers are numbers
-  if (personaData.motivation_profile?.primary_drivers) {
-    const drivers = personaData.motivation_profile.primary_drivers;
-    const driverKeys = ['care', 'family', 'status', 'mastery', 'meaning', 'novelty', 'security', 'belonging', 'self_interest'];
-    
-    driverKeys.forEach(key => {
-      if (typeof drivers[key] !== 'number') {
-        drivers[key] = 0.5; // Safe default
-        console.warn(`Fixed invalid driver value for ${key}`);
-      }
-    });
   }
 
   console.log('✅ Persona data validation complete');
