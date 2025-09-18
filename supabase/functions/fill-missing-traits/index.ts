@@ -13,6 +13,208 @@ const openaiApiKey = Deno.env.get('OPENAI_API_KEY')!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// New validation system - replace existing validation completely
+
+// Quick JSON Schema guard for top-level structure
+const PERSONA_SCHEMA = {
+  type: "object",
+  required: [
+    "identity", "daily_life", "health_profile", "relationships", "money_profile",
+    "motivation_profile", "communication_style", "humor_profile", "truth_honesty_profile",
+    "bias_profile", "cognitive_profile", "emotional_profile", "attitude_narrative",
+    "political_narrative", "adoption_profile", "prompt_shaping", "sexuality_profile"
+  ],
+  additionalProperties: false
+};
+
+// BANNED fields that should never appear anywhere
+const BANNED_KEYS = [
+  'big_five', 'social_identity', 'inhibitor_profile', 'cultural_dimensions', 
+  'behavioral_economics', 'identity_salience', 'knowledge_profile', 'contradictions',
+  'attitude_snapshot', 'political_signals', 'linguistic_signature', 'signature_phrases',
+  'physical_profile'
+];
+
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  completenessScore: number;
+}
+
+function validatePersona(persona: any): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Check for banned keys anywhere in the object
+  function checkForBannedKeys(obj: any, path = ''): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      if (BANNED_KEYS.includes(key)) {
+        errors.push(`Banned key found: ${currentPath}`);
+      }
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        checkForBannedKeys(value, currentPath);
+      }
+    }
+  }
+
+  checkForBannedKeys(persona);
+
+  // Check required top-level fields
+  for (const field of PERSONA_SCHEMA.required) {
+    if (!persona[field]) {
+      errors.push(`Missing required field: ${field}`);
+    }
+  }
+
+  // Hard stops - critical validations
+  if (persona.identity) {
+    if (!persona.identity.education_level) {
+      errors.push('Missing identity.education_level');
+    }
+    if (!persona.identity.income_bracket) {
+      errors.push('Missing identity.income_bracket');
+    }
+    if (!persona.identity.location?.urbanicity) {
+      errors.push('Missing identity.location.urbanicity');
+    }
+    
+    // Age validation
+    if (persona.identity.age && (persona.identity.age < 18 || persona.identity.age > 100)) {
+      errors.push(`Invalid age: ${persona.identity.age}`);
+    }
+  }
+
+  if (persona.cognitive_profile && typeof persona.cognitive_profile.thought_coherence !== 'number') {
+    errors.push('Missing or invalid cognitive_profile.thought_coherence');
+  }
+
+  // Daily activities validation
+  if (persona.daily_life?.primary_activities) {
+    const activities = persona.daily_life.primary_activities;
+    const totalHours = Object.values(activities).reduce((sum: number, hours: any) => sum + (Number(hours) || 0), 0);
+    
+    if (totalHours > 30) { // Allow some flexibility but catch obvious errors
+      errors.push(`Daily activities total ${totalHours} hours - unrealistic`);
+    }
+  }
+
+  // Numeric range validations
+  const numericFields = [
+    { path: 'motivation_profile.primary_drivers', fields: ['care', 'family', 'status', 'mastery', 'meaning', 'novelty', 'security', 'belonging', 'self_interest'] },
+    { path: 'truth_honesty_profile', fields: ['baseline_honesty'] },
+    { path: 'truth_honesty_profile.situational_variance', fields: ['work', 'home', 'public'] },
+    { path: 'bias_profile.cognitive', fields: ['status_quo', 'loss_aversion', 'confirmation', 'anchoring', 'availability', 'optimism', 'sunk_cost', 'overconfidence'] },
+    { path: 'cognitive_profile', fields: ['verbal_fluency', 'abstract_reasoning', 'thought_coherence'] },
+    { path: 'adoption_profile', fields: ['buyer_power', 'adoption_influence', 'risk_tolerance', 'change_friction'] },
+    { path: 'communication_style.voice_foundation', fields: ['empathy_level', 'charisma_level'] }
+  ];
+
+  numericFields.forEach(({ path, fields }) => {
+    const obj = path.split('.').reduce((current, key) => current?.[key], persona);
+    if (obj) {
+      fields.forEach(field => {
+        const value = obj[field];
+        if (typeof value === 'number' && (value < 0 || value > 1)) {
+          errors.push(`${path}.${field} must be between 0 and 1, got ${value}`);
+        }
+      });
+    }
+  });
+
+  // Check for empty values that should be filled
+  function checkForEmptyValues(obj: any, path = ''): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      if (value === '' || value === null) {
+        warnings.push(`Empty value at ${currentPath} - should be filled`);
+      } else if (Array.isArray(value) && value.length === 0 && !['pets', 'topics_off_limits'].includes(key)) {
+        warnings.push(`Empty array at ${currentPath} - may need content`);
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        checkForEmptyValues(value, currentPath);
+      }
+    }
+  }
+
+  checkForEmptyValues(persona);
+
+  // Check for bloated prompt_shaping
+  if (persona.prompt_shaping) {
+    const allowedPromptShapingKeys = [
+      'voice_foundation', 'style_markers', 'primary_motivations', 'deal_breakers',
+      'honesty_vector', 'bias_vector', 'context_switches', 'current_focus'
+    ];
+    
+    const extraKeys = Object.keys(persona.prompt_shaping).filter(key => !allowedPromptShapingKeys.includes(key));
+    if (extraKeys.length > 0) {
+      errors.push(`prompt_shaping has disallowed keys: ${extraKeys.join(', ')}`);
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    completenessScore: Math.max(0, 1 - (errors.length * 0.1) - (warnings.length * 0.02))
+  };
+}
+
+function hasBannedKeys(persona: any): boolean {
+  function checkRecursive(obj: any): boolean {
+    for (const [key, value] of Object.entries(obj)) {
+      if (BANNED_KEYS.includes(key)) {
+        return true;
+      }
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        if (checkRecursive(value)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  return checkRecursive(persona);
+}
+
+function hasRequiredKeys(persona: any): boolean {
+  return PERSONA_SCHEMA.required.every(key => persona.hasOwnProperty(key));
+}
+
+function cleanAndValidatePersona(persona: any): any {
+  // Remove any banned keys recursively
+  function removeBannedKeys(obj: any): any {
+    if (typeof obj !== 'object' || obj === null) return obj;
+    if (Array.isArray(obj)) return obj.map(removeBannedKeys);
+    
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (!BANNED_KEYS.includes(key)) {
+        cleaned[key] = removeBannedKeys(value);
+      }
+    }
+    return cleaned;
+  }
+
+  // Keep only allowed schema fields
+  const allowedFields = PERSONA_SCHEMA.required;
+  const cleanedPersona: any = {};
+  
+  const cleaned = removeBannedKeys(persona);
+  
+  for (const field of allowedFields) {
+    if (cleaned[field] !== undefined) {
+      cleanedPersona[field] = cleaned[field];
+    }
+  }
+  
+  return cleanedPersona;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -20,7 +222,7 @@ serve(async (req) => {
 
   try {
     const { personaIds = [], mode = 'preview' } = await req.json();
-    console.log('Fill missing traits request:', { personaIds, mode });
+    console.log('🔧 Fill missing traits request with new validation system:', { personaIds, mode });
 
     // Get personas with missing traits
     let query = supabase
@@ -35,50 +237,66 @@ serve(async (req) => {
     const { data: personas, error: fetchError } = await query;
 
     if (fetchError) {
-      console.error('Error fetching personas:', fetchError);
+      console.error('❌ Error fetching personas:', fetchError);
       throw fetchError;
     }
 
-    console.log(`Found ${personas?.length || 0} personas to analyze`);
+    console.log(`📊 Found ${personas?.length || 0} personas to analyze`);
 
-    const missingTraitsAnalysis = [];
+    const validationResults = [];
     const updates = [];
 
     for (const persona of personas || []) {
-      const analysis = analyzeTraitCompleteness(persona);
-      missingTraitsAnalysis.push({
+      console.log(`🔍 Validating persona: ${persona.name}`);
+      
+      // Run validation on existing persona
+      const validation = validatePersona(persona.full_profile);
+      
+      validationResults.push({
         persona_id: persona.persona_id,
         name: persona.name,
-        ...analysis
+        isValid: validation.isValid,
+        errors: validation.errors,
+        warnings: validation.warnings,
+        completenessScore: validation.completenessScore,
+        hasBannedKeys: hasBannedKeys(persona.full_profile),
+        hasRequiredKeys: hasRequiredKeys(persona.full_profile)
       });
 
-      if (mode === 'execute' && analysis.missingTraits.length > 0) {
-        console.log(`Filling missing traits for ${persona.name}:`, analysis.missingTraits);
+      if (mode === 'execute' && (!validation.isValid || hasBannedKeys(persona.full_profile) || !hasRequiredKeys(persona.full_profile))) {
+        console.log(`🛠️ Fixing persona ${persona.name} - Errors: ${validation.errors.length}, Banned keys: ${hasBannedKeys(persona.full_profile)}`);
         
-        const filledTraits = await fillMissingTraitsWithAI(
-          persona,
-          analysis.missingTraits
-        );
+        const fixedPersona = await fixPersonaCompliance(persona, validation);
 
-        if (filledTraits) {
-          updates.push({
-            persona_id: persona.persona_id,
-            name: persona.name,
-            filled_traits: analysis.missingTraits,
-            new_profile: filledTraits
-          });
+        if (fixedPersona) {
+          // Re-validate the fixed persona
+          const postValidation = validatePersona(fixedPersona);
+          
+          if (postValidation.isValid) {
+            console.log(`✅ Successfully fixed persona ${persona.name}`);
+            
+            updates.push({
+              persona_id: persona.persona_id,
+              name: persona.name,
+              validation_before: validation,
+              validation_after: postValidation,
+              fixed_profile: fixedPersona
+            });
 
-          // Update the persona
-          const { error: updateError } = await supabase
-            .from('v4_personas')
-            .update({
-              full_profile: filledTraits,
-              updated_at: new Date().toISOString()
-            })
-            .eq('persona_id', persona.persona_id);
+            // Update the persona in database
+            const { error: updateError } = await supabase
+              .from('v4_personas')
+              .update({
+                full_profile: fixedPersona,
+                updated_at: new Date().toISOString()
+              })
+              .eq('persona_id', persona.persona_id);
 
-          if (updateError) {
-            console.error(`Error updating persona ${persona.persona_id}:`, updateError);
+            if (updateError) {
+              console.error(`❌ Error updating persona ${persona.persona_id}:`, updateError);
+            }
+          } else {
+            console.error(`❌ Fixed persona ${persona.name} still has validation errors:`, postValidation.errors);
           }
         }
       }
@@ -87,15 +305,21 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       mode,
-      analyzed_count: missingTraitsAnalysis.length,
-      analysis: missingTraitsAnalysis,
-      updates: mode === 'execute' ? updates : []
+      analyzed_count: validationResults.length,
+      validation_results: validationResults,
+      updates: mode === 'execute' ? updates : [],
+      summary: {
+        valid_personas: validationResults.filter(r => r.isValid).length,
+        invalid_personas: validationResults.filter(r => !r.isValid).length,
+        personas_with_banned_keys: validationResults.filter(r => r.hasBannedKeys).length,
+        personas_missing_required: validationResults.filter(r => !r.hasRequiredKeys).length
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in fill-missing-traits function:', error);
+    console.error('❌ Error in fill-missing-traits function:', error);
     return new Response(JSON.stringify({ 
       success: false, 
       error: error.message 
@@ -106,161 +330,108 @@ serve(async (req) => {
   }
 });
 
-function analyzeTraitCompleteness(persona: any) {
-  const profile = persona.full_profile;
-  const missingTraits = [];
-
-  // Required trait categories based on new structure
-  const requiredTraits = [
-    'identity',
-    'daily_life',
-    'health_profile',
-    'relationships',
-    'money_profile',
-    'motivation_profile',
-    'communication_style',
-    'humor_profile',
-    'truth_honesty_profile',
-    'bias_profile',
-    'cognitive_profile',
-    'emotional_profile',
-    'attitude_narrative',
-    'political_narrative',
-    'adoption_profile',
-    'prompt_shaping',
-    'sexuality_profile'
-  ];
-
-  for (const trait of requiredTraits) {
-    if (trait === 'attitude_narrative' || trait === 'political_narrative') {
-      // String traits
-      if (!profile || !profile[trait] || typeof profile[trait] !== 'string' || profile[trait].trim() === '') {
-        missingTraits.push(trait);
-      }
-    } else {
-      // Object traits
-      if (!profile || !profile[trait] || typeof profile[trait] !== 'object' || Object.keys(profile[trait] || {}).length === 0) {
-        missingTraits.push(trait);
-      }
-    }
-  }
-
-  // Check for incomplete traits - just count missing required fields
-  const incompleteTraits = [];
+async function fixPersonaCompliance(persona: any, validation: ValidationResult) {
+  console.log(`🔧 Fixing compliance for ${persona.name}`);
   
-  // Check identity completeness
-  if (profile?.identity) {
-    const requiredIdentity = ['name', 'age', 'gender', 'occupation', 'location'];
-    const missing = requiredIdentity.filter(field => {
-      if (field === 'location') {
-        return !profile.identity.location || !profile.identity.location.city;
-      }
-      return !profile.identity[field] || profile.identity[field] === '';
-    });
-    if (missing.length > 0) incompleteTraits.push({ category: 'identity', missing });
+  // First clean the persona by removing banned keys and keeping only allowed schema
+  const cleanedPersona = cleanAndValidatePersona(persona.full_profile);
+  
+  // Check what's still missing after cleaning
+  const postCleanValidation = validatePersona(cleanedPersona);
+  
+  if (postCleanValidation.isValid) {
+    console.log(`✅ Persona ${persona.name} is valid after cleaning`);
+    return cleanedPersona;
   }
+  
+  console.log(`🤖 Generating missing fields for ${persona.name}:`, postCleanValidation.errors);
+  
+  // Use AI to generate the missing required fields
+  const systemPrompt = `You are a V4 persona compliance expert. Your job is to complete missing required fields in persona profiles.
 
-  return {
-    missingTraits,
-    incompleteTraits,
-    completenessScore: Math.round(((requiredTraits.length - missingTraits.length) / requiredTraits.length) * 100)
-  };
-}
+CRITICAL REQUIREMENTS:
+- You must generate ALL missing required fields from this exact list: ${PERSONA_SCHEMA.required.join(', ')}
+- NEVER include any of these banned fields: ${BANNED_KEYS.join(', ')}
+- Return ONLY valid JSON that matches the V4 persona schema
+- Use realistic, psychologically coherent values
+- Ensure internal consistency across all traits
+- Numeric values must be between 0 and 1 where specified
+- Age must be between 18 and 100
 
-async function fillMissingTraitsWithAI(persona: any, missingTraits: string[]) {
-  const systemPrompt = `You are a psychology AI expert helping to complete personality trait profiles for fictional personas. 
-
-Given a persona's existing profile, generate the missing trait categories with realistic, psychologically coherent values.
-
-POPULATION DISTRIBUTION GUIDELINES (batch-level targets, not per-persona requirements):
-- BMI Categories: 26% normal weight, 30% overweight, 44% obese (health_profile.bmi_category: "normal", "overweight", "obese")
-- Chronic Conditions: ≥60% have ≥1 condition; 50% on medications (20% mental health, 30% physical)
-- Substance Use: Smoking 12% cigarettes, 20% vaping; Alcohol: 30% abstain, 40% casual, 20% regular, 10% heavy; Marijuana: 15% regular, 20% occasional, 65% none/denial
-- Diet Patterns: Breakfast 35% daily, 30% skip, 35% irregular; Diet: 40% standard, 30% mixed, 20% healthy-conscious, 10% restrictive
-- Attitude Ranges (qualitative guidance): Abortion 40/40/20 pro-choice/mixed/pro-life; LGBTQ+ 70/20/10 supportive/tolerant/hostile; Immigration 30/40/30 restrictive/mixed/open
-- Behavioral Contradictions: Express as realistic behaviors (e.g., "tries to eat healthy but frequently gets fast food") rather than explicit contradiction fields
-
-IMPORTANT: Return ONLY valid JSON that can be merged with existing profile. Follow this exact structure:
-
+Required V4 Structure:
 {
   "identity": {
-    "name": "", "age": 0, "gender": "", "pronouns": "", "ethnicity": "", "nationality": "",
-    "occupation": "", "relationship_status": "", "dependents": 0,
-    "education_level": "", "income_bracket": "",
-    "location": { "city": "", "region": "", "country": "United States", "urbanicity": "urban" }
+    "name": "First Last", "age": 18-100, "gender": "Male/Female/Non-binary", "pronouns": "he/him/she/her/they/them", 
+    "ethnicity": "specific ethnicity", "nationality": "specific nationality", "occupation": "specific job", 
+    "relationship_status": "single/married/divorced/partnered", "dependents": 0-3,
+    "education_level": "high_school/some_college/bachelors/masters/doctorate", 
+    "income_bracket": "$20k-30k/$30k-50k/$50k-75k/$75k-100k/$100k+",
+    "location": { "city": "City", "region": "State", "country": "Country", "urbanicity": "urban/suburban/rural" }
   },
   "daily_life": {
-    "primary_activities": { "work": 0, "family_time": 0, "personal_care": 0, "personal_interests": 0, "social_interaction": 0 },
-    "schedule_blocks": [ { "start": "08:00", "end": "17:00", "activity": "", "setting": "" } ],
-    "time_sentiment": { "work": "", "family": "", "personal": "" },
-    "screen_time_summary": "",
-    "mental_preoccupations": []
+    "primary_activities": { "work": 6-10, "family_time": 0-6, "personal_care": 1-3, "personal_interests": 0-4, "social_interaction": 0-4 },
+    "schedule_blocks": [ { "start": "HH:MM", "end": "HH:MM", "activity": "activity name", "setting": "location" } ],
+    "time_sentiment": { "work": "fulfilling/neutral/stressful", "family": "energizing/balanced/draining", "personal": "restorative/rushed/neglected" },
+    "screen_time_summary": "Detailed description", "mental_preoccupations": ["preoccupation1", "preoccupation2"]
   },
   "health_profile": {
-    "bmi_category": "", "chronic_conditions": [], "mental_health_flags": [], "medications": [],
-    "adherence_level": "", "sleep_hours": 0,
-    "substance_use": { "alcohol": "", "cigarettes": "", "vaping": "", "marijuana": "" },
-    "fitness_level": "", "diet_pattern": ""
+    "bmi_category": "underweight/normal/overweight/obese", "chronic_conditions": [], "mental_health_flags": [], "medications": [],
+    "adherence_level": "excellent/good/poor/inconsistent", "sleep_hours": 5-9,
+    "substance_use": { "alcohol": "none/social/regular/heavy", "cigarettes": "none/social/regular/heavy", "vaping": "none/occasional/regular", "marijuana": "none/occasional/regular" },
+    "fitness_level": "sedentary/low/moderate/high/athletic", "diet_pattern": "standard/health_conscious/restricted/irregular"
   },
   "relationships": {
-    "household": { "status": "", "harmony_level": "", "dependents": 0 },
-    "caregiving_roles": [], "friend_network": { "size": "", "frequency": "", "anchor_contexts": [] },
+    "household": { "status": "alone/partner/family/roommates", "harmony_level": "tense/neutral/harmonious", "dependents": 0-3 },
+    "caregiving_roles": [], "friend_network": { "size": "small/medium/large", "frequency": "daily/weekly/monthly/rare", "anchor_contexts": [] },
     "pets": []
   },
   "money_profile": {
-    "attitude_toward_money": "", "earning_context": "", "spending_style": "",
-    "savings_investing_habits": { "emergency_fund_months": 0, "retirement_contributions": "", "investing_style": "" },
-    "debt_posture": "", "financial_stressors": [], "money_conflicts": "", "generosity_profile": ""
+    "attitude_toward_money": "anxious/practical/optimistic/indifferent", "earning_context": "stable/unstable/growing/declining", "spending_style": "frugal/balanced/impulsive/luxury_focused",
+    "savings_investing_habits": { "emergency_fund_months": 0-12, "retirement_contributions": "none/minimal/adequate/aggressive", "investing_style": "conservative/balanced/aggressive/none" },
+    "debt_posture": "debt_free/manageable/struggling/overwhelmed", "financial_stressors": [], "money_conflicts": "none/minor/moderate/severe", "generosity_profile": "stingy/selective/generous/very_generous"
   },
   "motivation_profile": {
     "primary_motivation_labels": [], "deal_breakers": [],
-    "primary_drivers": { "care": 0, "family": 0, "status": 0, "mastery": 0, "meaning": 0, "novelty": 0, "security": 0, "belonging": 0, "self_interest": 0 },
-    "goal_orientation": { "strength": 0, "time_horizon": "", "primary_goals": [], "goal_flexibility": 0 },
-    "want_vs_should_tension": { "major_conflicts": [], "default_resolution": "" }
+    "primary_drivers": { "care": 0.0-1.0, "family": 0.0-1.0, "status": 0.0-1.0, "mastery": 0.0-1.0, "meaning": 0.0-1.0, "novelty": 0.0-1.0, "security": 0.0-1.0, "belonging": 0.0-1.0, "self_interest": 0.0-1.0 },
+    "goal_orientation": { "strength": 0.0-1.0, "time_horizon": "short_term/medium_term/long_term", "primary_goals": [], "goal_flexibility": 0.0-1.0 },
+    "want_vs_should_tension": { "major_conflicts": [], "default_resolution": "want_wins/should_wins/context_dependent" }
   },
   "communication_style": {
-    "regional_register": { "region": "", "urbanicity": "urban", "dialect_hints": [] },
-    "voice_foundation": { "formality": "", "directness": "", "pace_rhythm": "", "positivity": "", "empathy_level": 0, "honesty_style": "", "charisma_level": 0 },
-    "style_markers": { "metaphor_domains": [], "aphorism_register": "", "storytelling_vs_bullets": 0, "humor_style": "", "code_switching_contexts": [] },
-    "context_switches": { "work": { "formality": "", "directness": "" }, "home": { "formality": "", "directness": "" }, "online": { "formality": "", "directness": "" } },
+    "regional_register": { "region": "region name", "urbanicity": "urban/suburban/rural", "dialect_hints": [] },
+    "voice_foundation": { "formality": "very_casual/casual/neutral/formal/very_formal", "directness": "blunt/direct/balanced/diplomatic/indirect", "pace_rhythm": "rapid/moderate/measured/slow", "positivity": "pessimistic/realistic/optimistic/very_positive", "empathy_level": 0.0-1.0, "honesty_style": "brutal/direct/tactful/diplomatic", "charisma_level": 0.0-1.0 },
+    "style_markers": { "metaphor_domains": [], "aphorism_register": "folksy/professional/philosophical/none", "storytelling_vs_bullets": 0.0-1.0, "humor_style": "dry/sarcastic/warm/silly/none", "code_switching_contexts": [] },
+    "context_switches": { "work": { "formality": "formal", "directness": "diplomatic" }, "home": { "formality": "casual", "directness": "direct" }, "online": { "formality": "neutral", "directness": "balanced" } },
     "authenticity_filters": { "avoid_registers": [], "embrace_registers": [], "personality_anchors": [] }
   },
-  "humor_profile": { "frequency": "", "style": [], "boundaries": [], "targets": [], "use_cases": [] },
+  "humor_profile": { "frequency": "rare/occasional/frequent/constant", "style": [], "boundaries": [], "targets": [], "use_cases": [] },
   "truth_honesty_profile": {
-    "baseline_honesty": 0, "situational_variance": { "work": 0, "home": 0, "public": 0 },
-    "typical_distortions": [], "red_lines": [], "pressure_points": [], "confession_style": ""
+    "baseline_honesty": 0.0-1.0, "situational_variance": { "work": 0.0-1.0, "home": 0.0-1.0, "public": 0.0-1.0 },
+    "typical_distortions": [], "red_lines": [], "pressure_points": [], "confession_style": "immediate/delayed/never/contextual"
   },
   "bias_profile": {
-    "cognitive": { "status_quo": 0, "loss_aversion": 0, "confirmation": 0, "anchoring": 0, "availability": 0, "optimism": 0, "sunk_cost": 0, "overconfidence": 0 },
+    "cognitive": { "status_quo": 0.0-1.0, "loss_aversion": 0.0-1.0, "confirmation": 0.0-1.0, "anchoring": 0.0-1.0, "availability": 0.0-1.0, "optimism": 0.0-1.0, "sunk_cost": 0.0-1.0, "overconfidence": 0.0-1.0 },
     "mitigations": []
   },
-  "cognitive_profile": { "verbal_fluency": 0, "abstract_reasoning": 0, "problem_solving_orientation": "", "thought_coherence": 0 },
-  "emotional_profile": { "stress_responses": [], "negative_triggers": [], "positive_triggers": [], "explosive_triggers": [], "emotional_regulation": "" },
-  "attitude_narrative": "String description of overall attitude and worldview",
-  "political_narrative": "String description of political views and influences",
-  "adoption_profile": { "buyer_power": 0, "adoption_influence": 0, "risk_tolerance": 0, "change_friction": 0, "expected_objections": [], "proof_points_needed": [] },
+  "cognitive_profile": { "verbal_fluency": 0.0-1.0, "abstract_reasoning": 0.0-1.0, "problem_solving_orientation": "methodical/intuitive/collaborative/avoidant", "thought_coherence": 0.0-1.0 },
+  "emotional_profile": { "stress_responses": [], "negative_triggers": [], "positive_triggers": [], "explosive_triggers": [], "emotional_regulation": "excellent/good/fair/poor" },
+  "attitude_narrative": "2-3 sentence description of overall outlook on life",
+  "political_narrative": "2-3 sentence description of political views",
+  "adoption_profile": { "buyer_power": 0.0-1.0, "adoption_influence": 0.0-1.0, "risk_tolerance": 0.0-1.0, "change_friction": 0.0-1.0, "expected_objections": [], "proof_points_needed": [] },
   "prompt_shaping": {
-    "voice_foundation": { "formality": "", "directness": "", "pace_rhythm": "", "positivity": "", "empathy_level": 0 },
-    "style_markers": { "metaphor_domains": [], "humor_style": "", "storytelling_vs_bullets": 0 },
-    "primary_motivations": [], "deal_breakers": [],
-    "honesty_vector": { "baseline": 0, "work": 0, "home": 0, "public": 0, "distortions": [] },
-    "bias_vector": { "top_cognitive": [], "top_social": [], "mitigation_playbook": [] },
-    "context_switches": { "work": "", "home": "", "online": "" },
-    "current_focus": ""
+    "voice_foundation": { "formality": "copy from communication_style", "directness": "copy from communication_style", "pace_rhythm": "copy from communication_style", "positivity": "copy from communication_style", "empathy_level": 0.0-1.0 },
+    "style_markers": { "metaphor_domains": [], "humor_style": "copy from humor_profile", "storytelling_vs_bullets": 0.0-1.0 },
+    "primary_motivations": [], "deal_breakers": [], "honesty_vector": { "baseline": 0.0-1.0, "work": 0.0-1.0, "home": 0.0-1.0, "public": 0.0-1.0, "distortions": [] },
+    "bias_vector": { "top_cognitive": [], "top_social": [], "mitigation_playbook": [] }, "context_switches": { "work": "description", "home": "description", "online": "description" }, "current_focus": "current mental focus"
   },
   "sexuality_profile": {
-    "orientation": "heterosexual", "expression_style": "private", "relationship_norms": "monogamous",
-    "boundaries": { "comfort_level": "moderate", "topics_off_limits": ["intimacy issues"] },
-    "linguistic_influences": { "flirtation_style": "none", "humor_boundaries": "clean", "taboo_navigation": "navigate_carefully" }
+    "orientation": "heterosexual/homosexual/bisexual/asexual/pansexual", "expression_style": "private/selective/open", "relationship_norms": "monogamous/polyamorous/casual/traditional",
+    "boundaries": { "comfort_level": "conservative/moderate/liberal", "topics_off_limits": [] }, "linguistic_influences": { "flirtation_style": "none/subtle/direct", "humor_boundaries": "clean/suggestive/explicit", "taboo_navigation": "avoid/navigate_carefully/comfortable" }
   }
-}`;
+}
 
-  const userPrompt = `Persona: ${persona.name}
-Existing profile: ${JSON.stringify(persona.full_profile, null, 2)}
+Generate realistic, internally consistent values. Return ONLY valid JSON without markdown or explanations.`;
 
-Missing trait categories: ${missingTraits.join(', ')}
-
-Generate realistic values for the missing traits that are consistent with the existing personality profile.`;
+  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after cleaning): ${JSON.stringify(cleanedPersona, null, 2)}\n\nValidation Errors: ${postCleanValidation.errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -276,7 +447,7 @@ Generate realistic values for the missing traits that are consistent with the ex
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.3,
-        max_tokens: 2000,
+        max_tokens: 3000,
       }),
     });
 
@@ -285,58 +456,32 @@ Generate realistic values for the missing traits that are consistent with the ex
     }
 
     const data = await response.json();
-    const generatedTraits = JSON.parse(data.choices[0].message.content);
-
-    // Create clean profile by removing legacy fields and keeping only new schema fields
-    const cleanProfile = cleanLegacyFields(persona.full_profile);
+    let generatedPersona;
     
-    // Merge generated traits with cleaned profile
-    for (const trait of missingTraits) {
-      if (generatedTraits[trait]) {
-        cleanProfile[trait] = generatedTraits[trait];
+    try {
+      // Clean the response - remove any markdown formatting
+      const content = data.choices[0].message.content.trim();
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      generatedPersona = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error('❌ Failed to parse AI response:', parseError);
+      return null;
+    }
+
+    // Merge the existing clean persona with generated content
+    const mergedPersona = { ...cleanedPersona };
+    
+    // Only add missing required fields
+    for (const requiredField of PERSONA_SCHEMA.required) {
+      if (!mergedPersona[requiredField] && generatedPersona[requiredField]) {
+        mergedPersona[requiredField] = generatedPersona[requiredField];
       }
     }
 
-    return cleanProfile;
+    return mergedPersona;
 
   } catch (error) {
-    console.error('Error generating traits with AI:', error);
+    console.error('❌ Error generating compliance fixes with AI:', error);
     return null;
   }
-}
-
-function cleanLegacyFields(profile: any) {
-  if (!profile) return {};
-  
-  // Define the new schema fields we want to keep
-  const newSchemaFields = [
-    'identity',
-    'daily_life', 
-    'health_profile',
-    'relationships',
-    'money_profile',
-    'motivation_profile',
-    'communication_style',
-    'humor_profile',
-    'truth_honesty_profile',
-    'bias_profile',
-    'cognitive_profile', 
-    'emotional_profile',
-    'attitude_narrative',
-    'political_narrative',
-    'adoption_profile',
-    'prompt_shaping',
-    'sexuality_profile'
-  ];
-  
-  // Create new clean profile with only the new schema fields
-  const cleanProfile: any = {};
-  
-  for (const field of newSchemaFields) {
-    if (profile[field] !== undefined) {
-      cleanProfile[field] = profile[field];
-    }
-  }
-  
-  return cleanProfile;
 }
