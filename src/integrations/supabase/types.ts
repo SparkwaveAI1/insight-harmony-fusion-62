@@ -908,60 +908,6 @@ export type Database = {
         }
         Relationships: []
       }
-      persona_v2: {
-        Row: {
-          age: number | null
-          city: string | null
-          created_at: string
-          data: Json
-          education_level: string | null
-          ethnicity: string | null
-          gender: string | null
-          id: string
-          income_bracket: string | null
-          name: string | null
-          occupation: string | null
-          region: string | null
-          thought_coherence: number | null
-          updated_at: string
-          urbanicity: string | null
-        }
-        Insert: {
-          age?: number | null
-          city?: string | null
-          created_at?: string
-          data: Json
-          education_level?: string | null
-          ethnicity?: string | null
-          gender?: string | null
-          id?: string
-          income_bracket?: string | null
-          name?: string | null
-          occupation?: string | null
-          region?: string | null
-          thought_coherence?: number | null
-          updated_at?: string
-          urbanicity?: string | null
-        }
-        Update: {
-          age?: number | null
-          city?: string | null
-          created_at?: string
-          data?: Json
-          education_level?: string | null
-          ethnicity?: string | null
-          gender?: string | null
-          id?: string
-          income_bracket?: string | null
-          name?: string | null
-          occupation?: string | null
-          region?: string | null
-          thought_coherence?: number | null
-          updated_at?: string
-          urbanicity?: string | null
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
