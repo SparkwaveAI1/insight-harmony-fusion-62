@@ -274,19 +274,21 @@ ALL REMAINING SECTIONS MUST BE COMPLETE:
 - prompt_shaping (voice_foundation summary, style_markers summary, primary_motivations, deal_breakers, honesty_vector, bias_vector, context_switches, current_focus)
 - sexuality_profile (orientation, expression_style, relationship_norms, boundaries, linguistic_influences)
 
-CRITICAL INSTRUCTIONS: 
-1. Generate ALL sections completely - no section should be empty or missing
-2. Use the ethnicity specified in user input exactly: ${userInputs.ethnicity || 'not specified'}
-3. Use the name preference if provided: ${userInputs.name_preference || 'generate appropriate name'}
-4. Use the gender if specified: ${userInputs.gender || 'not specified'}
-5. Use the role/occupation: ${userInputs.role || 'generate appropriate role'}
-6. Use the region: ${userInputs.region || 'generate appropriate region'}
-7. Use the urbanicity: ${userInputs.urbanicity || 'generate appropriate setting'}
-8. Be internally consistent across all fields
-9. All numeric values must be numbers between 0 and 1, not strings
-10. Generate realistic, detailed content for every field - no placeholders or empty values
-
-Return ONLY the complete JSON object with all sections filled with realistic, detailed data.`;
+        CRITICAL INSTRUCTIONS: 
+        1. Generate ALL sections completely - no section should be empty or missing
+        2. Use the ethnicity specified in user input exactly: ${userInputs.ethnicity || 'not specified'}
+        3. Use the name preference if provided: ${userInputs.name_preference || 'generate appropriate name'}
+        4. Use the gender if specified: ${userInputs.gender || 'not specified'}
+        5. Use the role/occupation: ${userInputs.role || 'generate appropriate role'}
+        6. Use the region: ${userInputs.region || 'generate appropriate region'}
+        7. Use the urbanicity: ${userInputs.urbanicity || 'generate appropriate setting'}
+        8. Be internally consistent across all fields
+        9. All numeric values must be numbers between 0 and 1, not strings
+        10. Generate realistic, detailed content for every field - no placeholders or empty values
+        11. Numeric TRAIT values must be realistically varied – do NOT output uniform defaults (e.g., all 0.5)
+        12. Do not rely on any post-processing; your output must be final and valid as-is
+        
+        Return ONLY the complete JSON object with all sections filled with realistic, detailed data.`;
 
     // Retry configurations
     const configurations = [
@@ -372,8 +374,9 @@ Return ONLY the complete JSON object with all sections filled with realistic, de
           throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
         }
 
-        // Success!
-        console.log(`✅ Successful generation on attempt ${config.attempt}`);
+        // Strict validation (no mutation, throws on failure)
+        personaData = validateAndFixPersonaData(personaData, userInputs);
+        console.log(`✅ Successful generation and validation on attempt ${config.attempt}`);
         break;
 
       } catch (error) {
@@ -390,63 +393,9 @@ Return ONLY the complete JSON object with all sections filled with realistic, de
       throw new Error(`All generation attempts failed. Last error: ${lastError?.message}`);
     }
 
-    // Validate and fix the persona data
-    try {
-      personaData = validateAndFixPersonaData(personaData, userInputs);
+    // Post-generation validation moved into generation loop (no mutations after generation).
 
-      // Strictly preserve user-specified fields
-      if (userInputs.name_preference) {
-        personaData.identity.name = userInputs.name_preference;
-      }
-
-      if (userInputs.ethnicity && personaData.identity.ethnicity !== userInputs.ethnicity) {
-        console.warn(`Ethnicity mismatch: expected ${userInputs.ethnicity}, got ${personaData.identity.ethnicity}`);
-        personaData.identity.ethnicity = userInputs.ethnicity;
-      }
-
-      if (userInputs.role && personaData.identity.occupation !== userInputs.role) {
-        console.warn(`Role mismatch: expected ${userInputs.role}, got ${personaData.identity.occupation}`);
-        personaData.identity.occupation = userInputs.role;
-      }
-
-      if (userInputs.gender) {
-        personaData.identity.gender = userInputs.gender;
-        // Align pronouns with gender when possible
-        const pronounMap: Record<string, string> = { male: 'he/him', female: 'she/her', 'non-binary': 'they/them' };
-        personaData.identity.pronouns = pronounMap[userInputs.gender] || personaData.identity.pronouns;
-      }
-
-      if (userInputs.region || userInputs.urbanicity) {
-        personaData.identity.location = personaData.identity.location || { city: '', region: '', country: 'United States', urbanicity: '' };
-        if (userInputs.region) personaData.identity.location.region = userInputs.region;
-        if (userInputs.urbanicity) personaData.identity.location.urbanicity = userInputs.urbanicity;
-      }
-
-      if (userInputs.age_range && typeof personaData.identity.age === 'number') {
-        const range = String(userInputs.age_range);
-        let min = 18, max = 90;
-        if (range.includes('+')) {
-          const base = parseInt(range);
-          if (!Number.isNaN(base)) min = base;
-        } else if (range.includes('-')) {
-          const [a, b] = range.split('-').map((n: string) => parseInt(n.trim(), 10));
-          if (!Number.isNaN(a) && !Number.isNaN(b)) { min = a; max = b; }
-        }
-        if (personaData.identity.age < min || personaData.identity.age > max) {
-          personaData.identity.age = Math.round((min + max) / 2);
-        }
-      }
-
-      console.log(`Validated persona with name: "${personaData.identity.name}", ethnicity: "${personaData.identity.ethnicity}"`);
-
-    } catch (validationError) {
-      console.error('Persona validation failed:', validationError);
-      throw validationError;
-    }
-
-    // Normalize numeric values
-    personaData = normalizePersonaData(personaData);
-
+    // No normalization step (no post-generation mutations)
     // Calculate validation score (all required fields present and validated)
     const validationScore = 1.0;
     const validationErrors: string[] = [];
@@ -491,10 +440,9 @@ Return ONLY the complete JSON object with all sections filled with realistic, de
 });
 
 function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any {
-  console.log('🔍 Starting comprehensive persona validation and completion...');
-  const fixes: string[] = [];
+  console.log('🔍 Strict persona validation (no mutations)...');
 
-  // Ensure all required top-level sections exist
+  // Required top-level sections
   const requiredSections = [
     'identity', 'daily_life', 'health_profile', 'relationships', 'money_profile',
     'motivation_profile', 'communication_style', 'humor_profile', 'truth_honesty_profile',
@@ -502,273 +450,111 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
     'political_narrative', 'adoption_profile', 'prompt_shaping', 'sexuality_profile'
   ];
 
-  // Create missing sections instead of failing
-  for (const section of requiredSections) {
-    if (!personaData[section]) {
-      personaData[section] = {};
-      fixes.push(`Created missing section: ${section}`);
+  const missingSections = requiredSections.filter((s) => !personaData[s]);
+  if (missingSections.length) {
+    throw new Error(`Missing required sections: ${missingSections.join(', ')}`);
+  }
+
+  // Identity checks (no mutation)
+  const id = personaData.identity || {};
+  const identityFields = [
+    'name','age','gender','pronouns','ethnicity','nationality','occupation','relationship_status','dependents','education_level','income_bracket','location'
+  ];
+  const missingIdentity = identityFields.filter((f) => id[f] === undefined || id[f] === null || (typeof id[f] === 'string' && id[f].trim?.() === ''));
+  if (missingIdentity.length) {
+    throw new Error(`Missing identity fields: ${missingIdentity.join(', ')}`);
+  }
+
+  const locFields = ['city','region','country','urbanicity'];
+  const missingLoc = locFields.filter((f) => !id.location?.[f]);
+  if (missingLoc.length) {
+    throw new Error(`Missing identity.location fields: ${missingLoc.join(', ')}`);
+  }
+
+  // User input alignment (fail instead of override)
+  if (userInputs.name_preference && id.name !== userInputs.name_preference) {
+    throw new Error(`Name mismatch: expected ${userInputs.name_preference}, got ${id.name}`);
+  }
+  if (userInputs.ethnicity && id.ethnicity !== userInputs.ethnicity) {
+    throw new Error(`Ethnicity mismatch: expected ${userInputs.ethnicity}, got ${id.ethnicity}`);
+  }
+  if (userInputs.role && id.occupation !== userInputs.role) {
+    throw new Error(`Role mismatch: expected ${userInputs.role}, got ${id.occupation}`);
+  }
+  if (userInputs.gender && id.gender !== userInputs.gender) {
+    throw new Error(`Gender mismatch: expected ${userInputs.gender}, got ${id.gender}`);
+  }
+  if (userInputs.region && id.location.region !== userInputs.region) {
+    throw new Error(`Region mismatch: expected ${userInputs.region}, got ${id.location.region}`);
+  }
+  if (userInputs.urbanicity && id.location.urbanicity !== userInputs.urbanicity) {
+    throw new Error(`Urbanicity mismatch: expected ${userInputs.urbanicity}, got ${id.location.urbanicity}`);
+  }
+  if (userInputs.age_range && typeof id.age === 'number') {
+    const range = String(userInputs.age_range);
+    let min = 18, max = 90;
+    if (range.includes('+')) {
+      const base = parseInt(range);
+      if (!Number.isNaN(base)) min = base;
+    } else if (range.includes('-')) {
+      const [a, b] = range.split('-').map((n: string) => parseInt(n.trim(), 10));
+      if (!Number.isNaN(a) && !Number.isNaN(b)) { min = a; max = b; }
+    }
+    if (id.age < min || id.age > max) {
+      throw new Error(`Age out of specified range (${min}-${max}): got ${id.age}`);
     }
   }
 
-  // Complete IDENTITY section
-  const identityDefaults = {
-    'name': userInputs.name_preference || 'John Doe',
-    'age': 35,
-    'gender': userInputs.gender || 'male',
-    'pronouns': 'he/him',
-    'ethnicity': userInputs.ethnicity || 'Caucasian',
-    'nationality': 'American',
-    'occupation': userInputs.role || 'Professional',
-    'relationship_status': 'single',
-    'dependents': 0,
-    'education_level': 'Bachelor\'s degree',
-    'income_bracket': '$50,000-$75,000'
-  };
-
-  // Fill missing identity fields with defaults
-  Object.entries(identityDefaults).forEach(([field, defaultValue]) => {
-    if (!personaData.identity[field]) {
-      personaData.identity[field] = defaultValue;
-      fixes.push(`Set identity.${field} to default: ${defaultValue}`);
-    }
-  });
-
-  // Ensure location exists
-  if (!personaData.identity.location) {
-    personaData.identity.location = {};
-    fixes.push('Created identity.location object');
+  // Daily life completeness
+  const dl = personaData.daily_life;
+  if (!dl?.primary_activities || !dl?.schedule_blocks || !dl?.time_sentiment || dl.screen_time_summary === undefined || !Array.isArray(dl.mental_preoccupations)) {
+    throw new Error('Incomplete daily_life section');
   }
 
-  const locationDefaults = {
-    'city': 'Atlanta',
-    'region': userInputs.region || 'Southeast',
-    'country': 'United States',
-    'urbanicity': userInputs.urbanicity || 'urban'
-  };
-
-  Object.entries(locationDefaults).forEach(([field, defaultValue]) => {
-    if (!personaData.identity.location[field]) {
-      personaData.identity.location[field] = defaultValue;
-      fixes.push(`Set identity.location.${field} to: ${defaultValue}`);
-    }
-  });
-
-  // Apply user input overrides
-  if (userInputs.ethnicity) {
-    personaData.identity.ethnicity = userInputs.ethnicity;
-    fixes.push(`Applied user ethnicity: ${userInputs.ethnicity}`);
-  }
-  
-  if (userInputs.name_preference) {
-    personaData.identity.name = userInputs.name_preference;
-    fixes.push(`Applied user name preference: ${userInputs.name_preference}`);
-  }
-  
-  if (userInputs.gender) {
-    personaData.identity.gender = userInputs.gender;
-    personaData.identity.pronouns = userInputs.gender === 'female' ? 'she/her' : 
-                                   userInputs.gender === 'male' ? 'he/him' : 'they/them';
-    fixes.push(`Applied user gender: ${userInputs.gender}`);
+  // Health profile minimal checks
+  const hp = personaData.health_profile;
+  if (!hp || hp.substance_use === undefined || hp.bmi_category === undefined || hp.sleep_hours === undefined) {
+    throw new Error('Incomplete health_profile section');
   }
 
-  // Complete DAILY_LIFE section
-  if (!personaData.daily_life.primary_activities) {
-    personaData.daily_life.primary_activities = {};
+  // Motivation drivers numeric checks
+  const mp = personaData.motivation_profile;
+  const drivers = mp?.primary_drivers;
+  const driverKeys = ['care','family','status','mastery','meaning','novelty','security','belonging','self_interest'];
+  if (!drivers || driverKeys.some((k) => typeof drivers[k] !== 'number')) {
+    throw new Error('Missing numeric motivation primary_drivers');
   }
-  
-  const activityDefaults = {
-    'work': 8,
-    'family_time': 3,
-    'personal_care': 2,
-    'personal_interests': 2,
-    'social_interaction': 1
-  };
-
-  Object.entries(activityDefaults).forEach(([activity, hours]) => {
-    if (typeof personaData.daily_life.primary_activities[activity] !== 'number') {
-      personaData.daily_life.primary_activities[activity] = hours;
-      fixes.push(`Set daily_life.primary_activities.${activity} to ${hours} hours`);
-    }
-  });
-
-  // Fill missing daily life fields
-  if (!personaData.daily_life.schedule_blocks) {
-    personaData.daily_life.schedule_blocks = [
-      { "start": "07:00", "end": "09:00", "activity": "Morning routine", "setting": "Home" },
-      { "start": "09:00", "end": "17:00", "activity": "Work", "setting": "Office" },
-      { "start": "17:00", "end": "22:00", "activity": "Personal time", "setting": "Home" }
-    ];
-    fixes.push('Generated default schedule_blocks');
+  const values = driverKeys.map((k) => drivers[k]);
+  const allSame = values.every((v) => v === values[0]);
+  if (allSame || values.every((v) => v === 0.5)) {
+    throw new Error('Unrealistic uniform motivation drivers (e.g., all 0.5)');
+  }
+  if (values.some((v) => v < 0 || v > 1)) {
+    throw new Error('Motivation drivers out of range 0-1');
   }
 
-  if (!personaData.daily_life.time_sentiment) {
-    personaData.daily_life.time_sentiment = {
-      "work": "focused but sometimes stressful",
-      "family": "cherished and meaningful",
-      "personal": "relaxing and restorative"
-    };
-    fixes.push('Generated default time_sentiment');
+  // Communication style numeric checks
+  const vf = personaData.communication_style?.voice_foundation;
+  if (!vf || typeof vf.empathy_level !== 'number' || typeof vf.charisma_level !== 'number') {
+    throw new Error('Incomplete communication_style.voice_foundation numeric fields');
+  }
+  if (vf.empathy_level < 0 || vf.empathy_level > 1 || vf.charisma_level < 0 || vf.charisma_level > 1) {
+    throw new Error('Voice foundation numeric values out of range 0-1');
   }
 
-  if (!personaData.daily_life.screen_time_summary) {
-    personaData.daily_life.screen_time_summary = "Moderate screen usage primarily for work and communication, with some evening entertainment";
-    fixes.push('Generated default screen_time_summary');
+  // Cognitive profile numeric checks
+  const cp = personaData.cognitive_profile;
+  if (!cp || typeof cp.verbal_fluency !== 'number' || typeof cp.abstract_reasoning !== 'number' || typeof cp.thought_coherence !== 'number') {
+    throw new Error('Incomplete cognitive_profile numeric fields');
   }
 
-  if (!personaData.daily_life.mental_preoccupations) {
-    personaData.daily_life.mental_preoccupations = ["work responsibilities", "personal goals", "family wellbeing"];
-    fixes.push('Generated default mental_preoccupations');
+  // Sexuality profile presence
+  const sp = personaData.sexuality_profile;
+  if (!sp || sp.orientation === undefined || sp.expression_style === undefined || sp.relationship_norms === undefined || sp.boundaries === undefined || sp.linguistic_influences === undefined) {
+    throw new Error('Incomplete sexuality_profile');
   }
 
-  // Complete HEALTH_PROFILE section
-  const healthDefaults = {
-    'bmi_category': 'normal',
-    'chronic_conditions': [],
-    'mental_health_flags': [],
-    'medications': [],
-    'adherence_level': 'mostly_consistent',
-    'sleep_hours': 7,
-    'fitness_level': 'moderate',
-    'diet_pattern': 'standard'
-  };
-
-  Object.entries(healthDefaults).forEach(([field, defaultValue]) => {
-    if (personaData.health_profile[field] === undefined) {
-      personaData.health_profile[field] = defaultValue;
-      fixes.push(`Set health_profile.${field} to default`);
-    }
-  });
-
-  if (!personaData.health_profile.substance_use) {
-    personaData.health_profile.substance_use = {};
-  }
-
-  const substanceDefaults = {
-    'alcohol': 'casual',
-    'cigarettes': 'none',
-    'vaping': 'none',
-    'marijuana': 'none'
-  };
-
-  Object.entries(substanceDefaults).forEach(([substance, level]) => {
-    if (!personaData.health_profile.substance_use[substance]) {
-      personaData.health_profile.substance_use[substance] = level;
-      fixes.push(`Set health_profile.substance_use.${substance} to ${level}`);
-    }
-  });
-
-  // Complete remaining sections with sensible defaults
-  
-  // RELATIONSHIPS section
-  if (!personaData.relationships.household) {
-    personaData.relationships.household = {
-      "status": personaData.identity.relationship_status || "single",
-      "harmony_level": "peaceful",
-      "dependents": personaData.identity.dependents || 0
-    };
-    fixes.push('Generated default relationships.household');
-  }
-
-  if (!personaData.relationships.caregiving_roles) {
-    personaData.relationships.caregiving_roles = [];
-    fixes.push('Set default empty caregiving_roles');
-  }
-
-  if (!personaData.relationships.friend_network) {
-    personaData.relationships.friend_network = {
-      "size": "medium",
-      "frequency": "weekly",
-      "anchor_contexts": ["work", "neighborhood"]
-    };
-    fixes.push('Generated default friend_network');
-  }
-
-  if (!personaData.relationships.pets) {
-    personaData.relationships.pets = [];
-    fixes.push('Set default empty pets array');
-  }
-
-  // MONEY_PROFILE section
-  const moneyDefaults = {
-    'attitude_toward_money': 'practical and careful with spending',
-    'earning_context': 'steady employment with regular income',
-    'spending_style': 'thoughtful and planned purchases',
-    'debt_posture': 'manageable debt levels',
-    'financial_stressors': ['unexpected expenses', 'retirement planning'],
-    'money_conflicts': 'occasional disagreements about spending priorities',
-    'generosity_profile': 'gives to causes they care about when possible'
-  };
-
-  Object.entries(moneyDefaults).forEach(([field, defaultValue]) => {
-    if (!personaData.money_profile[field]) {
-      personaData.money_profile[field] = defaultValue;
-      fixes.push(`Set money_profile.${field} to default`);
-    }
-  });
-
-  if (!personaData.money_profile.savings_investing_habits) {
-    personaData.money_profile.savings_investing_habits = {
-      "emergency_fund_months": 3,
-      "retirement_contributions": "contributes to 401k when possible",
-      "investing_style": "conservative with some growth investments"
-    };
-    fixes.push('Generated default savings_investing_habits');
-  }
-
-  // MOTIVATION_PROFILE section
-  if (!personaData.motivation_profile.primary_motivation_labels) {
-    personaData.motivation_profile.primary_motivation_labels = ["security", "achievement"];
-    fixes.push('Set default primary_motivation_labels');
-  }
-
-  if (!personaData.motivation_profile.deal_breakers) {
-    personaData.motivation_profile.deal_breakers = ["dishonesty", "disrespect"];
-    fixes.push('Set default deal_breakers');
-  }
-
-  if (!personaData.motivation_profile.primary_drivers) {
-    personaData.motivation_profile.primary_drivers = {
-      "care": 0.7, "family": 0.8, "status": 0.4, "mastery": 0.6,
-      "meaning": 0.5, "novelty": 0.3, "security": 0.8, "belonging": 0.6, "self_interest": 0.5
-    };
-    fixes.push('Generated default primary_drivers');
-  }
-
-  // Fill missing fields with defaults for all other sections
-  const sectionDefaults = {
-    'humor_profile': { frequency: 'moderate', style: ['situational'], boundaries: ['appropriate'], targets: ['general'], use_cases: ['social bonding'] },
-    'truth_honesty_profile': { baseline_honesty: 0.8, situational_variance: { work: 0.8, home: 0.9, public: 0.7 }, typical_distortions: [], red_lines: ['major lies'], pressure_points: [], confession_style: 'direct when confronted' },
-    'cognitive_profile': { verbal_fluency: 0.7, abstract_reasoning: 0.6, problem_solving_orientation: 'systematic', thought_coherence: 0.8 },
-    'emotional_profile': { stress_responses: ['problem-solving'], negative_triggers: ['criticism'], positive_triggers: ['recognition'], explosive_triggers: [], emotional_regulation: 'moderate' },
-    'adoption_profile': { buyer_power: 0.5, adoption_influence: 0.4, risk_tolerance: 0.5, change_friction: 0.6, expected_objections: [], proof_points_needed: [] }
-  };
-
-  Object.entries(sectionDefaults).forEach(([section, defaults]) => {
-    Object.entries(defaults).forEach(([field, defaultValue]) => {
-      if (!personaData[section][field]) {
-        personaData[section][field] = defaultValue;
-        fixes.push(`Set ${section}.${field} to default`);
-      }
-    });
-  });
-
-  // String fields
-  if (!personaData.attitude_narrative || typeof personaData.attitude_narrative !== 'string') {
-    personaData.attitude_narrative = "Generally optimistic about life while maintaining realistic expectations. Values personal growth and meaningful relationships.";
-    fixes.push('Generated default attitude_narrative');
-  }
-
-  if (!personaData.political_narrative || typeof personaData.political_narrative !== 'string') {
-    personaData.political_narrative = "Holds moderate political views with focus on practical solutions. Believes in civic engagement and informed participation.";
-    fixes.push('Generated default political_narrative');
-  }
-
-  console.log(`✅ Persona completion successful. Applied ${fixes.length} fixes.`);
-  
-  if (fixes.length > 0) {
-    console.log('🔧 Applied fixes:', fixes);
-  }
-
+  console.log('✅ Strict validation passed without mutations.');
   return personaData;
 }
 
