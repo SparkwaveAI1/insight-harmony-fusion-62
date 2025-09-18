@@ -279,19 +279,56 @@ Generate realistic values for the missing traits that are consistent with the ex
     const data = await response.json();
     const generatedTraits = JSON.parse(data.choices[0].message.content);
 
-    // Merge with existing profile
-    const updatedProfile = { ...persona.full_profile };
+    // Create clean profile by removing legacy fields and keeping only new schema fields
+    const cleanProfile = cleanLegacyFields(persona.full_profile);
     
+    // Merge generated traits with cleaned profile
     for (const trait of missingTraits) {
       if (generatedTraits[trait]) {
-        updatedProfile[trait] = generatedTraits[trait];
+        cleanProfile[trait] = generatedTraits[trait];
       }
     }
 
-    return updatedProfile;
+    return cleanProfile;
 
   } catch (error) {
     console.error('Error generating traits with AI:', error);
     return null;
   }
+}
+
+function cleanLegacyFields(profile: any) {
+  if (!profile) return {};
+  
+  // Define the new schema fields we want to keep
+  const newSchemaFields = [
+    'identity',
+    'daily_life', 
+    'health_profile',
+    'relationships',
+    'money_profile',
+    'motivation_profile',
+    'communication_style',
+    'humor_profile',
+    'truth_honesty_profile',
+    'bias_profile',
+    'cognitive_profile', 
+    'emotional_profile',
+    'attitude_narrative',
+    'political_narrative',
+    'adoption_profile',
+    'prompt_shaping',
+    'sexuality_profile'
+  ];
+  
+  // Create new clean profile with only the new schema fields
+  const cleanProfile: any = {};
+  
+  for (const field of newSchemaFields) {
+    if (profile[field] !== undefined) {
+      cleanProfile[field] = profile[field];
+    }
+  }
+  
+  return cleanProfile;
 }
