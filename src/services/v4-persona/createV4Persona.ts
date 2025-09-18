@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { validatePersona } from './v4PersonaValidation';
+import { normalizeV4PersonaProfile } from './v4PersonaNormalize';
 
 function extractPersonaName(personaData: any): string {
   // Primary: Check for explicit name in identity
@@ -125,6 +126,9 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
       
       const persona_id = `v4_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
+      // Normalize profile to match validator expectations
+      const normalizedProfile = normalizeV4PersonaProfile(data.persona_data);
+      
       // Insert into database with validated name
       const { data: dbData, error: dbError } = await supabase
         .from('v4_personas')
@@ -133,7 +137,7 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
             persona_id,
             name: personaName,  // This should never be null now
             user_id: request.user_id,
-            full_profile: data.persona_data,
+            full_profile: normalizedProfile,
             conversation_summary: {},
             creation_stage: 'completed',
             creation_completed: true

@@ -13,6 +13,7 @@ import {
   completeV4Persona, 
   getV4PersonaCompletionRecommendation 
 } from '@/services/v4-persona/v4PersonaCompletion';
+import { normalizeV4PersonaProfile } from '@/services/v4-persona/v4PersonaNormalize';
 import { toast } from 'sonner';
 
 interface V4PersonaCompletionCardProps {
