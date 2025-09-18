@@ -172,6 +172,14 @@ async function fillMissingTraitsWithAI(persona: any, missingTraits: string[]) {
 
 Given a persona's existing profile, generate the missing trait categories with realistic, psychologically coherent values.
 
+POPULATION DISTRIBUTION GUIDELINES (batch-level targets, not per-persona requirements):
+- BMI Categories: 26% normal weight, 30% overweight, 44% obese (health_profile.bmi_category: "normal", "overweight", "obese")
+- Chronic Conditions: ≥60% have ≥1 condition; 50% on medications (20% mental health, 30% physical)
+- Substance Use: Smoking 12% cigarettes, 20% vaping; Alcohol: 30% abstain, 40% casual, 20% regular, 10% heavy; Marijuana: 15% regular, 20% occasional, 65% none/denial
+- Diet Patterns: Breakfast 35% daily, 30% skip, 35% irregular; Diet: 40% standard, 30% mixed, 20% healthy-conscious, 10% restrictive
+- Attitude Ranges (qualitative guidance): Abortion 40/40/20 pro-choice/mixed/pro-life; LGBTQ+ 70/20/10 supportive/tolerant/hostile; Immigration 30/40/30 restrictive/mixed/open
+- Behavioral Contradictions: Express as realistic behaviors (e.g., "tries to eat healthy but frequently gets fast food") rather than explicit contradiction fields
+
 IMPORTANT: Return ONLY valid JSON that can be merged with existing profile. Follow this exact structure:
 
 {
