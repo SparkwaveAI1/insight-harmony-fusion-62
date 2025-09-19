@@ -35,7 +35,7 @@ export function PersonaDescriptionConverter() {
         .eq('creation_completed', true)
         .not('full_profile', 'is', null)
         .order('name')
-        .limit(20);
+        .limit(100);
 
       if (error) throw error;
       
