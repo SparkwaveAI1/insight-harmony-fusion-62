@@ -1463,6 +1463,7 @@ export type Database = {
           creation_completed: boolean | null
           creation_stage: string | null
           education_level: string | null
+          enhancement_applied_at: string | null
           enrichment_status: string | null
           evidence_notes: string | null
           full_profile: Json
@@ -1473,6 +1474,7 @@ export type Database = {
           persona_id: string
           profile_image_url: string | null
           schema_version: string
+          statistical_enhancement_status: string | null
           thought_coherence: number | null
           updated_at: string | null
           user_id: string
@@ -1483,6 +1485,7 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           education_level?: string | null
+          enhancement_applied_at?: string | null
           enrichment_status?: string | null
           evidence_notes?: string | null
           full_profile?: Json
@@ -1493,6 +1496,7 @@ export type Database = {
           persona_id: string
           profile_image_url?: string | null
           schema_version?: string
+          statistical_enhancement_status?: string | null
           thought_coherence?: number | null
           updated_at?: string | null
           user_id: string
@@ -1503,6 +1507,7 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           education_level?: string | null
+          enhancement_applied_at?: string | null
           enrichment_status?: string | null
           evidence_notes?: string | null
           full_profile?: Json
@@ -1513,6 +1518,7 @@ export type Database = {
           persona_id?: string
           profile_image_url?: string | null
           schema_version?: string
+          statistical_enhancement_status?: string | null
           thought_coherence?: number | null
           updated_at?: string | null
           user_id?: string

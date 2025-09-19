@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.log-grok-prompt]
 verify_jwt = false
+
+[functions.convert-personas-statistical]
+verify_jwt = true
