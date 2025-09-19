@@ -245,27 +245,158 @@ COMMUNICATION_STYLE SECTION (all fields required):
   }
 }
 
-ALL REMAINING SECTIONS MUST BE COMPLETE:
-- humor_profile (frequency, style, boundaries, targets, use_cases)
-- truth_honesty_profile (baseline_honesty, situational_variance, typical_distortions, red_lines, pressure_points, confession_style)
-- bias_profile (cognitive biases with all 8 types, mitigations)
-- cognitive_profile (verbal_fluency, abstract_reasoning, problem_solving_orientation, thought_coherence)
-- emotional_profile (stress_responses, negative_triggers, positive_triggers, explosive_triggers, emotional_regulation)
-- attitude_narrative (paragraph describing their worldview)
-- political_narrative (paragraph describing their political views)
-- adoption_profile (buyer_power, adoption_influence, risk_tolerance, change_friction, expected_objections, proof_points_needed)
-- prompt_shaping (voice_foundation, style_markers, primary_motivations, deal_breakers, honesty_vector, bias_vector, context_switches, current_focus)
-- sexuality_profile (orientation, expression_style, relationship_norms, boundaries, linguistic_influences)
+HUMOR_PROFILE SECTION (all fields required):
+{
+  "humor_profile": {
+    "frequency": "[regular/occasional/rare]",
+    "style": ["[style1]", "[style2]"],
+    "boundaries": ["[boundary1]", "[boundary2]"],
+    "targets": ["[target1]", "[target2]"],
+    "use_cases": ["[usecase1]", "[usecase2]"]
+  }
+}
+
+TRUTH_HONESTY_PROFILE SECTION (all fields required - NUMERIC VALUES):
+{
+  "truth_honesty_profile": {
+    "baseline_honesty": [0.0-1.0 NUMERIC],
+    "situational_variance": {
+      "work": [0.0-1.0 NUMERIC],
+      "home": [0.0-1.0 NUMERIC], 
+      "public": [0.0-1.0 NUMERIC]
+    },
+    "typical_distortions": ["[distortion1]", "[distortion2]"],
+    "red_lines": ["[redline1]", "[redline2]"],
+    "pressure_points": ["[pressure1]", "[pressure2]"],
+    "confession_style": "[direct/gradual/defensive]"
+  }
+}
+
+BIAS_PROFILE SECTION (all fields required - NUMERIC VALUES):
+{
+  "bias_profile": {
+    "cognitive": {
+      "status_quo": [0.0-1.0 NUMERIC],
+      "loss_aversion": [0.0-1.0 NUMERIC],
+      "confirmation": [0.0-1.0 NUMERIC],
+      "anchoring": [0.0-1.0 NUMERIC],
+      "availability": [0.0-1.0 NUMERIC],
+      "optimism": [0.0-1.0 NUMERIC],
+      "sunk_cost": [0.0-1.0 NUMERIC],
+      "overconfidence": [0.0-1.0 NUMERIC]
+    },
+    "mitigations": ["[mitigation1]", "[mitigation2]"]
+  }
+}
+
+COGNITIVE_PROFILE SECTION (all fields required - NUMERIC VALUES):
+{
+  "cognitive_profile": {
+    "verbal_fluency": [0.0-1.0 NUMERIC],
+    "abstract_reasoning": [0.0-1.0 NUMERIC],
+    "problem_solving_orientation": "[analytical/intuitive/systematic]",
+    "thought_coherence": [0.0-1.0 NUMERIC]
+  }
+}
+
+EMOTIONAL_PROFILE SECTION (all fields required):
+{
+  "emotional_profile": {
+    "stress_responses": ["[response1]", "[response2]"],
+    "negative_triggers": ["[trigger1]", "[trigger2]"],
+    "positive_triggers": ["[trigger1]", "[trigger2]"],
+    "explosive_triggers": ["[trigger1]", "[trigger2]"],
+    "emotional_regulation": "[strategy/approach]"
+  }
+}
+
+ADOPTION_PROFILE SECTION (all fields required - NUMERIC VALUES):
+{
+  "adoption_profile": {
+    "buyer_power": [0.0-1.0 NUMERIC],
+    "adoption_influence": [0.0-1.0 NUMERIC],
+    "risk_tolerance": [0.0-1.0 NUMERIC],
+    "change_friction": [0.0-1.0 NUMERIC],
+    "expected_objections": ["[objection1]", "[objection2]"],
+    "proof_points_needed": ["[proof1]", "[proof2]"]
+  }
+}
+
+SEXUALITY_PROFILE SECTION (all fields required):
+{
+  "sexuality_profile": {
+    "orientation": "[heterosexual/homosexual/bisexual/etc]",
+    "expression_style": "[open/private/moderate]",
+    "relationship_norms": "[monogamous/polyamorous/etc]",
+    "boundaries": {
+      "comfort_level": "[high/moderate/low]",
+      "topics_off_limits": ["[topic1]", "[topic2]"]
+    },
+    "linguistic_influences": {
+      "flirtation_style": "[playful/direct/subtle/none]",
+      "humor_boundaries": "[permissive/moderate/conservative]",
+      "taboo_navigation": "[direct/careful/avoidant]"
+    }
+  }
+}
+
+PROMPT_SHAPING SECTION (all fields required):
+{
+  "prompt_shaping": {
+    "voice_foundation": {
+      "formality": "[formal/casual/mixed]",
+      "directness": "[direct/diplomatic/indirect]",
+      "pace_rhythm": "[fast/moderate/slow]",
+      "positivity": "[optimistic/realistic/pessimistic]",
+      "empathy_level": [0.0-1.0 NUMERIC]
+    },
+    "style_markers": {
+      "metaphor_domains": ["[domain1]", "[domain2]"],
+      "humor_style": "[dry/playful/sarcastic/none]",
+      "storytelling_vs_bullets": [0.0-1.0 NUMERIC]
+    },
+    "primary_motivations": ["[motivation1]", "[motivation2]"],
+    "deal_breakers": ["[dealbreaker1]", "[dealbreaker2]"],
+    "honesty_vector": {
+      "baseline": [0.0-1.0 NUMERIC],
+      "work": [0.0-1.0 NUMERIC],
+      "home": [0.0-1.0 NUMERIC],
+      "public": [0.0-1.0 NUMERIC],
+      "distortions": ["[distortion1]"]
+    },
+    "bias_vector": {
+      "top_cognitive": [{"type": "[bias_type]", "level": [0.0-1.0 NUMERIC]}],
+      "top_social": [{"type": "[bias_type]", "level": [0.0-1.0 NUMERIC]}],
+      "mitigation_playbook": ["[strategy1]", "[strategy2]"]
+    },
+    "context_switches": {
+      "work": "[style_description]",
+      "home": "[style_description]",
+      "online": "[style_description]"
+    },
+    "current_focus": "[current life focus/priority]"
+  }
+}
+
+NARRATIVE SECTIONS:
+- attitude_narrative: "[Single paragraph describing worldview - make natural, not polished]"
+- political_narrative: "[Single paragraph describing political views - make natural, not polished]"
 
         CRITICAL INSTRUCTIONS: 
         1. Generate ALL sections completely - no section should be empty or missing
         2. Interpret the user description naturally and extract relevant traits
         3. Generate realistic and appropriate details for any missing information
         4. Be internally consistent across all fields
-        9. All numeric values must be numbers between 0 and 1, not strings
-        10. Generate realistic, detailed content for every field - no placeholders or empty values
-        11. Numeric TRAIT values must be realistically varied – do NOT output uniform defaults (e.g., all 0.5)
-        12. Do not rely on any post-processing; your output must be final and valid as-is
+        5. ALL NUMERIC VALUES MUST BE ACTUAL NUMBERS (0.0-1.0), NEVER STRINGS LIKE "high" OR "medium"
+        6. bias_profile.cognitive MUST have numeric 0-1 values, NOT strings
+        7. truth_honesty_profile.baseline_honesty MUST be numeric 0-1, NOT string
+        8. adoption_profile fields MUST be numeric 0-1 values, NOT strings
+        9. emotional_profile.stress_responses MUST be an array, NOT a string
+        10. sexuality_profile.linguistic_influences MUST be an object with flirtation_style, humor_boundaries, taboo_navigation
+        11. prompt_shaping.voice_foundation and style_markers MUST be objects, NOT strings or arrays
+        12. Generate realistic, detailed content for every field - no placeholders or empty values
+        13. Numeric TRAIT values must be realistically varied – do NOT output uniform defaults (e.g., all 0.5)
+        14. Do not rely on any post-processing; your output must be final and valid as-is
         
         CRITICAL: Never use empty arrays. If a field would be empty, use these patterns:
         - medications: ["none"]
@@ -462,8 +593,6 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
   // Log identity details without strict validation - let OpenAI's interpretation be final
   console.log(`Generated identity: name="${id.name}", ethnicity="${id.ethnicity}", occupation="${id.occupation}"`);
   
-  // No strict validation - OpenAI handles natural language interpretation
-
   // Daily life completeness
   const dl = personaData.daily_life;
   if (!dl?.primary_activities || !dl?.schedule_blocks || !dl?.time_sentiment || dl.screen_time_summary === undefined || !Array.isArray(dl.mental_preoccupations)) {
@@ -506,18 +635,87 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
   if (!cp || typeof cp.verbal_fluency !== 'number' || typeof cp.abstract_reasoning !== 'number' || typeof cp.thought_coherence !== 'number') {
     throw new Error('Incomplete cognitive_profile numeric fields');
   }
-
-  // Sexuality profile presence
-  const sp = personaData.sexuality_profile;
-  if (!sp || sp.orientation === undefined || sp.expression_style === undefined || sp.relationship_norms === undefined || sp.boundaries === undefined || sp.linguistic_influences === undefined) {
-    throw new Error('Incomplete sexuality_profile');
+  if (cp.verbal_fluency < 0 || cp.verbal_fluency > 1 || cp.abstract_reasoning < 0 || cp.abstract_reasoning > 1 || cp.thought_coherence < 0 || cp.thought_coherence > 1) {
+    throw new Error('Cognitive profile numeric values out of range 0-1');
   }
 
-  // Prompt shaping enforcement - reject banned/unknown keys
+  // BIAS PROFILE validation - enforce numeric cognitive biases
+  const bp = personaData.bias_profile;
+  if (!bp || !bp.cognitive) {
+    throw new Error('Missing bias_profile.cognitive section');
+  }
+  const biasKeys = ['status_quo', 'loss_aversion', 'confirmation', 'anchoring', 'availability', 'optimism', 'sunk_cost', 'overconfidence'];
+  const missingBiases = biasKeys.filter(k => typeof bp.cognitive[k] !== 'number');
+  if (missingBiases.length) {
+    throw new Error(`bias_profile.cognitive must have numeric values for: ${missingBiases.join(', ')}`);
+  }
+  const biasValues = biasKeys.map(k => bp.cognitive[k]);
+  if (biasValues.some(v => v < 0 || v > 1)) {
+    throw new Error('bias_profile.cognitive values must be between 0-1');
+  }
+
+  // TRUTH HONESTY PROFILE validation - enforce numeric baseline_honesty
+  const thp = personaData.truth_honesty_profile;
+  if (!thp || typeof thp.baseline_honesty !== 'number') {
+    throw new Error('truth_honesty_profile.baseline_honesty must be numeric 0-1');
+  }
+  if (thp.baseline_honesty < 0 || thp.baseline_honesty > 1) {
+    throw new Error('truth_honesty_profile.baseline_honesty must be between 0-1');
+  }
+  if (!thp.situational_variance || typeof thp.situational_variance !== 'object') {
+    throw new Error('truth_honesty_profile.situational_variance must be an object');
+  }
+  const svKeys = ['work', 'home', 'public'];
+  const missingSv = svKeys.filter(k => typeof thp.situational_variance[k] !== 'number');
+  if (missingSv.length) {
+    throw new Error(`truth_honesty_profile.situational_variance must have numeric values for: ${missingSv.join(', ')}`);
+  }
+
+  // ADOPTION PROFILE validation - enforce numeric values
+  const ap = personaData.adoption_profile;
+  if (!ap) {
+    throw new Error('Missing adoption_profile section');
+  }
+  const adoptionKeys = ['buyer_power', 'adoption_influence', 'risk_tolerance', 'change_friction'];
+  const missingAdoption = adoptionKeys.filter(k => typeof ap[k] !== 'number');
+  if (missingAdoption.length) {
+    throw new Error(`adoption_profile must have numeric 0-1 values for: ${missingAdoption.join(', ')}`);
+  }
+  const adoptionValues = adoptionKeys.map(k => ap[k]);
+  if (adoptionValues.some(v => v < 0 || v > 1)) {
+    throw new Error('adoption_profile numeric values must be between 0-1');
+  }
+
+  // EMOTIONAL PROFILE validation - enforce array for stress_responses
+  const ep = personaData.emotional_profile;
+  if (!ep || !Array.isArray(ep.stress_responses)) {
+    throw new Error('emotional_profile.stress_responses must be an array');
+  }
+
+  // SEXUALITY PROFILE validation - enforce object structure
+  const sp = personaData.sexuality_profile;
+  if (!sp || sp.orientation === undefined || sp.expression_style === undefined || sp.relationship_norms === undefined) {
+    throw new Error('Incomplete sexuality_profile basic fields');
+  }
+  if (!sp.boundaries || typeof sp.boundaries !== 'object') {
+    throw new Error('sexuality_profile.boundaries must be an object');
+  }
+  if (!sp.linguistic_influences || typeof sp.linguistic_influences !== 'object') {
+    throw new Error('sexuality_profile.linguistic_influences must be an object with flirtation_style, humor_boundaries, taboo_navigation');
+  }
+  const requiredLinguistic = ['flirtation_style', 'humor_boundaries', 'taboo_navigation'];
+  const missingLinguistic = requiredLinguistic.filter(k => sp.linguistic_influences[k] === undefined);
+  if (missingLinguistic.length) {
+    throw new Error(`sexuality_profile.linguistic_influences missing: ${missingLinguistic.join(', ')}`);
+  }
+
+  // PROMPT SHAPING validation - enforce object structures
   const ps = personaData.prompt_shaping;
   if (!ps || typeof ps !== 'object') {
     throw new Error('Missing prompt_shaping section');
   }
+  
+  // Check allowed keys
   const allowedPromptShapingKeys = [
     'voice_foundation', 'style_markers', 'primary_motivations', 'deal_breakers',
     'honesty_vector', 'bias_vector', 'context_switches', 'current_focus'
@@ -535,6 +733,44 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
     console.warn('BANNED prompt_shaping keys detected:', foundBannedSpecific);
     throw new Error(`Banned fields present in prompt_shaping: ${foundBannedSpecific.join(', ')}`);
   }
+
+  // Validate prompt_shaping structure
+  if (!ps.voice_foundation || typeof ps.voice_foundation !== 'object') {
+    throw new Error('prompt_shaping.voice_foundation must be an object');
+  }
+  if (!ps.style_markers || typeof ps.style_markers !== 'object') {
+    throw new Error('prompt_shaping.style_markers must be an object');
+  }
+  if (!ps.honesty_vector || typeof ps.honesty_vector !== 'object') {
+    throw new Error('prompt_shaping.honesty_vector must be an object');
+  }
+  if (!ps.bias_vector || typeof ps.bias_vector !== 'object') {
+    throw new Error('prompt_shaping.bias_vector must be an object');
+  }
+
+  // Fix empty arrays that should have content
+  if (personaData.health_profile?.medications?.length === 0) {
+    personaData.health_profile.medications = ["none"];
+  }
+  if (personaData.health_profile?.chronic_conditions?.length === 0) {
+    personaData.health_profile.chronic_conditions = ["none"];
+  }
+  if (personaData.health_profile?.mental_health_flags?.length === 0) {
+    personaData.health_profile.mental_health_flags = ["none"];
+  }
+  if (personaData.relationships?.caregiving_roles?.length === 0) {
+    personaData.relationships.caregiving_roles = ["none"];
+  }
+  if (personaData.money_profile?.financial_stressors?.length === 0) {
+    personaData.money_profile.financial_stressors = ["none"];
+  }
+  if (personaData.daily_life?.mental_preoccupations?.length === 0) {
+    personaData.daily_life.mental_preoccupations = ["general concerns"];
+  }
+
+  console.log('✅ Strict validation passed without mutations.');
+  return personaData;
+}
 
   // Fix empty arrays that should have content
   if (personaData.health_profile?.medications?.length === 0) {
