@@ -55,6 +55,43 @@ function validatePersona(persona: any): ValidationResult {
     }
   }
 
+  // NEW: Content completeness validation
+  function checkContentCompleteness(obj: any, path = ''): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      // Check for "unspecified" values
+      if (value === "unspecified") {
+        warnings.push(`Unspecified value at ${currentPath} - should be filled`);
+      }
+      
+      // Check for empty arrays that should have content
+      else if (Array.isArray(value) && value.length === 0) {
+        const shouldHaveContent = [
+          'targets', 'boundaries', 'use_cases', 'mitigations', 'positive_triggers', 
+          'negative_triggers', 'primary_motivation_labels', 'deal_breakers',
+          'stress_responses', 'mental_preoccupations'
+        ];
+        
+        if (shouldHaveContent.includes(key)) {
+          warnings.push(`Empty ${key} array - should have realistic content`);
+        }
+      }
+      
+      // Check for empty strings
+      else if (value === '' || value === null) {
+        warnings.push(`Empty value at ${currentPath} - should be filled`);
+      }
+      
+      // Recurse into objects
+      else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        checkContentCompleteness(value, currentPath);
+      }
+    }
+  }
+
+  checkContentCompleteness(persona);
+
   // Hard stops - critical validations
   if (persona.identity) {
     if (!persona.identity.education_level) {
@@ -148,12 +185,49 @@ function validatePersona(persona: any): ValidationResult {
     }
   }
 
+  // Calculate true completeness score
+  const completenessScore = calculateTrueCompleteness(persona);
+
   return {
     isValid: errors.length === 0,
     errors,
     warnings,
-    completenessScore: Math.max(0, 1 - (errors.length * 0.1) - (warnings.length * 0.02))
+    completenessScore
   };
+}
+
+// Calculate true completeness based on content, not just structure
+function calculateTrueCompleteness(persona: any): number {
+  let totalFields = 0;
+  let completeFields = 0;
+
+  function analyzeField(obj: any): void {
+    for (const [key, value] of Object.entries(obj)) {
+      totalFields++;
+      
+      if (value === null || value === '' || value === 'unspecified') {
+        // Incomplete field
+      } else if (Array.isArray(value)) {
+        const shouldHaveContent = [
+          'targets', 'boundaries', 'use_cases', 'mitigations', 'positive_triggers',
+          'negative_triggers', 'primary_motivation_labels', 'deal_breakers'
+        ];
+        
+        if (shouldHaveContent.includes(key) && value.length === 0) {
+          // Array that should have content but is empty
+        } else {
+          completeFields++;
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        analyzeField(value);
+      } else {
+        completeFields++;
+      }
+    }
+  }
+
+  analyzeField(persona);
+  return totalFields > 0 ? completeFields / totalFields : 0;
 }
 
 function hasBannedKeys(persona: any): boolean {

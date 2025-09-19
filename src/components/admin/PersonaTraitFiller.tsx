@@ -614,19 +614,49 @@ export function PersonaTraitFiller() {
                             ) : (
                               <AlertCircle className="h-4 w-4 text-red-600" />
                             )}
-                            Validation Status
+                            Comprehensive Validation Status
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-3">
+                            {/* Completeness Score */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Completeness Score:</span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className={`h-2 rounded-full ${
+                                      Math.round(singleTestResult.validation_results[0].completenessScore * 100) >= 85 
+                                        ? 'bg-green-500' 
+                                        : Math.round(singleTestResult.validation_results[0].completenessScore * 100) >= 70
+                                        ? 'bg-yellow-500'
+                                        : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${Math.round(singleTestResult.validation_results[0].completenessScore * 100)}%` }}
+                                  />
+                                </div>
+                                <span className={`text-sm font-bold ${
+                                  Math.round(singleTestResult.validation_results[0].completenessScore * 100) >= 85 
+                                    ? 'text-green-600' 
+                                    : Math.round(singleTestResult.validation_results[0].completenessScore * 100) >= 70
+                                    ? 'text-yellow-600'
+                                    : 'text-red-600'
+                                }`}>
+                                  {Math.round(singleTestResult.validation_results[0].completenessScore * 100)}%
+                                </span>
+                              </div>
+                            </div>
+                            
                             <Badge variant={singleTestResult.validation_results[0].isValid ? "default" : "destructive"}>
-                              {singleTestResult.validation_results[0].isValid ? 'Valid' : 'Has Issues'}
+                              {singleTestResult.validation_results[0].isValid ? 'Structurally Valid' : 'Has Structural Issues'}
                             </Badge>
                             
-                            {!singleTestResult.validation_results[0].isValid && (
-                              <div className="mt-2">
-                                <div className="text-xs font-medium text-red-600 mb-1">
-                                  Validation Errors ({singleTestResult.validation_results[0].errors.length}):
+                            {/* Structural Errors */}
+                            {singleTestResult.validation_results[0].errors.length > 0 && (
+                              <div className="mt-3">
+                                <div className="text-xs font-medium text-red-600 mb-2 flex items-center gap-1">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Structural Errors ({singleTestResult.validation_results[0].errors.length}):
                                 </div>
-                                <ul className="text-xs text-red-600 space-y-1">
+                                <ul className="text-xs text-red-600 space-y-1 bg-red-50 p-2 rounded">
                                   {singleTestResult.validation_results[0].errors.slice(0, 5).map((error: string, idx: number) => (
                                     <li key={idx} className="flex items-start gap-1">
                                       <span className="text-red-400 mt-0.5">•</span>
@@ -639,6 +669,36 @@ export function PersonaTraitFiller() {
                                     </li>
                                   )}
                                 </ul>
+                              </div>
+                            )}
+
+                            {/* Completeness Warnings */}
+                            {singleTestResult.validation_results[0].warnings && singleTestResult.validation_results[0].warnings.length > 0 && (
+                              <div className="mt-3">
+                                <div className="text-xs font-medium text-yellow-600 mb-2 flex items-center gap-1">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Content Completeness Issues ({singleTestResult.validation_results[0].warnings.length}):
+                                </div>
+                                <ul className="text-xs text-yellow-600 space-y-1 bg-yellow-50 p-2 rounded max-h-32 overflow-y-auto">
+                                  {singleTestResult.validation_results[0].warnings.slice(0, 8).map((warning: string, idx: number) => (
+                                    <li key={idx} className="flex items-start gap-1">
+                                      <span className="text-yellow-400 mt-0.5">•</span>
+                                      {warning}
+                                    </li>
+                                  ))}
+                                  {singleTestResult.validation_results[0].warnings.length > 8 && (
+                                    <li className="text-yellow-500 font-medium">
+                                      ... and {singleTestResult.validation_results[0].warnings.length - 8} more content gaps
+                                    </li>
+                                  )}
+                                </ul>
+                                
+                                {/* Completeness Enhancement Recommendation */}
+                                {Math.round(singleTestResult.validation_results[0].completenessScore * 100) < 85 && (
+                                  <div className="mt-2 text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                                    💡 <strong>Tip:</strong> Enable statistical enhancement to fill empty arrays and replace "unspecified" values with realistic content.
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

@@ -124,6 +124,199 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   return added;
 }
 
+// NEW: Comprehensive enhancement functions
+function applyComprehensiveEnhancement(persona: any, includeStatistical: boolean, includeCompleteness: boolean): any {
+  const allChanges: string[] = [];
+  let enhanced = { ...persona };
+
+  // Phase 1: Statistical Enhancement (existing medical traits)
+  if (includeStatistical) {
+    const medicallyEnhanced = applyStatisticalEnhancement(enhanced);
+    if (JSON.stringify(enhanced) !== JSON.stringify(medicallyEnhanced)) {
+      enhanced = medicallyEnhanced;
+      allChanges.push("Applied medical statistical traits");
+    }
+
+    // NEW: Income bracket assignment
+    if (!enhanced.identity?.income_bracket || enhanced.identity.income_bracket === "unspecified") {
+      const income = assignIncomeBracket(enhanced.identity?.occupation, enhanced.identity?.age);
+      enhanced.identity.income_bracket = income;
+      allChanges.push(`Assigned income bracket: ${income}`);
+    }
+  }
+
+  // Phase 2: Completeness Enhancement
+  if (includeCompleteness) {
+    const completenessChanges = fillEmptyArraysAndValues(enhanced);
+    allChanges.push(...completenessChanges);
+  }
+
+  return {
+    persona: enhanced,
+    changesLog: allChanges,
+    completenessScore: {
+      before: calculateTrueCompleteness(persona),
+      after: calculateTrueCompleteness(enhanced)
+    }
+  };
+}
+
+function assignIncomeBracket(occupation: string, age: number): string {
+  const occupationMap: Record<string, string[]> = {
+    "firefighter": ["middle", "upper_middle"],
+    "retired": ["middle", "lower_middle"], 
+    "teacher": ["lower_middle", "middle"],
+    "nurse": ["middle", "upper_middle"],
+    "engineer": ["upper_middle", "upper"],
+    "retail": ["lower", "lower_middle"],
+    "manager": ["middle", "upper_middle"],
+    "student": ["lower", "lower_middle"]
+  };
+
+  const key = occupation?.toLowerCase() || "general";
+  const brackets = occupationMap[key] || ["middle"];
+  
+  // Age adjustments
+  if (age < 25) return brackets[0];
+  if (age > 55 && key.includes("retired")) return "middle";
+  
+  return brackets[Math.floor(Math.random() * brackets.length)];
+}
+
+function fillEmptyArraysAndValues(persona: any): string[] {
+  const changes: string[] = [];
+
+  // Fill humor arrays
+  if (persona.humor_profile) {
+    if (!persona.humor_profile.targets || persona.humor_profile.targets.length === 0) {
+      persona.humor_profile.targets = ["everyday_situations", "self_deprecating", "work_situations"];
+      changes.push("Added humor targets");
+    }
+    if (!persona.humor_profile.boundaries || persona.humor_profile.boundaries.length === 0) {
+      persona.humor_profile.boundaries = ["no_offensive_jokes", "respectful_of_others"];
+      changes.push("Added humor boundaries");
+    }
+    if (!persona.humor_profile.use_cases || persona.humor_profile.use_cases.length === 0) {
+      persona.humor_profile.use_cases = ["lightening_mood", "building_rapport", "stress_relief"];
+      changes.push("Added humor use cases");
+    }
+  }
+
+  // Fill bias mitigations
+  if (persona.bias_profile && (!persona.bias_profile.mitigations || persona.bias_profile.mitigations.length === 0)) {
+    persona.bias_profile.mitigations = ["seek_diverse_perspectives", "question_assumptions", "consider_others_viewpoints"];
+    changes.push("Added bias mitigations");
+  }
+
+  // Fill emotional triggers
+  if (persona.emotional_profile) {
+    if (!persona.emotional_profile.positive_triggers || persona.emotional_profile.positive_triggers.length === 0) {
+      persona.emotional_profile.positive_triggers = ["achievement", "helping_others", "family_time"];
+      changes.push("Added positive triggers");
+    }
+    if (!persona.emotional_profile.negative_triggers || persona.emotional_profile.negative_triggers.length === 0) {
+      persona.emotional_profile.negative_triggers = ["unfairness", "disrespect", "overwhelming_situations"];  
+      changes.push("Added negative triggers");
+    }
+  }
+
+  // Fill motivation arrays
+  if (persona.motivation_profile) {
+    if (!persona.motivation_profile.primary_motivation_labels || persona.motivation_profile.primary_motivation_labels.length === 0) {
+      persona.motivation_profile.primary_motivation_labels = ["security_conscious", "family_focused", "achievement_oriented"];
+      changes.push("Added motivation labels");
+    }
+    if (!persona.motivation_profile.deal_breakers || persona.motivation_profile.deal_breakers.length === 0) {
+      persona.motivation_profile.deal_breakers = ["dishonesty", "disrespect", "harm_to_others"];
+      changes.push("Added deal breakers");
+    }
+  }
+
+  // Replace unspecified values
+  replaceUnspecifiedValues(persona, changes);
+
+  return changes;
+}
+
+function replaceUnspecifiedValues(persona: any, changes: string[]): void {
+  function traverse(obj: any, path: string = ''): void {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      if (value === "unspecified") {
+        const replacement = getContextualDefault(currentPath, persona);
+        obj[key] = replacement;
+        changes.push(`Replaced unspecified ${key}: ${replacement}`);
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        traverse(value, currentPath);
+      }
+    }
+  }
+  
+  traverse(persona);
+}
+
+function getContextualDefault(path: string, persona: any): string {
+  const defaults: Record<string, string> = {
+    "identity.education_level": getEducationDefault(persona),
+    "identity.relationship_status": getRelationshipDefault(persona),
+    "health_profile.fitness_level": getFitnessDefault(persona),
+    "communication_style.voice_foundation.formality": "casual",
+    "communication_style.voice_foundation.directness": "moderate"
+  };
+  
+  return defaults[path] || "moderate";
+}
+
+function getEducationDefault(persona: any): string {
+  const occupation = persona.identity?.occupation?.toLowerCase() || "";
+  if (occupation.includes("firefighter")) return "high_school";
+  if (occupation.includes("engineer") || occupation.includes("nurse")) return "college";
+  return "high_school";
+}
+
+function getRelationshipDefault(persona: any): string {
+  const age = persona.identity?.age || 35;
+  if (age < 25) return "single";
+  if (age > 60) return "married"; 
+  return Math.random() > 0.5 ? "married" : "single";
+}
+
+function getFitnessDefault(persona: any): string {
+  const occupation = persona.identity?.occupation?.toLowerCase() || "";
+  if (occupation.includes("firefighter")) return "high";
+  return "moderate";
+}
+
+function calculateTrueCompleteness(persona: any): number {
+  let totalFields = 0;
+  let completeFields = 0;
+
+  function analyzeField(obj: any): void {
+    for (const [key, value] of Object.entries(obj)) {
+      totalFields++;
+      
+      if (value === null || value === '' || value === 'unspecified') {
+        // Incomplete
+      } else if (Array.isArray(value)) {
+        const shouldHaveContent = ['targets', 'boundaries', 'use_cases', 'mitigations', 'positive_triggers', 'negative_triggers', 'primary_motivation_labels', 'deal_breakers'];
+        if (shouldHaveContent.includes(key) && value.length === 0) {
+          // Empty but should have content
+        } else {
+          completeFields++;
+        }
+      } else if (typeof value === 'object' && value !== null) {
+        analyzeField(value);
+      } else {
+        completeFields++;
+      }
+    }
+  }
+
+  analyzeField(persona);
+  return totalFields > 0 ? completeFields / totalFields : 0;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -461,9 +654,26 @@ serve(async (req) => {
             let statisticalTraitsAdded = [];
             
             if (includeStatisticalEnhancement) {
-              const enhancedPersona = applyStatisticalEnhancement(fixedPersona);
-              statisticalTraitsAdded = getStatisticalTraitsAdded(fixedPersona, enhancedPersona);
-              finalPersona = enhancedPersona;
+              console.log(`🧮 Applying comprehensive enhancement for ${persona.name}`);
+              
+              const beforeScore = calculateTrueCompleteness(fixedPersona);
+              const enhancementResult = applyComprehensiveEnhancement(fixedPersona, true, true);
+              const afterScore = enhancementResult.completenessScore.after;
+              
+              if (enhancementResult.changesLog.length > 0) {
+                console.log(`✅ Comprehensive enhancement applied for ${persona.name}:`);
+                enhancementResult.changesLog.forEach(change => console.log(`   - ${change}`));
+                console.log(`📊 Completeness improved: ${(beforeScore * 100).toFixed(1)}% → ${(afterScore * 100).toFixed(1)}%`);
+                
+                finalPersona = enhancementResult.persona;
+                statisticalTraitsAdded = enhancementResult.changesLog;
+              } else {
+                console.log(`ℹ️  No comprehensive enhancement needed for ${persona.name} - already complete`);
+                // Still apply basic medical traits
+                const enhancedPersona = applyStatisticalEnhancement(fixedPersona);
+                statisticalTraitsAdded = getStatisticalTraitsAdded(fixedPersona, enhancedPersona);
+                finalPersona = enhancedPersona;
+              }
             }
 
             updates.push({
