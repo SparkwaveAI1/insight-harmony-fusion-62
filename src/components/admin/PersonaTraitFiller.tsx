@@ -23,6 +23,12 @@ interface FillResult {
   name: string;
   filled_traits: string[];
   statistical_traits_added?: string[];
+  validation_results?: Array<{
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+    completenessScore: number;
+  }>;
 }
 
 interface PersonaOption {
@@ -258,7 +264,8 @@ export function PersonaTraitFiller() {
         processingTime,
         statusBefore,
         statusAfter,
-        executionLog: data.executionLog || []
+        executionLog: data.executionLog || [],
+        validation_results: data.validation_results
       });
 
       // Provide detailed feedback
@@ -282,16 +289,31 @@ export function PersonaTraitFiller() {
           description,
         });
       } else {
-        // Check if already enhanced
-        const wasAlreadyEnhanced = statusBefore.statistical_enhancement_status === 'complete' && includeStatisticalEnhancement;
-        const description = wasAlreadyEnhanced 
-          ? `ℹ️ Persona already has complete enhancements • Status: ${statusBefore.statistical_enhancement_status}`
-          : "ℹ️ No structural issues found and no statistical enhancements needed";
+        // Check validation results for detailed feedback
+        const validationResult = data.validation_results?.[0];
+        
+        if (validationResult?.isValid) {
+          // Persona is already valid
+          const wasAlreadyEnhanced = statusBefore.statistical_enhancement_status === 'complete' && includeStatisticalEnhancement;
+          const description = wasAlreadyEnhanced 
+            ? `ℹ️ Persona already has complete enhancements • Status: ${statusBefore.statistical_enhancement_status}`
+            : "ℹ️ No structural issues found and no statistical enhancements needed";
+            
+          toast({
+            title: "No Changes Required",
+            description,
+          });
+        } else {
+          // Show validation errors when fixes failed
+          const errorCount = validationResult?.errors?.length || 0;
+          const errorSample = validationResult?.errors?.slice(0, 2).join(', ') || 'Unknown validation issues';
           
-        toast({
-          title: "No Changes Required",
-          description,
-        });
+          toast({
+            title: "Fix Failed",
+            description: `❌ ${errorCount} validation errors remain: ${errorSample}${errorCount > 2 ? '...' : ''}`,
+            variant: "destructive"
+          });
+        }
       }
       
     } catch (error) {
@@ -582,6 +604,48 @@ export function PersonaTraitFiller() {
                 <CardContent>
                   <div className="space-y-6">
                     
+                    {/* Validation Results */}
+                    {singleTestResult.validation_results?.[0] && (
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                            {singleTestResult.validation_results[0].isValid ? (
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                            )}
+                            Validation Status
+                          </div>
+                          <div className="space-y-2">
+                            <Badge variant={singleTestResult.validation_results[0].isValid ? "default" : "destructive"}>
+                              {singleTestResult.validation_results[0].isValid ? 'Valid' : 'Has Issues'}
+                            </Badge>
+                            
+                            {!singleTestResult.validation_results[0].isValid && (
+                              <div className="mt-2">
+                                <div className="text-xs font-medium text-red-600 mb-1">
+                                  Validation Errors ({singleTestResult.validation_results[0].errors.length}):
+                                </div>
+                                <ul className="text-xs text-red-600 space-y-1">
+                                  {singleTestResult.validation_results[0].errors.slice(0, 5).map((error: string, idx: number) => (
+                                    <li key={idx} className="flex items-start gap-1">
+                                      <span className="text-red-400 mt-0.5">•</span>
+                                      {error}
+                                    </li>
+                                  ))}
+                                  {singleTestResult.validation_results[0].errors.length > 5 && (
+                                    <li className="text-red-500 font-medium">
+                                      ... and {singleTestResult.validation_results[0].errors.length - 5} more
+                                    </li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
                     {/* Enhancement Status Tracking */}
                     <div className="grid grid-cols-2 gap-4">
                       <Card>
@@ -658,7 +722,8 @@ export function PersonaTraitFiller() {
                     
                     {/* No Changes Message */}
                     {singleTestResult.filled_traits.length === 0 && 
-                     (!singleTestResult.statistical_traits_added || singleTestResult.statistical_traits_added.length === 0) && (
+                     (!singleTestResult.statistical_traits_added || singleTestResult.statistical_traits_added.length === 0) && 
+                     singleTestResult.validation_results?.[0]?.isValid && (
                       <Card>
                         <CardContent className="pt-4">
                           <div className="text-center text-muted-foreground">

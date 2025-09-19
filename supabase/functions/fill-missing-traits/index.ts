@@ -307,6 +307,65 @@ function hasRequiredKeys(persona: any): boolean {
   return PERSONA_SCHEMA.required.every(key => persona.hasOwnProperty(key));
 }
 
+function applyManualFixes(persona: any, personaName: string): any {
+  const fixed = JSON.parse(JSON.stringify(persona)); // Deep clone
+  
+  console.log(`🔧 Applying manual fixes for ${personaName}`);
+  
+  // Fix missing identity.location.urbanicity
+  if (fixed.identity?.location && !fixed.identity.location.urbanicity) {
+    // Determine urbanicity based on city or set default
+    const city = fixed.identity.location.city?.toLowerCase() || '';
+    if (city.includes('new york') || city.includes('chicago') || city.includes('los angeles') || 
+        city.includes('boston') || city.includes('san francisco') || city.includes('seattle')) {
+      fixed.identity.location.urbanicity = 'urban';
+    } else if (city.includes('suburb') || city.includes('town')) {
+      fixed.identity.location.urbanicity = 'suburban';  
+    } else {
+      fixed.identity.location.urbanicity = 'suburban'; // Default fallback
+    }
+    console.log(`✅ Fixed urbanicity: ${fixed.identity.location.urbanicity}`);
+  }
+  
+  // Fix missing education_level
+  if (fixed.identity && !fixed.identity.education_level) {
+    const occupation = fixed.identity.occupation?.toLowerCase() || '';
+    if (occupation.includes('doctor') || occupation.includes('lawyer') || occupation.includes('professor')) {
+      fixed.identity.education_level = 'doctorate';
+    } else if (occupation.includes('engineer') || occupation.includes('manager') || occupation.includes('analyst')) {
+      fixed.identity.education_level = 'bachelors';
+    } else {
+      fixed.identity.education_level = 'some_college'; // Default fallback
+    }
+    console.log(`✅ Fixed education_level: ${fixed.identity.education_level}`);
+  }
+  
+  // Fix missing income_bracket
+  if (fixed.identity && !fixed.identity.income_bracket) {
+    const occupation = fixed.identity.occupation?.toLowerCase() || '';
+    const age = fixed.identity.age || 30;
+    
+    if (occupation.includes('doctor') || occupation.includes('lawyer') || occupation.includes('executive')) {
+      fixed.identity.income_bracket = '$100k+';
+    } else if (occupation.includes('engineer') || occupation.includes('manager') || age > 40) {
+      fixed.identity.income_bracket = '$75k-100k';
+    } else if (occupation.includes('teacher') || occupation.includes('nurse') || occupation.includes('analyst')) {
+      fixed.identity.income_bracket = '$50k-75k';
+    } else {
+      fixed.identity.income_bracket = '$30k-50k'; // Default fallback
+    }
+    console.log(`✅ Fixed income_bracket: ${fixed.identity.income_bracket}`);
+  }
+  
+  // Fix missing cognitive_profile.thought_coherence
+  if (fixed.cognitive_profile && typeof fixed.cognitive_profile.thought_coherence !== 'number') {
+    fixed.cognitive_profile.thought_coherence = 0.7; // Default moderate coherence
+    console.log(`✅ Fixed thought_coherence: ${fixed.cognitive_profile.thought_coherence}`);
+  }
+  
+  return fixed;
+}
+
 function cleanAndValidatePersona(persona: any): any {
   // Remove any banned keys recursively
   function removeBannedKeys(obj: any): any {
@@ -519,17 +578,20 @@ async function fixPersonaCompliance(persona: any, validation: ValidationResult) 
   console.log(`🔧 Fixing compliance for ${persona.name}`);
   
   // First clean the persona by removing banned keys and keeping only allowed schema
-  const cleanedPersona = cleanAndValidatePersona(persona.full_profile);
+  let fixedPersona = cleanAndValidatePersona(persona.full_profile);
   
-  // Check what's still missing after cleaning
-  const postCleanValidation = validatePersona(cleanedPersona);
+  // Add manual fixes for simple missing fields before using AI
+  fixedPersona = applyManualFixes(fixedPersona, persona.name);
   
-  if (postCleanValidation.isValid) {
-    console.log(`✅ Persona ${persona.name} is valid after cleaning`);
-    return cleanedPersona;
+  // Check what's still missing after cleaning and manual fixes
+  const postFixValidation = validatePersona(fixedPersona);
+  
+  if (postFixValidation.isValid) {
+    console.log(`✅ Persona ${persona.name} is valid after cleaning and manual fixes`);
+    return fixedPersona;
   }
   
-  console.log(`🤖 Generating missing fields for ${persona.name}:`, postCleanValidation.errors);
+  console.log(`🤖 Generating missing fields for ${persona.name}:`, postFixValidation.errors);
   
   // Use AI to generate the missing required fields
   const systemPrompt = `You are a V4 persona compliance expert. Your job is to complete missing required fields in persona profiles.
@@ -616,7 +678,7 @@ Required V4 Structure:
 
 Generate realistic, internally consistent values. Return ONLY valid JSON without markdown or explanations.`;
 
-  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after cleaning): ${JSON.stringify(cleanedPersona, null, 2)}\n\nValidation Errors: ${postCleanValidation.errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
+  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after manual fixes): ${JSON.stringify(fixedPersona, null, 2)}\n\nValidation Errors: ${postFixValidation.errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -653,8 +715,8 @@ Generate realistic, internally consistent values. Return ONLY valid JSON without
       return null;
     }
 
-    // Merge the existing clean persona with generated content
-    const mergedPersona = { ...cleanedPersona };
+    // Merge the existing persona with generated content
+    const mergedPersona = { ...fixedPersona };
     
     // Only add missing required fields
     for (const requiredField of PERSONA_SCHEMA.required) {
@@ -663,7 +725,15 @@ Generate realistic, internally consistent values. Return ONLY valid JSON without
       }
     }
 
-    return mergedPersona;
+    // Final validation
+    const finalValidation = validatePersona(mergedPersona);
+    if (finalValidation.isValid) {
+      console.log(`✅ AI fix successful for ${persona.name}`);
+      return mergedPersona;
+    } else {
+      console.error(`❌ AI fix failed validation for ${persona.name}:`, finalValidation.errors);
+      return null;
+    }
 
   } catch (error) {
     console.error('❌ Error generating compliance fixes with AI:', error);
