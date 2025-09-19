@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, CheckCircle, AlertCircle, Play, Search, User, Users, Zap } from "lucide-react";
+import { Brain, CheckCircle, AlertCircle, Play, Search, User, Users, Zap, Clock, Loader2, RefreshCw, Database } from "lucide-react";
 
 interface TraitAnalysis {
   persona_id: string;
@@ -34,6 +34,16 @@ interface PersonaOption {
 interface SingleTestResult extends FillResult {
   before: any;
   after: any;
+  processingTime?: number;
+  statusBefore?: {
+    statistical_enhancement_status: string;
+    enhancement_applied_at: string | null;
+  };
+  statusAfter?: {
+    statistical_enhancement_status: string;
+    enhancement_applied_at: string | null;
+  };
+  executionLog?: string[];
 }
 
 export function PersonaTraitFiller() {
@@ -51,6 +61,9 @@ export function PersonaTraitFiller() {
   const [isSingleTesting, setIsSingleTesting] = useState(false);
   const [singleTestResult, setSingleTestResult] = useState<SingleTestResult | null>(null);
   const [loadingPersonas, setLoadingPersonas] = useState(false);
+  const [processingStage, setProcessingStage] = useState<string>('');
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [executionStartTime, setExecutionStartTime] = useState<number>(0);
   
   const { toast } = useToast();
 
@@ -153,7 +166,7 @@ export function PersonaTraitFiller() {
     }
   };
 
-  // Test single persona
+  // Test single persona with enhanced feedback
   const testSinglePersona = async () => {
     if (!selectedPersonaId) {
       toast({
@@ -166,18 +179,36 @@ export function PersonaTraitFiller() {
 
     setIsSingleTesting(true);
     setSingleTestResult(null);
+    setProcessingProgress(0);
+    setExecutionStartTime(Date.now());
     
     try {
-      // First get the current state
+      // Stage 1: Get current state
+      setProcessingStage("Analyzing current persona state...");
+      setProcessingProgress(10);
+      
       const { data: beforeData, error: beforeError } = await supabase
         .from('v4_personas')
-        .select('full_profile')
+        .select(`
+          full_profile, 
+          statistical_enhancement_status, 
+          enhancement_applied_at,
+          name
+        `)
         .eq('persona_id', selectedPersonaId)
         .single();
 
       if (beforeError) throw beforeError;
 
-      // Fill missing traits
+      const statusBefore = {
+        statistical_enhancement_status: beforeData.statistical_enhancement_status || 'pending',
+        enhancement_applied_at: beforeData.enhancement_applied_at
+      };
+
+      // Stage 2: Process enhancement
+      setProcessingStage("Processing structural validation and enhancements...");
+      setProcessingProgress(30);
+
       const { data, error } = await supabase.functions.invoke('fill-missing-traits', {
         body: { 
           mode: 'execute',
@@ -188,44 +219,92 @@ export function PersonaTraitFiller() {
 
       if (error) throw error;
 
+      // Stage 3: Verify results
+      setProcessingStage("Verifying results and updating database...");
+      setProcessingProgress(70);
+
       // Get the updated state
       const { data: afterData, error: afterError } = await supabase
         .from('v4_personas')
-        .select('full_profile')
+        .select(`
+          full_profile, 
+          statistical_enhancement_status, 
+          enhancement_applied_at,
+          name
+        `)
         .eq('persona_id', selectedPersonaId)
         .single();
 
       if (afterError) throw afterError;
 
+      const statusAfter = {
+        statistical_enhancement_status: afterData.statistical_enhancement_status || 'pending',
+        enhancement_applied_at: afterData.enhancement_applied_at
+      };
+
+      setProcessingProgress(100);
+      const processingTime = Date.now() - executionStartTime;
+
       const update = data.updates?.[0];
-      if (update) {
-        setSingleTestResult({
-          ...update,
-          before: beforeData.full_profile,
-          after: afterData.full_profile
-        });
+      const hasChanges = update && (update.filled_traits.length > 0 || (update.statistical_traits_added?.length || 0) > 0);
+      
+      setSingleTestResult({
+        persona_id: selectedPersonaId,
+        name: beforeData.name,
+        filled_traits: update?.filled_traits || [],
+        statistical_traits_added: update?.statistical_traits_added || [],
+        before: beforeData.full_profile,
+        after: afterData.full_profile,
+        processingTime,
+        statusBefore,
+        statusAfter,
+        executionLog: data.executionLog || []
+      });
+
+      // Provide detailed feedback
+      if (hasChanges) {
+        const structuralCount = update.filled_traits.length;
+        const statisticalCount = update.statistical_traits_added?.length || 0;
+        let description = '';
         
-        const totalTraits = update.filled_traits.length + (update.statistical_traits_added?.length || 0);
-        const enhancementText = includeStatisticalEnhancement ? " (including statistical traits)" : "";
+        if (structuralCount > 0 && statisticalCount > 0) {
+          description = `✅ ${structuralCount} structural fixes, ${statisticalCount} statistical traits added`;
+        } else if (structuralCount > 0) {
+          description = `✅ ${structuralCount} structural validation fixes applied`;
+        } else if (statisticalCount > 0) {
+          description = `✅ ${statisticalCount} statistical traits enhanced`;
+        }
+        
+        description += ` • Processed in ${processingTime}ms`;
+        
         toast({
-          title: "Single Persona Test Complete",
-          description: `Updated ${totalTraits} traits for ${update.name}${enhancementText}`,
+          title: "Enhancement Complete",
+          description,
         });
       } else {
+        // Check if already enhanced
+        const wasAlreadyEnhanced = statusBefore.statistical_enhancement_status === 'complete' && includeStatisticalEnhancement;
+        const description = wasAlreadyEnhanced 
+          ? `ℹ️ Persona already has complete enhancements • Status: ${statusBefore.statistical_enhancement_status}`
+          : "ℹ️ No structural issues found and no statistical enhancements needed";
+          
         toast({
-          title: "No Updates Needed",
-          description: "The selected persona already has complete traits",
+          title: "No Changes Required",
+          description,
         });
       }
+      
     } catch (error) {
       console.error('Error testing single persona:', error);
       toast({
-        title: "Test Failed",
-        description: error.message,
+        title: "Enhancement Failed",
+        description: `❌ ${error.message} • Processing time: ${Date.now() - executionStartTime}ms`,
         variant: "destructive"
       });
     } finally {
       setIsSingleTesting(false);
+      setProcessingStage('');
+      setProcessingProgress(0);
     }
   };
 
@@ -464,106 +543,167 @@ export function PersonaTraitFiller() {
               </div>
             </div>
 
+            {/* Processing Status */}
+            {isSingleTesting && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm font-medium">Processing Enhancement</span>
+                    </div>
+                    
+                    {processingStage && (
+                      <div className="text-sm text-muted-foreground">{processingStage}</div>
+                    )}
+                    
+                    <Progress value={processingProgress} className="h-2" />
+                    
+                    <div className="text-xs text-muted-foreground">
+                      Processing time: {Math.round((Date.now() - executionStartTime) / 1000)}s
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Enhanced Test Results */}
             {singleTestResult && (
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Test Results: {singleTestResult.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      {singleTestResult.filled_traits.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">Structural Traits Fixed:</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {singleTestResult.filled_traits.map((trait) => (
-                              <Badge key={trait} variant="default" className="text-xs">
-                                {trait.replace('_', ' ')}
-                              </Badge>
-                            ))}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Enhancement Results: {singleTestResult.name}
+                  </CardTitle>
+                  <CardDescription>
+                    Processing completed in {singleTestResult.processingTime}ms
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    
+                    {/* Enhancement Status Tracking */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="text-sm font-medium mb-2">Status Before</div>
+                          <div className="space-y-1">
+                            <Badge variant={singleTestResult.statusBefore?.statistical_enhancement_status === 'complete' ? 'default' : 'secondary'}>
+                              {singleTestResult.statusBefore?.statistical_enhancement_status || 'pending'}
+                            </Badge>
+                            {singleTestResult.statusBefore?.enhancement_applied_at && (
+                              <div className="text-xs text-muted-foreground">
+                                Last enhanced: {new Date(singleTestResult.statusBefore.enhancement_applied_at).toLocaleString()}
+                              </div>
+                            )}
                           </div>
-                        </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="text-sm font-medium mb-2">Status After</div>
+                          <div className="space-y-1">
+                            <Badge variant={singleTestResult.statusAfter?.statistical_enhancement_status === 'complete' ? 'default' : 'secondary'}>
+                              {singleTestResult.statusAfter?.statistical_enhancement_status || 'pending'}
+                            </Badge>
+                            {singleTestResult.statusAfter?.enhancement_applied_at && (
+                              <div className="text-xs text-muted-foreground">
+                                Enhanced: {new Date(singleTestResult.statusAfter.enhancement_applied_at).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Changes Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {singleTestResult.filled_traits.length > 0 && (
+                        <Card>
+                          <CardContent className="pt-4">
+                            <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              Structural Fixes ({singleTestResult.filled_traits.length})
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {singleTestResult.filled_traits.map((trait) => (
+                                <Badge key={trait} variant="default" className="text-xs">
+                                  {trait.replace('_', ' ')}
+                                </Badge>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
                       )}
                       
                       {singleTestResult.statistical_traits_added && singleTestResult.statistical_traits_added.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-1">Statistical Traits Added:</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {singleTestResult.statistical_traits_added.map((trait) => (
-                              <Badge key={trait} variant="secondary" className="text-xs">
-                                <Zap className="h-3 w-3 mr-1" />
-                                {trait.replace('_', ' ')}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                        <Card>
+                          <CardContent className="pt-4">
+                            <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                              <Zap className="h-4 w-4 text-blue-600" />
+                              Statistical Traits ({singleTestResult.statistical_traits_added.length})
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {singleTestResult.statistical_traits_added.map((trait) => (
+                                <Badge key={trait} variant="secondary" className="text-xs">
+                                  {trait.replace('_', ' ')}
+                                </Badge>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
                       )}
                     </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* No Changes Message */}
+                    {singleTestResult.filled_traits.length === 0 && 
+                     (!singleTestResult.statistical_traits_added || singleTestResult.statistical_traits_added.length === 0) && (
                       <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">Before</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <pre className="text-xs overflow-auto max-h-64 bg-muted p-2 rounded">
-                            {JSON.stringify(singleTestResult.before, null, 2)}
-                          </pre>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-base">After</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            {singleTestResult.filled_traits.map((trait) => {
-                              const newData = singleTestResult.after[trait];
-                              return (
-                                <div key={trait} className="p-2 border rounded">
-                                  <h4 className="font-medium text-sm mb-1">{trait.replace('_', ' ')}</h4>
-                                  <pre className="text-xs overflow-auto max-h-32 bg-muted p-2 rounded">
-                                    {JSON.stringify(newData, null, 2)}
-                                  </pre>
-                                </div>
-                              );
-                            })}
+                        <CardContent className="pt-4">
+                          <div className="text-center text-muted-foreground">
+                            <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <div className="text-sm">No changes were required</div>
+                            <div className="text-xs mt-1">
+                              Persona structure is complete and enhancements are up to date
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
+                    )}
+
+                    {/* Execution Log */}
+                    {singleTestResult.executionLog && singleTestResult.executionLog.length > 0 && (
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            Processing Log
+                          </div>
+                          <div className="text-xs font-mono bg-muted p-3 rounded max-h-40 overflow-y-auto space-y-1">
+                            {singleTestResult.executionLog.map((log, index) => (
+                              <div key={index} className="text-muted-foreground">{log}</div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Refresh Button */}
+                    <div className="flex justify-center">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => testSinglePersona()}
+                        disabled={isSingleTesting}
+                        className="flex items-center gap-2"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Test Again
+                      </Button>
                     </div>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base">Validation Checks</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          {singleTestResult.after.health_profile && (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              Health Profile: BMI category "{singleTestResult.after.health_profile.bmi_category}"
-                            </div>
-                          )}
-                          {singleTestResult.after.money_profile && (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              Money Profile: Attitude "{singleTestResult.after.money_profile.attitude_toward_money}"
-                            </div>
-                          )}
-                          {singleTestResult.after.political_narrative && (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              Political Narrative: Added realistic viewpoints
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
         </Tabs>
