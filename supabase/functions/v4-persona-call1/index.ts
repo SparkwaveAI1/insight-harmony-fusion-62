@@ -848,28 +848,8 @@ NARRATIVE SECTIONS:
         // Strict validation (no mutation, throws on failure)
         personaData = validateAndFixPersonaData(personaData, userInputs);
         
-        // Apply realistic trait assignment after validation
-        console.log('🎯 Applying statistical trait assignment...');
-        const demographics = {
-          age: personaData.identity.age,
-          income: personaData.identity.income_bracket,
-          region: personaData.identity.location.region,
-          ethnicity: personaData.identity.ethnicity,
-          gender: personaData.identity.gender
-        };
-        
-        // Fix income bracket if it's still unspecified
-        if (!demographics.income || demographics.income === 'unspecified') {
-          demographics.income = generateRealisticIncomeRange(
-            personaData.identity.occupation, 
-            demographics.age, 
-            demographics.region
-          );
-          personaData.identity.income_bracket = demographics.income;
-        }
-        
-        // Apply statistical trait enhancements
-        personaData = assignRealisticTraits(personaData, demographics);
+        // Statistical trait assignment disabled - keeping OpenAI's unique traits
+        console.log('🎯 Skipping statistical post-processing to preserve unique traits...');
         
         // Remove any forbidden signature phrases
         removeSignaturePhrases(personaData);
