@@ -27,6 +27,9 @@ export function assignRealisticTraits(persona: any, demographics: PersonaDemogra
   // Assign financial realities
   assignFinancialStressors(updatedPersona, demographics, modifiers);
   
+  // Assign physical appearance traits
+  assignPhysicalAppearance(updatedPersona, demographics, modifiers);
+  
   // Ensure internal consistency
   ensureTraitConsistency(updatedPersona);
   
@@ -253,6 +256,130 @@ function assignConsumptionBehaviors(persona: any, demographics: PersonaDemograph
   } else if (foodSecurityRoll < dist.food_security.very_low_security + dist.food_security.low_security) {
     persona.money_profile.financial_stressors.push("limited_food_access");
   }
+}
+
+function assignPhysicalAppearance(persona: any, demographics: PersonaDemographics, modifiers: any) {
+  const { age, gender } = demographics;
+  const dist = STATISTICAL_DISTRIBUTIONS.physical_appearance;
+  
+  // Initialize physical appearance in health_profile if it doesn't exist
+  if (!persona.health_profile) {
+    persona.health_profile = {};
+  }
+  
+  // Assign facial hair (men only)
+  if (gender.toLowerCase() === 'male') {
+    const facialHairDistribution = dist.facial_hair;
+    const ageKey = age <= 30 ? 'age_18_30' : age <= 50 ? 'age_31_50' : 'age_51plus';
+    
+    const facialHairOptions = [
+      { type: 'no_facial_hair', probability: facialHairDistribution.no_facial_hair[ageKey] },
+      { type: 'full_beard', probability: facialHairDistribution.full_beard[ageKey] },
+      { type: 'goatee', probability: facialHairDistribution.goatee[ageKey] },
+      { type: 'mustache_only', probability: facialHairDistribution.mustache_only[ageKey] },
+      { type: 'stubble', probability: facialHairDistribution.stubble[ageKey] },
+      { type: 'van_dyke', probability: facialHairDistribution.van_dyke[ageKey] }
+    ];
+    
+    persona.health_profile.facial_hair = selectByProbability(facialHairOptions);
+  }
+  
+  // Assign hair loss patterns (primarily men, but some women)
+  const hairLossMultiplier = gender.toLowerCase() === 'male' ? 1.0 : 0.1;
+  const baldnessDistribution = dist.hair_patterns.male_pattern_baldness;
+  const ageKey = age <= 30 ? 'age_20_30' : age <= 40 ? 'age_31_40' : age <= 50 ? 'age_41_50' : age <= 60 ? 'age_51_60' : 'age_61plus';
+  
+  if (Math.random() < (baldnessDistribution[ageKey] * hairLossMultiplier)) {
+    persona.health_profile.hair_loss_pattern = age > 50 ? 'significant_balding' : age > 40 ? 'moderate_balding' : 'receding_hairline';
+  }
+  
+  // Assign hair style
+  const hairStyles = dist.hair_styles;
+  const hairStyleOptions = Object.entries(hairStyles).map(([style, probability]) => ({
+    type: style,
+    probability: probability as number
+  }));
+  persona.health_profile.hair_style = selectByProbability(hairStyleOptions);
+  
+  // Assign distinctive facial features
+  const facialFeatures = dist.facial_features;
+  const distinctiveFeatures = [];
+  
+  // Check for prominent features based on probabilities
+  if (Math.random() < facialFeatures.nose_size.large + facialFeatures.nose_size.prominent) {
+    distinctiveFeatures.push(Math.random() < 0.75 ? 'large_nose' : 'prominent_nose');
+  }
+  
+  if (Math.random() < facialFeatures.ear_prominence.very_prominent) {
+    distinctiveFeatures.push('prominent_ears');
+  }
+  
+  if (Math.random() < facialFeatures.jaw_type.prominent) {
+    distinctiveFeatures.push('strong_jaw');
+  }
+  
+  if (Math.random() < facialFeatures.eye_shape.deep_set) {
+    distinctiveFeatures.push('deep_set_eyes');
+  }
+  
+  if (Math.random() < facialFeatures.lip_thickness.thin) {
+    distinctiveFeatures.push('thin_lips');
+  }
+  
+  if (Math.random() < facialFeatures.cheekbones.very_prominent) {
+    distinctiveFeatures.push('high_cheekbones');
+  }
+  
+  persona.health_profile.distinctive_features = distinctiveFeatures;
+  
+  // Assign attractiveness level (1-10 scale)
+  const attractivenessDistribution = dist.attractiveness_level;
+  const attractivenessOptions = [
+    { level: Math.floor(Math.random() * 2) + 1, probability: attractivenessDistribution.level_1_2 },
+    { level: Math.floor(Math.random() * 2) + 3, probability: attractivenessDistribution.level_3_4 },
+    { level: Math.floor(Math.random() * 2) + 5, probability: attractivenessDistribution.level_5_6 },
+    { level: Math.floor(Math.random() * 2) + 7, probability: attractivenessDistribution.level_7_8 },
+    { level: Math.floor(Math.random() * 2) + 9, probability: attractivenessDistribution.level_9_10 }
+  ];
+  
+  const selectedAttractiveness = selectByProbability(attractivenessOptions);
+  persona.health_profile.attractiveness_level = selectedAttractiveness.level;
+  
+  // Assign skin characteristics
+  const skinCharacteristics = [];
+  const skinData = dist.skin_characteristics;
+  
+  if (age <= 25 && Math.random() < skinData.acne_scarring.age_18_25) {
+    skinCharacteristics.push('acne_scarring');
+  } else if (age <= 40 && Math.random() < skinData.acne_scarring.age_26_40) {
+    skinCharacteristics.push('mild_acne_scarring');
+  }
+  
+  if (Math.random() < skinData.moles_birthmarks) {
+    skinCharacteristics.push('visible_moles');
+  }
+  
+  if (Math.random() < skinData.visible_scars) {
+    skinCharacteristics.push('minor_scars');
+  }
+  
+  persona.health_profile.skin_characteristics = skinCharacteristics;
+}
+
+// Helper function for probability-based selection
+function selectByProbability(options: Array<{type?: string, level?: number, probability: number}>): any {
+  const random = Math.random();
+  let cumulativeProbability = 0;
+  
+  for (const option of options) {
+    cumulativeProbability += option.probability;
+    if (random <= cumulativeProbability) {
+      return option.type || option.level || option;
+    }
+  }
+  
+  // Fallback to first option if something goes wrong
+  return options[0].type || options[0].level || options[0];
 }
 
 function getAgeGroup(age: number): string {

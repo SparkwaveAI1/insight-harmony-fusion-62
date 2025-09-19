@@ -78,6 +78,68 @@ function buildV4ImagePrompt(personaData: any): string {
   const ethnicity = identity.ethnicity;
   let physicalDescription = conversationSummary.physical_description;
   
+  // Enhance physical description with specific physical traits from health_profile
+  const physicalEnhancements = [];
+  
+  // Add facial hair details (men)
+  if (gender?.toLowerCase() === 'male' && healthProfile.facial_hair) {
+    const facialHairMap = {
+      'full_beard': 'full thick beard',
+      'goatee': 'goatee facial hair',
+      'mustache_only': 'mustache without beard',
+      'stubble': 'stubble facial hair',
+      'van_dyke': 'van dyke beard style',
+      'no_facial_hair': 'clean shaven'
+    };
+    physicalEnhancements.push(facialHairMap[healthProfile.facial_hair] || healthProfile.facial_hair);
+  }
+  
+  // Add hair loss patterns
+  if (healthProfile.hair_loss_pattern) {
+    const hairLossMap = {
+      'significant_balding': 'significantly bald, male pattern baldness',
+      'moderate_balding': 'balding, thinning hair on top',
+      'receding_hairline': 'receding hairline, widow\'s peak'
+    };
+    physicalEnhancements.push(hairLossMap[healthProfile.hair_loss_pattern] || healthProfile.hair_loss_pattern);
+  }
+  
+  // Add distinctive features
+  if (healthProfile.distinctive_features && healthProfile.distinctive_features.length > 0) {
+    const featureMap = {
+      'large_nose': 'large prominent nose',
+      'prominent_nose': 'distinctive prominent nose',
+      'prominent_ears': 'ears that stick out',
+      'strong_jaw': 'strong prominent jaw',
+      'deep_set_eyes': 'deep-set eyes',
+      'thin_lips': 'thin lips',
+      'high_cheekbones': 'high prominent cheekbones'
+    };
+    
+    healthProfile.distinctive_features.forEach((feature: string) => {
+      if (featureMap[feature]) {
+        physicalEnhancements.push(featureMap[feature]);
+      }
+    });
+  }
+  
+  // Add attractiveness context (avoid making everyone attractive)
+  if (healthProfile.attractiveness_level && healthProfile.attractiveness_level <= 4) {
+    physicalEnhancements.push('average everyday appearance, not conventionally attractive');
+  } else if (healthProfile.attractiveness_level && healthProfile.attractiveness_level >= 8) {
+    physicalEnhancements.push('attractive appearance');
+  }
+  
+  // Combine original description with enhancements
+  if (physicalEnhancements.length > 0) {
+    const enhancementText = physicalEnhancements.join(', ');
+    if (physicalDescription) {
+      physicalDescription = `${physicalDescription}, ${enhancementText}`;
+    } else {
+      physicalDescription = enhancementText;
+    }
+  }
+  
   // If BMI is available, enhance physical description
   if (healthProfile.bmi && typeof healthProfile.bmi === 'number') {
     const bmiDescription = getBMIDescription(healthProfile.bmi);

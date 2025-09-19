@@ -70,7 +70,7 @@ Return valid JSON with this exact structure:
        "location": "city, region format from identity.location",
        "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, relationships, and daily life patterns"
      },
-     "physical_description": "Comprehensive physical description for image generation based on age, occupation, location, health profile, and lifestyle. Include: estimated height/build based on occupation and fitness level, hair/eye details inferred from ethnicity and age, clothing style based on occupation and income, overall appearance reflecting health and lifestyle choices.",
+     "physical_description": "Comprehensive physical description for AI image generation including: facial hair (for men: beard/mustache/clean-shaven), hair style and any hair loss patterns, distinctive facial features (nose size, ear prominence, jaw type, etc.), attractiveness level, build/height based on BMI and fitness, clothing style reflecting occupation/income, overall appearance. Be specific about less conventional features - not everyone is conventionally attractive. Include details like 'receding hairline', 'full beard', 'prominent nose', 'thin build' etc.",
     "motivation_summary": "Concise description of top motivational drivers from motivation_profile.primary_drivers and how goal_orientation manifests in daily decisions",
     "goal_priorities": "Format: goal_name (intensity); goal_name (intensity) - from motivation_profile.goal_orientation.primary_goals",
     "want_vs_should_pattern": "Summary of motivation_profile.want_vs_should_tension patterns and typical resolution style",

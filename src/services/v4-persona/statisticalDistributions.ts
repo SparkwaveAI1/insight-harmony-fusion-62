@@ -1,6 +1,64 @@
 // Complete US population distributions for realistic persona generation
 export const STATISTICAL_DISTRIBUTIONS = {
   
+  // Physical Appearance (demographics + population data)
+  physical_appearance: {
+    // Facial hair patterns (men only, by age)
+    facial_hair: {
+      no_facial_hair: { age_18_30: 0.45, age_31_50: 0.35, age_51plus: 0.25 },
+      full_beard: { age_18_30: 0.25, age_31_50: 0.35, age_51plus: 0.40 },
+      goatee: { age_18_30: 0.15, age_31_50: 0.15, age_51plus: 0.10 },
+      mustache_only: { age_18_30: 0.05, age_31_50: 0.08, age_51plus: 0.15 },
+      stubble: { age_18_30: 0.08, age_31_50: 0.05, age_51plus: 0.08 },
+      van_dyke: { age_18_30: 0.02, age_31_50: 0.02, age_51plus: 0.02 }
+    },
+    
+    // Hair patterns and styles
+    hair_patterns: {
+      male_pattern_baldness: { age_20_30: 0.25, age_31_40: 0.35, age_41_50: 0.50, age_51_60: 0.65, age_61plus: 0.80 },
+      receding_hairline: { age_20_30: 0.15, age_31_40: 0.25, age_41_50: 0.40, age_51plus: 0.55 },
+      thinning_hair: { age_20_30: 0.10, age_31_40: 0.20, age_41_50: 0.35, age_51plus: 0.50 }
+    },
+    
+    hair_styles: {
+      short_professional: 0.35,
+      medium_casual: 0.25,
+      long_hair: 0.15,
+      buzz_cut: 0.08,
+      styled_trendy: 0.12,
+      unkempt: 0.05
+    },
+    
+    // Distinctive facial features
+    facial_features: {
+      nose_size: { small: 0.20, average: 0.60, large: 0.15, prominent: 0.05 },
+      ear_prominence: { close_set: 0.70, slightly_prominent: 0.20, very_prominent: 0.10 },
+      jaw_type: { narrow: 0.15, average: 0.60, strong: 0.20, prominent: 0.05 },
+      eye_shape: { narrow: 0.15, average: 0.65, wide: 0.15, deep_set: 0.05 },
+      lip_thickness: { thin: 0.20, average: 0.60, full: 0.15, very_full: 0.05 },
+      cheekbones: { low: 0.25, average: 0.50, high: 0.20, very_prominent: 0.05 },
+      chin_type: { receding: 0.10, average: 0.70, prominent: 0.15, cleft: 0.05 }
+    },
+    
+    // Attractiveness distribution (population bell curve)
+    attractiveness_level: {
+      level_1_2: 0.05,  // Very below average
+      level_3_4: 0.20,  // Below average  
+      level_5_6: 0.50,  // Average
+      level_7_8: 0.20,  // Above average
+      level_9_10: 0.05  // Very above average
+    },
+    
+    // Physical characteristics that affect appearance
+    skin_characteristics: {
+      acne_scarring: { age_18_25: 0.15, age_26_40: 0.08, age_41plus: 0.05 },
+      freckles: { light_skin: 0.25, medium_skin: 0.10, dark_skin: 0.02 },
+      moles_birthmarks: 0.30,
+      visible_scars: 0.15,
+      wrinkles: { age_30_40: 0.10, age_41_50: 0.35, age_51_60: 0.70, age_61plus: 0.90 }
+    }
+  },
+
   // Physical Health (CDC/NHANES data)
   physical_health: {
     bmi_distributions: {
