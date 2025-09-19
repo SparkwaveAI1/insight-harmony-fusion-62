@@ -402,12 +402,12 @@ NARRATIVE SECTIONS:
         14. Do not rely on any post-processing; your output must be final and valid as-is
         
         CRITICAL: Never use empty arrays. If a field would be empty, use these patterns:
-        - medications: ["none"]
-        - chronic_conditions: ["none"] 
-        - mental_health_flags: ["none"]
-        - caregiving_roles: ["none"]
+        - medications: ["N/A"]
+        - chronic_conditions: ["N/A"] 
+        - mental_health_flags: ["N/A"]
+        - caregiving_roles: ["N/A"]
         - pets: [] (only exception - empty is normal)
-        - financial_stressors: ["none"] if truly none
+        - financial_stressors: ["N/A"] if truly none
         - mental_preoccupations: ["work stress"] (always include at least one)
         
         Return ONLY the complete JSON object with all sections filled with realistic, detailed data.`;

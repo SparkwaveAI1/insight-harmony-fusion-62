@@ -57,6 +57,14 @@ function validatePersona(persona: any): ValidationResult {
 
   // NEW: Content completeness validation
   function checkContentCompleteness(obj: any, path = ''): void {
+    // Helper function to check if a value represents "no applicable content"
+    function isValidNoContentValue(value: any): boolean {
+      if (Array.isArray(value)) {
+        return value.length === 1 && value[0] === "N/A";
+      }
+      return value === "N/A";
+    }
+    
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}.${key}` : key;
       
@@ -76,6 +84,11 @@ function validatePersona(persona: any): ValidationResult {
         if (shouldHaveContent.includes(key)) {
           warnings.push(`Empty ${key} array - should have realistic content`);
         }
+      }
+      
+      // Don't warn about ["N/A"] arrays - they represent properly evaluated "no content"
+      else if (isValidNoContentValue(value)) {
+        // This is valid - persona was properly evaluated but has no applicable content
       }
       
       // Check for empty strings
@@ -157,6 +170,14 @@ function validatePersona(persona: any): ValidationResult {
 
   // Check for empty values that should be filled
   function checkForEmptyValues(obj: any, path = ''): void {
+    // Helper function to check if a value represents "no applicable content"
+    function isValidNoContentValue(value: any): boolean {
+      if (Array.isArray(value)) {
+        return value.length === 1 && value[0] === "N/A";
+      }
+      return value === "N/A";
+    }
+    
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}.${key}` : key;
       
@@ -164,6 +185,8 @@ function validatePersona(persona: any): ValidationResult {
         warnings.push(`Empty value at ${currentPath} - should be filled`);
       } else if (Array.isArray(value) && value.length === 0 && !['pets', 'topics_off_limits'].includes(key)) {
         warnings.push(`Empty array at ${currentPath} - may need content`);
+      } else if (Array.isArray(value) && isValidNoContentValue(value)) {
+        // Don't warn about ["N/A"] arrays - they represent properly evaluated "no content"
       } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         checkForEmptyValues(value, currentPath);
       }
@@ -201,6 +224,14 @@ function calculateTrueCompleteness(persona: any): number {
   let totalFields = 0;
   let completeFields = 0;
 
+  // Helper function to check if a value represents "no applicable content"
+  function isValidNoContentValue(value: any): boolean {
+    if (Array.isArray(value)) {
+      return value.length === 1 && value[0] === "N/A";
+    }
+    return value === "N/A";
+  }
+
   function analyzeField(obj: any): void {
     for (const [key, value] of Object.entries(obj)) {
       totalFields++;
@@ -215,9 +246,13 @@ function calculateTrueCompleteness(persona: any): number {
         
         if (shouldHaveContent.includes(key) && value.length === 0) {
           // Array that should have content but is empty
-        } else {
+        } else if (isValidNoContentValue(value) || value.length > 0) {
+          // Treat "N/A" values as complete (properly evaluated but no applicable content)
           completeFields++;
         }
+      } else if (isValidNoContentValue(value)) {
+        // Treat "N/A" values as complete (properly evaluated but no applicable content)
+        completeFields++;
       } else if (typeof value === 'object' && value !== null) {
         analyzeField(value);
       } else {

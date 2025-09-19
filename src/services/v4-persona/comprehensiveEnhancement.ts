@@ -31,12 +31,12 @@ export function applyStatisticalEnhancement(persona: any): { persona: any; chang
   if (!enhanced.health_profile) {
     enhanced.health_profile = {
       bmi: 22.3,
-      chronic_conditions: [],
-      mental_health_flags: [],
-      medications: [],
+      chronic_conditions: ["N/A"],
+      mental_health_flags: ["N/A"],
+      medications: ["N/A"],
       adherence_level: "good",
       sleep_hours: 7,
-      substance_use: { alcohol: "social", cigarettes: "none", vaping: "none", marijuana: "none" },
+      substance_use: { alcohol: "social", cigarettes: "N/A", vaping: "N/A", marijuana: "N/A" },
       fitness_level: "moderate",
       diet_pattern: "standard"
     };
@@ -50,7 +50,7 @@ export function applyStatisticalEnhancement(persona: any): { persona: any; chang
       spending_style: "balanced",
       savings_investing_habits: { emergency_fund_months: 3, retirement_contributions: "minimal", investing_style: "conservative" },
       debt_posture: "manageable",
-      financial_stressors: [],
+      financial_stressors: ["N/A"],
       money_conflicts: "minor",
       generosity_profile: "selective"
     };
@@ -421,6 +421,9 @@ export function calculateCompletenessScore(persona: any): number {
         } else {
           filledFields++; // Some arrays are legitimately empty
         }
+      } else if (isValidNoContentValue(value)) {
+        // Treat "N/A" values as complete (properly evaluated but no applicable content)
+        filledFields++;
       } else if (typeof value === 'object' && value !== null) {
         analyzeCompleteness(value);
       } else {
@@ -432,4 +435,12 @@ export function calculateCompletenessScore(persona: any): number {
   analyzeCompleteness(persona);
   
   return totalFields > 0 ? filledFields / totalFields : 0;
+}
+
+// Helper function to check if a value represents "no applicable content"
+function isValidNoContentValue(value: any): boolean {
+  if (Array.isArray(value)) {
+    return value.length === 1 && value[0] === "N/A";
+  }
+  return value === "N/A";
 }

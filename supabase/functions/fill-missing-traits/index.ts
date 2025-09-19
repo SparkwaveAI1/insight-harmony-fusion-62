@@ -10,12 +10,12 @@ function applyStatisticalEnhancement(persona: any): any {
   if (!enhanced.health_profile) {
     enhanced.health_profile = {
       bmi: 22.5,
-      chronic_conditions: [],
-      mental_health_flags: [],
-      medications: [],
+      chronic_conditions: ["N/A"],
+      mental_health_flags: ["N/A"],
+      medications: ["N/A"],
       adherence_level: "good",
       sleep_hours: 7,
-      substance_use: { alcohol: "social", cigarettes: "none", vaping: "none", marijuana: "none" },
+      substance_use: { alcohol: "social", cigarettes: "N/A", vaping: "N/A", marijuana: "N/A" },
       fitness_level: "moderate",
       diet_pattern: "standard"
     };
@@ -28,7 +28,7 @@ function applyStatisticalEnhancement(persona: any): any {
       spending_style: "balanced",
       savings_investing_habits: { emergency_fund_months: 3, retirement_contributions: "minimal", investing_style: "conservative" },
       debt_posture: "manageable",
-      financial_stressors: [],
+      financial_stressors: ["N/A"],
       money_conflicts: "minor",
       generosity_profile: "selective"
     };
@@ -244,9 +244,6 @@ function fillEmptyArraysAndValues(persona: any): string[] {
     }
   }
 
-  // Replace unspecified values
-  replaceUnspecifiedValues(persona, changes);
-
   return changes;
 }
 
@@ -259,13 +256,10 @@ function validateCompleteness(persona: any, changes: string[]): void {
       for (const [key, value] of Object.entries(obj)) {
         const fullPath = currentPath ? `${currentPath}.${key}` : key;
         
-  const unspecifiedFound = findUnspecifiedValues(persona);
-  if (unspecifiedFound.length > 0) {
-    throw new Error(`Unspecified values found: ${unspecifiedFound.join(', ')} - statistical generation incomplete`);
-  }
-  
-  changes.push('Validation passed - no unspecified values found');
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           traverse(value, fullPath);
+        } else if (value === 'unspecified') {
+          unspecified.push(fullPath);
         }
       }
     }
@@ -280,9 +274,18 @@ function validateCompleteness(persona: any, changes: string[]): void {
   }
   
   changes.push('Validation passed - no unspecified values found');
+}
 function calculateTrueCompleteness(persona: any): number {
   let totalFields = 0;
   let completeFields = 0;
+
+  // Helper function to check if a value represents "no applicable content"
+  function isValidNoContentValue(value: any): boolean {
+    if (Array.isArray(value)) {
+      return value.length === 1 && value[0] === "N/A";
+    }
+    return value === "N/A";
+  }
 
   function analyzeField(obj: any): void {
     for (const [key, value] of Object.entries(obj)) {
@@ -294,9 +297,13 @@ function calculateTrueCompleteness(persona: any): number {
         const shouldHaveContent = ['targets', 'boundaries', 'use_cases', 'mitigations', 'positive_triggers', 'negative_triggers', 'primary_motivation_labels', 'deal_breakers'];
         if (shouldHaveContent.includes(key) && value.length === 0) {
           // Empty but should have content
-        } else {
+        } else if (isValidNoContentValue(value) || value.length > 0) {
+          // Treat "N/A" values as complete (properly evaluated but no applicable content)
           completeFields++;
         }
+      } else if (isValidNoContentValue(value)) {
+        // Treat "N/A" values as complete (properly evaluated but no applicable content)
+        completeFields++;
       } else if (typeof value === 'object' && value !== null) {
         analyzeField(value);
       } else {
@@ -434,6 +441,14 @@ function validatePersona(persona: any): ValidationResult {
 
   // Check for empty values that should be filled
   function checkForEmptyValues(obj: any, path = ''): void {
+    // Helper function to check if a value represents "no applicable content"
+    function isValidNoContentValue(value: any): boolean {
+      if (Array.isArray(value)) {
+        return value.length === 1 && value[0] === "N/A";
+      }
+      return value === "N/A";
+    }
+    
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}.${key}` : key;
       
@@ -441,6 +456,8 @@ function validatePersona(persona: any): ValidationResult {
         warnings.push(`Empty value at ${currentPath} - should be filled`);
       } else if (Array.isArray(value) && value.length === 0 && !['pets', 'topics_off_limits'].includes(key)) {
         warnings.push(`Empty array at ${currentPath} - may need content`);
+      } else if (Array.isArray(value) && isValidNoContentValue(value)) {
+        // Don't warn about ["N/A"] arrays - they represent properly evaluated "no content"
       } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         checkForEmptyValues(value, currentPath);
       }
