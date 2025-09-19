@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Brain, CheckCircle, AlertCircle, Play, Search, User, Users } from "lucide-react";
+import { Brain, CheckCircle, AlertCircle, Play, Search, User, Users, Zap } from "lucide-react";
 
 interface TraitAnalysis {
   persona_id: string;
@@ -21,6 +22,7 @@ interface FillResult {
   persona_id: string;
   name: string;
   filled_traits: string[];
+  statistical_traits_added?: string[];
 }
 
 interface PersonaOption {
@@ -39,6 +41,9 @@ export function PersonaTraitFiller() {
   const [isFilling, setIsFilling] = useState(false);
   const [analysis, setAnalysis] = useState<TraitAnalysis[]>([]);
   const [results, setResults] = useState<FillResult[]>([]);
+  
+  // Statistical enhancement state
+  const [includeStatisticalEnhancement, setIncludeStatisticalEnhancement] = useState(false);
   
   // Single persona testing state
   const [personas, setPersonas] = useState<PersonaOption[]>([]);
@@ -78,7 +83,7 @@ export function PersonaTraitFiller() {
   const fillMissingTraits = async () => {
     const incompletePersonas = analysis.filter(p => p.missingTraits.length > 0);
     
-    if (incompletePersonas.length === 0) {
+    if (incompletePersonas.length === 0 && !includeStatisticalEnhancement) {
       toast({
         title: "No Action Needed",
         description: "All personas already have complete trait profiles"
@@ -88,12 +93,15 @@ export function PersonaTraitFiller() {
 
     setIsFilling(true);
     try {
-      const personaIds = incompletePersonas.map(p => p.persona_id);
+      const personaIds = incompletePersonas.length > 0 
+        ? incompletePersonas.map(p => p.persona_id)
+        : analysis.map(p => p.persona_id); // Include all if just doing statistical enhancement
       
       const { data, error } = await supabase.functions.invoke('fill-missing-traits', {
         body: { 
           mode: 'execute',
-          personaIds 
+          personaIds,
+          includeStatisticalEnhancement
         }
       });
 
@@ -104,14 +112,15 @@ export function PersonaTraitFiller() {
       // Refresh analysis
       await analyzeTraits();
       
+      const enhancementSuffix = includeStatisticalEnhancement ? " with statistical enhancement" : "";
       toast({
-        title: "Traits Filled Successfully",
-        description: `Updated ${data.updates?.length || 0} personas with missing traits`,
+        title: "Enhancement Complete",
+        description: `Updated ${data.updates?.length || 0} personas${enhancementSuffix}`,
       });
     } catch (error) {
       console.error('Error filling traits:', error);
       toast({
-        title: "Fill Failed",
+        title: "Enhancement Failed",
         description: error.message,
         variant: "destructive"
       });
@@ -172,7 +181,8 @@ export function PersonaTraitFiller() {
       const { data, error } = await supabase.functions.invoke('fill-missing-traits', {
         body: { 
           mode: 'execute',
-          personaIds: [selectedPersonaId]
+          personaIds: [selectedPersonaId],
+          includeStatisticalEnhancement
         }
       });
 
@@ -195,9 +205,11 @@ export function PersonaTraitFiller() {
           after: afterData.full_profile
         });
         
+        const totalTraits = update.filled_traits.length + (update.statistical_traits_added?.length || 0);
+        const enhancementText = includeStatisticalEnhancement ? " (including statistical traits)" : "";
         toast({
           title: "Single Persona Test Complete",
-          description: `Updated ${update.filled_traits.length} traits for ${update.name}`,
+          description: `Updated ${totalTraits} traits for ${update.name}${enhancementText}`,
         });
       } else {
         toast({
@@ -233,10 +245,10 @@ export function PersonaTraitFiller() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="h-5 w-5" />
-          Persona Trait Completeness
+          Unified Persona Enhancement
         </CardTitle>
         <CardDescription>
-          Analyze and fill missing personality traits using AI
+          Analyze and enhance personas with structural validation and statistical traits
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -253,25 +265,39 @@ export function PersonaTraitFiller() {
           </TabsList>
           
           <TabsContent value="batch" className="space-y-4">
-            <div className="flex gap-2">
-              <Button 
-                onClick={analyzeTraits}
-                disabled={isAnalyzing}
-                variant="outline"
-              >
-                <Search className="h-4 w-4 mr-2" />
-                {isAnalyzing ? 'Analyzing...' : 'Analyze Traits'}
-              </Button>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="statistical-enhancement" 
+                  checked={includeStatisticalEnhancement}
+                  onCheckedChange={(checked) => setIncludeStatisticalEnhancement(checked === true)}
+                />
+                <label htmlFor="statistical-enhancement" className="text-sm font-medium flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Include Statistical Trait Enhancement
+                </label>
+              </div>
               
-              {analysis.length > 0 && (
+              <div className="flex gap-2">
                 <Button 
-                  onClick={fillMissingTraits}
-                  disabled={isFilling || analysis.filter(p => p.missingTraits.length > 0).length === 0}
+                  onClick={analyzeTraits}
+                  disabled={isAnalyzing}
+                  variant="outline"
                 >
-                  <Play className="h-4 w-4 mr-2" />
-                  {isFilling ? 'Filling Traits...' : 'Fill Missing Traits'}
+                  <Search className="h-4 w-4 mr-2" />
+                  {isAnalyzing ? 'Analyzing...' : 'Analyze Traits'}
                 </Button>
-              )}
+                
+                {analysis.length > 0 && (
+                  <Button 
+                    onClick={fillMissingTraits}
+                    disabled={isFilling || (!includeStatisticalEnhancement && analysis.filter(p => p.missingTraits.length > 0).length === 0)}
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    {isFilling ? 'Enhancing...' : 'Enhance Personas'}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {analysis.length > 0 && (
@@ -360,18 +386,38 @@ export function PersonaTraitFiller() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {results.map((result) => (
-                      <div key={result.persona_id} className="flex items-center justify-between p-2 bg-muted rounded">
-                        <span className="font-medium">{result.name}</span>
-                        <div className="flex gap-1">
-                          {result.filled_traits.map((trait) => (
-                            <Badge key={trait} variant="default" className="text-xs">
-                              {trait.replace('_', ' ')}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                     {results.map((result) => (
+                       <div key={result.persona_id} className="p-3 bg-muted rounded space-y-2">
+                         <div className="font-medium">{result.name}</div>
+                         
+                         {result.filled_traits.length > 0 && (
+                           <div>
+                             <div className="text-xs text-muted-foreground mb-1">Structural fixes:</div>
+                             <div className="flex flex-wrap gap-1">
+                               {result.filled_traits.map((trait) => (
+                                 <Badge key={trait} variant="default" className="text-xs">
+                                   {trait.replace('_', ' ')}
+                                 </Badge>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                         
+                         {result.statistical_traits_added && result.statistical_traits_added.length > 0 && (
+                           <div>
+                             <div className="text-xs text-muted-foreground mb-1">Statistical traits:</div>
+                             <div className="flex flex-wrap gap-1">
+                               {result.statistical_traits_added.map((trait) => (
+                                 <Badge key={trait} variant="secondary" className="text-xs">
+                                   <Zap className="h-3 w-3 mr-1" />
+                                   {trait.replace('_', ' ')}
+                                 </Badge>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     ))}
                   </div>
                 </CardContent>
               </Card>
@@ -379,29 +425,43 @@ export function PersonaTraitFiller() {
           </TabsContent>
           
           <TabsContent value="single" className="space-y-4">
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">Select Persona to Test</label>
-                <Select value={selectedPersonaId} onValueChange={setSelectedPersonaId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={loadingPersonas ? "Loading personas..." : "Choose a persona"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {personas.map((persona) => (
-                      <SelectItem key={persona.persona_id} value={persona.persona_id}>
-                        {persona.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="single-statistical-enhancement" 
+                  checked={includeStatisticalEnhancement}
+                  onCheckedChange={(checked) => setIncludeStatisticalEnhancement(checked === true)}
+                />
+                <label htmlFor="single-statistical-enhancement" className="text-sm font-medium flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Include Statistical Trait Enhancement
+                </label>
               </div>
-              <Button 
-                onClick={testSinglePersona}
-                disabled={isSingleTesting || !selectedPersonaId}
-              >
-                <Play className="h-4 w-4 mr-2" />
-                {isSingleTesting ? 'Testing...' : 'Test Persona'}
-              </Button>
+              
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <label className="text-sm font-medium mb-2 block">Select Persona to Test</label>
+                  <Select value={selectedPersonaId} onValueChange={setSelectedPersonaId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingPersonas ? "Loading personas..." : "Choose a persona"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {personas.map((persona) => (
+                        <SelectItem key={persona.persona_id} value={persona.persona_id}>
+                          {persona.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  onClick={testSinglePersona}
+                  disabled={isSingleTesting || !selectedPersonaId}
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  {isSingleTesting ? 'Testing...' : 'Test Enhancement'}
+                </Button>
+              </div>
             </div>
 
             {singleTestResult && (
@@ -411,12 +471,33 @@ export function PersonaTraitFiller() {
                     <CardTitle className="text-lg">Test Results: {singleTestResult.name}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex flex-wrap gap-1">
-                      {singleTestResult.filled_traits.map((trait) => (
-                        <Badge key={trait} variant="default" className="text-xs">
-                          Added: {trait.replace('_', ' ')}
-                        </Badge>
-                      ))}
+                    <div className="space-y-2">
+                      {singleTestResult.filled_traits.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-1">Structural Traits Fixed:</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {singleTestResult.filled_traits.map((trait) => (
+                              <Badge key={trait} variant="default" className="text-xs">
+                                {trait.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {singleTestResult.statistical_traits_added && singleTestResult.statistical_traits_added.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-1">Statistical Traits Added:</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {singleTestResult.statistical_traits_added.map((trait) => (
+                              <Badge key={trait} variant="secondary" className="text-xs">
+                                <Zap className="h-3 w-3 mr-1" />
+                                {trait.replace('_', ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

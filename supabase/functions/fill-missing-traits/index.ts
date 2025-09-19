@@ -2,6 +2,128 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 
+// Import statistical enhancement functions
+function applyStatisticalEnhancement(persona: any): any {
+  const enhanced = JSON.parse(JSON.stringify(persona)); // Deep clone
+  
+  // Initialize missing sections
+  if (!enhanced.health_profile) {
+    enhanced.health_profile = {
+      bmi_category: "normal",
+      chronic_conditions: [],
+      mental_health_flags: [],
+      medications: [],
+      adherence_level: "good",
+      sleep_hours: 7,
+      substance_use: { alcohol: "social", cigarettes: "none", vaping: "none", marijuana: "none" },
+      fitness_level: "moderate",
+      diet_pattern: "standard"
+    };
+  }
+  
+  if (!enhanced.money_profile) {
+    enhanced.money_profile = {
+      attitude_toward_money: "practical",
+      earning_context: "stable",
+      spending_style: "balanced",
+      savings_investing_habits: { emergency_fund_months: 3, retirement_contributions: "minimal", investing_style: "conservative" },
+      debt_posture: "manageable",
+      financial_stressors: [],
+      money_conflicts: "minor",
+      generosity_profile: "selective"
+    };
+  }
+
+  // Extract demographics
+  const age = enhanced.identity?.age || 25;
+  const income = enhanced.identity?.income_bracket?.toLowerCase() || "middle";
+  
+  // Apply age-based health conditions
+  if (age >= 45) {
+    if (Math.random() < 0.35) { // 35% chance for hypertension after 45
+      if (!enhanced.health_profile.chronic_conditions.includes("hypertension")) {
+        enhanced.health_profile.chronic_conditions.push("hypertension");
+        if (!enhanced.health_profile.medications.includes("lisinopril")) {
+          enhanced.health_profile.medications.push("lisinopril");
+        }
+      }
+    }
+    if (age >= 50 && Math.random() < 0.15) { // 15% chance for diabetes after 50
+      if (!enhanced.health_profile.chronic_conditions.includes("type_2_diabetes")) {
+        enhanced.health_profile.chronic_conditions.push("type_2_diabetes");
+        if (!enhanced.health_profile.medications.includes("metformin")) {
+          enhanced.health_profile.medications.push("metformin");
+        }
+      }
+    }
+  }
+
+  // Apply income-based financial stress
+  if (income.includes("20k") || income.includes("30k") || income.includes("low")) {
+    if (!enhanced.money_profile.financial_stressors.includes("credit_card_debt")) {
+      enhanced.money_profile.financial_stressors.push("credit_card_debt");
+    }
+    if (!enhanced.money_profile.financial_stressors.includes("student_loans")) {
+      enhanced.money_profile.financial_stressors.push("student_loans");
+    }
+    enhanced.money_profile.debt_posture = "struggling";
+  } else if (income.includes("50k") || income.includes("middle")) {
+    if (Math.random() < 0.4 && !enhanced.money_profile.financial_stressors.includes("mortgage_payments")) {
+      enhanced.money_profile.financial_stressors.push("mortgage_payments");
+    }
+  }
+
+  // Apply mental health based on stress levels
+  if (enhanced.money_profile.financial_stressors.length > 1) {
+    if (!enhanced.health_profile.mental_health_flags.includes("anxiety")) {
+      enhanced.health_profile.mental_health_flags.push("anxiety");
+    }
+    if (Math.random() < 0.3 && !enhanced.health_profile.medications.includes("sertraline")) {
+      enhanced.health_profile.medications.push("sertraline");
+    }
+  }
+
+  return enhanced;
+}
+
+function getStatisticalTraitsAdded(before: any, after: any): string[] {
+  const added = [];
+  
+  // Check for new chronic conditions
+  const beforeConditions = before.health_profile?.chronic_conditions || [];
+  const afterConditions = after.health_profile?.chronic_conditions || [];
+  const newConditions = afterConditions.filter(c => !beforeConditions.includes(c));
+  if (newConditions.length > 0) {
+    added.push("chronic_conditions");
+  }
+  
+  // Check for new medications
+  const beforeMeds = before.health_profile?.medications || [];
+  const afterMeds = after.health_profile?.medications || [];
+  const newMeds = afterMeds.filter(m => !beforeMeds.includes(m));
+  if (newMeds.length > 0) {
+    added.push("medications");
+  }
+  
+  // Check for new financial stressors
+  const beforeStressors = before.money_profile?.financial_stressors || [];
+  const afterStressors = after.money_profile?.financial_stressors || [];
+  const newStressors = afterStressors.filter(s => !beforeStressors.includes(s));
+  if (newStressors.length > 0) {
+    added.push("financial_stressors");
+  }
+  
+  // Check for new mental health flags
+  const beforeMental = before.health_profile?.mental_health_flags || [];
+  const afterMental = after.health_profile?.mental_health_flags || [];
+  const newMental = afterMental.filter(m => !beforeMental.includes(m));
+  if (newMental.length > 0) {
+    added.push("mental_health_flags");
+  }
+  
+  return added;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -221,8 +343,8 @@ serve(async (req) => {
   }
 
   try {
-    const { personaIds = [], mode = 'preview' } = await req.json();
-    console.log('🔧 Fill missing traits request with new validation system:', { personaIds, mode });
+    const { personaIds = [], mode = 'preview', includeStatisticalEnhancement = false } = await req.json();
+    console.log('🔧 Fill missing traits request with new validation system:', { personaIds, mode, includeStatisticalEnhancement });
 
     // Get personas with missing traits
     let query = supabase
@@ -275,21 +397,39 @@ serve(async (req) => {
           if (postValidation.isValid) {
             console.log(`✅ Successfully fixed persona ${persona.name}`);
             
+            // Apply statistical enhancement if requested
+            let finalPersona = fixedPersona;
+            let statisticalTraitsAdded = [];
+            
+            if (includeStatisticalEnhancement) {
+              const enhancedPersona = applyStatisticalEnhancement(fixedPersona);
+              statisticalTraitsAdded = getStatisticalTraitsAdded(fixedPersona, enhancedPersona);
+              finalPersona = enhancedPersona;
+            }
+
             updates.push({
               persona_id: persona.persona_id,
               name: persona.name,
+              filled_traits: validation.errors.map(e => e.split(' ')[3] || 'unknown').filter(t => t !== 'unknown'),
+              statistical_traits_added: statisticalTraitsAdded,
               validation_before: validation,
               validation_after: postValidation,
-              fixed_profile: fixedPersona
+              fixed_profile: finalPersona
             });
 
             // Update the persona in database
+            const updateData: any = {
+              full_profile: finalPersona,
+              updated_at: new Date().toISOString()
+            };
+            
+            if (includeStatisticalEnhancement) {
+              updateData.statistical_enhancement_status = 'complete';
+            }
+            
             const { error: updateError } = await supabase
               .from('v4_personas')
-              .update({
-                full_profile: fixedPersona,
-                updated_at: new Date().toISOString()
-              })
+              .update(updateData)
               .eq('persona_id', persona.persona_id);
 
             if (updateError) {
@@ -299,20 +439,65 @@ serve(async (req) => {
             console.error(`❌ Fixed persona ${persona.name} still has validation errors:`, postValidation.errors);
           }
         }
+      } else if (mode === 'execute' && includeStatisticalEnhancement && validation.isValid) {
+        // Only apply statistical enhancement to already valid personas
+        console.log(`✨ Applying statistical enhancement to valid persona ${persona.name}`);
+        
+        const enhancedPersona = applyStatisticalEnhancement(persona.full_profile);
+        const statisticalTraitsAdded = getStatisticalTraitsAdded(persona.full_profile, enhancedPersona);
+        
+        if (statisticalTraitsAdded.length > 0) {
+          updates.push({
+            persona_id: persona.persona_id,
+            name: persona.name,
+            filled_traits: [],
+            statistical_traits_added: statisticalTraitsAdded,
+            validation_before: validation,
+            validation_after: validation, // No change in validation
+            fixed_profile: enhancedPersona
+          });
+
+          // Update the persona in database
+          const { error: updateError } = await supabase
+            .from('v4_personas')
+            .update({
+              full_profile: enhancedPersona,
+              statistical_enhancement_status: 'complete',
+              updated_at: new Date().toISOString()
+            })
+            .eq('persona_id', persona.persona_id);
+
+          if (updateError) {
+            console.error(`❌ Error updating persona ${persona.persona_id}:`, updateError);
+          } else {
+            console.log(`✅ Successfully enhanced persona ${persona.name} with statistical traits`);
+          }
+        }
       }
     }
+
+    // For analysis mode, convert validation results to the expected format
+    const analysis = validationResults.map(result => ({
+      persona_id: result.persona_id,
+      name: result.name,
+      missingTraits: result.errors.filter(e => e.includes('Missing required field')).map(e => e.split(': ')[1]),
+      incompleteTraits: [],
+      completenessScore: Math.round(result.completenessScore * 100)
+    }));
 
     return new Response(JSON.stringify({
       success: true,
       mode,
       analyzed_count: validationResults.length,
+      analysis: mode === 'preview' ? analysis : undefined,
       validation_results: validationResults,
       updates: mode === 'execute' ? updates : [],
       summary: {
         valid_personas: validationResults.filter(r => r.isValid).length,
         invalid_personas: validationResults.filter(r => !r.isValid).length,
         personas_with_banned_keys: validationResults.filter(r => r.hasBannedKeys).length,
-        personas_missing_required: validationResults.filter(r => !r.hasRequiredKeys).length
+        personas_missing_required: validationResults.filter(r => !r.hasRequiredKeys).length,
+        statistical_enhancements_applied: includeStatisticalEnhancement ? updates.filter(u => u.statistical_traits_added?.length > 0).length : 0
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
