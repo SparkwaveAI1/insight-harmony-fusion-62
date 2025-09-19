@@ -166,11 +166,21 @@ export function getV4PersonaCompletionRecommendation(persona: V4Persona): {
 } {
   const validation = validatePersona(persona.full_profile || {});
   
-  if (validation.isValid && persona.creation_completed) {
+  // Check if persona is already complete
+  if (persona.creation_completed && persona.creation_stage === 'completed') {
     return {
       canComplete: false,
-      recommendation: 'Persona is already complete',
+      recommendation: 'Persona is fully complete',
       actionRequired: 'none'
+    };
+  }
+  
+  // High validation score but not marked complete - likely needs database update
+  if (validation.isValid && validation.completenessScore >= 0.9 && persona.full_profile && persona.conversation_summary) {
+    return {
+      canComplete: false,
+      recommendation: 'Persona appears complete but database status needs updating',
+      actionRequired: 'update_completion_status'
     };
   }
   
