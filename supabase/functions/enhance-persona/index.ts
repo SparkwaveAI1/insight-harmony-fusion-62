@@ -6,6 +6,7 @@ import {
   PersonaGenerationError 
 } from "./errorHandler.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { generateKnowledgeDomains } from "../_shared/knowledgeDomains.ts";
 
 // Statistical distributions for realistic trait assignment (copied from v4-persona-call1)
 const STATISTICAL_DISTRIBUTIONS = {
@@ -333,24 +334,92 @@ function getAgeGroup(age: number): string {
   return "65+";
 }
 
+function ensureScaffolding(persona: any) {
+  persona.identity = persona.identity || {};
+  persona.identity.location = persona.identity.location || {};
+  if (!persona.identity.income_bracket) persona.identity.income_bracket = 'unspecified';
+
+  persona.health_profile = persona.health_profile || {};
+  persona.health_profile.medications = Array.isArray(persona.health_profile.medications) ? persona.health_profile.medications : [];
+  persona.health_profile.chronic_conditions = Array.isArray(persona.health_profile.chronic_conditions) ? persona.health_profile.chronic_conditions : [];
+  persona.health_profile.mental_health_flags = Array.isArray(persona.health_profile.mental_health_flags) ? persona.health_profile.mental_health_flags : [];
+  persona.health_profile.substance_use = persona.health_profile.substance_use || {};
+  persona.health_profile.physical_appearance = persona.health_profile.physical_appearance || {};
+
+  persona.money_profile = persona.money_profile || {};
+  persona.money_profile.financial_stressors = Array.isArray(persona.money_profile.financial_stressors) ? persona.money_profile.financial_stressors : [];
+
+  persona.relationships = persona.relationships || {};
+  persona.emotional_profile = persona.emotional_profile || { stress_responses: [], negative_triggers: [], positive_triggers: [] };
+
+  persona.communication_style = persona.communication_style || {};
+  persona.communication_style.linguistic_signature = persona.communication_style.linguistic_signature || {};
+  persona.communication_style.linguistic_signature.signature_phrases = Array.isArray(persona.communication_style.linguistic_signature.signature_phrases) ? persona.communication_style.linguistic_signature.signature_phrases : [];
+  persona.communication_style.style_markers = persona.communication_style.style_markers || {};
+  persona.communication_style.style_markers.signature_phrases = Array.isArray(persona.communication_style.style_markers.signature_phrases) ? persona.communication_style.style_markers.signature_phrases : [];
+}
+
 function removeSignaturePhrases(personaData: any) {
-  const forbiddenPhrases = ["I believe that", "In my experience", "I always", "I never"];
-  
-  // Remove forbidden signature phrases from communication style
-  if (personaData.communication_style?.linguistic_signature?.signature_phrases) {
-    personaData.communication_style.linguistic_signature.signature_phrases = 
-      personaData.communication_style.linguistic_signature.signature_phrases.filter(
-        phrase => !forbiddenPhrases.some(forbidden => phrase.includes(forbidden))
-      );
+  const forbiddenRaw = [
+    "I believe that","In my experience","I always","I never",
+    "You know what I mean?","It's not that complicated."
+  ];
+  const normalize = (s: string) => s?.toString().trim().replace(/^[\'\"]|[\'\"]$/g,'').toLowerCase();
+  const forbidden = new Set(forbiddenRaw.map(normalize));
+
+  const purge = (arr?: string[]) => Array.isArray(arr) ? arr.filter(p => !forbidden.has(normalize(p))) : [];
+
+  if (personaData.communication_style?.linguistic_signature) {
+     personaData.communication_style.linguistic_signature.signature_phrases = purge(
+       personaData.communication_style.linguistic_signature.signature_phrases
+     );
   }
-  
-  // Also check other places signature phrases might appear
-  if (personaData.communication_style?.style_markers?.signature_phrases) {
-    personaData.communication_style.style_markers.signature_phrases = 
-      personaData.communication_style.style_markers.signature_phrases.filter(
-        phrase => !forbiddenPhrases.some(forbidden => phrase.includes(forbidden))
-      );
+  if (personaData.communication_style?.style_markers) {
+     personaData.communication_style.style_markers.signature_phrases = purge(
+       personaData.communication_style.style_markers.signature_phrases
+     );
   }
+}
+
+function validateAndRepair(persona: any): string[] {
+  const fixes: string[] = [];
+  ensureScaffolding(persona);
+
+  if (!persona.identity?.income_bracket || persona.identity.income_bracket === 'unspecified') {
+    const newIncome = generateRealisticIncomeRange(
+      persona.identity?.occupation || 'professional',
+      persona.identity?.age || 35,
+      persona.identity?.location?.region || 'California'
+    );
+    persona.identity.income_bracket = newIncome;
+    fixes.push(`income_bracket=${newIncome}`);
+  }
+
+  const needsHealth = !persona.health_profile?.bmi || !persona.health_profile?.bmi_category || persona.health_profile.bmi_category === 'unspecified';
+  const needsAppearance = !persona.health_profile?.physical_appearance?.hair_style || !persona.health_profile?.physical_appearance?.attractiveness_level;
+
+  if (needsHealth || needsAppearance) {
+    const demographics = {
+      age: persona.identity?.age || 35,
+      income: persona.identity?.income_bracket,
+      region: persona.identity?.location?.region || 'California',
+      ethnicity: persona.identity?.ethnicity,
+      gender: persona.identity?.gender
+    };
+    assignRealisticTraits(persona, demographics);
+    fixes.push('statistical_traits_applied');
+  }
+
+  const beforeLen = (persona.communication_style?.linguistic_signature?.signature_phrases?.length || 0)
+    + (persona.communication_style?.style_markers?.signature_phrases?.length || 0);
+  removeSignaturePhrases(persona);
+  const afterLen = (persona.communication_style?.linguistic_signature?.signature_phrases?.length || 0)
+    + (persona.communication_style?.style_markers?.signature_phrases?.length || 0);
+  if (afterLen < beforeLen) {
+    fixes.push('signature_phrases_cleaned');
+  }
+
+  return fixes;
 }
 
 function generateRealisticIncomeRange(occupation: string, age: number, region: string): string {
@@ -504,12 +573,15 @@ serve(async (req) => {
       throw new PersonaGenerationError('validation', 'Persona not found or access denied');
     }
 
-    let enhancedPersona = { ...existingPersona.full_profile };
-    const enhancementLog: string[] = [];
+let enhancedPersona = { ...(existingPersona.full_profile || {}) };
+const enhancementLog: string[] = [];
 
-    console.log('🔍 Analyzing persona gaps...');
-    const gaps = analyzePersonaGaps(enhancedPersona);
-    console.log('📋 Identified gaps:', gaps);
+console.log('🧱 Scaffolding persona for enhancement...');
+ensureScaffolding(enhancedPersona);
+
+console.log('🔍 Analyzing persona gaps...');
+const gaps = analyzePersonaGaps(enhancedPersona);
+console.log('📋 Identified gaps:', gaps);
 
     // PHASE 1: Fix Core Data Issues (Income, BMI, Signature Phrases)
     console.log('🔧 Phase 1: Fixing core data issues...');
@@ -606,16 +678,24 @@ serve(async (req) => {
       }
     }
 
-    // Save the enhanced persona
-    console.log('💾 Saving enhanced persona...');
-    const { data: updatedPersona, error: updateError } = await supabase
-      .from('v4_personas')
-      .update({
-        full_profile: enhancedPersona
-      })
-      .eq('persona_id', personaId)
-      .eq('user_id', user.id)
-      .select()
+// Final validation and repair before saving
+console.log('🧪 Final validation pass...');
+const validationFixes = validateAndRepair(enhancedPersona);
+if (validationFixes.length) {
+  enhancementLog.push(`Final fixes: ${validationFixes.join(', ')}`);
+  console.log('✅ Final fixes applied:', validationFixes);
+}
+
+// Save the enhanced persona
+console.log('💾 Saving enhanced persona...');
+const { data: updatedPersona, error: updateError } = await supabase
+  .from('v4_personas')
+  .update({
+    full_profile: enhancedPersona
+  })
+  .eq('persona_id', personaId)
+  .eq('user_id', user.id)
+  .select()
       .single();
 
     if (updateError) {
