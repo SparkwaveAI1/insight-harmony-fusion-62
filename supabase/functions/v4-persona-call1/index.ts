@@ -254,7 +254,7 @@ ALL REMAINING SECTIONS MUST BE COMPLETE:
 - attitude_narrative (paragraph describing their worldview)
 - political_narrative (paragraph describing their political views)
 - adoption_profile (buyer_power, adoption_influence, risk_tolerance, change_friction, expected_objections, proof_points_needed)
-- prompt_shaping (voice_foundation summary, style_markers summary, primary_motivations, deal_breakers, honesty_vector, bias_vector, context_switches, current_focus)
+- prompt_shaping (voice_foundation, style_markers, primary_motivations, deal_breakers, honesty_vector, bias_vector, context_switches, current_focus)
 - sexuality_profile (orientation, expression_style, relationship_norms, boundaries, linguistic_influences)
 
         CRITICAL INSTRUCTIONS: 
@@ -502,6 +502,29 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
   const sp = personaData.sexuality_profile;
   if (!sp || sp.orientation === undefined || sp.expression_style === undefined || sp.relationship_norms === undefined || sp.boundaries === undefined || sp.linguistic_influences === undefined) {
     throw new Error('Incomplete sexuality_profile');
+  }
+
+  // Prompt shaping enforcement - reject banned/unknown keys
+  const ps = personaData.prompt_shaping;
+  if (!ps || typeof ps !== 'object') {
+    throw new Error('Missing prompt_shaping section');
+  }
+  const allowedPromptShapingKeys = [
+    'voice_foundation', 'style_markers', 'primary_motivations', 'deal_breakers',
+    'honesty_vector', 'bias_vector', 'context_switches', 'current_focus'
+  ];
+  const promptKeys = Object.keys(ps);
+  const extraKeys = promptKeys.filter((k) => !allowedPromptShapingKeys.includes(k));
+  const bannedSpecific = ['style_markers_summary', 'voice_foundation_summary'];
+  const foundBannedSpecific = promptKeys.filter((k) => bannedSpecific.includes(k));
+
+  if (extraKeys.length > 0) {
+    console.warn('Disallowed prompt_shaping keys found:', extraKeys);
+    throw new Error(`prompt_shaping has disallowed keys: ${extraKeys.join(', ')}`);
+  }
+  if (foundBannedSpecific.length > 0) {
+    console.warn('BANNED prompt_shaping keys detected:', foundBannedSpecific);
+    throw new Error(`Banned fields present in prompt_shaping: ${foundBannedSpecific.join(', ')}`);
   }
 
   console.log('✅ Strict validation passed without mutations.');
