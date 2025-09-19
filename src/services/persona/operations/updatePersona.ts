@@ -99,3 +99,36 @@ export async function updatePersonaProfileImageUrl(personaId: string, imageUrl: 
     return false;
   }
 }
+
+/**
+ * Marks a V4 persona as complete by updating creation flags
+ */
+export async function markV4PersonaAsComplete(personaId: string): Promise<boolean> {
+  try {
+    if (!personaId.startsWith('v4_')) {
+      console.warn('markV4PersonaAsComplete called with non-V4 ID');
+      return false;
+    }
+
+    console.log(`Marking V4 persona ${personaId} as complete`);
+    const { error } = await supabase
+      .from('v4_personas')
+      .update({
+        creation_completed: true,
+        creation_stage: 'completed',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('persona_id', personaId);
+
+    if (error) {
+      console.error('Error updating V4 persona completion status:', error);
+      return false;
+    }
+
+    console.log('Successfully marked V4 persona as complete');
+    return true;
+  } catch (error) {
+    console.error('Unexpected error in markV4PersonaAsComplete:', error);
+    return false;
+  }
+}

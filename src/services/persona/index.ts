@@ -10,7 +10,8 @@ export {
 export { 
   updatePersonaVisibility, 
   updatePersonaName,
-  updatePersonaProfileImageUrl 
+  updatePersonaProfileImageUrl,
+  markV4PersonaAsComplete
 } from './operations/updatePersona';
 export { deletePersona } from './operations/deletePersona';
 export { clonePersona } from './operations/clonePersona';

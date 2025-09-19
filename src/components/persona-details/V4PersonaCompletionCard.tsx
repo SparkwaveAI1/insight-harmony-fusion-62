@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, RefreshCw, CheckSquare } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { 
   validatePersona,
@@ -14,6 +14,7 @@ import {
   getV4PersonaCompletionRecommendation 
 } from '@/services/v4-persona/v4PersonaCompletion';
 import { normalizeV4PersonaProfile } from '@/services/v4-persona/v4PersonaNormalize';
+import { markV4PersonaAsComplete } from '@/services/persona';
 import { toast } from 'sonner';
 
 interface V4PersonaCompletionCardProps {
@@ -23,6 +24,7 @@ interface V4PersonaCompletionCardProps {
 
 export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4PersonaCompletionCardProps) {
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
   
   const validation = validatePersona(persona.full_profile || {});
   const needsCompletion = !validation.isValid || !persona.creation_completed;
@@ -59,6 +61,36 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
     }
   };
 
+  const handleMarkAsComplete = async () => {
+    setIsMarkingComplete(true);
+    
+    try {
+      console.log('🔄 Marking V4 persona as complete:', persona.persona_id);
+      
+      const success = await markV4PersonaAsComplete(persona.persona_id);
+      
+      if (success) {
+        toast.success('Persona marked as complete!');
+        
+        // Update local persona state
+        if (onPersonaUpdated) {
+          onPersonaUpdated({
+            ...persona,
+            creation_completed: true,
+            creation_stage: 'completed'
+          });
+        }
+      } else {
+        toast.error('Failed to mark persona as complete');
+      }
+    } catch (error) {
+      console.error('Error marking persona as complete:', error);
+      toast.error('Failed to mark persona as complete');
+    } finally {
+      setIsMarkingComplete(false);
+    }
+  };
+
   const getStatusIcon = () => {
     if (validation.isValid && persona.creation_completed) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -81,14 +113,19 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {getStatusIcon()}
-            <CardTitle className="text-lg">V4 Persona Incomplete</CardTitle>
+            <CardTitle className="text-lg">
+              {recommendation.actionRequired === 'update_completion_status' ? 'Persona Appears Complete' : 'V4 Persona Incomplete'}
+            </CardTitle>
           </div>
           <Badge variant={getStatusVariant()}>
             {status}
           </Badge>
         </div>
         <CardDescription>
-          This V4 persona is not fully generated and may not work properly in conversations.
+          {recommendation.actionRequired === 'update_completion_status' 
+            ? 'This persona appears to be complete but needs status update in the database.'
+            : 'This V4 persona is not fully generated and may not work properly in conversations.'
+          }
         </CardDescription>
       </CardHeader>
       
@@ -168,6 +205,28 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Complete V4 Persona
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Mark as Complete Button */}
+        {recommendation.actionRequired === 'update_completion_status' && (
+          <Button 
+            onClick={handleMarkAsComplete}
+            disabled={isMarkingComplete}
+            className="w-full"
+            variant="outline"
+          >
+            {isMarkingComplete ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Marking as Complete...
+              </>
+            ) : (
+              <>
+                <CheckSquare className="mr-2 h-4 w-4" />
+                Mark as Complete
               </>
             )}
           </Button>
