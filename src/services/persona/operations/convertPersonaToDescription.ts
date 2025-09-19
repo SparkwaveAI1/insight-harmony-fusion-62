@@ -1,5 +1,7 @@
 import { OpenAIService } from '@/services/ai/openaiService';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { listPersonaCollections } from '@/lib/api/memories';
 
 /**
  * Converts legacy persona JSON data into a natural, detailed description
@@ -34,8 +36,27 @@ Create a flowing narrative description that captures all the key details.`;
       throw new Error('Generated description is empty');
     }
 
-    console.log('Successfully converted persona to description');
-    return description.trim();
+    // Get persona collections to preserve them in the description
+    let collectionsText = '';
+    if (legacyPersonaJSON.persona_id) {
+      try {
+        console.log('Fetching collections for persona:', legacyPersonaJSON.persona_id);
+        const collectionsResult = await listPersonaCollections(supabase, legacyPersonaJSON.persona_id);
+        
+        if (collectionsResult.data && collectionsResult.data.length > 0) {
+          const collectionNames = collectionsResult.data.map(collection => collection.name);
+          collectionsText = `\n\nCollections: ${collectionNames.join(', ')}`;
+          console.log('Found collections for persona:', collectionNames);
+        }
+      } catch (error) {
+        console.warn('Could not fetch collections for persona:', error);
+        // Continue without collections if there's an error
+      }
+    }
+
+    const finalDescription = description.trim() + collectionsText;
+    console.log('Successfully converted persona to description with collections');
+    return finalDescription;
 
   } catch (error) {
     console.error('Error converting persona to description:', error);
