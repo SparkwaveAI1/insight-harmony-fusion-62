@@ -21,44 +21,27 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Received request:', JSON.stringify(requestBody, null, 2));
 
-    // Extract and validate inputs
+    // Extract and validate inputs - simplified to just user description
     const userInputs = {
-      role: requestBody.role || null,
-      region: requestBody.region && requestBody.region !== 'any' ? requestBody.region : null,
-      urbanicity: requestBody.urbanicity && requestBody.urbanicity !== 'any' ? requestBody.urbanicity : null,
-      age_range: requestBody.age_range && requestBody.age_range !== 'any' ? requestBody.age_range : null,
-      ethnicity: requestBody.ethnicity || null,
-      income_bracket: requestBody.income_bracket || null,
-      coherence_target: requestBody.coherence_target || 0.7,
-      education_level: requestBody.education_level || null,
-      relationship_status: requestBody.relationship_status || null,
-      name_preference: requestBody.name_preference || null,
-      gender: requestBody.gender || null
+      user_description: requestBody.user_description || '',
+      coherence_target: requestBody.coherence_target || 0.7
     };
 
     console.log('Processed user inputs:', userInputs);
 
-    // Build enhanced user prompt that explicitly includes only user-specified fields
-    const userPrompt = `Generate persona with these EXACT specifications:
+    // Natural language interpretation prompt
+    const userPrompt = `Create a persona based on this user description: "${userInputs.user_description}"
 
-${userInputs.role ? `Role/Occupation: ${userInputs.role}` : ''}
-${(userInputs.region || userInputs.urbanicity) ? `Location: ${userInputs.region || 'unspecified'}${userInputs.urbanicity ? ` (${userInputs.urbanicity})` : ''}` : ''}
-${userInputs.age_range ? `Age Range: ${userInputs.age_range}` : ''}
-${userInputs.gender ? `GENDER (REQUIRED): ${userInputs.gender}` : ''}
-${userInputs.name_preference ? `NAME (REQUIRED): ${userInputs.name_preference}` : ''}
-${userInputs.ethnicity ? `ETHNICITY (REQUIRED): ${userInputs.ethnicity}` : ''}
-${userInputs.income_bracket ? `Income Bracket: ${userInputs.income_bracket}` : ''}
-${userInputs.education_level ? `Education Level: ${userInputs.education_level}` : ''}
-${userInputs.relationship_status ? `Relationship Status: ${userInputs.relationship_status}` : ''}
+Interpret this description intelligently:
+- Extract any names, ethnicities, occupations, or other traits mentioned
+- If no name provided, generate an appropriate first and last name
+- If only first name, add an appropriate last name  
+- Handle misspellings and variations naturally
+- Generate all missing traits realistically
+
+User description: ${userInputs.user_description}
+
 Thought Coherence Target: ${userInputs.coherence_target}
-
-CRITICAL REQUIREMENTS:
-- If a field above is marked REQUIRED, use it EXACTLY as provided
-- Place the role in identity.occupation when provided
-- Match location details when provided
-- Ensure age falls within the specified range when provided
-- Include ALL required fields from the system prompt
-- Make persona internally consistent
 
 Generate complete persona with all 17 sections filled.`;
 
@@ -276,13 +259,9 @@ ALL REMAINING SECTIONS MUST BE COMPLETE:
 
         CRITICAL INSTRUCTIONS: 
         1. Generate ALL sections completely - no section should be empty or missing
-        2. Use the ethnicity specified in user input exactly: ${userInputs.ethnicity || 'not specified'}
-        3. Use the name preference if provided: ${userInputs.name_preference || 'generate appropriate name'}
-        4. Use the gender if specified: ${userInputs.gender || 'not specified'}
-        5. Use the role/occupation: ${userInputs.role || 'generate appropriate role'}
-        6. Use the region: ${userInputs.region || 'generate appropriate region'}
-        7. Use the urbanicity: ${userInputs.urbanicity || 'generate appropriate setting'}
-        8. Be internally consistent across all fields
+        2. Interpret the user description naturally and extract relevant traits
+        3. Generate realistic and appropriate details for any missing information
+        4. Be internally consistent across all fields
         9. All numeric values must be numbers between 0 and 1, not strings
         10. Generate realistic, detailed content for every field - no placeholders or empty values
         11. Numeric TRAIT values must be realistically varied – do NOT output uniform defaults (e.g., all 0.5)
@@ -471,39 +450,10 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
     throw new Error(`Missing identity.location fields: ${missingLoc.join(', ')}`);
   }
 
-  // User input alignment (fail instead of override)
-  if (userInputs.name_preference && id.name !== userInputs.name_preference) {
-    throw new Error(`Name mismatch: expected ${userInputs.name_preference}, got ${id.name}`);
-  }
-  if (userInputs.ethnicity && id.ethnicity !== userInputs.ethnicity) {
-    throw new Error(`Ethnicity mismatch: expected ${userInputs.ethnicity}, got ${id.ethnicity}`);
-  }
-  if (userInputs.role && id.occupation !== userInputs.role) {
-    throw new Error(`Role mismatch: expected ${userInputs.role}, got ${id.occupation}`);
-  }
-  if (userInputs.gender && id.gender !== userInputs.gender) {
-    throw new Error(`Gender mismatch: expected ${userInputs.gender}, got ${id.gender}`);
-  }
-  if (userInputs.region && id.location.region !== userInputs.region) {
-    throw new Error(`Region mismatch: expected ${userInputs.region}, got ${id.location.region}`);
-  }
-  if (userInputs.urbanicity && id.location.urbanicity !== userInputs.urbanicity) {
-    throw new Error(`Urbanicity mismatch: expected ${userInputs.urbanicity}, got ${id.location.urbanicity}`);
-  }
-  if (userInputs.age_range && typeof id.age === 'number') {
-    const range = String(userInputs.age_range);
-    let min = 18, max = 90;
-    if (range.includes('+')) {
-      const base = parseInt(range);
-      if (!Number.isNaN(base)) min = base;
-    } else if (range.includes('-')) {
-      const [a, b] = range.split('-').map((n: string) => parseInt(n.trim(), 10));
-      if (!Number.isNaN(a) && !Number.isNaN(b)) { min = a; max = b; }
-    }
-    if (id.age < min || id.age > max) {
-      throw new Error(`Age out of specified range (${min}-${max}): got ${id.age}`);
-    }
-  }
+  // Log identity details without strict validation - let OpenAI's interpretation be final
+  console.log(`Generated identity: name="${id.name}", ethnicity="${id.ethnicity}", occupation="${id.occupation}"`);
+  
+  // No strict validation - OpenAI handles natural language interpretation
 
   // Daily life completeness
   const dl = personaData.daily_life;

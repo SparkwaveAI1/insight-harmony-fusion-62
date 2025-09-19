@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from '@/services/v4-persona';
@@ -25,13 +23,7 @@ export function V4PersonaCreator() {
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   
-  // Specific persona parameters
-  const [namePreference, setNamePreference] = useState('');
-  const [ethnicity, setEthnicity] = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [ageRange, setAgeRange] = useState('');
-  const [region, setRegion] = useState('');
-  const [urbanicity, setUrbanicity] = useState('');
+  // Remove all specific persona parameters - now using simple text input
   const currentJob = usePersonaCreationJob(currentJobId || undefined);
 
   const handleCreatePersona = async () => {
@@ -52,18 +44,12 @@ export function V4PersonaCreator() {
       description: "Your persona is being created in the background. You can navigate away and check progress from the job indicator.",
     });
 
-    // Start background processing with all form data
+    // Start background processing with simplified parameters
     processPersonaCreation(job.id, {
       user_prompt: prompt.trim(),
       user_id: user.id,
       generateImage,
       selectedCollectionIds,
-      namePreference,
-      ethnicity,
-      occupation,
-      ageRange,
-      region,
-      urbanicity,
     });
   };
 
@@ -74,12 +60,6 @@ export function V4PersonaCreator() {
       user_id: string;
       generateImage: boolean;
       selectedCollectionIds: string[];
-      namePreference?: string;
-      ethnicity?: string;
-      occupation?: string;
-      ageRange?: string;
-      region?: string;
-      urbanicity?: string;
     }
   ) => {
     try {
@@ -90,16 +70,10 @@ export function V4PersonaCreator() {
         message: 'Generating detailed personality traits...',
       });
       
-      // DIAGNOSTIC: Log trace before regular creation call with all form data
+      // DIAGNOSTIC: Log trace before creation call with simplified data
       const creationData = {
         user_prompt: params.user_prompt,
         user_id: params.user_id,
-        name_preference: params.namePreference,
-        ethnicity: params.ethnicity,
-        role: params.occupation,
-        age_range: params.ageRange,
-        region: params.region,
-        urbanicity: params.urbanicity,
       };
       
       console.log('TRACE_M_START', {
@@ -293,117 +267,7 @@ export function V4PersonaCreator() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Name Preference (optional)
-              </label>
-              <Input
-                value={namePreference}
-                onChange={(e) => setNamePreference(e.target.value)}
-                placeholder="e.g., Laura"
-                disabled={isCreating}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Ethnicity (optional)
-              </label>
-              <Select value={ethnicity} onValueChange={setEthnicity} disabled={isCreating}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select ethnicity" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
-                  <SelectItem value="African American">African American</SelectItem>
-                  <SelectItem value="Asian">Asian</SelectItem>
-                  <SelectItem value="Caucasian">Caucasian</SelectItem>
-                  <SelectItem value="Hispanic">Hispanic</SelectItem>
-                  <SelectItem value="Native American">Native American</SelectItem>
-                  <SelectItem value="Pacific Islander">Pacific Islander</SelectItem>
-                  <SelectItem value="Mixed/Multiracial">Mixed/Multiracial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Occupation (optional)
-              </label>
-              <Input
-                value={occupation}
-                onChange={(e) => setOccupation(e.target.value)}
-                placeholder="e.g., teacher"
-                disabled={isCreating}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Age Range (optional)
-              </label>
-              <Select value={ageRange} onValueChange={setAgeRange} disabled={isCreating}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select age range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
-                  <SelectItem value="18-25">18-25</SelectItem>
-                  <SelectItem value="25-35">25-35</SelectItem>
-                  <SelectItem value="35-45">35-45</SelectItem>
-                  <SelectItem value="45-55">45-55</SelectItem>
-                  <SelectItem value="55-65">55-65</SelectItem>
-                  <SelectItem value="65+">65+</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Region (optional)
-              </label>
-              <Select value={region} onValueChange={setRegion} disabled={isCreating}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
-                  <SelectItem value="California">California</SelectItem>
-                  <SelectItem value="Texas">Texas</SelectItem>
-                  <SelectItem value="Florida">Florida</SelectItem>
-                  <SelectItem value="New York">New York</SelectItem>
-                  <SelectItem value="Illinois">Illinois</SelectItem>
-                  <SelectItem value="Pennsylvania">Pennsylvania</SelectItem>
-                  <SelectItem value="Ohio">Ohio</SelectItem>
-                  <SelectItem value="Georgia">Georgia</SelectItem>
-                  <SelectItem value="North Carolina">North Carolina</SelectItem>
-                  <SelectItem value="Michigan">Michigan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Environment (optional)
-              </label>
-              <Select value={urbanicity} onValueChange={setUrbanicity} disabled={isCreating}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select environment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
-                  <SelectItem value="urban">Urban</SelectItem>
-                  <SelectItem value="suburban">Suburban</SelectItem>
-                  <SelectItem value="rural">Rural</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {/* All structured fields removed - using only free-text description */}
 
           <div className="flex items-center space-x-2">
             <Checkbox 

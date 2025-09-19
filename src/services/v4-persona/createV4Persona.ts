@@ -16,17 +16,10 @@ function extractPersonaName(personaData: any): string {
 }
 
 export interface CreateV4PersonaRequest {
-  role?: string;
-  region?: string;
-  urbanicity?: string;
-  age_range?: string;
-  ethnicity?: string;
-  income_bracket?: string;
+  user_description?: string; // Single free-text field for natural language
   coherence_target?: number;
   user_id?: string; // Still needed for database storage
   user_prompt?: string; // Keep for backward compatibility
-  name_preference?: string; // Add name preference
-  gender?: 'male' | 'female' | 'non-binary';
 }
 
 export interface CreateV4PersonaResponse {
@@ -42,61 +35,16 @@ export interface CreateV4PersonaResponse {
 
 export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Promise<CreateV4PersonaResponse> {
   try {
-    console.log('🚀 Starting V4 persona creation - Call 1 with form data:', {
-      role: request.role,
-      region: request.region,
-      urbanicity: request.urbanicity,
-      age_range: request.age_range,
-      ethnicity: request.ethnicity,
-      name_preference: request.name_preference,
-      user_prompt: request.user_prompt
+    console.log('🚀 Starting V4 persona creation - Call 1 with user description:', {
+      user_description: request.user_description || request.user_prompt,
+      coherence_target: request.coherence_target
     });
     
-    // Parse user_prompt if it's a simple text, or use structured parameters
-    let personaParams = {
-      // Only pass fields explicitly set by the user; treat "any"/empty as undefined so the server doesn't force defaults
-      role: request.role || undefined,
-      region: request.region && request.region !== 'any' ? request.region : undefined,
-      urbanicity: request.urbanicity && request.urbanicity !== 'any' ? request.urbanicity : undefined,
-      age_range: request.age_range && request.age_range !== 'any' ? request.age_range : undefined,
-      ethnicity: request.ethnicity || undefined,
-      income_bracket: request.income_bracket || undefined,
-      coherence_target: request.coherence_target || 0.7,
-      name_preference: request.name_preference || undefined,
-      gender: request.gender
+    // Simple pass-through - let OpenAI interpret the user's text
+    const personaParams = {
+      user_description: (request.user_description || request.user_prompt || '').trim(),
+      coherence_target: request.coherence_target || 0.7
     };
-
-    // If user_prompt is provided, try to extract parameters from it
-    if (request.user_prompt && !request.role) {
-      // Parse simple user prompts into parameters
-      const prompt = request.user_prompt.toLowerCase();
-      
-      // Extract age range
-      const ageMatch = prompt.match(/(\d+)[-–](\d+)/);
-      if (ageMatch) {
-        personaParams.age_range = `${ageMatch[1]}-${ageMatch[2]}`;
-      }
-      
-      // Extract occupation/role
-      const occupationWords = ['teacher', 'engineer', 'doctor', 'nurse', 'manager', 'developer', 'student', 'artist', 'writer'];
-      const foundOccupation = occupationWords.find(occ => prompt.includes(occ));
-      if (foundOccupation) {
-        personaParams.role = foundOccupation;
-      }
-      
-      // Extract ethnicity from prompt
-      const ethnicities = ['african american', 'black', 'asian', 'caucasian', 'white', 'hispanic', 'latino', 'native american', 'pacific islander'];
-      const foundEthnicity = ethnicities.find(eth => prompt.includes(eth));
-      if (foundEthnicity) {
-        personaParams.ethnicity = foundEthnicity.replace('black', 'African American').replace('white', 'Caucasian');
-      }
-      
-      // Extract name preference
-      const nameMatch = prompt.match(/named?\s+(\w+)/i);
-      if (nameMatch) {
-        personaParams.name_preference = nameMatch[1];
-      }
-    }
     
     console.log('📤 Sending to edge function:', personaParams);
     
@@ -126,8 +74,8 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
       
       const persona_id = `v4_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      // Normalize profile to match validator expectations
-      const normalizedProfile = normalizeV4PersonaProfile(data.persona_data);
+      // Keep original profile without client-side normalization
+      const profile = data.persona_data;
       
       // Insert into database with validated name
       const { data: dbData, error: dbError } = await supabase
@@ -137,7 +85,7 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
             persona_id,
             name: personaName,  // This should never be null now
             user_id: request.user_id,
-            full_profile: normalizedProfile,
+            full_profile: profile,
             conversation_summary: {},
             creation_stage: 'completed',
             creation_completed: true
