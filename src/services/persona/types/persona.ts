@@ -48,4 +48,8 @@ export interface Persona {
   // V4 fields for detection (preserved during conversion)
   schema_version?: string;
   full_profile?: any;
+  
+  // V4 completion tracking fields
+  creation_completed?: boolean;
+  creation_stage?: string;
 }

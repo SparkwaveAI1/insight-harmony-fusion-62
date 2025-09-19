@@ -72,7 +72,10 @@ export async function getPersonaByPersonaId(personaId: string): Promise<Persona 
           // Preserve V4 fields for correct detection
           schema_version: v4Data.schema_version,
           full_profile: v4Data.full_profile,
-          conversation_summary: null // Field removed from schema
+          conversation_summary: null, // Field removed from schema
+          // Include V4 completion status fields for proper UI display
+          creation_completed: v4Data.creation_completed,
+          creation_stage: v4Data.creation_stage
         };
         
         return convertedPersona;
