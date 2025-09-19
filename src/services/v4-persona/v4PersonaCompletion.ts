@@ -2,6 +2,7 @@ import { V4Persona } from '@/types/persona-v4';
 import { createV4PersonaCall2 } from './createV4Persona';
 import { getV4PersonaById } from './getV4Personas';
 import { validatePersona, hasRequiredKeys } from './v4PersonaValidation';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface V4PersonaCompletionResult {
   success: boolean;
@@ -29,7 +30,8 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
 
     console.log('Current persona state:', {
       stage: currentPersona.creation_stage,
-      completed: currentPersona.creation_completed
+      completed: currentPersona.creation_completed,
+      enrichmentStatus: (currentPersona as any).enrichment_status
     });
 
     // Validate what's missing
@@ -43,14 +45,66 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
       };
     }
 
-    // Determine what completion step is needed
+    // NEW: Handle personas that need enhancement (the main case we're fixing)
+    if (currentPersona.full_profile && 
+        (!validation.isValid || (currentPersona as any).enrichment_status === 'pending' || validation.completenessScore < 0.85)) {
+      
+      console.log('🔄 Persona needs comprehensive enhancement');
+      
+      try {
+        // Call the enhanced fill-missing-traits edge function
+        const { data, error } = await supabase.functions.invoke('fill-missing-traits', {
+          body: { 
+            personaIds: [personaId], 
+            mode: 'execute',
+            includeStatisticalEnhancement: true 
+          }
+        });
+
+        if (error) {
+          console.error('Enhancement edge function error:', error);
+          return {
+            success: false,
+            error: `Enhancement failed: ${error.message}`,
+            completionStage: 'enhancement_failed'
+          };
+        }
+
+        if (data?.success) {
+          // Get the updated persona
+          const updatedPersona = await getV4PersonaById(personaId);
+          
+          return {
+            success: true,
+            persona: updatedPersona || currentPersona,
+            completionStage: 'enhancement_completed'
+          };
+        } else {
+          return {
+            success: false,
+            error: data?.error || 'Enhancement failed with unknown error',
+            completionStage: 'enhancement_failed'
+          };
+        }
+        
+      } catch (enhancementError) {
+        console.error('Enhancement error:', enhancementError);
+        return {
+          success: false,
+          error: `Enhancement error: ${enhancementError instanceof Error ? enhancementError.message : 'Unknown enhancement error'}`,
+          completionStage: 'enhancement_error'
+        };
+      }
+    }
+
+    // Handle personas that need summary generation (existing logic)
     if (currentPersona.creation_stage === 'detailed_traits' && 
         currentPersona.full_profile &&
-        !currentPersona.creation_completed) {
+        !currentPersona.creation_completed &&
+        validation.isValid) {
       
       console.log('🔄 Persona needs summary generation (Call 2)');
       
-      // Call the summary generation function
       const call2Result = await createV4PersonaCall2(personaId);
       
       if (!call2Result.success) {
@@ -61,7 +115,6 @@ export async function completeV4Persona(personaId: string): Promise<V4PersonaCom
         };
       }
 
-      // Get the updated persona
       const updatedPersona = await getV4PersonaById(personaId);
       
       return {

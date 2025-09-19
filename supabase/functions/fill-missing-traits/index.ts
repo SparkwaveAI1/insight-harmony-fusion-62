@@ -163,22 +163,32 @@ function applyComprehensiveEnhancement(persona: any, includeStatistical: boolean
 
 function assignIncomeBracket(occupation: string, age: number): string {
   const occupationMap: Record<string, string[]> = {
-    "firefighter": ["middle", "upper_middle"],
-    "retired": ["middle", "lower_middle"], 
-    "teacher": ["lower_middle", "middle"],
-    "nurse": ["middle", "upper_middle"],
-    "engineer": ["upper_middle", "upper"],
-    "retail": ["lower", "lower_middle"],
-    "manager": ["middle", "upper_middle"],
-    "student": ["lower", "lower_middle"]
+    "firefighter": ["$50k-75k", "$75k-100k"],
+    "retired": ["$30k-50k", "$40k-60k"],
+    "teacher": ["$35k-50k", "$45k-65k"],
+    "nurse": ["$50k-75k", "$65k-85k"],
+    "engineer": ["$75k-100k", "$100k+"],
+    "retail": ["$20k-35k", "$25k-40k"],
+    "manager": ["$60k-80k", "$75k-100k"],
+    "student": ["$15k-25k", "$20k-30k"]
   };
 
-  const key = occupation?.toLowerCase() || "general";
-  const brackets = occupationMap[key] || ["middle"];
+  const key = occupation?.toLowerCase() || "";
+  let brackets = occupationMap[key];
+  
+  // Handle retired occupations
+  if (key.includes("retired") || age > 62) {
+    brackets = ["$30k-50k", "$40k-60k"]; // Pension/retirement income
+  }
+  
+  // Default if not found
+  if (!brackets) {
+    brackets = ["$40k-60k", "$50k-75k"];
+  }
   
   // Age adjustments
   if (age < 25) return brackets[0];
-  if (age > 55 && key.includes("retired")) return "middle";
+  if (age > 65) return "$30k-50k";
   
   return brackets[Math.floor(Math.random() * brackets.length)];
 }
@@ -638,75 +648,80 @@ serve(async (req) => {
       });
 
       if (mode === 'execute' && (!validation.isValid || hasBannedKeys(persona.full_profile) || !hasRequiredKeys(persona.full_profile))) {
-        console.log(`🛠️ Fixing persona ${persona.name} - Errors: ${validation.errors.length}, Banned keys: ${hasBannedKeys(persona.full_profile)}`);
-        
-        const fixedPersona = await fixPersonaCompliance(persona, validation);
-
-        if (fixedPersona) {
-          // Re-validate the fixed persona
-          const postValidation = validatePersona(fixedPersona);
+        try {
+          console.log(`🔧 Applying comprehensive enhancement to ${persona.name}`);
           
-          if (postValidation.isValid) {
-            console.log(`✅ Successfully fixed persona ${persona.name}`);
+          // First apply comprehensive enhancement (the main fix)
+          const enhancementResult = applyComprehensiveEnhancement(
+            persona.full_profile, 
+            includeStatisticalEnhancement, 
+            true // Always include completeness enhancement
+          );
+          
+          let enhanced = enhancementResult.persona;
+          const enhancementChanges = enhancementResult.changesLog || [];
+          
+          // Then apply compliance fixes if still needed
+          const postEnhancementValidation = validatePersona(enhanced);
+          if (postEnhancementValidation.errors.length > 0 || hasBannedKeys(enhanced)) {
+            console.log(`🛠️ Fixing persona ${persona.name} - Errors: ${postEnhancementValidation.errors.length}, Banned keys: ${hasBannedKeys(enhanced)}`);
             
-            // Apply statistical enhancement if requested
-            let finalPersona = fixedPersona;
-            let statisticalTraitsAdded = [];
+            const fixedPersona = await fixPersonaCompliance({ ...persona, full_profile: enhanced }, postEnhancementValidation);
             
-            if (includeStatisticalEnhancement) {
-              console.log(`🧮 Applying comprehensive enhancement for ${persona.name}`);
-              
-              const beforeScore = calculateTrueCompleteness(fixedPersona);
-              const enhancementResult = applyComprehensiveEnhancement(fixedPersona, true, true);
-              const afterScore = enhancementResult.completenessScore.after;
-              
-              if (enhancementResult.changesLog.length > 0) {
-                console.log(`✅ Comprehensive enhancement applied for ${persona.name}:`);
-                enhancementResult.changesLog.forEach(change => console.log(`   - ${change}`));
-                console.log(`📊 Completeness improved: ${(beforeScore * 100).toFixed(1)}% → ${(afterScore * 100).toFixed(1)}%`);
-                
-                finalPersona = enhancementResult.persona;
-                statisticalTraitsAdded = enhancementResult.changesLog;
-              } else {
-                console.log(`ℹ️  No comprehensive enhancement needed for ${persona.name} - already complete`);
-                // Still apply basic medical traits
-                const enhancedPersona = applyStatisticalEnhancement(fixedPersona);
-                statisticalTraitsAdded = getStatisticalTraitsAdded(fixedPersona, enhancedPersona);
-                finalPersona = enhancedPersona;
-              }
+            if (fixedPersona) {
+              enhanced = fixedPersona;
+              enhancementChanges.push('Applied compliance fixes');
             }
-
-            updates.push({
-              persona_id: persona.persona_id,
-              name: persona.name,
-              filled_traits: validation.errors.map(e => e.split(' ')[3] || 'unknown').filter(t => t !== 'unknown'),
-              statistical_traits_added: statisticalTraitsAdded,
-              validation_before: validation,
-              validation_after: postValidation,
-              fixed_profile: finalPersona
-            });
-
-            // Update the persona in database
-            const updateData: any = {
-              full_profile: finalPersona,
-              updated_at: new Date().toISOString()
-            };
-            
-            if (includeStatisticalEnhancement) {
-              updateData.statistical_enhancement_status = 'complete';
-            }
-            
-            const { error: updateError } = await supabase
-              .from('v4_personas')
-              .update(updateData)
-              .eq('persona_id', persona.persona_id);
-
-            if (updateError) {
-              console.error(`❌ Error updating persona ${persona.persona_id}:`, updateError);
-            }
-          } else {
-            console.error(`❌ Fixed persona ${persona.name} still has validation errors:`, postValidation.errors);
           }
+          
+          // Final validation
+          const finalValidation = validatePersona(enhanced);
+          const isFullyComplete = finalValidation.errors.length === 0 && finalValidation.completenessScore > 0.85;
+          
+          console.log(`✅ Successfully enhanced persona ${persona.name} - Complete: ${isFullyComplete}`);
+          
+          updates.push({
+            persona_id: persona.persona_id,
+            name: persona.name,
+            filled_traits: validation.errors.map(e => e.split(' ')[3] || 'unknown').filter(t => t !== 'unknown'),
+            statistical_traits_added: enhancementChanges,
+            validation_before: validation,
+            validation_after: finalValidation,
+            fixed_profile: enhanced
+          });
+          
+          // Update the persona in database with proper status
+          const updateData: any = {
+            full_profile: enhanced,
+            enrichment_status: isFullyComplete ? 'complete' : 'enhanced',
+            enhancement_applied_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          if (includeStatisticalEnhancement) {
+            updateData.statistical_enhancement_status = 'complete';
+          }
+          
+          const { error: updateError } = await supabase
+            .from('v4_personas')
+            .update(updateData)
+            .eq('persona_id', persona.persona_id);
+          
+          if (updateError) {
+            console.error(`❌ Failed to update persona ${persona.name}:`, updateError);
+          }
+          
+        } catch (error) {
+          console.error(`❌ Enhancement failed for persona ${persona.name}:`, error);
+          
+          // Mark as failed in database
+          await supabase
+            .from('v4_personas')
+            .update({ 
+              enrichment_status: 'failed',
+              enhancement_applied_at: new Date().toISOString()
+            })
+            .eq('persona_id', persona.persona_id);
         }
       } else if (mode === 'execute' && includeStatisticalEnhancement && validation.isValid) {
         // Only apply statistical enhancement to already valid personas

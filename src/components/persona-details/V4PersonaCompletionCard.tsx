@@ -51,11 +51,21 @@ export function V4PersonaCompletionCard({ persona, onPersonaUpdated }: V4Persona
           onPersonaUpdated(result.persona);
         }
       } else {
-        toast.error(result.error || 'Failed to complete V4 persona');
+        // Show more specific error messages
+        const errorMessage = result.error || 'Failed to complete V4 persona';
+        console.error('V4 persona completion failed:', result);
+        
+        if (errorMessage.includes('internal error')) {
+          toast.error('An internal error occurred. The enhancement system is being updated. Please try again in a few minutes.');
+        } else if (errorMessage.includes('timeout')) {
+          toast.error('Enhancement timed out. This persona may be complex - please try again.');
+        } else {
+          toast.error(`Enhancement failed: ${errorMessage}`);
+        }
       }
     } catch (error) {
       console.error('Error completing V4 persona:', error);
-      toast.error('Failed to complete V4 persona');
+      toast.error('An unexpected error occurred during enhancement. Please try again.');
     } finally {
       setIsCompleting(false);
     }

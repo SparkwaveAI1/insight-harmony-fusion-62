@@ -1,5 +1,4 @@
-import { STATISTICAL_DISTRIBUTIONS, AGE_MODIFIERS } from './statisticalDistributions';
-import { assignRealisticTraits, PersonaDemographics } from './traitAssignment';
+// Removed broken imports - all functionality implemented directly in this file
 
 export interface EnhancementPhases {
   structural: boolean;
@@ -26,24 +25,80 @@ export function applyStructuralEnhancement(persona: any): { persona: any; change
 // PHASE 2: Enhanced Statistical Enhancement
 export function applyStatisticalEnhancement(persona: any): { persona: any; changes: string[] } {
   const changes: string[] = [];
-  const enhanced = { ...persona };
-
-  // Extract demographics for statistical assignment
-  const demographics: PersonaDemographics = {
-    age: enhanced.identity?.age || 35,
-    income: enhanced.identity?.income_bracket || "middle",
-    region: enhanced.identity?.location?.region || "midwest", 
-    ethnicity: enhanced.identity?.ethnicity || "white",
-    gender: enhanced.identity?.gender || "female"
-  };
-
-  // Apply existing medical/health statistical traits
-  const medicallyEnhanced = assignRealisticTraits(enhanced, demographics);
+  const enhanced = JSON.parse(JSON.stringify(persona)); // Deep clone
   
-  // Check if medical traits were added
-  if (JSON.stringify(enhanced) !== JSON.stringify(medicallyEnhanced)) {
-    changes.push("Applied medical and health statistical traits");
-    Object.assign(enhanced, medicallyEnhanced);
+  // Initialize missing sections
+  if (!enhanced.health_profile) {
+    enhanced.health_profile = {
+      bmi_category: "normal",
+      chronic_conditions: [],
+      mental_health_flags: [],
+      medications: [],
+      adherence_level: "good",
+      sleep_hours: 7,
+      substance_use: { alcohol: "social", cigarettes: "none", vaping: "none", marijuana: "none" },
+      fitness_level: "moderate",
+      diet_pattern: "standard"
+    };
+    changes.push("Initialized health_profile");
+  }
+  
+  if (!enhanced.money_profile) {
+    enhanced.money_profile = {
+      attitude_toward_money: "practical",
+      earning_context: "stable",
+      spending_style: "balanced",
+      savings_investing_habits: { emergency_fund_months: 3, retirement_contributions: "minimal", investing_style: "conservative" },
+      debt_posture: "manageable",
+      financial_stressors: [],
+      money_conflicts: "minor",
+      generosity_profile: "selective"
+    };
+    changes.push("Initialized money_profile");
+  }
+
+  // Apply statistical medical traits based on demographics
+  const age = enhanced.identity?.age || 25;
+  const income = enhanced.identity?.income_bracket?.toLowerCase() || "";
+  
+  // Age-based health conditions
+  if (age >= 45) {
+    if (Math.random() < 0.35 && !enhanced.health_profile.chronic_conditions.includes("hypertension")) {
+      enhanced.health_profile.chronic_conditions.push("hypertension");
+      if (!enhanced.health_profile.medications.includes("lisinopril")) {
+        enhanced.health_profile.medications.push("lisinopril");
+      }
+      changes.push("Added age-appropriate hypertension");
+    }
+    if (age >= 50 && Math.random() < 0.15 && !enhanced.health_profile.chronic_conditions.includes("type_2_diabetes")) {
+      enhanced.health_profile.chronic_conditions.push("type_2_diabetes");
+      if (!enhanced.health_profile.medications.includes("metformin")) {
+        enhanced.health_profile.medications.push("metformin");
+      }
+      changes.push("Added age-appropriate diabetes");
+    }
+  }
+
+  // Income-based financial stress
+  if (income.includes("20k") || income.includes("30k") || income.includes("low")) {
+    if (!enhanced.money_profile.financial_stressors.includes("credit_card_debt")) {
+      enhanced.money_profile.financial_stressors.push("credit_card_debt");
+      changes.push("Added income-appropriate financial stressors");
+    }
+    enhanced.money_profile.debt_posture = "struggling";
+  } else if (income.includes("50k") || income.includes("middle")) {
+    if (Math.random() < 0.4 && !enhanced.money_profile.financial_stressors.includes("mortgage_payments")) {
+      enhanced.money_profile.financial_stressors.push("mortgage_payments");
+      changes.push("Added mortgage-related financial stress");
+    }
+  }
+
+  // Mental health based on stress
+  if (enhanced.money_profile.financial_stressors.length > 1) {
+    if (!enhanced.health_profile.mental_health_flags.includes("anxiety")) {
+      enhanced.health_profile.mental_health_flags.push("anxiety");
+      changes.push("Added stress-related anxiety");
+    }
   }
 
   // NEW: Apply income bracket based on occupation and age
@@ -118,25 +173,36 @@ export function applyCompletenessEnhancement(persona: any): { persona: any; chan
 }
 
 // Income assignment based on occupation and demographics
-function assignIncomeBracket(occupation: string, age: number, region: string): string {
+function assignIncomeBracket(occupation: string, age: number, region: string = ""): string {
   const occupationMap: Record<string, string[]> = {
-    "firefighter": ["middle", "upper_middle"],
-    "retired_firefighter": ["middle", "lower_middle"],
-    "teacher": ["lower_middle", "middle"],
-    "nurse": ["middle", "upper_middle"],
-    "engineer": ["upper_middle", "upper"],
-    "retail": ["lower", "lower_middle"],
-    "manager": ["middle", "upper_middle"],
-    "consultant": ["upper_middle", "upper"],
-    "student": ["lower", "lower_middle"],
-    "unemployed": ["lower"]
+    "firefighter": ["$50k-75k", "$75k-100k"],
+    "retired_firefighter": ["$30k-50k", "$40k-60k"],
+    "teacher": ["$35k-50k", "$45k-65k"],
+    "nurse": ["$50k-75k", "$65k-85k"],
+    "engineer": ["$75k-100k", "$100k+"],
+    "retail": ["$20k-35k", "$25k-40k"],
+    "manager": ["$60k-80k", "$75k-100k"],
+    "consultant": ["$80k-120k", "$100k+"],
+    "student": ["$15k-25k", "$20k-30k"],
+    "unemployed": ["$15k-25k"]
   };
 
-  const brackets = occupationMap[occupation?.toLowerCase()] || ["middle"];
+  const key = occupation?.toLowerCase() || "";
+  let brackets = occupationMap[key];
+  
+  // Handle retired occupations
+  if (key.includes("retired") || (age > 62 && key !== "student")) {
+    brackets = ["$30k-50k", "$40k-60k"]; // Pension/retirement income
+  }
+  
+  // Default brackets if occupation not found
+  if (!brackets) {
+    brackets = ["$40k-60k", "$50k-75k"];
+  }
   
   // Age adjustments
   if (age < 25) return brackets[0]; // Younger = lower end
-  if (age > 55 && occupation?.includes("retired")) return "middle"; // Retirement income
+  if (age > 65) return "$30k-50k"; // Retirement/fixed income
   
   return brackets[Math.floor(Math.random() * brackets.length)];
 }

@@ -603,6 +603,11 @@ export interface V4Persona {
   creation_stage?: 'not_started' | 'detailed_traits' | 'summary_generation' | 'completed';
   creation_completed?: boolean;
   
+  // Enhancement tracking
+  enrichment_status?: 'pending' | 'enhanced' | 'complete' | 'failed';
+  enhancement_applied_at?: string;
+  statistical_enhancement_status?: 'pending' | 'complete';
+  
   created_at: string;
   updated_at: string;
 }
