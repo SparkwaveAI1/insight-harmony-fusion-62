@@ -267,6 +267,15 @@ ALL REMAINING SECTIONS MUST BE COMPLETE:
         11. Numeric TRAIT values must be realistically varied – do NOT output uniform defaults (e.g., all 0.5)
         12. Do not rely on any post-processing; your output must be final and valid as-is
         
+        CRITICAL: Never use empty arrays. If a field would be empty, use these patterns:
+        - medications: ["none"]
+        - chronic_conditions: ["none"] 
+        - mental_health_flags: ["none"]
+        - caregiving_roles: ["none"]
+        - pets: [] (only exception - empty is normal)
+        - financial_stressors: ["none"] if truly none
+        - mental_preoccupations: ["work stress"] (always include at least one)
+        
         Return ONLY the complete JSON object with all sections filled with realistic, detailed data.`;
 
     // Retry configurations
@@ -525,6 +534,26 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
   if (foundBannedSpecific.length > 0) {
     console.warn('BANNED prompt_shaping keys detected:', foundBannedSpecific);
     throw new Error(`Banned fields present in prompt_shaping: ${foundBannedSpecific.join(', ')}`);
+  }
+
+  // Fix empty arrays that should have content
+  if (personaData.health_profile?.medications?.length === 0) {
+    personaData.health_profile.medications = ["none"];
+  }
+  if (personaData.health_profile?.chronic_conditions?.length === 0) {
+    personaData.health_profile.chronic_conditions = ["none"];
+  }
+  if (personaData.health_profile?.mental_health_flags?.length === 0) {
+    personaData.health_profile.mental_health_flags = ["none"];
+  }
+  if (personaData.relationships?.caregiving_roles?.length === 0) {
+    personaData.relationships.caregiving_roles = ["none"];
+  }
+  if (personaData.money_profile?.financial_stressors?.length === 0) {
+    personaData.money_profile.financial_stressors = ["none"];
+  }
+  if (personaData.daily_life?.mental_preoccupations?.length === 0) {
+    personaData.daily_life.mental_preoccupations = ["general concerns"];
   }
 
   console.log('✅ Strict validation passed without mutations.');
