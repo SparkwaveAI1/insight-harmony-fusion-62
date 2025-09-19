@@ -8,6 +8,7 @@ import { AdminBillingStats } from "./AdminBillingStats";
 import { AdminAlerts } from "./AdminAlerts";
 import { GrokPromptMonitor } from "../dashboard/GrokPromptMonitor";
 import { PersonaTraitFiller } from "./PersonaTraitFiller";
+import { PersonaDescriptionConverter } from "./PersonaDescriptionConverter";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -67,6 +68,9 @@ export function AdminDashboard() {
 
       {/* Persona Trait Filler */}
       <PersonaTraitFiller />
+
+      {/* Persona Description Converter Test */}
+      <PersonaDescriptionConverter />
 
       {/* Admin Billing Users */}
       <AdminBillingUsers />
