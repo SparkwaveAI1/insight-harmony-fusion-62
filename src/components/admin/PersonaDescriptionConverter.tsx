@@ -69,7 +69,11 @@ export function PersonaDescriptionConverter() {
     try {
       console.log('🧪 Testing conversion for persona:', selectedPersona.name);
       
-      const description = await convertPersonaToDescription(selectedPersona.full_profile);
+      // Pass the complete persona object so the function can access persona_id for collections
+      const description = await convertPersonaToDescription({
+        ...selectedPersona.full_profile,
+        persona_id: selectedPersona.persona_id
+      });
       
       setResult(description);
       setShowResultDialog(true);
