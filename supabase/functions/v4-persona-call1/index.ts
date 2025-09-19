@@ -385,7 +385,7 @@ identity, daily_life, health_profile, relationships, money_profile, motivation_p
 IDENTITY SECTION (all fields required):
 {
   "identity": {
-    "name": "[realistic first and last name]",
+    "name": "[realistic first and last name - vary surnames, avoid common defaults like Johnson/Smith/Williams]",
     "age": [18-100],
     "gender": "[male/female/non-binary]",
     "pronouns": "[appropriate pronouns]",
