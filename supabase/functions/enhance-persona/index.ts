@@ -116,29 +116,25 @@ function assignPhysicalHealth(persona: any, demographics: any, modifiers: any) {
   const dist = STATISTICAL_DISTRIBUTIONS.physical_health;
   
   // Only assign BMI if missing or invalid
-  if (!persona.health_profile.bmi || !persona.health_profile.bmi_category || persona.health_profile.bmi_category === 'unspecified') {
+  if (!persona.health_profile.bmi || persona.health_profile.bmi < 16 || persona.health_profile.bmi > 50) {
     const bmiRoll = Math.random();
     const bmiDist = dist.bmi_distributions;
     let cumulativeProbability = 0;
     let assignedBMI: number | null = null;
-    let bmiCategory = "normal";
     
     for (const [category, config] of Object.entries(bmiDist)) {
       cumulativeProbability += config.probability;
       if (bmiRoll <= cumulativeProbability) {
         assignedBMI = config.min + Math.random() * (config.max - config.min);
-        bmiCategory = category === "obese_class_1" || category === "obese_class_2" || category === "obese_class_3" ? "obese" : category;
         break;
       }
     }
     
     if (assignedBMI === null) {
       assignedBMI = 23.0;
-      bmiCategory = "normal";
     }
     
     persona.health_profile.bmi = Math.round(assignedBMI * 10) / 10;
-    persona.health_profile.bmi_category = bmiCategory;
   }
   
   // Chronic conditions (only if missing)
@@ -395,7 +391,7 @@ function validateAndRepair(persona: any): string[] {
     fixes.push(`income_bracket=${newIncome}`);
   }
 
-  const needsHealth = !persona.health_profile?.bmi || !persona.health_profile?.bmi_category || persona.health_profile.bmi_category === 'unspecified';
+  const needsHealth = !persona.health_profile?.bmi || persona.health_profile.bmi < 16 || persona.health_profile.bmi > 50;
   const needsAppearance = !persona.health_profile?.physical_appearance?.hair_style || !persona.health_profile?.physical_appearance?.attractiveness_level;
 
   if (needsHealth || needsAppearance) {
@@ -455,7 +451,7 @@ async function generateV4PersonaTraits(basePersona: any, missingTraits: string[]
 CRITICAL: Generate realistic, specific data for ONLY these missing sections: ${missingTraits.join(', ')}
 
 For income_bracket, use specific ranges like "45000-65000", "70000-95000", "100000-140000" - NEVER use "unspecified".
-For bmi_category, use "underweight", "normal", "overweight", or "obese" with corresponding numeric BMI.
+For bmi, use numeric values between 16.0-50.0 (e.g., 22.3, 28.1, 35.7).
 For physical_appearance, include specific traits like facial_hair, hair_style, attractiveness_level, distinctive_features.
 
 Return valid JSON with ONLY the missing sections requested. Do not include existing data.`;
@@ -511,8 +507,8 @@ function analyzePersonaGaps(persona: any): string[] {
     gaps.push('income_bracket');
   }
   
-  // Check BMI and category
-  if (!persona.health_profile?.bmi || !persona.health_profile?.bmi_category || persona.health_profile.bmi_category === 'unspecified') {
+  // Check BMI
+  if (!persona.health_profile?.bmi || persona.health_profile.bmi < 16 || persona.health_profile.bmi > 50) {
     gaps.push('health_profile');
   }
   

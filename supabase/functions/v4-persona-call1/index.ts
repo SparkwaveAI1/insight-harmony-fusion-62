@@ -104,24 +104,20 @@ function assignPhysicalHealth(persona: any, demographics: any, modifiers: any) {
   const bmiDist = dist.bmi_distributions;
   let cumulativeProbability = 0;
   let assignedBMI: number | null = null;
-  let bmiCategory = "normal";
   
   for (const [category, config] of Object.entries(bmiDist)) {
     cumulativeProbability += config.probability;
     if (bmiRoll <= cumulativeProbability) {
       assignedBMI = config.min + Math.random() * (config.max - config.min);
-      bmiCategory = category === "obese_class_1" || category === "obese_class_2" || category === "obese_class_3" ? "obese" : category;
       break;
     }
   }
   
   if (assignedBMI === null) {
     assignedBMI = 23.0; // Default
-    bmiCategory = "normal";
   }
   
   persona.health_profile.bmi = Math.round(assignedBMI * 10) / 10;
-  persona.health_profile.bmi_category = bmiCategory;
   
   // Chronic conditions
   const conditions = [];
@@ -440,7 +436,7 @@ DAILY_LIFE SECTION (all fields required):
 HEALTH_PROFILE SECTION (all fields required):
 {
   "health_profile": {
-    "bmi_category": "[underweight/normal/overweight/obese]",
+    "bmi": [16.0-50.0 NUMERIC VALUE],
     "chronic_conditions": ["[condition 1 if any]"],
     "mental_health_flags": ["[flag 1 if any]"],
     "medications": ["[medication 1 if any]"],
