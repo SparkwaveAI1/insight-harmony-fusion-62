@@ -20,10 +20,18 @@ export function getPersonaDisplayName(persona: V4Persona): string {
  * Safely extract age from V4 persona
  */
 export function getPersonaAge(persona: V4Persona): number | undefined {
-  if (persona.full_profile?.identity?.age) {
-    return typeof persona.full_profile.identity.age === 'number' 
-      ? persona.full_profile.identity.age 
-      : parseInt(String(persona.full_profile.identity.age));
+  // Prefer conversation_summary demographics if present
+  const csAge: any = persona.conversation_summary?.demographics?.age;
+  if (csAge !== undefined && csAge !== null && csAge !== '') {
+    const n = typeof csAge === 'number' ? csAge : parseInt(String(csAge));
+    return isNaN(n) ? undefined : n;
+  }
+
+  // Fallback to full_profile identity
+  const fpAge: any = persona.full_profile?.identity?.age;
+  if (fpAge !== undefined && fpAge !== null && fpAge !== '') {
+    const n = typeof fpAge === 'number' ? fpAge : parseInt(String(fpAge));
+    return isNaN(n) ? undefined : n;
   }
   return undefined;
 }

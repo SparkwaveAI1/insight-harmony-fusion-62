@@ -15,7 +15,7 @@ import { V4PersonaCompletionCard } from '@/components/persona-details/V4PersonaC
 import PersonaMemoriesTab from '../persona-details/PersonaMemoriesTab';
 import PersonaCollectionsTab from '../persona-details/PersonaCollectionsTab';
 import { useNavigate } from 'react-router-dom';
-
+import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription } from '@/utils/personaDisplayUtils';
 interface V4PersonaDisplayProps {
   persona: V4Persona;
   isOwner?: boolean;
@@ -50,23 +50,25 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <div><strong>Name:</strong> {conversationSummary?.demographics?.name || persona.name}</div>
-          <div><strong>Age:</strong> {String(conversationSummary?.demographics?.age) || String(fullProfile?.identity?.age) || 'Not specified'}</div>
+          <div><strong>Age:</strong> {getPersonaAge(persona) ?? conversationSummary?.demographics?.age ?? fullProfile?.identity?.age ?? 'Not specified'}</div>
           <div><strong>Gender:</strong> {fullProfile?.identity?.gender || 'Not specified'}</div>
           <div><strong>Pronouns:</strong> {fullProfile?.identity?.pronouns || 'Not specified'}</div>
           <div><strong>Ethnicity:</strong> {fullProfile?.identity?.ethnicity || 'Not specified'}</div>
         </div>
         <div className="space-y-2">
           <div><strong>Occupation:</strong> {conversationSummary?.demographics?.occupation || fullProfile?.identity?.occupation || 'Not specified'}</div>
-          <div><strong>Location:</strong> {conversationSummary?.demographics?.location || 'Not specified'}</div>
+          <div><strong>Location:</strong> {getPersonaLocation(persona) || conversationSummary?.demographics?.location || 'Not specified'}</div>
           <div><strong>Relationship Status:</strong> {fullProfile?.identity?.relationship_status || 'Not specified'}</div>
           <div><strong>Dependents:</strong> {fullProfile?.identity?.dependents !== undefined ? fullProfile.identity.dependents : 'Not specified'}</div>
         </div>
       </div>
       
-      {conversationSummary?.demographics?.background_description && (
+      {(conversationSummary?.demographics?.background_description || getPersonaBackgroundDescription(persona)) && (
         <div className="mt-4">
           <strong>Background:</strong>
-          <p className="mt-2 text-muted-foreground">{conversationSummary.demographics.background_description}</p>
+          <p className="mt-2 text-muted-foreground">
+            {conversationSummary?.demographics?.background_description || getPersonaBackgroundDescription(persona)}
+          </p>
         </div>
       )}
       
