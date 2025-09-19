@@ -22,6 +22,12 @@ import { V4Persona } from "@/types/persona-v4";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AddToCollectionButton from "./AddToCollectionButton";
+import { 
+  getPersonaAge, 
+  getPersonaLocation, 
+  getPersonaOccupation, 
+  getPersonaBackgroundDescription 
+} from "@/utils/personaDisplayUtils";
 
 interface PersonaCardProps {
   persona: V4Persona;
@@ -79,24 +85,11 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
-  // Get description from V4 persona full_profile
-  const getDescription = () => {
-    const fullProfile = persona.full_profile as any;
-    const demographics = fullProfile?.demographics;
-    if (demographics?.background_description) {
-      return demographics.background_description;
-    }
-    return "No description available";
-  };
-
-  const description = getDescription();
-  
-  // Get V4 persona data from full_profile
-  const fullProfile = persona.full_profile as any;
-  const demographics = fullProfile?.demographics || {};
-  const age = demographics?.age || 'Not specified';
-  const location = demographics?.location || 'Not specified';
-  const occupation = demographics?.occupation || 'Not specified';
+  // Use utility functions to get V4 persona data
+  const age = getPersonaAge(persona) || 'Not specified';
+  const location = getPersonaLocation(persona) || 'Not specified';
+  const occupation = getPersonaOccupation(persona) || 'Not specified';
+  const description = getPersonaBackgroundDescription(persona) || "No description available";
 
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">

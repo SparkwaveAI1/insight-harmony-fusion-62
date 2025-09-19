@@ -55,6 +55,11 @@ export function getPersonaLocation(persona: V4Persona): string | undefined {
  * Safely extract background description from V4 persona
  */
 export function getPersonaBackgroundDescription(persona: V4Persona): string | undefined {
+  // Check for attitude_narrative first as it's more descriptive
+  if (persona.full_profile?.attitude_narrative) {
+    return persona.full_profile.attitude_narrative;
+  }
+  
   // Try to generate from available data if no explicit description
   const age = getPersonaAge(persona);
   const occupation = getPersonaOccupation(persona);
