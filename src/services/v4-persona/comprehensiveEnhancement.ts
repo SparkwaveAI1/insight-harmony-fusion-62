@@ -111,65 +111,42 @@ export function applyStatisticalEnhancement(persona: any): { persona: any; chang
   return { persona: enhanced, changes };
 }
 
-// PHASE 3: Completeness Enhancement
+// PHASE 3: Completeness Validation (No defaults - fail if incomplete)
 export function applyCompletenessEnhancement(persona: any): { persona: any; changes: string[] } {
   const changes: string[] = [];
-  const enhanced = { ...persona };
-
-  // Fill empty humor arrays
-  if (enhanced.humor_profile) {
-    if (!enhanced.humor_profile.targets || enhanced.humor_profile.targets.length === 0) {
-      enhanced.humor_profile.targets = assignHumorTargets(enhanced);
-      changes.push("Added humor targets");
-    }
-    
-    if (!enhanced.humor_profile.boundaries || enhanced.humor_profile.boundaries.length === 0) {
-      enhanced.humor_profile.boundaries = assignHumorBoundaries(enhanced);
-      changes.push("Added humor boundaries");
-    }
-    
-    if (!enhanced.humor_profile.use_cases || enhanced.humor_profile.use_cases.length === 0) {
-      enhanced.humor_profile.use_cases = assignHumorUseCases(enhanced);
-      changes.push("Added humor use cases");
-    }
-  }
-
-  // Fill empty bias mitigation arrays
-  if (enhanced.bias_profile && (!enhanced.bias_profile.mitigations || enhanced.bias_profile.mitigations.length === 0)) {
-    enhanced.bias_profile.mitigations = assignBiasMitigations(enhanced);
-    changes.push("Added bias mitigations");
-  }
-
-  // Fill empty emotional trigger arrays
-  if (enhanced.emotional_profile) {
-    if (!enhanced.emotional_profile.positive_triggers || enhanced.emotional_profile.positive_triggers.length === 0) {
-      enhanced.emotional_profile.positive_triggers = assignPositiveTriggers(enhanced);
-      changes.push("Added positive emotional triggers");
-    }
-    
-    if (!enhanced.emotional_profile.negative_triggers || enhanced.emotional_profile.negative_triggers.length === 0) {
-      enhanced.emotional_profile.negative_triggers = assignNegativeTriggers(enhanced);
-      changes.push("Added negative emotional triggers");
+  
+  // Validate that required arrays exist and are populated
+  const requiredArrays = [
+    'humor_profile.targets',
+    'humor_profile.boundaries', 
+    'humor_profile.use_cases',
+    'bias_profile.mitigations', 
+    'emotional_profile.positive_triggers',
+    'emotional_profile.negative_triggers',
+    'motivation_profile.primary_motivation_labels',
+    'motivation_profile.deal_breakers'
+  ];
+  
+  for (const arrayPath of requiredArrays) {
+    const [section, field] = arrayPath.split('.');
+    if (!persona[section]?.[field] || persona[section][field].length === 0) {
+      throw new Error(`Required field ${arrayPath} is empty - statistical generation must populate this field`);
     }
   }
-
-  // Fill motivation arrays
-  if (enhanced.motivation_profile) {
-    if (!enhanced.motivation_profile.primary_motivation_labels || enhanced.motivation_profile.primary_motivation_labels.length === 0) {
-      enhanced.motivation_profile.primary_motivation_labels = assignMotivationLabels(enhanced);
-      changes.push("Added motivation labels");
-    }
-    
-    if (!enhanced.motivation_profile.deal_breakers || enhanced.motivation_profile.deal_breakers.length === 0) {
-      enhanced.motivation_profile.deal_breakers = assignDealBreakers(enhanced);
-      changes.push("Added deal breakers");
-    }
+  
+  // Check for "unspecified" values and fail if found
+  const unspecifiedFound = findUnspecifiedValues(persona);
+  if (unspecifiedFound.length > 0) {
+    throw new Error(`Unspecified values found: ${unspecifiedFound.join(', ')} - statistical generation incomplete`);
   }
-
-  // Replace "unspecified" values throughout
-  replaceUnspecifiedValues(enhanced, changes);
-
-  return { persona: enhanced, changes };
+  
+  // Check for empty string values and fail if found
+  const emptyStringFields = findEmptyStringValues(persona);
+  if (emptyStringFields.length > 0) {
+    throw new Error(`Empty string values found: ${emptyStringFields.join(', ')} - all fields must have meaningful values`);
+  }
+  
+  return { persona, changes: ['Validation passed - no fallbacks needed'] };
 }
 
 // Income assignment based on occupation and demographics
@@ -336,68 +313,42 @@ function assignDealBreakers(persona: any): string[] {
   return dealBreakers;
 }
 
-function replaceUnspecifiedValues(persona: any, changes: string[]): void {
-  function traverse(obj: any, path: string = ''): void {
+function findUnspecifiedValues(persona: any, path: string = ''): string[] {
+  const unspecified: string[] = [];
+  
+  function processObject(obj: any, currentPath: string = '') {
     for (const [key, value] of Object.entries(obj)) {
-      const currentPath = path ? `${path}.${key}` : key;
+      const fullPath = currentPath ? `${currentPath}.${key}` : key;
       
-      if (value === "unspecified") {
-        const replacement = getDefaultValue(currentPath, persona);
-        obj[key] = replacement;
-        changes.push(`Replaced unspecified value at ${currentPath}: ${replacement}`);
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        traverse(value, currentPath);
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        processObject(value, fullPath);
+      } else if (value === 'unspecified') {
+        unspecified.push(fullPath);
       }
     }
   }
   
-  traverse(persona);
+  processObject(persona, path);
+  return unspecified;
 }
 
-function getDefaultValue(path: string, persona: any): string {
-  // Context-aware defaults based on other persona characteristics
-  const defaults: Record<string, string> = {
-    "identity.education_level": getEducationDefault(persona),
-    "identity.relationship_status": getRelationshipDefault(persona),
-    "daily_life.time_sentiment.work": "neutral",
-    "daily_life.time_sentiment.family": "positive", 
-    "daily_life.time_sentiment.personal": "neutral",
-    "health_profile.fitness_level": getFitnessDefault(persona),
-    "communication_style.voice_foundation.formality": "casual",
-    "communication_style.voice_foundation.directness": "moderate",
-    "communication_style.voice_foundation.pace_rhythm": "measured"
-  };
+function findEmptyStringValues(persona: any, path: string = ''): string[] {
+  const emptyStrings: string[] = [];
   
-  return defaults[path] || "moderate";
-}
-
-function getEducationDefault(persona: any): string {
-  const occupation = persona.identity?.occupation?.toLowerCase() || "";
+  function processObject(obj: any, currentPath: string = '') {
+    for (const [key, value] of Object.entries(obj)) {
+      const fullPath = currentPath ? `${currentPath}.${key}` : key;
+      
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        processObject(value, fullPath);
+      } else if (typeof value === 'string' && value === '') {
+        emptyStrings.push(fullPath);
+      }
+    }
+  }
   
-  if (occupation.includes("firefighter")) return "high_school";
-  if (occupation.includes("engineer") || occupation.includes("nurse")) return "college";
-  if (occupation.includes("teacher")) return "college";
-  
-  return "high_school";
-}
-
-function getRelationshipDefault(persona: any): string {
-  const age = persona.identity?.age || 35;
-  
-  if (age < 25) return "single";
-  if (age > 60) return "married";
-  
-  return Math.random() > 0.5 ? "married" : "single";
-}
-
-function getFitnessDefault(persona: any): string {
-  const occupation = persona.identity?.occupation?.toLowerCase() || "";
-  const age = persona.identity?.age || 35;
-  
-  if (occupation.includes("firefighter") && age < 60) return "high";
-  if (persona.health_profile?.chronic_conditions?.includes("arthritis")) return "low";
-  
-  return age > 65 ? "low" : "moderate";
+  processObject(persona, path);
+  return emptyStrings;
 }
 
 // Comprehensive enhancement orchestrator

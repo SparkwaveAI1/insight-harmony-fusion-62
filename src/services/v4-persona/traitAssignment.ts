@@ -40,7 +40,7 @@ function assignPhysicalHealth(persona: any, demographics: PersonaDemographics, m
   const bmiRoll = Math.random();
   const bmiDist = dist.bmi_distributions;
   let cumulativeProbability = 0;
-  let assignedBMI = 22.0; // fallback that should never be used
+  let assignedBMI: number | null = null;
   
   for (const [category, config] of Object.entries(bmiDist)) {
     cumulativeProbability += config.probability;
@@ -49,6 +49,10 @@ function assignPhysicalHealth(persona: any, demographics: PersonaDemographics, m
       assignedBMI = config.min + Math.random() * (config.max - config.min);
       break;
     }
+  }
+  
+  if (assignedBMI === null) {
+    throw new Error(`BMI assignment failed for ${demographics.age} year old: probability distribution error`);
   }
   
   persona.health_profile.bmi = Math.round(assignedBMI * 10) / 10; // Round to 1 decimal place

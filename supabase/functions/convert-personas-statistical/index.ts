@@ -199,7 +199,7 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
 
 function generateRealisticBMI(): number {
   const bmiRoll = Math.random();
-  let bmi = 22.0; // fallback that should never be used
+  let bmi: number | null = null;
   
   if (bmiRoll < 0.02) {
     bmi = 16.5 + Math.random() * (18.4 - 16.5); // underweight
@@ -213,6 +213,10 @@ function generateRealisticBMI(): number {
     bmi = 35.0 + Math.random() * (39.9 - 35.0); // obese class 2
   } else {
     bmi = 40.0 + Math.random() * (50.0 - 40.0); // obese class 3
+  }
+  
+  if (bmi === null) {
+    throw new Error('BMI generation failed: probability distribution error');
   }
   
   return Math.round(bmi * 10) / 10;
