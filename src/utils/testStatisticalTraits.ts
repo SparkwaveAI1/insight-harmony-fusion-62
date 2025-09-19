@@ -13,7 +13,7 @@ export function demonstrateStatisticalTraits() {
       occupation: "Marketing Manager"
     },
     health_profile: {
-      bmi_category: "",
+      bmi: 21.8,
       chronic_conditions: ["none"],
       mental_health_flags: ["none"],
       medications: ["none"],
@@ -76,7 +76,7 @@ export function demonstrateStatisticalTraits() {
   const enhancedPersona = assignRealisticTraits(basePersona, demographics);
   
   console.log("✨ AFTER Statistical Enhancement:");
-  console.log("BMI Category:", enhancedPersona.health_profile.bmi_category);
+  console.log("BMI:", enhancedPersona.health_profile.bmi);
   console.log("Chronic Conditions:", enhancedPersona.health_profile.chronic_conditions);
   console.log("Medications:", enhancedPersona.health_profile.medications);
   console.log("Mental Health Flags:", enhancedPersona.health_profile.mental_health_flags);

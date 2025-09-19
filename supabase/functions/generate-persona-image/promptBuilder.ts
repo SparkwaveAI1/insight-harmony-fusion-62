@@ -57,8 +57,18 @@ export function buildImagePrompt(personaData: any): string {
   }
 }
 
+function getBMIDescription(bmi: number): string {
+  if (bmi < 18.5) return 'slender build, lean frame';
+  if (bmi < 25) return 'athletic build, healthy proportions';
+  if (bmi < 30) return 'stocky build, solid frame';
+  if (bmi < 35) return 'heavier build, fuller figure';
+  if (bmi < 40) return 'larger build, robust frame';
+  return 'very heavy build, substantial frame';
+}
+
 function buildV4ImagePrompt(personaData: any): string {
   const identity = personaData.full_profile?.identity || {};
+  const healthProfile = personaData.full_profile?.health_profile || {};
   const conversationSummary = personaData.conversation_summary || {};
   const demographics = conversationSummary.demographics || {};
   
@@ -66,9 +76,20 @@ function buildV4ImagePrompt(personaData: any): string {
   const age = identity.age || demographics.age;
   const gender = identity.gender;
   const ethnicity = identity.ethnicity;
-  const physicalDescription = conversationSummary.physical_description;
+  let physicalDescription = conversationSummary.physical_description;
   
-  console.log("V4 persona details:", { age, gender, ethnicity });
+  // If BMI is available, enhance physical description
+  if (healthProfile.bmi && typeof healthProfile.bmi === 'number') {
+    const bmiDescription = getBMIDescription(healthProfile.bmi);
+    if (physicalDescription) {
+      physicalDescription = `${physicalDescription}, ${bmiDescription}`;
+    } else {
+      physicalDescription = bmiDescription;
+    }
+    console.log(`Enhanced physical description with BMI ${healthProfile.bmi}: ${physicalDescription}`);
+  }
+  
+  console.log("V4 persona details:", { age, gender, ethnicity, bmi: healthProfile.bmi });
   console.log("Physical description:", physicalDescription);
   
   // Build prompt using exact user specification

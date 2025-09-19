@@ -36,15 +36,22 @@ export function assignRealisticTraits(persona: any, demographics: PersonaDemogra
 function assignPhysicalHealth(persona: any, demographics: PersonaDemographics, modifiers: any) {
   const dist = STATISTICAL_DISTRIBUTIONS.physical_health;
   
-  // BMI assignment
+  // BMI assignment - generate actual BMI number based on population distribution
   const bmiRoll = Math.random();
-  if (bmiRoll < dist.bmi_category.normal) {
-    persona.health_profile.bmi_category = "normal";
-  } else if (bmiRoll < dist.bmi_category.normal + dist.bmi_category.overweight) {
-    persona.health_profile.bmi_category = "overweight";  
-  } else {
-    persona.health_profile.bmi_category = "obese";
+  const bmiDist = dist.bmi_distributions;
+  let cumulativeProbability = 0;
+  let assignedBMI = 22.0; // fallback that should never be used
+  
+  for (const [category, config] of Object.entries(bmiDist)) {
+    cumulativeProbability += config.probability;
+    if (bmiRoll <= cumulativeProbability) {
+      // Generate random BMI within this category's range
+      assignedBMI = config.min + Math.random() * (config.max - config.min);
+      break;
+    }
   }
+  
+  persona.health_profile.bmi = Math.round(assignedBMI * 10) / 10; // Round to 1 decimal place
   
   // Chronic conditions based on age
   const conditions = [];
@@ -257,7 +264,7 @@ export function testRealisticTraits() {
   const samplePersona = {
     identity: { name: "Test Person", age: 45 },
     health_profile: {
-      bmi_category: "",
+      bmi: 23.1,
       chronic_conditions: ["none"],
       mental_health_flags: ["none"],
       medications: ["none"],

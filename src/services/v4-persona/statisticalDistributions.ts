@@ -3,7 +3,14 @@ export const STATISTICAL_DISTRIBUTIONS = {
   
   // Physical Health (CDC/NHANES data)
   physical_health: {
-    bmi_category: { normal: 0.26, overweight: 0.30, obese: 0.44 },
+    bmi_distributions: {
+      underweight: { min: 16.5, max: 18.4, probability: 0.02 },
+      normal: { min: 18.5, max: 24.9, probability: 0.32 },
+      overweight: { min: 25.0, max: 29.9, probability: 0.36 },
+      obese_class_1: { min: 30.0, max: 34.9, probability: 0.20 },
+      obese_class_2: { min: 35.0, max: 39.9, probability: 0.07 },
+      obese_class_3: { min: 40.0, max: 50.0, probability: 0.03 }
+    },
     chronic_conditions: {
       diabetes: { overall: 0.11, age_65plus: 0.27 },
       hypertension: { overall: 0.47, age_65plus: 0.75 },

@@ -312,7 +312,7 @@ export interface V4FullProfile {
     mental_preoccupations: string[];
   };
   health_profile: {
-    bmi_category: string;
+    bmi: number;
     chronic_conditions: string[];
     mental_health_flags: string[];
     medications: string[];

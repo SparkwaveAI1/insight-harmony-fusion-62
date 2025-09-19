@@ -9,7 +9,7 @@ function applyStatisticalEnhancement(persona: any): any {
   // Initialize missing sections
   if (!enhanced.health_profile) {
     enhanced.health_profile = {
-      bmi_category: "normal",
+      bmi: 22.5,
       chronic_conditions: [],
       mental_health_flags: [],
       medications: [],
@@ -847,7 +847,7 @@ Required V4 Structure:
     "screen_time_summary": "Detailed description", "mental_preoccupations": ["preoccupation1", "preoccupation2"]
   },
   "health_profile": {
-    "bmi_category": "underweight/normal/overweight/obese", "chronic_conditions": [], "mental_health_flags": [], "medications": [],
+    "bmi": 16.5-50.0, "chronic_conditions": [], "mental_health_flags": [], "medications": [],
     "adherence_level": "excellent/good/poor/inconsistent", "sleep_hours": 5-9,
     "substance_use": { "alcohol": "none/social/regular/heavy", "cigarettes": "none/social/regular/heavy", "vaping": "none/occasional/regular", "marijuana": "none/occasional/regular" },
     "fitness_level": "sedentary/low/moderate/high/athletic", "diet_pattern": "standard/health_conscious/restricted/irregular"

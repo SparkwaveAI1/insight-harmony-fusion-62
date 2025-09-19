@@ -104,7 +104,7 @@ DAILY_LIFE SECTION (all fields required):
 HEALTH_PROFILE SECTION (all fields required):
 {
   "health_profile": {
-    "bmi_category": "[normal/overweight/obese]",
+    "bmi": [16.5-50.0],
     "chronic_conditions": ["[condition 1 if any]"],
     "mental_health_flags": ["[flag 1 if any]"],
     "medications": ["[medication 1 if any]"],
@@ -619,7 +619,7 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
 
   // Health profile minimal checks
   const hp = personaData.health_profile;
-  if (!hp || hp.substance_use === undefined || hp.bmi_category === undefined || hp.sleep_hours === undefined) {
+  if (!hp || hp.substance_use === undefined || hp.bmi === undefined || hp.sleep_hours === undefined) {
     throw new Error('Incomplete health_profile section');
   }
 

@@ -30,7 +30,7 @@ export function applyStatisticalEnhancement(persona: any): { persona: any; chang
   // Initialize missing sections
   if (!enhanced.health_profile) {
     enhanced.health_profile = {
-      bmi_category: "normal",
+      bmi: 22.3,
       chronic_conditions: [],
       mental_health_flags: [],
       medications: [],

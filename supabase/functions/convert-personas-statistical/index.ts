@@ -31,7 +31,14 @@ interface ConversionResult {
 // Statistical distributions for realistic trait assignment
 const STATISTICAL_DISTRIBUTIONS = {
   physical_health: {
-    bmi_category: { normal: 0.26, overweight: 0.30, obese: 0.44 },
+    bmi_distributions: {
+      underweight: { min: 16.5, max: 18.4, probability: 0.02 },
+      normal: { min: 18.5, max: 24.9, probability: 0.32 },
+      overweight: { min: 25.0, max: 29.9, probability: 0.36 },
+      obese_class_1: { min: 30.0, max: 34.9, probability: 0.20 },
+      obese_class_2: { min: 35.0, max: 39.9, probability: 0.07 },
+      obese_class_3: { min: 40.0, max: 50.0, probability: 0.03 }
+    },
     chronic_conditions: {
       diabetes: { overall: 0.11, age_65plus: 0.27 },
       hypertension: { overall: 0.47, age_65plus: 0.75 },
@@ -132,7 +139,7 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
   // Initialize missing sections
   if (!updatedPersona.health_profile) {
     updatedPersona.health_profile = {
-      bmi_category: "",
+      bmi: generateRealisticBMI(),
       chronic_conditions: ["none"],
       mental_health_flags: ["none"],
       medications: ["none"],
@@ -190,18 +197,32 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
   return { updatedPersona, traitsAdded };
 }
 
+function generateRealisticBMI(): number {
+  const bmiRoll = Math.random();
+  let bmi = 22.0; // fallback that should never be used
+  
+  if (bmiRoll < 0.02) {
+    bmi = 16.5 + Math.random() * (18.4 - 16.5); // underweight
+  } else if (bmiRoll < 0.34) { 
+    bmi = 18.5 + Math.random() * (24.9 - 18.5); // normal
+  } else if (bmiRoll < 0.70) {
+    bmi = 25.0 + Math.random() * (29.9 - 25.0); // overweight
+  } else if (bmiRoll < 0.90) {
+    bmi = 30.0 + Math.random() * (34.9 - 30.0); // obese class 1
+  } else if (bmiRoll < 0.97) {
+    bmi = 35.0 + Math.random() * (39.9 - 35.0); // obese class 2
+  } else {
+    bmi = 40.0 + Math.random() * (50.0 - 40.0); // obese class 3
+  }
+  
+  return Math.round(bmi * 10) / 10;
+}
+
 function assignPhysicalHealth(persona: any, age: number, modifiers: any, traitsAdded: string[]) {
   const dist = STATISTICAL_DISTRIBUTIONS.physical_health;
   
-  // BMI assignment
-  const bmiRoll = Math.random();
-  if (bmiRoll < dist.bmi_category.normal) {
-    persona.health_profile.bmi_category = "normal";
-  } else if (bmiRoll < dist.bmi_category.normal + dist.bmi_category.overweight) {
-    persona.health_profile.bmi_category = "overweight";  
-  } else {
-    persona.health_profile.bmi_category = "obese";
-  }
+  // Generate realistic BMI
+  persona.health_profile.bmi = generateRealisticBMI();
   
   // Chronic conditions based on age
   const conditions = [];

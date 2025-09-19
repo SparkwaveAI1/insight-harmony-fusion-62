@@ -73,7 +73,7 @@ function createTestPersona() {
   return {
     identity: { name: "Test Person" },
     health_profile: {
-      bmi_category: "",
+      bmi: 24.2,
       chronic_conditions: ["none"],
       mental_health_flags: ["none"],
       medications: ["none"],
