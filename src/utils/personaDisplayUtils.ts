@@ -39,6 +39,12 @@ export function getPersonaOccupation(persona: V4Persona): string | undefined {
  * Safely extract location from V4 persona
  */
 export function getPersonaLocation(persona: V4Persona): string | undefined {
+  // First check conversation_summary demographics (legacy data)
+  if (persona.conversation_summary?.demographics?.location) {
+    return persona.conversation_summary.demographics.location;
+  }
+  
+  // Then check full_profile identity (new structure)
   if (persona.full_profile?.identity?.location) {
     const loc = persona.full_profile.identity.location;
     if (typeof loc === 'string') return loc;
