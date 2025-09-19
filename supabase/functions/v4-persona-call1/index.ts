@@ -259,11 +259,11 @@ HUMOR_PROFILE SECTION (all fields required):
 TRUTH_HONESTY_PROFILE SECTION (all fields required - NUMERIC VALUES):
 {
   "truth_honesty_profile": {
-    "baseline_honesty": [0.0-1.0 NUMERIC],
+    "baseline_honesty": 0.85,
     "situational_variance": {
-      "work": [0.0-1.0 NUMERIC],
-      "home": [0.0-1.0 NUMERIC], 
-      "public": [0.0-1.0 NUMERIC]
+      "work": 0.9,
+      "home": 0.8, 
+      "public": 0.7
     },
     "typical_distortions": ["[distortion1]", "[distortion2]"],
     "red_lines": ["[redline1]", "[redline2]"],
@@ -271,23 +271,25 @@ TRUTH_HONESTY_PROFILE SECTION (all fields required - NUMERIC VALUES):
     "confession_style": "[direct/gradual/defensive]"
   }
 }
+WARNING: baseline_honesty must be a decimal number like 0.85, NOT a string like "high"
 
 BIAS_PROFILE SECTION (all fields required - NUMERIC VALUES):
 {
   "bias_profile": {
     "cognitive": {
-      "status_quo": [0.0-1.0 NUMERIC],
-      "loss_aversion": [0.0-1.0 NUMERIC],
-      "confirmation": [0.0-1.0 NUMERIC],
-      "anchoring": [0.0-1.0 NUMERIC],
-      "availability": [0.0-1.0 NUMERIC],
-      "optimism": [0.0-1.0 NUMERIC],
-      "sunk_cost": [0.0-1.0 NUMERIC],
-      "overconfidence": [0.0-1.0 NUMERIC]
+      "status_quo": 0.6,
+      "loss_aversion": 0.7,
+      "confirmation": 0.4,
+      "anchoring": 0.5,
+      "availability": 0.6,
+      "optimism": 0.8,
+      "sunk_cost": 0.3,
+      "overconfidence": 0.5
     },
     "mitigations": ["[mitigation1]", "[mitigation2]"]
   }
 }
+WARNING: Do NOT use strings like "high", "medium", "low" - use actual decimal numbers like 0.6, 0.7, etc.
 
 COGNITIVE_PROFILE SECTION (all fields required - NUMERIC VALUES):
 {
@@ -313,14 +315,15 @@ EMOTIONAL_PROFILE SECTION (all fields required):
 ADOPTION_PROFILE SECTION (all fields required - NUMERIC VALUES):
 {
   "adoption_profile": {
-    "buyer_power": [0.0-1.0 NUMERIC],
-    "adoption_influence": [0.0-1.0 NUMERIC],
-    "risk_tolerance": [0.0-1.0 NUMERIC],
-    "change_friction": [0.0-1.0 NUMERIC],
+    "buyer_power": 0.6,
+    "adoption_influence": 0.7,
+    "risk_tolerance": 0.5,
+    "change_friction": 0.3,
     "expected_objections": ["[objection1]", "[objection2]"],
     "proof_points_needed": ["[proof1]", "[proof2]"]
   }
 }
+WARNING: All four fields must be decimal numbers like 0.6, NOT strings like "moderate"
 
 SEXUALITY_PROFILE SECTION (all fields required):
 {
@@ -470,6 +473,21 @@ NARRATIVE SECTIONS:
         // Parse JSON
         try {
           personaData = JSON.parse(rawContent);
+          console.log('✅ JSON parsing successful');
+          
+          // Log critical data types in raw response
+          console.log('🔍 Raw OpenAI data types check:');
+          if (personaData.bias_profile?.cognitive) {
+            console.log('bias_profile.cognitive.confirmation type:', typeof personaData.bias_profile.cognitive.confirmation, 'value:', personaData.bias_profile.cognitive.confirmation);
+            console.log('bias_profile.cognitive.optimism type:', typeof personaData.bias_profile.cognitive.optimism, 'value:', personaData.bias_profile.cognitive.optimism);
+          }
+          if (personaData.truth_honesty_profile) {
+            console.log('truth_honesty_profile.baseline_honesty type:', typeof personaData.truth_honesty_profile.baseline_honesty, 'value:', personaData.truth_honesty_profile.baseline_honesty);
+          }
+          if (personaData.adoption_profile) {
+            console.log('adoption_profile.buyer_power type:', typeof personaData.adoption_profile.buyer_power, 'value:', personaData.adoption_profile.buyer_power);
+          }
+          
         } catch (parseError) {
           console.log('Direct parsing failed, trying extraction...');
           personaData = extractJSONFromMarkdown(rawContent);
