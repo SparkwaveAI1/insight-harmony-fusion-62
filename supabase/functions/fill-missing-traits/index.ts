@@ -137,18 +137,20 @@ function applyComprehensiveEnhancement(persona: any, includeStatistical: boolean
       allChanges.push("Applied medical statistical traits");
     }
 
-    // NEW: Income bracket assignment
+    // NEW: Income bracket assignment - must succeed or fail
     if (!enhanced.identity?.income_bracket || enhanced.identity.income_bracket === "unspecified") {
       const income = assignIncomeBracket(enhanced.identity?.occupation, enhanced.identity?.age);
+      if (!income) {
+        throw new Error(`Income bracket assignment failed for occupation: ${enhanced.identity?.occupation || 'unknown'}`);
+      }
       enhanced.identity.income_bracket = income;
       allChanges.push(`Assigned income bracket: ${income}`);
     }
   }
 
-  // Phase 2: Completeness Enhancement
+  // Phase 2: Completeness Validation (no defaults)
   if (includeCompleteness) {
-    const completenessChanges = fillEmptyArraysAndValues(enhanced);
-    allChanges.push(...completenessChanges);
+    validateCompleteness(enhanced, allChanges);
   }
 
   return {
@@ -248,56 +250,36 @@ function fillEmptyArraysAndValues(persona: any): string[] {
   return changes;
 }
 
-function replaceUnspecifiedValues(persona: any, changes: string[]): void {
-  function traverse(obj: any, path: string = ''): void {
-    for (const [key, value] of Object.entries(obj)) {
-      const currentPath = path ? `${path}.${key}` : key;
-      
-      if (value === "unspecified") {
-        const replacement = getContextualDefault(currentPath, persona);
-        obj[key] = replacement;
-        changes.push(`Replaced unspecified ${key}: ${replacement}`);
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        traverse(value, currentPath);
-      }
-    }
+function validateCompleteness(persona: any, changes: string[]): void {
+  // Check for "unspecified" values and fail if found
+  function findUnspecifiedValues(obj: any, path: string = ''): string[] {
+    const unspecified: string[] = [];
+    
+    function traverse(obj: any, currentPath: string = '') {
+      for (const [key, value] of Object.entries(obj)) {
+        const fullPath = currentPath ? `${currentPath}.${key}` : key;
+        
+  const unspecifiedFound = findUnspecifiedValues(persona);
+  if (unspecifiedFound.length > 0) {
+    throw new Error(`Unspecified values found: ${unspecifiedFound.join(', ')} - statistical generation incomplete`);
   }
   
-  traverse(persona);
-}
-
-function getContextualDefault(path: string, persona: any): string {
-  const defaults: Record<string, string> = {
-    "identity.education_level": getEducationDefault(persona),
-    "identity.relationship_status": getRelationshipDefault(persona),
-    "health_profile.fitness_level": getFitnessDefault(persona),
-    "communication_style.voice_foundation.formality": "casual",
-    "communication_style.voice_foundation.directness": "moderate"
-  };
+  changes.push('Validation passed - no unspecified values found');
+          traverse(value, fullPath);
+        }
+      }
+    }
+    
+    traverse(obj, path);
+    return unspecified;
+  }
   
-  return defaults[path] || "moderate";
-}
-
-function getEducationDefault(persona: any): string {
-  const occupation = persona.identity?.occupation?.toLowerCase() || "";
-  if (occupation.includes("firefighter")) return "high_school";
-  if (occupation.includes("engineer") || occupation.includes("nurse")) return "college";
-  return "high_school";
-}
-
-function getRelationshipDefault(persona: any): string {
-  const age = persona.identity?.age || 35;
-  if (age < 25) return "single";
-  if (age > 60) return "married"; 
-  return Math.random() > 0.5 ? "married" : "single";
-}
-
-function getFitnessDefault(persona: any): string {
-  const occupation = persona.identity?.occupation?.toLowerCase() || "";
-  if (occupation.includes("firefighter")) return "high";
-  return "moderate";
-}
-
+  const unspecifiedFound = findUnspecifiedValues(persona);
+  if (unspecifiedFound.length > 0) {
+    throw new Error(`Unspecified values found: ${unspecifiedFound.join(', ')} - statistical generation incomplete`);
+  }
+  
+  changes.push('Validation passed - no unspecified values found');
 function calculateTrueCompleteness(persona: any): number {
   let totalFields = 0;
   let completeFields = 0;
@@ -517,7 +499,7 @@ function applyManualFixes(persona: any, personaName: string): any {
   
   // Fix missing identity.location.urbanicity
   if (fixed.identity?.location && !fixed.identity.location.urbanicity) {
-    // Determine urbanicity based on city or set default
+    // Validate urbanicity assignment
     const city = fixed.identity.location.city?.toLowerCase() || '';
     if (city.includes('new york') || city.includes('chicago') || city.includes('los angeles') || 
         city.includes('boston') || city.includes('san francisco') || city.includes('seattle')) {
@@ -525,12 +507,12 @@ function applyManualFixes(persona: any, personaName: string): any {
     } else if (city.includes('suburb') || city.includes('town')) {
       fixed.identity.location.urbanicity = 'suburban';  
     } else {
-      fixed.identity.location.urbanicity = 'suburban'; // Default fallback
+      throw new Error(`Cannot determine urbanicity for city: ${city} - statistical generation must provide this`);
     }
     console.log(`✅ Fixed urbanicity: ${fixed.identity.location.urbanicity}`);
   }
   
-  // Fix missing education_level
+  // Validate education_level assignment  
   if (fixed.identity && !fixed.identity.education_level) {
     const occupation = fixed.identity.occupation?.toLowerCase() || '';
     if (occupation.includes('doctor') || occupation.includes('lawyer') || occupation.includes('professor')) {
@@ -538,12 +520,12 @@ function applyManualFixes(persona: any, personaName: string): any {
     } else if (occupation.includes('engineer') || occupation.includes('manager') || occupation.includes('analyst')) {
       fixed.identity.education_level = 'bachelors';
     } else {
-      fixed.identity.education_level = 'some_college'; // Default fallback
+      throw new Error(`Cannot determine education_level for occupation: ${occupation} - statistical generation must provide this`);
     }
     console.log(`✅ Fixed education_level: ${fixed.identity.education_level}`);
   }
   
-  // Fix missing income_bracket
+  // Validate income_bracket assignment
   if (fixed.identity && !fixed.identity.income_bracket) {
     const occupation = fixed.identity.occupation?.toLowerCase() || '';
     const age = fixed.identity.age || 30;
@@ -555,15 +537,14 @@ function applyManualFixes(persona: any, personaName: string): any {
     } else if (occupation.includes('teacher') || occupation.includes('nurse') || occupation.includes('analyst')) {
       fixed.identity.income_bracket = '$50k-75k';
     } else {
-      fixed.identity.income_bracket = '$30k-50k'; // Default fallback
+      throw new Error(`Cannot determine income_bracket for occupation: ${occupation} - statistical generation must provide this`);
     }
     console.log(`✅ Fixed income_bracket: ${fixed.identity.income_bracket}`);
   }
   
-  // Fix missing cognitive_profile.thought_coherence
+  // Validate thought_coherence assignment
   if (fixed.cognitive_profile && typeof fixed.cognitive_profile.thought_coherence !== 'number') {
-    fixed.cognitive_profile.thought_coherence = 0.7; // Default moderate coherence
-    console.log(`✅ Fixed thought_coherence: ${fixed.cognitive_profile.thought_coherence}`);
+    throw new Error('Missing thought_coherence value - statistical generation must provide this');
   }
   
   return fixed;

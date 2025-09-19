@@ -820,10 +820,24 @@ function normalizePersonaData(data: any): any {
     return Math.max(0, Math.min(1, value));
   }
 
-  // Ensure sexuality_profile exists
+  // Ensure sexuality_profile exists with proper orientation
   if (!data.sexuality_profile) {
+    // Statistical assignment for sexual orientation based on demographics
+    const orientationRoll = Math.random();
+    let orientation: string;
+    
+    if (orientationRoll < 0.92) {
+      orientation = "heterosexual";
+    } else if (orientationRoll < 0.96) {
+      orientation = "bisexual";  
+    } else if (orientationRoll < 0.98) {
+      orientation = "homosexual";
+    } else {
+      orientation = "other";
+    }
+    
     data.sexuality_profile = {
-      orientation: "unspecified",
+      orientation: orientation,
       expression_style: "private",
       relationship_norms: "monogamous",
       boundaries: {

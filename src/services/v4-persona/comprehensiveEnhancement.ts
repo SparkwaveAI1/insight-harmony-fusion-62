@@ -101,9 +101,12 @@ export function applyStatisticalEnhancement(persona: any): { persona: any; chang
     }
   }
 
-  // NEW: Apply income bracket based on occupation and age
+  // NEW: Apply income bracket based on occupation and age (must succeed or fail)
   if (!enhanced.identity?.income_bracket || enhanced.identity.income_bracket === "unspecified") {
     const income = assignIncomeBracket(enhanced.identity?.occupation, enhanced.identity?.age, enhanced.identity?.location?.region);
+    if (!income) {
+      throw new Error(`Income bracket assignment failed for occupation: ${enhanced.identity?.occupation || 'unknown'}`);
+    }
     enhanced.identity.income_bracket = income;
     changes.push(`Assigned income bracket: ${income}`);
   }
