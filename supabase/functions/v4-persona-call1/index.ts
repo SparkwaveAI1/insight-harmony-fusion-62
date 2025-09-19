@@ -790,30 +790,6 @@ function validateAndFixPersonaData(personaData: any, userInputs: any = {}): any 
   return personaData;
 }
 
-  // Fix empty arrays that should have content
-  if (personaData.health_profile?.medications?.length === 0) {
-    personaData.health_profile.medications = ["none"];
-  }
-  if (personaData.health_profile?.chronic_conditions?.length === 0) {
-    personaData.health_profile.chronic_conditions = ["none"];
-  }
-  if (personaData.health_profile?.mental_health_flags?.length === 0) {
-    personaData.health_profile.mental_health_flags = ["none"];
-  }
-  if (personaData.relationships?.caregiving_roles?.length === 0) {
-    personaData.relationships.caregiving_roles = ["none"];
-  }
-  if (personaData.money_profile?.financial_stressors?.length === 0) {
-    personaData.money_profile.financial_stressors = ["none"];
-  }
-  if (personaData.daily_life?.mental_preoccupations?.length === 0) {
-    personaData.daily_life.mental_preoccupations = ["general concerns"];
-  }
-
-  console.log('✅ Strict validation passed without mutations.');
-  return personaData;
-}
-
 function extractJSONFromMarkdown(content: string): any {
   let cleaned = content.replace(/```json\s*|\s*```/g, '');
   
