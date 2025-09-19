@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.convert-personas-statistical]
 verify_jwt = true
+
+[functions.enhance-persona-statistics]
+verify_jwt = false
