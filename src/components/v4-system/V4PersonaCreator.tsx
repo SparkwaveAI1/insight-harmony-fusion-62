@@ -123,69 +123,6 @@ export function V4PersonaCreator() {
       });
 
       // Add to selected collections if any
-      backgroundJobService.updateJob(jobId, {
-        status: 'stage2',
-        progress: 40,
-        message: 'Creating conversation summaries...',
-      });
-
-      const call2Response = await createV4PersonaCall2(call1Response.persona_id!);
-
-      if (!call2Response.success) {
-        throw new Error(call2Response.error || 'Call 2 failed');
-      }
-
-      // DIAGNOSTIC: Fetch persona from DB after Stage 2
-      const { data: fresh2, error: error2 } = await supabase
-        .from('v4_personas')
-        .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-        .eq('persona_id', call2Response.persona_id!)
-        .maybeSingle();
-
-      if (error2) throw error2;
-      
-      console.log('TRACE_M_AFTER_CALL2', {
-        job_id: jobId,
-        persona_id: call2Response.persona_id,
-        card_description: null, // V4 personas don't have separate card_description field  
-        profile_image_url: fresh2?.profile_image_url ?? null,
-        creation_stage: fresh2?.creation_stage ?? null,
-        creation_completed: fresh2?.creation_completed ?? null,
-        ts: new Date().toISOString(),
-      });
-
-      backgroundJobService.updateJobFromApiResponse(jobId, call2Response);
-
-      // Call 3: Generate profile image (optional)
-      backgroundJobService.updateJob(jobId, {
-        status: 'stage3',
-        progress: 70,
-        message: 'Generating profile image...',
-      });
-
-      const call3Response = await createV4PersonaCall3(call2Response.persona_id!, params.generateImage);
-      
-      // DIAGNOSTIC: Fetch persona from DB after Stage 3
-      const { data: fresh3, error: error3 } = await supabase
-        .from('v4_personas')
-        .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-        .eq('persona_id', call2Response.persona_id!)
-        .maybeSingle();
-
-      if (error3) throw error3;
-      
-      console.log('TRACE_M_AFTER_CALL3', {
-        job_id: jobId,
-        persona_id: call2Response.persona_id,
-        card_description: null, // V4 personas don't have separate card_description field  
-        profile_image_url: fresh3?.profile_image_url ?? null,
-        creation_stage: fresh3?.creation_stage ?? null,
-        creation_completed: fresh3?.creation_completed ?? null,
-        ts: new Date().toISOString(),
-      });
-      
-      backgroundJobService.updateJobFromApiResponse(jobId, call3Response);
-
       if (params.selectedCollectionIds.length > 0) {
         backgroundJobService.updateJob(jobId, {
           progress: 90,
@@ -204,50 +141,25 @@ export function V4PersonaCreator() {
         message: 'Persona created successfully!',
       });
 
-      onPersonaCreated?.(unifiedResponse.persona_id!);
-
-      // DIAGNOSTIC: Final trace before marking completed and navigating
-      const { data: finalFresh, error: finalError } = await supabase
-        .from('v4_personas')
-        .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-        .eq('persona_id', call2Response.persona_id!)
-        .maybeSingle();
-
-      if (finalError) throw finalError;
-      
-      console.log('TRACE_M_BEFORE_COMPLETE', {
-        job_id: jobId,
-        persona_id: call2Response.persona_id,
-        // IMPORTANT: what object are we about to render?
-        render_source: finalFresh ? 'db_fetch' : 'create_response',
-        has_full_profile: !!finalFresh?.full_profile,
-        has_identity: !!(finalFresh?.full_profile as any)?.identity,
-        has_motivation: !!(finalFresh?.full_profile as any)?.motivation_profile,
-        has_comm_style: !!(finalFresh?.full_profile as any)?.communication_style,
-        card_description: null, // V4 personas don't have separate card_description field  
-        profile_image_url: finalFresh?.profile_image_url ?? null,
-        ts: new Date().toISOString(),
-      });
-
       // Complete the job
       backgroundJobService.completeJob(jobId, {
-        personaId: call2Response.persona_id!,
-        personaName: call2Response.persona_name || 'New Persona',
-        imageUrl: call3Response.image_url,
+        personaId: unifiedResponse.persona_id!,
+        personaName: unifiedResponse.persona_name || 'New Persona',
+        imageUrl: null, // Image generation happens in the unified function
       });
 
       toast({
         title: "Persona created successfully!",
-        description: `"${call2Response.persona_name}" is ready to chat with.`,
+        description: `"${unifiedResponse.persona_name}" is ready to chat with.`,
       });
 
-    } catch (err) {
-      console.error('Error creating V4 persona:', err);
-      backgroundJobService.failJob(jobId, err instanceof Error ? err.message : 'Unknown error occurred');
+    } catch (error) {
+      console.error('Error creating V4 persona:', error);
+      backgroundJobService.failJob(jobId, error instanceof Error ? error.message : 'Unknown error occurred');
       
       toast({
         title: "Persona creation failed",
-        description: err instanceof Error ? err.message : 'Unknown error occurred',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
         variant: "destructive",
       });
     }

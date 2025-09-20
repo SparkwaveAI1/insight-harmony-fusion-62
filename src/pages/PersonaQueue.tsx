@@ -21,7 +21,7 @@ import {
   deleteQueueItem
 } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
-import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
+import { createV4PersonaUnified } from "@/services/v4-persona";
 import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
 import { addPersonaToCollection } from '@/services/collections/personaCollectionOperations';
 import { supabase } from '@/integrations/supabase/client';
@@ -349,25 +349,25 @@ const PersonaQueue = () => {
             ts: new Date().toISOString(),
           });
           
-          const call1Response = await withTimeout(createV4PersonaCall1({
-            user_prompt: item.description,
+          const unifiedResponse = await withTimeout(createV4PersonaUnified({
+            user_description: item.description,
             user_id: user.id
-          }), 120000); // 120 second timeout (increased from 90s)
+          }), 120000); // 120 second timeout
 
-          if (!call1Response.success) {
-            await fail(`V4 Call 1 failed: ${call1Response.error}`);
+          if (!unifiedResponse.success) {
+            await fail(`V4 Unified creation failed: ${unifiedResponse.error}`);
           }
 
-          // === STEP 1: Validate and persist persona_id after Stage 1 ===
-          personaId = call1Response.persona_id;
+          // === STEP 1: Validate and persist persona_id after creation ===
+          personaId = unifiedResponse.persona_id;
           
           // Guard: only accept real V4 ids; never write queue uuid by accident
           if (!personaId || !String(personaId).startsWith('v4_')) {
-            await fail(`Stage1 returned non-v4 persona_id: ${personaId}`);
+            await fail(`Unified creation returned non-v4 persona_id: ${personaId}`);
           }
 
           // Persist immediately, and advance status
-          await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
+          await updateQueueStatusSafe(item.id, 'completed', personaId);
           currentStatus = 'processing_stage1'; // Update local status
           
           // 🔒 Fetch the created persona from DB and enforce V4 schema
@@ -383,7 +383,7 @@ const PersonaQueue = () => {
           // DIAGNOSTIC: Log trace after queue creation call
           console.log('TRACE_Q_AFTER_CALL1', {
             queue_item_id: item.id,
-            persona_id: call1Response?.persona_id,
+            persona_id: unifiedResponse?.persona_id,
             db: {
               schema: fresh?.schema_version,
               has_identity: !!(fresh?.full_profile as any)?.identity,
@@ -397,25 +397,35 @@ const PersonaQueue = () => {
             ts: new Date().toISOString(),
           });
           
-          console.log('✅ V4 persona creation step 1 completed:', personaId);
+          console.log('✅ V4 unified persona creation completed:', personaId);
+          
+          // Add to collections if specified
+          if (item.collections && item.collections.length > 0) {
+            console.log('📁 Adding persona to collections:', item.collections);
+            for (const collectionId of item.collections) {
+              try {
+                await addPersonaToCollection(collectionId, personaId);
+                console.log(`✅ Added persona to collection ${collectionId}`);
+              } catch (collectionError) {
+                console.warn(`⚠️ Failed to add persona to collection ${collectionId}:`, collectionError);
+              }
+            }
+          }
+          
+          // Mark as completed
+          await updateQueueStatusSafe(item.id, 'completed', personaId);
+          console.log('🎉 Queue item marked as completed');
+          
+          return; // Skip the old multi-step logic below
         } else {
-          console.log('📋 Persona already exists, skipping stage 1:', personaId);
-          await updateQueueStatusSafe(item.id, 'processing_stage1', personaId);
-          currentStatus = 'processing_stage1'; // Update local status
+          console.log('📋 Persona already exists, marking as completed:', personaId);
+          await updateQueueStatusSafe(item.id, 'completed', personaId);
+          return;
         }
       }
 
-      // === Stage 2: Enrich / finalize metadata ===
-      // Run Stage 2 if we have persona_id and need to complete Stage 2
-      if (personaId && (currentStatus === 'processing_stage1' || currentStatus === 'processing_stage2')) {
-        // Guard: must have personaId by now
-        if (!personaId) {
-          await fail('Missing persona_id before stage 2');
-        }
-        
-        console.log('🎯 Starting V4 persona creation step 2...');
-        
-        const call2Response = await createV4PersonaCall2(personaId); // No timeout - background processing
+      // === OLD MULTI-STEP LOGIC (LEGACY - REMOVED) ===
+      // This section has been removed as we now use the unified persona creation system
         
         if (!call2Response.success) {
           await fail(`Stage2 failed: ${call2Response.error || 'unknown'}`);
@@ -453,7 +463,9 @@ const PersonaQueue = () => {
 
       // === Stage 3: Image / attachments ===
       // Run Stage 3 if we have persona_id and need to complete Stage 3
-      if (personaId && (currentStatus === 'processing_stage2' || currentStatus === 'processing_stage3')) {
+      console.log('🎉 Unified persona creation and collection assignment completed');
+      
+    } catch (error: any) {
         if (!personaId) {
           await fail('Missing persona_id before stage 3');
         }
