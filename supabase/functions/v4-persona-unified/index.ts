@@ -200,16 +200,25 @@ Original description: ${user_description}`
     let profileImageUrl = null
     
     try {
-      // Use existing generate-persona-image function with Nano Banana, passing the physical description
+      // Use existing generate-persona-image function with Nano Banana, structuring data for V4 prompt builder
       const personaData = {
         persona_id: persona_id,
-        physical_description: physicalDescription,
-        name: user_description.split(' ')[0] || 'Persona',
-        demographics: { age: healthData.age }, 
-        personality: characterDescription,
-        health_profile: {
-          bmi: healthData.bmi,
-          fitness_level: healthData.fitness_level
+        full_profile: {
+          identity: {
+            age: healthData.age,
+            gender: 'unknown', // Will be extracted from description by prompt builder
+            ethnicity: 'unknown' // Will be extracted from description by prompt builder
+          },
+          health_profile: {
+            bmi: healthData.bmi,
+            fitness_level: healthData.fitness_level
+          }
+        },
+        conversation_summary: {
+          physical_description: physicalDescription,
+          demographics: {
+            age: healthData.age
+          }
         }
       }
       
