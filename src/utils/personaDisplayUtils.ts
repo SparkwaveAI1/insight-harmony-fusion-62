@@ -69,17 +69,17 @@ export function getPersonaLocation(persona: V4Persona): string | undefined {
  * Safely extract background description from V4 persona
  */
 export function getPersonaBackgroundDescription(persona: V4Persona): string | undefined {
-  // Prefer the actual background story from conversation_summary
+  // First check conversation_summary for background_description
+  if (persona.conversation_summary?.background_description) {
+    return persona.conversation_summary.background_description;
+  }
+  
+  // Check legacy demographics path  
   if (persona.conversation_summary?.demographics?.background_description) {
     return persona.conversation_summary.demographics.background_description;
   }
   
-  // Only use attitude_narrative fallback for legacy personas (not V4)
-  if (persona.schema_version !== 'v4.0' && persona.full_profile?.attitude_narrative) {
-    return persona.full_profile.attitude_narrative;
-  }
-  
-  // Last resort: generate from available data (legacy personas only)
+  // For legacy personas only, construct from available data
   if (persona.schema_version !== 'v4.0') {
     const age = getPersonaAge(persona);
     const occupation = getPersonaOccupation(persona);
