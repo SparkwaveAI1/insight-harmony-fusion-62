@@ -102,22 +102,25 @@ GOOD: "32-year-old Chicago professional who researches purchases carefully, seek
     const characterDescription = descriptionResponse.choices[0]?.message?.content?.trim()
     console.log('✅ Character description generated:', characterDescription?.slice(0, 100) + '...')
 
-    // PHASE 3: Physical Appearance (detailed paragraph)
-    console.log('👤 Phase 3: Generating physical appearance...')
-    const appearanceMessages = [
+    // PHASE 3A: Generate BMI and Health Characteristics first
+    console.log('🏃 Phase 3A: Generating BMI and health characteristics...')
+    const healthMessages = [
       {
         role: 'system',
-        content: `Generate a detailed physical appearance description for image generation. Include:
-- Age-appropriate features and build
-- Hair color, style, and condition
-- Eye color and facial features
-- Clothing style that fits their background
-- Overall grooming and presentation
-- Any distinguishing characteristics
+        content: `Generate realistic BMI and basic health characteristics for a persona. Return ONLY a JSON object with:
+{
+  "bmi": [realistic number like 19.8, 24.3, 28.7],
+  "fitness_level": "sedentary/light/moderate/active/very_active",
+  "age": [number like 28, 45, 62]
+}
 
-Write as a detailed paragraph suitable for AI image generation. Be specific and realistic.
+BMI Guidelines:
+- Underweight: 16-18.4
+- Normal: 18.5-24.9  
+- Overweight: 25-29.9
+- Obese: 30+
 
-CRITICAL: Ensure gender consistency with previous content. Match the gender identity established in the background and character description.`
+Most people fall in normal/overweight range. Generate realistic variation based on lifestyle, occupation, and background.`
       },
       {
         role: 'user',
@@ -128,62 +131,96 @@ Original description: ${user_description}`
       }
     ]
     
-    const appearanceResponse = await generateChatResponse(appearanceMessages, openaiApiKey, {
+    const healthResponse = await generateChatResponse(healthMessages, openaiApiKey, {
       model: 'gpt-4.1-2025-04-14',
       temperature: 0.7,
+      max_tokens: 100
+    })
+    
+    let healthData = { bmi: 24.0, fitness_level: "moderate", age: 35 }
+    try {
+      healthData = JSON.parse(healthResponse.choices[0]?.message?.content?.trim())
+    } catch (e) {
+      console.warn('Failed to parse health data, using defaults')
+    }
+    console.log('✅ Health characteristics generated:', healthData)
+
+    // PHASE 3B: Physical Appearance with BMI and attractiveness variance
+    console.log('👤 Phase 3B: Generating physical appearance...')
+    const appearanceMessages = [
+      {
+        role: 'system',
+        content: `Generate a detailed physical appearance description for image generation. Include:
+
+BODY TYPE: Based on BMI ${healthData.bmi}, fitness level ${healthData.fitness_level}, and age ${healthData.age}:
+- Build appropriate body type and physique
+- Age-appropriate skin, posture, and overall condition
+- Realistic proportions and muscle tone
+
+ATTRACTIVENESS VARIANCE: People vary naturally in conventional attractiveness:
+- 20% are quite attractive/striking
+- 60% are average/pleasant-looking  
+- 20% are less conventionally attractive
+Generate realistic, authentic appearance without bias toward conventional beauty standards.
+
+DETAILS TO INCLUDE:
+- Hair color, style, texture, and condition
+- Eye color, shape, and expression
+- Facial features (nose, jawline, cheekbones, etc.)
+- Skin tone, texture, and any distinctive marks
+- Clothing style that fits their background and body type
+- Overall grooming and presentation style
+- Posture and how they carry themselves
+
+Write as a detailed paragraph suitable for AI image generation. Be specific, realistic, and authentic.
+
+CRITICAL: Ensure gender consistency with previous content. Match the gender identity established in the background and character description.`
+      },
+      {
+        role: 'user',
+        content: `Based on this persona:
+Background: ${background}
+Character: ${characterDescription}
+Health: BMI ${healthData.bmi}, ${healthData.fitness_level} fitness, age ${healthData.age}
+Original description: ${user_description}`
+      }
+    ]
+    
+    const appearanceResponse = await generateChatResponse(appearanceMessages, openaiApiKey, {
+      model: 'gpt-4.1-2025-04-14',
+      temperature: 0.8,
       max_tokens: 500
     })
     
     const physicalDescription = appearanceResponse.choices[0]?.message?.content?.trim()
     console.log('✅ Physical appearance generated:', physicalDescription?.slice(0, 100) + '...')
 
-    // PHASE 4: Image Generation using existing Nano Banana functionality
+    // PHASE 4: Image Generation using appearance description
     console.log('🎨 Phase 4: Generating persona image...')
     let profileImageUrl = null
     
     try {
-      // Use existing generate-persona-image function with Nano Banana/Gemini
-      const personaData = {
-        persona_id: persona_id,
-        physical_description: physicalDescription,
-        name: user_description.split(' ')[0] || 'Persona', // Extract likely name from description
-        demographics: { age: 30 }, // Placeholder - will be generated in Phase 5
-        personality: characterDescription
-      }
-      
-      const { data: imageData, error: imageError } = await supabase.functions.invoke('generate-persona-image', {
-        body: { personaData }
+      // Use OpenAI DALL-E 3 with the detailed physical description
+      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: `Professional headshot portrait photograph: ${physicalDescription}. High quality photography, realistic lighting, neutral background, professional composition.`,
+          size: '1024x1024',
+          quality: 'hd'
+        })
       })
 
-      if (imageError) {
-        console.error('❌ Image generation failed:', imageError)
-        // Try OpenAI fallback with dall-e-3 if Nano Banana fails
-        try {
-          const fallbackResponse = await fetch('https://api.openai.com/v1/images/generations', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openaiApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'dall-e-3',
-              prompt: `Professional headshot portrait: ${physicalDescription}. High quality, realistic, well-lit, neutral background.`,
-              size: '1024x1024',
-              quality: 'hd'
-            })
-          })
-
-          if (fallbackResponse.ok) {
-            const fallbackData = await fallbackResponse.json()
-            profileImageUrl = fallbackData.data[0].url
-            console.log('✅ Fallback image generated:', profileImageUrl)
-          }
-        } catch (fallbackError) {
-          console.error('❌ Fallback image generation also failed:', fallbackError)
-        }
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        profileImageUrl = imageData.data[0].url
+        console.log('✅ Image generated:', profileImageUrl)
       } else {
-        profileImageUrl = imageData.image_url
-        console.log('✅ Image generated with Nano Banana:', profileImageUrl)
+        console.error('❌ Image generation failed:', await imageResponse.text())
       }
     } catch (imageError) {
       console.error('❌ Image generation error:', imageError)
@@ -493,7 +530,11 @@ CHARACTER ESSENCE: ${characterDescription}
 
 PHYSICAL APPEARANCE: ${physicalDescription}
 
+HEALTH CHARACTERISTICS: Use BMI ${healthData.bmi}, fitness level "${healthData.fitness_level}", and age ${healthData.age}
+
 ORIGINAL USER DESCRIPTION: ${user_description}
+
+CRITICAL: Use the provided BMI (${healthData.bmi}), age (${healthData.age}), and fitness level (${healthData.fitness_level}) exactly as given. Do not generate new values for these fields.
 
 Ensure all traits are coherent with the background story and character essence. Use natural trait variation throughout.`
       }
