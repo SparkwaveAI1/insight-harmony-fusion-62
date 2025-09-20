@@ -238,20 +238,6 @@ function PersonaProfile() {
     );
   }
 
-  // Check if this is a V4 persona and route to V4PersonaDisplay
-  if (persona.schema_version === 'v4.0') {
-    return (
-      <V4PersonaDisplay
-        persona={persona}
-        isOwner={user?.id === persona?.user_id}
-        onVisibilityChange={handleVisibilityChange}
-        onPersonaUpdated={async () => await loadPersona(personaId!)}
-        onDelete={handlePersonaDeleted}
-        onImageGenerated={async () => await loadPersona(personaId!)}
-      />
-    );
-  }
-
   const displayName = getPersonaDisplayName(persona);
   const age = getPersonaAge(persona);
   const location = getPersonaLocation(persona);
