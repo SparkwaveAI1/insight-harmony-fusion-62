@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaUnified } from "@/services/v4-persona";
 import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
 import { addPersonaToCollection } from '@/services/collections/personaCollectionOperations';
+import { getUserCollections } from '@/services/collections/collectionOperations';
 import { supabase } from '@/integrations/supabase/client';
 import { QueueHealthMonitor } from '@/components/persona-queue/QueueHealthMonitor';
 import { getProcessingTimeText, getStatusColor, getStatusDisplay } from '@/services/queueHealthService';
@@ -396,12 +397,29 @@ const PersonaQueue = () => {
         // Add to collections if specified
         if (item.collections && item.collections.length > 0) {
           console.log('📁 Adding persona to collections:', item.collections);
-          for (const collectionId of item.collections) {
+          
+          // Fetch user collections and create name-to-ID map
+          const userCollections = await getUserCollections();
+          const collectionMap = new Map();
+          userCollections.forEach(collection => {
+            // Normalize collection name for matching
+            const normalizedName = collection.name.toLowerCase().trim();
+            collectionMap.set(normalizedName, collection.id);
+          });
+          
+          for (const collectionName of item.collections) {
             try {
-              await addPersonaToCollection(collectionId, personaId);
-              console.log(`✅ Added persona to collection ${collectionId}`);
+              const normalizedSearchName = collectionName.toLowerCase().trim();
+              const collectionId = collectionMap.get(normalizedSearchName);
+              
+              if (collectionId) {
+                await addPersonaToCollection(collectionId, personaId);
+                console.log(`✅ Added persona to collection "${collectionName}" (${collectionId})`);
+              } else {
+                console.warn(`⚠️ Collection "${collectionName}" not found for user. Available collections:`, Array.from(collectionMap.keys()));
+              }
             } catch (collectionError) {
-              console.warn(`⚠️ Failed to add persona to collection ${collectionId}:`, collectionError);
+              console.warn(`⚠️ Failed to add persona to collection "${collectionName}":`, collectionError);
             }
           }
         }
