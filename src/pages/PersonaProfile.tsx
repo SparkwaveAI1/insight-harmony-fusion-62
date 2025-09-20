@@ -280,8 +280,20 @@ function PersonaProfile() {
         </div>
 
         {/* Identity Header - Always Visible */}
-        <Card className="p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-6">
+        <Card className="p-6 mb-6 relative">
+          {/* Chat Button - Upper Right */}
+          <div className="absolute top-4 right-4">
+            <Button 
+              onClick={() => navigate(`/persona/${personaId}/chat`)}
+              size="lg"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
+            >
+              <MessageCircle className="mr-2 h-5 w-5" />
+              Chat with {displayName.split(' ')[0] || 'Persona'}
+            </Button>
+          </div>
+          
+          <div className="flex flex-col lg:flex-row gap-6 pr-0 lg:pr-60">
             {/* Avatar/Photo */}
             <div className="flex-shrink-0">
               {persona.profile_image_url ? (
@@ -342,15 +354,6 @@ function PersonaProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
-              {/* Chat Button - Most Prominent */}
-              <Button 
-                onClick={() => navigate(`/persona/${personaId}/chat`)}
-                size="lg"
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
-              >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Chat with {displayName.split(' ')[0] || 'Persona'}
-              </Button>
 
               <Dialog>
                 <DialogTrigger asChild>

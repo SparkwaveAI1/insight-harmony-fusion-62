@@ -137,14 +137,28 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           </div>
         </div>
         
-        {/* Actions dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
+        {/* Upper right actions */}
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/persona/${persona.persona_id}/chat`);
+            }}
+            size="sm"
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <MessageCircle className="mr-1 h-4 w-4" />
+            Chat
+          </Button>
+          
+          {/* Actions dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleViewDetails}>
               View Details
@@ -173,6 +187,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </CardHeader>
       
       <CardContent onClick={handleViewDetails} className="cursor-pointer pt-0 pb-4">
@@ -211,17 +226,6 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           </Badge>
         </div>
         <div className="flex gap-2">
-          <Button 
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/persona/${persona.persona_id}/chat`);
-            }}
-            size="sm"
-            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <MessageCircle className="mr-1 h-4 w-4" />
-            Chat
-          </Button>
           <AddToCollectionButton personaId={persona.persona_id} />
         </div>
       </CardFooter>
