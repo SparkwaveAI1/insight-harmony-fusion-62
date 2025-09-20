@@ -190,6 +190,7 @@ const CollectionDetail = () => {
                       <PersonaCard 
                         key={persona.persona_id}
                         persona={persona}
+                        hideChat={true}
                       />
                     ))}
                   </div>

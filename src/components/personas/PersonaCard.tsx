@@ -34,13 +34,15 @@ interface PersonaCardProps {
   onVisibilityChange?: (personaId: string, isPublic: boolean) => void;
   onDelete?: (personaId: string) => void;
   showDeleteButton?: boolean;
+  hideChat?: boolean;
 }
 
 const PersonaCard: React.FC<PersonaCardProps> = ({ 
   persona, 
   onVisibilityChange, 
   onDelete,
-  showDeleteButton = false
+  showDeleteButton = false,
+  hideChat = false
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -139,17 +141,19 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
         
         {/* Upper right actions */}
         <div className="flex items-center gap-2">
-          <Button 
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/persona-detail/${persona.persona_id}/chat`);
-            }}
-            size="sm"
-            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <MessageCircle className="mr-1 h-4 w-4" />
-            Chat
-          </Button>
+          {!hideChat && (
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/persona-detail/${persona.persona_id}/chat`);
+              }}
+              size="sm"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <MessageCircle className="mr-1 h-4 w-4" />
+              Chat
+            </Button>
+          )}
           
           {/* Actions dropdown */}
           <DropdownMenu>
@@ -178,11 +182,13 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                     </>
                   )}
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to={`/persona-detail/${persona.persona_id}/chat`}>
-                    Chat with Persona
-                  </Link>
-                </DropdownMenuItem>
+                {!hideChat && (
+                  <DropdownMenuItem asChild>
+                    <Link to={`/persona-detail/${persona.persona_id}/chat`}>
+                      Chat with Persona
+                    </Link>
+                  </DropdownMenuItem>
+                )}
               </>
             )}
           </DropdownMenuContent>
