@@ -44,7 +44,9 @@ serve(async (req) => {
 - Major life challenges or formative experiences
 - Current living situation and circumstances
 
-Write in third person, past tense. Make it authentic and grounded in real-world experiences. Avoid formulaic phrases like "approaches life with" or "believes in". Use diverse, natural language with varied sentence patterns.
+Write in third person, past tense. Make it authentic and grounded in real-world experiences. 
+
+ABSOLUTELY FORBIDDEN PHRASES: "approaches life with", "believes in", "moves through the world", "navigates life", "carries herself/himself", "draws strength from", "finds solace in", "embraces challenges", "values authenticity", "seeks balance", "strives for", "passionate about", "driven by a desire". Use completely different, natural language patterns.
 
 CRITICAL: Pay attention to gender consistency. If the persona is female, use "she/her" pronouns throughout. If male, use "he/him" pronouns. If non-binary, use "they/them" pronouns. NO mixed pronouns (e.g., don't use "His career" for a female persona).`
       },
@@ -73,7 +75,9 @@ CRITICAL: Pay attention to gender consistency. If the persona is female, use "sh
 - How they handle challenges and relationships
 - Their general demeanor and outlook
 
-Write in third person, present tense. Make it insightful and authentic. Avoid formulaic phrases like "approaches life with" or "believes in". Use diverse, natural language with varied sentence patterns.
+Write in third person, present tense. Make it insightful and authentic. 
+
+ABSOLUTELY FORBIDDEN PHRASES: "approaches life with", "believes in", "moves through the world", "navigates life", "carries herself/himself", "draws strength from", "finds solace in", "embraces challenges", "values authenticity", "seeks balance", "strives for", "passionate about", "driven by a desire", "quiet intensity", "fierce ambition", "persistent undercurrent". Use completely original, natural descriptions.
 
 CRITICAL: Maintain gender consistency with the background story. Use correct pronouns throughout (she/her for female, he/him for male, they/them for non-binary).`
       },
@@ -212,6 +216,10 @@ DATA TYPE REQUIREMENTS:
 - time_sentiment: Use simple states only ("satisfied", "stressful", "content", "rushed", "peaceful", "energizing")
 - humor_style: Generate diverse styles including "witty", "physical", "wordplay", "dark", "none", "sarcastic", "observational", "self-deprecating" (avoid overusing "wry" and "dry")
 - All trait values in primary_drivers, cognitive, etc.: Use decimals 0.1-0.9
+
+CONTENT REQUIREMENTS:
+- sexuality_profile: Generate realistic orientation (heterosexual/homosexual/bisexual/pansexual/asexual/etc.), relationship_approach (monogamous/polyamorous/casual/etc.), intimacy_style (physical/emotional/intellectual/etc.), and relevant boundaries
+- attitude_narrative: Write 2-3 sentences describing the person's general outlook on life, worldview, and core values WITHOUT using formulaic phrases
 
 Use this EXACT JSON structure:
 
@@ -424,6 +432,13 @@ Use this EXACT JSON structure:
     "expected_objections": [],
     "proof_points_needed": []
   },
+  "sexuality_profile": {
+    "orientation": "",
+    "relationship_approach": "",
+    "intimacy_style": "",
+    "boundaries": []
+  },
+  "attitude_narrative": "",
   "prompt_shaping": {
     "voice_foundation": {
       "formality": "",

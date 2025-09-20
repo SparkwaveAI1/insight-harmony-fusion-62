@@ -168,6 +168,33 @@ function validatePersona(persona: any): ValidationResult {
     }
   });
 
+  // Check for formulaic content patterns
+  function checkForFormulaic(obj: any, path = ''): void {
+    const forbiddenPhrases = [
+      'moves through the world', 'approaches life with', 'believes in',
+      'navigates life', 'carries herself', 'carries himself', 'draws strength from',
+      'finds solace in', 'embraces challenges', 'values authenticity',
+      'seeks balance', 'strives for', 'passionate about', 'driven by a desire',
+      'quiet intensity', 'fierce ambition', 'persistent undercurrent'
+    ];
+
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      
+      if (typeof value === 'string') {
+        forbiddenPhrases.forEach(phrase => {
+          if (value.toLowerCase().includes(phrase.toLowerCase())) {
+            warnings.push(`Formulaic language detected at ${currentPath}: "${phrase}" - use more natural language`);
+          }
+        });
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        checkForFormulaic(value, currentPath);
+      }
+    }
+  }
+
+  checkForFormulaic(persona);
+
   // Check for empty values that should be filled
   function checkForEmptyValues(obj: any, path = ''): void {
     // Helper function to check if a value represents "no applicable content"
