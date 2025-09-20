@@ -68,19 +68,25 @@ CRITICAL: Pay attention to gender consistency. If the persona is female, use "sh
     // PHASE 2: Character Description (2-3 sentences)
     console.log('🎭 Phase 2: Generating character essence...')
     const descriptionMessages = [
-      {
-        role: 'system',
-        content: `Generate a 2-3 sentence character essence description that captures this person's core personality. Focus on:
-- Core personality traits and worldview
-- How they handle challenges and relationships
-- Their general demeanor and outlook
+        {
+          role: 'system',
+          content: `Generate a 3-4 sentence summary for market researchers planning studies. Focus on actionable behavioral insights:
+- Key demographics and life circumstances that drive decisions
+- Observable behaviors, communication patterns, and decision-making factors
+- Practical constraints, motivations, and influences in their daily life
+- What matters to them when making choices (time, money, social factors, etc.)
 
-Write in third person, present tense. Make it insightful and authentic. 
+Write factually about WHO they are, HOW they behave, and WHAT influences them. Use language a market researcher would find useful for study design and participant targeting.
 
-ABSOLUTELY FORBIDDEN PHRASES: "approaches life with", "believes in", "moves through the world", "navigates life", "carries herself/himself", "draws strength from", "finds solace in", "embraces challenges", "values authenticity", "seeks balance", "strives for", "passionate about", "driven by a desire", "quiet intensity", "fierce ambition", "persistent undercurrent". Use completely original, natural descriptions.
+AVOID: Abstract personality traits, philosophical descriptions, emotional metaphors
+USE: Demographics, behaviors, motivations, constraints, decision factors, lifestyle patterns, communication preferences
 
-CRITICAL: Maintain gender consistency with the background story. Use correct pronouns throughout (she/her for female, he/him for male, they/them for non-binary).`
-      },
+CRITICAL: Maintain gender consistency. Use correct pronouns throughout.
+
+Example of research-useful vs abstract:
+BAD: "She embraces challenges with quiet determination"
+GOOD: "32-year-old Chicago professional who researches purchases carefully, seeks peer recommendations, and prefers text/email communication over phone calls"`
+        },
       {
         role: 'user',
         content: `Based on this background: ${background}\n\nOriginal description: ${user_description}`
