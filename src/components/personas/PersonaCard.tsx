@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, MapPin, Briefcase, User } from "lucide-react";
+import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, MapPin, Briefcase, User, MessageCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -211,6 +211,17 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           </Badge>
         </div>
         <div className="flex gap-2">
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/persona/${persona.persona_id}/chat`);
+            }}
+            size="sm"
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <MessageCircle className="mr-1 h-4 w-4" />
+            Chat
+          </Button>
           <AddToCollectionButton personaId={persona.persona_id} />
         </div>
       </CardFooter>

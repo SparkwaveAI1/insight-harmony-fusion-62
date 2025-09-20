@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Plus, FileText, BarChart3, Edit, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint, Target, Download, ChevronDown, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, Plus, FileText, BarChart3, Edit, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint, Target, Download, ChevronDown, ExternalLink, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -342,6 +342,16 @@ function PersonaProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
+              {/* Chat Button - Most Prominent */}
+              <Button 
+                onClick={() => navigate(`/persona/${personaId}/chat`)}
+                size="lg"
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Chat with {displayName.split(' ')[0] || 'Persona'}
+              </Button>
+
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
