@@ -409,7 +409,8 @@ export default function PersonaProfile() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
-          <CollapsibleSection title="Background & Demographics" defaultOpen>
+            <div className="space-y-4">
+              <CollapsibleSection title="Background & Demographics" defaultOpen>
             <div className="space-y-6">
               {/* Background Section */}
               <div className="space-y-2">
@@ -1214,7 +1215,7 @@ export default function PersonaProfile() {
               )}
             </div>
           </CollapsibleSection>
-
+            </div>
           </TabsContent>
 
           <TabsContent value="knowledge" className="space-y-4">
