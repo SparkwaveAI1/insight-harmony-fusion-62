@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { MessageCircle, Menu, LayoutDashboard } from 'lucide-react';
+import { MessageCircle, Menu, LayoutDashboard, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/ui-custom/Card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -204,20 +204,27 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       </div>
       
       {/* Persona badge */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-muted">
-        <Avatar className="w-12 h-12 rounded-full border-2 border-primary/20">
-          {activePersona.profile_image_url ? (
-            <AvatarImage src={activePersona.profile_image_url} alt={activePersona.name} />
-          ) : (
-            <AvatarFallback className="bg-primary/20 text-primary font-bold text-lg">
-              {activePersona.name.charAt(0)}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div>
-          <p className="font-medium">{activePersona.name}</p>
-          
+      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-muted">
+        <div className="flex items-center gap-3">
+          <Avatar className="w-12 h-12 rounded-full border-2 border-primary/20">
+            {activePersona.profile_image_url ? (
+              <AvatarImage src={activePersona.profile_image_url} alt={activePersona.name} />
+            ) : (
+              <AvatarFallback className="bg-primary/20 text-primary font-bold text-lg">
+                {activePersona.name.charAt(0)}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div>
+            <p className="font-medium">{activePersona.name}</p>
+          </div>
         </div>
+        <Link to={`/persona/${personaId}`}>
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Profile
+          </Button>
+        </Link>
       </div>
 
       
