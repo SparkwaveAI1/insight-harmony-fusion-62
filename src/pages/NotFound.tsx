@@ -24,7 +24,7 @@ const NotFound = () => {
     
     // Check if the user was trying to access a persona chat page
     if (location.pathname.includes('/persona-chat/') || 
-        location.pathname.includes('/persona/') && location.pathname.includes('/chat')) {
+        location.pathname.includes('/persona-detail/') && location.pathname.includes('/chat')) {
       toast.error("This persona chat could not be found. Redirecting to persona library.");
       setTimeout(() => navigate("/persona-viewer"), 2000);
       return;

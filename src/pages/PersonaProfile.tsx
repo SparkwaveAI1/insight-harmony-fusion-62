@@ -284,7 +284,7 @@ function PersonaProfile() {
           {/* Chat Button - Upper Right */}
           <div className="absolute top-4 right-4">
             <Button 
-              onClick={() => navigate(`/persona/${personaId}/chat`)}
+              onClick={() => navigate(`/persona-detail/${personaId}/chat`)}
               size="lg"
               className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
             >

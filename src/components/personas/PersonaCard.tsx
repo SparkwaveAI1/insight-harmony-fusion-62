@@ -142,7 +142,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           <Button 
             onClick={(e) => {
               e.stopPropagation();
-              navigate(`/persona/${persona.persona_id}/chat`);
+              navigate(`/persona-detail/${persona.persona_id}/chat`);
             }}
             size="sm"
             className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
@@ -179,7 +179,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to={`/persona/${persona.persona_id}/chat`}>
+                  <Link to={`/persona-detail/${persona.persona_id}/chat`}>
                     Chat with Persona
                   </Link>
                 </DropdownMenuItem>

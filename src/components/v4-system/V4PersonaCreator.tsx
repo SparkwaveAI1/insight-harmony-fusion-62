@@ -240,7 +240,7 @@ export function V4PersonaCreator() {
 
   const handleViewPersona = () => {
     if (currentJob?.personaId) {
-      navigate(`/persona/${currentJob.personaId}`);
+      navigate(`/persona-detail/${currentJob.personaId}`);
       setCurrentJobId(null);
     }
   };

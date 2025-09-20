@@ -70,7 +70,7 @@ Please create a persona with the above customizations applied. The customization
         toast.success("Customized persona created successfully!");
         
         // Navigate to the new persona detail page with the correct path
-        navigate(`/persona/${generatedPersona.persona_id}`);
+        navigate(`/persona-detail/${generatedPersona.persona_id}`);
         return true;
       } else {
         console.error("Failed to generate persona - no result returned");
