@@ -17,7 +17,8 @@ import {
   updateQueueStatusSafe, 
   parsePersonaDescription, 
   popNextQueueItem,
-  forceFailQueueItem
+  forceFailQueueItem,
+  deleteQueueItem
 } from "@/services/personaQueueService";
 import { useToast } from "@/hooks/use-toast";
 import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from "@/services/v4-persona";
@@ -188,6 +189,31 @@ const PersonaQueue = () => {
         description: `Failed to clear ${name}`,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteItem = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"? This will permanently remove it from the queue.`)) {
+      return;
+    }
+    
+    try {
+      setBusy(true);
+      await deleteQueueItem(id);
+      toast({
+        title: "Success",
+        description: `Deleted "${name}" from queue`,
+      });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('Error deleting queue item:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete ${name}`,
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -733,11 +759,22 @@ const PersonaQueue = () => {
                                       <ExternalLink className="h-3 w-3" />
                                     </Button>
                                   )}
+                                  {item.status === 'pending' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteItem(item.id, item.name)}
+                                      title="Delete from queue"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                   {(item.status === 'failed' || item.status.startsWith('processing')) && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleManualClear(item.id, item.name)}
+                                      title="Mark as failed"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>

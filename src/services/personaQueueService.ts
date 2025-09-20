@@ -121,6 +121,25 @@ export const forceFailQueueItem = async (id: string, reason: string = 'Manually 
   }
 };
 
+// Delete a queue item completely from the database
+export const deleteQueueItem = async (id: string) => {
+  try {
+    const { error } = await supabase
+      .from('persona_creation_queue')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete queue item', { id, error });
+    throw error;
+  }
+};
+
 export const parsePersonaDescription = (text: string) => {
   const trimmedText = text.trim();
   
