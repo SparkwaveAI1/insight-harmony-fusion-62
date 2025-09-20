@@ -411,31 +411,6 @@ function validateAndRepair(persona: any): string[] {
   return [];
 }
 
-  if (needsHealth || needsAppearance) {
-    const demographics = {
-      age: persona.identity?.age || 35,
-      income: persona.identity?.income_bracket,
-      region: persona.identity?.location?.region || 'California',
-      ethnicity: persona.identity?.ethnicity,
-      gender: persona.identity?.gender
-    };
-    // DISABLED: Statistical contamination system - preserving OpenAI's authentic generation  
-    // assignRealisticTraits(persona, demographics);
-    // fixes.push('statistical_traits_applied');
-  }
-
-  const beforeLen = (persona.communication_style?.linguistic_signature?.signature_phrases?.length || 0)
-    + (persona.communication_style?.style_markers?.signature_phrases?.length || 0);
-  removeSignaturePhrases(persona);
-  const afterLen = (persona.communication_style?.linguistic_signature?.signature_phrases?.length || 0)
-    + (persona.communication_style?.style_markers?.signature_phrases?.length || 0);
-  if (afterLen < beforeLen) {
-    fixes.push('signature_phrases_cleaned');
-  }
-
-  return fixes;
-}
-
 function generateRealisticIncomeRange(occupation: string, age: number, region: string): string {
   const baseRanges = {
     "software engineer": ["60000-80000", "80000-120000", "120000-180000"],
