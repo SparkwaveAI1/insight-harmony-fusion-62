@@ -591,6 +591,7 @@ export interface V4Persona {
   schema_version: string;
   profile_image_url?: string;
   is_public: boolean;
+  background?: string; // Life story/background from three-phase generation
   
   full_profile: V4FullProfile;
   conversation_summary?: V4ConversationSummary | string | any; // Allow flexible type for now

@@ -387,21 +387,50 @@ serve(async (req) => {
 
     console.log('Processed user inputs:', userInputs);
 
-    // Natural language interpretation prompt
-    const userPrompt = `Create a persona based on this user description: "${userInputs.user_description}"
+    // Three-phase generation prompt with realistic life story foundation
+    const userPrompt = `Create a persona using this EXACT three-phase process based on: "${userInputs.user_description}"
 
-Interpret this description intelligently:
-- Extract any names, ethnicities, occupations, or other traits mentioned
-- If no name provided, generate an appropriate first and last name
-- If only first name, add an appropriate last name  
-- Handle misspellings and variations naturally
-- Generate all missing traits realistically
+**PHASE 1: Background First (4-6 sentences)**
+Generate a realistic life story that explains how this person got to where they are. Include:
+- Key life events that shaped their current situation
+- One significant relationship or family dynamic  
+- Their biggest challenge or ongoing struggle
+- What they're currently working toward or worried about
+- Avoid dramatic backstories - focus on realistic life progression
+- Make it feel like someone you might actually meet
+
+**PHASE 2: Description (2-3 sentences)**
+Based on the background, write a concise summary that captures their essential character:
+- What would someone notice about them in the first 5 minutes?
+- How do they typically handle everyday situations?
+- What's their general approach to life?
+- Keep it grounded and observable, not philosophical
+
+**PHASE 3: Appearance (detailed paragraph)**
+Describe their physical appearance for image generation:
+- Age-appropriate details reflecting their background and lifestyle
+- Clothing that matches their income level and personality
+- Physical signs of their work/lifestyle (callused hands, tired eyes, etc.)
+- Overall grooming and style choices
+- Posture and typical expression
+- 150-200 words, practical and specific
+
+**PHASE 4: Complete JSON Generation**
+Using the Background, Description, and Appearance as foundation, generate all 17 JSON sections with traits that logically connect to the established character.
 
 User description: ${userInputs.user_description}
 
-Generate complete persona with all 17 sections filled.`;
+Return the response in this EXACT format:
+{
+  "background": "[Phase 1 background text]",
+  "description": "[Phase 2 description text]", 
+  "appearance": "[Phase 3 appearance text]",
+  "persona_data": { [Complete JSON with all 17 sections] }
+}`;
 
-    const systemPrompt = `Generate a complete U.S. adult persona as valid JSON with ALL 17 required top-level sections. Every field listed below MUST be present and filled with realistic data.
+    const systemPrompt = `You are creating a realistic persona using a three-phase process. Follow the user's instructions exactly and return the response in the specified format with background, description, appearance, and complete persona_data JSON.
+
+Generate a complete U.S. adult persona JSON with ALL 17 required top-level sections. Every field listed below MUST be present and filled with realistic data.
 
 REQUIRED TOP-LEVEL SECTIONS (all mandatory):
 identity, daily_life, health_profile, relationships, money_profile, motivation_profile, communication_style, humor_profile, truth_honesty_profile, bias_profile, cognitive_profile, emotional_profile, attitude_narrative, political_narrative, adoption_profile, prompt_shaping, sexuality_profile
@@ -834,6 +863,21 @@ NARRATIVE SECTIONS:
         try {
           personaData = JSON.parse(rawContent);
           console.log('✅ JSON parsing successful');
+          
+          // Handle three-phase response format
+          if (personaData.persona_data) {
+            // New three-phase format - extract structured fields
+            const structuredPersonaData = {
+              background: personaData.background,
+              description: personaData.description, 
+              appearance: personaData.appearance,
+              ...personaData.persona_data
+            };
+            personaData = structuredPersonaData;
+            console.log('✅ Three-phase format detected and processed');
+          } else {
+            console.log('✅ Legacy format - using as-is');
+          }
           
           // Log critical data types in raw response
           console.log('🔍 Raw OpenAI data types check:');

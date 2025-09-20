@@ -76,8 +76,9 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
       
       // Keep original profile without client-side normalization
       const profile = data.persona_data;
+      const background = data.persona_data?.background || null;
       
-      // Insert into database with validated name
+      // Insert into database with validated name and background
       const { data: dbData, error: dbError } = await supabase
         .from('v4_personas')
         .insert([
@@ -86,6 +87,7 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
             name: personaName,  // This should never be null now
             user_id: request.user_id,
             full_profile: profile,
+            background: background,
             conversation_summary: {},
             creation_stage: 'completed',
             creation_completed: true

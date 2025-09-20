@@ -368,13 +368,15 @@ function PersonaProfile() {
                 )}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">Description</span>
-                    <span className={`text-xs ${getCharacterCount(description, 400)}`}>
-                      {description.length}/400 characters
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {persona.background ? 'Background' : 'Description'}
+                    </span>
+                    <span className={`text-xs ${getCharacterCount(persona.background || description, 400)}`}>
+                      {(persona.background || description).length}/400 characters
                     </span>
                   </div>
                   <p className="text-muted-foreground leading-relaxed">
-                    {description}
+                    {persona.background || description}
                   </p>
                 </div>
               </div>

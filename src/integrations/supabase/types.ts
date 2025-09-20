@@ -1458,6 +1458,7 @@ export type Database = {
       }
       v4_personas: {
         Row: {
+          background: string | null
           conversation_summary: Json | null
           created_at: string | null
           creation_completed: boolean | null
@@ -1480,6 +1481,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          background?: string | null
           conversation_summary?: Json | null
           created_at?: string | null
           creation_completed?: boolean | null
@@ -1502,6 +1504,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          background?: string | null
           conversation_summary?: Json | null
           created_at?: string | null
           creation_completed?: boolean | null
