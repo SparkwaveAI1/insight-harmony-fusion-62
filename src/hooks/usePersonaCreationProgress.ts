@@ -27,7 +27,7 @@ export const usePersonaCreationProgress = () => {
       setProgress(createProgressUpdate(CREATION_STEPS.DEMOGRAPHICS, false, "Generating detailed personality traits..."));
       
       const call1Response = await createV4PersonaCall1({
-        user_prompt: prompt,
+        user_description: prompt,
         user_id: user.id,
       });
 
