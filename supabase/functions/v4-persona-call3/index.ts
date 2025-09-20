@@ -42,21 +42,48 @@ serve(async (req) => {
     console.log('Fetched persona for image generation:', persona.name)
 
     // Check if the persona has a physical description for image generation
-    const physicalDescription = persona.conversation_summary?.physical_description
-    if (!physicalDescription) {
-      console.log('No physical description available, skipping image generation')
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          persona_id: persona_id,
-          stage: 'creation_complete',
-          message: 'Persona created successfully (no image generated - missing physical description)'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
+    let physicalDescription = persona.conversation_summary?.physical_description
+    
+    // Generate fallback physical description if missing or insufficient
+    if (!physicalDescription || physicalDescription.length < 50) {
+      console.log('Physical description missing or insufficient, generating fallback from profile data')
+      
+      try {
+        const fullProfile = persona.full_profile
+        const demographics = fullProfile?.identity || {}
+        const health = fullProfile?.health_profile || {}
+        const physical = health.physical_appearance || {}
+        
+        // Build physical description from structured data
+        const age = demographics.age || 'adult'
+        const gender = demographics.gender || 'person'
+        const ethnicity = demographics.ethnicity || ''
+        const height = physical.height || 'average height'
+        const build = physical.build || health.fitness_level || 'average build'
+        const hairColor = physical.hair_color || 'brown'
+        const hairStyle = physical.hair_style || 'standard'
+        const eyeColor = physical.eye_color || 'brown'
+        const facialHair = physical.facial_hair || (gender.toLowerCase() === 'male' ? 'clean-shaven' : 'none')
+        
+        physicalDescription = `A ${age}-year-old ${ethnicity ? ethnicity + ' ' : ''}${gender} with ${height} and ${build}. Has ${hairStyle} ${hairColor} hair and ${eyeColor} eyes. ${facialHair !== 'none' ? `Facial hair: ${facialHair}.` : ''} Appears professional and well-groomed, reflecting their occupation as ${demographics.occupation || 'professional'}. Overall appearance suggests someone who is ${health.fitness_level || 'moderately active'} with a ${build} physique.`
+        
+        console.log('Generated fallback physical description:', physicalDescription.slice(0, 100) + '...')
+        
+      } catch (error) {
+        console.error('Failed to generate fallback physical description:', error)
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            persona_id: persona_id,
+            stage: 'creation_complete',
+            message: 'Persona created successfully (no image generated - could not create physical description)'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          },
+        )
+      }
     }
 
     // Call the existing image generation function

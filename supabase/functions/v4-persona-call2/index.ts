@@ -86,7 +86,7 @@ Return valid JSON with this exact structure:
        "location": "city, region format from identity.location",
        "background_description": "Rich 3-4 sentence narrative synthesizing identity, cultural background, life situation, relationships, and daily life patterns"
      },
-     "physical_description": "Comprehensive physical description for AI image generation including: facial hair (for men: beard/mustache/clean-shaven), hair style and any hair loss patterns, distinctive facial features (nose size, ear prominence, jaw type, etc.), attractiveness level, build/height based on BMI and fitness, clothing style reflecting occupation/income, overall appearance. Be specific about less conventional features - not everyone is conventionally attractive. Include details like receding hairline, full beard, prominent nose, thin build etc.",
+     "physical_description": "MANDATORY: Comprehensive physical description for AI image generation. Must include: facial hair (for men: beard/mustache/clean-shaven), complete hair description (style, color, loss patterns), distinctive facial features (nose size/shape, ear prominence, jaw type, eye shape/color), attractiveness level, build/height based on BMI and fitness, clothing style reflecting occupation/income, skin tone, overall appearance. Be specific about less conventional features - not everyone is conventionally attractive. Include details like receding hairline, full beard, prominent nose, thin build, etc. MINIMUM 100 words required.",
     "motivation_summary": "Concise description of top motivational drivers from motivation_profile.primary_drivers and how goal_orientation manifests in daily decisions",
     "goal_priorities": "Format: goal_name (intensity); goal_name (intensity) - from motivation_profile.goal_orientation.primary_goals",
     "want_vs_should_pattern": "Summary of motivation_profile.want_vs_should_tension patterns and typical resolution style",
@@ -164,8 +164,15 @@ CRITICAL REQUIREMENTS:
               // Validate the structure contains required fields
               if (!summaryData.conversation_summary || 
                   !summaryData.conversation_summary.demographics ||
-                  !summaryData.conversation_summary.communication_style) {
+                  !summaryData.conversation_summary.communication_style ||
+                  !summaryData.conversation_summary.physical_description) {
                 throw new Error('Missing required fields in generated summary')
+              }
+              
+              // Validate physical description meets minimum requirements
+              const physicalDesc = summaryData.conversation_summary.physical_description
+              if (!physicalDesc || physicalDesc.length < 50) {
+                throw new Error(`Physical description too short: ${physicalDesc?.length || 0} chars (minimum 50)`)
               }
               
               console.log(`Successfully parsed summary JSON with ${model}`)
