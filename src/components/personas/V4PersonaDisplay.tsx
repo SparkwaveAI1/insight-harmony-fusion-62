@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, ArrowLeft, User, Download } from 'lucide-react';
+import { MessageCircle, ArrowLeft, User, Download, ImageIcon } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { SurveyManagement } from '../surveys/SurveyManagement';
 import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
@@ -15,6 +15,7 @@ import PersonaCollectionsTab from '../persona-details/PersonaCollectionsTab';
 import { useNavigate } from 'react-router-dom';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, getPersonaDisplayName } from '@/utils/personaDisplayUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { usePersonaImageGeneration } from '@/hooks/usePersonaImageGeneration';
 
 interface V4PersonaDisplayProps {
   persona: V4Persona;
@@ -46,6 +47,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
 }) => {
   const navigate = useNavigate();
   const [collections, setCollections] = useState<PersonaCollection[]>([]);
+  const { isGenerating, generateImage } = usePersonaImageGeneration(persona);
   
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
@@ -96,6 +98,13 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
+  };
+
+  const handleRegenerateImage = async () => {
+    const result = await generateImage(false); // Don't save to gallery by default
+    if (result && onImageGenerated) {
+      onImageGenerated();
+    }
   };
 
   const displayName = getPersonaDisplayName(persona);
@@ -246,7 +255,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           
           <div className="flex flex-col lg:flex-row gap-6 pr-0 lg:pr-60">
             {/* Avatar/Photo */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 space-y-3">
               {persona.profile_image_url ? (
                 <img 
                   src={persona.profile_image_url} 
@@ -256,6 +265,38 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
               ) : (
                 <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border">
                   <User className="h-16 w-16 text-muted-foreground" />
+                </div>
+              )}
+              
+              {/* Regenerate Image Button - Only show for owners */}
+              {isOwner && (
+                <div className="space-y-2">
+                  {/* Quick regenerate button */}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full flex items-center gap-2"
+                    disabled={isGenerating}
+                    onClick={handleRegenerateImage}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    {isGenerating ? 'Generating...' : persona.profile_image_url ? 'Regenerate Image' : 'Generate Image'}
+                  </Button>
+                  
+                  {/* Advanced options through dialog */}
+                  <PersonaImageGenerationDialog
+                    persona={persona as any} // Type compatibility - V4Persona to Persona adapter
+                    onImageGenerated={() => onImageGenerated?.()}
+                    trigger={
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Advanced Options
+                      </Button>
+                    }
+                  />
                 </div>
               )}
             </div>
