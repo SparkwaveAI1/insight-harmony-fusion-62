@@ -3,17 +3,18 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, ArrowLeft, User, Download, ImageIcon } from 'lucide-react';
+import { MessageCircle, ArrowLeft, User, Download } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { SurveyManagement } from '../surveys/SurveyManagement';
 import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
 import DeletePersonaButton from '../persona-details/DeletePersonaButton';
+import PersonaImageGenerationDialog from '../persona-details/PersonaImageGenerationDialog';
+import { V4PersonaCompletionCard } from '@/components/persona-details/V4PersonaCompletionCard';
 import PersonaMemoriesTab from '../persona-details/PersonaMemoriesTab';
 import PersonaCollectionsTab from '../persona-details/PersonaCollectionsTab';
 import { useNavigate } from 'react-router-dom';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, getPersonaDisplayName } from '@/utils/personaDisplayUtils';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface V4PersonaDisplayProps {
   persona: V4Persona;
@@ -45,7 +46,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
 }) => {
   const navigate = useNavigate();
   const [collections, setCollections] = useState<PersonaCollection[]>([]);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
@@ -96,43 +96,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-  };
-
-  const handleRegenerateImage = async () => {
-    setIsGeneratingImage(true);
-    
-    try {
-      toast.info('Generating new profile image...', {
-        description: 'This may take a few moments.'
-      });
-      
-      const { data, error } = await supabase.functions.invoke('generate-persona-image', {
-        body: { personaData: persona }
-      });
-
-      if (error) {
-        console.error("Error calling generate-persona-image function:", error);
-        toast.error("Failed to generate persona image");
-        return;
-      }
-      
-      if (!data.success || !data.image_url) {
-        console.error("Image generation failed:", data.error || "No image URL returned");
-        toast.error("Failed to generate persona image");
-        return;
-      }
-      
-      toast.success("Persona image generated successfully!");
-      
-      if (onImageGenerated) {
-        onImageGenerated();
-      }
-    } catch (error) {
-      console.error("Error in generatePersonaImage:", error);
-      toast.error("An unexpected error occurred while generating the persona image");
-    } finally {
-      setIsGeneratingImage(false);
-    }
   };
 
   const displayName = getPersonaDisplayName(persona);
@@ -283,7 +246,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           
           <div className="flex flex-col lg:flex-row gap-6 pr-0 lg:pr-60">
             {/* Avatar/Photo */}
-            <div className="flex-shrink-0 space-y-3">
+            <div className="flex-shrink-0">
               {persona.profile_image_url ? (
                 <img 
                   src={persona.profile_image_url} 
@@ -294,20 +257,6 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
                 <div className="w-48 h-48 rounded-lg bg-muted flex items-center justify-center border">
                   <User className="h-16 w-16 text-muted-foreground" />
                 </div>
-              )}
-              
-              {/* Regenerate Image Button - Only show for owners */}
-              {isOwner && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full flex items-center gap-2"
-                  disabled={isGeneratingImage}
-                  onClick={handleRegenerateImage}
-                >
-                  <ImageIcon className="h-4 w-4" />
-                  {isGeneratingImage ? 'Generating...' : persona.profile_image_url ? 'Regenerate Image' : 'Generate Image'}
-                </Button>
               )}
             </div>
 
