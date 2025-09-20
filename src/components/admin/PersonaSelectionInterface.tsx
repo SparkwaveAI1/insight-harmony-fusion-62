@@ -326,8 +326,8 @@ export function PersonaSelectionInterface() {
         {results.length > 0 && (
           <div className="space-y-3">
             <h4 className="font-medium">Conversion Results:</h4>
-            <ScrollArea className="max-h-[200px] w-full">
-              <div className="space-y-2">
+            <div className="max-h-[200px] overflow-y-auto border rounded-lg">
+              <div className="space-y-2 p-2">
                 {results.map((result) => (
                   <div 
                     key={result.persona_id}
@@ -344,7 +344,7 @@ export function PersonaSelectionInterface() {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         )}
 
@@ -352,8 +352,8 @@ export function PersonaSelectionInterface() {
         {personas.length > 0 ? (
           <div className="space-y-3">
             <h4 className="font-medium">Available Personas ({personas.length}):</h4>
-            <ScrollArea className="max-h-[400px] w-full">
-              <div className="space-y-2">
+            <div className="max-h-[400px] overflow-y-auto border rounded-lg bg-background">
+              <div className="space-y-2 p-3">
                 {personas.map((persona) => (
                   <div 
                     key={persona.persona_id}
@@ -393,7 +393,7 @@ export function PersonaSelectionInterface() {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           </div>
         ) : (
           <Alert>
