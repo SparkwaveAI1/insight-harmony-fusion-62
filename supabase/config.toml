@@ -1,5 +1,8 @@
 project_id = "wgerdrdsuusnrdnwwelt"
 
+[functions.v4-persona-unified]
+verify_jwt = false
+
 [functions.reserve_and_execute]
 verify_jwt = false
 

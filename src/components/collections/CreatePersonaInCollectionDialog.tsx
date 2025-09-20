@@ -5,9 +5,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, CheckCircle, AlertCircle } from 'lucide-react';
-import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from '@/services/v4-persona/createV4Persona';
+import { createV4PersonaUnified } from '@/services/v4-persona/createV4PersonaUnified';
 import { addPersonaToCollection } from '@/services/collections/collectionsService';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreatePersonaInCollectionDialogProps {
   collectionId: string;
@@ -15,13 +16,14 @@ interface CreatePersonaInCollectionDialogProps {
   onPersonaCreated?: () => void;
 }
 
-type Stage = 'input' | 'creating' | 'generating-summary' | 'generating-image' | 'adding-to-collection' | 'success' | 'error';
+type Stage = 'input' | 'creating' | 'adding-to-collection' | 'success' | 'error';
 
 export function CreatePersonaInCollectionDialog({ 
   collectionId, 
   collectionName, 
   onPersonaCreated 
 }: CreatePersonaInCollectionDialogProps) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [generateImage, setGenerateImage] = useState(true);
@@ -30,44 +32,25 @@ export function CreatePersonaInCollectionDialog({
   const [error, setError] = useState<string | null>(null);
 
   const handleCreatePersona = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !user) return;
 
     try {
       setStage('creating');
       setError(null);
 
-      // Step 1: Create initial persona
-      const call1Result = await createV4PersonaCall1({
-        user_prompt: prompt,
-        user_id: '' // Will be set by the edge function
+      // Single unified persona creation
+      const result = await createV4PersonaUnified({
+        user_description: prompt,
+        user_id: user.id
       });
 
-      if (!call1Result.success || !call1Result.persona_id) {
-        throw new Error(call1Result.error || 'Failed to create persona');
+      if (!result.success || !result.persona_id) {
+        throw new Error(result.error || 'Failed to create persona');
       }
 
-      setStage('generating-summary');
-
-      // Step 2: Generate summary
-      const call2Result = await createV4PersonaCall2(call1Result.persona_id);
-
-      if (!call2Result.success) {
-        throw new Error(call2Result.error || 'Failed to generate persona summary');
-      }
-
-      // Step 3: Generate image (if requested)
-      if (generateImage) {
-        setStage('generating-image');
-        const call3Result = await createV4PersonaCall3(call1Result.persona_id, true);
-
-        if (!call3Result.success) {
-          console.warn('Image generation failed, but continuing with persona creation');
-        }
-      }
-
-      // Step 4: Add to collection
+      // Add to collection
       setStage('adding-to-collection');
-      const addedToCollection = await addPersonaToCollection(collectionId, call1Result.persona_id);
+      const addedToCollection = await addPersonaToCollection(collectionId, result.persona_id);
 
       if (!addedToCollection) {
         // Persona was created but couldn't be added to collection
@@ -75,7 +58,7 @@ export function CreatePersonaInCollectionDialog({
       }
 
       setStage('success');
-      setResult({ persona_id: call1Result.persona_id, persona_name: call1Result.persona_name });
+      setResult({ persona_id: result.persona_id, persona_name: result.persona_name });
       toast.success(`Persona created and added to ${collectionName}!`);
       
       if (onPersonaCreated) {
@@ -93,10 +76,6 @@ export function CreatePersonaInCollectionDialog({
     switch (stage) {
       case 'creating':
         return 'Creating persona...';
-      case 'generating-summary':
-        return 'Generating conversation summary...';
-      case 'generating-image':
-        return 'Generating profile image...';
       case 'adding-to-collection':
         return `Adding to ${collectionName}...`;
       case 'success':
@@ -109,7 +88,7 @@ export function CreatePersonaInCollectionDialog({
   };
 
   const handleClose = () => {
-    if (stage !== 'creating' && stage !== 'generating-summary' && stage !== 'generating-image' && stage !== 'adding-to-collection') {
+    if (stage !== 'creating' && stage !== 'adding-to-collection') {
       setOpen(false);
       setStage('input');
       setPrompt('');
@@ -168,7 +147,7 @@ export function CreatePersonaInCollectionDialog({
             </>
           )}
 
-          {(stage === 'creating' || stage === 'generating-summary' || stage === 'generating-image' || stage === 'adding-to-collection') && (
+          {(stage === 'creating' || stage === 'adding-to-collection') && (
             <Alert>
               <Loader2 className="h-4 w-4 animate-spin" />
               <AlertDescription>{getStageMessage(stage)}</AlertDescription>

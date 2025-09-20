@@ -1,0 +1,501 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { generateChatResponse } from '../_shared/openai.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const { user_description, user_id } = await req.json()
+    
+    console.log('🚀 Starting V4 Unified Persona Generation')
+    console.log('User description:', user_description?.slice(0, 100) + '...')
+    
+    // Initialize Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API key not found')
+    }
+
+    // Generate persona ID
+    const persona_id = `v4_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    console.log('Generated persona ID:', persona_id)
+
+    // PHASE 1: Background Generation (4-6 sentences)
+    console.log('📝 Phase 1: Generating background story...')
+    const backgroundMessages = [
+      {
+        role: 'system',
+        content: `Generate a realistic 4-6 sentence life story background for a persona based on the user's description. Focus on:
+- Current life situation and how they got there
+- Key relationships (family, friends, colleagues)
+- Major life challenges or formative experiences
+- Current living situation and circumstances
+
+Write in third person, past tense. Make it authentic and grounded in real-world experiences. Avoid clichés.`
+      },
+      {
+        role: 'user', 
+        content: user_description
+      }
+    ]
+    
+    const backgroundResponse = await generateChatResponse(backgroundMessages, openaiApiKey, {
+      model: 'gpt-4.1-2025-04-14',
+      temperature: 0.8,
+      max_tokens: 200
+    })
+    
+    const background = backgroundResponse.choices[0]?.message?.content?.trim()
+    console.log('✅ Background generated:', background?.slice(0, 100) + '...')
+
+    // PHASE 2: Character Description (2-3 sentences)
+    console.log('🎭 Phase 2: Generating character essence...')
+    const descriptionMessages = [
+      {
+        role: 'system',
+        content: `Generate a 2-3 sentence character essence description that captures how this person approaches life. Focus on:
+- Core personality traits and worldview
+- How they handle challenges and relationships
+- Their general demeanor and outlook
+
+Write in third person, present tense. Make it insightful and authentic.`
+      },
+      {
+        role: 'user',
+        content: `Based on this background: ${background}\n\nOriginal description: ${user_description}`
+      }
+    ]
+    
+    const descriptionResponse = await generateChatResponse(descriptionMessages, openaiApiKey, {
+      model: 'gpt-4.1-2025-04-14', 
+      temperature: 0.7,
+      max_tokens: 150
+    })
+    
+    const characterDescription = descriptionResponse.choices[0]?.message?.content?.trim()
+    console.log('✅ Character description generated:', characterDescription?.slice(0, 100) + '...')
+
+    // PHASE 3: Physical Appearance (detailed paragraph)
+    console.log('👤 Phase 3: Generating physical appearance...')
+    const appearanceMessages = [
+      {
+        role: 'system',
+        content: `Generate a detailed physical appearance description for image generation. Include:
+- Age-appropriate features and build
+- Hair color, style, and condition
+- Eye color and facial features
+- Clothing style that fits their background
+- Overall grooming and presentation
+- Any distinguishing characteristics
+
+Write as a detailed paragraph suitable for AI image generation. Be specific and realistic.`
+      },
+      {
+        role: 'user',
+        content: `Based on this persona:
+Background: ${background}
+Character: ${characterDescription}
+Original description: ${user_description}`
+      }
+    ]
+    
+    const appearanceResponse = await generateChatResponse(appearanceMessages, openaiApiKey, {
+      model: 'gpt-4.1-2025-04-14',
+      temperature: 0.7,
+      max_tokens: 250
+    })
+    
+    const physicalDescription = appearanceResponse.choices[0]?.message?.content?.trim()
+    console.log('✅ Physical appearance generated:', physicalDescription?.slice(0, 100) + '...')
+
+    // PHASE 4: Full Persona JSON Generation
+    console.log('🧠 Phase 4: Generating complete persona JSON...')
+    const personaJsonMessages = [
+      {
+        role: 'system',
+        content: `You are PersonaGPT, an advanced AI that creates realistic human personas. Generate a complete persona JSON based on the provided context.
+
+CRITICAL REQUIREMENTS:
+- Use natural trait variation (0.1-0.9 range, avoid 0.5 defaults)
+- Ensure gender consistency across ALL fields
+- Generate realistic, coherent personality traits
+- No statistical normalization - let traits vary naturally
+- Coherence values: 0.1-0.3 (scattered), 0.3-0.4 (average), 0.5-0.6 (organized), 0.7+ (highly structured)
+
+Use this EXACT JSON structure:
+
+{
+  "identity": {
+    "name": "",
+    "age": 0,
+    "gender": "",
+    "pronouns": "",
+    "ethnicity": "",
+    "nationality": "United States",
+    "occupation": "",
+    "relationship_status": "",
+    "dependents": 0,
+    "education_level": "",
+    "income_bracket": "",
+    "location": {
+      "city": "",
+      "region": "",
+      "country": "United States",
+      "urbanicity": "urban"
+    }
+  },
+  "daily_life": {
+    "primary_activities": {
+      "work": 0,
+      "family_time": 0,
+      "personal_care": 0,
+      "personal_interests": 0,
+      "social_interaction": 0
+    },
+    "schedule_blocks": [
+      {
+        "start": "08:00",
+        "end": "17:00",
+        "activity": "",
+        "setting": ""
+      }
+    ],
+    "time_sentiment": {
+      "work": "",
+      "family": "",
+      "personal": ""
+    },
+    "screen_time_summary": "",
+    "mental_preoccupations": []
+  },
+  "health_profile": {
+    "bmi_category": "",
+    "chronic_conditions": [],
+    "mental_health_flags": [],
+    "medications": [],
+    "adherence_level": "",
+    "sleep_hours": 0,
+    "substance_use": {
+      "alcohol": "",
+      "cigarettes": "",
+      "vaping": "",
+      "marijuana": ""
+    },
+    "fitness_level": "",
+    "diet_pattern": ""
+  },
+  "relationships": {
+    "household": {
+      "status": "",
+      "harmony_level": "",
+      "dependents": 0
+    },
+    "caregiving_roles": [],
+    "friend_network": {
+      "size": "",
+      "frequency": "",
+      "anchor_contexts": []
+    },
+    "pets": []
+  },
+  "money_profile": {
+    "attitude_toward_money": "",
+    "earning_context": "",
+    "spending_style": "",
+    "savings_investing_habits": {
+      "emergency_fund_months": 0,
+      "retirement_contributions": "",
+      "investing_style": ""
+    },
+    "debt_posture": "",
+    "financial_stressors": [],
+    "money_conflicts": "",
+    "generosity_profile": ""
+  },
+  "motivation_profile": {
+    "primary_motivation_labels": [],
+    "deal_breakers": [],
+    "primary_drivers": {
+      "care": 0,
+      "family": 0,
+      "status": 0,
+      "mastery": 0,
+      "meaning": 0,
+      "novelty": 0,
+      "security": 0,
+      "belonging": 0,
+      "self_interest": 0
+    },
+    "goal_orientation": {
+      "strength": 0,
+      "time_horizon": "",
+      "primary_goals": [],
+      "goal_flexibility": 0
+    },
+    "want_vs_should_tension": {
+      "major_conflicts": [],
+      "default_resolution": ""
+    }
+  },
+  "communication_style": {
+    "regional_register": {
+      "region": "",
+      "urbanicity": "urban",
+      "dialect_hints": []
+    },
+    "voice_foundation": {
+      "formality": "",
+      "directness": "",
+      "pace_rhythm": "",
+      "positivity": "",
+      "empathy_level": 0,
+      "honesty_style": "",
+      "charisma_level": 0
+    },
+    "style_markers": {
+      "metaphor_domains": [],
+      "aphorism_register": "",
+      "storytelling_vs_bullets": 0,
+      "humor_style": "",
+      "code_switching_contexts": []
+    },
+    "context_switches": {
+      "work": {
+        "formality": "",
+        "directness": ""
+      },
+      "home": {
+        "formality": "",
+        "directness": ""
+      },
+      "online": {
+        "formality": "",
+        "directness": ""
+      }
+    },
+    "authenticity_filters": {
+      "avoid_registers": [],
+      "embrace_registers": [],
+      "personality_anchors": []
+    }
+  },
+  "humor_profile": {
+    "frequency": "",
+    "style": [],
+    "boundaries": [],
+    "targets": [],
+    "use_cases": []
+  },
+  "truth_honesty_profile": {
+    "baseline_honesty": 0,
+    "situational_variance": {
+      "work": 0,
+      "home": 0,
+      "public": 0
+    },
+    "typical_distortions": [],
+    "red_lines": [],
+    "pressure_points": [],
+    "confession_style": ""
+  },
+  "bias_profile": {
+    "cognitive": {
+      "status_quo": 0,
+      "loss_aversion": 0,
+      "confirmation": 0,
+      "anchoring": 0,
+      "availability": 0,
+      "optimism": 0,
+      "sunk_cost": 0,
+      "overconfidence": 0
+    },
+    "mitigations": []
+  },
+  "cognitive_profile": {
+    "verbal_fluency": 0,
+    "abstract_reasoning": 0,
+    "problem_solving_orientation": "",
+    "thought_coherence": 0
+  },
+  "emotional_profile": {
+    "stress_responses": [],
+    "negative_triggers": [],
+    "positive_triggers": [],
+    "explosive_triggers": [],
+    "emotional_regulation": ""
+  },
+  "attitude_narrative": "",
+  "political_narrative": "",
+  "adoption_profile": {
+    "buyer_power": 0,
+    "adoption_influence": 0,
+    "risk_tolerance": 0,
+    "change_friction": 0,
+    "expected_objections": [],
+    "proof_points_needed": []
+  },
+  "prompt_shaping": {
+    "voice_foundation": {
+      "formality": "",
+      "directness": "",
+      "pace_rhythm": "",
+      "positivity": "",
+      "empathy_level": 0
+    },
+    "style_markers": {
+      "metaphor_domains": [],
+      "humor_style": "",
+      "storytelling_vs_bullets": 0
+    },
+    "primary_motivations": [],
+    "deal_breakers": [],
+    "honesty_vector": {
+      "baseline": 0,
+      "work": 0,
+      "home": 0,
+      "public": 0,
+      "distortions": []
+    },
+    "bias_vector": {
+      "top_cognitive": [],
+      "top_social": [],
+      "mitigation_playbook": []
+    },
+    "context_switches": {
+      "work": "",
+      "home": "",
+      "online": ""
+    },
+    "current_focus": ""
+  }
+}
+
+Return ONLY valid JSON with no additional text.`
+      },
+      {
+        role: 'user',
+        content: `Generate a complete persona JSON using this context:
+
+BACKGROUND: ${background}
+
+CHARACTER ESSENCE: ${characterDescription}
+
+PHYSICAL APPEARANCE: ${physicalDescription}
+
+ORIGINAL USER DESCRIPTION: ${user_description}
+
+Ensure all traits are coherent with the background story and character essence. Use natural trait variation throughout.`
+      }
+    ]
+    
+    const personaJsonResponse = await generateChatResponse(personaJsonMessages, openaiApiKey, {
+      model: 'gpt-4.1-2025-04-14',
+      temperature: 0.6,
+      max_tokens: 4000
+    })
+    
+    const personaJsonString = personaJsonResponse.choices[0]?.message?.content?.trim()
+    console.log('✅ Persona JSON generated, length:', personaJsonString?.length)
+    
+    let fullProfile
+    try {
+      fullProfile = JSON.parse(personaJsonString)
+      console.log('✅ JSON parsing successful')
+    } catch (parseError) {
+      console.error('❌ JSON parsing failed:', parseError)
+      throw new Error('Failed to parse generated persona JSON')
+    }
+
+    // Extract name from the generated profile
+    const personaName = fullProfile.identity?.name || 'Generated Persona'
+    
+    // Create conversation summary from the generated content
+    const conversationSummary = {
+      demographics: {
+        age: fullProfile.identity?.age || null,
+        location: fullProfile.identity?.location?.city || null,
+        occupation: fullProfile.identity?.occupation || null,
+        name: personaName,
+        background_description: background
+      },
+      communication_style: {
+        directness: fullProfile.communication_style?.voice_foundation?.directness || '',
+        formality: fullProfile.communication_style?.voice_foundation?.formality || '',
+        response_patterns: fullProfile.communication_style?.style_markers?.storytelling_vs_bullets || 0
+      },
+      motivational_summary: fullProfile.motivation_profile?.primary_motivation_labels?.join(', ') || '',
+      personality_summary: characterDescription,
+      physical_description: physicalDescription
+    }
+
+    // Store in database
+    console.log('💾 Storing persona in database...')
+    const { data: insertData, error: insertError } = await supabase
+      .from('v4_personas')
+      .insert({
+        persona_id: persona_id,
+        name: personaName,
+        user_id: user_id,
+        full_profile: fullProfile,
+        conversation_summary: conversationSummary,
+        background: background,
+        creation_stage: 'completed',
+        creation_completed: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('❌ Database insertion failed:', insertError)
+      throw insertError
+    }
+
+    console.log('✅ V4 Unified Persona Generation Complete!')
+    
+    return new Response(
+      JSON.stringify({
+        success: true,
+        persona_id: persona_id,
+        persona_name: personaName,
+        stage: 'creation_complete',
+        background: background,
+        character_description: characterDescription,
+        physical_description: physicalDescription,
+        message: 'Persona created successfully with unified generation!'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
+    )
+
+  } catch (error) {
+    console.error('❌ Error in v4-persona-unified:', error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        message: 'Persona generation failed'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      },
+    )
+  }
+})

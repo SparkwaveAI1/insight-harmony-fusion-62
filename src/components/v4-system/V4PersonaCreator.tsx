@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { createV4PersonaCall1, createV4PersonaCall2, createV4PersonaCall3 } from '@/services/v4-persona';
+import { createV4PersonaUnified } from '@/services/v4-persona';
 import { CollectionsMultiSelector } from '@/components/collections/CollectionsMultiSelector';
 import { addPersonaToCollection } from '@/services/collections/collectionsService';
 import { useAuth } from '@/context/AuthContext';
@@ -83,23 +83,26 @@ export function V4PersonaCreator() {
         ts: new Date().toISOString(),
       });
       
-      const call1Response = await createV4PersonaCall1(creationData);
+      const unifiedResponse = await createV4PersonaUnified({
+        user_description: creationData.user_prompt || '',
+        user_id: user.id
+      });
 
-      if (!call1Response.success) {
-        throw new Error(call1Response.error || 'Call 1 failed');
+      if (!unifiedResponse.success) {
+        throw new Error(unifiedResponse.error || 'Unified persona creation failed');
       }
 
       // DIAGNOSTIC: Fetch created persona from DB for comparison
       const { data: fresh, error } = await supabase
         .from('v4_personas')
         .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-        .eq('persona_id', call1Response.persona_id!)
+        .eq('persona_id', unifiedResponse.persona_id!)
         .maybeSingle();
 
-      // DIAGNOSTIC: Log trace after regular creation call
-      console.log('TRACE_M_AFTER_CALL1', {
+      // DIAGNOSTIC: Log trace after unified creation
+      console.log('TRACE_M_AFTER_UNIFIED', {
         job_id: jobId,
-        persona_id: call1Response?.persona_id,
+        persona_id: unifiedResponse?.persona_id,
         db: {
           schema: fresh?.schema_version,
           has_identity: !!(fresh?.full_profile as any)?.identity,
@@ -113,9 +116,13 @@ export function V4PersonaCreator() {
         ts: new Date().toISOString(),
       });
 
-      backgroundJobService.updateJobFromApiResponse(jobId, call1Response);
+      backgroundJobService.updateJob(jobId, {
+        status: 'completed',
+        progress: 100,
+        message: 'Persona created successfully!',
+      });
 
-      // Call 2: Generate summaries
+      // Add to selected collections if any
       backgroundJobService.updateJob(jobId, {
         status: 'stage2',
         progress: 40,
@@ -179,7 +186,6 @@ export function V4PersonaCreator() {
       
       backgroundJobService.updateJobFromApiResponse(jobId, call3Response);
 
-      // Add to selected collections if any
       if (params.selectedCollectionIds.length > 0) {
         backgroundJobService.updateJob(jobId, {
           progress: 90,
@@ -187,9 +193,18 @@ export function V4PersonaCreator() {
         });
 
         for (const collectionId of params.selectedCollectionIds) {
-          await addPersonaToCollection(collectionId, call1Response.persona_id!);
+          await addPersonaToCollection(collectionId, unifiedResponse.persona_id!);
         }
       }
+
+      // Complete
+      backgroundJobService.updateJob(jobId, {
+        status: 'completed',
+        progress: 100,
+        message: 'Persona created successfully!',
+      });
+
+      onPersonaCreated?.(unifiedResponse.persona_id!);
 
       // DIAGNOSTIC: Final trace before marking completed and navigating
       const { data: finalFresh, error: finalError } = await supabase

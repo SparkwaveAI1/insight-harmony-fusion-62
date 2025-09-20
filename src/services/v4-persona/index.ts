@@ -1,5 +1,6 @@
 // V4 Persona Services Export
 export * from './createV4Persona';
+export * from './createV4PersonaUnified';     // New unified system
 export * from './getV4Personas';
 export * from './deleteV4Persona';
 export * from './conversationV4';           // Now defaults to Grok
