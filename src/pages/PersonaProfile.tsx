@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Plus, FileText, BarChart3, Edit, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint, Target } from 'lucide-react';
+import { ArrowLeft, User, Plus, FileText, BarChart3, Edit, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint, Target, Download, ChevronDown, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { V4Persona } from '@/types/persona-v4';
 import { getV4PersonaById } from '@/services/v4-persona';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, getPersonaDisplayName } from '@/utils/personaDisplayUtils';
@@ -26,6 +29,7 @@ export default function PersonaProfile() {
   const [persona, setPersona] = useState<V4Persona | null>(null);
   const [collections, setCollections] = useState<PersonaCollection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('profile');
 
   useEffect(() => {
     const loadData = async () => {
@@ -178,6 +182,22 @@ export default function PersonaProfile() {
     return Math.max(0, Math.min(100, wellbeing));
   };
 
+  // Export Functions
+  const handleExportJSON = () => {
+    if (!persona) return;
+    
+    const dataStr = JSON.stringify(persona, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `${persona.name.replace(/\s+/g, '_')}_persona_profile.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -218,18 +238,26 @@ export default function PersonaProfile() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/persona-library')}
-            className="gap-2 p-0 h-auto text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Library
-          </Button>
-          <span>/</span>
-          <span className="text-foreground font-medium">{displayName}</span>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/persona-library')}
+              className="gap-2 p-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Library
+            </Button>
+            <span>/</span>
+            <span className="text-foreground font-medium">{displayName}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <ExternalLink className="h-4 w-4 mr-1" />
+              View Similar
+            </Button>
+          </div>
         </div>
 
         {/* Identity Header - Always Visible */}
@@ -295,28 +323,92 @@ export default function PersonaProfile() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
-              <Button variant="outline" size="sm" disabled>
-                <Plus className="h-4 w-4 mr-2" />
-                Add to Study
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Compare
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                <FileText className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add to Study
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add to Study</DialogTitle>
+                    <DialogDescription>
+                      Study functionality coming soon. You'll be able to add personas to research studies for comparative analysis.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Compare
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Compare Personas</DialogTitle>
+                    <DialogDescription>
+                      Comparison functionality coming soon. You'll be able to select multiple personas for side-by-side comparison.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleExportJSON}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as PDF (Coming Soon)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Export as CSV (Coming Soon)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                    <DialogDescription>
+                      Edit mode coming soon. You'll be able to modify persona traits and details directly.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </Card>
 
-        {/* Collapsible Sections */}
-        <div className="space-y-4">
+        {/* Tab Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="knowledge">Knowledge & Memory</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile" className="space-y-4">
           <CollapsibleSection title="Background & Demographics" defaultOpen>
             <div className="space-y-6">
               {/* Background Section */}
@@ -1040,12 +1132,126 @@ export default function PersonaProfile() {
           </CollapsibleSection>
 
           <CollapsibleSection title="Public Issues & Attitudes">
-            <div className="text-muted-foreground">
-              Content coming soon...
+            <div className="space-y-6">
+              {/* Politics Snapshot */}
+              {persona.full_profile?.political_narrative && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Political Worldview
+                  </h4>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {persona.full_profile.political_narrative}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Policy Issue Cards */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Policy Positions</h4>
+                {persona.full_profile?.public_issues ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(persona.full_profile.public_issues).map(([issue, stance]: [string, any]) => (
+                      <Card key={issue} className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium capitalize">{issue.replace(/_/g, ' ')}</h5>
+                            <Badge 
+                              variant={
+                                stance.position === 'support' ? 'default' : 
+                                stance.position === 'oppose' ? 'destructive' : 
+                                'secondary'
+                              }
+                            >
+                              {stance.position}
+                            </Badge>
+                          </div>
+                          {stance.rationale && (
+                            <p className="text-sm text-muted-foreground">{stance.rationale}</p>
+                          )}
+                          {stance.confidence && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Confidence:</span>
+                              <Progress value={stance.confidence * 100} className="h-2 flex-1" />
+                              <span className="text-xs text-muted-foreground">{Math.round(stance.confidence * 100)}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {['Education', 'Healthcare', 'Climate', 'Social Equity', 'Economics', 'Technology'].map((issue) => (
+                      <Card key={issue} className="p-4 opacity-50">
+                        <div className="space-y-2">
+                          <h5 className="font-medium">{issue}</h5>
+                          <div className="text-sm text-muted-foreground">
+                            No recorded position
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                
+                {!persona.full_profile?.public_issues && (
+                  <div className="mt-4 p-4 bg-muted/30 rounded-lg text-center">
+                    <p className="text-sm text-muted-foreground">
+                      No active policy opinions recorded. Political views may be inferred from the narrative above.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {!persona.full_profile?.political_narrative && (
+                <div className="text-center p-8 text-muted-foreground">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No political or public issue data available</p>
+                </div>
+              )}
             </div>
           </CollapsibleSection>
-        </div>
+
+          </TabsContent>
+
+          <TabsContent value="knowledge" className="space-y-4">
+            <div className="space-y-6">
+              {/* Knowledge Items Section */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Knowledge Items</h3>
+                <div className="text-center p-8 text-muted-foreground bg-muted/30 rounded-lg border-2 border-dashed border-muted">
+                  <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No knowledge items recorded yet</p>
+                  <p className="text-xs mt-1">Knowledge base will be populated during conversations</p>
+                  <Button variant="outline" size="sm" className="mt-4" disabled>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Knowledge (Coming Soon)
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Memories Section */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Memories</h3>
+                <div className="text-center p-8 text-muted-foreground bg-muted/30 rounded-lg border-2 border-dashed border-muted">
+                  <Heart className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No memories captured yet</p>
+                  <p className="text-xs mt-1">Personal memories and experiences will appear here</p>
+                  <Button variant="outline" size="sm" className="mt-4" disabled>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Memory (Coming Soon)
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
 }
+
+export default PersonaProfile;
