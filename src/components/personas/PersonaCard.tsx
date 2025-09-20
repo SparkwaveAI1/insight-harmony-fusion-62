@@ -216,9 +216,19 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           </div>
         </div>
         
-        {/* Description */}
+        {/* Character Description (3 lines max) */}
+        {persona.conversation_summary?.character_description && (
+          <div className="space-y-2 mb-3">
+            <h4 className="text-sm font-medium text-muted-foreground">Character</h4>
+            <p className="text-sm text-foreground line-clamp-3 leading-relaxed">
+              {persona.conversation_summary.character_description}
+            </p>
+          </div>
+        )}
+        
+        {/* Background Description */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Background</h4>
           <p className="text-sm text-foreground line-clamp-3 leading-relaxed">
             {description.length > 150 ? `${description.substring(0, 150)}...` : description}
           </p>
