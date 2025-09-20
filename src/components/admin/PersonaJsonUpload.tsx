@@ -210,7 +210,7 @@ interface PersonaSchema {
 }
 
 interface UploadState {
-  file: File | null;
+  uploadText: string;
   description: string;
   background: string;
   selectedCollections: string[];
@@ -220,11 +220,17 @@ interface UploadState {
   error: string | null;
   generatedPersona: any | null;
   generatedImageUrl: string | null;
+  parsedData: {
+    description: string;
+    background: string;
+    collections: string[];
+    jsonData: any;
+  } | null;
 }
 
 export function PersonaJsonUpload() {
   const [state, setState] = useState<UploadState>({
-    file: null,
+    uploadText: '',
     description: '',
     background: '',
     selectedCollections: [],
@@ -234,6 +240,7 @@ export function PersonaJsonUpload() {
     error: null,
     generatedPersona: null,
     generatedImageUrl: null,
+    parsedData: null,
   });
 
   const validatePersonaSchema = (jsonData: any): jsonData is PersonaSchema => {
@@ -268,12 +275,38 @@ export function PersonaJsonUpload() {
     return true;
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type === 'application/json') {
-      setState(prev => ({ ...prev, file, error: null }));
-    } else {
-      setState(prev => ({ ...prev, file: null, error: 'Please select a valid JSON file' }));
+  const parseUploadFormat = (text: string) => {
+    try {
+      // Check if text starts with the expected format
+      if (!text.includes('---PERSONA-UPLOAD---') || !text.includes('---END-PERSONA---')) {
+        throw new Error('Invalid format. Please use the standardized persona upload format.');
+      }
+
+      // Extract description
+      const descMatch = text.match(/DESCRIPTION:\s*(.*?)\s*BACKGROUND:/s);
+      if (!descMatch) throw new Error('Description not found in format');
+      const description = descMatch[1].trim();
+
+      // Extract background
+      const backgroundMatch = text.match(/BACKGROUND:\s*(.*?)\s*COLLECTIONS:/s);
+      if (!backgroundMatch) throw new Error('Background not found in format');
+      const background = backgroundMatch[1].trim();
+
+      // Extract collections
+      const collectionsMatch = text.match(/COLLECTIONS:\s*(.*?)\s*JSON:/s);
+      if (!collectionsMatch) throw new Error('Collections not found in format');
+      const collectionsStr = collectionsMatch[1].trim();
+      const collections = collectionsStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
+
+      // Extract JSON
+      const jsonMatch = text.match(/JSON:\s*(.*?)\s*---END-PERSONA---/s);
+      if (!jsonMatch) throw new Error('JSON not found in format');
+      const jsonStr = jsonMatch[1].trim();
+      const jsonData = JSON.parse(jsonStr);
+
+      return { description, background, collections, jsonData };
+    } catch (error) {
+      throw new Error(`Format parsing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -282,28 +315,50 @@ export function PersonaJsonUpload() {
   };
 
   const handleUpload = async () => {
-    if (!state.file || !state.description || !state.background) {
-      setState(prev => ({ ...prev, error: 'Please fill in all required fields' }));
+    if (!state.uploadText.trim()) {
+      setState(prev => ({ ...prev, error: 'Please paste the persona upload format' }));
       return;
     }
 
     setState(prev => ({ ...prev, uploading: true, progress: 0, error: null }));
 
     try {
-      // Step 1: Read and validate JSON
+      // Step 1: Parse upload format
       updateProgress(10);
-      const fileContent = await state.file.text();
-      const jsonData = JSON.parse(fileContent);
+      const parsedData = parseUploadFormat(state.uploadText);
+      setState(prev => ({ ...prev, parsedData }));
       
-      validatePersonaSchema(jsonData);
+      validatePersonaSchema(parsedData.jsonData);
       updateProgress(20);
 
-      // Step 2: Enhance JSON with additional fields
+      // Step 2: Validate collections exist
+      const { data: existingCollections } = await supabase
+        .from('collections')
+        .select('name')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+      
+      const existingCollectionNames = existingCollections?.map(c => c.name) || [];
+      const invalidCollections = parsedData.collections.filter(name => !existingCollectionNames.includes(name));
+      
+      if (invalidCollections.length > 0) {
+        throw new Error(`Collections not found: ${invalidCollections.join(', ')}`);
+      }
+
+      // Get collection IDs
+      const { data: collectionsData } = await supabase
+        .from('collections')
+        .select('id, name')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .in('name', parsedData.collections);
+      
+      const collectionIds = collectionsData?.map(c => c.id) || [];
+
+      // Step 3: Enhance JSON with additional fields
       const enhancedPersona = {
-        ...jsonData,
-        description: state.description,
-        background: state.background,
-        collections: state.selectedCollections,
+        ...parsedData.jsonData,
+        description: parsedData.description,
+        background: parsedData.background,
+        collections: collectionIds,
       };
 
       updateProgress(30);
@@ -361,8 +416,8 @@ export function PersonaJsonUpload() {
       updateProgress(60);
 
       // Step 5: Add to collections
-      if (state.selectedCollections.length > 0) {
-        const collectionInserts = state.selectedCollections.map(collectionId => ({
+      if (collectionIds.length > 0) {
+        const collectionInserts = collectionIds.map(collectionId => ({
           collection_id: collectionId,
           persona_id: personaId,
         }));
@@ -435,7 +490,7 @@ export function PersonaJsonUpload() {
 
   const resetForm = () => {
     setState({
-      file: null,
+      uploadText: '',
       description: '',
       background: '',
       selectedCollections: [],
@@ -445,6 +500,7 @@ export function PersonaJsonUpload() {
       error: null,
       generatedPersona: null,
       generatedImageUrl: null,
+      parsedData: null,
     });
   };
 
@@ -507,10 +563,10 @@ export function PersonaJsonUpload() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Upload Persona JSON
+          Paste Persona Upload Format
         </CardTitle>
         <CardDescription>
-          Upload a persona JSON file to automatically create a new persona with image generation
+          Paste the standardized persona format to automatically create a new persona with image generation
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -533,72 +589,36 @@ export function PersonaJsonUpload() {
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="json-file">Persona JSON File *</Label>
-            <Input
-              id="json-file"
-              type="file"
-              accept=".json"
-              onChange={handleFileChange}
-              disabled={state.uploading}
-              className="cursor-pointer"
-            />
-            {state.file && (
-              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                {state.file.name}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="description">Description *</Label>
-            <Textarea
-              id="description"
-              placeholder="Present-moment snapshot of who this person is today"
-              value={state.description}
-              onChange={(e) => setState(prev => ({ ...prev, description: e.target.value }))}
-              disabled={state.uploading}
-              maxLength={400}
-              className="min-h-[80px]"
-            />
-            <div className="text-xs text-muted-foreground mt-1">
-              {state.description.length}/400 characters
+            <Label htmlFor="upload-format">Paste Persona Upload Format *</Label>
+            <div className="text-xs text-muted-foreground mb-2">
+              Format example:
+              <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
+{`---PERSONA-UPLOAD---
+DESCRIPTION: [Present-moment snapshot]
+BACKGROUND: [Life history and influences]
+COLLECTIONS: [Collection Name 1, Collection Name 2]
+JSON:
+{"identity": {"name": "...", "age": ...}, ...}
+---END-PERSONA---`}
+              </pre>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="background">Background *</Label>
             <Textarea
-              id="background"
-              placeholder="Life history and formative influences explaining how they got here"
-              value={state.background}
-              onChange={(e) => setState(prev => ({ ...prev, background: e.target.value }))}
+              id="upload-format"
+              placeholder="Paste the complete persona upload format here..."
+              value={state.uploadText}
+              onChange={(e) => setState(prev => ({ ...prev, uploadText: e.target.value }))}
               disabled={state.uploading}
-              maxLength={900}
-              className="min-h-[120px]"
+              className="min-h-[300px] font-mono text-sm"
             />
-            <div className="text-xs text-muted-foreground mt-1">
-              {state.background.length}/900 characters
-            </div>
           </div>
 
-          <div>
-            <Label>Collections (Optional)</Label>
-            <CollectionsMultiSelector
-              selectedCollectionIds={state.selectedCollections}
-              onSelectionChange={(collectionIds) => 
-                setState(prev => ({ ...prev, selectedCollections: collectionIds }))
-              }
-              className="mt-2"
-            />
-          </div>
 
           <Button 
             onClick={handleUpload}
-            disabled={!state.file || !state.description || !state.background || state.uploading}
+            disabled={!state.uploadText.trim() || state.uploading}
             className="w-full"
           >
-            {state.uploading ? 'Processing...' : 'Upload & Create Persona'}
+            {state.uploading ? 'Processing...' : 'Process Upload'}
           </Button>
         </div>
       </CardContent>
