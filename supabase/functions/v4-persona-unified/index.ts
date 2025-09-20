@@ -195,32 +195,33 @@ Original description: ${user_description}`
     const physicalDescription = appearanceResponse.choices[0]?.message?.content?.trim()
     console.log('✅ Physical appearance generated:', physicalDescription?.slice(0, 100) + '...')
 
-    // PHASE 4: Image Generation using appearance description
-    console.log('🎨 Phase 4: Generating persona image...')
+    // PHASE 4: Image Generation using Nano Banana
+    console.log('🎨 Phase 4: Generating persona image with Nano Banana...')
     let profileImageUrl = null
     
     try {
-      // Use OpenAI DALL-E 3 with the detailed physical description
-      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: `Professional headshot portrait photograph: ${physicalDescription}. High quality photography, realistic lighting, neutral background, professional composition.`,
-          size: '1024x1024',
-          quality: 'hd'
-        })
+      // Use existing generate-persona-image function with Nano Banana, passing the physical description
+      const personaData = {
+        persona_id: persona_id,
+        physical_description: physicalDescription,
+        name: user_description.split(' ')[0] || 'Persona',
+        demographics: { age: healthData.age }, 
+        personality: characterDescription,
+        health_profile: {
+          bmi: healthData.bmi,
+          fitness_level: healthData.fitness_level
+        }
+      }
+      
+      const { data: imageData, error: imageError } = await supabase.functions.invoke('generate-persona-image', {
+        body: { personaData }
       })
 
-      if (imageResponse.ok) {
-        const imageData = await imageResponse.json()
-        profileImageUrl = imageData.data[0].url
-        console.log('✅ Image generated:', profileImageUrl)
+      if (imageError) {
+        console.error('❌ Nano Banana image generation failed:', imageError)
       } else {
-        console.error('❌ Image generation failed:', await imageResponse.text())
+        profileImageUrl = imageData.image_url
+        console.log('✅ Image generated with Nano Banana:', profileImageUrl)
       }
     } catch (imageError) {
       console.error('❌ Image generation error:', imageError)
