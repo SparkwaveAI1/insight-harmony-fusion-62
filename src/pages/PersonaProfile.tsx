@@ -16,7 +16,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { TraitsDashboard } from '@/components/TraitsDashboard';
 import { useAuth } from '@/context/AuthContext';
 import PersonaVisibilityToggle from '@/components/persona-details/PersonaVisibilityToggle';
+import DeletePersonaButton from '@/components/persona-details/DeletePersonaButton';
 import { updatePersonaVisibility } from '@/services/persona';
+import { deleteV4Persona } from '@/services/v4-persona/deleteV4Persona';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PersonaCollection {
   collection_id: string;
@@ -29,6 +32,7 @@ function PersonaProfile() {
   console.log('Extracted personaId:', personaId);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [persona, setPersona] = useState<V4Persona | null>(null);
   const [collections, setCollections] = useState<PersonaCollection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +106,38 @@ function PersonaProfile() {
     } catch (error) {
       console.error('Error updating persona visibility:', error);
       toast.error('Failed to update visibility');
+    }
+  };
+
+  const handlePersonaDeleted = async () => {
+    if (!personaId || !user) return;
+    
+    try {
+      console.log('🗑️ Deleting persona:', personaId);
+      
+      const result = await deleteV4Persona(personaId);
+      
+      if (result.success) {
+        toast.success("Persona deleted successfully");
+        
+        // Invalidate React Query cache to refresh persona lists
+        console.log('🔄 Invalidating persona queries to refresh lists...');
+        queryClient.invalidateQueries({ queryKey: ['personas'] });
+        queryClient.invalidateQueries({ queryKey: ['myPersonas'] });
+        queryClient.invalidateQueries({ queryKey: ['publicPersonas'] });
+        queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
+        
+        // Navigate back to persona library
+        setTimeout(() => {
+          navigate("/persona-library");
+        }, 100);
+      } else {
+        toast.error(result.error || "Failed to delete persona");
+      }
+    } catch (error) {
+      console.error("Error deleting persona:", error);
+      toast.error("Failed to delete persona");
     }
   };
 
@@ -384,6 +420,12 @@ function PersonaProfile() {
                   isPublic={isPublic}
                   isOwner={user?.id === persona?.user_id}
                   onVisibilityChange={handleVisibilityChange}
+                />
+
+                {/* Delete Persona Button */}
+                <DeletePersonaButton
+                  onDelete={handlePersonaDeleted}
+                  isOwner={user?.id === persona?.user_id}
                 />
               </div>
             )}
