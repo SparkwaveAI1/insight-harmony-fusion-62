@@ -380,6 +380,18 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Chat Button - Most Prominent */}
+            {onChatToggle && (
+              <Button
+                onClick={onChatToggle}
+                size="lg"
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 text-lg font-semibold"
+              >
+                <MessageCircle className="mr-3 h-6 w-6" />
+                {showChat ? 'Hide Chat' : `Chat with ${persona.name}`}
+              </Button>
+            )}
+            
             {/* Download JSON Button - Available to all users */}
             <Button
               variant="outline"
