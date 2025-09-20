@@ -85,8 +85,10 @@ serve(async (req) => {
       }
 
     } else {
-      console.log('Persona is sufficiently complete, applying targeted fixes only...');
-      updatedPersonaData = applyTargetedFixes(persona.persona_data, analysis.missingFields);
+      console.log('Persona is sufficiently complete, no modifications needed - preserving OpenAI output integrity');
+      // DISABLED: Validation contamination removed - no targeted fixes applied
+      // updatedPersonaData = applyTargetedFixes(persona.persona_data, analysis.missingFields);
+      updatedPersonaData = persona.persona_data; // Use original data without modifications
     }
 
     // Update the persona in database
@@ -208,28 +210,11 @@ function analyzePersonaCompleteness(personaData: any) {
   };
 }
 
+// DISABLED: Validation contamination removed - no data modification  
 function applyTargetedFixes(personaData: any, missingFields: string[]): any {
-  const fixed = JSON.parse(JSON.stringify(personaData)); // Deep copy
-
-  // Apply basic fixes for common missing fields
-  missingFields.forEach(fieldPath => {
-    if (fieldPath === 'attitude_narrative' && (!fixed.attitude_narrative || !fixed.attitude_narrative.trim())) {
-      fixed.attitude_narrative = "Believes in working hard and treating people fairly. Values honesty and direct communication. Tends to be pragmatic about solving problems.";
-    }
-    
-    if (fieldPath === 'political_narrative' && (!fixed.political_narrative || !fixed.political_narrative.trim())) {
-      fixed.political_narrative = "Generally moderate in political views. Focuses more on local issues than national politics. Values competent leadership over party affiliation.";
-    }
-
-    if (fieldPath === 'identity.nationality' && !fixed.identity?.nationality) {
-      if (!fixed.identity) fixed.identity = {};
-      fixed.identity.nationality = 'American';
-    }
-
-    if (fieldPath === 'identity.dependents' && fixed.identity?.dependents === undefined) {
-      fixed.identity.dependents = 0;
-    }
-  });
-
-  return fixed;
+  console.log('⚠️ applyTargetedFixes disabled - preserving OpenAI output integrity');
+  console.log('Missing fields detected but not fixing:', missingFields);
+  
+  // READ-ONLY: Return original persona without applying hardcoded defaults
+  return personaData;
 }

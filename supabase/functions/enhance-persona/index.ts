@@ -377,22 +377,39 @@ function removeSignaturePhrases(personaData: any) {
   }
 }
 
-function validateAndRepair(persona: any): string[] {
-  const fixes: string[] = [];
-  ensureScaffolding(persona);
-
+// DISABLED: Validation contamination removed - converted to read-only validation
+function validatePersonaReadOnly(persona: any): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  // Check required fields without modifying
   if (!persona.identity?.income_bracket || persona.identity.income_bracket === 'unspecified') {
-    const newIncome = generateRealisticIncomeRange(
-      persona.identity?.occupation || 'professional',
-      persona.identity?.age || 35,
-      persona.identity?.location?.region || 'California'
-    );
-    persona.identity.income_bracket = newIncome;
-    fixes.push(`income_bracket=${newIncome}`);
+    errors.push('Missing or invalid income_bracket');
   }
 
   const needsHealth = !persona.health_profile?.bmi || persona.health_profile.bmi < 16 || persona.health_profile.bmi > 50;
   const needsAppearance = !persona.health_profile?.physical_appearance?.hair_style || !persona.health_profile?.physical_appearance?.attractiveness_level;
+
+  if (needsHealth) {
+    errors.push('Invalid or missing health profile BMI');
+  }
+  
+  if (needsAppearance) {
+    errors.push('Missing physical appearance data');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// DISABLED: Data modification function - now read-only validation only
+function validateAndRepair(persona: any): string[] {
+  // This function previously modified persona data - now disabled
+  // Use validatePersonaReadOnly instead for pass/fail validation
+  console.warn('⚠️ validateAndRepair is disabled - use validatePersonaReadOnly for read-only validation');
+  return [];
+}
 
   if (needsHealth || needsAppearance) {
     const demographics = {
@@ -676,12 +693,20 @@ console.log('📋 Identified gaps:', gaps);
       }
     }
 
+// DISABLED: Validation contamination removed - converted to read-only validation
 // Final validation and repair before saving
 console.log('🧪 Final validation pass...');
-const validationFixes = validateAndRepair(enhancedPersona);
-if (validationFixes.length) {
-  enhancementLog.push(`Final fixes: ${validationFixes.join(', ')}`);
-  console.log('✅ Final fixes applied:', validationFixes);
+// const validationFixes = validateAndRepair(enhancedPersona);
+// if (validationFixes.length) {
+//   enhancementLog.push(`Final fixes: ${validationFixes.join(', ')}`);
+//   console.log('✅ Final fixes applied:', validationFixes);
+// }
+
+// READ-ONLY VALIDATION: Check if persona is valid, reject if not
+const validationResult = validatePersonaReadOnly(enhancedPersona);
+if (!validationResult.isValid) {
+  console.error('❌ Persona failed read-only validation:', validationResult.errors);
+  throw new PersonaGenerationError('validation', `Persona validation failed: ${validationResult.errors.join(', ')}`);
 }
 
 // Save the enhanced persona

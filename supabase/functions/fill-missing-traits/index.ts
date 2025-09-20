@@ -661,16 +661,25 @@ serve(async (req) => {
           const enhancementChanges = enhancementResult.changesLog || [];
           
           // Then apply compliance fixes if still needed
+          // DISABLED: Validation contamination removed - reject instead of fix
           const postEnhancementValidation = validatePersona(enhanced);
           if (postEnhancementValidation.errors.length > 0 || hasBannedKeys(enhanced)) {
-            console.log(`🛠️ Fixing persona ${persona.name} - Errors: ${postEnhancementValidation.errors.length}, Banned keys: ${hasBannedKeys(enhanced)}`);
+            console.log(`❌ Rejecting persona ${persona.name} - Errors: ${postEnhancementValidation.errors.length}, Banned keys: ${hasBannedKeys(enhanced)}`);
+            console.log('Validation errors:', postEnhancementValidation.errors);
             
-            const fixedPersona = await fixPersonaCompliance({ ...persona, full_profile: enhanced }, postEnhancementValidation);
+            // READ-ONLY: Reject the persona instead of trying to fix it
+            const rejectionReason = `Validation failed: ${postEnhancementValidation.errors.join(', ')}`;
             
-            if (fixedPersona) {
-              enhanced = fixedPersona;
-              enhancementChanges.push('Applied compliance fixes');
-            }
+            console.log(`❌ Persona ${persona.name} rejected: ${rejectionReason}`);
+            return {
+              persona_id: persona.persona_id,
+              name: persona.name,
+              status: 'rejected',
+              reason: rejectionReason,
+              validation_before: validation,
+              validation_after: postEnhancementValidation,
+              rejected_profile: enhanced
+            };
           }
           
           // Final validation
@@ -798,24 +807,21 @@ serve(async (req) => {
   }
 });
 
+// DISABLED: Validation contamination removed - no data modification
 async function fixPersonaCompliance(persona: any, validation: ValidationResult) {
-  console.log(`🔧 Fixing compliance for ${persona.name}`);
+  console.log(`❌ Rejecting non-compliant persona: ${persona.name}`);
+  console.log('Validation errors:', validation.errors);
   
-  // First clean the persona by removing banned keys and keeping only allowed schema
-  let fixedPersona = cleanAndValidatePersona(persona.full_profile);
+  // READ-ONLY: Just reject the persona instead of modifying it
+  return null; // Reject the persona entirely
+}
+
+// DISABLED: Manual fixes removed - preserving OpenAI's authentic output
+function applyManualFixes(persona: any, personaName: string): any {
+  console.log(`⚠️ applyManualFixes disabled for ${personaName} - preserving OpenAI output integrity`);
   
-  // Add manual fixes for simple missing fields before using AI
-  fixedPersona = applyManualFixes(fixedPersona, persona.name);
-  
-  // Check what's still missing after cleaning and manual fixes
-  const postFixValidation = validatePersona(fixedPersona);
-  
-  if (postFixValidation.isValid) {
-    console.log(`✅ Persona ${persona.name} is valid after cleaning and manual fixes`);
-    return fixedPersona;
-  }
-  
-  console.log(`🤖 Generating missing fields for ${persona.name}:`, postFixValidation.errors);
+  // READ-ONLY: Return original persona without modifications
+  return persona;
   
   // Use AI to generate the missing required fields
   const systemPrompt = `You are a V4 persona compliance expert. Your job is to complete missing required fields in persona profiles.
