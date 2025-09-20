@@ -53,12 +53,23 @@ export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
 export async function getMyV4PersonasShowAll(userId: string): Promise<V4Persona[]> {
   if (!userId) throw new Error('Missing userId');
   
+  console.log("=== PERSONA SERVICE DEBUG ===");
+  console.log("Input userId:", userId);
+  
+  // Check current session
+  const { data: { session } } = await supabase.auth.getSession();
+  console.log("Current session:", session?.user?.id);
+  console.log("Session access token present:", !!session?.access_token);
+  
   const { data, error } = await supabase
     .from('v4_personas')
     .select('persona_id, name, schema_version, full_profile, created_at, is_public, user_id, profile_image_url')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
+  console.log("Query result:", { data: data?.length, error });
+  if (error) console.error("Query error details:", error);
+  
   if (error) throw error;
   return (data ?? []) as unknown as V4Persona[];
 }

@@ -42,14 +42,18 @@ const MyPersonasList = ({
         return [];
       }
       
-      console.log("Fetching my personas for user:", user.id);
+      console.log("=== FETCHING MY PERSONAS ===");
+      console.log("User ID:", user.id);
+      console.log("User object:", user);
+      
       const data = await getMyV4PersonasShowAll(user.id);
-      console.log("My personas count:", data?.length || 0);
+      console.log("My personas fetched:", data?.length || 0);
+      console.log("Sample persona:", data?.[0]);
       
       return data;
     },
-    enabled: !!user?.id && !authLoading, // Only run when user is loaded
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!user?.id && !authLoading,
+    staleTime: 5 * 60 * 1000,
     retry: 1
   });
 
@@ -118,10 +122,11 @@ const MyPersonasList = ({
     maxResults: 50 
   });
 
-  // Update local state
+  // Update local state only when searchedPersonas actually changes
   useEffect(() => {
+    console.log('Setting personas:', searchedPersonas.length);
     setPersonas(searchedPersonas);
-  }, [searchedPersonas]);
+  }, [searchedPersonas.length]); // Use length to prevent object reference changes
 
   // Handle visibility changes
   const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
