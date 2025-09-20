@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { V4Persona } from '@/types/persona-v4';
 import { getV4PersonaById } from '@/services/v4-persona';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, getPersonaDisplayName } from '@/utils/personaDisplayUtils';
+import { V4PersonaDisplay } from '@/components/personas/V4PersonaDisplay';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
@@ -141,63 +142,6 @@ function PersonaProfile() {
     }
   };
 
-  const generateDescription = (persona: V4Persona): string => {
-    // V4 personas don't have a description field, generate from other data
-    
-    // Generate from attitude_narrative + current_focus
-    const attitude = persona.full_profile?.attitude_narrative || '';
-    const focus = persona.full_profile?.prompt_shaping?.current_focus || '';
-    
-    if (attitude && focus) {
-      return `${attitude.slice(0, 200)}... Currently focused on: ${focus}`;
-    }
-    
-    if (attitude) {
-      return attitude.slice(0, 400);
-    }
-    
-    return 'No description available.';
-  };
-
-  // Helper function to get possessive pronoun based on persona's pronouns
-  const getPossessivePronoun = (persona: V4Persona): string => {
-    const pronouns = persona.full_profile?.identity?.pronouns?.toLowerCase();
-    
-    if (pronouns?.includes('he')) return 'his';
-    if (pronouns?.includes('she')) return 'her';
-    return 'their'; // Default to 'their' for they/them or any other pronouns
-  };
-
-  const generateBackground = (persona: V4Persona): string => {
-    // Generate background from attitude_narrative + life details
-    const attitude = persona.full_profile?.attitude_narrative || '';
-    const identity = persona.full_profile?.identity;
-    const relationships = persona.full_profile?.relationships;
-    const money = persona.full_profile?.money_profile;
-    const possessive = getPossessivePronoun(persona);
-    const possessiveCapitalized = possessive.charAt(0).toUpperCase() + possessive.slice(1);
-    
-    let background = '';
-    
-    if (attitude) {
-      background = attitude;
-    }
-    
-    // Add formative life details if available
-    if (identity?.occupation) {
-      background += ` ${possessiveCapitalized} career as a ${identity.occupation} has shaped ${possessive} worldview.`;
-    }
-    
-    if (relationships?.household?.status) {
-      background += ` ${possessiveCapitalized} ${relationships.household.status} has influenced ${possessive} life priorities.`;
-    }
-    
-    if (money?.attitude_toward_money) {
-      background += ` ${possessiveCapitalized} relationship with money reflects ${money.attitude_toward_money}.`;
-    }
-    
-    return background.slice(0, 900);
-  };
 
   const getCharacterCount = (text: string, limit: number) => {
     const count = text.length;
@@ -294,10 +238,23 @@ function PersonaProfile() {
     );
   }
 
+  // Check if this is a V4 persona and route to V4PersonaDisplay
+  if (persona.schema_version === 'v4.0') {
+    return (
+      <V4PersonaDisplay
+        persona={persona}
+        isOwner={user?.id === persona?.user_id}
+        onVisibilityChange={handleVisibilityChange}
+        onPersonaUpdated={async () => await loadPersona(personaId!)}
+        onDelete={handlePersonaDeleted}
+        onImageGenerated={async () => await loadPersona(personaId!)}
+      />
+    );
+  }
+
   const displayName = getPersonaDisplayName(persona);
   const age = getPersonaAge(persona);
   const location = getPersonaLocation(persona);
-  const description = generateDescription(persona);
 
   // Debug logging for data visualization
   console.log('=== PERSONA DATA DEBUG ===');
@@ -385,12 +342,12 @@ function PersonaProfile() {
                  <div className="space-y-1">
                    <div className="flex items-center justify-between">
                      <span className="text-sm font-medium text-muted-foreground">Background</span>
-                     <span className={`text-xs ${getCharacterCount(persona.conversation_summary?.demographics?.background_description || generateBackground(persona), 400)}`}>
-                       {(persona.conversation_summary?.demographics?.background_description || generateBackground(persona)).length}/400 characters
+                      <span className={`text-xs ${getCharacterCount(getPersonaBackgroundDescription(persona) || 'No background available', 400)}`}>
+                        {(getPersonaBackgroundDescription(persona) || 'No background available').length}/400 characters
                      </span>
                    </div>
-                   <p className="text-muted-foreground leading-relaxed">
-                     {persona.conversation_summary?.demographics?.background_description || generateBackground(persona)}
+                    <p className="text-muted-foreground leading-relaxed">
+                      {getPersonaBackgroundDescription(persona) || 'No background available'}
                    </p>
                  </div>
               </div>
@@ -457,13 +414,13 @@ function PersonaProfile() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-lg font-semibold">Background</h4>
-                  <span className={`text-xs ${getCharacterCount(generateBackground(persona), 900)}`}>
-                    {generateBackground(persona).length}/900 characters
+                  <span className={`text-xs ${getCharacterCount(getPersonaBackgroundDescription(persona) || 'No background available', 900)}`}>
+                    {(getPersonaBackgroundDescription(persona) || 'No background available').length}/900 characters
                   </span>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {generateBackground(persona) || 'No background information available.'}
+                    {getPersonaBackgroundDescription(persona) || 'No background information available.'}
                   </p>
                 </div>
               </div>

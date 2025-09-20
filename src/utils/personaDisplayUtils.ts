@@ -74,18 +74,20 @@ export function getPersonaBackgroundDescription(persona: V4Persona): string | un
     return persona.conversation_summary.demographics.background_description;
   }
   
-  // Fallback to attitude_narrative if no background story
-  if (persona.full_profile?.attitude_narrative) {
+  // Only use attitude_narrative fallback for legacy personas (not V4)
+  if (persona.schema_version !== 'v4.0' && persona.full_profile?.attitude_narrative) {
     return persona.full_profile.attitude_narrative;
   }
   
-  // Last resort: generate from available data
-  const age = getPersonaAge(persona);
-  const occupation = getPersonaOccupation(persona);
-  const location = getPersonaLocation(persona);
-  
-  if (age && occupation && location) {
-    return `${age}-year-old ${occupation} from ${location}`;
+  // Last resort: generate from available data (legacy personas only)
+  if (persona.schema_version !== 'v4.0') {
+    const age = getPersonaAge(persona);
+    const occupation = getPersonaOccupation(persona);
+    const location = getPersonaLocation(persona);
+    
+    if (age && occupation && location) {
+      return `${age}-year-old ${occupation} from ${location}`;
+    }
   }
   
   return undefined;
