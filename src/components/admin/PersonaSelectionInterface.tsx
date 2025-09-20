@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -20,6 +19,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { validatePersona } from "@/services/v4-persona/v4PersonaValidation";
+import { convertPersonaToDescription } from "@/services/persona/operations/convertPersonaToDescription";
+import { addToQueue, getQueueItems, parsePersonaDescription } from "@/services/personaQueueService";
 
 interface PersonaForSelection {
   persona_id: string;
@@ -46,11 +47,13 @@ export function PersonaSelectionInterface() {
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState<ConversionResult[]>([]);
   const [progress, setProgress] = useState(0);
+  const [queueItems, setQueueItems] = useState<any[]>([]);
 
   const MAX_SELECTION = 10;
 
   useEffect(() => {
     fetchPersonasForSelection();
+    fetchQueue();
   }, []);
 
   const fetchPersonasForSelection = async () => {
@@ -104,6 +107,15 @@ export function PersonaSelectionInterface() {
     }
   };
 
+  const fetchQueue = async () => {
+    if (!user?.id) return;
+    try {
+      const items = await getQueueItems(user.id);
+      setQueueItems(items || []);
+    } catch (error) {
+      console.error('Error fetching queue items:', error);
+    }
+  };
   const handlePersonaToggle = (personaId: string) => {
     const newSelected = new Set(selectedPersonas);
     
@@ -153,55 +165,65 @@ export function PersonaSelectionInterface() {
     setResults(initialResults);
 
     try {
-      console.log(`🚀 Starting conversion of ${selectedPersonasList.length} selected personas...`);
+      console.log(`🚀 Queuing ${selectedPersonasList.length} selected personas for processing...`);
 
-      // Call the bulk conversion edge function with selected persona IDs
-      const { data, error } = await supabase.functions.invoke('convert-selected-personas', {
-        body: { 
-          personaIds: Array.from(selectedPersonas),
-          userId: user.id
+      let completed = 0;
+      for (let i = 0; i < selectedPersonasList.length; i++) {
+        const persona = selectedPersonasList[i];
+
+        // Update local result to processing while we build description
+        setResults(prev => prev.map(r => r.persona_id === persona.persona_id ? { ...r, status: 'processing' } : r));
+
+        try {
+          // Step 1: Convert persona JSON to description text
+          const description = await convertPersonaToDescription({
+            ...persona.full_profile,
+            persona_id: persona.persona_id,
+          });
+
+          // Step 2: Parse for name/collections and add to queue with 'pending' status
+          const parsed = parsePersonaDescription(description);
+          await addToQueue(
+            user.id,
+            parsed.name || persona.name,
+            parsed.description,
+            parsed.collections
+          );
+
+          // Mark as queued (pending)
+          setResults(prev => prev.map(r => r.persona_id === persona.persona_id ? { ...r, status: 'pending' } : r));
+        } catch (err) {
+          console.error(`❌ Failed to queue persona ${persona.name}:`, err);
+          setResults(prev => prev.map(r => r.persona_id === persona.persona_id ? { ...r, status: 'failed', error: err instanceof Error ? err.message : 'Unknown error' } : r));
         }
-      });
 
-      if (error) throw error;
-
-      console.log('✅ Batch conversion completed:', data);
-      
-      // Update results based on response
-      if (data?.results) {
-        setResults(data.results);
+        completed++;
+        setProgress(Math.round((completed / selectedPersonasList.length) * 100));
       }
 
-      const succeeded = data?.succeeded || 0;
-      const failed = data?.failed || 0;
-      
-      toast.success(`Conversion complete! ${succeeded} succeeded, ${failed} failed`);
-      
-      // Refresh the persona list to reflect changes
-      await fetchPersonasForSelection();
-      
+      // Fetch latest queue items for the user to display status
+      await fetchQueue();
+
+      toast.success(`Queued ${selectedPersonasList.length} personas. Processing will continue in the background.`);
+
+      // Keep persona list as-is; they still "need migration" until queue processes them
     } catch (error) {
-      console.error('❌ Batch conversion failed:', error);
-      toast.error('Batch conversion failed');
-      
-      // Mark all as failed
-      setResults(prev => prev.map(result => ({
-        ...result,
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      })));
+      console.error('❌ Queueing failed:', error);
+      toast.error('Failed to queue selected personas');
     } finally {
       setProcessing(false);
-      setProgress(100);
     }
   };
 
-  const getStatusIcon = (status: ConversionResult['status']) => {
+  const getStatusIcon = (status: string) => {
+    if (status?.startsWith('processing')) {
+      return <Clock className="h-4 w-4 text-blue-500 animate-spin" />;
+    }
     switch (status) {
       case 'pending': return <Clock className="h-4 w-4 text-muted-foreground" />;
-      case 'processing': return <Clock className="h-4 w-4 text-blue-500 animate-spin" />;
       case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'failed': return <AlertCircle className="h-4 w-4 text-red-500" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -276,7 +298,7 @@ export function PersonaSelectionInterface() {
             <Button
               variant="outline"
               size="sm"
-              onClick={fetchPersonasForSelection}
+              onClick={async () => { await fetchPersonasForSelection(); await fetchQueue(); }}
               disabled={processing}
             >
               <RefreshCw className="h-4 w-4 mr-1" />
@@ -315,31 +337,30 @@ export function PersonaSelectionInterface() {
         {processing && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Converting personas...</span>
+              <span>Queueing personas...</span>
               <span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="w-full" />
           </div>
         )}
 
-        {/* Results Display */}
-        {results.length > 0 && (
+        {/* Queue Status Display */}
+        {queueItems.length > 0 && (
           <div className="space-y-3">
-            <h4 className="font-medium">Conversion Results:</h4>
-            <div className="max-h-[200px] overflow-y-auto border rounded-lg">
+            <h4 className="font-medium">Queue Status ({queueItems.length} items):</h4>
+            <div className="max-h-[240px] overflow-y-auto border rounded-lg">
               <div className="space-y-2 p-2">
-                {results.map((result) => (
-                  <div 
-                    key={result.persona_id}
-                    className="flex items-center justify-between p-2 border rounded"
-                  >
+                {queueItems.map((item: any) => (
+                  <div key={item.id} className="flex items-center justify-between p-2 border rounded">
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(result.status)}
-                      <span className="font-medium">{result.name}</span>
+                      {getStatusIcon(item.status)}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-xs text-muted-foreground">{item.persona_id ? `Persona: ${String(item.persona_id).slice(-8)}` : `Queued ${new Date(item.created_at).toLocaleString()}`}</span>
+                      </div>
                     </div>
-                    <Badge variant={result.status === 'completed' ? 'default' : 
-                                  result.status === 'failed' ? 'destructive' : 'secondary'}>
-                      {result.status}
+                    <Badge variant={item.status === 'completed' ? 'default' : item.status === 'failed' ? 'destructive' : 'secondary'}>
+                      {item.status}
                     </Badge>
                   </div>
                 ))}
