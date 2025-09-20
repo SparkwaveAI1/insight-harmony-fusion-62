@@ -91,6 +91,44 @@ export default function PersonaProfile() {
     return 'No description available.';
   };
 
+  const generateBackground = (persona: V4Persona): string => {
+    // Generate background from attitude_narrative + life details
+    const attitude = persona.full_profile?.attitude_narrative || '';
+    const identity = persona.full_profile?.identity;
+    const relationships = persona.full_profile?.relationships;
+    const money = persona.full_profile?.money_profile;
+    
+    let background = '';
+    
+    if (attitude) {
+      background = attitude;
+    }
+    
+    // Add formative life details if available
+    if (identity?.occupation) {
+      background += ` Their career as a ${identity.occupation} has shaped their worldview.`;
+    }
+    
+    if (relationships?.household?.status) {
+      background += ` Their ${relationships.household.status} has influenced their life priorities.`;
+    }
+    
+    if (money?.attitude_toward_money) {
+      background += ` Their relationship with money reflects ${money.attitude_toward_money}.`;
+    }
+    
+    return background.slice(0, 900);
+  };
+
+  const getCharacterCount = (text: string, limit: number) => {
+    const count = text.length;
+    const percentage = (count / limit) * 100;
+    
+    if (percentage >= 90) return 'text-destructive';
+    if (percentage >= 75) return 'text-yellow-600';
+    return 'text-muted-foreground';
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -172,9 +210,17 @@ export default function PersonaProfile() {
                     {age} years old {location && `• ${location}`}
                   </div>
                 )}
-                <p className="text-muted-foreground leading-relaxed">
-                  {description}
-                </p>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Description</span>
+                    <span className={`text-xs ${getCharacterCount(description, 400)}`}>
+                      {description.length}/400 characters
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {description}
+                  </p>
+                </div>
               </div>
 
               {/* Collection Badges */}
@@ -223,18 +269,102 @@ export default function PersonaProfile() {
         {/* Collapsible Sections */}
         <div className="space-y-4">
           <CollapsibleSection title="Background & Demographics" defaultOpen>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div><strong>Age:</strong> {age || 'Not specified'}</div>
-                <div><strong>Gender:</strong> {persona.full_profile?.identity?.gender || 'Not specified'}</div>
-                <div><strong>Location:</strong> {location || 'Not specified'}</div>
-                <div><strong>Occupation:</strong> {persona.full_profile?.identity?.occupation || 'Not specified'}</div>
+            <div className="space-y-6">
+              {/* Background Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-semibold">Background</h4>
+                  <span className={`text-xs ${getCharacterCount(generateBackground(persona), 900)}`}>
+                    {generateBackground(persona).length}/900 characters
+                  </span>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {generateBackground(persona) || 'No background information available.'}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-3">
-                <div><strong>Education:</strong> {persona.full_profile?.identity?.education_level || 'Not specified'}</div>
-                <div><strong>Income:</strong> {persona.full_profile?.identity?.income_bracket || 'Not specified'}</div>
-                <div><strong>Relationship:</strong> {persona.full_profile?.identity?.relationship_status || 'Not specified'}</div>
-                <div><strong>Dependents:</strong> {persona.full_profile?.identity?.dependents ?? 'Not specified'}</div>
+
+              {/* Demographics Grid */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4">Demographics</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                  {/* Left Column */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Age:</span>
+                      <span className="text-sm">
+                        {age || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Gender:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.gender || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Pronouns:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.pronouns || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Ethnicity:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.ethnicity || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Nationality:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.nationality || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Location:</span>
+                      <span className="text-sm">
+                        {location || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Education Level:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.education_level || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Occupation:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.occupation || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Income Bracket:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.income_bracket || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Relationship Status:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.relationship_status || <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Dependents:</span>
+                      <span className="text-sm">
+                        {persona.full_profile?.identity?.dependents !== undefined 
+                          ? persona.full_profile.identity.dependents 
+                          : <span className="text-muted-foreground">Not specified</span>}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </CollapsibleSection>
