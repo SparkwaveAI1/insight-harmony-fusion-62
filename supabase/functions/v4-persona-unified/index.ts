@@ -44,7 +44,9 @@ serve(async (req) => {
 - Major life challenges or formative experiences
 - Current living situation and circumstances
 
-Write in third person, past tense. Make it authentic and grounded in real-world experiences. Avoid clichés.`
+Write in third person, past tense. Make it authentic and grounded in real-world experiences. Avoid clichés.
+
+CRITICAL: Pay attention to gender consistency. If the persona is female, use "she/her" pronouns throughout. If male, use "he/him" pronouns. If non-binary, use "they/them" pronouns. NO mixed pronouns (e.g., don't use "His career" for a female persona).`
       },
       {
         role: 'user', 
@@ -71,7 +73,9 @@ Write in third person, past tense. Make it authentic and grounded in real-world 
 - How they handle challenges and relationships
 - Their general demeanor and outlook
 
-Write in third person, present tense. Make it insightful and authentic.`
+Write in third person, present tense. Make it insightful and authentic.
+
+CRITICAL: Maintain gender consistency with the background story. Use correct pronouns throughout (she/her for female, he/him for male, they/them for non-binary).`
       },
       {
         role: 'user',
@@ -101,7 +105,9 @@ Write in third person, present tense. Make it insightful and authentic.`
 - Overall grooming and presentation
 - Any distinguishing characteristics
 
-Write as a detailed paragraph suitable for AI image generation. Be specific and realistic.`
+Write as a detailed paragraph suitable for AI image generation. Be specific and realistic.
+
+CRITICAL: Ensure gender consistency with previous content. Match the gender identity established in the background and character description.`
       },
       {
         role: 'user',
@@ -195,6 +201,13 @@ CRITICAL REQUIREMENTS:
 - Use natural trait variation (0.1-0.9 range, avoid 0.5 defaults)
 - Ensure gender consistency across ALL fields and pronouns
 - Generate realistic, coherent personality traits
+
+CRITICAL GENDER CONSISTENCY: 
+- MUST maintain consistent pronouns throughout ALL generated text
+- If persona is female: use "she/her" pronouns exclusively
+- If persona is male: use "he/him" pronouns exclusively  
+- If persona is non-binary: use "they/them" pronouns exclusively
+- NO mixed pronouns (e.g., "His career" for female persona is WRONG)
 - No statistical normalization - let traits vary naturally
 - Coherence values: 0.1-0.3 (scattered), 0.3-0.4 (average), 0.5-0.6 (organized), 0.7+ (highly structured)
 

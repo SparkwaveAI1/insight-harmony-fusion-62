@@ -64,25 +64,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
         </div>
       </div>
       
-      {/* Description (Character Essence) */}
-      {conversationSummary?.character_description && (
-        <div className="mt-4">
-          <strong>Description:</strong>
-          <p className="mt-2 text-muted-foreground italic">
-            {conversationSummary.character_description}
-          </p>
-        </div>
-      )}
-      
-      {/* Background Story */}
-      {(conversationSummary?.demographics?.background_description || getPersonaBackgroundDescription(persona)) && (
-        <div className="mt-4">
-          <strong>Background:</strong>
-          <p className="mt-2 text-muted-foreground">
-            {conversationSummary?.demographics?.background_description || getPersonaBackgroundDescription(persona)}
-          </p>
-        </div>
-      )}
+      {/* Note: Description and Background are now in the main header section */}
       
       {conversationSummary?.physical_description && (
         <div className="mt-4">
@@ -375,26 +357,25 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-2xl font-bold">{formatName(persona.name)}</h2>
               </div>
-              <div className="text-sm text-muted-foreground space-y-2">
+                <div className="text-sm text-muted-foreground space-y-2">
                 <div className="flex items-center gap-4">
                   <span>{persona.conversation_summary?.demographics?.age} years old</span>
                   <span>{persona.conversation_summary?.demographics?.occupation}</span>
                   <span>{persona.conversation_summary?.demographics?.location}</span>
                 </div>
                 
-                {/* Description (Character Essence) */}
-                {persona.conversation_summary?.character_description && (
+                {/* Description (Character Essence) - FIRST in top box */}
+                {(persona.conversation_summary?.personality_summary || persona.conversation_summary?.character_description) && (
                   <div>
-                    <strong>Description:</strong>
-                    <p className="mt-1 text-muted-foreground italic">{persona.conversation_summary.character_description}</p>
-                  </div>
-                )}
-                
-                {/* Background Story */}
-                {persona.conversation_summary?.demographics?.background_description && (
-                  <div>
-                    <strong>Background:</strong>
-                    <p className="mt-1 text-muted-foreground">{persona.conversation_summary.demographics.background_description}</p>
+                    <div className="flex items-center justify-between">
+                      <strong>Description:</strong>
+                      <span className="text-xs text-muted-foreground">
+                        {(persona.conversation_summary?.personality_summary || persona.conversation_summary?.character_description || "").length}/300 characters
+                      </span>
+                    </div>
+                    <p className="mt-1 text-muted-foreground italic">
+                      {persona.conversation_summary?.personality_summary || persona.conversation_summary?.character_description}
+                    </p>
                   </div>
                 )}
                 
@@ -449,6 +430,37 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
         </div>
       </Card>
+
+      {/* Background Section - SECOND, outside/below top box */}
+      {persona.conversation_summary?.demographics?.background_description && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold">Background</h3>
+            <span className="text-xs text-muted-foreground">
+              {persona.conversation_summary.demographics.background_description.length}/400 characters
+            </span>
+          </div>
+          <div className="space-y-2">
+            {persona.conversation_summary.demographics.background_description.length > 300 ? (
+              <details className="group">
+                <summary className="cursor-pointer text-muted-foreground">
+                  <span className="group-open:hidden">
+                    {persona.conversation_summary.demographics.background_description.slice(0, 200)}...
+                  </span>
+                  <span className="font-medium text-primary ml-2 group-open:hidden">Read more</span>
+                </summary>
+                <p className="text-muted-foreground mt-2">
+                  {persona.conversation_summary.demographics.background_description}
+                </p>
+              </details>
+            ) : (
+              <p className="text-muted-foreground">
+                {persona.conversation_summary.demographics.background_description}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Chat Section - Controlled from parent */}
       {showChat && (
