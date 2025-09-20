@@ -396,43 +396,13 @@ const PersonaQueue = () => {
         // Add to collections if specified
         if (item.collections && item.collections.length > 0) {
           console.log('📁 Adding persona to collections:', item.collections);
-          
-          // Fetch user's collections to create name-to-ID map
-          const { data: userCollections, error: collectionsError } = await supabase
-            .from('collections')
-            .select('id, name')
-            .eq('user_id', user.id);
-
-          if (collectionsError) {
-            console.error('❌ Error fetching user collections:', collectionsError);
-          } else if (userCollections) {
-            // Create name-to-ID lookup map
-            const collectionMap = new Map(
-              userCollections.map(col => [col.name.toLowerCase(), col.id])
-            );
-            
-            let successCount = 0;
-            let failureCount = 0;
-            
-            for (const collectionName of item.collections) {
-              const collectionId = collectionMap.get(collectionName.toLowerCase());
-              
-              if (collectionId) {
-                try {
-                  await addPersonaToCollection(collectionId, personaId);
-                  console.log(`✅ Added persona to collection "${collectionName}" (${collectionId})`);
-                  successCount++;
-                } catch (collectionError) {
-                  console.warn(`⚠️ Failed to add persona to collection "${collectionName}":`, collectionError);
-                  failureCount++;
-                }
-              } else {
-                console.warn(`⚠️ Collection "${collectionName}" not found for user`);
-                failureCount++;
-              }
+          for (const collectionId of item.collections) {
+            try {
+              await addPersonaToCollection(collectionId, personaId);
+              console.log(`✅ Added persona to collection ${collectionId}`);
+            } catch (collectionError) {
+              console.warn(`⚠️ Failed to add persona to collection ${collectionId}:`, collectionError);
             }
-            
-            console.log(`📊 Collection assignment complete: ${successCount} successful, ${failureCount} failed`);
           }
         }
         
