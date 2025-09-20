@@ -19,7 +19,7 @@ const PersonaHeader = ({
   const navigate = useNavigate();
   
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center justify-between mb-8">
       <Button 
         variant="ghost" 
         onClick={() => navigate('/persona-viewer')}
@@ -33,9 +33,9 @@ const PersonaHeader = ({
         <Button 
           onClick={onChatToggle}
           size="lg"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 text-lg font-semibold"
         >
-          <MessageCircle className="mr-2 h-5 w-5" />
+          <MessageCircle className="mr-3 h-6 w-6" />
           {isChatOpen ? 'Hide Chat' : chatButtonText}
         </Button>
       )}
