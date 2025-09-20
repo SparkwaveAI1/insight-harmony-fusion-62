@@ -310,14 +310,11 @@ function PersonaProfile() {
                   </div>
                 )}
                  {/* Description (Character Essence) */}
-                 {persona.conversation_summary?.character_description && (
-                   <div className="space-y-1">
-                     <div className="flex items-center justify-between">
-                       <span className="text-sm font-medium text-muted-foreground">Description</span>
-                       <span className={`text-xs ${getCharacterCount(persona.conversation_summary.character_description, 300)}`}>
-                         {persona.conversation_summary.character_description.length}/300 characters
-                       </span>
-                     </div>
+                  {persona.conversation_summary?.character_description && (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">Description</span>
+                      </div>
                      <p className="text-muted-foreground leading-relaxed italic">
                        {persona.conversation_summary.character_description}
                      </p>
@@ -385,13 +382,10 @@ function PersonaProfile() {
               <CollapsibleSection title="Background & Demographics" defaultOpen>
             <div className="space-y-6">
               {/* Background Section */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-semibold">Background</h4>
-                  <span className={`text-xs ${getCharacterCount(getPersonaBackgroundDescription(persona) || 'No background available', 900)}`}>
-                    {(getPersonaBackgroundDescription(persona) || 'No background available').length}/900 characters
-                  </span>
-                </div>
+               <div className="space-y-2">
+                 <div className="flex items-center justify-between">
+                   <h4 className="text-lg font-semibold">Background</h4>
+                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">
                     {getPersonaBackgroundDescription(persona) || 'No background information available.'}
