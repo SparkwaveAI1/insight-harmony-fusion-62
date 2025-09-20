@@ -219,7 +219,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
             <p className="font-medium">{activePersona.name}</p>
           </div>
         </div>
-        <Link to={`/persona/${personaId}`}>
+        <Link to={`/persona-detail/${personaId}`}>
           <Button variant="outline" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Profile
