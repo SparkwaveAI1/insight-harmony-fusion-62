@@ -115,7 +115,7 @@ Original description: ${user_description}`
     const appearanceResponse = await generateChatResponse(appearanceMessages, openaiApiKey, {
       model: 'gpt-4.1-2025-04-14',
       temperature: 0.7,
-      max_tokens: 250
+      max_tokens: 500
     })
     
     const physicalDescription = appearanceResponse.choices[0]?.message?.content?.trim()
