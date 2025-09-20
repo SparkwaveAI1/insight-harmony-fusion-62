@@ -130,10 +130,19 @@ Original description: ${user_description}`
 
 CRITICAL REQUIREMENTS:
 - Use natural trait variation (0.1-0.9 range, avoid 0.5 defaults)
-- Ensure gender consistency across ALL fields
+- Ensure gender consistency across ALL fields and pronouns
 - Generate realistic, coherent personality traits
 - No statistical normalization - let traits vary naturally
 - Coherence values: 0.1-0.3 (scattered), 0.3-0.4 (average), 0.5-0.6 (organized), 0.7+ (highly structured)
+
+DATA TYPE REQUIREMENTS:
+- income_bracket: Use numeric ranges like "35000-50000", "75000-100000", "25000-35000"
+- age: Must be a number (e.g., 34)
+- sleep_hours: Must be a number (e.g., 7.5)
+- emergency_fund_months: Must be a number (e.g., 3)
+- dependents: Must be a number (e.g., 2)
+- All numeric fields in primary_drivers, goal_orientation, etc.: Use decimals 0.1-0.9
+- bmi_category: Use standard categories like "normal", "overweight", "underweight", "obese"
 
 Use this EXACT JSON structure:
 
@@ -149,7 +158,7 @@ Use this EXACT JSON structure:
     "relationship_status": "",
     "dependents": 0,
     "education_level": "",
-    "income_bracket": "",
+    "income_bracket": "35000-50000",
     "location": {
       "city": "",
       "region": "",
@@ -187,7 +196,7 @@ Use this EXACT JSON structure:
     "mental_health_flags": [],
     "medications": [],
     "adherence_level": "",
-    "sleep_hours": 0,
+    "sleep_hours": 7.5,
     "substance_use": {
       "alcohol": "",
       "cigarettes": "",
@@ -216,7 +225,7 @@ Use this EXACT JSON structure:
     "earning_context": "",
     "spending_style": "",
     "savings_investing_habits": {
-      "emergency_fund_months": 0,
+      "emergency_fund_months": 3,
       "retirement_contributions": "",
       "investing_style": ""
     },
@@ -229,21 +238,21 @@ Use this EXACT JSON structure:
     "primary_motivation_labels": [],
     "deal_breakers": [],
     "primary_drivers": {
-      "care": 0,
-      "family": 0,
-      "status": 0,
-      "mastery": 0,
-      "meaning": 0,
-      "novelty": 0,
-      "security": 0,
-      "belonging": 0,
-      "self_interest": 0
+      "care": 0.7,
+      "family": 0.8,
+      "status": 0.3,
+      "mastery": 0.6,
+      "meaning": 0.5,
+      "novelty": 0.2,
+      "security": 0.9,
+      "belonging": 0.4,
+      "self_interest": 0.3
     },
     "goal_orientation": {
-      "strength": 0,
-      "time_horizon": "",
+      "strength": 0.6,
+      "time_horizon": "medium-term",
       "primary_goals": [],
-      "goal_flexibility": 0
+      "goal_flexibility": 0.4
     },
     "want_vs_should_tension": {
       "major_conflicts": [],
@@ -261,14 +270,14 @@ Use this EXACT JSON structure:
       "directness": "",
       "pace_rhythm": "",
       "positivity": "",
-      "empathy_level": 0,
+      "empathy_level": 0.7,
       "honesty_style": "",
-      "charisma_level": 0
+      "charisma_level": 0.5
     },
     "style_markers": {
       "metaphor_domains": [],
       "aphorism_register": "",
-      "storytelling_vs_bullets": 0,
+      "storytelling_vs_bullets": 0.6,
       "humor_style": "",
       "code_switching_contexts": []
     },
@@ -300,11 +309,11 @@ Use this EXACT JSON structure:
     "use_cases": []
   },
   "truth_honesty_profile": {
-    "baseline_honesty": 0,
+    "baseline_honesty": 0.8,
     "situational_variance": {
-      "work": 0,
-      "home": 0,
-      "public": 0
+      "work": 0.7,
+      "home": 0.9,
+      "public": 0.6
     },
     "typical_distortions": [],
     "red_lines": [],
@@ -313,22 +322,22 @@ Use this EXACT JSON structure:
   },
   "bias_profile": {
     "cognitive": {
-      "status_quo": 0,
-      "loss_aversion": 0,
-      "confirmation": 0,
-      "anchoring": 0,
-      "availability": 0,
-      "optimism": 0,
-      "sunk_cost": 0,
-      "overconfidence": 0
+      "status_quo": 0.5,
+      "loss_aversion": 0.7,
+      "confirmation": 0.6,
+      "anchoring": 0.4,
+      "availability": 0.5,
+      "optimism": 0.3,
+      "sunk_cost": 0.4,
+      "overconfidence": 0.2
     },
     "mitigations": []
   },
   "cognitive_profile": {
-    "verbal_fluency": 0,
-    "abstract_reasoning": 0,
-    "problem_solving_orientation": "",
-    "thought_coherence": 0
+    "verbal_fluency": 0.7,
+    "abstract_reasoning": 0.6,
+    "problem_solving_orientation": "methodical",
+    "thought_coherence": 0.5
   },
   "emotional_profile": {
     "stress_responses": [],
@@ -340,10 +349,10 @@ Use this EXACT JSON structure:
   "attitude_narrative": "",
   "political_narrative": "",
   "adoption_profile": {
-    "buyer_power": 0,
-    "adoption_influence": 0,
-    "risk_tolerance": 0,
-    "change_friction": 0,
+    "buyer_power": 0.4,
+    "adoption_influence": 0.3,
+    "risk_tolerance": 0.5,
+    "change_friction": 0.6,
     "expected_objections": [],
     "proof_points_needed": []
   },
@@ -353,20 +362,20 @@ Use this EXACT JSON structure:
       "directness": "",
       "pace_rhythm": "",
       "positivity": "",
-      "empathy_level": 0
+      "empathy_level": 0.7
     },
     "style_markers": {
       "metaphor_domains": [],
       "humor_style": "",
-      "storytelling_vs_bullets": 0
+      "storytelling_vs_bullets": 0.6
     },
     "primary_motivations": [],
     "deal_breakers": [],
     "honesty_vector": {
-      "baseline": 0,
-      "work": 0,
-      "home": 0,
-      "public": 0,
+      "baseline": 0.8,
+      "work": 0.7,
+      "home": 0.9,
+      "public": 0.6,
       "distortions": []
     },
     "bias_vector": {
@@ -431,6 +440,7 @@ Ensure all traits are coherent with the background story and character essence. 
         name: personaName,
         background_description: background
       },
+      character_description: characterDescription,
       communication_style: {
         directness: fullProfile.communication_style?.voice_foundation?.directness || '',
         formality: fullProfile.communication_style?.voice_foundation?.formality || '',
