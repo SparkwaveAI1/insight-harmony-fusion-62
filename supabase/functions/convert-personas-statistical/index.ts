@@ -138,6 +138,7 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
   
   // DISABLED: Health sanitization removed - preserving authentic OpenAI health diversity
   // Initialize missing sections
+  // DISABLED: Health profile initialization - preserving OpenAI's authentic health generation
   // if (!updatedPersona.health_profile) {
   //   updatedPersona.health_profile = {
   //     bmi: generateRealisticBMI(),
@@ -154,9 +155,9 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
   //     },
   //     fitness_level: "moderate",
   //     diet_pattern: "mixed"
-    };
-    traitsAdded.push("health_profile");
-  }
+  //   };
+  //   traitsAdded.push("health_profile");
+  // }
 
   if (!updatedPersona.money_profile) {
     updatedPersona.money_profile = {
