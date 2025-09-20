@@ -242,12 +242,6 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         />
       </Card>
       
-      <Alert className="bg-blue-50 border-blue-200">
-        <MessageCircle className="h-4 w-4 text-blue-500" />
-        <AlertDescription className="text-blue-800 font-medium">
-          Powered by V4/Grok system for authentic conversations!
-        </AlertDescription>
-      </Alert>
       
       {/* Mobile Navigation Drawer */}
       <MobileDrawerMenu 
