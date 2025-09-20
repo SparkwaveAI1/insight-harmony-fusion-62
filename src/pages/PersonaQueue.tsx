@@ -352,7 +352,7 @@ const PersonaQueue = () => {
           const call1Response = await withTimeout(createV4PersonaCall1({
             user_prompt: item.description,
             user_id: user.id
-          }), 90000); // 90 second timeout
+          }), 120000); // 120 second timeout (increased from 90s)
 
           if (!call1Response.success) {
             await fail(`V4 Call 1 failed: ${call1Response.error}`);
@@ -415,7 +415,7 @@ const PersonaQueue = () => {
         
         console.log('🎯 Starting V4 persona creation step 2...');
         
-        const call2Response = await withTimeout(createV4PersonaCall2(personaId), 90000);
+        const call2Response = await withTimeout(createV4PersonaCall2(personaId), 120000); // 120 second timeout
         
         if (!call2Response.success) {
           await fail(`Stage2 failed: ${call2Response.error || 'unknown'}`);
@@ -460,7 +460,7 @@ const PersonaQueue = () => {
         
         console.log('🎯 Starting V4 persona creation step 3...');
         
-        const call3Response = await withTimeout(createV4PersonaCall3(personaId, true), 90000);
+        const call3Response = await withTimeout(createV4PersonaCall3(personaId, true), 120000); // 120 second timeout
         
         if (!call3Response.success) {
           await fail(`Stage3 failed: ${call3Response.error || 'unknown'}`);

@@ -52,7 +52,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07', // Faster model for summarization
         messages: [
           {
             role: 'system',
@@ -106,8 +106,7 @@ CRITICAL REQUIREMENTS:
             content: `Generate summaries for this V4 persona:\n\n${JSON.stringify(persona.full_profile, null, 2)}`
           }
         ],
-        temperature: 0.3,
-        max_tokens: 1500
+        max_completion_tokens: 1200 // Reduced tokens and use correct parameter for GPT-5
       })
     })
 

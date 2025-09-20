@@ -7,9 +7,9 @@ export interface RetryOptions {
 }
 
 export const DEFAULT_RETRY_OPTIONS: RetryOptions = {
-  maxRetries: 3,
-  baseDelay: 1000,
-  maxDelay: 10000,
+  maxRetries: 4, // Increased from 3 to 4
+  baseDelay: 1500, // Increased from 1000ms to 1500ms
+  maxDelay: 15000, // Increased from 10000ms to 15000ms
   backoffFactor: 2
 };
 
