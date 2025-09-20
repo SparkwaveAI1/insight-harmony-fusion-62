@@ -55,7 +55,6 @@ serve(async (req) => {
         urbanicity: persona.urbanicity || 'urban', 
         age_range: persona.age ? `${persona.age - 2}-${persona.age + 2}` : '25-35',
         ethnicity: persona.ethnicity || null,
-        coherence_target: 0.7,
         name_preference: persona.name // Try to keep the same name if possible
       };
 

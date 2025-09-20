@@ -355,8 +355,7 @@ serve(async (req) => {
 
     // Extract and validate inputs - simplified to just user description
     const userInputs = {
-      user_description: requestBody.user_description || '',
-      coherence_target: requestBody.coherence_target || 0.7
+      user_description: requestBody.user_description || ''
     };
 
     console.log('Processed user inputs:', userInputs);
@@ -372,8 +371,6 @@ Interpret this description intelligently:
 - Generate all missing traits realistically
 
 User description: ${userInputs.user_description}
-
-Thought Coherence Target: ${userInputs.coherence_target}
 
 Generate complete persona with all 17 sections filled.`;
 
