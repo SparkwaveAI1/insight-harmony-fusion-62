@@ -10,6 +10,7 @@ import { GrokPromptMonitor } from "../dashboard/GrokPromptMonitor";
 import { PersonaTraitFiller } from "./PersonaTraitFiller";
 import { PersonaDescriptionConverter } from "./PersonaDescriptionConverter";
 import { BatchPersonaConverter } from "./BatchPersonaConverter";
+import { PersonaSelectionInterface } from "./PersonaSelectionInterface";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -69,6 +70,9 @@ export function AdminDashboard() {
 
       {/* Persona Trait Filler */}
       <PersonaTraitFiller />
+
+      {/* Persona Selection Interface */}
+      <PersonaSelectionInterface />
 
       {/* Batch Persona Converter */}
       <BatchPersonaConverter />
