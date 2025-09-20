@@ -21,7 +21,7 @@ interface PersonaCollection {
   name: string;
 }
 
-export default function PersonaProfile() {
+function PersonaProfile() {
   const { personaId } = useParams<{ personaId: string }>();
   console.log('Route params:', useParams());
   console.log('Extracted personaId:', personaId);
@@ -195,7 +195,6 @@ export default function PersonaProfile() {
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-  };
   };
 
   if (isLoading) {
@@ -1152,59 +1151,24 @@ export default function PersonaProfile() {
               {/* Policy Issue Cards */}
               <div>
                 <h4 className="text-lg font-semibold mb-4">Policy Positions</h4>
-                {persona.full_profile?.public_issues ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(persona.full_profile.public_issues).map(([issue, stance]: [string, any]) => (
-                      <Card key={issue} className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium capitalize">{issue.replace(/_/g, ' ')}</h5>
-                            <Badge 
-                              variant={
-                                stance.position === 'support' ? 'default' : 
-                                stance.position === 'oppose' ? 'destructive' : 
-                                'secondary'
-                              }
-                            >
-                              {stance.position}
-                            </Badge>
-                          </div>
-                          {stance.rationale && (
-                            <p className="text-sm text-muted-foreground">{stance.rationale}</p>
-                          )}
-                          {stance.confidence && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">Confidence:</span>
-                              <Progress value={stance.confidence * 100} className="h-2 flex-1" />
-                              <span className="text-xs text-muted-foreground">{Math.round(stance.confidence * 100)}%</span>
-                            </div>
-                          )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {['Education', 'Healthcare', 'Climate', 'Social Equity', 'Economics', 'Technology'].map((issue) => (
+                    <Card key={issue} className="p-4 opacity-50">
+                      <div className="space-y-2">
+                        <h5 className="font-medium">{issue}</h5>
+                        <div className="text-sm text-muted-foreground">
+                          No recorded position
                         </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {['Education', 'Healthcare', 'Climate', 'Social Equity', 'Economics', 'Technology'].map((issue) => (
-                      <Card key={issue} className="p-4 opacity-50">
-                        <div className="space-y-2">
-                          <h5 className="font-medium">{issue}</h5>
-                          <div className="text-sm text-muted-foreground">
-                            No recorded position
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
                 
-                {!persona.full_profile?.public_issues && (
-                  <div className="mt-4 p-4 bg-muted/30 rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground">
-                      No active policy opinions recorded. Political views may be inferred from the narrative above.
-                    </p>
-                  </div>
-                )}
+                <div className="mt-4 p-4 bg-muted/30 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No active policy opinions recorded. Political views may be inferred from the narrative above.
+                  </p>
+                </div>
               </div>
 
               {!persona.full_profile?.political_narrative && (
