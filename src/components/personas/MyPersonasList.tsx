@@ -58,7 +58,7 @@ const MyPersonasList = ({
     if (allPersonas && onPersonasLoad) {
       onPersonasLoad(allPersonas);
     }
-  }, [allPersonas, onPersonasLoad]);
+  }, [allPersonas]); // Remove onPersonasLoad from dependencies to prevent infinite loop
 
   // Apply advanced filters
   const applyAdvancedFilters = (personas: V4Persona[]) => {
