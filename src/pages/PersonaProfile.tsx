@@ -366,19 +366,33 @@ function PersonaProfile() {
                     {age} years old {location && `• ${location}`}
                   </div>
                 )}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {persona.background ? 'Background' : 'Description'}
-                    </span>
-                    <span className={`text-xs ${getCharacterCount(persona.background || description, 400)}`}>
-                      {(persona.background || description).length}/400 characters
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {persona.background || description}
-                  </p>
-                </div>
+                 {/* Description (Character Essence) */}
+                 {persona.conversation_summary?.character_description && (
+                   <div className="space-y-1">
+                     <div className="flex items-center justify-between">
+                       <span className="text-sm font-medium text-muted-foreground">Description</span>
+                       <span className={`text-xs ${getCharacterCount(persona.conversation_summary.character_description, 300)}`}>
+                         {persona.conversation_summary.character_description.length}/300 characters
+                       </span>
+                     </div>
+                     <p className="text-muted-foreground leading-relaxed italic">
+                       {persona.conversation_summary.character_description}
+                     </p>
+                   </div>
+                 )}
+
+                 {/* Background Story */}
+                 <div className="space-y-1">
+                   <div className="flex items-center justify-between">
+                     <span className="text-sm font-medium text-muted-foreground">Background</span>
+                     <span className={`text-xs ${getCharacterCount(persona.conversation_summary?.demographics?.background_description || generateBackground(persona), 400)}`}>
+                       {(persona.conversation_summary?.demographics?.background_description || generateBackground(persona)).length}/400 characters
+                     </span>
+                   </div>
+                   <p className="text-muted-foreground leading-relaxed">
+                     {persona.conversation_summary?.demographics?.background_description || generateBackground(persona)}
+                   </p>
+                 </div>
               </div>
 
               {/* Collection Badges */}

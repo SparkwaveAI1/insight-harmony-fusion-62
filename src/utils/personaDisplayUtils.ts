@@ -69,18 +69,35 @@ export function getPersonaLocation(persona: V4Persona): string | undefined {
  * Safely extract background description from V4 persona
  */
 export function getPersonaBackgroundDescription(persona: V4Persona): string | undefined {
-  // Check for attitude_narrative first as it's more descriptive
+  // Prefer the actual background story from conversation_summary
+  if (persona.conversation_summary?.demographics?.background_description) {
+    return persona.conversation_summary.demographics.background_description;
+  }
+  
+  // Fallback to attitude_narrative if no background story
   if (persona.full_profile?.attitude_narrative) {
     return persona.full_profile.attitude_narrative;
   }
   
-  // Try to generate from available data if no explicit description
+  // Last resort: generate from available data
   const age = getPersonaAge(persona);
   const occupation = getPersonaOccupation(persona);
   const location = getPersonaLocation(persona);
   
   if (age && occupation && location) {
     return `${age}-year-old ${occupation} from ${location}`;
+  }
+  
+  return undefined;
+}
+
+/**
+ * Safely extract character description (essence) from V4 persona
+ */
+export function getPersonaDescription(persona: V4Persona): string | undefined {
+  // Check for character_description first (from Phase 2 generation)
+  if (persona.conversation_summary?.character_description) {
+    return persona.conversation_summary.character_description;
   }
   
   return undefined;

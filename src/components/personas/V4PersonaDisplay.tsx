@@ -64,6 +64,17 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
         </div>
       </div>
       
+      {/* Description (Character Essence) */}
+      {conversationSummary?.character_description && (
+        <div className="mt-4">
+          <strong>Description:</strong>
+          <p className="mt-2 text-muted-foreground italic">
+            {conversationSummary.character_description}
+          </p>
+        </div>
+      )}
+      
+      {/* Background Story */}
       {(conversationSummary?.demographics?.background_description || getPersonaBackgroundDescription(persona)) && (
         <div className="mt-4">
           <strong>Background:</strong>
@@ -364,13 +375,29 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-2xl font-bold">{formatName(persona.name)}</h2>
               </div>
-              <div className="text-sm text-muted-foreground space-y-1">
+              <div className="text-sm text-muted-foreground space-y-2">
                 <div className="flex items-center gap-4">
                   <span>{persona.conversation_summary?.demographics?.age} years old</span>
                   <span>{persona.conversation_summary?.demographics?.occupation}</span>
                   <span>{persona.conversation_summary?.demographics?.location}</span>
                 </div>
-                <div>{persona.conversation_summary?.demographics?.background_description}</div>
+                
+                {/* Description (Character Essence) */}
+                {persona.conversation_summary?.character_description && (
+                  <div>
+                    <strong>Description:</strong>
+                    <p className="mt-1 text-muted-foreground italic">{persona.conversation_summary.character_description}</p>
+                  </div>
+                )}
+                
+                {/* Background Story */}
+                {persona.conversation_summary?.demographics?.background_description && (
+                  <div>
+                    <strong>Background:</strong>
+                    <p className="mt-1 text-muted-foreground">{persona.conversation_summary.demographics.background_description}</p>
+                  </div>
+                )}
+                
                 <div className="text-xs mt-2">
                   Created: {new Date(persona.created_at).toLocaleDateString()} • 
                   ID: {persona.persona_id}
