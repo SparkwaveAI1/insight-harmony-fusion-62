@@ -121,8 +121,71 @@ Original description: ${user_description}`
     const physicalDescription = appearanceResponse.choices[0]?.message?.content?.trim()
     console.log('✅ Physical appearance generated:', physicalDescription?.slice(0, 100) + '...')
 
-    // PHASE 4: Full Persona JSON Generation
-    console.log('🧠 Phase 4: Generating complete persona JSON...')
+    // PHASE 4: Image Generation
+    console.log('🎨 Phase 4: Generating persona image...')
+    let profileImageUrl = null
+    
+    try {
+      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-image-1',
+          prompt: `Professional headshot portrait: ${physicalDescription}. High quality, realistic, well-lit, neutral background.`,
+          size: '1024x1024',
+          quality: 'high',
+          output_format: 'webp'
+        })
+      })
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json()
+        const imageBase64 = imageData.data[0].b64_json
+        
+        if (imageBase64) {
+          // Convert base64 to blob for storage
+          const byteCharacters = atob(imageBase64)
+          const byteNumbers = new Array(byteCharacters.length)
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i)
+          }
+          const byteArray = new Uint8Array(byteNumbers)
+          const blob = new Blob([byteArray], { type: 'image/webp' })
+          
+          // Upload to Supabase Storage
+          const fileName = `${persona_id}.webp`
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('persona-images')
+            .upload(fileName, blob, {
+              contentType: 'image/webp',
+              upsert: true
+            })
+
+          if (uploadError) {
+            console.error('❌ Image upload failed:', uploadError)
+          } else {
+            // Get public URL
+            const { data: urlData } = supabase.storage
+              .from('persona-images')
+              .getPublicUrl(fileName)
+            
+            profileImageUrl = urlData.publicUrl
+            console.log('✅ Image generated and uploaded:', profileImageUrl)
+          }
+        }
+      } else {
+        console.error('❌ Image generation failed:', await imageResponse.text())
+      }
+    } catch (imageError) {
+      console.error('❌ Image generation error:', imageError)
+      // Continue without image - don't fail the entire persona creation
+    }
+
+    // PHASE 5: Full Persona JSON Generation
+    console.log('🧠 Phase 5: Generating complete persona JSON...')
     const personaJsonMessages = [
       {
         role: 'system',
@@ -462,6 +525,7 @@ Ensure all traits are coherent with the background story and character essence. 
         full_profile: fullProfile,
         conversation_summary: conversationSummary,
         background: background,
+        profile_image_url: profileImageUrl,
         creation_stage: 'completed',
         creation_completed: true,
         created_at: new Date().toISOString(),
@@ -486,6 +550,7 @@ Ensure all traits are coherent with the background story and character essence. 
         background: background,
         character_description: characterDescription,
         physical_description: physicalDescription,
+        profile_image_url: profileImageUrl,
         message: 'Persona created successfully with unified generation!'
       }),
       {
