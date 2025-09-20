@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Plus, FileText, BarChart3, Edit } from 'lucide-react';
+import { ArrowLeft, User, Plus, FileText, BarChart3, Edit, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
+import { Progress } from '@/components/ui/progress';
 import { V4Persona } from '@/types/persona-v4';
 import { getV4PersonaById } from '@/services/v4-persona';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, getPersonaDisplayName } from '@/utils/personaDisplayUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 interface PersonaCollection {
   collection_id: string;
@@ -127,6 +129,46 @@ export default function PersonaProfile() {
     if (percentage >= 90) return 'text-destructive';
     if (percentage >= 75) return 'text-yellow-600';
     return 'text-muted-foreground';
+  };
+
+  // Computed indices
+  const calculateFinancialStressIndex = (persona: V4Persona): number => {
+    const money = persona.full_profile?.money_profile;
+    if (!money) return 0;
+    
+    const stressors = money.financial_stressors?.length || 0;
+    const emergencyFund = money.savings_investing_habits?.emergency_fund_months || 0;
+    const debtPosture = money.debt_posture;
+    
+    let stress = stressors * 20; // Each stressor adds 20%
+    if (emergencyFund < 3) stress += 30; // Low emergency fund
+    if (debtPosture === 'high_debt' || debtPosture === 'struggling') stress += 25;
+    
+    return Math.min(100, stress);
+  };
+
+  const calculateWellbeingIndex = (persona: V4Persona): number => {
+    const health = persona.full_profile?.health_profile;
+    if (!health) return 50; // Default neutral
+    
+    let wellbeing = 50;
+    const sleepHours = health.sleep_hours || 7;
+    const mentalFlags = health.mental_health_flags?.length || 0;
+    
+    // Sleep optimization (7-8 hours optimal)
+    if (sleepHours >= 7 && sleepHours <= 8) wellbeing += 20;
+    else if (sleepHours >= 6 && sleepHours <= 9) wellbeing += 10;
+    else wellbeing -= 15;
+    
+    // Mental health impact
+    wellbeing -= mentalFlags * 15;
+    
+    // Fitness level impact
+    if (health.fitness_level === 'high' || health.fitness_level === 'very_active') wellbeing += 20;
+    else if (health.fitness_level === 'moderate') wellbeing += 10;
+    else if (health.fitness_level === 'low' || health.fitness_level === 'sedentary') wellbeing -= 10;
+    
+    return Math.max(0, Math.min(100, wellbeing));
   };
 
   if (isLoading) {
@@ -370,20 +412,389 @@ export default function PersonaProfile() {
           </CollapsibleSection>
 
           <CollapsibleSection title="Daily Life Snapshot">
-            <div className="text-muted-foreground">
-              Content coming soon...
+            <div className="space-y-6">
+              {/* Activity Chart */}
+              <div>
+                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Daily Time Allocation
+                </h4>
+                {persona.full_profile?.daily_life?.primary_activities ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={Object.entries(persona.full_profile.daily_life.primary_activities).map(([key, value]) => ({
+                              name: key.replace(/_/g, ' '),
+                              value: value as number,
+                              hours: value as number
+                            }))}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={40}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {Object.entries(persona.full_profile.daily_life.primary_activities).map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={`hsl(${index * 45 + 200}, 70%, 50%)`} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: any) => [`${value} hours`, 'Time']} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="space-y-2">
+                      {Object.entries(persona.full_profile.daily_life.primary_activities).map(([key, value], index) => (
+                        <div key={key} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: `hsl(${index * 45 + 200}, 70%, 50%)` }}
+                            />
+                            <span className="text-sm capitalize">{key.replace(/_/g, ' ')}</span>
+                          </div>
+                          <span className="text-sm font-medium">{value} hrs</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground">No activity data available</div>
+                )}
+              </div>
+
+              {/* Screen Time Summary */}
+              {persona.full_profile?.daily_life?.screen_time_summary && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Screen Time
+                  </h4>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm leading-relaxed">
+                      {persona.full_profile.daily_life.screen_time_summary}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Mental Preoccupations */}
+              {persona.full_profile?.daily_life?.mental_preoccupations && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <Brain className="h-5 w-5" />
+                    Mental Preoccupations
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {persona.full_profile.daily_life.mental_preoccupations.map((preoccupation, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {preoccupation}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!persona.full_profile?.daily_life && (
+                <div className="text-muted-foreground">No daily life data available</div>
+              )}
             </div>
           </CollapsibleSection>
 
           <CollapsibleSection title="Home Life & Relationships">
-            <div className="text-muted-foreground">
-              Content coming soon...
+            <div className="space-y-6">
+              {/* Household Info */}
+              {persona.full_profile?.relationships?.household && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Home className="h-5 w-5" />
+                    Household
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">Status:</span>
+                      <span className="text-sm capitalize">
+                        {persona.full_profile.relationships.household.status?.replace(/_/g, ' ') || 'Not specified'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">Harmony:</span>
+                      <span className="text-sm capitalize">
+                        {persona.full_profile.relationships.household.harmony_level || 'Not specified'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">Dependents:</span>
+                      <span className="text-sm">
+                        {persona.full_profile.relationships.household.dependents ?? 'Not specified'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pets */}
+              <div>
+                <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                  <PawPrint className="h-5 w-5" />
+                  Pets
+                </h4>
+                {persona.full_profile?.relationships?.pets && persona.full_profile.relationships.pets.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {persona.full_profile.relationships.pets.map((pet, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        <PawPrint className="h-3 w-3 mr-1" />
+                        {typeof pet === 'string' ? pet : (pet as any)?.name || 'Pet'}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground text-sm">No pets</div>
+                )}
+              </div>
+
+              {/* Friend Network */}
+              {persona.full_profile?.relationships?.friend_network && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Social Network
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium">Network Size:</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.relationships.friend_network.size || 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium">Contact Frequency:</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.relationships.friend_network.frequency || 'Not specified'}
+                        </span>
+                      </div>
+                    </div>
+                    {persona.full_profile.relationships.friend_network.anchor_contexts && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground mb-2 block">Social Contexts:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {persona.full_profile.relationships.friend_network.anchor_contexts.map((context, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {context}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Caregiving Roles */}
+              {persona.full_profile?.relationships?.caregiving_roles && persona.full_profile.relationships.caregiving_roles.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                    <Heart className="h-5 w-5" />
+                    Caregiving Responsibilities
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {persona.full_profile.relationships.caregiving_roles.map((role, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        <Heart className="h-3 w-3 mr-1" />
+                        {role}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!persona.full_profile?.relationships && (
+                <div className="text-muted-foreground">No relationship data available</div>
+              )}
             </div>
           </CollapsibleSection>
 
           <CollapsibleSection title="Money & Health">
-            <div className="text-muted-foreground">
-              Content coming soon...
+            <div className="space-y-6">
+              {/* Computed Indices */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <Card className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Financial Stress Index
+                    </h4>
+                    <span className="text-2xl font-bold">{calculateFinancialStressIndex(persona)}%</span>
+                  </div>
+                  <Progress value={calculateFinancialStressIndex(persona)} className="h-2" />
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      Wellbeing Index
+                    </h4>
+                    <span className="text-2xl font-bold">{calculateWellbeingIndex(persona)}%</span>
+                  </div>
+                  <Progress value={calculateWellbeingIndex(persona)} className="h-2" />
+                </Card>
+              </div>
+
+              {/* Money Profile */}
+              {persona.full_profile?.money_profile && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Financial Profile
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium text-muted-foreground block mb-1">Spending Style</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.money_profile.spending_style?.replace(/_/g, ' ') || 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium text-muted-foreground block mb-1">Debt Posture</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.money_profile.debt_posture?.replace(/_/g, ' ') || 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium text-muted-foreground block mb-1">Earning Context</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.money_profile.earning_context?.replace(/_/g, ' ') || 'Not specified'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Financial Stressors */}
+                    {persona.full_profile.money_profile.financial_stressors && persona.full_profile.money_profile.financial_stressors.length > 0 && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground mb-2 block">Financial Stressors:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {persona.full_profile.money_profile.financial_stressors.map((stressor, index) => (
+                            <Badge key={index} variant="destructive" className="text-xs">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              {stressor}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Savings & Investing */}
+                    {persona.full_profile.money_profile.savings_investing_habits && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h5 className="text-sm font-semibold mb-2">Savings & Investing</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Emergency Fund:</span>
+                            <span className="ml-2">
+                              {persona.full_profile.money_profile.savings_investing_habits.emergency_fund_months || 0} months
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Retirement:</span>
+                            <span className="ml-2 capitalize">
+                              {persona.full_profile.money_profile.savings_investing_habits.retirement_contributions?.replace(/_/g, ' ') || 'Not specified'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Investment Style:</span>
+                            <span className="ml-2 capitalize">
+                              {persona.full_profile.money_profile.savings_investing_habits.investing_style?.replace(/_/g, ' ') || 'Not specified'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Health Profile */}
+              {persona.full_profile?.health_profile && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Health Profile
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium text-muted-foreground block mb-1">Sleep</span>
+                        <span className="text-sm">
+                          {persona.full_profile.health_profile.sleep_hours || 'Not specified'} hours/night
+                        </span>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium text-muted-foreground block mb-1">Diet Pattern</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.health_profile.diet_pattern?.replace(/_/g, ' ') || 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <span className="text-sm font-medium text-muted-foreground block mb-1">Fitness Level</span>
+                        <span className="text-sm capitalize">
+                          {persona.full_profile.health_profile.fitness_level?.replace(/_/g, ' ') || 'Not specified'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Health Conditions */}
+                    {persona.full_profile.health_profile.chronic_conditions && persona.full_profile.health_profile.chronic_conditions.length > 0 && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground mb-2 block">Chronic Conditions:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {persona.full_profile.health_profile.chronic_conditions.map((condition, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {condition}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mental Health */}
+                    {persona.full_profile.health_profile.mental_health_flags && persona.full_profile.health_profile.mental_health_flags.length > 0 && (
+                      <div>
+                        <span className="text-sm font-medium text-muted-foreground mb-2 block">Mental Health:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {persona.full_profile.health_profile.mental_health_flags.map((flag, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {flag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Substance Use */}
+                    {persona.full_profile.health_profile.substance_use && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h5 className="text-sm font-semibold mb-2">Substance Use</h5>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          {Object.entries(persona.full_profile.health_profile.substance_use).map(([substance, usage]) => (
+                            <div key={substance}>
+                              <span className="text-muted-foreground capitalize">{substance}:</span>
+                              <span className="ml-2 capitalize">{usage?.replace(/_/g, ' ') || 'None'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!persona.full_profile?.money_profile && !persona.full_profile?.health_profile && (
+                <div className="text-muted-foreground">No financial or health data available</div>
+              )}
             </div>
           </CollapsibleSection>
 
