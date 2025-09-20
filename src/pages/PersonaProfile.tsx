@@ -15,6 +15,7 @@ import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, get
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import { TraitsDashboard } from '@/components/TraitsDashboard';
 
 interface PersonaCollection {
   collection_id: string;
@@ -232,6 +233,14 @@ function PersonaProfile() {
   const age = getPersonaAge(persona);
   const location = getPersonaLocation(persona);
   const description = generateDescription(persona);
+
+  // Debug logging for data visualization
+  console.log('=== PERSONA DATA DEBUG ===');
+  console.log('Full persona object:', persona);
+  console.log('Motivation profile:', persona?.full_profile?.motivation_profile);
+  console.log('Primary drivers:', persona?.full_profile?.motivation_profile?.primary_drivers);
+  console.log('Bias profile:', persona?.full_profile?.bias_profile);
+  console.log('=== END DEBUG ===');
 
   return (
     <div className="min-h-screen bg-background">
@@ -910,21 +919,29 @@ function PersonaProfile() {
               {persona.full_profile?.bias_profile?.cognitive && (
                 <div>
                   <h4 className="text-lg font-semibold mb-4">Cognitive Bias Profile</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    {Object.entries(persona.full_profile.bias_profile.cognitive).map(([bias, value]) => (
-                      <div key={bias} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium capitalize">
-                            {bias.replace(/_/g, ' ')}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {Math.round((value as number) * 100)}%
-                          </span>
-                        </div>
-                        <Progress value={(value as number) * 100} className="h-2" />
+                  {(() => {
+                    const biasData = persona.full_profile.bias_profile.cognitive;
+                    console.log('Bias profile data:', biasData);
+                    
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        {Object.entries(biasData).map(([bias, value]) => {
+                          const biasName = bias.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                          const percentage = Math.round((value as number) * 100);
+                          
+                          return (
+                            <div key={bias} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">{biasName}</span>
+                                <span className="text-sm text-muted-foreground">{percentage}%</span>
+                              </div>
+                              <Progress value={percentage} className="h-2" />
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
                   {persona.full_profile.bias_profile.mitigations && persona.full_profile.bias_profile.mitigations.length > 0 && (
                     <div>
                       <span className="text-sm font-medium text-muted-foreground">Bias Mitigations:</span>
@@ -943,79 +960,72 @@ function PersonaProfile() {
               {/* Personality Attributes */}
               <div>
                 <h4 className="text-lg font-semibold mb-4">Core Personality Attributes</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Honesty */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Honesty</span>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round((persona.full_profile?.truth_honesty_profile?.baseline_honesty || 0.5) * 100)}%
-                      </span>
-                    </div>
-                    <Progress value={(persona.full_profile?.truth_honesty_profile?.baseline_honesty || 0.5) * 100} className="h-3" />
-                  </div>
+                {(() => {
+                  const honestyValue = persona.full_profile?.truth_honesty_profile?.baseline_honesty || 0.5;
+                  const empathyValue = persona.full_profile?.prompt_shaping?.voice_foundation?.empathy_level || 0.5;
+                  const regulation = persona.full_profile?.emotional_profile?.emotional_regulation;
+                  const spendingStyle = persona.full_profile?.money_profile?.spending_style;
+                  const selfEfficacyValue = persona.full_profile?.motivation_profile?.goal_orientation?.strength || 0.5;
+                  
+                  // Calculate impulse control
+                  let impulseControl = 0.5;
+                  if (regulation === 'very_high' || regulation === 'high') impulseControl += 0.3;
+                  else if (regulation === 'low' || regulation === 'very_low') impulseControl -= 0.3;
+                  if (spendingStyle === 'frugal' || spendingStyle === 'conservative') impulseControl += 0.2;
+                  else if (spendingStyle === 'impulsive' || spendingStyle === 'extravagant') impulseControl -= 0.2;
+                  impulseControl = Math.max(0, Math.min(1, impulseControl));
+                  
+                  console.log('Personality attributes:', {
+                    honesty: honestyValue,
+                    empathy: empathyValue,
+                    impulseControl,
+                    selfEfficacy: selfEfficacyValue
+                  });
 
-                  {/* Empathy */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Empathy</span>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round((persona.full_profile?.prompt_shaping?.voice_foundation?.empathy_level || 0.5) * 100)}%
-                      </span>
-                    </div>
-                    <Progress value={(persona.full_profile?.prompt_shaping?.voice_foundation?.empathy_level || 0.5) * 100} className="h-3" />
-                  </div>
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Honesty */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Honesty</span>
+                          <span className="text-sm text-muted-foreground">{Math.round(honestyValue * 100)}%</span>
+                        </div>
+                        <Progress value={honestyValue * 100} className="h-3" />
+                      </div>
 
-                  {/* Impulse Control - Derived */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Impulse Control</span>
-                      <span className="text-sm text-muted-foreground">
-                        {(() => {
-                          const regulation = persona.full_profile?.emotional_profile?.emotional_regulation;
-                          const spendingStyle = persona.full_profile?.money_profile?.spending_style;
-                          let impulseControl = 0.5;
-                          
-                          if (regulation === 'very_high' || regulation === 'high') impulseControl += 0.3;
-                          else if (regulation === 'low' || regulation === 'very_low') impulseControl -= 0.3;
-                          
-                          if (spendingStyle === 'frugal' || spendingStyle === 'conservative') impulseControl += 0.2;
-                          else if (spendingStyle === 'impulsive' || spendingStyle === 'extravagant') impulseControl -= 0.2;
-                          
-                          return Math.round(Math.max(0, Math.min(1, impulseControl)) * 100);
-                        })()}%
-                      </span>
-                    </div>
-                    <Progress value={(() => {
-                      const regulation = persona.full_profile?.emotional_profile?.emotional_regulation;
-                      const spendingStyle = persona.full_profile?.money_profile?.spending_style;
-                      let impulseControl = 0.5;
-                      
-                      if (regulation === 'very_high' || regulation === 'high') impulseControl += 0.3;
-                      else if (regulation === 'low' || regulation === 'very_low') impulseControl -= 0.3;
-                      
-                      if (spendingStyle === 'frugal' || spendingStyle === 'conservative') impulseControl += 0.2;
-                      else if (spendingStyle === 'impulsive' || spendingStyle === 'extravagant') impulseControl -= 0.2;
-                      
-                      return Math.max(0, Math.min(1, impulseControl)) * 100;
-                    })()} className="h-3" />
-                  </div>
+                      {/* Empathy */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Empathy</span>
+                          <span className="text-sm text-muted-foreground">{Math.round(empathyValue * 100)}%</span>
+                        </div>
+                        <Progress value={empathyValue * 100} className="h-3" />
+                      </div>
 
-                  {/* Self-Efficacy */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Self-Efficacy</span>
-                      <span className="text-sm text-muted-foreground">
-                        {Math.round((persona.full_profile?.motivation_profile?.goal_orientation?.strength || 0.5) * 100)}%
-                      </span>
+                      {/* Impulse Control */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Impulse Control</span>
+                          <span className="text-sm text-muted-foreground">{Math.round(impulseControl * 100)}%</span>
+                        </div>
+                        <Progress value={impulseControl * 100} className="h-3" />
+                      </div>
+
+                      {/* Self-Efficacy */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Self-Efficacy</span>
+                          <span className="text-sm text-muted-foreground">{Math.round(selfEfficacyValue * 100)}%</span>
+                        </div>
+                        <Progress value={selfEfficacyValue * 100} className="h-3" />
+                      </div>
                     </div>
-                    <Progress value={(persona.full_profile?.motivation_profile?.goal_orientation?.strength || 0.5) * 100} className="h-3" />
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
 
               {/* Motivations Display */}
-              {persona.full_profile?.motivation_profile && (
+              {persona.full_profile?.motivation_profile ? (
                 <div>
                   <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <Target className="h-5 w-5" />
@@ -1026,19 +1036,30 @@ function PersonaProfile() {
                   {persona.full_profile.motivation_profile.primary_drivers && (
                     <div className="mb-6">
                       <h5 className="text-base font-medium mb-3">Primary Drivers</h5>
-                      <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={Object.entries(persona.full_profile.motivation_profile.primary_drivers).map(([key, value]) => ({
-                            name: key.replace(/_/g, ' '),
-                            value: value as number
-                          })).sort((a, b) => b.value - a.value)} layout="horizontal">
-                            <XAxis type="number" domain={[0, 1]} />
-                            <YAxis dataKey="name" type="category" width={100} className="text-xs" />
-                            <Tooltip formatter={(value) => [`${Math.round((value as number) * 100)}%`, 'Strength']} />
-                            <Bar dataKey="value" fill="#8884d8" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+                      {(() => {
+                        const driversData = Object.entries(persona.full_profile.motivation_profile.primary_drivers)
+                          .map(([key, value]) => ({
+                            name: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+                            value: value as number,
+                            percentage: Math.round((value as number) * 100)
+                          }))
+                          .sort((a, b) => b.value - a.value);
+                        
+                        console.log('Primary drivers data for chart:', driversData);
+                        
+                        return (
+                          <div className="h-80">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={driversData} layout="horizontal" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
+                                <XAxis type="number" domain={[0, 1]} tickFormatter={(value) => `${Math.round(value * 100)}%`} />
+                                <YAxis dataKey="name" type="category" width={80} className="text-xs" />
+                                <Tooltip formatter={(value, name) => [`${Math.round((value as number) * 100)}%`, 'Strength']} />
+                                <Bar dataKey="value" fill="#8884d8" />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
@@ -1065,6 +1086,13 @@ function PersonaProfile() {
                       </div>
                     </div>
                   )}
+                </div>
+              ) : (
+                <div className="text-center p-8 text-muted-foreground bg-muted/30 rounded-lg">
+                  <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No motivational profile data available</p>
+                </div>
+              )}
                 </div>
               )}
 
