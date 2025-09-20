@@ -17,9 +17,10 @@ import {
 interface DeletePersonaButtonProps {
   onDelete: () => Promise<void>;
   isOwner: boolean;
+  variant?: 'default' | 'small';  // Add variant prop
 }
 
-export default function DeletePersonaButton({ onDelete, isOwner }: DeletePersonaButtonProps) {
+export default function DeletePersonaButton({ onDelete, isOwner, variant = 'default' }: DeletePersonaButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   
   const handleDeletePersona = async () => {
@@ -31,15 +32,18 @@ export default function DeletePersonaButton({ onDelete, isOwner }: DeletePersona
   // Only show delete button to the owner
   if (!isOwner) return null;
   
+  const isSmall = variant === 'small';
+  
   return (
-    <div className="mt-8 mb-4">
+    <div className={isSmall ? "" : "mt-8 mb-4"}>
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button 
             variant="destructive"
-            className="w-full"
+            size={isSmall ? "sm" : "default"}
+            className={isSmall ? "text-xs px-3 py-1" : "w-full"}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className={`${isSmall ? "h-3 w-3" : "h-4 w-4"} mr-2`} />
             Delete Persona
           </Button>
         </AlertDialogTrigger>

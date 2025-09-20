@@ -421,12 +421,6 @@ function PersonaProfile() {
                   isOwner={user?.id === persona?.user_id}
                   onVisibilityChange={handleVisibilityChange}
                 />
-
-                {/* Delete Persona Button */}
-                <DeletePersonaButton
-                  onDelete={handlePersonaDeleted}
-                  isOwner={user?.id === persona?.user_id}
-                />
               </div>
             )}
           </div>
@@ -1016,6 +1010,17 @@ function PersonaProfile() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Delete Button - Bottom of Page (Owner Only) */}
+        {user?.id === persona?.user_id && (
+          <div className="mt-8 flex justify-center">
+            <DeletePersonaButton
+              onDelete={handlePersonaDeleted}
+              isOwner={true}
+              variant="small"
+            />
+          </div>
+        )}
       </div>
     </div>
   );
