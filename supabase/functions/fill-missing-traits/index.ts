@@ -6,20 +6,21 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
 function applyStatisticalEnhancement(persona: any): any {
   const enhanced = JSON.parse(JSON.stringify(persona)); // Deep clone
   
+  // DISABLED: Health sanitization removed - preserving authentic OpenAI health diversity
   // Initialize missing sections
-  if (!enhanced.health_profile) {
-    enhanced.health_profile = {
-      bmi: 22.5,
-      chronic_conditions: ["N/A"],
-      mental_health_flags: ["N/A"],
-      medications: ["N/A"],
-      adherence_level: "good",
-      sleep_hours: 7,
-      substance_use: { alcohol: "social", cigarettes: "N/A", vaping: "N/A", marijuana: "N/A" },
-      fitness_level: "moderate",
-      diet_pattern: "standard"
-    };
-  }
+  // if (!enhanced.health_profile) {
+  //   enhanced.health_profile = {
+  //     bmi: 22.5,
+  //     chronic_conditions: ["N/A"],
+  //     mental_health_flags: ["N/A"],
+  //     medications: ["N/A"],
+  //     adherence_level: "good",
+  //     sleep_hours: 7,
+  //     substance_use: { alcohol: "social", cigarettes: "N/A", vaping: "N/A", marijuana: "N/A" },
+  //     fitness_level: "moderate",
+  //     diet_pattern: "standard"
+  //   };
+  // }
   
   if (!enhanced.money_profile) {
     enhanced.money_profile = {

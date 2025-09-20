@@ -732,14 +732,16 @@ NARRATIVE SECTIONS:
         15. NEVER include signature phrases like "I believe that...", "In my experience...", "I always...", "I never..."
         16. income_bracket MUST be a specific range like "45000-65000" based on occupation and age - NEVER use "unspecified"
         
-        CRITICAL: Never use empty arrays. If a field would be empty, use these patterns:
-        - medications: ["N/A"]
-        - chronic_conditions: ["N/A"] 
-        - mental_health_flags: ["N/A"]
-        - caregiving_roles: ["N/A"]
-        - pets: [] (only exception - empty is normal)
-        - financial_stressors: ["N/A"] if truly none
-        - mental_preoccupations: ["work stress"] (always include at least one)
+        CRITICAL HEALTH AUTHENTICITY: Generate realistic health profiles reflecting population diversity:
+        - medications: Include realistic prescriptions when appropriate (blood pressure, diabetes, antidepressants, etc.) or [] if none
+        - chronic_conditions: Include realistic conditions when appropriate (hypertension, diabetes, anxiety, depression, etc.) or [] if none  
+        - mental_health_flags: Include realistic mental health conditions when appropriate (anxiety, depression, ADHD, etc.) or [] if none
+        - adherence_level: Vary realistically ("excellent", "good", "inconsistent", "poor") based on personality and circumstances
+        - substance_use: Reflect realistic patterns including social drinking, occasional marijuana use, etc. - not everyone abstains
+        - caregiving_roles: Include realistic roles when appropriate or [] if none
+        - pets: [] (empty is normal for no pets)
+        - financial_stressors: Include realistic stressors when appropriate or [] if none
+        - mental_preoccupations: Always include at least one realistic preoccupation
         
         Return ONLY the complete JSON object with all sections filled with realistic, detailed data.`;
 

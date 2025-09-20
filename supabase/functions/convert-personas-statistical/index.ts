@@ -136,23 +136,24 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
   const ageGroup = getAgeGroup(age);
   const modifiers = AGE_MODIFIERS[ageGroup] || {};
   
+  // DISABLED: Health sanitization removed - preserving authentic OpenAI health diversity
   // Initialize missing sections
-  if (!updatedPersona.health_profile) {
-    updatedPersona.health_profile = {
-      bmi: generateRealisticBMI(),
-      chronic_conditions: ["none"],
-      mental_health_flags: ["none"],
-      medications: ["none"],
-      adherence_level: "good",
-      sleep_hours: 7,
-      substance_use: {
-        alcohol: "none",
-        cigarettes: "no",
-        vaping: "no",
-        marijuana: "no"
-      },
-      fitness_level: "moderate",
-      diet_pattern: "mixed"
+  // if (!updatedPersona.health_profile) {
+  //   updatedPersona.health_profile = {
+  //     bmi: generateRealisticBMI(),
+  //     chronic_conditions: ["none"],
+  //     mental_health_flags: ["none"],
+  //     medications: ["none"],
+  //     adherence_level: "good",
+  //     sleep_hours: 7,
+  //     substance_use: {
+  //       alcohol: "none",
+  //       cigarettes: "no",
+  //       vaping: "no",
+  //       marijuana: "no"
+  //     },
+  //     fitness_level: "moderate",
+  //     diet_pattern: "mixed"
     };
     traitsAdded.push("health_profile");
   }
