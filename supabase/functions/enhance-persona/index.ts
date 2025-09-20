@@ -402,8 +402,9 @@ function validateAndRepair(persona: any): string[] {
       ethnicity: persona.identity?.ethnicity,
       gender: persona.identity?.gender
     };
-    assignRealisticTraits(persona, demographics);
-    fixes.push('statistical_traits_applied');
+    // DISABLED: Statistical contamination system - preserving OpenAI's authentic generation  
+    // assignRealisticTraits(persona, demographics);
+    // fixes.push('statistical_traits_applied');
   }
 
   const beforeLen = (persona.communication_style?.linguistic_signature?.signature_phrases?.length || 0)
@@ -605,9 +606,10 @@ console.log('📋 Identified gaps:', gaps);
         gender: enhancedPersona.identity?.gender
       };
       
-      enhancedPersona = assignRealisticTraits(enhancedPersona, demographics);
-      enhancementLog.push('Applied statistical trait assignment for health and appearance');
-      console.log('✅ Statistical traits applied');
+      // DISABLED: Statistical contamination system - preserving OpenAI's authentic generation
+      // enhancedPersona = assignRealisticTraits(enhancedPersona, demographics);
+      // enhancementLog.push('Applied statistical trait assignment for health and appearance');
+      console.log('✅ Preserving original OpenAI traits (statistical override disabled)');
     }
 
     // Remove forbidden signature phrases

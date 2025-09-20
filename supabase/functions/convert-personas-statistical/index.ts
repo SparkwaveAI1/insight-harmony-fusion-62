@@ -463,7 +463,10 @@ serve(async (req) => {
         result.processed++;
         
         const originalProfile = persona.full_profile || {};
-        const { updatedPersona, traitsAdded } = assignRealisticTraits(originalProfile);
+        // DISABLED: Statistical contamination system - preserving OpenAI's authentic generation
+        // const { updatedPersona, traitsAdded } = assignRealisticTraits(originalProfile);
+        const updatedPersona = originalProfile; // Use original OpenAI output without statistical override
+        const traitsAdded = []; // No traits artificially added
         
         // Track before/after for examples
         const beforeAfter = {
