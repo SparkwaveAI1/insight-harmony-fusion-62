@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint, Target, MessageCircle, BarChart3, Plus } from 'lucide-react';
+import { ArrowLeft, User, Clock, Brain, Home, Heart, DollarSign, Activity, AlertTriangle, CheckCircle, Users, PawPrint, Target, MessageCircle, BarChart3, Plus, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -364,9 +364,21 @@ function PersonaProfile() {
               )}
             </div>
 
-            {/* Visibility Toggle */}
+            {/* Owner Actions */}
             {user?.id === persona?.user_id && (
-              <div className="flex flex-col sm:flex-row lg:flex-col">
+              <div className="flex flex-col gap-3">
+                {/* Download JSON Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportJSON}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download JSON
+                </Button>
+                
+                {/* Visibility Toggle */}
                 <PersonaVisibilityToggle
                   personaId={persona.persona_id}
                   isPublic={isPublic}
