@@ -54,62 +54,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     loadPersona();
   }, [personaId]);
 
-  // Show error if persona loading failed
-  if (sessionError) {
-    return (
-      <div className="space-y-4">
-        <Alert className="bg-red-50 border-red-200">
-          <AlertDescription className="text-red-800">
-            {sessionError}
-          </AlertDescription>
-        </Alert>
-        <Button 
-          onClick={() => {
-            setSessionError(null);
-            window.location.reload();
-          }}
-          className="w-full"
-        >
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  if (isLoading || !activePersona) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground">
-          Loading V4 persona...
-        </p>
-      </div>
-    );
-  }
-
-  // Check if persona has required data
-  if (!activePersona.name) {
-    return (
-      <div className="space-y-4">
-        <Alert className="bg-yellow-50 border-yellow-200">
-          <AlertDescription className="text-yellow-800">
-            This V4 persona appears to be incomplete. Please check the persona data.
-          </AlertDescription>
-        </Alert>
-        <Button 
-          onClick={() => window.location.reload()}
-          className="w-full"
-        >
-          Refresh
-        </Button>
-      </div>
-    );
-  }
-  
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
+  // Ensure hooks are declared before any early returns
   const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {
     if (!activePersona || isLoading) return;
     
@@ -167,6 +112,65 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       setIsLoading(false);
     }
   }, [activePersona, isLoading, messages, personaId]);
+
+  // Show error if persona loading failed
+  if (sessionError) {
+    return (
+      <div className="space-y-4">
+        <Alert className="bg-red-50 border-red-200">
+          <AlertDescription className="text-red-800">
+            {sessionError}
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => {
+            setSessionError(null);
+            window.location.reload();
+          }}
+          className="w-full"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+  
+  if (isLoading || !activePersona) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-sm text-muted-foreground">
+          Loading V4 persona...
+        </p>
+      </div>
+    );
+  }
+  
+  // Check if persona has required data
+  if (!activePersona.name) {
+    return (
+      <div className="space-y-4">
+        <Alert className="bg-yellow-50 border-yellow-200">
+          <AlertDescription className="text-yellow-800">
+            This V4 persona appears to be incomplete. Please check the persona data.
+          </AlertDescription>
+        </Alert>
+        <Button 
+          onClick={() => window.location.reload()}
+          className="w-full"
+        >
+          Refresh
+        </Button>
+      </div>
+    );
+  }
+  
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // removed duplicate handleSendMessageWithImage (moved above)
+
 
 
   return (
