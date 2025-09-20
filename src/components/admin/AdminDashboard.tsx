@@ -8,8 +8,8 @@ import { AdminBillingStats } from "./AdminBillingStats";
 import { AdminAlerts } from "./AdminAlerts";
 import { GrokPromptMonitor } from "../dashboard/GrokPromptMonitor";
 import { PersonaTraitFiller } from "./PersonaTraitFiller";
-import { PersonaDescriptionConverter } from "./PersonaDescriptionConverter";
-import { BatchPersonaConverter } from "./BatchPersonaConverter";
+import { PersonaJsonUpload } from "./PersonaJsonUpload";
+import { PersonaJsonUploadHelp } from "./PersonaJsonUploadHelp";
 import { PersonaSelectionInterface } from "./PersonaSelectionInterface";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -64,6 +64,12 @@ export function AdminDashboard() {
 
       {/* Admin Billing Stats */}
       <AdminBillingStats />
+
+      {/* Persona JSON Upload */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <PersonaJsonUpload />
+        <PersonaJsonUploadHelp />
+      </div>
 
       {/* Persona Trait Filler */}
       <PersonaTraitFiller />
