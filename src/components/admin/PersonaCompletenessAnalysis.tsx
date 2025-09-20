@@ -12,25 +12,26 @@ import {
   AlertTriangle,
   Users,
   Brain,
-  MessageSquare
+  MessageSquare,
+  ArrowRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { validatePersona } from "@/services/v4-persona/v4PersonaValidation";
 
-interface PersonaCompleteness {
+interface PersonaMigrationStatus {
   persona_id: string;
   name: string;
-  is_complete: boolean;
-  missing_components: string[];
-  completion_score: number;
-  trait_profile_complete: boolean;
-  interview_sections_complete: boolean;
-  metadata_complete: boolean;
-  linguistic_profile_complete: boolean;
+  needs_migration: boolean;
+  missing_fields: string[];
+  migration_score: number;
+  has_political_narrative: boolean;
+  has_prompt_shaping: boolean;
+  passes_validation: boolean;
 }
 
 export function PersonaCompletenessAnalysis() {
-  const [personas, setPersonas] = useState<PersonaCompleteness[]>([]);
+  const [personas, setPersonas] = useState<PersonaMigrationStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [showIncomplete, setShowIncomplete] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
@@ -54,67 +55,49 @@ export function PersonaCompletenessAnalysis() {
     );
   };
 
-  const analyzePersonaCompleteness = (persona: any): PersonaCompleteness => {
-    const missingComponents: string[] = [];
-    let completionScore = 0;
-    const totalComponents = 4;
+  const analyzeMigrationStatus = (persona: any): PersonaMigrationStatus => {
+    const missingFields: string[] = [];
+    let migrationScore = 0;
+    const totalChecks = 3;
 
-    // Check trait profile completeness - V4 personas store this in full_profile
     const fullProfile = persona.full_profile || {};
-    const traitProfileComplete = fullProfile.personality && 
-      Object.keys(fullProfile.personality).length > 0;
-    
-    if (traitProfileComplete) {
-      completionScore++;
+
+    // Check for political_narrative field
+    const hasPoliticalNarrative = !!fullProfile.political_narrative;
+    if (hasPoliticalNarrative) {
+      migrationScore++;
     } else {
-      missingComponents.push("Trait Profile");
+      missingFields.push("Political Narrative");
     }
 
-    // Check interview sections completeness - V4 personas have conversations
-    const interviewSectionsComplete = fullProfile.conversations && 
-      Array.isArray(fullProfile.conversations) &&
-      fullProfile.conversations.length > 0;
-    
-    if (interviewSectionsComplete) {
-      completionScore++;
+    // Check for prompt_shaping field
+    const hasPromptShaping = !!fullProfile.prompt_shaping;
+    if (hasPromptShaping) {
+      migrationScore++;
     } else {
-      missingComponents.push("Interview Sections");
+      missingFields.push("Prompt Shaping");
     }
 
-    // Check metadata completeness - V4 personas store demographics in full_profile.demographics
-    const demographics = fullProfile.demographics || {};
-    const metadataComplete = demographics && 
-      Object.keys(demographics).length > 0 &&
-      demographics.age && demographics.occupation && demographics.location;
-    
-    if (metadataComplete) {
-      completionScore++;
+    // Run full validation check
+    const validation = validatePersona(fullProfile);
+    const passesValidation = validation.isValid;
+    if (passesValidation) {
+      migrationScore++;
     } else {
-      missingComponents.push("Demographics Metadata");
+      missingFields.push("Schema Validation");
     }
 
-    // Check linguistic profile completeness - V4 personas store this in full_profile.communication
-    const linguisticProfileComplete = fullProfile.communication && 
-      Object.keys(fullProfile.communication).length > 0;
-    
-    if (linguisticProfileComplete) {
-      completionScore++;
-    } else {
-      missingComponents.push("Linguistic Profile");
-    }
-
-    const isComplete = missingComponents.length === 0;
+    const needsMigration = missingFields.length > 0;
 
     return {
       persona_id: persona.persona_id,
       name: persona.name,
-      is_complete: isComplete,
-      missing_components: missingComponents,
-      completion_score: Math.round((completionScore / totalComponents) * 100),
-      trait_profile_complete: traitProfileComplete,
-      interview_sections_complete: interviewSectionsComplete,
-      metadata_complete: metadataComplete,
-      linguistic_profile_complete: linguisticProfileComplete
+      needs_migration: needsMigration,
+      missing_fields: missingFields,
+      migration_score: Math.round((migrationScore / totalChecks) * 100),
+      has_political_narrative: hasPoliticalNarrative,
+      has_prompt_shaping: hasPromptShaping,
+      passes_validation: passesValidation
     };
   };
 
@@ -133,7 +116,7 @@ export function PersonaCompletenessAnalysis() {
         return;
       }
 
-      const analyzedPersonas = personasData.map(analyzePersonaCompleteness);
+      const analyzedPersonas = personasData.map(analyzeMigrationStatus);
       setPersonas(analyzedPersonas);
       
     } catch (error) {
@@ -144,22 +127,20 @@ export function PersonaCompletenessAnalysis() {
     }
   };
 
-  const completePersonas = personas.filter(p => p.is_complete);
-  const incompletePersonas = personas.filter(p => !p.is_complete);
-  const averageCompletionScore = personas.length > 0 
-    ? Math.round(personas.reduce((sum, p) => sum + p.completion_score, 0) / personas.length)
+  const migratedPersonas = personas.filter(p => !p.needs_migration);
+  const needsMigrationPersonas = personas.filter(p => p.needs_migration);
+  const averageMigrationScore = personas.length > 0 
+    ? Math.round(personas.reduce((sum, p) => sum + p.migration_score, 0) / personas.length)
     : 0;
 
-  const getComponentIcon = (component: string) => {
-    switch (component) {
-      case "Trait Profile":
+  const getComponentIcon = (field: string) => {
+    switch (field) {
+      case "Political Narrative":
         return <Brain className="h-3 w-3" />;
-      case "Interview Sections":
+      case "Prompt Shaping":
         return <MessageSquare className="h-3 w-3" />;
-      case "Demographics Metadata":
-        return <Users className="h-3 w-3" />;
-      case "Linguistic Profile":
-        return <MessageSquare className="h-3 w-3" />;
+      case "Schema Validation":
+        return <AlertTriangle className="h-3 w-3" />;
       default:
         return <AlertTriangle className="h-3 w-3" />;
     }
@@ -185,8 +166,8 @@ export function PersonaCompletenessAnalysis() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          Persona Completeness Analysis
+          <ArrowRight className="h-5 w-5" />
+          V4 Migration Progress Analysis
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -197,16 +178,16 @@ export function PersonaCompletenessAnalysis() {
             <div className="text-sm text-muted-foreground">Total Personas</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{completePersonas.length}</div>
-            <div className="text-sm text-muted-foreground">Complete</div>
+            <div className="text-2xl font-bold text-green-600">{migratedPersonas.length}</div>
+            <div className="text-sm text-muted-foreground">Migrated</div>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">{incompletePersonas.length}</div>
-            <div className="text-sm text-muted-foreground">Incomplete</div>
+            <div className="text-2xl font-bold text-orange-600">{needsMigrationPersonas.length}</div>
+            <div className="text-sm text-muted-foreground">Needs Migration</div>
           </div>
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{averageCompletionScore}%</div>
-            <div className="text-sm text-muted-foreground">Avg. Complete</div>
+            <div className="text-2xl font-bold text-blue-600">{averageMigrationScore}%</div>
+            <div className="text-sm text-muted-foreground">Avg. Progress</div>
           </div>
         </div>
 
@@ -218,7 +199,7 @@ export function PersonaCompletenessAnalysis() {
             onClick={() => setShowIncomplete(!showIncomplete)}
           >
             <XCircle className="h-4 w-4 mr-1" />
-            Incomplete ({incompletePersonas.length})
+            Needs Migration ({needsMigrationPersonas.length})
           </Button>
           <Button
             variant={showComplete ? "default" : "outline"}
@@ -226,7 +207,7 @@ export function PersonaCompletenessAnalysis() {
             onClick={() => setShowComplete(!showComplete)}
           >
             <CheckCircle className="h-4 w-4 mr-1" />
-            Complete ({completePersonas.length})
+            Migrated ({migratedPersonas.length})
           </Button>
           <Button
             variant="outline"
@@ -237,31 +218,31 @@ export function PersonaCompletenessAnalysis() {
           </Button>
         </div>
 
-        {/* Incomplete Personas */}
-        {showIncomplete && incompletePersonas.length > 0 && (
+        {/* Personas Needing Migration */}
+        {showIncomplete && needsMigrationPersonas.length > 0 && (
           <Collapsible defaultOpen>
             <CollapsibleTrigger className="flex items-center gap-2 w-full">
               <ChevronDown className="h-4 w-4" />
               <h3 className="text-lg font-medium text-orange-600">
-                Incomplete Personas ({incompletePersonas.length})
+                Personas Needing Migration ({needsMigrationPersonas.length})
               </h3>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2 mt-3">
-              {incompletePersonas.map((persona) => (
+              {needsMigrationPersonas.map((persona) => (
                 <div key={persona.persona_id} className="border rounded-lg p-4 bg-orange-50/50">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <XCircle className="h-4 w-4 text-orange-500" />
                       <span className="font-medium">{persona.name}</span>
-                      <Badge variant="outline">{persona.completion_score}% complete</Badge>
+                      <Badge variant="outline">{persona.migration_score}% migrated</Badge>
                     </div>
                   </div>
                   
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {persona.missing_components.map((component) => (
-                      <Badge key={component} variant="destructive" className="text-xs">
-                        {getComponentIcon(component)}
-                        <span className="ml-1">{component}</span>
+                    {persona.missing_fields.map((field) => (
+                      <Badge key={field} variant="destructive" className="text-xs">
+                        {getComponentIcon(field)}
+                        <span className="ml-1">{field}</span>
                       </Badge>
                     ))}
                   </div>
@@ -271,22 +252,22 @@ export function PersonaCompletenessAnalysis() {
           </Collapsible>
         )}
 
-        {/* Complete Personas */}
-        {showComplete && completePersonas.length > 0 && (
+        {/* Migrated Personas */}
+        {showComplete && migratedPersonas.length > 0 && (
           <Collapsible>
             <CollapsibleTrigger className="flex items-center gap-2 w-full">
               <ChevronRight className="h-4 w-4" />
               <h3 className="text-lg font-medium text-green-600">
-                Complete Personas ({completePersonas.length})
+                Migrated Personas ({migratedPersonas.length})
               </h3>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2 mt-3">
-              {completePersonas.map((persona) => (
+              {migratedPersonas.map((persona) => (
                 <div key={persona.persona_id} className="border rounded-lg p-4 bg-green-50/50">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
                     <span className="font-medium">{persona.name}</span>
-                    <Badge variant="outline" className="bg-green-100">100% complete</Badge>
+                    <Badge variant="outline" className="bg-green-100">100% migrated</Badge>
                   </div>
                 </div>
               ))}
