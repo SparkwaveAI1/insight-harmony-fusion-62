@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import PersonaViewer from "./pages/PersonaViewer";
 import PersonaChat from "./pages/PersonaChat";
 import PersonaDetail from "./pages/PersonaDetail";
+import PersonaProfile from "./pages/PersonaProfile";
 import Dashboard from "./pages/Dashboard";
 import Billing from "./pages/Billing";
 import Projects from "./pages/Projects";
@@ -130,6 +131,7 @@ function App() {
                 <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
                 <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
                 <Route path="/persona/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
+                <Route path="/profile/:id" element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
                 
                 <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                 <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
