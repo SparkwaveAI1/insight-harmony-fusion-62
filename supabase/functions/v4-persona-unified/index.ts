@@ -44,7 +44,7 @@ serve(async (req) => {
 - Major life challenges or formative experiences
 - Current living situation and circumstances
 
-Write in third person, past tense. Make it authentic and grounded in real-world experiences. Avoid clichés.
+Write in third person, past tense. Make it authentic and grounded in real-world experiences. Avoid formulaic phrases like "approaches life with" or "believes in". Use diverse, natural language with varied sentence patterns.
 
 CRITICAL: Pay attention to gender consistency. If the persona is female, use "she/her" pronouns throughout. If male, use "he/him" pronouns. If non-binary, use "they/them" pronouns. NO mixed pronouns (e.g., don't use "His career" for a female persona).`
       },
@@ -68,12 +68,12 @@ CRITICAL: Pay attention to gender consistency. If the persona is female, use "sh
     const descriptionMessages = [
       {
         role: 'system',
-        content: `Generate a 2-3 sentence character essence description that captures how this person approaches life. Focus on:
+        content: `Generate a 2-3 sentence character essence description that captures this person's core personality. Focus on:
 - Core personality traits and worldview
 - How they handle challenges and relationships
 - Their general demeanor and outlook
 
-Write in third person, present tense. Make it insightful and authentic.
+Write in third person, present tense. Make it insightful and authentic. Avoid formulaic phrases like "approaches life with" or "believes in". Use diverse, natural language with varied sentence patterns.
 
 CRITICAL: Maintain gender consistency with the background story. Use correct pronouns throughout (she/her for female, he/him for male, they/them for non-binary).`
       },
@@ -127,63 +127,53 @@ Original description: ${user_description}`
     const physicalDescription = appearanceResponse.choices[0]?.message?.content?.trim()
     console.log('✅ Physical appearance generated:', physicalDescription?.slice(0, 100) + '...')
 
-    // PHASE 4: Image Generation
+    // PHASE 4: Image Generation using existing Nano Banana functionality
     console.log('🎨 Phase 4: Generating persona image...')
     let profileImageUrl = null
     
     try {
-      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-image-1',
-          prompt: `Professional headshot portrait: ${physicalDescription}. High quality, realistic, well-lit, neutral background.`,
-          size: '1024x1024',
-          quality: 'high',
-          output_format: 'webp'
-        })
+      // Use existing generate-persona-image function with Nano Banana/Gemini
+      const personaData = {
+        persona_id: persona_id,
+        physical_description: physicalDescription,
+        name: user_description.split(' ')[0] || 'Persona', // Extract likely name from description
+        demographics: { age: 30 }, // Placeholder - will be generated in Phase 5
+        personality: characterDescription
+      }
+      
+      const { data: imageData, error: imageError } = await supabase.functions.invoke('generate-persona-image', {
+        body: { personaData }
       })
 
-      if (imageResponse.ok) {
-        const imageData = await imageResponse.json()
-        const imageBase64 = imageData.data[0].b64_json
-        
-        if (imageBase64) {
-          // Convert base64 to blob for storage
-          const byteCharacters = atob(imageBase64)
-          const byteNumbers = new Array(byteCharacters.length)
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i)
-          }
-          const byteArray = new Uint8Array(byteNumbers)
-          const blob = new Blob([byteArray], { type: 'image/webp' })
-          
-          // Upload to Supabase Storage
-          const fileName = `${persona_id}.webp`
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('persona-images')
-            .upload(fileName, blob, {
-              contentType: 'image/webp',
-              upsert: true
+      if (imageError) {
+        console.error('❌ Image generation failed:', imageError)
+        // Try OpenAI fallback with dall-e-3 if Nano Banana fails
+        try {
+          const fallbackResponse = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openaiApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'dall-e-3',
+              prompt: `Professional headshot portrait: ${physicalDescription}. High quality, realistic, well-lit, neutral background.`,
+              size: '1024x1024',
+              quality: 'hd'
             })
+          })
 
-          if (uploadError) {
-            console.error('❌ Image upload failed:', uploadError)
-          } else {
-            // Get public URL
-            const { data: urlData } = supabase.storage
-              .from('persona-images')
-              .getPublicUrl(fileName)
-            
-            profileImageUrl = urlData.publicUrl
-            console.log('✅ Image generated and uploaded:', profileImageUrl)
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json()
+            profileImageUrl = fallbackData.data[0].url
+            console.log('✅ Fallback image generated:', profileImageUrl)
           }
+        } catch (fallbackError) {
+          console.error('❌ Fallback image generation also failed:', fallbackError)
         }
       } else {
-        console.error('❌ Image generation failed:', await imageResponse.text())
+        profileImageUrl = imageData.image_url
+        console.log('✅ Image generated with Nano Banana:', profileImageUrl)
       }
     } catch (imageError) {
       console.error('❌ Image generation error:', imageError)
@@ -217,9 +207,10 @@ DATA TYPE REQUIREMENTS:
 - sleep_hours: Must be a number (e.g., 7.5)
 - emergency_fund_months: Must be a number (e.g., 3)
 - dependents: Must be a number (e.g., 2)
-- bmi: Use numeric BMI value (e.g., 24.5, 28.3) NOT categories
-- primary_activities: Use hours per day as integers (e.g., "work": 8, "family_time": 4)
-- time_sentiment: Use simple states only ("satisfied", "stressful", "content", "rushed", "peaceful")
+- bmi: Generate realistic BMI numbers (e.g., 22.1, 28.5, 19.8) NOT categories like "overweight"
+- primary_activities: Use hours per day as integers (e.g., "work": 8, "family_time": 4, "personal_care": 2)
+- time_sentiment: Use simple states only ("satisfied", "stressful", "content", "rushed", "peaceful", "energizing")
+- humor_style: Generate diverse styles including "witty", "physical", "wordplay", "dark", "none", "sarcastic", "observational", "self-deprecating" (avoid overusing "wry" and "dry")
 - All trait values in primary_drivers, cognitive, etc.: Use decimals 0.1-0.9
 
 Use this EXACT JSON structure:
@@ -424,7 +415,6 @@ Use this EXACT JSON structure:
     "explosive_triggers": [],
     "emotional_regulation": ""
   },
-  "attitude_narrative": "",
   "political_narrative": "",
   "adoption_profile": {
     "buyer_power": 0.4,

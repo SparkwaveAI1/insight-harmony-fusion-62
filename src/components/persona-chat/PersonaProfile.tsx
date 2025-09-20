@@ -1,23 +1,68 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useParams } from "react-router-dom";
+import { usePersonaDetail } from "@/hooks/usePersonaDetail";
+import { V4PersonaDisplay } from "@/components/personas/V4PersonaDisplay";
 import Card from "@/components/ui-custom/Card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Target, Users } from "lucide-react";
 
 const PersonaProfile = () => {
-  // Using Alina R's persona ID for this component
-  const personaId = "9f8540fa";
-  
+  const { personaId } = useParams<{ personaId: string }>();
+  const { persona, isLoading, isOwner } = usePersonaDetail();
+
+  if (isLoading) {
+    return (
+      <Card className="p-6 sticky top-24">
+        <div className="flex flex-col items-center justify-center h-48">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="mt-2 text-muted-foreground">Loading persona...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!persona) {
+    return (
+      <Card className="p-6 sticky top-24">
+        <div className="flex flex-col items-center justify-center h-48">
+          <p className="text-red-500">Failed to load persona</p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Check if this is a V4 persona
+  if (persona.schema_version === 'v4.0') {
+    return (
+      <div className="sticky top-24">
+        <V4PersonaDisplay
+          persona={persona as any}
+          isOwner={isOwner}
+          onVisibilityChange={async () => {}}
+          onPersonaUpdated={async () => {}}
+          onDelete={async () => {}}
+          onImageGenerated={async () => {}}
+        />
+      </div>
+    );
+  }
+
+  // Fallback for legacy personas - use the original hardcoded layout
+  const age = persona.conversation_summary?.demographics?.age || (persona.trait_profile as any)?.identity?.age;
+  const occupation = persona.conversation_summary?.demographics?.occupation || (persona.trait_profile as any)?.identity?.occupation;
+  const location = persona.conversation_summary?.demographics?.location || (persona.trait_profile as any)?.identity?.location?.city;
+
   return (
     <Card className="p-6 sticky top-24">
       <div className="flex flex-col">
         <div className="text-center mb-6">
           <Avatar className="w-24 h-24 mb-4 mx-auto">
-            <AvatarImage src="/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png" />
+            <AvatarImage src={persona.profile_image_url || "/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png"} />
             <AvatarFallback>AI</AvatarFallback>
           </Avatar>
-          <h2 className="text-2xl font-bold mb-2">Alina R - Financial Analyst</h2>
-          <p className="text-muted-foreground">32-year-old analyst focused on sustainable investing</p>
+          <h2 className="text-2xl font-bold mb-2">{persona.name || "Persona"}</h2>
+          <p className="text-muted-foreground">{age}-year-old {occupation || "person"}</p>
         </div>
         
         <div className="space-y-6">
@@ -26,16 +71,7 @@ const PersonaProfile = () => {
             <h3 className="text-base font-semibold mb-3">Persona Traits</h3>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-muted/30 rounded p-2 text-center">
-                <span className="text-xs font-medium">Financial Expert</span>
-              </div>
-              <div className="bg-muted/30 rounded p-2 text-center">
-                <span className="text-xs font-medium">Master's Degree</span>
-              </div>
-              <div className="bg-muted/30 rounded p-2 text-center">
-                <span className="text-xs font-medium">Analytical</span>
-              </div>
-              <div className="bg-muted/30 rounded p-2 text-center">
-                <span className="text-xs font-medium">Tech-Savvy</span>
+                <span className="text-xs font-medium">Legacy Persona</span>
               </div>
             </div>
           </div>
@@ -46,68 +82,17 @@ const PersonaProfile = () => {
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between">
                 <span className="text-muted-foreground">Age:</span>
-                <span className="font-medium">32</span>
+                <span className="font-medium">{age || 'N/A'}</span>
               </li>
               <li className="flex justify-between">
                 <span className="text-muted-foreground">Occupation:</span>
-                <span className="font-medium">Financial Analyst</span>
+                <span className="font-medium">{occupation || 'N/A'}</span>
               </li>
               <li className="flex justify-between">
                 <span className="text-muted-foreground">Region:</span>
-                <span className="font-medium">New York</span>
-              </li>
-              <li className="flex justify-between">
-                <span className="text-muted-foreground">Education:</span>
-                <span className="font-medium">Master's Degree</span>
+                <span className="font-medium">{location || 'N/A'}</span>
               </li>
             </ul>
-          </div>
-          
-          {/* Decisions section - Using Alina R's insights */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Brain className="h-4 w-4 text-primary" />
-              <h3 className="text-base font-semibold">Decisions</h3>
-            </div>
-            <ul className="space-y-2 text-sm pl-1">
-              <li>Relies on data visualization tools for complex financial decisions</li>
-              <li>Balances risk and reward through multi-scenario modeling</li>
-            </ul>
-          </div>
-          
-          {/* Drivers section - Using Alina R's insights */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="h-4 w-4 text-primary" />
-              <h3 className="text-base font-semibold">Drivers</h3>
-            </div>
-            <ul className="space-y-2 text-sm pl-1">
-              <li>Motivated by sustainable growth and ethical investing principles</li>
-              <li>Values work-life integration and financial security</li>
-            </ul>
-          </div>
-          
-          {/* Persuasion section - Using Alina R's insights */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-primary" />
-              <h3 className="text-base font-semibold">Discussion & Persuasion</h3>
-            </div>
-            <ul className="space-y-2 text-sm pl-1">
-              <li>Responds to evidence-based arguments with practical applications</li>
-              <li>Appreciates detailed analysis backed by real-world examples</li>
-            </ul>
-          </div>
-          
-          {/* Interest Areas */}
-          <div>
-            <h3 className="text-base font-semibold mb-3">Interest Areas</h3>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="bg-primary/10">Sustainable Finance</Badge>
-              <Badge variant="outline" className="bg-primary/10">ESG Investing</Badge>
-              <Badge variant="outline" className="bg-primary/10">Financial Technology</Badge>
-              <Badge variant="outline" className="bg-primary/10">Data Analytics</Badge>
-            </div>
           </div>
         </div>
       </div>
