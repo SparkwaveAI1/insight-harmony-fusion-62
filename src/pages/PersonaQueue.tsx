@@ -336,264 +336,89 @@ const PersonaQueue = () => {
 
       // === Stage 1: Create (idempotent) ===
       if (!personaId && (currentStatus === 'processing' || currentStatus === 'processing_stage1')) {
-        if (!personaId) {
-          console.log('🎯 Starting V4 persona creation step 1...');
-          
-          // DIAGNOSTIC: Log trace before queue creation call
-          console.log('TRACE_Q_START', {
-            queue_item_id: item.id,
-            payload_keys: Object.keys({
-              user_prompt: item.description,
-              user_id: user.id
-            }),
-            ts: new Date().toISOString(),
-          });
-          
-          const unifiedResponse = await withTimeout(createV4PersonaUnified({
-            user_description: item.description,
+        console.log('🎯 Starting V4 persona creation...');
+        
+        // DIAGNOSTIC: Log trace before queue creation call
+        console.log('TRACE_Q_START', {
+          queue_item_id: item.id,
+          payload_keys: Object.keys({
+            user_prompt: item.description,
             user_id: user.id
-          }), 120000); // 120 second timeout
-
-          if (!unifiedResponse.success) {
-            await fail(`V4 Unified creation failed: ${unifiedResponse.error}`);
-          }
-
-          // === STEP 1: Validate and persist persona_id after creation ===
-          personaId = unifiedResponse.persona_id;
-          
-          // Guard: only accept real V4 ids; never write queue uuid by accident
-          if (!personaId || !String(personaId).startsWith('v4_')) {
-            await fail(`Unified creation returned non-v4 persona_id: ${personaId}`);
-          }
-
-          // Persist immediately, and advance status
-          await updateQueueStatusSafe(item.id, 'completed', personaId);
-          currentStatus = 'processing_stage1'; // Update local status
-          
-          // 🔒 Fetch the created persona from DB and enforce V4 schema
-          const { data: fresh, error } = await supabase
-            .from('v4_personas')
-            .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-            .eq('persona_id', personaId)
-            .maybeSingle();
-
-          if (error) throw error;
-          ensureV4PersonaCore(fresh);
-          
-          // DIAGNOSTIC: Log trace after queue creation call
-          console.log('TRACE_Q_AFTER_CALL1', {
-            queue_item_id: item.id,
-            persona_id: unifiedResponse?.persona_id,
-            db: {
-              schema: fresh?.schema_version,
-              has_identity: !!(fresh?.full_profile as any)?.identity,
-              has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
-              has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
-              card_description: null, // V4 personas don't have separate card_description field
-              profile_image_url: fresh?.profile_image_url ?? null,
-              creation_stage: fresh?.creation_stage ?? null,
-              creation_completed: fresh?.creation_completed ?? null,
-            },
-            ts: new Date().toISOString(),
-          });
-          
-          console.log('✅ V4 unified persona creation completed:', personaId);
-          
-          // Add to collections if specified
-          if (item.collections && item.collections.length > 0) {
-            console.log('📁 Adding persona to collections:', item.collections);
-            for (const collectionId of item.collections) {
-              try {
-                await addPersonaToCollection(collectionId, personaId);
-                console.log(`✅ Added persona to collection ${collectionId}`);
-              } catch (collectionError) {
-                console.warn(`⚠️ Failed to add persona to collection ${collectionId}:`, collectionError);
-              }
-            }
-          }
-          
-          // Mark as completed
-          await updateQueueStatusSafe(item.id, 'completed', personaId);
-          console.log('🎉 Queue item marked as completed');
-          
-          return; // Skip the old multi-step logic below
-        } else {
-          console.log('📋 Persona already exists, marking as completed:', personaId);
-          await updateQueueStatusSafe(item.id, 'completed', personaId);
-          return;
-        }
-      }
-
-      // === OLD MULTI-STEP LOGIC (LEGACY - REMOVED) ===
-      // This section has been removed as we now use the unified persona creation system
+          }),
+          ts: new Date().toISOString(),
+        });
         
-        if (!call2Response.success) {
-          await fail(`Stage2 failed: ${call2Response.error || 'unknown'}`);
+        const unifiedResponse = await withTimeout(createV4PersonaUnified({
+          user_description: item.description,
+          user_id: user.id
+        }), 120000); // 120 second timeout
+
+        if (!unifiedResponse.success) {
+          await fail(`V4 Unified creation failed: ${unifiedResponse.error}`);
         }
+
+        // === STEP 1: Validate and persist persona_id after creation ===
+        personaId = unifiedResponse.persona_id;
         
-        // Update personaId if call2 returns a different one
-        personaId = call2Response.persona_id || personaId;
-        if (!personaId) {
-          await fail('Stage 2 completed but returned no persona_id');
+        // Guard: only accept real V4 ids; never write queue uuid by accident
+        if (!personaId || !String(personaId).startsWith('v4_')) {
+          await fail(`Unified creation returned non-v4 persona_id: ${personaId}`);
         }
-        await updateQueueStatusSafe(item.id, 'processing_stage2', personaId);
-        currentStatus = 'processing_stage2'; // Update local status
-        
-        // DIAGNOSTIC: Fetch persona from DB after Stage 2
-        const { data: fresh2, error: error2 } = await supabase
+
+        // 🔒 Fetch the created persona from DB and enforce V4 schema
+        const { data: fresh, error } = await supabase
           .from('v4_personas')
           .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
           .eq('persona_id', personaId)
           .maybeSingle();
 
-        if (error2) throw error2;
+        if (error) throw error;
+        ensureV4PersonaCore(fresh);
         
-        console.log('TRACE_Q_AFTER_CALL2', {
+        // DIAGNOSTIC: Log trace after queue creation call
+        console.log('TRACE_Q_AFTER_UNIFIED', {
           queue_item_id: item.id,
-          persona_id: personaId,
-          card_description: null, // V4 personas don't have separate card_description field  
-          profile_image_url: fresh2?.profile_image_url ?? null,
-          creation_stage: fresh2?.creation_stage ?? null,
-          creation_completed: fresh2?.creation_completed ?? null,
+          persona_id: unifiedResponse?.persona_id,
+          db: {
+            schema: fresh?.schema_version,
+            has_identity: !!(fresh?.full_profile as any)?.identity,
+            has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
+            has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
+            profile_image_url: fresh?.profile_image_url ?? null,
+            creation_stage: fresh?.creation_stage ?? null,
+            creation_completed: fresh?.creation_completed ?? null,
+          },
           ts: new Date().toISOString(),
         });
         
-        console.log('✅ V4 persona creation step 2 completed');
-      }
-
-      // === Stage 3: Image / attachments ===
-      // Run Stage 3 if we have persona_id and need to complete Stage 3
-      console.log('🎉 Unified persona creation and collection assignment completed');
-      
-    } catch (error: any) {
-        if (!personaId) {
-          await fail('Missing persona_id before stage 3');
-        }
+        console.log('✅ V4 unified persona creation completed:', personaId);
         
-        console.log('🎯 Starting V4 persona creation step 3...');
-        
-        const call3Response = await withTimeout(createV4PersonaCall3(personaId, true), 120000); // 120 second timeout
-        
-        if (!call3Response.success) {
-          await fail(`Stage3 failed: ${call3Response.error || 'unknown'}`);
-        }
-        
-        // Keep original personaId from Stage 1
-        if (!personaId) {
-          await fail('Stage 3 completed but returned no persona_id');
-        }
-        await updateQueueStatusSafe(item.id, 'processing_stage3', personaId);
-        currentStatus = 'processing_stage3'; // Update local status
-        
-        // DIAGNOSTIC: Fetch persona from DB after Stage 3
-        const { data: fresh3, error: error3 } = await supabase
-          .from('v4_personas')
-          .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-          .eq('persona_id', personaId)
-          .maybeSingle();
-
-        if (error3) throw error3;
-        
-        console.log('TRACE_Q_AFTER_CALL3', {
-          queue_item_id: item.id,
-          persona_id: personaId,
-          card_description: null, // V4 personas don't have separate card_description field  
-          profile_image_url: fresh3?.profile_image_url ?? null,
-          creation_stage: fresh3?.creation_stage ?? null,
-          creation_completed: fresh3?.creation_completed ?? null,
-          ts: new Date().toISOString(),
-        });
-        
-        console.log('✅ V4 persona creation step 3 completed');
-      }
-
-      // === Finalize ===
-      if (!personaId) {
-        await fail('Cannot finalize - no persona_id after all stages');
-      }
-      
-      // DIAGNOSTIC: Final trace before marking completed and navigating
-      const { data: finalFresh, error: finalError } = await supabase
-        .from('v4_personas')
-        .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
-        .eq('persona_id', personaId)
-        .maybeSingle();
-
-      if (finalError) throw finalError;
-      
-      console.log('TRACE_Q_BEFORE_COMPLETE', {
-        queue_item_id: item.id,
-        persona_id: personaId,
-        // IMPORTANT: what object are we about to render?
-        render_source: finalFresh ? 'db_fetch' : 'create_response',
-        has_full_profile: !!finalFresh?.full_profile,
-        has_identity: !!(finalFresh?.full_profile as any)?.identity,
-        has_motivation: !!(finalFresh?.full_profile as any)?.motivation_profile,
-        has_comm_style: !!(finalFresh?.full_profile as any)?.communication_style,
-        card_description: null, // V4 personas don't have separate card_description field  
-        profile_image_url: finalFresh?.profile_image_url ?? null,
-        creation_stage: finalFresh?.creation_stage ?? null,
-        creation_completed: finalFresh?.creation_completed ?? null,
-        ts: new Date().toISOString(),
-      });
-      
-      // === STEP 3: Hard validation before completion ===
-      // Hard invariant: only complete when truly done
-      if (finalFresh?.creation_completed !== true && finalFresh?.creation_stage !== 'completed') {
-        await fail(`Pipeline not complete after Stage 3: creation_completed=${finalFresh?.creation_completed}, creation_stage=${finalFresh?.creation_stage}`);
-      }
-      if (!finalFresh?.profile_image_url) {
-        await fail(`Image missing after Stage 3: profile_image_url=${finalFresh?.profile_image_url}`);
-      }
-      
-      // ✅ INVARIANT: Collections are only added AFTER persona is fully complete
-      // This ensures no partial personas end up in collections
-      await updateQueueStatusSafe(item.id, 'completed', personaId);
-      console.log('🏁 Processing completed successfully for:', item.name);
-      
-      // Auto-assign to collections if specified
-      if (item.collections && item.collections.length > 0) {
-        console.log('Collections to assign:', item.collections);
-        
-        // Step 1: Get user's collections and find matching names
-        const { data: userCollections, error: collectionsError } = await supabase
-          .from('collections')
-          .select('id, name')
-          .eq('user_id', user.id)
-          .in('name', item.collections);
-
-        console.log('Database query result:', userCollections);
-        console.log('Database query error:', collectionsError);
-        
-        // Also check what collections actually exist for this user
-        const { data: allUserCollections } = await supabase
-          .from('collections')
-          .select('id, name')
-          .eq('user_id', user.id);
-        console.log('All user collections:', allUserCollections);
-
-        // Step 2: Assign to matching collections
-        if (userCollections && userCollections.length > 0) {
-          for (const collection of userCollections) {
+        // Add to collections if specified
+        if (item.collections && item.collections.length > 0) {
+          console.log('📁 Adding persona to collections:', item.collections);
+          for (const collectionId of item.collections) {
             try {
-              console.log(`Attempting to assign persona ${personaId} to collection ${collection.id} (${collection.name})`);
-              await addPersonaToCollection(collection.id, personaId);
-              console.log(`✅ Successfully assigned persona to collection: ${collection.name}`);
-            } catch (error) {
-              console.error('❌ Failed to assign to collection:', collection.name, error);
+              await addPersonaToCollection(collectionId, personaId);
+              console.log(`✅ Added persona to collection ${collectionId}`);
+            } catch (collectionError) {
+              console.warn(`⚠️ Failed to add persona to collection ${collectionId}:`, collectionError);
             }
           }
-        } else {
-          console.log('No matching collections found');
         }
         
-        // Log any collections that weren't found
-        const foundNames = userCollections?.map(c => c.name) || [];
-        const notFound = item.collections.filter(name => !foundNames.includes(name));
-        if (notFound.length > 0) {
-          console.warn('Collections not found:', notFound);
-        }
+        // Mark as completed
+        await updateQueueStatusSafe(item.id, 'completed', personaId);
+        console.log('🎉 Queue item marked as completed');
+        
+      } else if (personaId) {
+        console.log('📋 Persona already exists, marking as completed:', personaId);
+        await updateQueueStatusSafe(item.id, 'completed', personaId);
+      } else if (currentStatus === 'completed') {
+        console.log('✅ Item already completed, skipping');
+        return;
       }
+
+      console.log('🎉 Unified persona creation and collection assignment completed');
       
       toast({
         title: 'Persona created successfully!',
