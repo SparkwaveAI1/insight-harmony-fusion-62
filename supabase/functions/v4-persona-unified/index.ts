@@ -199,13 +199,15 @@ CRITICAL REQUIREMENTS:
 - Coherence values: 0.1-0.3 (scattered), 0.3-0.4 (average), 0.5-0.6 (organized), 0.7+ (highly structured)
 
 DATA TYPE REQUIREMENTS:
-- income_bracket: Use numeric ranges like "35000-50000", "75000-100000", "25000-35000"
+- income_bracket: Use numeric ranges like "35000-50000", "75000-100000", "25000-35000" (NO text categories)
 - age: Must be a number (e.g., 34)
 - sleep_hours: Must be a number (e.g., 7.5)
 - emergency_fund_months: Must be a number (e.g., 3)
 - dependents: Must be a number (e.g., 2)
-- All numeric fields in primary_drivers, goal_orientation, etc.: Use decimals 0.1-0.9
-- bmi_category: Use standard categories like "normal", "overweight", "underweight", "obese"
+- bmi: Use numeric BMI value (e.g., 24.5, 28.3) NOT categories
+- primary_activities: Use hours per day as integers (e.g., "work": 8, "family_time": 4)
+- time_sentiment: Use simple states only ("satisfied", "stressful", "content", "rushed", "peaceful")
+- All trait values in primary_drivers, cognitive, etc.: Use decimals 0.1-0.9
 
 Use this EXACT JSON structure:
 
@@ -231,11 +233,11 @@ Use this EXACT JSON structure:
   },
   "daily_life": {
     "primary_activities": {
-      "work": 0,
-      "family_time": 0,
-      "personal_care": 0,
-      "personal_interests": 0,
-      "social_interaction": 0
+      "work": 8,
+      "family_time": 4,
+      "personal_care": 2,
+      "personal_interests": 3,
+      "social_interaction": 2
     },
     "schedule_blocks": [
       {
@@ -246,15 +248,15 @@ Use this EXACT JSON structure:
       }
     ],
     "time_sentiment": {
-      "work": "",
-      "family": "",
-      "personal": ""
+      "work": "satisfied",
+      "family": "content",
+      "personal": "peaceful"
     },
     "screen_time_summary": "",
     "mental_preoccupations": []
   },
   "health_profile": {
-    "bmi_category": "",
+    "bmi": 24.5,
     "chronic_conditions": [],
     "mental_health_flags": [],
     "medications": [],
