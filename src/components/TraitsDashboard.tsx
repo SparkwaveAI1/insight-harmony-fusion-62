@@ -19,13 +19,6 @@ export function TraitsDashboard({ persona }: TraitsDashboardProps) {
 
   return (
     <div className="space-y-8">
-      {/* Big Five Personality - Not Available in V4 Schema */}
-      <div className="text-center p-6 text-muted-foreground bg-muted/30 rounded-lg">
-        <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
-        <p>Big Five personality data not available</p>
-        <p className="text-xs mt-1">This persona uses behavioral profiling instead</p>
-      </div>
-
       {/* Bias Profile */}
       {persona.full_profile?.bias_profile?.cognitive && (
         <div>
