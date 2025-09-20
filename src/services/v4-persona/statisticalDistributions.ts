@@ -216,6 +216,15 @@ export const STATISTICAL_DISTRIBUTIONS = {
       separated: 0.02,
       widowed: 0.06
     }
+  },
+
+  // Cognitive Coherence (realistic conversation patterns)
+  cognitive_coherence: {
+    severely_scattered: { range: [0.1, 0.2], probability: 0.08 },    // ADHD, high stress, substance issues
+    average_population: { range: [0.3, 0.4], probability: 0.55 },    // Most people - should be most common  
+    above_average: { range: [0.5, 0.6], probability: 0.22 },         // Teachers, organized workers
+    highly_organized: { range: [0.7, 0.8], probability: 0.13 },      // Lawyers, executives, presenters
+    exceptionally_coherent: { range: [0.9, 1.0], probability: 0.02 } // Rare - exceptional communicators
   }
 };
 

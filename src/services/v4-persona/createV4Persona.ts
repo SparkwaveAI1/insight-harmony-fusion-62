@@ -43,7 +43,7 @@ export async function createV4PersonaCall1(request: CreateV4PersonaRequest): Pro
     // Simple pass-through - let OpenAI interpret the user's text
     const personaParams = {
       user_description: (request.user_description || request.user_prompt || '').trim(),
-      coherence_target: request.coherence_target || 0.7
+      coherence_target: request.coherence_target || 0.35 // Default to average population range
     };
     
     console.log('📤 Sending to edge function:', personaParams);

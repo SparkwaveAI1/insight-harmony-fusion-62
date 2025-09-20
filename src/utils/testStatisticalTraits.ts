@@ -51,7 +51,7 @@ export function demonstrateStatisticalTraits() {
       }
     },
     cognitive_profile: {
-      thought_coherence: 0.8
+      thought_coherence: 0.35
     }
   };
 

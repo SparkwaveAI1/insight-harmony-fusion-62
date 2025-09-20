@@ -70,6 +70,15 @@ const STATISTICAL_DISTRIBUTIONS = {
       medical_debt: 0.23
     },
     employment_stress: { job_insecurity: 0.22, underemployed: 0.07 }
+  },
+  
+  // Cognitive Coherence (realistic conversation patterns)
+  cognitive_coherence: {
+    severely_scattered: { range: [0.1, 0.2], probability: 0.08 },    // ADHD, high stress, substance issues
+    average_population: { range: [0.3, 0.4], probability: 0.55 },    // Most people - should be most common  
+    above_average: { range: [0.5, 0.6], probability: 0.22 },         // Teachers, organized workers
+    highly_organized: { range: [0.7, 0.8], probability: 0.13 },      // Lawyers, executives, presenters
+    exceptionally_coherent: { range: [0.9, 1.0], probability: 0.02 } // Rare - exceptional communicators
   }
 };
 
@@ -79,6 +88,24 @@ const AGE_MODIFIERS = {
   "41-65": { chronic_conditions: 1.8 },
   "65+": { chronic_conditions: 2.5 }
 };
+
+// Generate realistic coherence value based on statistical distribution
+function generateCoherenceValue(): number {
+  const dist = STATISTICAL_DISTRIBUTIONS.cognitive_coherence;
+  const roll = Math.random();
+  
+  let cumulative = 0;
+  for (const [key, config] of Object.entries(dist)) {
+    cumulative += config.probability;
+    if (roll <= cumulative) {
+      const [min, max] = config.range;
+      return Math.round((Math.random() * (max - min) + min) * 100) / 100; // Round to 2 decimal places
+    }
+  }
+  
+  // Fallback to average range if something goes wrong
+  return 0.35;
+}
 
 // Realistic trait assignment function
 function assignRealisticTraits(persona: any, demographics: any): any {
@@ -626,7 +653,7 @@ COGNITIVE_PROFILE SECTION (all fields required - NUMERIC VALUES):
     "verbal_fluency": [0.0-1.0 NUMERIC],
     "abstract_reasoning": [0.0-1.0 NUMERIC],
     "problem_solving_orientation": "[analytical/intuitive/systematic]",
-    "thought_coherence": [0.0-1.0 NUMERIC]
+    "thought_coherence": [0.0-1.0 NUMERIC - REALISTIC VALUES: 0.1-0.2=severely scattered (ADHD/stress), 0.3-0.4=average population (MOST COMMON), 0.5-0.6=above average, 0.7-0.8=highly organized, 0.9+=exceptional (RARE)]
   }
 }
 

@@ -1,5 +1,25 @@
 import { STATISTICAL_DISTRIBUTIONS, AGE_MODIFIERS } from './statisticalDistributions';
 
+// Generate realistic coherence value based on statistical distribution
+function generateCoherenceValue(): number {
+  const dist = STATISTICAL_DISTRIBUTIONS.cognitive_coherence;
+  const roll = Math.random();
+  
+  let cumulative = 0;
+  for (const [key, config] of Object.entries(dist)) {
+    cumulative += config.probability;
+    if (roll <= cumulative) {
+      const [min, max] = config.range;
+      return Math.round((Math.random() * (max - min) + min) * 100) / 100; // Round to 2 decimal places
+    }
+  }
+  
+  // Fallback to average range if something goes wrong
+  return 0.35;
+}
+
+export { generateCoherenceValue };
+
 export interface PersonaDemographics {
   age: number;
   income: string;
@@ -124,7 +144,8 @@ function assignMentalHealth(persona: any, demographics: PersonaDemographics, mod
   if (Math.random() < adhdRate) {
     flags.push("adhd");
     persona.daily_life.mental_preoccupations.push("focus_challenges");
-    persona.cognitive_profile.thought_coherence = Math.max(0.1, persona.cognitive_profile.thought_coherence * 0.8); // Affects coherence
+    // ADHD significantly reduces coherence to severely scattered range
+    persona.cognitive_profile.thought_coherence = Math.max(0.1, Math.min(0.25, persona.cognitive_profile.thought_coherence * 0.4));
   }
   
   // Work dissatisfaction
@@ -433,7 +454,7 @@ export function testRealisticTraits() {
       }
     },
     cognitive_profile: {
-      thought_coherence: 0.8
+      thought_coherence: generateCoherenceValue() // Use realistic statistical distribution
     }
   };
   

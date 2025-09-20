@@ -92,6 +92,15 @@ const STATISTICAL_DISTRIBUTIONS = {
       job_insecurity: 0.22,
       workplace_harassment: 0.15
     }
+  },
+  
+  // Cognitive Coherence (realistic conversation patterns)
+  cognitive_coherence: {
+    severely_scattered: { range: [0.1, 0.2], probability: 0.08 },    // ADHD, high stress, substance issues
+    average_population: { range: [0.3, 0.4], probability: 0.55 },    // Most people - should be most common  
+    above_average: { range: [0.5, 0.6], probability: 0.22 },         // Teachers, organized workers
+    highly_organized: { range: [0.7, 0.8], probability: 0.13 },      // Lawyers, executives, presenters
+    exceptionally_coherent: { range: [0.9, 1.0], probability: 0.02 } // Rare - exceptional communicators
   }
 };
 
@@ -118,6 +127,24 @@ const AGE_MODIFIERS = {
     social_isolation: 1.6
   }
 };
+
+// Generate realistic coherence value based on statistical distribution
+function generateCoherenceValue(): number {
+  const dist = STATISTICAL_DISTRIBUTIONS.cognitive_coherence;
+  const roll = Math.random();
+  
+  let cumulative = 0;
+  for (const [key, config] of Object.entries(dist)) {
+    cumulative += config.probability;
+    if (roll <= cumulative) {
+      const [min, max] = config.range;
+      return Math.round((Math.random() * (max - min) + min) * 100) / 100; // Round to 2 decimal places
+    }
+  }
+  
+  // Fallback to average range if something goes wrong
+  return 0.35;
+}
 
 function getAgeGroup(age: number): string {
   if (age <= 25) return "18-25";
@@ -303,8 +330,9 @@ function assignMentalHealth(persona: any, age: number, gender: string, modifiers
     flags.push("adhd");
     if (!persona.daily_life) persona.daily_life = { mental_preoccupations: [], time_sentiment: { work: "neutral", family: "positive", personal: "neutral" } };
     persona.daily_life.mental_preoccupations.push("focus_challenges");
-    if (!persona.cognitive_profile) persona.cognitive_profile = { thought_coherence: 0.8 };
-    persona.cognitive_profile.thought_coherence = Math.max(0.1, persona.cognitive_profile.thought_coherence * 0.8);
+    if (!persona.cognitive_profile) persona.cognitive_profile = { thought_coherence: 0.35 }; // Average population default
+    // ADHD significantly reduces coherence to severely scattered range
+    persona.cognitive_profile.thought_coherence = Math.max(0.1, Math.min(0.25, persona.cognitive_profile.thought_coherence * 0.4));
     traitsAdded.push("adhd + cognitive_impact");
   }
   
