@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X, Globe, Lock, Trash2, User, Plus, ImageIcon } from 'lucide-react';
+import { MessageCircle, X, Globe, Lock, Trash2, User, Plus, ImageIcon, Download } from 'lucide-react';
 import { V4Persona } from '@/types/persona-v4';
 import { formatName } from '@/lib/utils';
 import { SurveyManagement } from '../surveys/SurveyManagement';
@@ -16,6 +16,7 @@ import PersonaMemoriesTab from '../persona-details/PersonaMemoriesTab';
 import PersonaCollectionsTab from '../persona-details/PersonaCollectionsTab';
 import { useNavigate } from 'react-router-dom';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription } from '@/utils/personaDisplayUtils';
+import { downloadPersonaAsJSON } from '@/utils/downloadUtils';
 interface V4PersonaDisplayProps {
   persona: V4Persona;
   isOwner?: boolean;
@@ -379,6 +380,17 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Download JSON Button - Available to all users */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => downloadPersonaAsJSON(persona)}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download JSON
+            </Button>
+            
             {/* Owner Controls */}
             {isOwner && (
               <div className="flex items-center gap-2">
