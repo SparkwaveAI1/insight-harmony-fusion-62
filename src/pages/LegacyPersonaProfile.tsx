@@ -324,21 +324,9 @@ function PersonaProfile() {
                    </div>
                  )}
 
-                 {/* Background Story */}
-                 <div className="space-y-1">
-                   <div className="flex items-center justify-between">
-                     <span className="text-sm font-medium text-muted-foreground">Background</span>
-                      <span className={`text-xs ${getCharacterCount(getPersonaBackgroundDescription(persona) || 'No background available', 400)}`}>
-                        {(getPersonaBackgroundDescription(persona) || 'No background available').length}/400 characters
-                     </span>
-                   </div>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {getPersonaBackgroundDescription(persona) || 'No background available'}
-                   </p>
-                 </div>
-              </div>
+               </div>
 
-              {/* Collection Badges */}
+               {/* Collection Badges */}
               {collections.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {collections.map((collection) => (
