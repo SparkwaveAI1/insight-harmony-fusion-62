@@ -540,7 +540,7 @@ CHARACTER ESSENCE: ${characterDescription}
 
 PHYSICAL APPEARANCE: ${physicalDescription}
 
-HEALTH CHARACTERISTICS: Use BMI ${healthData.bmi}, fitness level "${healthData.fitness_level}", and age ${healthData.age}
+HEALTH CHARACTERISTICS: ${JSON.stringify(healthData)}
 
 ORIGINAL USER DESCRIPTION: ${user_description}
 
@@ -559,12 +559,22 @@ Ensure all traits are coherent with the background story and character essence. 
     const personaJsonString = personaJsonResponse.choices[0]?.message?.content?.trim()
     console.log('✅ Persona JSON generated, length:', personaJsonString?.length)
     
+    // Clean up JSON before parsing (remove trailing commas and extra whitespace)
+    function cleanupJson(jsonString) {
+      return jsonString
+        .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+        .replace(/\s+/g, ' ')          // Normalize whitespace
+        .trim()
+    }
+    
     let fullProfile
     try {
-      fullProfile = JSON.parse(personaJsonString)
+      const cleanedJson = cleanupJson(personaJsonString)
+      fullProfile = JSON.parse(cleanedJson)
       console.log('✅ JSON parsing successful')
     } catch (parseError) {
       console.error('❌ JSON parsing failed:', parseError)
+      console.error('❌ Malformed JSON content:', personaJsonString?.slice(0, 500) + '...')
       throw new Error('Failed to parse generated persona JSON')
     }
 
