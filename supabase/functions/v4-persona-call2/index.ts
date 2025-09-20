@@ -25,38 +25,54 @@ serve(async (req) => {
     
     console.log('Starting V4 Call 2 - Summary generation for persona:', persona_id)
 
+    // Validate input
+    if (!persona_id || typeof persona_id !== 'string') {
+      throw new Error('Invalid persona_id provided')
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the full_profile from Call 1
-    const { data: persona, error: fetchError } = await supabase
-      .from('v4_personas')
-      .select('*')
-      .eq('persona_id', persona_id)
-      .single()
+    // Start background processing immediately and return success
+    const backgroundTask = async () => {
+      try {
+        console.log('Starting background summary generation for:', persona_id)
 
-    if (fetchError) {
-      console.error('Error fetching persona:', fetchError)
-      throw fetchError
-    }
+        // Get the full_profile from Call 1
+        const { data: persona, error: fetchError } = await supabase
+          .from('v4_personas')
+          .select('*')
+          .eq('persona_id', persona_id)
+          .single()
 
-    console.log('Retrieved persona for summary generation')
+        if (fetchError) {
+          console.error('Error fetching persona:', fetchError)
+          throw fetchError
+        }
 
-    // Call OpenAI to generate summaries based on new V4 structure
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07', // Faster model for summarization
-        messages: [
-          {
-            role: 'system',
-            content: `Analyze the complete V4 persona and create accurate conversation summaries for all categories.
+        if (!persona.full_profile) {
+          throw new Error('Persona missing full_profile data - Call 1 may not have completed')
+        }
+
+        console.log('Retrieved persona for summary generation')
+
+        // Robust OpenAI call with retry logic for different models
+        let summaryData
+        const models = ['gpt-5-mini-2025-08-07', 'gpt-4.1-2025-04-14']
+        let lastError
+
+        for (const model of models) {
+          try {
+            console.log(`Attempting summary generation with ${model}`)
+            
+            const requestBody: any = {
+              model,
+              messages: [
+                {
+                  role: 'system',
+                  content: `Analyze the complete V4 persona and create accurate conversation summaries for all categories.
 
 TASK: Generate conversation summaries that capture the essence from the new V4 persona structure.
 
@@ -99,61 +115,128 @@ CRITICAL REQUIREMENTS:
 - Generate realistic physical description based on demographics, health, and lifestyle
 - Include details useful for AI image generation
 - Focus on how traits manifest in conversation and decision-making
-- Return ONLY the JSON object, no explanations or markdown`
-          },
-          {
-            role: 'user',
-            content: `Generate summaries for this V4 persona:\n\n${JSON.stringify(persona.full_profile, null, 2)}`
+- Return ONLY the JSON object, no explanations or markdown
+- NEVER truncate or abbreviate - provide complete comprehensive summaries for all fields`
+                },
+                {
+                  role: 'user',
+                  content: `Generate summaries for this V4 persona:\n\n${JSON.stringify(persona.full_profile, null, 2)}`
+                }
+              ]
+            }
+
+            // Use appropriate token parameter based on model
+            if (model.includes('gpt-5')) {
+              requestBody.max_completion_tokens = 5000 // Higher limit for completeness
+            } else {
+              requestBody.max_completion_tokens = 4000 // GPT-4.1 also uses max_completion_tokens
+            }
+
+            const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody)
+            })
+
+            if (!openaiResponse.ok) {
+              const errorData = await openaiResponse.json()
+              throw new Error(`OpenAI API error: ${errorData.error?.message || openaiResponse.statusText}`)
+            }
+
+            const openaiData = await openaiResponse.json()
+            const rawContent = openaiData.choices[0].message.content
+            
+            console.log(`Summary generation complete with ${model}, content length:`, rawContent.length)
+
+            // Validate we got substantial content
+            if (rawContent.length < 500) {
+              throw new Error(`Generated content too short (${rawContent.length} chars) - likely truncated`)
+            }
+
+            const cleanedContent = extractJSONFromMarkdown(rawContent)
+            
+            try {
+              summaryData = JSON.parse(cleanedContent)
+              
+              // Validate the structure contains required fields
+              if (!summaryData.conversation_summary || 
+                  !summaryData.conversation_summary.demographics ||
+                  !summaryData.conversation_summary.communication_style) {
+                throw new Error('Missing required fields in generated summary')
+              }
+              
+              console.log(`Successfully parsed summary JSON with ${model}`)
+              break // Success, exit retry loop
+              
+            } catch (parseError) {
+              console.error(`JSON parsing failed with ${model}:`, parseError)
+              console.error('Content that failed to parse:', cleanedContent.slice(0, 500))
+              throw new Error(`Failed to parse as JSON: ${parseError.message}`)
+            }
+
+          } catch (modelError) {
+            console.error(`Model ${model} failed:`, modelError)
+            lastError = modelError
+            
+            // If this isn't the last model, continue to next
+            if (model !== models[models.length - 1]) {
+              console.log(`Retrying with next model...`)
+              continue
+            }
           }
-        ],
-        max_completion_tokens: 1200 // Reduced tokens and use correct parameter for GPT-5
-      })
-    })
+        }
 
-    const openaiData = await openaiResponse.json()
-    console.log('Summary generation complete')
+        // If we get here without summaryData, all models failed
+        if (!summaryData) {
+          throw new Error(`All models failed. Last error: ${lastError?.message || 'Unknown error'}`)
+        }
 
-    const rawContent = openaiData.choices[0].message.content
-    console.log('Raw OpenAI summary content length:', rawContent.length)
+        // Update persona with conversation summary
+        const { data: updatedPersona, error: updateError } = await supabase
+          .from('v4_personas')
+          .update({
+            conversation_summary: summaryData.conversation_summary,
+            creation_stage: 'completed',
+            creation_completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('persona_id', persona_id)
+          .select()
 
-    const cleanedContent = extractJSONFromMarkdown(rawContent)
-    console.log('Cleaned summary content for parsing')
+        if (updateError) {
+          console.error('Error updating persona:', updateError)
+          throw updateError
+        }
 
-    let summaryData
-    try {
-      summaryData = JSON.parse(cleanedContent)
-      console.log('Successfully parsed summary JSON')
-    } catch (parseError) {
-      console.error('Summary JSON parsing failed:', parseError)
-      console.error('Summary content that failed to parse:', cleanedContent.slice(0, 500))
-      throw new Error(`Failed to parse OpenAI summary response as JSON: ${parseError.message}`)
+        console.log('Persona updated successfully with complete summaries')
+
+      } catch (backgroundError) {
+        console.error('Background processing failed for persona:', persona_id, backgroundError)
+        
+        // Update persona with error status
+        await supabase
+          .from('v4_personas')
+          .update({
+            creation_stage: 'failed',
+            creation_completed: false,
+            updated_at: new Date().toISOString()
+          })
+          .eq('persona_id', persona_id)
+      }
     }
 
-    // Update persona with conversation summary
-    const { data: updatedPersona, error: updateError } = await supabase
-      .from('v4_personas')
-      .update({
-        conversation_summary: summaryData.conversation_summary,
-        creation_stage: 'completed',
-        creation_completed: true,
-        updated_at: new Date().toISOString()
-      })
-      .eq('persona_id', persona_id)
-      .select()
-
-    if (updateError) {
-      console.error('Error updating persona:', updateError)
-      throw updateError
-    }
-
-    console.log('Persona updated successfully with summaries')
+    // Start background task and return immediately
+    EdgeRuntime.waitUntil(backgroundTask())
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        persona_id: updatedPersona[0].persona_id,
-        persona_name: updatedPersona[0].name,
-        stage: 'completed'
+        persona_id: persona_id,
+        message: 'Summary generation started in background',
+        stage: 'processing_summaries'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -162,9 +245,14 @@ CRITICAL REQUIREMENTS:
     )
 
   } catch (error) {
-    console.error('Error in v4-persona-call2:', error)
+    // Only fail immediately for fundamental input problems
+    console.error('Immediate failure in v4-persona-call2:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message,
+        type: 'input_validation_error'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

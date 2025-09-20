@@ -415,7 +415,7 @@ const PersonaQueue = () => {
         
         console.log('🎯 Starting V4 persona creation step 2...');
         
-        const call2Response = await withTimeout(createV4PersonaCall2(personaId), 120000); // 120 second timeout
+        const call2Response = await createV4PersonaCall2(personaId); // No timeout - background processing
         
         if (!call2Response.success) {
           await fail(`Stage2 failed: ${call2Response.error || 'unknown'}`);
