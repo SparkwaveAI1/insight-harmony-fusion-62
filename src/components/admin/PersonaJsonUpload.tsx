@@ -544,7 +544,7 @@ export function PersonaJsonUpload() {
           
           <div className="flex gap-2">
             <Button 
-              onClick={() => window.open(`/persona/${state.generatedPersona?.persona_id}`, '_blank')}
+              onClick={() => window.open(`/persona-detail/${state.generatedPersona?.persona_id}`, '_blank')}
               variant="outline"
             >
               View Persona

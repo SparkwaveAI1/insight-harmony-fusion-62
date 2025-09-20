@@ -39,7 +39,7 @@ export const JobProgressNotification: React.FC<JobProgressNotificationProps> = (
 
   const handleViewPersona = () => {
     if (job.personaId) {
-      navigate(`/persona/${job.personaId}`);
+      navigate(`/persona-detail/${job.personaId}`);
       onRemove(job.id);
     }
   };

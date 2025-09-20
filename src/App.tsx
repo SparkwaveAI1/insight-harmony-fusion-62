@@ -9,7 +9,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import PersonaViewer from "./pages/PersonaViewer";
 import PersonaChat from "./pages/PersonaChat";
-import PersonaDetail from "./pages/PersonaDetail";
 import PersonaProfile from "./pages/PersonaProfile";
 import Dashboard from "./pages/Dashboard";
 import Billing from "./pages/Billing";
@@ -128,7 +127,6 @@ function App() {
                 <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
                 <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
                 <Route path="/persona-library" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
-                <Route path="/persona/:personaId" element={<ProtectedRoute><PersonaDetail /></ProtectedRoute>} />
                 <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
                 <Route path="/persona-detail/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
                 <Route path="/profile/:id" element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
