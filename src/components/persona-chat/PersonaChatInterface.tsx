@@ -20,20 +20,20 @@ interface PersonaChatInterfaceProps {
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const [activePersona, setActivePersona] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const messagesRef = useRef<any[]>([]);
+  const [isPersonaLoading, setIsPersonaLoading] = useState(false);
+  const [isResponding, setIsResponding] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isResponding = isLoading;
-
   // Load V4 persona directly
   useEffect(() => {
     const loadPersona = async () => {
       try {
-        setIsLoading(true);
+        setIsPersonaLoading(true);
         console.log('Loading V4 persona:', personaId);
         
         const persona = await getV4PersonaById(personaId);
@@ -47,19 +47,23 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         console.error('Error loading V4 persona:', error);
         setSessionError('Failed to load V4 persona');
       } finally {
-        setIsLoading(false);
+        setIsPersonaLoading(false);
       }
     };
 
     loadPersona();
   }, [personaId]);
 
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   // Ensure hooks are declared before any early returns
   const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {
-    if (!activePersona || isLoading) return;
+    if (!activePersona || isResponding) return;
     
     try {
-      setIsLoading(true);
+      setIsResponding(true);
       
       // Convert image file to base64 if present
       let imageData: string | undefined;
@@ -82,11 +86,11 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       // Add user message to UI immediately
       setMessages(prev => [...prev, userMessage]);
       
-      // Send to V4/Grok system
+      // Send to V4/Grok system with the latest conversation (including this user message)
       const response = await sendV4Message({
         persona_id: personaId,
         user_message: message,
-        conversation_history: messages.map(m => ({
+        conversation_history: [...messagesRef.current, userMessage].map(m => ({
           role: m.role,
           content: m.content
         }))
@@ -109,9 +113,9 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setMessages(prev => prev.slice(0, -1));
     } finally {
-      setIsLoading(false);
+      setIsResponding(false);
     }
-  }, [activePersona, isLoading, personaId]);
+  }, [activePersona, isResponding, personaId]);
 
   // Show error if persona loading failed
   if (sessionError) {
@@ -135,7 +139,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     );
   }
   
-  if (isLoading || !activePersona) {
+  if (isPersonaLoading || !activePersona) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
