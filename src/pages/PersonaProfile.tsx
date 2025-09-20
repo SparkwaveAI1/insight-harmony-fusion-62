@@ -105,12 +105,23 @@ function PersonaProfile() {
     return 'No description available.';
   };
 
+  // Helper function to get possessive pronoun based on persona's pronouns
+  const getPossessivePronoun = (persona: V4Persona): string => {
+    const pronouns = persona.full_profile?.identity?.pronouns?.toLowerCase();
+    
+    if (pronouns?.includes('he')) return 'his';
+    if (pronouns?.includes('she')) return 'her';
+    return 'their'; // Default to 'their' for they/them or any other pronouns
+  };
+
   const generateBackground = (persona: V4Persona): string => {
     // Generate background from attitude_narrative + life details
     const attitude = persona.full_profile?.attitude_narrative || '';
     const identity = persona.full_profile?.identity;
     const relationships = persona.full_profile?.relationships;
     const money = persona.full_profile?.money_profile;
+    const possessive = getPossessivePronoun(persona);
+    const possessiveCapitalized = possessive.charAt(0).toUpperCase() + possessive.slice(1);
     
     let background = '';
     
@@ -120,15 +131,15 @@ function PersonaProfile() {
     
     // Add formative life details if available
     if (identity?.occupation) {
-      background += ` Their career as a ${identity.occupation} has shaped their worldview.`;
+      background += ` ${possessiveCapitalized} career as a ${identity.occupation} has shaped ${possessive} worldview.`;
     }
     
     if (relationships?.household?.status) {
-      background += ` Their ${relationships.household.status} has influenced their life priorities.`;
+      background += ` ${possessiveCapitalized} ${relationships.household.status} has influenced ${possessive} life priorities.`;
     }
     
     if (money?.attitude_toward_money) {
-      background += ` Their relationship with money reflects ${money.attitude_toward_money}.`;
+      background += ` ${possessiveCapitalized} relationship with money reflects ${money.attitude_toward_money}.`;
     }
     
     return background.slice(0, 900);
