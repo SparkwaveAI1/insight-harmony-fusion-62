@@ -1152,11 +1152,12 @@ function extractJSONFromMarkdown(content: string): any {
 }
 
 function normalizePersonaData(data: any): any {
-  // Clamp numeric values to 0-1 range
-  function clampValue(value: any): number {
-    if (typeof value !== 'number') return 0.5;
-    return Math.max(0, Math.min(1, value));
-  }
+  // DISABLED: clampValue contamination - preserving OpenAI's authentic numeric values
+  // Clamp numeric values to 0-1 range  
+  // function clampValue(value: any): number {
+  //   if (typeof value !== 'number') return 0.5;
+  //   return Math.max(0, Math.min(1, value));
+  // }
 
   // Ensure sexuality_profile exists with proper orientation
   if (!data.sexuality_profile) {
@@ -1190,21 +1191,23 @@ function normalizePersonaData(data: any): any {
     };
   }
 
+  // DISABLED: Motivation driver clamping - preserving OpenAI's authentic values
   // Clamp motivation drivers
-  if (data.motivation_profile?.primary_drivers) {
-    Object.keys(data.motivation_profile.primary_drivers).forEach(key => {
-      data.motivation_profile.primary_drivers[key] = clampValue(data.motivation_profile.primary_drivers[key]);
-    });
-  }
+  // if (data.motivation_profile?.primary_drivers) {
+  //   Object.keys(data.motivation_profile.primary_drivers).forEach(key => {
+  //     data.motivation_profile.primary_drivers[key] = clampValue(data.motivation_profile.primary_drivers[key]);
+  //   });
+  // }
 
+  // DISABLED: Cognitive value clamping - preserving OpenAI's authentic values  
   // Clamp cognitive values
-  if (data.cognitive_profile) {
-    ['verbal_fluency', 'abstract_reasoning', 'thought_coherence'].forEach(field => {
-      if (data.cognitive_profile[field] !== undefined) {
-        data.cognitive_profile[field] = clampValue(data.cognitive_profile[field]);
-      }
-    });
-  }
+  // if (data.cognitive_profile) {
+  //   ['verbal_fluency', 'abstract_reasoning', 'thought_coherence'].forEach(field => {
+  //     if (data.cognitive_profile[field] !== undefined) {
+  //       data.cognitive_profile[field] = clampValue(data.cognitive_profile[field]);
+  //     }
+  //   });
+  // }
 
   return data;
 }
