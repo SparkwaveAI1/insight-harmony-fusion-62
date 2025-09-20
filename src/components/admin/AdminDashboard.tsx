@@ -65,29 +65,14 @@ export function AdminDashboard() {
       {/* Admin Billing Stats */}
       <AdminBillingStats />
 
-      {/* Persona Completeness Analysis */}
-      <PersonaCompletenessAnalysis />
-
       {/* Persona Trait Filler */}
       <PersonaTraitFiller />
-
-      {/* Persona Selection Interface */}
-      <PersonaSelectionInterface />
-
-      {/* Batch Persona Converter */}
-      <BatchPersonaConverter />
-
-      {/* Persona Description Converter Test */}
-      <PersonaDescriptionConverter />
 
       {/* Admin Billing Users */}
       <AdminBillingUsers />
 
       {/* Admin Billing Audit Log */}
       <AdminBillingAuditLog />
-
-      {/* Enhancement Tools */}
-      <PersonaEnhancementTools />
     </div>
   );
 }
