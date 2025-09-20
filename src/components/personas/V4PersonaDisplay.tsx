@@ -8,14 +8,12 @@ import { V4Persona } from '@/types/persona-v4';
 import { SurveyManagement } from '../surveys/SurveyManagement';
 import PersonaVisibilityToggle from '../persona-details/PersonaVisibilityToggle';
 import DeletePersonaButton from '../persona-details/DeletePersonaButton';
-import PersonaImageGenerationDialog from '../persona-details/PersonaImageGenerationDialog';
-import { V4PersonaCompletionCard } from '@/components/persona-details/V4PersonaCompletionCard';
 import PersonaMemoriesTab from '../persona-details/PersonaMemoriesTab';
 import PersonaCollectionsTab from '../persona-details/PersonaCollectionsTab';
 import { useNavigate } from 'react-router-dom';
 import { getPersonaAge, getPersonaLocation, getPersonaBackgroundDescription, getPersonaDisplayName } from '@/utils/personaDisplayUtils';
 import { supabase } from '@/integrations/supabase/client';
-import { usePersonaImageGeneration } from '@/hooks/usePersonaImageGeneration';
+import { toast } from 'sonner';
 
 interface V4PersonaDisplayProps {
   persona: V4Persona;
@@ -47,7 +45,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
 }) => {
   const navigate = useNavigate();
   const [collections, setCollections] = useState<PersonaCollection[]>([]);
-  const { isGenerating, generateImage } = usePersonaImageGeneration(persona);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
   const fullProfile = persona.full_profile;
   const conversationSummary = persona.conversation_summary;
@@ -101,9 +99,39 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
   };
 
   const handleRegenerateImage = async () => {
-    const result = await generateImage(false); // Don't save to gallery by default
-    if (result && onImageGenerated) {
-      onImageGenerated();
+    setIsGeneratingImage(true);
+    
+    try {
+      toast.info('Generating new profile image...', {
+        description: 'This may take a few moments.'
+      });
+      
+      const { data, error } = await supabase.functions.invoke('generate-persona-image', {
+        body: { personaData: persona }
+      });
+
+      if (error) {
+        console.error("Error calling generate-persona-image function:", error);
+        toast.error("Failed to generate persona image");
+        return;
+      }
+      
+      if (!data.success || !data.image_url) {
+        console.error("Image generation failed:", data.error || "No image URL returned");
+        toast.error("Failed to generate persona image");
+        return;
+      }
+      
+      toast.success("Persona image generated successfully!");
+      
+      if (onImageGenerated) {
+        onImageGenerated();
+      }
+    } catch (error) {
+      console.error("Error in generatePersonaImage:", error);
+      toast.error("An unexpected error occurred while generating the persona image");
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -270,34 +298,16 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
               
               {/* Regenerate Image Button - Only show for owners */}
               {isOwner && (
-                <div className="space-y-2">
-                  {/* Quick regenerate button */}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full flex items-center gap-2"
-                    disabled={isGenerating}
-                    onClick={handleRegenerateImage}
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                    {isGenerating ? 'Generating...' : persona.profile_image_url ? 'Regenerate Image' : 'Generate Image'}
-                  </Button>
-                  
-                  {/* Advanced options through dialog */}
-                  <PersonaImageGenerationDialog
-                    persona={persona as any} // Type compatibility - V4Persona to Persona adapter
-                    onImageGenerated={() => onImageGenerated?.()}
-                    trigger={
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        Advanced Options
-                      </Button>
-                    }
-                  />
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full flex items-center gap-2"
+                  disabled={isGeneratingImage}
+                  onClick={handleRegenerateImage}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  {isGeneratingImage ? 'Generating...' : persona.profile_image_url ? 'Regenerate Image' : 'Generate Image'}
+                </Button>
               )}
             </div>
 
