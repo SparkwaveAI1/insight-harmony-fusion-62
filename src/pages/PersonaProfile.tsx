@@ -19,22 +19,30 @@ interface PersonaCollection {
 }
 
 export default function PersonaProfile() {
-  const { id } = useParams<{ id: string }>();
+  const { personaId } = useParams<{ personaId: string }>();
+  console.log('Route params:', useParams());
+  console.log('Extracted personaId:', personaId);
   const navigate = useNavigate();
   const [persona, setPersona] = useState<V4Persona | null>(null);
   const [collections, setCollections] = useState<PersonaCollection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      loadPersona(id);
-    }
-  }, [id]);
+    const loadData = async () => {
+      if (personaId) {
+        console.log('Loading persona...');
+        await loadPersona(personaId);
+        await loadCollections(personaId);
+      }
+    };
+    loadData();
+  }, [personaId]);
 
   const loadPersona = async (personaId: string) => {
     try {
       setIsLoading(true);
       const personaData = await getV4PersonaById(personaId);
+      console.log('Loaded persona data:', personaData);
       
       if (!personaData) {
         toast.error('Persona not found');
@@ -43,7 +51,6 @@ export default function PersonaProfile() {
       }
 
       setPersona(personaData);
-      await loadCollections(personaId);
     } catch (error) {
       console.error('Error loading persona:', error);
       toast.error('Failed to load persona');
