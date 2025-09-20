@@ -111,7 +111,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [activePersona, isLoading, messages, personaId]);
+  }, [activePersona, isLoading, personaId]);
 
   // Show error if persona loading failed
   if (sessionError) {
