@@ -265,8 +265,8 @@ const Collections = () => {
                   onClick={() => viewCollection(collection.id)}
                 >
                   {viewMode === 'grid' ? (
-                    <>
-                      <div className="mb-4">
+                    <div className="flex flex-col h-full min-h-[200px]">
+                      <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
                           <h2 className="text-xl font-semibold">{collection.name}</h2>
                           <div className="flex items-center gap-2">
@@ -283,11 +283,11 @@ const Collections = () => {
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2 h-10">
+                        <p className="text-sm text-muted-foreground line-clamp-3">
                           {collection.description || "No description"}
                         </p>
                       </div>
-                      <div className="flex justify-between items-end">
+                      <div className="flex justify-between items-end pt-4 mt-auto">
                         <p className="text-sm text-muted-foreground">
                           {collection.persona_count} personas
                         </p>
@@ -310,7 +310,7 @@ const Collections = () => {
                           </div>
                         )}
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <>
                       <div className="flex-1">
