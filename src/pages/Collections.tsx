@@ -153,6 +153,43 @@ const Collections = () => {
     }
   };
 
+  const createBulkCollections = async () => {
+    const collections = [
+      {
+        name: "Parents of College-Bound Teens",
+        description: "Parents navigating the college application process and preparing their teenagers for higher education"
+      },
+      {
+        name: "Parents Investing in Tutoring",
+        description: "Parents who invest in additional educational support through tutoring services for their children"
+      },
+      {
+        name: "Parents Paying for Private School",
+        description: "Parents who choose and fund private school education for their children"
+      },
+      {
+        name: "Christian Parents",
+        description: "Parents who integrate Christian faith and values into their parenting approach"
+      },
+      {
+        name: "Homeschooling Parents",
+        description: "Parents who educate their children at home rather than traditional school settings"
+      }
+    ];
+
+    try {
+      for (const collection of collections) {
+        await createCollection(collection.name, collection.description, false);
+        console.log(`Created collection: ${collection.name}`);
+      }
+      fetchCollections();
+      toast.success(`Successfully created ${collections.length} collections`);
+    } catch (error) {
+      console.error("Error creating bulk collections:", error);
+      toast.error("Failed to create collections");
+    }
+  };
+
   const openEditDialog = (collection: Collection, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation to collection detail
     setSelectedCollection(collection);
@@ -378,10 +415,15 @@ const Collections = () => {
                   Organize your personas and discover public collections from the community.
                 </p>
               </div>
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                New Collection
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Collection
+                </Button>
+                <Button onClick={createBulkCollections} variant="outline">
+                  Create Parent Collections
+                </Button>
+              </div>
             </div>
 
             {/* Tabs for My Collections vs Public Collections */}
