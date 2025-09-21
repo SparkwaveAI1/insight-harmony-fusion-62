@@ -174,6 +174,66 @@ const Collections = () => {
       {
         name: "Homeschooling Parents",
         description: "Parents who educate their children at home rather than traditional school settings"
+      },
+      {
+        name: "Parents of Student Athletes",
+        description: "Parents supporting their children in competitive sports and balancing athletics with academics"
+      },
+      {
+        name: "Young Adults Starting Careers",
+        description: "Recent graduates and young professionals entering the workforce and establishing their careers"
+      },
+      {
+        name: "Divorced Adults",
+        description: "Adults navigating life changes, co-parenting, and rebuilding after divorce"
+      },
+      {
+        name: "Single Parents",
+        description: "Parents raising children independently while managing work, finances, and personal responsibilities"
+      },
+      {
+        name: "Healthcare Workers",
+        description: "Medical professionals including doctors, nurses, and healthcare support staff"
+      },
+      {
+        name: "Corporate Middle Managers",
+        description: "Mid-level executives balancing leadership responsibilities with organizational pressures"
+      },
+      {
+        name: "Entrepreneurs & Startup Founders",
+        description: "Business founders and entrepreneurs building new ventures and navigating startup challenges"
+      },
+      {
+        name: "Creative Professionals",
+        description: "Artists, designers, writers, and other creative professionals pursuing their craft"
+      },
+      {
+        name: "Blue-Collar & Skilled Trades",
+        description: "Skilled workers in construction, manufacturing, mechanics, and other hands-on professions"
+      },
+      {
+        name: "Sports Fans",
+        description: "Enthusiastic followers of sports teams, leagues, and athletic competitions"
+      },
+      {
+        name: "Outdoor Enthusiasts",
+        description: "People passionate about hiking, camping, adventure sports, and outdoor recreation"
+      },
+      {
+        name: "Collectors & Hobbyists",
+        description: "Individuals dedicated to collecting items or pursuing specialized hobbies and interests"
+      },
+      {
+        name: "Social Media Influencers",
+        description: "Content creators and influencers building audiences and monetizing their online presence"
+      },
+      {
+        name: "Mobile Gamers",
+        description: "Players engaged with mobile gaming apps, competitive mobile games, and gaming communities"
+      },
+      {
+        name: "Teenagers",
+        description: "Adolescents navigating high school, social pressures, and preparing for adulthood"
       }
     ];
 
@@ -421,7 +481,7 @@ const Collections = () => {
                   New Collection
                 </Button>
                 <Button onClick={createBulkCollections} variant="outline">
-                  Create Parent Collections
+                  Create All Collections (20)
                 </Button>
               </div>
             </div>
