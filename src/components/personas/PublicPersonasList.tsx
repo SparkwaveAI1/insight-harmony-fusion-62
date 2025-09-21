@@ -137,12 +137,13 @@ const PublicPersonasList = ({
 
   return (
     <div className={className}>
-      {personas.map((persona) => (
-        <PersonaCard 
-          key={persona.persona_id} 
-          persona={persona}
-        />
-      ))}
+        {personas.map((persona) => (
+          <PersonaCard
+            key={persona.persona_id}
+            persona={persona}
+            forcePublic={true}
+          />
+        ))}
     </div>
   );
 };

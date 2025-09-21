@@ -37,6 +37,7 @@ interface PersonaCardProps {
   hideChat?: boolean;
   collectionId?: string;
   onRemoveFromCollection?: (personaId: string, collectionId: string) => void;
+  forcePublic?: boolean;
 }
 
 const PersonaCard: React.FC<PersonaCardProps> = ({ 
@@ -47,16 +48,29 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   hideChat = false,
   collectionId,
   onRemoveFromCollection,
+  forcePublic = false,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isOwner = user?.id === persona.user_id;
-  const [isPublic, setIsPublic] = useState(persona.is_public);
+  
+  // Normalize is_public value to handle various data types
+  const normalizeIsPublic = (value: any): boolean => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    if (typeof value === 'number') return value === 1;
+    return false;
+  };
+  
+  // Derive display status directly from persona data or force public
+  const displayIsPublic = forcePublic || normalizeIsPublic(persona.is_public);
+  const [isPublic, setIsPublic] = useState(displayIsPublic);
 
   // Sync local state with prop changes
   useEffect(() => {
-    setIsPublic(persona.is_public);
-  }, [persona.is_public]);
+    const newDisplayIsPublic = forcePublic || normalizeIsPublic(persona.is_public);
+    setIsPublic(newDisplayIsPublic);
+  }, [persona.is_public, forcePublic]);
 
   const handleVisibilityChange = async () => {
     if (!isOwner) {
@@ -252,13 +266,9 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       
       <CardFooter className="flex items-center justify-between pt-0">
         <div className="flex items-center gap-2">
-          <Badge variant={isPublic ? "default" : "secondary"}>
-            {isPublic ? "Public" : "Private"}
+          <Badge variant={displayIsPublic ? "default" : "secondary"}>
+            {displayIsPublic ? "Public" : "Private"}
           </Badge>
-          {/* Debug: Show is_public value */}
-          <span className="text-xs text-muted-foreground">
-            (is_public: {String(persona.is_public)})
-          </span>
         </div>
         <div className="flex gap-2">
           <AddToCollectionButton personaId={persona.persona_id} />
