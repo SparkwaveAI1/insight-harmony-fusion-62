@@ -25,12 +25,14 @@ export async function createV4PersonaUnified(request: CreateV4PersonaUnifiedRequ
       user_id: request.user_id
     });
 
+    console.log('📞 About to call edge function...');
     const { data, error } = await supabase.functions.invoke('v4-persona-unified', {
       body: {
         user_description: request.user_description,
         user_id: request.user_id
       }
     });
+    console.log('📞 Edge function call completed. Error:', error, 'Data:', data);
 
     if (error) {
       console.error('❌ Error in unified persona creation:', error);
