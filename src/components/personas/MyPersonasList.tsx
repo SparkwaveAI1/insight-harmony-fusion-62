@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
@@ -32,7 +32,7 @@ const MyPersonasList = ({
 }: MyPersonasListProps) => {
   const { user, isLoading: authLoading } = useAuth();
   const [personas, setPersonas] = useState<V4Persona[]>([]);
-
+  const queryClient = useQueryClient();
   // Show ALL user's personas without any filtering
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['my-personas-show-all', user?.id],
@@ -142,7 +142,11 @@ const MyPersonasList = ({
         )
       );
       
-      // Refetch to ensure consistency
+      // Invalidate caches so other views update
+      queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
+      
+      // Refetch to ensure consistency in this list
       refetch();
     } catch (error) {
       console.error("Error updating persona visibility:", error);

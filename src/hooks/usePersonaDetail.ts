@@ -148,6 +148,10 @@ export function usePersonaDetail() {
         
         toast.success(`Persona visibility ${newVisibility ? 'published' : 'set to private'}`);
         
+        // Invalidate persona lists so My and Public views refresh
+        queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
+        
         // For V4 personas, force a reload to ensure state consistency
         if (persona?.persona_id?.startsWith('v4_')) {
           console.log("V4 persona detected, forcing reload for state consistency...");

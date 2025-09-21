@@ -54,7 +54,12 @@ const PersonaViewerContent = () => {
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['personas'] });
   }, [queryClient]);
-
+  // If in library view, ensure public personas are freshly fetched
+  useEffect(() => {
+    if (isLibraryView) {
+      queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
+    }
+  }, [isLibraryView, queryClient]);
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedTags([]);
@@ -123,7 +128,7 @@ const PersonaViewerContent = () => {
           />
 
           {/* Tabbed View - Always show both tabs */}
-          <Tabs defaultValue="my-personas" className="w-full">
+          <Tabs defaultValue={isLibraryView ? 'public-personas' : 'my-personas'} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="my-personas">My Personas</TabsTrigger>
               <TabsTrigger value="public-personas">Public Personas</TabsTrigger>

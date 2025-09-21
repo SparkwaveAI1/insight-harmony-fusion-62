@@ -28,6 +28,7 @@ import {
   getPersonaOccupation, 
   getPersonaBackgroundDescription 
 } from "@/utils/personaDisplayUtils";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PersonaCardProps {
   persona: V4Persona;
@@ -50,8 +51,8 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isOwner = user?.id === persona.user_id;
-  
   // Normalize is_public value to handle various data types
   const normalizeIsPublic = (value: any): boolean => {
     if (typeof value === 'boolean') return value;
@@ -72,6 +73,9 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     try {
       const success = await updatePersonaVisibility(persona.persona_id, newVisibility);
       if (success) {
+        // Invalidate lists so other views refresh
+        queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
         if (onVisibilityChange) {
           onVisibilityChange(persona.persona_id, newVisibility);
         }
