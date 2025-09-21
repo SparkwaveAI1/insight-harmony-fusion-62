@@ -234,12 +234,180 @@ const Collections = () => {
       {
         name: "Teenagers",
         description: "Adolescents navigating high school, social pressures, and preparing for adulthood"
+      },
+      {
+        name: "High Debt Households",
+        description: "Families and individuals managing significant debt burdens and working toward financial stability"
+      },
+      {
+        name: "Underemployed Adults",
+        description: "Adults working in jobs that don't fully utilize their skills or provide adequate compensation"
+      },
+      {
+        name: "African-American Urban Consumers",
+        description: "African-American consumers living in urban areas with distinct shopping and lifestyle preferences"
+      },
+      {
+        name: "Rural Agricultural Workers",
+        description: "Workers in farming, ranching, and agricultural industries in rural communities"
+      },
+      {
+        name: "Faith-Driven Professionals",
+        description: "Working professionals who integrate their religious faith into their career decisions and workplace behavior"
+      },
+      {
+        name: "Progressive Democrats",
+        description: "Democratic voters who support progressive policies and liberal social positions"
+      },
+      {
+        name: "Moderate Democrats",
+        description: "Democratic voters who hold centrist positions and support pragmatic policy approaches"
+      },
+      {
+        name: "Conservative Republicans",
+        description: "Republican voters who support traditional conservative values and limited government policies"
+      },
+      {
+        name: "Moderate Republicans",
+        description: "Republican voters who hold centrist positions and support bipartisan policy solutions"
+      },
+      {
+        name: "Libertarians",
+        description: "Voters who prioritize individual liberty, limited government, and free-market economics"
+      },
+      {
+        name: "Anti-Establishment Voters",
+        description: "Voters who distrust traditional political institutions and prefer outsider candidates"
+      },
+      {
+        name: "Politically Disengaged Adults",
+        description: "Adults who show little interest in politics or civic participation"
+      },
+      {
+        name: "Latino Voters",
+        description: "Hispanic and Latino voters with diverse backgrounds and political perspectives"
+      },
+      {
+        name: "Black Voters",
+        description: "African-American voters with shared experiences and diverse political viewpoints"
+      },
+      {
+        name: "Asian-American Voters",
+        description: "Asian-American voters representing diverse ethnic backgrounds and political perspectives"
+      },
+      {
+        name: "White Working-Class Voters",
+        description: "White voters in working-class jobs who focus on economic and employment issues"
+      },
+      {
+        name: "Conservative Media Consumers",
+        description: "Individuals who primarily consume conservative news sources and commentary"
+      },
+      {
+        name: "Progressive Media Consumers",
+        description: "Individuals who primarily consume progressive news sources and commentary"
+      },
+      {
+        name: "Rural Conservative Voters",
+        description: "Conservative voters living in rural areas with traditional values and limited government preferences"
+      },
+      {
+        name: "Urban Progressive Voters",
+        description: "Progressive voters living in urban areas who support liberal policies and social change"
+      },
+      {
+        name: "Older Conservative Voters",
+        description: "Senior citizens who hold conservative political views and traditional values"
+      },
+      {
+        name: "Gun Rights Advocates",
+        description: "Citizens who strongly support Second Amendment rights and gun ownership freedoms"
+      },
+      {
+        name: "Gun Control Advocates",
+        description: "Citizens who support stricter gun regulations and firearm safety measures"
+      },
+      {
+        name: "Pro-Choice Voters",
+        description: "Voters who support reproductive rights and abortion access"
+      },
+      {
+        name: "Tax Reform Advocates",
+        description: "Citizens who support changes to the tax system for fairness or economic growth"
+      },
+      {
+        name: "Climate Activists",
+        description: "Individuals actively engaged in environmental protection and climate change advocacy"
+      },
+      {
+        name: "Uninsured / Underinsured Households",
+        description: "Families lacking adequate health insurance coverage and facing healthcare cost challenges"
+      },
+      {
+        name: "Border Security Advocates",
+        description: "Citizens who prioritize strong immigration enforcement and border control measures"
+      },
+      {
+        name: "Engaged Couples Planning Weddings",
+        description: "Soon-to-be-married couples navigating wedding planning and preparation for marriage"
+      },
+      {
+        name: "Newlyweds",
+        description: "Recently married couples adjusting to married life and making joint decisions"
+      },
+      {
+        name: "Jewish Families",
+        description: "Families practicing Judaism and integrating Jewish traditions into their daily lives"
+      },
+      {
+        name: "Jewish Young Professionals",
+        description: "Young Jewish adults building careers while maintaining their religious and cultural identity"
+      },
+      {
+        name: "Hindu Families",
+        description: "Families practicing Hinduism and incorporating Hindu traditions into their family life"
+      },
+      {
+        name: "Hindu Professionals",
+        description: "Hindu individuals building careers while maintaining their religious and cultural practices"
+      },
+      {
+        name: "Buddhist Practitioners",
+        description: "Individuals who practice Buddhism and integrate Buddhist principles into their daily lives"
+      },
+      {
+        name: "Evangelical Christian Families",
+        description: "Christian families who emphasize personal relationship with Jesus and biblical authority"
+      },
+      {
+        name: "Muslim Families",
+        description: "Families practicing Islam and integrating Islamic values into their family structure"
+      },
+      {
+        name: "Muslim Professionals",
+        description: "Muslim individuals balancing career advancement with Islamic principles and practices"
+      },
+      {
+        name: "Interfaith Households",
+        description: "Families with members from different religious backgrounds navigating diverse beliefs"
+      },
+      {
+        name: "Spiritual but Not Religious",
+        description: "Individuals who maintain spiritual beliefs without formal religious affiliation"
+      },
+      {
+        name: "Catholic Families",
+        description: "Families practicing Catholicism and incorporating Catholic traditions into their lives"
+      },
+      {
+        name: "Sikh Families",
+        description: "Families practicing Sikhism and maintaining Sikh traditions and community connections"
       }
     ];
 
     try {
       for (const collection of collections) {
-        await createCollection(collection.name, collection.description, false);
+        await createCollection(collection.name, collection.description, true);
         console.log(`Created collection: ${collection.name}`);
       }
       fetchCollections();
@@ -499,7 +667,7 @@ const Collections = () => {
                   New Collection
                 </Button>
                 <Button onClick={createBulkCollections} variant="outline">
-                  Create All Collections (20)
+                  Create All Collections (62)
                 </Button>
                 <Button onClick={makeAllCollectionsPublic} variant="outline">
                   Make All Public
