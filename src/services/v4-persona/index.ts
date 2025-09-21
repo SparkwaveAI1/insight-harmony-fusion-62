@@ -3,6 +3,7 @@ export * from './createV4Persona';
 export * from './createV4PersonaUnified';     // New unified system
 export * from './getV4Personas';
 export * from './deleteV4Persona';
+export * from './bulkDeletePersonas';         // Bulk deletion utilities
 export * from './conversationV4';           // Now defaults to Grok
 export * from './conversationGrok';         // Direct Grok access
 export * from './v4PersonaValidation';      // V4 validation services
