@@ -174,46 +174,6 @@ const Collections = () => {
     navigate(`/collections/${collectionId}`);
   };
 
-  const cleanupDuplicateCollections = async () => {
-    try {
-      // Get all collections grouped by name
-      const collectionsMap = new Map();
-      myCollections.forEach(collection => {
-        if (!collectionsMap.has(collection.name)) {
-          collectionsMap.set(collection.name, []);
-        }
-        collectionsMap.get(collection.name).push(collection);
-      });
-
-      // Find duplicates and delete the newer ones
-      let deletedCount = 0;
-      for (const [name, collections] of collectionsMap) {
-        if (collections.length > 1) {
-          // Sort by created_at to keep the oldest
-          collections.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-          
-          // Delete all but the first (oldest)
-          for (let i = 1; i < collections.length; i++) {
-            const result = await deleteCollection(collections[i].id);
-            if (result) {
-              deletedCount++;
-              console.log(`Deleted duplicate: ${collections[i].name} (${collections[i].id})`);
-            }
-          }
-        }
-      }
-
-      if (deletedCount > 0) {
-        toast.success(`Cleaned up ${deletedCount} duplicate collections`);
-        fetchCollections(); // Refresh the list
-      } else {
-        toast.info("No duplicates found");
-      }
-    } catch (error) {
-      console.error("Error cleaning up duplicates:", error);
-      toast.error("Failed to clean up duplicates");
-    }
-  };
 
   function renderCollectionsContent() {
     return (
@@ -421,15 +381,10 @@ const Collections = () => {
                   Organize your personas and discover public collections from the community.
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Collection
-                </Button>
-                <Button onClick={cleanupDuplicateCollections} variant="outline">
-                  Clean Duplicates
-                </Button>
-              </div>
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Collection
+              </Button>
             </div>
 
             {/* Tabs for My Collections vs Public Collections */}
