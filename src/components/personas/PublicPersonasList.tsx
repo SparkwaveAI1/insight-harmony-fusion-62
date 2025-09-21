@@ -135,13 +135,21 @@ const PublicPersonasList = ({
     return <PersonaEmptyState />;
   }
 
+  const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
+    // If persona is made private, remove it from the list and refetch
+    if (!isPublic) {
+      setPersonas(prev => prev.filter(p => p.persona_id !== personaId));
+      refetch();
+    }
+  };
+
   return (
     <div className={className}>
         {personas.map((persona) => (
           <PersonaCard
             key={persona.persona_id}
             persona={persona}
-            forcePublic={true}
+            onVisibilityChange={handleVisibilityChange}
           />
         ))}
     </div>

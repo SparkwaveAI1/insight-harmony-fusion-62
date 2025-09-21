@@ -37,7 +37,6 @@ interface PersonaCardProps {
   hideChat?: boolean;
   collectionId?: string;
   onRemoveFromCollection?: (personaId: string, collectionId: string) => void;
-  forcePublic?: boolean;
 }
 
 const PersonaCard: React.FC<PersonaCardProps> = ({ 
@@ -48,7 +47,6 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   hideChat = false,
   collectionId,
   onRemoveFromCollection,
-  forcePublic = false,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -62,15 +60,12 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     return false;
   };
   
-  // Derive display status directly from persona data or force public
-  const displayIsPublic = forcePublic || normalizeIsPublic(persona.is_public);
-  const [isPublic, setIsPublic] = useState(displayIsPublic);
+  const [isPublic, setIsPublic] = useState(normalizeIsPublic(persona.is_public));
 
   // Sync local state with prop changes
   useEffect(() => {
-    const newDisplayIsPublic = forcePublic || normalizeIsPublic(persona.is_public);
-    setIsPublic(newDisplayIsPublic);
-  }, [persona.is_public, forcePublic]);
+    setIsPublic(normalizeIsPublic(persona.is_public));
+  }, [persona.is_public]);
 
   const handleVisibilityChange = async () => {
     if (!isOwner) {
@@ -266,8 +261,8 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       
       <CardFooter className="flex items-center justify-between pt-0">
         <div className="flex items-center gap-2">
-          <Badge variant={displayIsPublic ? "default" : "secondary"}>
-            {displayIsPublic ? "Public" : "Private"}
+          <Badge variant={isPublic ? "default" : "secondary"}>
+            {isPublic ? "Public" : "Private"}
           </Badge>
         </div>
         <div className="flex gap-2">
