@@ -304,9 +304,9 @@ const Collections = () => {
                   {viewMode === 'grid' ? (
                     <div className="flex flex-col h-full min-h-[200px]">
                       <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h2 className="text-xl font-semibold">{collection.name}</h2>
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-start justify-between mb-3">
+                          <h2 className="text-xl font-semibold line-clamp-2 leading-tight h-14 flex items-start">{collection.name}</h2>
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                             {collection.is_public ? (
                               <Badge variant="outline" className="text-xs">
                                 <Globe className="h-3 w-3 mr-1" />
