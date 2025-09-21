@@ -250,6 +250,24 @@ const Collections = () => {
     }
   };
 
+  const makeAllCollectionsPublic = async () => {
+    try {
+      let updatedCount = 0;
+      for (const collection of myCollections) {
+        if (!collection.is_public) {
+          await updateCollection(collection.id, { is_public: true });
+          updatedCount++;
+          console.log(`Made collection public: ${collection.name}`);
+        }
+      }
+      fetchCollections();
+      toast.success(`Successfully made ${updatedCount} collections public`);
+    } catch (error) {
+      console.error("Error making collections public:", error);
+      toast.error("Failed to update collections");
+    }
+  };
+
   const openEditDialog = (collection: Collection, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation to collection detail
     setSelectedCollection(collection);
@@ -482,6 +500,9 @@ const Collections = () => {
                 </Button>
                 <Button onClick={createBulkCollections} variant="outline">
                   Create All Collections (20)
+                </Button>
+                <Button onClick={makeAllCollectionsPublic} variant="outline">
+                  Make All Public
                 </Button>
               </div>
             </div>
