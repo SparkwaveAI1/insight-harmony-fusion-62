@@ -126,7 +126,7 @@ const MyPersonasList = ({
   useEffect(() => {
     console.log('Setting personas:', searchedPersonas.length);
     setPersonas(searchedPersonas);
-  }, [searchedPersonas.length]); // Use length to prevent object reference changes
+  }, [searchedPersonas]); // Depend on the full array to catch changes beyond length
 
   // Handle visibility changes
   const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
