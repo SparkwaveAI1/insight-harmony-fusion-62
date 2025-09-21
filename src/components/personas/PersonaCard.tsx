@@ -255,6 +255,10 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           <Badge variant={isPublic ? "default" : "secondary"}>
             {isPublic ? "Public" : "Private"}
           </Badge>
+          {/* Debug: Show is_public value */}
+          <span className="text-xs text-muted-foreground">
+            (is_public: {String(persona.is_public)})
+          </span>
         </div>
         <div className="flex gap-2">
           <AddToCollectionButton personaId={persona.persona_id} />
