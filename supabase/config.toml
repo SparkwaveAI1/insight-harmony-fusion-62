@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.enhance-persona-statistics]
 verify_jwt = false
+
+[functions.bulk-delete-old-personas]
+verify_jwt = true
