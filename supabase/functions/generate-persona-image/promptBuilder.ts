@@ -74,8 +74,9 @@ function buildV4ImagePrompt(personaData: any): string {
   
   // Extract the four required categories
   const age = identity.age || demographics.age;
-  const gender = identity.gender;
-  const ethnicity = identity.ethnicity;
+  const gender = demographics.gender || identity.gender;
+  const ethnicity = demographics.ethnicity || identity.ethnicity;
+  const bmi = healthProfile.bmi;
   let physicalDescription = conversationSummary.physical_description;
   
   // Clean up attractiveness rating pattern from description
@@ -147,11 +148,19 @@ function buildV4ImagePrompt(personaData: any): string {
   
   // Physical description is already comprehensive from the persona generation process
   
-  console.log("V4 persona details:", { age, gender, ethnicity, bmi: healthProfile.bmi });
+  console.log("V4 persona details:", { age, gender, ethnicity, bmi });
   console.log("Physical description:", physicalDescription);
   
-  // Build prompt using exact user specification
-  const prompt = `Film still photograph of [ Age ${age}, "gender": "${gender}", "ethnicity": "${ethnicity}", "physical_description": "${physicalDescription}" ] in 2024, sigma 85mm f/1.4`;
+  // Build prompt using exact user specification with BMI description
+  let prompt = `Film still photograph of [ Age ${age}, "gender": "${gender}", "ethnicity": "${ethnicity}"`;
+  
+  // Add BMI description if available
+  if (bmi && typeof bmi === 'number') {
+    const bmiDescription = getBMIDescription(bmi);
+    prompt += `, "body_type": "${bmiDescription}"`;
+  }
+  
+  prompt += `, "physical_description": "${physicalDescription}" ] in 2024, sigma 85mm f/1.4`;
   
   console.log("Generated V4 image prompt:", prompt);
   return prompt;
