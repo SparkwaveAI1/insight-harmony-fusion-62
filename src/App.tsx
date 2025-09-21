@@ -55,6 +55,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 import { JobCompletionNotifier } from "./components/persona-creation/JobCompletionNotifier";
 import { AutoDeletePersonas } from "./components/AutoDeletePersonas";
+import { PersonaToggleDebug } from "./components/debug/PersonaToggleDebug";
 
 import "./App.css";
 
@@ -95,6 +96,7 @@ function App() {
             <DeploymentVerifier />
             <JobCompletionNotifier />
             <AutoDeletePersonas />
+            <PersonaToggleDebug />
             <Routes>
                 {/* DEPLOYMENT TEST ROUTE - Independent persona test */}
                 <Route path="/test-persona-library" element={<ProtectedRoute><TestPersonaLibrary /></ProtectedRoute>} />
