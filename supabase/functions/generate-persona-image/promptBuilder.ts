@@ -78,6 +78,11 @@ function buildV4ImagePrompt(personaData: any): string {
   const ethnicity = identity.ethnicity;
   let physicalDescription = conversationSummary.physical_description;
   
+  // Clean up attractiveness rating pattern from description
+  if (physicalDescription) {
+    physicalDescription = physicalDescription.replace(/\(Attractiveness:.*?\)/g, '').trim();
+  }
+  
   // Enhance physical description with specific physical traits from health_profile
   const physicalEnhancements = [];
   
