@@ -140,16 +140,7 @@ function buildV4ImagePrompt(personaData: any): string {
     }
   }
   
-  // If BMI is available, enhance physical description
-  if (healthProfile.bmi && typeof healthProfile.bmi === 'number') {
-    const bmiDescription = getBMIDescription(healthProfile.bmi);
-    if (physicalDescription) {
-      physicalDescription = `${physicalDescription}, ${bmiDescription}`;
-    } else {
-      physicalDescription = bmiDescription;
-    }
-    console.log(`Enhanced physical description with BMI ${healthProfile.bmi}: ${physicalDescription}`);
-  }
+  // Physical description is already comprehensive from the persona generation process
   
   console.log("V4 persona details:", { age, gender, ethnicity, bmi: healthProfile.bmi });
   console.log("Physical description:", physicalDescription);
