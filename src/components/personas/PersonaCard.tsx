@@ -60,23 +60,18 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     return false;
   };
   
-  const [isPublic, setIsPublic] = useState(normalizeIsPublic(persona.is_public));
+  const currentIsPublic = normalizeIsPublic(persona.is_public);
 
-  // Sync local state with prop changes
-  useEffect(() => {
-    setIsPublic(normalizeIsPublic(persona.is_public));
-  }, [persona.is_public]);
 
   const handleVisibilityChange = async () => {
     if (!isOwner) {
       return;
     }
 
-    const newVisibility = !isPublic;
+    const newVisibility = !currentIsPublic;
     try {
       const success = await updatePersonaVisibility(persona.persona_id, newVisibility);
       if (success) {
-        setIsPublic(newVisibility);
         if (onVisibilityChange) {
           onVisibilityChange(persona.persona_id, newVisibility);
         }
@@ -204,7 +199,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
             {isOwner && (
               <>
                 <DropdownMenuItem onClick={handleVisibilityChange}>
-                  {isPublic ? (
+                  {currentIsPublic ? (
                     <>
                       <EyeOff className="mr-2 h-4 w-4" />
                       Make Private
@@ -261,8 +256,8 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       
       <CardFooter className="flex items-center justify-between pt-0">
         <div className="flex items-center gap-2">
-          <Badge variant={isPublic ? "default" : "secondary"}>
-            {isPublic ? "Public" : "Private"}
+          <Badge variant={currentIsPublic ? "default" : "secondary"}>
+            {currentIsPublic ? "Public" : "Private"}
           </Badge>
         </div>
         <div className="flex gap-2">
