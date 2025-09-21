@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, MapPin, Briefcase, User, MessageCircle } from "lucide-react";
+import { Eye, EyeOff, MoreHorizontal, UserCheck, Clock, MapPin, Briefcase, User, MessageCircle, X } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -35,6 +35,8 @@ interface PersonaCardProps {
   onDelete?: (personaId: string) => void;
   showDeleteButton?: boolean;
   hideChat?: boolean;
+  collectionId?: string;
+  onRemoveFromCollection?: (personaId: string, collectionId: string) => void;
 }
 
 const PersonaCard: React.FC<PersonaCardProps> = ({ 
@@ -42,7 +44,9 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   onVisibilityChange, 
   onDelete,
   showDeleteButton = false,
-  hideChat = false
+  hideChat = false,
+  collectionId,
+  onRemoveFromCollection,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -79,6 +83,14 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
     navigate(`/persona-detail/${persona.persona_id}`);
   };
 
+  const handleRemoveFromCollection = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (collectionId && onRemoveFromCollection) {
+      onRemoveFromCollection(persona.persona_id, collectionId);
+    }
+  };
+
   // Generate initials for avatar fallback
   const initials = persona.name
     .split(' ')
@@ -94,7 +106,20 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   const description = getPersonaBackgroundDescription(persona) || "No description available";
 
   return (
-    <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
+    <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative">
+      {/* Remove from Collection Button */}
+      {collectionId && onRemoveFromCollection && (
+        <Button
+          onClick={handleRemoveFromCollection}
+          size="icon"
+          variant="ghost"
+          className="absolute top-2 right-2 z-10 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
+          title="Remove from collection"
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      )}
+      
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
         <div className="flex items-start gap-4 flex-1">
           {/* Profile Photo */}

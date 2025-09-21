@@ -29,6 +29,7 @@ import {
   deleteCollection,
   getPersonasInCollectionWithDetails,
 } from "@/services/collections";
+import { removePersonaFromCollection } from "@/services/collections/personaCollectionOperations";
 import { Collection } from "@/services/collections/types";
 import { V4Persona } from "@/types/persona-v4";
 
@@ -121,6 +122,22 @@ const CollectionDetail = () => {
     }
   };
 
+  const handleRemovePersonaFromCollection = async (personaId: string, collectionId: string) => {
+    try {
+      const success = await removePersonaFromCollection(collectionId, personaId);
+      if (success) {
+        // Remove the persona from local state immediately for better UX
+        setPersonas(prev => prev.filter(p => p.persona_id !== personaId));
+        toast.success("Persona removed from collection");
+      } else {
+        toast.error("Failed to remove persona from collection");
+      }
+    } catch (error) {
+      console.error("Error removing persona from collection:", error);
+      toast.error("Failed to remove persona from collection");
+    }
+  };
+
   // Add a not found state if collection couldn't be loaded
   if (!isLoading && !collection) {
     return <NotFoundState />;
@@ -191,6 +208,8 @@ const CollectionDetail = () => {
                         key={persona.persona_id}
                         persona={persona}
                         hideChat={true}
+                        collectionId={collectionId}
+                        onRemoveFromCollection={handleRemovePersonaFromCollection}
                       />
                     ))}
                   </div>
