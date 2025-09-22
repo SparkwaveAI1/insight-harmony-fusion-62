@@ -729,6 +729,50 @@ class V4TraitRelevanceAnalyzer {
   }
 }
 
+// General Opinion Synthesis Function
+function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
+  const traitMap = {};
+  selectedTraits.forEach(trait => {
+    traitMap[trait.trait] = trait.value;
+  });
+  
+  // Extract key decision-making traits
+  const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
+  const lossAversion = traitMap['bias_profile.cognitive.loss_aversion'] || 0.5;
+  const changeResistance = traitMap['adoption_profile.change_friction'] || 0.5;
+  const honesty = traitMap['truth_honesty_profile.baseline_honesty'] || 0.7;
+  const occupation = traitMap['identity.occupation'] || '';
+  
+  // Build opinion based on trait combination patterns
+  let stanceElements = [];
+  
+  // Risk approach
+  if (riskTolerance > 0.7) {
+    stanceElements.push('you lean toward embracing new approaches');
+  } else if (riskTolerance < 0.4) {
+    stanceElements.push('you prefer cautious, validated approaches');
+  }
+  
+  // Change approach  
+  if (changeResistance > 0.7) {
+    stanceElements.push('you want extensive proof before changing current methods');
+  }
+  
+  // Professional lens
+  if (occupation.toLowerCase().includes('director') || occupation.toLowerCase().includes('executive')) {
+    stanceElements.push('you focus on operational and strategic implications');
+  } else if (occupation.toLowerCase().includes('business')) {
+    stanceElements.push('you emphasize practical costs and ROI considerations');
+  }
+  
+  // Combine into coherent stance
+  if (stanceElements.length > 0) {
+    return `Based on your traits, ${stanceElements.join(' and ')}`;
+  }
+  
+  return 'You approach this with your unique perspective and priorities';
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
