@@ -1001,25 +1001,38 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
 }
 
 // Helper function to provide behavioral guidance for traits
-function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain: string): string {
+function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain: string): string | null {
+  // Only provide guidance if we can be specific about the trait's impact
+  if (!dataValue || (Array.isArray(dataValue) && dataValue.length === 0)) {
+    return null; // Return null instead of generic text
+  }
+  
   const trait = traitPath.toLowerCase();
   const domain = questionDomain.toLowerCase();
   
-  // Emotional/stress responses - be more specific about how they manifest
-  if (trait.includes('stress_responses')) {
-    if (Array.isArray(dataValue)) {
-      const responses = dataValue.map(r => r.toLowerCase());
-      if (responses.includes('defensive') || responses.includes('argumentative')) {
-        return "When challenged on this topic, become more defensive and push back against criticism";
-      }
-      if (responses.includes('withdrawn') || responses.includes('shut down')) {
-        return "If the topic becomes contentious, respond more briefly and pull back from elaboration";
-      }
-      if (responses.includes('intense') || responses.includes('passionate')) {
-        return "Let your passion about this topic show through increased intensity and conviction";
-      }
+  // Handle stress responses specifically with actual data
+  if (trait.includes('stress_responses') && Array.isArray(dataValue)) {
+    const responses = dataValue.map(r => r.toLowerCase());
+    if (responses.includes('defensive') || responses.includes('argumentative')) {
+      return "When challenged on this topic, become more defensive and push back against criticism";
     }
-    return "Your stress response patterns will activate - respond with heightened emotional engagement";
+    if (responses.includes('withdrawn') || responses.includes('shut down')) {
+      return "If the topic becomes contentious, respond more briefly and pull back from elaboration";
+    }
+    if (responses.includes('intense') || responses.includes('passionate')) {
+      return "Let your passion about this topic show through increased intensity and conviction";
+    }
+    const responseList = responses.join(', ');
+    return `When stressed or challenged about topics like this, you tend to: ${responseList}. Let this subtly influence your response tone.`;
+  }
+  
+  // Handle thought coherence specifically
+  if (trait === 'cognitive_profile.thought_coherence') {
+    const score = parseFloat(dataValue);
+    if (score >= 0.8) return "Structure your response with clear, logical progression of ideas.";
+    if (score >= 0.6) return "Maintain clear thinking but allow some natural flow between related concepts.";
+    if (score >= 0.4) return "Your thinking may jump between connected ideas - let this show naturally.";
+    return "Express ideas as they come to you, some tangents and shifts in focus expected.";
   }
   
   if (trait.includes('negative_triggers') || trait.includes('explosive_triggers')) {
@@ -1122,9 +1135,8 @@ function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain
     }
   }
   
-  // Default behavioral guidance with trait context
-  const traitName = traitPath.split('.').pop();
-  return `Let your ${traitName} trait (${typeof dataValue === 'object' ? 'complex profile' : dataValue}) naturally influence your perspective and tone`;
+  // For other traits, only provide guidance if we can be specific
+  return null;
 }
 
 // Using helper functions from top of file
@@ -1163,7 +1175,12 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   const traitsFormatted = traits.map(t => {
     const value = typeof t.data_value === 'object' ? JSON.stringify(t.data_value) : t.data_value;
     const behavioralGuidance = getBehavioralGuidance(t.trait, t.data_value, questionDomain);
-    return `- ${t.trait}: ${value}\n  → Why relevant: ${t.relevance_reason}\n  → How this affects your response: ${behavioralGuidance}`;
+    
+    let traitSection = `- ${t.trait}: ${value}\n  → Why relevant: ${t.relevance_reason}`;
+    if (behavioralGuidance) {
+      traitSection += `\n  → How this affects your response: ${behavioralGuidance}`;
+    }
+    return traitSection;
   }).join('\n\n');
 
   const instructions = `PERSONA IDENTITY: You are ${name}, a ${demographics.age}-year-old ${demographics.gender} ${demographics.occupation} living in ${demographics.location}.
