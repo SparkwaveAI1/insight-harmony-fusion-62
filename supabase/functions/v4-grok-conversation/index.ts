@@ -682,6 +682,28 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
   return chosen.slice(0, Math.min(k, 6));
 }
 
+// Safety switches (default "on" if missing)
+const CE_PROMPT_V2 = Deno.env.get('CE_PROMPT_V2') !== "false";
+const CE_OPENING_DEDUPE_RETRY = Deno.env.get('CE_OPENING_DEDUPE_RETRY') !== "false";
+
+// Helper functions for trait formatting
+function formatTraits(dominant: any[]): string {
+  return dominant.map(t => {
+    const cat = t.category || "trait";
+    const label = t.label || t.name || t.key || t.trait || "trait";
+    const val = typeof t.value === "number" ? ` = ${t.value}` : (t.value ? `: ${t.value}` : "");
+    return `(${cat}) ${label}${val}`;
+  }).join("; ");
+}
+
+function safe(s: any): string { 
+  return (s === null || s === undefined) ? "" : String(s); 
+}
+
+function list(arr: any): string { 
+  return Array.isArray(arr) ? arr.join("; ") : ""; 
+}
+
 // V4-Native instruction builder using trait analysis results
 function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
   const selectedTraits = v4Analysis.selected_traits;
@@ -689,8 +711,10 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   const behavioral = v4Analysis.behavioral_modifiers;
   const classification = v4Analysis.context_classification;
 
-  // Build comprehensive text-based instructions for Grok
-  let instructions = `PERSONA IDENTITY:
+  // Safety switch: fall back to old template if disabled
+  if (!CE_PROMPT_V2) {
+    // Original template (preserved)
+    let instructions = `PERSONA IDENTITY:
 You are ${conversationSummary.demographics.name}, a ${conversationSummary.demographics.age}-year-old ${conversationSummary.demographics.gender} ${conversationSummary.demographics.occupation} living in ${conversationSummary.demographics.location}.
 
 CORE DEMOGRAPHICS:
@@ -708,74 +732,74 @@ COMMUNICATION STYLE:
 - Emotional State: ${behavioral.emotional_state}
 `;
 
-  // Add linguistic signature if available
-  if (linguistic.signature_phrases && linguistic.signature_phrases.length > 0) {
-    instructions += `- Your signature phrases: ${linguistic.signature_phrases.join(', ')}\n`;
-  }
-  if (linguistic.conversation_enders && linguistic.conversation_enders.length > 0) {
-    instructions += `- Your conversation enders: ${linguistic.conversation_enders.join(', ')}\n`;
-  }
+    // Add linguistic signature if available
+    if (linguistic.signature_phrases && linguistic.signature_phrases.length > 0) {
+      instructions += `- Your signature phrases: ${linguistic.signature_phrases.join(', ')}\n`;
+    }
+    if (linguistic.conversation_enders && linguistic.conversation_enders.length > 0) {
+      instructions += `- Your conversation enders: ${linguistic.conversation_enders.join(', ')}\n`;
+    }
 
-  // Add knowledge boundaries
-  if (fullProfile?.knowledge_profile?.expertise_domains) {
-    instructions += `
+    // Add knowledge boundaries
+    if (fullProfile?.knowledge_profile?.expertise_domains) {
+      instructions += `
 EXPERTISE DOMAINS:
 You have professional knowledge in: ${fullProfile.knowledge_profile.expertise_domains.join(', ')}
 `;
-  }
+    }
 
-  if (fullProfile?.knowledge_profile?.knowledge_gaps) {
-    instructions += `Knowledge limitations: You are not well-versed in ${fullProfile.knowledge_profile.knowledge_gaps.join(', ')}\n`;
-  }
+    if (fullProfile?.knowledge_profile?.knowledge_gaps) {
+      instructions += `Knowledge limitations: You are not well-versed in ${fullProfile.knowledge_profile.knowledge_gaps.join(', ')}\n`;
+    }
 
-  // Add relevant traits for this specific query
-  if (selectedTraits && selectedTraits.length > 0) {
-    instructions += `
+    // Add relevant traits for this specific query
+    if (selectedTraits && selectedTraits.length > 0) {
+      instructions += `
 RELEVANT PERSONALITY TRAITS FOR THIS QUERY:
 `;
-    selectedTraits.slice(0, 8).forEach(trait => {
-      if (trait.data_value) {
-        instructions += `- ${trait.trait}: ${typeof trait.data_value === 'object' ? JSON.stringify(trait.data_value) : trait.data_value}\n`;
-      }
-    });
-  }
+      selectedTraits.slice(0, 8).forEach(trait => {
+        if (trait.data_value) {
+          instructions += `- ${trait.trait}: ${typeof trait.data_value === 'object' ? JSON.stringify(trait.data_value) : trait.data_value}\n`;
+        }
+      });
+    }
 
-  // Add motivational drivers from full profile
-  if (fullProfile?.motivation_profile?.primary_drivers) {
-    const topMotivations = Object.entries(fullProfile.motivation_profile.primary_drivers)
-      .filter(([, value]) => (value as number) >= 7)
-      .sort(([,a], [,b]) => (b as number) - (a as number))
-      .slice(0, 3);
-    
-    if (topMotivations.length > 0) {
-      instructions += `
+    // Add motivational drivers from full profile
+    if (fullProfile?.motivation_profile?.primary_drivers) {
+      const topMotivations = Object.entries(fullProfile.motivation_profile.primary_drivers)
+        .filter(([, value]) => (value as number) >= 7)
+        .sort(([,a], [,b]) => (b as number) - (a as number))
+        .slice(0, 3);
+      
+      if (topMotivations.length > 0) {
+        instructions += `
 PRIMARY MOTIVATIONS:
 ${topMotivations.map(([key, value]) => `- ${key.replace(/_/g, ' ')}: ${value}/10`).join('\n')}
 `;
+      }
     }
-  }
 
-  // Add emotional triggers if present
-  const emotionalTriggers = selectedTraits.find(t => t.trait.includes('negative_triggers') || t.trait.includes('explosive_triggers'));
-  if (emotionalTriggers?.data_value) {
-    instructions += `
+    // Add emotional triggers if present
+    const emotionalTriggers = selectedTraits.find(t => t.trait.includes('negative_triggers') || t.trait.includes('explosive_triggers'));
+    if (emotionalTriggers?.data_value) {
+      instructions += `
 EMOTIONAL TRIGGERS:
 ${Array.isArray(emotionalTriggers.data_value) ? emotionalTriggers.data_value.join(', ') : emotionalTriggers.data_value}
 When triggered, you respond with increased intensity and directness.
 `;
-  }
+    }
 
-  // Add contradictions/tensions if present
-  const contradictions = selectedTraits.find(t => t.trait.includes('contradiction') || t.trait.includes('tension'));
-  if (contradictions?.data_value) {
-    instructions += `
+    // Add contradictions/tensions if present
+    const contradictions = selectedTraits.find(t => t.trait.includes('contradiction') || t.trait.includes('tension'));
+    if (contradictions?.data_value) {
+      instructions += `
 INTERNAL CONTRADICTIONS:
 ${typeof contradictions.data_value === 'object' ? JSON.stringify(contradictions.data_value) : contradictions.data_value}
 `;
-  }
+    }
 
-  // Add conversation context and requirements
-  instructions += `
+    // Add conversation context and requirements
+    instructions += `
 CONVERSATION CONTEXT:
 - Intent: ${classification.intent}
 - Topics: ${classification.topics.join(', ')}
@@ -804,17 +828,151 @@ Never use these phrases:
 - "To begin with"
 - "Let's consider the data"`;
 
-  // Add persona-specific forbidden expressions
-  if (linguistic.forbidden_expressions && linguistic.forbidden_expressions.length > 0) {
-    instructions += `
+    // Add persona-specific forbidden expressions
+    if (linguistic.forbidden_expressions && linguistic.forbidden_expressions.length > 0) {
+      instructions += `
 - ${linguistic.forbidden_expressions.join('\n- ')}`;
-  }
+    }
 
-  instructions += `
+    instructions += `
 
 CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${conversationSummary.demographics.name} would, drawing on your personality traits, motivations, and knowledge boundaries listed above.`;
 
+    return instructions;
+  }
+
+  // NEW V2 TEMPLATE
+  // Get traits using existing analyzer and limit to 4-6 (reuse pickDominantTraits)
+  const dominant = pickDominantTraits(selectedTraits || []);
+  const CE_SELECTED_TRAITS_LINE = formatTraits(dominant);
+
+  // Pull fields from persona JSON with null-guards
+  const id = fullProfile?.identity;
+  const cs = fullProfile?.communication_style;
+  const mp = fullProfile?.motivation_profile;
+  const tc = fullProfile?.cognitive_profile?.thought_coherence;
+  const th = fullProfile?.truth_honesty_profile;
+
+  let instructions = `
+You are ${safe(id?.name)}, ${safe(id?.age)}, ${safe(id?.ethnicity)}; ${safe(id?.occupation)} in ${safe(id?.location?.city)}, ${safe(id?.location?.region)} (${safe(id?.location?.urbanicity)}).
+
+You communicate with THIS exact voice:
+- Voice foundation: ${safe(cs?.voice_foundation)}
+- Style markers: ${safe(JSON.stringify(cs?.style_markers))}
+- Regional register & dialect hints: ${safe(JSON.stringify(cs?.regional_register))}
+- Context switches: ${safe(JSON.stringify(cs?.context_switches))}
+
+(Coherence control: thought_coherence=${(typeof tc === "number" ? tc : "0.7")} — match linearity to this level; do not over-polish.)
+
+Core motivations: ${list(mp?.primary_motivation_labels)}${mp?.want_vs_should_tension ? ` (+ tensions: ${safe(JSON.stringify(mp?.want_vs_should_tension))})` : ""}
+
+Honesty/Truth posture: ${safe(JSON.stringify(th))}
+
+Relevant traits for this query:
+${CE_SELECTED_TRAITS_LINE}
+
+Guidelines:
+- Never begin with generic phrases like "As a [role]" or "As a [job title]." Speak naturally, as yourself.
+- Avoid hedges like "Honestly" or "I'm not an expert, but...". If something is outside your knowledge, acknowledge it in your natural voice.
+- Be extra distinct in your **first sentence** and **final line**. Do not echo common templates (e.g., "What matters most...", "This would be valuable.").
+- Vary length by interest: more detail when the topic touches your motivations/stressors; be concise otherwise.
+- Match your thought coherence level: lower = looser phrasing and small repetitions; higher = structured and succinct. Let natural imperfections surface. Do not sound AI-polished.
+
+FORBIDDEN PHRASES:
+- As a, As an, As someone who, In my role, From my perspective as, What matters most, For me, the biggest
+- that's what matters, this would be valuable, that makes a difference, that's why it's important
+- "Honestly", "I'm not an expert, but..."
+
+Remember to use your own unique voice.
+`.trim();
+
   return instructions;
+}
+
+// Optional de-dupe retry functions (guarded by CE_OPENING_DEDUPE_RETRY)
+function firstNWordsLC(s: string, n = 5): string {
+  const w = s.trim().split(/\s+/).slice(0, n).join(" ").toLowerCase();
+  return w;
+}
+
+// Shared opening tracker (for multi-persona orchestration)
+const seenOpenings = new Set<string>();
+
+async function callGrokWithOpeningGuard(
+  messages: any[], 
+  personaLabel: string,
+  grokApiKey: string
+): Promise<any> {
+  // First attempt
+  const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${grokApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'grok-beta',
+      messages: messages,
+      temperature: 0.4,
+    }),
+  });
+
+  if (!grokResponse.ok) {
+    throw new Error(`Grok API error: ${grokResponse.statusText}`);
+  }
+
+  const firstResult = await grokResponse.json();
+  const firstContent = firstResult.choices[0]?.message?.content || "";
+  const firstKey = firstNWordsLC(firstContent);
+  
+  // Check if de-dupe retry is enabled
+  if (!CE_OPENING_DEDUPE_RETRY) {
+    seenOpenings.add(firstKey);
+    return firstResult;
+  }
+
+  // Check for collision
+  if (seenOpenings.has(firstKey)) {
+    console.log(`🔄 Opening collision detected for ${personaLabel}, retrying...`);
+    
+    // One retry with nudge
+    const nudge = {
+      role: "system",
+      content: "Your opening sentence duplicated another participant. Rewrite ONLY your first sentence to better match your unique style and avoid that phrasing. Keep the rest intact.",
+    };
+    
+    const retryMessages = [messages[0], nudge, ...messages.slice(1)];
+    
+    const retryResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${grokApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'grok-beta',
+        messages: retryMessages,
+        temperature: 0.4,
+      }),
+    });
+
+    if (!retryResponse.ok) {
+      // If retry fails, return original
+      seenOpenings.add(firstKey);
+      return firstResult;
+    }
+
+    const secondResult = await retryResponse.json();
+    const secondContent = secondResult.choices[0]?.message?.content || "";
+    const secondKey = firstNWordsLC(secondContent);
+    
+    // Accept second even if collision again (prevents loops)
+    seenOpenings.add(secondKey || firstKey);
+    return secondResult;
+  } else {
+    seenOpenings.add(firstKey);
+    return firstResult;
+  }
 }
 
 // Enhanced instruction builder that handles explosive emotional states (LEGACY - for comparison)
@@ -1018,42 +1176,53 @@ serve(async (req) => {
       console.warn('Non-blocking: failed to log Grok prompt', e)
     }
 
-    // Call Grok API with trait-specific instructions
-    const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('GROK_API_KEY')}`,
-        'Content-Type': 'application/json',
+    // Call Grok API with trait-specific instructions (with optional opening guard)
+    const messages = [
+      {
+        role: 'system',
+        content: instructions
       },
-      body: JSON.stringify({
-        model: 'grok-4-latest',
-        messages: [
-          {
-            role: 'system',
-            content: instructions
-          },
-          // Add conversation history if provided
-          ...(conversation_history || []),
-          {
-            role: 'user',
-            content: user_message
-          }
-        ],
-        stream: false,
-        temperature: 0.4
-      })
-    })
+      // Add conversation history if provided
+      ...(conversation_history || []),
+      {
+        role: 'user',
+        content: user_message
+      }
+    ];
 
-    console.log('Grok response received')
-    
-    // Check if response is ok
-    if (!grokResponse.ok) {
-      const errorText = await grokResponse.text()
-      console.error('Grok API error:', grokResponse.status, errorText)
-      throw new Error(`Grok API error: ${grokResponse.status} - ${errorText}`)
+    const grokApiKey = Deno.env.get('GROK_API_KEY');
+    let grokData;
+
+    if (CE_OPENING_DEDUPE_RETRY) {
+      // Use guarded version with de-dupe retry
+      grokData = await callGrokWithOpeningGuard(messages, persona.name || persona_id, grokApiKey);
+    } else {
+      // Direct call without guard
+      const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${grokApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'grok-4-latest',
+          messages: messages,
+          stream: false,
+          temperature: 0.4
+        })
+      });
+
+      console.log('Grok response received')
+      
+      // Check if response is ok
+      if (!grokResponse.ok) {
+        const errorText = await grokResponse.text()
+        console.error('Grok API error:', grokResponse.status, errorText)
+        throw new Error(`Grok API error: ${grokResponse.status} - ${errorText}`)
+      }
+
+      grokData = await grokResponse.json();
     }
-
-    const grokData = await grokResponse.json()
     console.log('Grok response data:', JSON.stringify(grokData, null, 2))
 
     // Validate response structure
