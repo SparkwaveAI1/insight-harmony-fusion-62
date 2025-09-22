@@ -245,6 +245,21 @@ class V4TraitRelevanceAnalyzer {
     // Extract ALL traits from the full persona profile
     const allTraits = this.flattenPersonaProfile(fullProfile);
     
+    // Filter out narrative traits and verbose descriptive text blocks
+    const filteredTraits = allTraits.filter(({ path, value }) => {
+      // Exclude narrative sections that provide generic verbose descriptions
+      if (path.includes('attitude_narrative') || path.includes('political_narrative')) {
+        return false;
+      }
+      
+      // Exclude overly verbose text blocks that don't provide specific behavioral guidance
+      if (typeof value === 'string' && value.length > 300) {
+        return false;
+      }
+      
+      return true;
+    });
+    
     // ALWAYS include thought_coherence first if it exists
     const thoughtCoherence = this.getNestedValue(fullProfile, 'cognitive_profile.thought_coherence');
     if (thoughtCoherence !== null && thoughtCoherence !== undefined) {
@@ -256,8 +271,8 @@ class V4TraitRelevanceAnalyzer {
       });
     }
     
-    // Score ALL extracted traits using existing relevance logic
-    for (const { path, value } of allTraits) {
+    // Score ALL filtered traits using existing relevance logic
+    for (const { path, value } of filteredTraits) {
       if (path === 'cognitive_profile.thought_coherence') continue; // Already added
       
       if (value !== null && value !== undefined && value !== '') {
@@ -307,7 +322,6 @@ class V4TraitRelevanceAnalyzer {
       
       // For opinion/values questions  
       'truth_honesty_profile.baseline_honesty': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.8 : 0.3,
-      'attitude_narrative': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.9 : 0.4,
       'motivation_profile.primary_drivers.meaning': () => questionTopics.ethics.some(t => input.includes(t)) ? 0.8 : 0.3,
       
       // For emotional responses
@@ -347,42 +361,39 @@ class V4TraitRelevanceAnalyzer {
     // AI/Technology context explanations
     if (input.includes('ai') || input.includes('technology')) {
       if (traitPath.includes('thought_coherence')) {
-        return `Thought coherence (${traitValue}) determines how logically and clearly this person processes complex technical concepts and articulates nuanced views about AI's implications`;
+        return `Thought coherence affects logical processing of technical concepts`;
       }
       if (traitPath.includes('risk_tolerance')) {
-        return `Risk tolerance (${traitValue}) directly affects how this person weighs AI's potential benefits against its dangers and uncertainties`;
+        return `Risk tolerance directly affects weighing AI benefits vs dangers`;
       }
       if (traitPath.includes('abstract_reasoning')) {
-        return `Abstract reasoning (${traitValue}) influences their ability to conceptualize AI's broader implications beyond immediate applications`;
+        return `Abstract reasoning influences conceptualizing broader AI implications`;
       }
       if (traitPath.includes('overconfidence')) {
-        return `Overconfidence bias (${traitValue}) affects whether they might overestimate or underestimate AI's current capabilities`;
+        return `Overconfidence bias affects estimation of AI capabilities`;
       }
     }
     
     // Professional/Medical context
     if (input.includes('radiology') || input.includes('medical')) {
       if (traitPath.includes('occupation')) {
-        return `Professional identity as ${traitValue} directly shapes their expert perspective on AI's role in their field`;
+        return `Professional identity shapes expert perspective on AI in their field`;
       }
       if (traitPath.includes('expertise_domains')) {
-        return `Their expertise in ${traitValue} provides informed context for evaluating AI's practical applications and limitations`;
+        return `Professional expertise informs AI application evaluation`;
       }
       if (traitPath.includes('stress_responses')) {
-        return `Stress response patterns (${traitValue}) influence how they react to AI potentially changing their professional workflow and responsibilities`;
+        return `Stress responses affect reaction to AI workflow changes`;
       }
     }
     
     // Opinion/Values context
     if (input.includes('think') || input.includes('feel') || input.includes('opinion')) {
-      if (traitPath.includes('attitude_narrative')) {
-        return `Their core attitudes (${traitValue}) fundamentally shape how they interpret and respond to new technological developments`;
-      }
       if (traitPath.includes('baseline_honesty')) {
-        return `Honesty level (${traitValue}) affects how candidly they express reservations or enthusiasm versus giving socially expected responses`;
+        return `Honesty level affects candidness in expressing professional opinions`;
       }
       if (traitPath.includes('directness')) {
-        return `Communication directness (${traitValue}) determines whether they'll express opinions bluntly or diplomatically`;
+        return `Communication directness determines blunt vs diplomatic expression`;
       }
     }
     
@@ -422,10 +433,6 @@ class V4TraitRelevanceAnalyzer {
       return `Your stress response patterns (${JSON.stringify(traitValue)}) will activate when discussing challenging or high-stakes topics like this`;
     }
     
-    if (traitPath.includes('attitude_narrative')) {
-      const narrativeSnippet = typeof traitValue === 'string' ? traitValue.substring(0, 100) + '...' : traitValue;
-      return `Your core worldview ("${narrativeSnippet}") fundamentally shapes how you interpret and respond to ${domain} questions`;
-    }
     
     if (traitPath.includes('motivation_profile')) {
       if (traitPath.includes('mastery')) {
@@ -1063,14 +1070,9 @@ function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain
     return "Respond with moderate energy and engagement";
   }
   
-  // Attitude and worldview narratives
-  if (trait.includes('attitude_narrative')) {
-    const narrativeSnippet = typeof dataValue === 'string' ? dataValue.substring(0, 50) + '...' : dataValue;
-    return `Let your core worldview ("${narrativeSnippet}") fundamentally shape how you interpret this question`;
-  }
-  
-  if (trait.includes('political_narrative')) {
-    return "Let your political perspective naturally inform your stance without being preachy about ideology";
+  // Filter out narrative traits - these provide no specific behavioral guidance
+  if (trait.includes('attitude_narrative') || trait.includes('political_narrative')) {
+    return null;
   }
   
   // Expertise and knowledge domains
