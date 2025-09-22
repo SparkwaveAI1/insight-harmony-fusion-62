@@ -777,7 +777,7 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
 function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
   const traitMap = {};
   selectedTraits.forEach(trait => {
-    traitMap[trait.trait] = trait.value;
+    traitMap[trait.trait] = trait.data_value;
   });
   
   const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
