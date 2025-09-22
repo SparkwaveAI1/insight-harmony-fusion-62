@@ -196,7 +196,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="bg-popover border shadow-md z-50">
             <DropdownMenuItem onClick={handleViewDetails}>
               View Details
             </DropdownMenuItem>
