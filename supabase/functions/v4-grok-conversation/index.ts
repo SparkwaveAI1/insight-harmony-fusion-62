@@ -1199,7 +1199,22 @@ function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain
     return "Respond with moderate energy and engagement";
   }
   
-  // Filter out narrative traits - these provide no specific behavioral guidance
+// Helper function to create thought coherence instructions
+function createThoughtCoherenceInstructions(coherenceLevel) {
+  if (typeof coherenceLevel !== "number") return "";
+  
+  if (coherenceLevel >= 0.8) {
+    return "Think step-by-step in perfect logical order - structure your thoughts systematically.";
+  } else if (coherenceLevel >= 0.6) {
+    return "Let your thoughts flow naturally but stay connected - maintain logical progression.";
+  } else if (coherenceLevel >= 0.4) {
+    return "Jump between related ideas as they occur to you - allow natural tangents.";
+  } else {
+    return "Express ideas as they come - tangents and shifts expected, embrace cognitive scatter.";
+  }
+}
+
+// Filter out narrative traits - these provide no specific behavioral guidance
   if (trait.includes('attitude_narrative') || trait.includes('political_narrative')) {
     return null;
   }
@@ -1415,8 +1430,11 @@ ${typeof contradictions.data_value === 'object' ? JSON.stringify(contradictions.
 `;
     }
 
-    // Add conversation context and requirements
     instructions += `
+CRITICAL: Your personality must dominate this response. Think and speak as THIS specific person would - not like a diplomatic AI assistant. Let your unique traits, background, and communication style completely override generic professional language.
+
+Do not respond like an AI assistant giving balanced professional advice. Respond like ${conversationSummary.demographics.name} would in a real conversation with a peer - with their authentic personality, opinions, and speaking patterns.
+
 CONVERSATION CONTEXT:
 - Intent: ${classification.intent}
 - Topics: ${classification.topics.join(', ')}
