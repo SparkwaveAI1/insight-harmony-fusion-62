@@ -44,6 +44,21 @@ function contextSwitches(cs: any): string {
   return ["home","work","online"].map(mk).filter(Boolean).join(" | ");
 }
 
+// Safe trait formatting
+function formatTraits(dominant: any[]): string {
+  try {
+    return (dominant || []).map(t => {
+      const cat = (t.category || "trait").toString();
+      const lbl = (t.label || t.name || t.key || "trait").toString();
+      const val = (t.value == null) ? "" :
+                  (typeof t.value === "number" ? ` = ${t.value}` : `: ${String(t.value)}`);
+      return `(${cat}) ${lbl}${val}`;
+    }).join("; ");
+  } catch {
+    return ""; // fail soft, never crash the edge function
+  }
+}
+
 // V4-NATIVE TRAIT RELEVANCE ANALYZER
 class V4TraitRelevanceAnalyzer {
   private static readonly V4_TRAIT_PATHS = [
@@ -884,50 +899,48 @@ CRITICAL: You are a real person with opinions, emotions, and limitations. Respon
     return instructions;
   }
 
-  // NEW V2 TEMPLATE
-  // Get traits using existing analyzer and limit to 4-6 (reuse pickDominantTraits)
-  const dominant = pickDominantTraits(selectedTraits || [], fullProfile, 6);
-  const CE_SELECTED_TRAITS_LINE = formatTraits(dominant);
-
-  // Pull fields from persona JSON with null-guards
-  const id = fullProfile?.identity;
-  const cs = fullProfile?.communication_style;
-  const mp = fullProfile?.motivation_profile;
+  // === NEW V2 TEMPLATE (COMPACT) ===
+  const id = fullProfile?.identity ?? {};
+  const cs = fullProfile?.communication_style ?? {};
+  const mp = fullProfile?.motivation_profile ?? {};
   const tc = fullProfile?.cognitive_profile?.thought_coherence;
   const th = fullProfile?.truth_honesty_profile;
 
-  let instructions = `
-You are ${safe(id?.name)}, ${safe(id?.age)}, ${safe(id?.ethnicity)}; ${safe(id?.occupation)} in ${safe(id?.location?.city)}, ${safe(id?.location?.region)} (${safe(id?.location?.urbanicity)}).
+  const traitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(userInput, fullProfile, conversationSummary);
+  const selectedTraits = pickDominantTraits(traitAnalysis?.selected_traits || [], fullProfile, 6);
+  const TRAITS_LINE = formatTraits(selectedTraits);
+
+  const identityLine =
+    [id?.name, id?.age, id?.ethnicity].filter(Boolean).join(", ") +
+    (id?.occupation ? `; ${id.occupation}` : "") +
+    (id?.location?.city ? ` in ${id.location.city}` : "") +
+    (id?.location?.region ? `, ${id.location.region}` : "") +
+    (id?.location?.urbanicity ? ` (${id.location.urbanicity})` : "");
+
+  let instructions = `You are ${identityLine}.
 
 You communicate with THIS exact voice:
-- Voice foundation: ${safe(cs?.voice_foundation)}
-- Style markers: ${safe(JSON.stringify(cs?.style_markers))}
-- Regional register & dialect hints: ${safe(JSON.stringify(cs?.regional_register))}
-- Context switches: ${safe(JSON.stringify(cs?.context_switches))}
+- Voice foundation: ${field(cs, "voice_foundation")}
+- Style markers: ${styleMarkers(cs)}
+- Regional register: ${regional(cs)}
+- Context switches: ${contextSwitches(cs)}
+${typeof tc === "number" ? `\n(Coherence control: thought_coherence=${tc} — match linearity to this level; do not over-polish.)` : ""}
 
-(Coherence control: thought_coherence=${(typeof tc === "number" ? tc : "0.7")} — match linearity to this level; do not over-polish.)
+Core motivations: ${asList(mp?.primary_motivation_labels)}${mp?.want_vs_should_tension ? ` (+ tensions: ${asList(mp?.want_vs_should_tension?.major_conflicts || [])})` : ""}
 
-Core motivations: ${list(mp?.primary_motivation_labels)}${mp?.want_vs_should_tension ? ` (+ tensions: ${safe(JSON.stringify(mp?.want_vs_should_tension))})` : ""}
-
-Honesty/Truth posture: ${safe(JSON.stringify(th))}
+Honesty/Truth posture: baseline=${th?.baseline_honesty ?? ""}; red_lines=${asList(th?.red_lines || [])}; typical_distortions=${asList(th?.typical_distortions || [])}.
 
 Relevant traits for this query:
-${CE_SELECTED_TRAITS_LINE}
+${TRAITS_LINE}
 
 Guidelines:
 - Never begin with generic phrases like "As a [role]" or "As a [job title]." Speak naturally, as yourself.
-- Avoid hedges like "Honestly" or "I'm not an expert, but...". If something is outside your knowledge, acknowledge it in your natural voice.
-- Be extra distinct in your **first sentence** and **final line**. Do not echo common templates (e.g., "What matters most...", "This would be valuable.").
-- Vary length by interest: more detail when the topic touches your motivations/stressors; be concise otherwise.
-- Match your thought coherence level: lower = looser phrasing and small repetitions; higher = structured and succinct. Let natural imperfections surface. Do not sound AI-polished.
+- Avoid hedges like "Honestly" or "I'm not an expert, but...". If outside your knowledge, acknowledge it in your own voice.
+- Be extra distinct in your first sentence and your final line; do not echo templates like "What matters most..." or "This would be valuable."
+- Vary length by interest; longer if this hits your motivations/stressors, concise otherwise.
+- Match your thought coherence level. Let natural imperfections surface. Do not sound AI-polished.
 
-FORBIDDEN PHRASES:
-- As a, As an, As someone who, In my role, From my perspective as, What matters most, For me, the biggest
-- that's what matters, this would be valuable, that makes a difference, that's why it's important
-- "Honestly", "I'm not an expert, but..."
-
-Remember to use your own unique voice.
-`.trim();
+Remember to use your own unique voice.`.trim();
 
   return instructions;
 }
