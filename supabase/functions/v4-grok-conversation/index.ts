@@ -1,6 +1,49 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Flags (default OFF)
+const CE_PROMPT_V2 = Deno.env.get("CE_PROMPT_V2") === "true";
+const CE_OPENING_DEDUPE_RETRY = Deno.env.get("CE_OPENING_DEDUPE_RETRY") === "true";
+
+// Safe extractors to replace JSON.stringify on complex objects
+function asList(x: any): string {
+  return Array.isArray(x) ? x.join(", ") : (typeof x === "string" ? x : "");
+}
+
+function field(obj: any, key: string): string {
+  const v = obj?.[key];
+  return (v == null) ? "" : (typeof v === "string" ? v : Array.isArray(v) ? asList(v) : "");
+}
+
+// compact style markers
+function styleMarkers(cs: any): string {
+  if (!cs?.style_markers) return "";
+  const sm = cs.style_markers;
+  const humor = sm.humor_style ? `humor=${sm.humor_style}` : "";
+  const metaphors = sm.metaphor_domains ? `metaphors=${asList(sm.metaphor_domains)}` : "";
+  const aph = sm.aphorism_register ? `aphorisms=${sm.aphorism_register}` : "";
+  const t = typeof sm.storytelling_vs_bullets === "number" ? `story_vs_bullets=${sm.storytelling_vs_bullets}` : "";
+  return [humor, metaphors, aph, t].filter(Boolean).join("; ");
+}
+
+// compact regional register
+function regional(cs: any): string {
+  const r = cs?.regional_register;
+  if (!r) return "";
+  const region = r.region ? `region=${r.region}` : "";
+  const urb = r.urbanicity ? `urbanicity=${r.urbanicity}` : "";
+  const hints = Array.isArray(r.dialect_hints) ? `hints=${r.dialect_hints.join("/")}` : "";
+  return [region, urb, hints].filter(Boolean).join("; ");
+}
+
+// compact context switches
+function contextSwitches(cs: any): string {
+  const cx = cs?.context_switches;
+  if (!cx) return "";
+  const mk = (k: string) => cx[k] ? `${k}: formality=${cx[k].formality ?? "-"}, directness=${cx[k].directness ?? "-"}` : "";
+  return ["home","work","online"].map(mk).filter(Boolean).join(" | ");
+}
+
 // V4-NATIVE TRAIT RELEVANCE ANALYZER
 class V4TraitRelevanceAnalyzer {
   private static readonly V4_TRAIT_PATHS = [
