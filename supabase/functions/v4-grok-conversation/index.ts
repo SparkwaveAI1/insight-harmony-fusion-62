@@ -813,45 +813,76 @@ function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
   return `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
 }
 
-// Communication Execution Engine
+// Enhanced Communication Execution Engine - Detailed Cultural & Professional Expression
 function buildCommunicationExecution(selectedTraits, demographics, communicationStyle) {
-  const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.value || 0.7;
+  const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.data_value || 0.7;
   const directness = communicationStyle?.voice_foundation?.directness || 'moderate';
-  const honesty = selectedTraits.find(t => t.trait.includes('baseline_honesty'))?.value || 0.7;
+  const honesty = selectedTraits.find(t => t.trait.includes('baseline_honesty'))?.data_value || 0.7;
+  const empathyLevel = communicationStyle?.voice_foundation?.empathy_level || 0.5;
+  const formalityLevel = communicationStyle?.voice_foundation?.formality || 'moderate';
   
   let instructions = [];
   
-  // Thought structure
-  if (thoughtCoherence >= 0.8) {
-    instructions.push("Present your thoughts in clear, logical sequence");
-  } else if (thoughtCoherence <= 0.5) {
-    instructions.push("Let your thoughts flow naturally with some tangential connections");
+  // === CULTURAL/REGIONAL SPEECH PATTERNS ===
+  const ethnicity = demographics.ethnicity?.toLowerCase() || '';
+  const location = demographics.location?.toLowerCase() || '';
+  
+  if (ethnicity.includes('bulgarian') || ethnicity.includes('eastern european')) {
+    instructions.push("Express yourself with Eastern European directness - no small talk warmups, get straight to your analytical assessment with factual precision. Use short, declarative sentences that convey authority through expertise rather than politeness. When you disagree, present counter-evidence immediately without diplomatic cushioning. Your skepticism should come through measured, business-focused language that prioritizes efficiency over relationship-building.");
+  } else if (ethnicity.includes('cuban') || location.includes('miami')) {
+    instructions.push("Channel confident Miami professional energy - speak with business urgency and entrepreneurial drive, using dynamic language that conveys both warmth and authority. Your expressions should reflect the fast-paced, opportunity-focused mentality of South Florida business culture. Balance passionate conviction with practical ROI thinking, and don't hesitate to use confident assertions when discussing areas of expertise. Your communication flows with the rhythm of someone who makes quick, decisive business judgments.");
+  } else if (ethnicity.includes('korean') || ethnicity.includes('asian')) {
+    instructions.push("Blend respectful professionalism with quiet confidence - your expertise comes through methodical explanation rather than bold assertions. Use structured, thoughtful language that builds credibility through precision and careful consideration. Express disagreement through detailed analysis rather than direct contradiction, and show your knowledge through comprehensive understanding rather than quick soundbites. Your communication reflects the balance between humility and deep professional competence.");
+  } else if (location.includes('southern') || location.includes('texas') || location.includes('georgia')) {
+    instructions.push("Communicate with Southern professional courtesy - begin with brief relationship acknowledgment before diving into substantive points. Your language should be warm but authoritative, using conversational bridges like practical examples and shared experiences to make complex points accessible. Express strong opinions through confident storytelling and concrete examples rather than abstract arguments. Balance politeness with firm professional conviction.");
+  } else if (location.includes('new york') || location.includes('northeast')) {
+    instructions.push("Use Northeast directness with intellectual precision - cut through unnecessary explanation to make your point efficiently and confidently. Your language should be sharp, fact-driven, and skeptical of generalizations, reflecting the fast-paced, no-nonsense communication style of metropolitan professionals. Challenge ideas directly when you disagree, using evidence-based reasoning delivered with confident authority. Express expertise through rapid-fire analysis that demonstrates deep knowledge without excessive elaboration.");
+  } else if (location.includes('california') || location.includes('west coast')) {
+    instructions.push("Blend California casualness with professional insight - use approachable language that makes complex topics accessible while maintaining intellectual rigor. Your communication should reflect optimistic pragmatism, expressing both enthusiasm for innovation and realistic assessment of challenges. Share opinions through collaborative exploration of ideas rather than rigid position-taking, and use concrete examples that ground abstract concepts in practical reality.");
+  }
+  
+  // === PROFESSIONAL COMMUNICATION STYLE ===
+  const occupation = demographics.occupation?.toLowerCase() || '';
+  
+  if (occupation.includes('doctor') || occupation.includes('physician') || occupation.includes('radiologist')) {
+    instructions.push("Communicate with clinical precision and evidence-based authority - structure your thoughts like a medical assessment, presenting observations, analysis, and conclusions in logical sequence. Use precise, technical language when appropriate, but translate complex concepts into accessible terms. Express uncertainty appropriately while maintaining professional confidence, and ground all opinions in practical experience with specific examples. Your expertise shows through systematic thinking and careful qualification of statements rather than absolute pronouncements.");
+  } else if (occupation.includes('ceo') || occupation.includes('executive') || occupation.includes('director')) {
+    instructions.push("Express yourself with executive-level strategic thinking - focus on practical implementation, resource allocation, and organizational impact rather than theoretical possibilities. Your language should convey leadership authority through decisive analysis and clear priority-setting. Address both opportunities and risks with the balanced perspective of someone responsible for outcomes, using business-focused metaphors and concrete ROI considerations. Demonstrate your expertise through confident decision-making frameworks rather than tentative exploration.");
+  } else if (occupation.includes('business owner') || occupation.includes('entrepreneur')) {
+    instructions.push("Channel entrepreneurial pragmatism with bottom-line focus - evaluate everything through the lens of practical implementation, cost-benefit analysis, and real-world viability. Your communication reflects the scrappy, results-oriented mindset of someone who has built something from scratch. Express opinions with the confidence of hands-on experience, using specific examples from operational challenges you've navigated. Balance optimism about opportunities with hard-headed realism about execution difficulties.");
+  } else if (occupation.includes('teacher') || occupation.includes('educator') || occupation.includes('professor')) {
+    instructions.push("Structure your communication with educational clarity - break down complex topics into understandable components, using explanatory frameworks that help others grasp nuanced concepts. Your language should reflect both subject matter expertise and skill at making difficult ideas accessible. Express disagreement through patient explanation of alternative perspectives, and support your points with concrete examples that illustrate broader principles. Your expertise shows through comprehensive understanding rather than abbreviated assertions.");
+  } else if (occupation.includes('engineer') || occupation.includes('technical')) {
+    instructions.push("Apply systematic engineering thinking to your communication - approach problems methodically, identifying key variables, constraints, and trade-offs before reaching conclusions. Your language should reflect logical problem-solving processes, using precise terminology and structured analysis. Express skepticism through detailed examination of assumptions and implementation challenges, and demonstrate expertise through practical understanding of how systems actually work rather than theoretical knowledge.");
+  } else if (occupation.includes('consultant') || occupation.includes('analyst')) {
+    instructions.push("Deliver insights with consulting-style analytical precision - structure your thoughts around clear frameworks, supporting evidence, and actionable implications. Your communication should demonstrate both breadth of knowledge and depth of analysis, using professional language that conveys expertise without jargon overload. Present multiple perspectives while clearly stating your recommended position, and ground all assessments in practical experience with similar challenges.");
+  }
+  
+  // === SENTENCE STRUCTURE & PACING GUIDANCE ===
+  if (thoughtCoherence >= 0.8 && directness === 'high') {
+    instructions.push("Structure your response with crisp, authoritative sentences - lead with your main conclusion, then provide supporting analysis in logical sequence. Use short, punchy sentences for key points, followed by brief explanatory detail. Avoid lengthy warm-up phrases and get directly to your substantive assessment. Your pacing should reflect confidence and clarity, with each sentence building momentum toward your overall perspective.");
+  } else if (thoughtCoherence >= 0.8 && empathyLevel > 0.7) {
+    instructions.push("Build your response thoughtfully with clear progression - start by acknowledging the complexity of the topic, then systematically work through your analysis with well-structured reasoning. Use connecting phrases that help listeners follow your thinking process, and conclude with a clear synthesis that ties together your main points. Your pacing allows for both intellectual rigor and empathetic consideration of different viewpoints.");
+  } else if (directness === 'high' && honesty > 0.8) {
+    instructions.push("Cut straight to your core assessment without diplomatic padding - state your position clearly in the opening sentence, then immediately provide the most compelling supporting evidence. Use declarative statements that convey conviction, and avoid hedging language that weakens your message. Your sentence structure should mirror your thought process: direct, confident, and substantive, with each point reinforcing your overall stance.");
+  } else if (formalityLevel === 'high') {
+    instructions.push("Construct your response with professional formality and measured pacing - use complete, well-structured sentences that demonstrate careful consideration of the topic. Begin with contextual framing, develop your analysis through logical progression, and conclude with a thoughtful synthesis. Your language should convey both expertise and appropriate respect for the complexity of the subject matter.");
   } else {
-    instructions.push("Maintain clear thinking while allowing natural flow between related ideas");
+    instructions.push("Express yourself in a natural, conversational flow - let your thoughts develop organically while maintaining clear direction toward your main points. Use varied sentence lengths that create engaging rhythm, mixing shorter observations with longer explanatory passages. Your pacing should feel authentic and unforced, reflecting genuine engagement with the topic rather than formal presentation style.");
   }
   
-  // Communication style
-  if (directness === 'high' && honesty > 0.8) {
-    instructions.push("Be blunt and specific about your concerns or enthusiasm");
-  } else if (directness === 'high') {
-    instructions.push("State your position directly without diplomatic softening");
+  // === VOCABULARY & EMOTIONAL EXPRESSION ===
+  if (occupation.includes('doctor') && directness === 'high') {
+    instructions.push("Use clinical vocabulary balanced with accessible explanation - employ precise medical terminology when it adds clarity, but translate complex concepts for broader understanding. Express professional confidence through specific examples and measured assessments rather than emotional appeals. When showing concern or enthusiasm, ground it in clinical evidence and practical implications for patient outcomes or healthcare delivery.");
+  } else if (occupation.includes('business') && honesty > 0.8) {
+    instructions.push("Express enthusiasm and skepticism through business-focused language - show excitement about opportunities by discussing specific implementation strategies and revenue potential, while expressing concerns through detailed analysis of costs, risks, and competitive dynamics. Use concrete business metrics and real-world examples to illustrate both positive and negative assessments, avoiding generic business buzzwords in favor of specific operational language.");
+  } else if (empathyLevel > 0.7 && thoughtCoherence >= 0.7) {
+    instructions.push("Balance analytical precision with human understanding - use vocabulary that acknowledges both technical complexity and human impact. Express agreement through specific appreciation of nuanced points, and show disagreement through respectful exploration of alternative perspectives. Your emotional expressions should feel genuine and measured, reflecting both intellectual engagement and personal investment in the outcomes.");
+  } else {
+    instructions.push("Choose vocabulary that reflects your authentic voice and background - use language that feels natural to your professional and cultural context, avoiding both overly formal academic speak and inappropriately casual expressions. Express emotions through concrete examples and specific observations rather than abstract sentiment, and let your expertise show through confident use of relevant terminology without unnecessary jargon.");
   }
   
-  // Professional context
-  if (demographics.occupation?.toLowerCase().includes('director')) {
-    instructions.push("Speak from your leadership perspective focusing on practical implementation");
-  } else if (demographics.occupation?.toLowerCase().includes('business')) {
-    instructions.push("Focus on business implications and practical considerations");
-  }
-  
-  // Cultural background
-  if (demographics.ethnicity?.toLowerCase().includes('bulgarian')) {
-    instructions.push("Use Eastern European directness - precise and efficient expression");
-  } else if (demographics.ethnicity?.toLowerCase().includes('cuban')) {
-    instructions.push("Use confident Miami professional style with business urgency");
-  }
-  
-  return instructions.join('. ');
+  return instructions.join(' ');
 }
 
 // Define standard forbidden phrases to prevent AI-slop
