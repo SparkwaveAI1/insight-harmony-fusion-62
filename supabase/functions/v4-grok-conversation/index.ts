@@ -4,6 +4,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 // Flags (default OFF)
 const CE_PROMPT_V2 = Deno.env.get("CE_PROMPT_V2") === "true";
 const CE_OPENING_DEDUPE_RETRY = Deno.env.get("CE_OPENING_DEDUPE_RETRY") === "true";
+const GROK_MODEL = Deno.env.get("GROK_MODEL") ?? "grok-4-latest";
+
+// Log configuration at boot
+console.log(`Grok model: ${GROK_MODEL}, CE_PROMPT_V2=${CE_PROMPT_V2}`);
 
 // Safe extractors to replace JSON.stringify on complex objects
 function asList(x: any): string {
@@ -900,24 +904,25 @@ CRITICAL: You are a real person with opinions, emotions, and limitations. Respon
   }
 
   // === NEW V2 TEMPLATE (COMPACT) ===
-  const id = fullProfile?.identity ?? {};
-  const cs = fullProfile?.communication_style ?? {};
-  const mp = fullProfile?.motivation_profile ?? {};
-  const tc = fullProfile?.cognitive_profile?.thought_coherence;
-  const th = fullProfile?.truth_honesty_profile;
+  try {
+    const id = fullProfile?.identity ?? {};
+    const cs = fullProfile?.communication_style ?? {};
+    const mp = fullProfile?.motivation_profile ?? {};
+    const tc = fullProfile?.cognitive_profile?.thought_coherence;
+    const th = fullProfile?.truth_honesty_profile;
 
-  const traitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(userInput, fullProfile, conversationSummary);
-  const selectedTraits = pickDominantTraits(traitAnalysis?.selected_traits || [], fullProfile, 6);
-  const TRAITS_LINE = formatTraits(selectedTraits);
+    const traitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(userInput, fullProfile, conversationSummary);
+    const selectedTraits = pickDominantTraits(traitAnalysis?.selected_traits || [], fullProfile, 6);
+    const TRAITS_LINE = formatTraits(selectedTraits);
 
-  const identityLine =
-    [id?.name, id?.age, id?.ethnicity].filter(Boolean).join(", ") +
-    (id?.occupation ? `; ${id.occupation}` : "") +
-    (id?.location?.city ? ` in ${id.location.city}` : "") +
-    (id?.location?.region ? `, ${id.location.region}` : "") +
-    (id?.location?.urbanicity ? ` (${id.location.urbanicity})` : "");
+    const identityLine =
+      [id?.name, id?.age, id?.ethnicity].filter(Boolean).join(", ") +
+      (id?.occupation ? `; ${id.occupation}` : "") +
+      (id?.location?.city ? ` in ${id.location.city}` : "") +
+      (id?.location?.region ? `, ${id.location.region}` : "") +
+      (id?.location?.urbanicity ? ` (${id.location.urbanicity})` : "");
 
-  let instructions = `You are ${identityLine}.
+    let instructions = `You are ${identityLine}.
 
 You communicate with THIS exact voice:
 - Voice foundation: ${field(cs, "voice_foundation")}
@@ -942,7 +947,35 @@ Guidelines:
 
 Remember to use your own unique voice.`.trim();
 
-  return instructions;
+    return instructions;
+  } catch (e) {
+    console.error("CE template error", { msg: String(e).slice(0,300) });
+    // Safe fallback to V1 template
+    let instructions = `PERSONA: ${conversationSummary.demographics.name}
+
+AGE: ${conversationSummary.demographics.age}
+
+OCCUPATION: ${conversationSummary.demographics.occupation}
+
+LOCATION: ${conversationSummary.demographics.location}
+
+BACKGROUND: ${conversationSummary.demographics.background_description}
+
+COMMUNICATION STYLE:
+${conversationSummary.communication_style.directness} directness, ${conversationSummary.communication_style.formality} formality
+
+MOTIVATIONAL PROFILE:
+${conversationSummary.motivational_summary}
+
+PERSONALITY:
+${conversationSummary.personality_summary}`;
+
+    instructions += `
+
+CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${conversationSummary.demographics.name} would, drawing on your personality traits, motivations, and knowledge boundaries listed above.`;
+
+    return instructions;
+  }
 }
 
 // Optional de-dupe retry functions (guarded by CE_OPENING_DEDUPE_RETRY)
@@ -967,7 +1000,7 @@ async function callGrokWithOpeningGuard(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: Deno.env.get("GROK_MODEL") ?? "grok-4-latest",
+      model: GROK_MODEL,
       messages: messages,
       temperature: 0.4,
     }),
@@ -1006,7 +1039,7 @@ async function callGrokWithOpeningGuard(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: Deno.env.get("GROK_MODEL") ?? "grok-4-latest",
+        model: GROK_MODEL,
         messages: retryMessages,
         temperature: 0.4,
       }),
@@ -1261,7 +1294,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: Deno.env.get("GROK_MODEL") ?? "grok-4-latest",
+          model: GROK_MODEL,
           messages: messages,
           stream: false,
           temperature: 0.4
