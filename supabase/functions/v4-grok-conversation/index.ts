@@ -122,24 +122,13 @@ class V4TraitRelevanceAnalyzer {
 
   static analyzeTraitRelevance(userInput, fullProfile, conversationSummary) {
     const input = userInput.toLowerCase();
-    const selectedTraits = [];
-
-    // 1. CLASSIFY THE TURN
+    
+    // 1. CLASSIFY THE TURN AND DETERMINE QUESTION DOMAIN
     const classification = this.classifyTurn(userInput);
+    const questionDomain = this.determineQuestionDomain(userInput);
 
-    // 2. ANALYZE TRAIT RELEVANCE - SCAN ALL TRAITS DYNAMICALLY
-    const allTraits = this.extractAllTraits(fullProfile);
-    for (const traitData of allTraits) {
-      const score = this.calculateDynamicTraitRelevance(input, traitData, fullProfile);
-      if (score > 0.3) { // Relevance threshold
-        selectedTraits.push({
-          trait: traitData.path,
-          score: score,
-          relevance_reason: this.getDynamicRelevanceReason(input, traitData),
-          data_value: traitData.value
-        });
-      }
-    }
+    // 2. SELECT RELEVANT TRAITS BASED ON QUESTION DOMAIN (MAX 5)
+    const selectedTraits = this.selectDomainRelevantTraits(input, fullProfile, questionDomain, classification);
 
     // 3. EXTRACT LINGUISTIC SIGNATURE
     const linguisticSignature = this.extractLinguisticSignature(fullProfile);
@@ -150,15 +139,13 @@ class V4TraitRelevanceAnalyzer {
     // 5. CALCULATE KNOWLEDGE BOUNDARIES
     const knowledgeBoundary = this.calculateKnowledgeBoundaries(classification.topics, fullProfile);
 
-    // Sort traits by relevance score
-    selectedTraits.sort((a, b) => b.score - a.score);
-
     return {
-      selected_traits: selectedTraits.slice(0, 12), // Top 12 most relevant traits
+      selected_traits: selectedTraits.slice(0, 5), // Max 5 relevant traits
       context_classification: classification,
       linguistic_signature: linguisticSignature,
       behavioral_modifiers: behavioralModifiers,
-      knowledge_boundary: knowledgeBoundary
+      knowledge_boundary: knowledgeBoundary,
+      question_domain: questionDomain
     };
   }
 
@@ -167,29 +154,208 @@ class V4TraitRelevanceAnalyzer {
 
     // Classify intent
     let intent = 'clarify';
-    if (input.includes('what do you think') || input.includes('opinion')) intent = 'opinion';
+    if (input.includes('what do you think') || input.includes('opinion') || input.includes('feel about')) intent = 'opinion';
     else if (input.includes('how to') || input.includes('advice') || input.includes('should i')) intent = 'advice';
-    else if (input.includes('tell me about') || input.includes('experience')) intent = 'story';
+    else if (input.includes('tell me about') || input.includes('experience') || input.includes('story')) intent = 'story';
     else if (input.includes('vs') || input.includes('compare') || input.includes('better')) intent = 'compare';
     else if (input.includes('wrong') || input.includes('bad') || input.includes('critique')) intent = 'critique';
 
-    // Extract topics
+    // Extract topics with better detection
     const topics = [];
-    if (input.includes('work') || input.includes('job') || input.includes('career')) topics.push('work');
-    if (input.includes('family') || input.includes('children') || input.includes('kids')) topics.push('family');
-    if (input.includes('money') || input.includes('finance') || input.includes('investment')) topics.push('finance');
-    if (input.includes('politic') || input.includes('government') || input.includes('policy')) topics.push('politics');
-    if (input.includes('relationship') || input.includes('dating') || input.includes('marriage')) topics.push('relationships');
+    if (input.includes('work') || input.includes('job') || input.includes('career') || input.includes('professional')) topics.push('work');
+    if (input.includes('family') || input.includes('children') || input.includes('kids') || input.includes('parent')) topics.push('family');
+    if (input.includes('money') || input.includes('finance') || input.includes('investment') || input.includes('budget')) topics.push('finance');
+    if (input.includes('politic') || input.includes('government') || input.includes('policy') || input.includes('election')) topics.push('politics');
+    if (input.includes('relationship') || input.includes('dating') || input.includes('marriage') || input.includes('social')) topics.push('relationships');
+    if (input.includes('health') || input.includes('medical') || input.includes('doctor') || input.includes('hospital')) topics.push('health');
+    if (input.includes('technology') || input.includes('ai') || input.includes('digital') || input.includes('tech')) topics.push('technology');
 
-    // Determine audience (simplified)
+    // Determine audience
     const audience = 'peer'; // Default assumption
 
     // Assess sensitivity
     let sensitivity = 'low';
     if (topics.includes('politics') || input.includes('controversial')) sensitivity = 'high';
-    else if (topics.includes('family') || topics.includes('relationships')) sensitivity = 'medium';
+    else if (topics.includes('family') || topics.includes('relationships') || topics.includes('health')) sensitivity = 'medium';
 
     return { intent, topics, audience, sensitivity };
+  }
+
+  static determineQuestionDomain(userInput) {
+    const input = userInput.toLowerCase();
+    
+    // Professional/Work domain
+    if (input.includes('work') || input.includes('job') || input.includes('career') || 
+        input.includes('professional') || input.includes('colleague') || input.includes('boss') ||
+        input.includes('radiology') || input.includes('medical') || input.includes('hospital') ||
+        input.includes('ai in') || input.includes('technology at work')) {
+      return 'professional';
+    }
+    
+    // Personal values/beliefs domain
+    if (input.includes('believe') || input.includes('value') || input.includes('principle') ||
+        input.includes('opinion') || input.includes('think about') || input.includes('feel about') ||
+        input.includes('philosophy') || input.includes('ethics')) {
+      return 'values';
+    }
+    
+    // Social/Political domain
+    if (input.includes('politic') || input.includes('government') || input.includes('policy') ||
+        input.includes('society') || input.includes('community') || input.includes('social')) {
+      return 'social_political';
+    }
+    
+    // Financial domain
+    if (input.includes('money') || input.includes('financial') || input.includes('investment') ||
+        input.includes('budget') || input.includes('economic') || input.includes('spend')) {
+      return 'financial';
+    }
+    
+    // Family/Personal domain
+    if (input.includes('family') || input.includes('personal') || input.includes('relationship') ||
+        input.includes('children') || input.includes('parent') || input.includes('home')) {
+      return 'personal';
+    }
+    
+    return 'general';
+  }
+
+  static selectDomainRelevantTraits(userInput, fullProfile, domain, classification) {
+    const selectedTraits = [];
+    
+    // Define domain-specific trait priorities
+    const domainTraitMap = {
+      'professional': [
+        'identity.occupation',
+        'knowledge_profile.expertise_domains',
+        'attitude_narrative',
+        'emotional_profile.stress_responses',
+        'communication_style.context_switches.work'
+      ],
+      'values': [
+        'attitude_narrative',
+        'political_narrative', 
+        'motivation_profile.primary_drivers.meaning',
+        'motivation_profile.deal_breakers',
+        'truth_honesty_profile.baseline_honesty'
+      ],
+      'social_political': [
+        'political_narrative',
+        'attitude_narrative',
+        'identity_salience.political_identity',
+        'motivation_profile.primary_drivers.care',
+        'emotional_profile.negative_triggers'
+      ],
+      'financial': [
+        'money_profile.attitude_toward_money',
+        'money_profile.spending_style',
+        'money_profile.financial_stressors',
+        'motivation_profile.primary_drivers.security',
+        'money_profile.generosity_profile'
+      ],
+      'personal': [
+        'relationships.household',
+        'emotional_profile.emotional_regulation',
+        'motivation_profile.primary_drivers.family',
+        'daily_life.mental_preoccupations',
+        'health_profile'
+      ],
+      'general': [
+        'attitude_narrative',
+        'communication_style.voice_foundation',
+        'emotional_profile.emotional_regulation',
+        'motivation_profile.primary_drivers',
+        'personality_summary'
+      ]
+    };
+
+    const priorityPaths = domainTraitMap[domain] || domainTraitMap['general'];
+    
+    // Select traits based on domain priority and actual content
+    for (const path of priorityPaths) {
+      const value = this.getNestedValue(fullProfile, path);
+      if (value && value !== '' && value !== null && value !== undefined) {
+        const relevanceScore = this.calculateQualitativeRelevance(userInput, path, value);
+        if (relevanceScore > 0.2) {
+          selectedTraits.push({
+            trait: path,
+            score: relevanceScore,
+            relevance_reason: this.getQualitativeRelevanceReason(userInput, path, value, domain),
+            data_value: value
+          });
+        }
+      }
+    }
+    
+    // Sort by relevance and return top 5
+    selectedTraits.sort((a, b) => b.score - a.score);
+    return selectedTraits.slice(0, 5);
+  }
+
+  static calculateQualitativeRelevance(userInput, traitPath, traitValue) {
+    const input = userInput.toLowerCase();
+    const pathParts = traitPath.toLowerCase().split('.');
+    let score = 0;
+    
+    // Path keyword matching
+    const inputWords = input.split(/\s+/).filter(word => word.length > 2);
+    const pathMatches = pathParts.filter(part => 
+      inputWords.some(word => word.includes(part) || part.includes(word))
+    );
+    
+    if (pathMatches.length > 0) {
+      score += 0.7;
+    }
+    
+    // Content relevance for key traits
+    if (typeof traitValue === 'string' && traitValue.length > 0) {
+      const contentWords = traitValue.toLowerCase().split(/\s+/);
+      const contentMatches = inputWords.filter(word => 
+        contentWords.some(contentWord => contentWord.includes(word) || word.includes(contentWord))
+      );
+      
+      if (contentMatches.length > 0) {
+        score += 0.3 * (contentMatches.length / inputWords.length);
+      }
+    }
+    
+    return Math.min(score, 1.0);
+  }
+
+  static getQualitativeRelevanceReason(userInput, traitPath, traitValue, domain) {
+    const pathParts = traitPath.split('.');
+    const category = pathParts[0];
+    const subcategory = pathParts[pathParts.length - 1];
+    
+    // Generate qualitative explanations based on domain and trait type
+    const reasonMap = {
+      'attitude_narrative': `Reflects core worldview and approach to ${domain} topics`,
+      'political_narrative': `Informs perspective on social and political issues`,
+      'emotional_profile': `Influences emotional response and stress management style`,
+      'communication_style': `Shapes how opinions are expressed and defended`,
+      'money_profile': `Affects financial attitudes and decision-making patterns`,
+      'knowledge_profile': `Provides expertise context and confidence levels`,
+      'motivation_profile': `Drives underlying priorities and decision factors`,
+      'identity': `Establishes professional and personal context for response`
+    };
+    
+    const generalReason = reasonMap[category] || `Provides relevant context for ${domain} discussions`;
+    
+    // Add specific relevance note if trait value contains related keywords
+    if (typeof traitValue === 'string') {
+      const lowerValue = traitValue.toLowerCase();
+      const lowerInput = userInput.toLowerCase();
+      
+      const sharedWords = lowerInput.split(/\s+/).filter(word => 
+        word.length > 3 && lowerValue.includes(word)
+      );
+      
+      if (sharedWords.length > 0) {
+        return `${generalReason} - contains relevant themes: ${sharedWords.join(', ')}`;
+      }
+    }
+    
+    return generalReason;
   }
 
   static calculateTraitRelevance(userInput, traitPath, fullProfile) {
@@ -292,20 +458,7 @@ class V4TraitRelevanceAnalyzer {
     return Math.min(score, 1.0);
   }
 
-  static getDynamicRelevanceReason(userInput, traitData) {
-    const pathKeywords = traitData.path.toLowerCase().split('.');
-    const inputWords = userInput.toLowerCase().split(/\s+/);
-    
-    const matches = pathKeywords.filter(keyword => 
-      inputWords.some(word => word.includes(keyword) || keyword.includes(word))
-    );
-    
-    if (matches.length > 0) {
-      return `Path relevance: ${matches.join(', ')}`;
-    }
-    
-    return 'Content similarity detected';
-  }
+  // This method is replaced by getQualitativeRelevanceReason above
 
   static getNestedValue(obj, path) {
     return path.split('.').reduce((current, key) => {
@@ -746,12 +899,83 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
 
 // Using helper functions from top of file
 
-// V4-Native instruction builder using trait analysis results
+// V4-Native instruction builder using trait analysis results  
 function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
-  const selectedTraits = v4Analysis.selected_traits;
-  const linguistic = v4Analysis.linguistic_signature;
-  const behavioral = v4Analysis.behavioral_modifiers;
-  const classification = v4Analysis.context_classification;
+  // Extract demographics properly from V4 structure
+  const demographics = extractV4Demographics(conversationSummary, fullProfile);
+  const commStyle = extractCommunicationStyle(conversationSummary, fullProfile);
+  const traits = v4Analysis.selected_traits || [];
+  const contextClass = v4Analysis.context_classification || {};
+  const behavMods = v4Analysis.behavioral_modifiers || {};
+  const questionDomain = v4Analysis.question_domain || 'general';
+
+  console.log("=== VOICE DIFFERENTIATION DIAGNOSTIC ===");
+  console.log("Current persona data keys:", Object.keys(conversationSummary || {}));
+  console.log("Full profile exists:", !!fullProfile);
+  console.log("Full profile communication style:", fullProfile?.communication_style);
+  console.log("Conversation summary communication style:", conversationSummary?.communication_style);
+  
+  const name = demographics.name || "Unknown";
+  
+  // Extract forbidden phrases and signature phrases
+  const lingSig = v4Analysis.linguistic_signature || {};
+  console.log(`${name} signature phrases:`, lingSig.signature_phrases);
+  console.log(`${name} forbidden expressions:`, lingSig.forbidden_expressions);
+  console.log("=== END DIAGNOSTIC ===");
+
+  // Log selected traits and behavioral modifiers
+  console.log(`V4 - Selected traits for this input: ${JSON.stringify(traits.map(t => t.trait), null, 2)}`);
+  console.log(`V4 - Context classification: ${JSON.stringify(contextClass)}`);
+  console.log(`V4 - Behavioral modifiers: ${JSON.stringify(behavMods)}`);
+  console.log(`V4 - Linguistic signature extracted: ${JSON.stringify(Object.keys(lingSig))}`);
+
+  // Build relevant traits with qualitative explanations
+  const traitsFormatted = traits.map(t => {
+    const value = typeof t.data_value === 'object' ? JSON.stringify(t.data_value) : t.data_value;
+    return `- ${t.trait}: ${value}\n  → ${t.relevance_reason}`;
+  }).join('\n');
+
+  const instructions = `PERSONA IDENTITY: You are ${name}, a ${demographics.age}-year-old ${demographics.gender} ${demographics.occupation} living in ${demographics.location}.
+
+CORE DEMOGRAPHICS:
+- Age: ${demographics.age}
+- Gender: ${demographics.gender}
+- Ethnicity: ${demographics.ethnicity} 
+- Location: ${demographics.location}
+- Occupation: ${demographics.occupation}
+- Relationship Status: ${demographics.relationship_status}
+- Dependents: ${demographics.dependents}
+
+COMMUNICATION STYLE (PRIMARY):
+- Directness Level: ${commStyle.directness}
+- Formality: ${commStyle.formality}
+- Emotional State: ${behavMods.emotional_state || "neutral"}
+- Pace/Rhythm: ${commStyle.pace_rhythm}
+- Regional Style: ${commStyle.regional}
+
+RELEVANT TRAITS FOR THIS ${questionDomain.toUpperCase()} QUESTION:
+${traitsFormatted}
+
+CONVERSATION CONTEXT:
+- Intent: ${contextClass.intent || "clarify"}
+- Question Domain: ${questionDomain}
+- Audience: ${contextClass.audience || "peer"}
+- Sensitivity Level: ${contextClass.sensitivity || "low"}
+
+RESPONSE REQUIREMENTS:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Match the ${commStyle.directness} directness and ${commStyle.formality} formality
+- Respond with ${behavMods.emotional_state || "neutral"} emotional state
+- Use your natural communication patterns
+
+FORBIDDEN PHRASES: Never use these phrases:
+${(lingSig.forbidden_expressions || []).map(phrase => `- "${phrase}"`).join('\n')}
+
+CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${name} would.`;
+
+  console.log(`V4 - Instruction length: ${instructions.length}`);
+  return instructions;
 
   // Safety switch: fall back to old template if disabled
   if (!CE_PROMPT_V2) {
@@ -1337,3 +1561,35 @@ serve(async (req) => {
     )
   }
 })
+
+// Extract demographics properly from V4 structure
+function extractV4Demographics(conversationSummary: any, fullProfile: any) {
+  const cs = conversationSummary || {};
+  const demo = cs.demographics || {};
+  const identity = fullProfile?.identity || {};
+  
+  return {
+    name: demo.name || identity.name || "Unknown",
+    age: demo.age || identity.age || "unknown age", 
+    gender: identity.gender || demo.gender || "unknown",
+    ethnicity: identity.ethnicity || demo.ethnicity || "unknown",
+    location: demo.location || identity.location?.city || identity.location || "unknown location",
+    occupation: demo.occupation || identity.occupation || "unknown occupation",
+    relationship_status: identity.relationship_status || "unknown",
+    dependents: identity.dependents || "unknown"
+  };
+}
+
+// Extract communication style properly
+function extractCommunicationStyle(conversationSummary: any, fullProfile: any) {
+  const cs = conversationSummary?.communication_style || {};
+  const voiceFound = fullProfile?.communication_style?.voice_foundation || {};
+  const regional = fullProfile?.communication_style?.regional_register || {};
+  
+  return {
+    directness: cs.directness || voiceFound.directness || "balanced",
+    formality: cs.formality || voiceFound.formality || "neutral", 
+    pace_rhythm: voiceFound.pace_rhythm || "moderate",
+    regional: regional.region || regional.urbanicity || ""
+  };
+}
