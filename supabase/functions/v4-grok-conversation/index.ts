@@ -897,9 +897,75 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
   return chosen.slice(0, Math.min(k, 6));
 }
 
+// Helper function to provide behavioral guidance for traits
+function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain: string): string {
+  const trait = traitPath.toLowerCase();
+  const domain = questionDomain.toLowerCase();
+  
+  // Emotional/stress responses
+  if (trait.includes('stress_responses') || trait.includes('negative_triggers')) {
+    return "Show heightened emotional engagement, be more direct and passionate in your stance";
+  }
+  
+  if (trait.includes('explosive_triggers')) {
+    return "Respond with intensity and conviction, don't hold back your strong feelings";
+  }
+  
+  // Motivations
+  if (trait.includes('motivation') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Let this strong motivation drive urgency and conviction in your response";
+    if (dataValue <= 0.3) return "Show less enthusiasm for this area, be more skeptical or disinterested";
+    return "Acknowledge this as a moderate concern in your response";
+  }
+  
+  // Big Five traits
+  if (trait.includes('agreeableness') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Be cooperative and diplomatic, seek common ground";
+    if (dataValue <= 0.3) return "Be more skeptical and challenging, don't shy away from disagreement";
+  }
+  
+  if (trait.includes('neuroticism') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Show worry or anxiety about potential negative outcomes";
+    if (dataValue <= 0.3) return "Remain calm and stable, don't express excessive concern";
+  }
+  
+  if (trait.includes('openness') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Be curious and creative, consider novel perspectives";
+    if (dataValue <= 0.3) return "Stick to conventional wisdom, be skeptical of new ideas";
+  }
+  
+  if (trait.includes('conscientiousness') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Be thorough and methodical, emphasize proper procedures";
+    if (dataValue <= 0.3) return "Be more spontaneous and flexible in your approach";
+  }
+  
+  if (trait.includes('extraversion') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Be energetic and assertive, speak with confidence";
+    if (dataValue <= 0.3) return "Be more reserved and thoughtful, speak concisely";
+  }
+  
+  // Knowledge/expertise domains
+  if (trait.includes('knowledge') || trait.includes('expertise')) {
+    return `Draw on your ${domain} knowledge confidently without being preachy`;
+  }
+  
+  // Identity-based traits
+  if (trait.includes('identity') || trait.includes('community')) {
+    return "Let this identity perspective naturally color your viewpoint";
+  }
+  
+  // Goal orientation
+  if (trait.includes('goal')) {
+    return "Frame your response in terms of achieving this important goal";
+  }
+  
+  // Default behavioral guidance
+  return "Let this trait naturally influence your tone and perspective";
+}
+
 // Using helper functions from top of file
 
-// V4-Native instruction builder using trait analysis results  
+// V4-Native instruction builder using trait analysis results
 function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
   // Extract demographics properly from V4 structure
   const demographics = extractV4Demographics(conversationSummary, fullProfile);
@@ -929,11 +995,12 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
   console.log(`V4 - Behavioral modifiers: ${JSON.stringify(behavMods)}`);
   console.log(`V4 - Linguistic signature extracted: ${JSON.stringify(Object.keys(lingSig))}`);
 
-  // Build relevant traits with qualitative explanations
+  // Build relevant traits with qualitative explanations AND behavioral instructions
   const traitsFormatted = traits.map(t => {
     const value = typeof t.data_value === 'object' ? JSON.stringify(t.data_value) : t.data_value;
-    return `- ${t.trait}: ${value}\n  → ${t.relevance_reason}`;
-  }).join('\n');
+    const behavioralGuidance = getBehavioralGuidance(t.trait, t.data_value, questionDomain);
+    return `- ${t.trait}: ${value}\n  → Why relevant: ${t.relevance_reason}\n  → How this affects your response: ${behavioralGuidance}`;
+  }).join('\n\n');
 
   const instructions = `PERSONA IDENTITY: You are ${name}, a ${demographics.age}-year-old ${demographics.gender} ${demographics.occupation} living in ${demographics.location}.
 
