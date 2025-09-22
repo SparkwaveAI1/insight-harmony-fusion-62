@@ -813,6 +813,47 @@ function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
   return `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
 }
 
+// Communication Execution Engine
+function buildCommunicationExecution(selectedTraits, demographics, communicationStyle) {
+  const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.value || 0.7;
+  const directness = communicationStyle?.voice_foundation?.directness || 'moderate';
+  const honesty = selectedTraits.find(t => t.trait.includes('baseline_honesty'))?.value || 0.7;
+  
+  let instructions = [];
+  
+  // Thought structure
+  if (thoughtCoherence >= 0.8) {
+    instructions.push("Present your thoughts in clear, logical sequence");
+  } else if (thoughtCoherence <= 0.5) {
+    instructions.push("Let your thoughts flow naturally with some tangential connections");
+  } else {
+    instructions.push("Maintain clear thinking while allowing natural flow between related ideas");
+  }
+  
+  // Communication style
+  if (directness === 'high' && honesty > 0.8) {
+    instructions.push("Be blunt and specific about your concerns or enthusiasm");
+  } else if (directness === 'high') {
+    instructions.push("State your position directly without diplomatic softening");
+  }
+  
+  // Professional context
+  if (demographics.occupation?.toLowerCase().includes('director')) {
+    instructions.push("Speak from your leadership perspective focusing on practical implementation");
+  } else if (demographics.occupation?.toLowerCase().includes('business')) {
+    instructions.push("Focus on business implications and practical considerations");
+  }
+  
+  // Cultural background
+  if (demographics.ethnicity?.toLowerCase().includes('bulgarian')) {
+    instructions.push("Use Eastern European directness - precise and efficient expression");
+  } else if (demographics.ethnicity?.toLowerCase().includes('cuban')) {
+    instructions.push("Use confident Miami professional style with business urgency");
+  }
+  
+  return instructions.join('. ');
+}
+
 // Define standard forbidden phrases to prevent AI-slop
 const forbiddenPhrases = [
   "That said...", "However...", "On the other hand...",
