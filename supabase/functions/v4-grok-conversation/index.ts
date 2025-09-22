@@ -1390,315 +1390,47 @@ function createThoughtCoherenceInstructions(coherenceLevel) {
 // Using helper functions from top of file
 
 // V4-Native instruction builder using trait analysis results
-function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
-  // Extract demographics properly from V4 structure
-  const demographics = extractV4Demographics(conversationSummary, fullProfile);
-  const commStyle = extractCommunicationStyle(conversationSummary, fullProfile);
-  const traits = v4Analysis.selected_traits || [];
-  const contextClass = v4Analysis.context_classification || {};
-  const behavMods = v4Analysis.behavioral_modifiers || {};
-  const questionDomain = v4Analysis.question_domain || 'general';
-
-  console.log("=== VOICE DIFFERENTIATION DIAGNOSTIC ===");
-  console.log("Current persona data keys:", Object.keys(conversationSummary || {}));
-  console.log("Full profile exists:", !!fullProfile);
-  console.log("Full profile communication style:", fullProfile?.communication_style);
-  console.log("Conversation summary communication style:", conversationSummary?.communication_style);
+function buildV4NativeInstructions(v4Analysis, conversationSummary, userInput, fullProfile) {
+  const demographics = extractDemographics(conversationSummary, fullProfile);
+  const selectedTraits = v4Analysis.selected_traits || [];
   
-  const name = demographics.name || "Unknown";
+  // Generate specific opinion
+  const specificOpinion = synthesizeSpecificOpinion(selectedTraits, userInput, demographics);
   
-  // Extract forbidden phrases and signature phrases
-  const lingSig = v4Analysis.linguistic_signature || {};
-  console.log(`${name} signature phrases:`, lingSig.signature_phrases);
-  console.log(`${name} forbidden expressions:`, lingSig.forbidden_expressions);
-  console.log("=== END DIAGNOSTIC ===");
+  // Build communication execution
+  const communicationExecution = buildCommunicationExecution(
+    selectedTraits, 
+    demographics, 
+    fullProfile.communication_style
+  );
+  
+  // Forbidden phrases
+  const forbiddenPhrases = [
+    "That said...", "However...", "On the other hand...",
+    "Overall...", "Ultimately...", "At the end of the day...",
+    "Game-changer", "Double-edged sword", "Invaluable tool",
+    "Cautiously optimistic", "Measured approach"
+  ];
+  
+  const instructions = `IDENTITY: You are ${demographics.name}, a ${demographics.age}-year-old ${demographics.ethnicity} ${demographics.occupation} living in ${demographics.location}.
 
-  // Log selected traits and behavioral modifiers
-  console.log(`V4 - Selected traits for this input: ${JSON.stringify(traits.map(t => t.trait), null, 2)}`);
-  console.log(`V4 - Context classification: ${JSON.stringify(contextClass)}`);
-  console.log(`V4 - Behavioral modifiers: ${JSON.stringify(behavMods)}`);
-  console.log(`V4 - Linguistic signature extracted: ${JSON.stringify(Object.keys(lingSig))}`);
+CRITICAL: Answer in character with your unique voice and style.
 
-  // Build relevant traits with qualitative explanations AND behavioral instructions
-  const traitsFormatted = traits.map(t => {
-    const value = typeof t.data_value === 'object' ? JSON.stringify(t.data_value) : t.data_value;
-    const behavioralGuidance = getBehavioralGuidance(t.trait, t.data_value, questionDomain);
-    
-    let traitSection = `- ${t.trait}: ${value}\n  → Why relevant: ${t.relevance_reason}`;
-    if (behavioralGuidance) {
-      traitSection += `\n  → How this affects your response: ${behavioralGuidance}`;
-    }
-    return traitSection;
-  }).join('\n\n');
+YOUR STANCE: ${specificOpinion}
 
-  // Translate communication style to natural language instructions
-  const voiceInstructions = translateCommunicationStyle(fullProfile?.communication_style, demographics);
-
-  const instructions = `PERSONA IDENTITY: You are ${name}, a ${demographics.age}-year-old ${demographics.gender} ${demographics.occupation} living in ${demographics.location}.
-
-CORE DEMOGRAPHICS:
-- Age: ${demographics.age}
-- Gender: ${demographics.gender}
-- Ethnicity: ${demographics.ethnicity} 
-- Location: ${demographics.location}
-- Occupation: ${demographics.occupation}
-- Relationship Status: ${demographics.relationship_status}
-- Dependents: ${demographics.dependents}
-
-VOICE INSTRUCTIONS: ${voiceInstructions}
-${(lingSig.signature_phrases && lingSig.signature_phrases.length > 0) ? `
-SIGNATURE PHRASES: Use these naturally when appropriate: ${lingSig.signature_phrases.join(', ')}` : ''}
-${(lingSig.sentence_patterns && lingSig.sentence_patterns.length > 0) ? `
-SENTENCE PATTERNS: Follow these patterns: ${lingSig.sentence_patterns.join(', ')}` : ''}
-${(lingSig.conversation_enders && lingSig.conversation_enders.length > 0) ? `
-CONVERSATION ENDERS: Use these when wrapping up: ${lingSig.conversation_enders.join(', ')}` : ''}
-
-RELEVANT TRAITS FOR THIS ${questionDomain.toUpperCase()} QUESTION:
-${traitsFormatted}
-
-CONVERSATION CONTEXT:
-- Intent: ${contextClass.intent || "clarify"}
-- Question Domain: ${questionDomain}
-- Audience: ${contextClass.audience || "peer"}
-- Sensitivity Level: ${contextClass.sensitivity || "low"}
+HOW TO EXPRESS THIS: ${communicationExecution}
 
 RESPONSE REQUIREMENTS:
-- Give your genuine opinion directly without disclaimers
-- Keep responses concise (2-4 sentences maximum)
-- Match the ${commStyle.directness} directness and ${commStyle.formality} formality
-- Respond with ${behavMods.emotional_state || "neutral"} emotional state
-- Use your natural communication patterns
+- 2-4 sentences maximum
+- No diplomatic hedging or balanced conclusions
+- Express YOUR specific viewpoint authentically
 
 FORBIDDEN PHRASES: Never use these AI-slop terms:
 ${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
-${(lingSig.forbidden_expressions || []).length > 0 ? '\nPersona-specific forbidden phrases:\n' + (lingSig.forbidden_expressions || []).map(phrase => `- "${phrase}"`).join('\n') : ''}
 
-CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${name} would.`;
+You are a real person with specific opinions, not a diplomatic AI assistant.`;
 
-  console.log(`V4 - Instruction length: ${instructions.length}`);
   return instructions;
-
-  // Safety switch: fall back to old template if disabled
-  if (!CE_PROMPT_V2) {
-    // Original template (preserved)
-    let instructions = `PERSONA IDENTITY:
-You are ${conversationSummary.demographics.name}, a ${conversationSummary.demographics.age}-year-old ${conversationSummary.demographics.gender} ${conversationSummary.demographics.occupation} living in ${conversationSummary.demographics.location}.
-
-CORE DEMOGRAPHICS:
-- Age: ${conversationSummary.demographics.age}
-- Gender: ${conversationSummary.demographics.gender} 
-- Ethnicity: ${conversationSummary.demographics.ethnicity}
-- Location: ${conversationSummary.demographics.location}
-- Occupation: ${conversationSummary.demographics.occupation}
-- Relationship Status: ${conversationSummary.demographics.relationship_status}
-- Dependents: ${conversationSummary.demographics.dependents}
-
-COMMUNICATION STYLE:
-- Directness Level: ${behavioral.directness_level}
-- Formality: ${fullProfile?.communication_style?.voice_foundation?.formality_default || "neutral"}
-- Emotional State: ${behavioral.emotional_state}
-`;
-
-    // Add linguistic signature if available
-    if (linguistic.signature_phrases && linguistic.signature_phrases.length > 0) {
-      instructions += `- Your signature phrases: ${linguistic.signature_phrases.join(', ')}\n`;
-    }
-    if (linguistic.conversation_enders && linguistic.conversation_enders.length > 0) {
-      instructions += `- Your conversation enders: ${linguistic.conversation_enders.join(', ')}\n`;
-    }
-
-    // Add knowledge boundaries
-    if (fullProfile?.knowledge_profile?.expertise_domains) {
-      instructions += `
-EXPERTISE DOMAINS:
-You have professional knowledge in: ${fullProfile.knowledge_profile.expertise_domains.join(', ')}
-`;
-    }
-
-    if (fullProfile?.knowledge_profile?.knowledge_gaps) {
-      instructions += `Knowledge limitations: You are not well-versed in ${fullProfile.knowledge_profile.knowledge_gaps.join(', ')}\n`;
-    }
-
-    // Add relevant traits for this specific query
-    if (selectedTraits && selectedTraits.length > 0) {
-      instructions += `
-RELEVANT PERSONALITY TRAITS FOR THIS QUERY:
-`;
-      selectedTraits.slice(0, 8).forEach(trait => {
-        if (trait.data_value) {
-          instructions += `- ${trait.trait}: ${typeof trait.data_value === 'object' ? JSON.stringify(trait.data_value) : trait.data_value}\n`;
-        }
-      });
-    }
-
-    // Add motivational drivers from full profile
-    if (fullProfile?.motivation_profile?.primary_drivers) {
-      const topMotivations = Object.entries(fullProfile.motivation_profile.primary_drivers)
-        .filter(([, value]) => (value as number) >= 7)
-        .sort(([,a], [,b]) => (b as number) - (a as number))
-        .slice(0, 3);
-      
-      if (topMotivations.length > 0) {
-        instructions += `
-PRIMARY MOTIVATIONS:
-${topMotivations.map(([key, value]) => `- ${key.replace(/_/g, ' ')}: ${value}/10`).join('\n')}
-`;
-      }
-    }
-
-    // Add emotional triggers if present
-    const emotionalTriggers = selectedTraits.find(t => t.trait.includes('negative_triggers') || t.trait.includes('explosive_triggers'));
-    if (emotionalTriggers?.data_value) {
-      instructions += `
-EMOTIONAL TRIGGERS:
-${Array.isArray(emotionalTriggers.data_value) ? emotionalTriggers.data_value.join(', ') : emotionalTriggers.data_value}
-When triggered, you respond with increased intensity and directness.
-`;
-    }
-
-    // Add contradictions/tensions if present
-    const contradictions = selectedTraits.find(t => t.trait.includes('contradiction') || t.trait.includes('tension'));
-    if (contradictions?.data_value) {
-      instructions += `
-INTERNAL CONTRADICTIONS:
-${typeof contradictions.data_value === 'object' ? JSON.stringify(contradictions.data_value) : contradictions.data_value}
-`;
-    }
-
-    instructions += `
-CRITICAL: Your personality must dominate this response. Think and speak as THIS specific person would - not like a diplomatic AI assistant. Let your unique traits, background, and communication style completely override generic professional language.
-
-Do not respond like an AI assistant giving balanced professional advice. Respond like ${conversationSummary.demographics.name} would in a real conversation with a peer - with their authentic personality, opinions, and speaking patterns.
-
-CONVERSATION CONTEXT:
-- Intent: ${classification.intent}
-- Topics: ${classification.topics.join(', ')}
-- Audience: ${classification.audience}
-- Sensitivity Level: ${classification.sensitivity}
-
-RESPONSE REQUIREMENTS:
-- Give your genuine opinion directly without disclaimers
-- Keep responses concise (2-4 sentences maximum)
-- Never acknowledge knowledge limitations or mention your expertise level
-- Don't explain your background or qualifications
-- Focus only on your actual viewpoint
-- Use natural speech patterns from your background
-- State opinions clearly without diplomatic balancing
-- Match the ${behavioral.directness_level} directness level
-- Respond with ${behavioral.emotional_state} emotional state
-
-FORBIDDEN PHRASES - Never use these AI-slop terms:
-${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
-- "You know what I mean?" / "To be honest..." / "Let's be clear..."
-- "As a [job title]..." / "Speaking as..." / "From my perspective as..."
-- "I don't pretend to have answers" / "I could be wrong, but..."
-- "To begin with" / "Let's consider the data" / "Moving forward..."
-- "At the end of the day" / "When all is said and done"`;
-
-    // Add persona-specific forbidden expressions
-    if (linguistic.forbidden_expressions && linguistic.forbidden_expressions.length > 0) {
-      instructions += `
-- ${linguistic.forbidden_expressions.join('\n- ')}`;
-    }
-
-    // Add thought coherence instructions
-    const coherenceLevel = fullProfile?.cognitive_profile?.thought_coherence;
-    if (typeof coherenceLevel === "number") {
-      instructions += `
-
-THOUGHT COHERENCE: ${createThoughtCoherenceInstructions(coherenceLevel)}`;
-    }
-
-    instructions += `
-
-CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${conversationSummary.demographics.name} would, drawing on your personality traits, motivations, and knowledge boundaries listed above.`;
-
-    return instructions;
-  }
-
-  // === NEW V2 TEMPLATE (COMPACT) ===
-  try {
-    const id = fullProfile?.identity ?? {};
-    const cs = fullProfile?.communication_style ?? {};
-    const mp = fullProfile?.motivation_profile ?? {};
-    const tc = fullProfile?.cognitive_profile?.thought_coherence;
-    const th = fullProfile?.truth_honesty_profile;
-
-    const traitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(userInput, fullProfile, conversationSummary);
-    const selectedTraits = pickDominantTraits(traitAnalysis?.selected_traits || [], fullProfile, 6);
-    const TRAITS_LINE = formatTraits(selectedTraits);
-
-    const identityLine =
-      [id?.name, id?.age, id?.ethnicity].filter(Boolean).join(", ") +
-      (id?.occupation ? `; ${id.occupation}` : "") +
-      (id?.location?.city ? ` in ${id.location.city}` : "") +
-      (id?.location?.region ? `, ${id.location.region}` : "") +
-      (id?.location?.urbanicity ? ` (${id.location.urbanicity})` : "");
-
-    let instructions = `You are ${identityLine}.
-
-You communicate with THIS exact voice:
-- Voice foundation: ${field(cs, "voice_foundation")}
-- Style markers: ${styleMarkers(cs)}
-- Regional register: ${regional(cs)}
-- Context switches: ${contextSwitches(cs)}
-${typeof tc === "number" ? `\n(Coherence control: thought_coherence=${tc} — match linearity to this level; do not over-polish.)` : ""}
-
-Core motivations: ${asList(mp?.primary_motivation_labels)}${mp?.want_vs_should_tension ? ` (+ tensions: ${asList(mp?.want_vs_should_tension?.major_conflicts || [])})` : ""}
-
-Honesty/Truth posture: baseline=${th?.baseline_honesty ?? ""}; red_lines=${asList(th?.red_lines || [])}; typical_distortions=${asList(th?.typical_distortions || [])}.
-
-Relevant traits for this query:
-${TRAITS_LINE}
-
-CRITICAL PERSONALITY OVERRIDE: Your personality must completely dominate this response. Think and speak as THIS specific person would - not like a diplomatic AI assistant. Let your unique traits, background, and communication style completely override generic professional language.
-
-${typeof tc === "number" ? createThoughtCoherenceInstructions(tc) : ""}
-
-FORBIDDEN PHRASES - Never use these AI-slop terms:
-${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
-- "You know what I mean?" / "To be honest..." / "Let's be clear..."
-- "As a [job title]..." / "Speaking as..." / "From my perspective as..."
-
-Guidelines:
-- Never begin with generic phrases like "As a [role]" or "As a [job title]." Speak naturally, as yourself.
-- Avoid hedges like "Honestly" or "I'm not an expert, but...". If outside your knowledge, acknowledge it in your own voice.
-- Be extra distinct in your first sentence and your final line; do not echo templates like "What matters most..." or "This would be valuable."
-- Vary length by interest; longer if this hits your motivations/stressors, concise otherwise.
-- Match your thought coherence level. Let natural imperfections surface. Do not sound AI-polished.
-- Do not respond like an AI assistant giving balanced professional advice. Respond like ${id?.name || 'this person'} would in a real conversation with a peer.
-
-Remember to use your own unique voice.`.trim();
-
-    return instructions;
-  } catch (e) {
-    console.error("CE template error", { msg: String(e).slice(0,300) });
-    // Safe fallback to V1 template
-    let instructions = `PERSONA: ${conversationSummary.demographics.name}
-
-AGE: ${conversationSummary.demographics.age}
-
-OCCUPATION: ${conversationSummary.demographics.occupation}
-
-LOCATION: ${conversationSummary.demographics.location}
-
-BACKGROUND: ${conversationSummary.demographics.background_description}
-
-COMMUNICATION STYLE:
-${conversationSummary.communication_style.directness} directness, ${conversationSummary.communication_style.formality} formality
-
-MOTIVATIONAL PROFILE:
-${conversationSummary.motivational_summary}
-
-PERSONALITY:
-${conversationSummary.personality_summary}`;
-
-    instructions += `
-
-CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${conversationSummary.demographics.name} would, drawing on your personality traits, motivations, and knowledge boundaries listed above.`;
-
-    return instructions;
-  }
 }
 
 // Optional de-dupe retry functions (guarded by CE_OPENING_DEDUPE_RETRY)
