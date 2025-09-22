@@ -426,8 +426,8 @@ class V4TraitRelevanceAnalyzer {
       }
     }
     
-    // Default explanation
-    return `${traitName} (${traitValue}) influences their perspective and response style to this question about ${classification.topics.join(', ')}`;
+    if (traitPath.includes('agreeableness')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
       return `Your ${level} agreeableness (${traitValue}) will determine whether you seek consensus or challenge the idea directly when giving your opinion`;
     }
     
