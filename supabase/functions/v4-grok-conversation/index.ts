@@ -1389,6 +1389,20 @@ function createThoughtCoherenceInstructions(coherenceLevel) {
 
 // Using helper functions from top of file
 
+function extractDemographics(conversationSummary, fullProfile) {
+  // Try conversation summary first, then fallback to full profile
+  const demographics = conversationSummary?.demographics || {};
+  const identity = fullProfile?.identity || {};
+  
+  return {
+    name: demographics.name || identity.name || 'Unknown',
+    age: demographics.age || identity.age || 'Unknown',
+    ethnicity: demographics.ethnicity || identity.ethnicity || 'Unknown', 
+    occupation: demographics.occupation || identity.occupation || 'Unknown',
+    location: demographics.location || identity.location?.city || 'Unknown'
+  };
+}
+
 // V4-Native instruction builder using trait analysis results
 function buildV4NativeInstructions(v4Analysis, conversationSummary, userInput, fullProfile) {
   const demographics = extractDemographics(conversationSummary, fullProfile);
