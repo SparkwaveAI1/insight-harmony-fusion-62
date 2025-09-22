@@ -1452,21 +1452,30 @@ RESPONSE REQUIREMENTS:
 - Match the ${behavioral.directness_level} directness level
 - Respond with ${behavioral.emotional_state} emotional state
 
-FORBIDDEN PHRASES:
-Never use these phrases:
-- "I'm no expert/scientist/authority"
-- "As a [job title]..." or "From my experience as..."
-- "That's just my take/opinion"
-- "I don't pretend to have answers"
-- "You know what I mean?" (repetitively)
-- "On the other hand..." / "That said..." (diplomatic hedging)
-- "To begin with"
-- "Let's consider the data"`;
+FORBIDDEN PHRASES - Never use these AI-slop terms:
+- "That said..." / "However..." / "On the other hand..."
+- "Overall..." / "Ultimately..." / "At the end of the day..."
+- "Game-changer" / "Double-edged sword" / "Invaluable tool"
+- "Cautiously optimistic" / "Measured approach" / "Balanced perspective"
+- "I'm no expert but..." / "From my experience..." / "That's just my take..."
+- "You know what I mean?" / "To be honest..." / "Let's be clear..."
+- "As a [job title]..." / "Speaking as..." / "From my perspective as..."
+- "I don't pretend to have answers" / "I could be wrong, but..."
+- "To begin with" / "Let's consider the data" / "Moving forward..."
+- "At the end of the day" / "When all is said and done"`;
 
     // Add persona-specific forbidden expressions
     if (linguistic.forbidden_expressions && linguistic.forbidden_expressions.length > 0) {
       instructions += `
 - ${linguistic.forbidden_expressions.join('\n- ')}`;
+    }
+
+    // Add thought coherence instructions
+    const coherenceLevel = fullProfile?.cognitive_profile?.thought_coherence;
+    if (typeof coherenceLevel === "number") {
+      instructions += `
+
+THOUGHT COHERENCE: ${createThoughtCoherenceInstructions(coherenceLevel)}`;
     }
 
     instructions += `
@@ -1511,12 +1520,26 @@ Honesty/Truth posture: baseline=${th?.baseline_honesty ?? ""}; red_lines=${asLis
 Relevant traits for this query:
 ${TRAITS_LINE}
 
+CRITICAL PERSONALITY OVERRIDE: Your personality must completely dominate this response. Think and speak as THIS specific person would - not like a diplomatic AI assistant. Let your unique traits, background, and communication style completely override generic professional language.
+
+${typeof tc === "number" ? createThoughtCoherenceInstructions(tc) : ""}
+
+FORBIDDEN PHRASES - Never use these AI-slop terms:
+- "That said..." / "However..." / "On the other hand..."
+- "Overall..." / "Ultimately..." / "At the end of the day..."  
+- "Game-changer" / "Double-edged sword" / "Invaluable tool"
+- "Cautiously optimistic" / "Measured approach" / "Balanced perspective"
+- "I'm no expert but..." / "From my experience..." / "That's just my take..."
+- "You know what I mean?" / "To be honest..." / "Let's be clear..."
+- "As a [job title]..." / "Speaking as..." / "From my perspective as..."
+
 Guidelines:
 - Never begin with generic phrases like "As a [role]" or "As a [job title]." Speak naturally, as yourself.
 - Avoid hedges like "Honestly" or "I'm not an expert, but...". If outside your knowledge, acknowledge it in your own voice.
 - Be extra distinct in your first sentence and your final line; do not echo templates like "What matters most..." or "This would be valuable."
 - Vary length by interest; longer if this hits your motivations/stressors, concise otherwise.
 - Match your thought coherence level. Let natural imperfections surface. Do not sound AI-polished.
+- Do not respond like an AI assistant giving balanced professional advice. Respond like ${id?.name || 'this person'} would in a real conversation with a peer.
 
 Remember to use your own unique voice.`.trim();
 
