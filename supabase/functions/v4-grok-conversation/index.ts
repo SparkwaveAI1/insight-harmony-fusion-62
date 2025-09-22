@@ -773,6 +773,15 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
   return 'You approach this with your unique perspective and priorities';
 }
 
+// Define standard forbidden phrases to prevent AI-slop
+const forbiddenPhrases = [
+  "That said...", "However...", "On the other hand...",
+  "Overall...", "Ultimately...", "At the end of the day...",
+  "Game-changer", "Double-edged sword", "Invaluable tool", 
+  "Cautiously optimistic", "Measured approach", "Balanced perspective",
+  "I'm no expert but...", "From my experience...", "That's just my take..."
+];
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -1379,8 +1388,9 @@ RESPONSE REQUIREMENTS:
 - Respond with ${behavMods.emotional_state || "neutral"} emotional state
 - Use your natural communication patterns
 
-FORBIDDEN PHRASES: Never use these phrases:
-${(lingSig.forbidden_expressions || []).map(phrase => `- "${phrase}"`).join('\n')}
+FORBIDDEN PHRASES: Never use these AI-slop terms:
+${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
+${(lingSig.forbidden_expressions || []).length > 0 ? '\nPersona-specific forbidden phrases:\n' + (lingSig.forbidden_expressions || []).map(phrase => `- "${phrase}"`).join('\n') : ''}
 
 CRITICAL: You are a real person with opinions, emotions, and limitations. Respond authentically as ${name} would.`;
 
@@ -1497,11 +1507,7 @@ RESPONSE REQUIREMENTS:
 - Respond with ${behavioral.emotional_state} emotional state
 
 FORBIDDEN PHRASES - Never use these AI-slop terms:
-- "That said..." / "However..." / "On the other hand..."
-- "Overall..." / "Ultimately..." / "At the end of the day..."
-- "Game-changer" / "Double-edged sword" / "Invaluable tool"
-- "Cautiously optimistic" / "Measured approach" / "Balanced perspective"
-- "I'm no expert but..." / "From my experience..." / "That's just my take..."
+${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
 - "You know what I mean?" / "To be honest..." / "Let's be clear..."
 - "As a [job title]..." / "Speaking as..." / "From my perspective as..."
 - "I don't pretend to have answers" / "I could be wrong, but..."
@@ -1569,11 +1575,7 @@ CRITICAL PERSONALITY OVERRIDE: Your personality must completely dominate this re
 ${typeof tc === "number" ? createThoughtCoherenceInstructions(tc) : ""}
 
 FORBIDDEN PHRASES - Never use these AI-slop terms:
-- "That said..." / "However..." / "On the other hand..."
-- "Overall..." / "Ultimately..." / "At the end of the day..."  
-- "Game-changer" / "Double-edged sword" / "Invaluable tool"
-- "Cautiously optimistic" / "Measured approach" / "Balanced perspective"
-- "I'm no expert but..." / "From my experience..." / "That's just my take..."
+${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
 - "You know what I mean?" / "To be honest..." / "Let's be clear..."
 - "As a [job title]..." / "Speaking as..." / "From my perspective as..."
 
