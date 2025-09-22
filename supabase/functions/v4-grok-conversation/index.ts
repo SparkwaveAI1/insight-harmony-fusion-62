@@ -744,25 +744,7 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
   return chosen.slice(0, Math.min(k, 6));
 }
 
-// Safety switches removed - using declarations from top of file
-
-// Helper functions for trait formatting
-function formatTraits(dominant: any[]): string {
-  return dominant.map(t => {
-    const cat = t.category || "trait";
-    const label = t.label || t.name || t.key || t.trait || "trait";
-    const val = typeof t.value === "number" ? ` = ${t.value}` : (t.value ? `: ${t.value}` : "");
-    return `(${cat}) ${label}${val}`;
-  }).join("; ");
-}
-
-function safe(s: any): string { 
-  return (s === null || s === undefined) ? "" : String(s); 
-}
-
-function list(arr: any): string { 
-  return Array.isArray(arr) ? arr.join("; ") : ""; 
-}
+// Using helper functions from top of file
 
 // V4-Native instruction builder using trait analysis results
 function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, userInput: string, fullProfile: any): string {
