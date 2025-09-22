@@ -220,58 +220,32 @@ class V4TraitRelevanceAnalyzer {
     return 'general';
   }
 
+  static flattenPersonaProfile(fullProfile) {
+    const traits = [];
+    
+    function extractTraits(obj, prefix = '') {
+      for (const [key, value] of Object.entries(obj)) {
+        const path = prefix ? `${prefix}.${key}` : key;
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          extractTraits(value, path);
+        } else if (value !== null && value !== undefined && value !== '') {
+          traits.push({ path, value });
+        }
+      }
+    }
+    
+    extractTraits(fullProfile);
+    return traits;
+  }
+
   static selectDomainRelevantTraits(userInput, fullProfile, domain, classification) {
     const selectedTraits = [];
     
-    // ALL possible trait paths to scan
-    const allTraitPaths = [
-      // Identity & Demographics
-      'identity.occupation', 'identity.age', 'identity.education_level', 'identity.location',
-      
-      // Personality & Psychology
-      'big_five.openness', 'big_five.conscientiousness', 'big_five.extraversion', 
-      'big_five.agreeableness', 'big_five.neuroticism',
-      
-      // Cognitive Profile - ALWAYS INCLUDE thought_coherence
-      'cognitive_profile.thought_coherence', 'cognitive_profile.verbal_fluency', 
-      'cognitive_profile.abstract_reasoning', 'cognitive_profile.problem_solving_orientation',
-      
-      // Emotional Profile
-      'emotional_profile.stress_responses', 'emotional_profile.emotional_regulation',
-      'emotional_profile.negative_triggers', 'emotional_profile.positive_triggers',
-      
-      // Communication Style
-      'communication_style.voice_foundation.directness', 'communication_style.voice_foundation.formality',
-      'communication_style.voice_foundation.empathy_level', 'communication_style.voice_foundation.honesty_style',
-      'communication_style.style_markers.humor_style', 'communication_style.style_markers.metaphor_domains',
-      'communication_style.context_switches.work', 'communication_style.context_switches.home',
-      
-      // Motivation & Values
-      'motivation_profile.primary_drivers.care', 'motivation_profile.primary_drivers.mastery',
-      'motivation_profile.primary_drivers.meaning', 'motivation_profile.primary_drivers.security',
-      'motivation_profile.deal_breakers', 'motivation_profile.goal_orientation',
-      
-      // Money & Financial
-      'money_profile.attitude_toward_money', 'money_profile.spending_style',
-      'money_profile.financial_stressors', 'money_profile.generosity_profile',
-      
-      // Truth & Honesty
-      'truth_honesty_profile.baseline_honesty', 'truth_honesty_profile.situational_variance',
-      'truth_honesty_profile.typical_distortions',
-      
-      // Knowledge & Expertise
-      'knowledge_profile.expertise_domains', 'adoption_profile.buyer_power',
-      'adoption_profile.risk_tolerance', 'adoption_profile.change_friction',
-      
-      // Narratives & Attitudes
-      'attitude_narrative', 'political_narrative',
-      
-      // Bias Profile
-      'bias_profile.cognitive.confirmation', 'bias_profile.cognitive.overconfidence',
-      'bias_profile.cognitive.loss_aversion', 'bias_profile.cognitive.optimism'
-    ];
+    // Extract ALL traits from the full persona profile
+    const allTraits = this.flattenPersonaProfile(fullProfile);
     
-    // ALWAYS include thought_coherence first
+    // ALWAYS include thought_coherence first if it exists
     const thoughtCoherence = this.getNestedValue(fullProfile, 'cognitive_profile.thought_coherence');
     if (thoughtCoherence !== null && thoughtCoherence !== undefined) {
       selectedTraits.push({
@@ -282,11 +256,10 @@ class V4TraitRelevanceAnalyzer {
       });
     }
     
-    // Scan ALL traits and calculate relevance
-    for (const path of allTraitPaths) {
+    // Score ALL extracted traits using existing relevance logic
+    for (const { path, value } of allTraits) {
       if (path === 'cognitive_profile.thought_coherence') continue; // Already added
       
-      const value = this.getNestedValue(fullProfile, path);
       if (value !== null && value !== undefined && value !== '') {
         const relevanceScore = this.calculateContextualRelevance(userInput, path, value, domain, classification);
         if (relevanceScore > 0.3) { // Higher threshold for quality
