@@ -843,7 +843,7 @@ CRITICAL: You are a real person with opinions, emotions, and limitations. Respon
 
   // NEW V2 TEMPLATE
   // Get traits using existing analyzer and limit to 4-6 (reuse pickDominantTraits)
-  const dominant = pickDominantTraits(selectedTraits || []);
+  const dominant = pickDominantTraits(selectedTraits || [], fullProfile, 6);
   const CE_SELECTED_TRAITS_LINE = formatTraits(dominant);
 
   // Pull fields from persona JSON with null-guards
@@ -911,7 +911,7 @@ async function callGrokWithOpeningGuard(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'grok-beta',
+      model: Deno.env.get("GROK_MODEL") ?? "grok-4-latest",
       messages: messages,
       temperature: 0.4,
     }),
@@ -950,7 +950,7 @@ async function callGrokWithOpeningGuard(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: Deno.env.get("GROK_MODEL") ?? "grok-4-latest",
         messages: retryMessages,
         temperature: 0.4,
       }),
@@ -1205,7 +1205,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'grok-4-latest',
+          model: Deno.env.get("GROK_MODEL") ?? "grok-4-latest",
           messages: messages,
           stream: false,
           temperature: 0.4
