@@ -744,9 +744,7 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
   return chosen.slice(0, Math.min(k, 6));
 }
 
-// Safety switches (default "on" if missing)
-const CE_PROMPT_V2 = Deno.env.get('CE_PROMPT_V2') !== "false";
-const CE_OPENING_DEDUPE_RETRY = Deno.env.get('CE_OPENING_DEDUPE_RETRY') !== "false";
+// Safety switches removed - using declarations from top of file
 
 // Helper functions for trait formatting
 function formatTraits(dominant: any[]): string {
