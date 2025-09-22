@@ -223,114 +223,211 @@ class V4TraitRelevanceAnalyzer {
   static selectDomainRelevantTraits(userInput, fullProfile, domain, classification) {
     const selectedTraits = [];
     
-    // Define domain-specific trait priorities
-    const domainTraitMap = {
-      'professional': [
-        'identity.occupation',
-        'knowledge_profile.expertise_domains',
-        'attitude_narrative',
-        'emotional_profile.stress_responses',
-        'communication_style.context_switches.work'
-      ],
-      'values': [
-        'attitude_narrative',
-        'political_narrative', 
-        'motivation_profile.primary_drivers.meaning',
-        'motivation_profile.deal_breakers',
-        'truth_honesty_profile.baseline_honesty'
-      ],
-      'social_political': [
-        'political_narrative',
-        'attitude_narrative',
-        'identity_salience.political_identity',
-        'motivation_profile.primary_drivers.care',
-        'emotional_profile.negative_triggers'
-      ],
-      'financial': [
-        'money_profile.attitude_toward_money',
-        'money_profile.spending_style',
-        'money_profile.financial_stressors',
-        'motivation_profile.primary_drivers.security',
-        'money_profile.generosity_profile'
-      ],
-      'personal': [
-        'relationships.household',
-        'emotional_profile.emotional_regulation',
-        'motivation_profile.primary_drivers.family',
-        'daily_life.mental_preoccupations',
-        'health_profile'
-      ],
-      'general': [
-        'attitude_narrative',
-        'communication_style.voice_foundation',
-        'emotional_profile.emotional_regulation',
-        'motivation_profile.primary_drivers',
-        'personality_summary'
-      ]
-    };
-
-    const priorityPaths = domainTraitMap[domain] || domainTraitMap['general'];
+    // ALL possible trait paths to scan
+    const allTraitPaths = [
+      // Identity & Demographics
+      'identity.occupation', 'identity.age', 'identity.education_level', 'identity.location',
+      
+      // Personality & Psychology
+      'big_five.openness', 'big_five.conscientiousness', 'big_five.extraversion', 
+      'big_five.agreeableness', 'big_five.neuroticism',
+      
+      // Cognitive Profile - ALWAYS INCLUDE thought_coherence
+      'cognitive_profile.thought_coherence', 'cognitive_profile.verbal_fluency', 
+      'cognitive_profile.abstract_reasoning', 'cognitive_profile.problem_solving_orientation',
+      
+      // Emotional Profile
+      'emotional_profile.stress_responses', 'emotional_profile.emotional_regulation',
+      'emotional_profile.negative_triggers', 'emotional_profile.positive_triggers',
+      
+      // Communication Style
+      'communication_style.voice_foundation.directness', 'communication_style.voice_foundation.formality',
+      'communication_style.voice_foundation.empathy_level', 'communication_style.voice_foundation.honesty_style',
+      'communication_style.style_markers.humor_style', 'communication_style.style_markers.metaphor_domains',
+      'communication_style.context_switches.work', 'communication_style.context_switches.home',
+      
+      // Motivation & Values
+      'motivation_profile.primary_drivers.care', 'motivation_profile.primary_drivers.mastery',
+      'motivation_profile.primary_drivers.meaning', 'motivation_profile.primary_drivers.security',
+      'motivation_profile.deal_breakers', 'motivation_profile.goal_orientation',
+      
+      // Money & Financial
+      'money_profile.attitude_toward_money', 'money_profile.spending_style',
+      'money_profile.financial_stressors', 'money_profile.generosity_profile',
+      
+      // Truth & Honesty
+      'truth_honesty_profile.baseline_honesty', 'truth_honesty_profile.situational_variance',
+      'truth_honesty_profile.typical_distortions',
+      
+      // Knowledge & Expertise
+      'knowledge_profile.expertise_domains', 'adoption_profile.buyer_power',
+      'adoption_profile.risk_tolerance', 'adoption_profile.change_friction',
+      
+      // Narratives & Attitudes
+      'attitude_narrative', 'political_narrative',
+      
+      // Bias Profile
+      'bias_profile.cognitive.confirmation', 'bias_profile.cognitive.overconfidence',
+      'bias_profile.cognitive.loss_aversion', 'bias_profile.cognitive.optimism'
+    ];
     
-    // Select traits based on domain priority and actual content
-    for (const path of priorityPaths) {
+    // ALWAYS include thought_coherence first
+    const thoughtCoherence = this.getNestedValue(fullProfile, 'cognitive_profile.thought_coherence');
+    if (thoughtCoherence !== null && thoughtCoherence !== undefined) {
+      selectedTraits.push({
+        trait: 'cognitive_profile.thought_coherence',
+        score: 1.0, // Always highest priority
+        relevance_reason: `Thought coherence (${thoughtCoherence}) affects how clearly and logically this person processes and expresses complex ideas like AI in healthcare`,
+        data_value: thoughtCoherence
+      });
+    }
+    
+    // Scan ALL traits and calculate relevance
+    for (const path of allTraitPaths) {
+      if (path === 'cognitive_profile.thought_coherence') continue; // Already added
+      
       const value = this.getNestedValue(fullProfile, path);
-      if (value && value !== '' && value !== null && value !== undefined) {
-        const relevanceScore = this.calculateQualitativeRelevance(userInput, path, value);
-        if (relevanceScore > 0.2) {
+      if (value !== null && value !== undefined && value !== '') {
+        const relevanceScore = this.calculateContextualRelevance(userInput, path, value, domain, classification);
+        if (relevanceScore > 0.3) { // Higher threshold for quality
           selectedTraits.push({
             trait: path,
             score: relevanceScore,
-            relevance_reason: this.getQualitativeRelevanceReason(userInput, path, value, domain),
+            relevance_reason: this.getDetailedRelevanceReason(userInput, path, value, domain, classification),
             data_value: value
           });
         }
       }
     }
     
-    // Sort by relevance and return top 5
+    // Sort by relevance and return top 6 (including thought_coherence)
     selectedTraits.sort((a, b) => b.score - a.score);
-    return selectedTraits.slice(0, 5);
+    return selectedTraits.slice(0, 6);
   }
 
-  static calculateQualitativeRelevance(userInput, traitPath, traitValue) {
+  static calculateContextualRelevance(userInput, traitPath, traitValue, domain, classification) {
     const input = userInput.toLowerCase();
     const pathParts = traitPath.toLowerCase().split('.');
     let score = 0;
     
-    // Path keyword matching
-    const inputWords = input.split(/\s+/).filter(word => word.length > 2);
-    const pathMatches = pathParts.filter(part => 
-      inputWords.some(word => word.includes(part) || part.includes(word))
-    );
+    // Question topic analysis
+    const questionTopics = {
+      technology: ['ai', 'technology', 'tech', 'artificial', 'intelligence', 'digital', 'automation'],
+      healthcare: ['medical', 'health', 'doctor', 'patient', 'diagnosis', 'radiology', 'hospital'],
+      professional: ['work', 'job', 'career', 'professional', 'workplace', 'business'],
+      opinion: ['think', 'feel', 'opinion', 'view', 'believe', 'perspective'],
+      ethics: ['ethical', 'moral', 'right', 'wrong', 'should', 'responsibility'],
+      risk: ['risk', 'danger', 'safe', 'concern', 'worry', 'cautious']
+    };
     
-    if (pathMatches.length > 0) {
-      score += 0.7;
+    // Trait relevance by question context
+    const traitRelevanceMap = {
+      // For AI/technology questions
+      'cognitive_profile.abstract_reasoning': () => input.includes('ai') || input.includes('technology') ? 0.9 : 0.3,
+      'adoption_profile.risk_tolerance': () => questionTopics.technology.some(t => input.includes(t)) ? 0.8 : 0.2,
+      'bias_profile.cognitive.overconfidence': () => input.includes('ai') && input.includes('replace') ? 0.7 : 0.2,
+      
+      // For professional contexts
+      'identity.occupation': () => questionTopics.healthcare.some(t => input.includes(t)) ? 0.9 : 0.3,
+      'knowledge_profile.expertise_domains': () => questionTopics.professional.some(t => input.includes(t)) ? 0.8 : 0.3,
+      'communication_style.context_switches.work': () => questionTopics.professional.some(t => input.includes(t)) ? 0.7 : 0.2,
+      
+      // For opinion/values questions  
+      'truth_honesty_profile.baseline_honesty': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.8 : 0.3,
+      'attitude_narrative': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.9 : 0.4,
+      'motivation_profile.primary_drivers.meaning': () => questionTopics.ethics.some(t => input.includes(t)) ? 0.8 : 0.3,
+      
+      // For emotional responses
+      'emotional_profile.stress_responses': () => questionTopics.risk.some(t => input.includes(t)) ? 0.8 : 0.2,
+      'emotional_profile.negative_triggers': () => input.includes('frustrat') || input.includes('concern') ? 0.7 : 0.2,
+      'emotional_profile.positive_triggers': () => input.includes('excit') || input.includes('thrill') ? 0.7 : 0.2,
+      
+      // Communication traits - higher for opinion questions
+      'communication_style.voice_foundation.directness': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.6 : 0.3,
+      'communication_style.style_markers.metaphor_domains': () => 0.5, // Always somewhat relevant
+      
+      // Default scoring
+      'default': () => 0.3
+    };
+    
+    // Calculate trait-specific relevance
+    const relevanceFunc = traitRelevanceMap[traitPath] || traitRelevanceMap['default'];
+    score = relevanceFunc();
+    
+    // Boost for high-value traits
+    if (typeof traitValue === 'number' && (traitValue > 0.7 || traitValue < 0.3)) {
+      score += 0.2; // Extreme values are more interesting
     }
     
-    // Content relevance for key traits
-    if (typeof traitValue === 'string' && traitValue.length > 0) {
-      const contentWords = traitValue.toLowerCase().split(/\s+/);
-      const contentMatches = inputWords.filter(word => 
-        contentWords.some(contentWord => contentWord.includes(word) || word.includes(contentWord))
-      );
-      
-      if (contentMatches.length > 0) {
-        score += 0.3 * (contentMatches.length / inputWords.length);
-      }
+    // Boost for rich content
+    if (typeof traitValue === 'string' && traitValue.length > 50) {
+      score += 0.1;
     }
     
     return Math.min(score, 1.0);
   }
 
-  static getQualitativeRelevanceReason(userInput, traitPath, traitValue, domain) {
-    const pathParts = traitPath.split('.');
-    const category = pathParts[0];
-    const trait = pathParts[pathParts.length - 1];
+  static getDetailedRelevanceReason(userInput, traitPath, traitValue, domain, classification) {
     const input = userInput.toLowerCase();
+    const traitName = traitPath.split('.').pop();
     
-    // Generate detailed, insightful explanations based on specific traits and user input
-    if (traitPath.includes('agreeableness')) {
-      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+    // AI/Technology context explanations
+    if (input.includes('ai') || input.includes('technology')) {
+      if (traitPath.includes('thought_coherence')) {
+        return `Thought coherence (${traitValue}) determines how logically and clearly this person processes complex technical concepts and articulates nuanced views about AI's implications`;
+      }
+      if (traitPath.includes('risk_tolerance')) {
+        return `Risk tolerance (${traitValue}) directly affects how this person weighs AI's potential benefits against its dangers and uncertainties`;
+      }
+      if (traitPath.includes('abstract_reasoning')) {
+        return `Abstract reasoning (${traitValue}) influences their ability to conceptualize AI's broader implications beyond immediate applications`;
+      }
+      if (traitPath.includes('overconfidence')) {
+        return `Overconfidence bias (${traitValue}) affects whether they might overestimate or underestimate AI's current capabilities`;
+      }
+    }
+    
+    // Professional/Medical context
+    if (input.includes('radiology') || input.includes('medical')) {
+      if (traitPath.includes('occupation')) {
+        return `Professional identity as ${traitValue} directly shapes their expert perspective on AI's role in their field`;
+      }
+      if (traitPath.includes('expertise_domains')) {
+        return `Their expertise in ${traitValue} provides informed context for evaluating AI's practical applications and limitations`;
+      }
+      if (traitPath.includes('stress_responses')) {
+        return `Stress response patterns (${traitValue}) influence how they react to AI potentially changing their professional workflow and responsibilities`;
+      }
+    }
+    
+    // Opinion/Values context
+    if (input.includes('think') || input.includes('feel') || input.includes('opinion')) {
+      if (traitPath.includes('attitude_narrative')) {
+        return `Their core attitudes (${traitValue}) fundamentally shape how they interpret and respond to new technological developments`;
+      }
+      if (traitPath.includes('baseline_honesty')) {
+        return `Honesty level (${traitValue}) affects how candidly they express reservations or enthusiasm versus giving socially expected responses`;
+      }
+      if (traitPath.includes('directness')) {
+        return `Communication directness (${traitValue}) determines whether they'll express opinions bluntly or diplomatically`;
+      }
+    }
+    
+    // Emotional response context
+    if (input.includes('excit') || input.includes('concern') || input.includes('frustrat')) {
+      if (traitPath.includes('positive_triggers')) {
+        return `Positive emotional triggers (${traitValue}) explain what aspects of AI generate genuine excitement and optimism`;
+      }
+      if (traitPath.includes('negative_triggers')) {
+        return `Negative emotional triggers (${traitValue}) reveal what specific AI concerns activate their worry or frustration`;
+      }
+      if (traitPath.includes('emotional_regulation')) {
+        return `Emotional regulation (${traitValue}) affects how they balance and express conflicting feelings about AI's promise and risks`;
+      }
+    }
+    
+    // Default explanation
+    return `${traitName} (${traitValue}) influences their perspective and response style to this question about ${classification.topics.join(', ')}`;
       return `Your ${level} agreeableness (${traitValue}) will determine whether you seek consensus or challenge the idea directly when giving your opinion`;
     }
     
