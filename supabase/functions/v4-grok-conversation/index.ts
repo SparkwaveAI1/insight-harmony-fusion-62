@@ -975,6 +975,135 @@ function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any
   return chosen.slice(0, Math.min(k, 6));
 }
 
+// Communication Style Translator - converts JSON to natural language instructions
+function translateCommunicationStyle(communicationStyle, demographics) {
+  const instructions = [];
+  
+  // Voice Foundation Translation
+  const voice = communicationStyle?.voice_foundation || {};
+  if (voice.directness === "high") {
+    instructions.push("Be direct and straightforward - avoid diplomatic hedging.");
+  } else if (voice.directness === "low") {
+    instructions.push("Be gentle and indirect - soften opinions with qualifying language.");
+  } else if (voice.directness === "moderate") {
+    instructions.push("Balance directness with diplomacy - be clear but tactful.");
+  }
+  
+  if (voice.formality === "high" || voice.formality === "formal") {
+    instructions.push("Use professional language and complete sentences.");
+  } else if (voice.formality === "low" || voice.formality === "casual") {
+    instructions.push("Use conversational, relaxed language.");
+  }
+  
+  if (voice.pace_rhythm) {
+    if (voice.pace_rhythm.includes("measured")) {
+      instructions.push("Speak with measured, deliberate pacing - use longer sentences.");
+    } else if (voice.pace_rhythm.includes("brisk") || voice.pace_rhythm.includes("quick")) {
+      instructions.push("Respond briskly with shorter, punchy sentences.");
+    } else if (voice.pace_rhythm.includes("steady")) {
+      instructions.push("Maintain steady, consistent pacing.");
+    }
+  }
+  
+  if (voice.honesty_style) {
+    if (voice.honesty_style.includes("frank")) {
+      instructions.push("Be frankly honest - express genuine views without sugar-coating.");
+    } else if (voice.honesty_style.includes("tactful") || voice.honesty_style.includes("diplomatic")) {
+      instructions.push("Express honesty diplomatically - be truthful but considerate.");
+    } else if (voice.honesty_style.includes("precise")) {
+      instructions.push("Be precise and accurate in your statements.");
+    }
+  }
+  
+  if (typeof voice.empathy_level === "number") {
+    if (voice.empathy_level >= 0.8) {
+      instructions.push("Show high empathy - acknowledge emotional aspects and consider others' feelings.");
+    } else if (voice.empathy_level <= 0.3) {
+      instructions.push("Focus on facts over emotions - keep responses logical and practical.");
+    }
+  }
+  
+  // Style Markers Translation
+  const style = communicationStyle?.style_markers || {};
+  if (style.humor_style && style.humor_style !== "none" && style.humor_style !== "dry") {
+    if (style.humor_style === "observational") {
+      instructions.push("Use observational humor naturally when appropriate.");
+    } else if (style.humor_style === "wry") {
+      instructions.push("Employ wry, understated humor occasionally.");
+    } else if (style.humor_style === "self-deprecating") {
+      instructions.push("Use light self-deprecating humor when natural.");
+    }
+  }
+  
+  if (style.metaphor_domains && style.metaphor_domains.length > 0) {
+    const domains = style.metaphor_domains.slice(0, 3).join(", "); // Limit to 3 for brevity
+    instructions.push(`Draw metaphors from: ${domains} when explaining concepts.`);
+  }
+  
+  if (typeof style.storytelling_vs_bullets === "number") {
+    if (style.storytelling_vs_bullets >= 0.7) {
+      instructions.push("Favor narrative explanations over bullet points - tell mini-stories.");
+    } else if (style.storytelling_vs_bullets <= 0.3) {
+      instructions.push("Keep responses structured and bullet-pointed - avoid long narratives.");
+    }
+  }
+  
+  // Regional/Cultural Markers
+  const regional = communicationStyle?.regional_register || {};
+  if (regional.dialect_hints && regional.dialect_hints.length > 0) {
+    const culturalMarkers = [];
+    
+    regional.dialect_hints.forEach(hint => {
+      if (hint.includes("Eastern European")) {
+        culturalMarkers.push("slight formal precision in language");
+      } else if (hint.includes("Southern")) {
+        culturalMarkers.push("warm, measured speech patterns");
+      } else if (hint.includes("Japanese")) {
+        culturalMarkers.push("formal, respectful expression");
+      } else if (hint.includes("formal")) {
+        culturalMarkers.push("formal written expression");
+      }
+    });
+    
+    if (culturalMarkers.length > 0) {
+      instructions.push(`Cultural speech patterns: ${culturalMarkers.join(", ")}.`);
+    }
+  }
+  
+  // Context Switches for Professional Setting
+  const workContext = communicationStyle?.context_switches?.work || {};
+  if (workContext.formality && workContext.directness) {
+    instructions.push(`In professional contexts: use ${workContext.formality} formality with ${workContext.directness} directness.`);
+  }
+  
+  // Authenticity Filters
+  const auth = communicationStyle?.authenticity_filters || {};
+  if (auth.avoid_registers && auth.avoid_registers.length > 0) {
+    const avoidances = auth.avoid_registers.slice(0, 2).join(" and ");
+    instructions.push(`Avoid: ${avoidances}.`);
+  }
+  
+  // Professional Communication Patterns
+  if (demographics?.occupation) {
+    if (demographics.occupation.toLowerCase().includes("doctor") || demographics.occupation.toLowerCase().includes("radiologist")) {
+      instructions.push("Use medical professional communication - precise, evidence-based language.");
+    } else if (demographics.occupation.toLowerCase().includes("engineer")) {
+      instructions.push("Communicate with engineering precision - systematic, logical explanations.");
+    }
+  }
+  
+  // Cultural Background Integration
+  if (demographics?.ethnicity) {
+    if (demographics.ethnicity.toLowerCase().includes("bulgarian")) {
+      instructions.push("Speak with Eastern European directness balanced by professional courtesy.");
+    } else if (demographics.ethnicity.toLowerCase().includes("japanese")) {
+      instructions.push("Maintain Japanese cultural values of respect and measured precision.");
+    }
+  }
+  
+  return instructions.filter(Boolean).join(" ");
+}
+
 // Helper function to provide behavioral guidance for traits
 function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain: string): string | null {
   // Only provide guidance if we can be specific about the trait's impact
@@ -1153,6 +1282,9 @@ function buildV4NativeInstructions(v4Analysis: any, conversationSummary: any, us
     return traitSection;
   }).join('\n\n');
 
+  // Translate communication style to natural language instructions
+  const voiceInstructions = translateCommunicationStyle(fullProfile?.communication_style, demographics);
+
   const instructions = `PERSONA IDENTITY: You are ${name}, a ${demographics.age}-year-old ${demographics.gender} ${demographics.occupation} living in ${demographics.location}.
 
 CORE DEMOGRAPHICS:
@@ -1164,19 +1296,7 @@ CORE DEMOGRAPHICS:
 - Relationship Status: ${demographics.relationship_status}
 - Dependents: ${demographics.dependents}
 
-COMMUNICATION STYLE (COMPREHENSIVE):
-- Directness Level: ${commStyle.directness}
-- Formality: ${commStyle.formality}
-- Emotional State: ${behavMods.emotional_state || "neutral"}
-- Pace/Rhythm: ${commStyle.pace_rhythm}
-- Regional Style: ${commStyle.regional}
-${fullProfile?.communication_style ? `
-ADVANCED LANGUAGE PATTERNS:
-- Voice Foundation: ${JSON.stringify(fullProfile.communication_style.voice_foundation || {})}
-- Style Markers: ${JSON.stringify(fullProfile.communication_style.style_markers || {})}
-- Context Switches: ${JSON.stringify(fullProfile.communication_style.context_switches || {})}
-- Regional Register: ${JSON.stringify(fullProfile.communication_style.regional_register || {})}
-- Authenticity Filters: ${JSON.stringify(fullProfile.communication_style.authenticity_filters || {})}` : ''}
+VOICE INSTRUCTIONS: ${voiceInstructions}
 ${(lingSig.signature_phrases && lingSig.signature_phrases.length > 0) ? `
 SIGNATURE PHRASES: Use these naturally when appropriate: ${lingSig.signature_phrases.join(', ')}` : ''}
 ${(lingSig.sentence_patterns && lingSig.sentence_patterns.length > 0) ? `
