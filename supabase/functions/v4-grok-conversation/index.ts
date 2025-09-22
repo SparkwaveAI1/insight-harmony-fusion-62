@@ -773,6 +773,46 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
   return 'You approach this with your unique perspective and priorities';
 }
 
+// Specific Opinion Synthesis Engine
+function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
+  const traitMap = {};
+  selectedTraits.forEach(trait => {
+    traitMap[trait.trait] = trait.value;
+  });
+  
+  const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
+  const lossAversion = traitMap['bias_profile.cognitive.loss_aversion'] || 0.5;
+  const changeResistance = traitMap['adoption_profile.change_friction'] || 0.5;
+  const occupation = demographics.occupation || '';
+  const honesty = traitMap['truth_honesty_profile.baseline_honesty'] || 0.7;
+  
+  // Create specific stance based on trait combination
+  let opinionElements = [];
+  
+  // Risk assessment approach
+  if (riskTolerance < 0.4 && lossAversion > 0.7) {
+    opinionElements.push("you're deeply concerned about potential risks and implementation costs");
+  } else if (riskTolerance > 0.7) {
+    opinionElements.push("you see significant opportunities and favor moving forward with proper safeguards");
+  } else {
+    opinionElements.push("you see both potential benefits and legitimate concerns");
+  }
+  
+  // Change approach
+  if (changeResistance > 0.7) {
+    opinionElements.push("you want extensive proof and validation before changing current methods");
+  }
+  
+  // Professional perspective
+  if (occupation.toLowerCase().includes('director') || occupation.toLowerCase().includes('executive')) {
+    opinionElements.push("you're focused on operational impact, staff training, and organizational changes");
+  } else if (occupation.toLowerCase().includes('business')) {
+    opinionElements.push("you're evaluating ROI, cost-benefit ratios, and business implications");
+  }
+  
+  return `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
+}
+
 // Define standard forbidden phrases to prevent AI-slop
 const forbiddenPhrases = [
   "That said...", "However...", "On the other hand...",
