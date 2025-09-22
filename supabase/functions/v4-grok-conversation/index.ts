@@ -458,28 +458,8 @@ class V4TraitRelevanceAnalyzer {
     
     // Fallback with more insight
     const valueDescription = typeof traitValue === 'object' ? 'complex profile' : `value: ${traitValue}`;
-    return `This ${category} trait (${valueDescription}) provides contextual influence on your ${domain} perspective and response style`;
-  }
-
-  static calculateTraitRelevance(userInput, traitPath, fullProfile) {
-    let score = 0;
-
-    // Check context relevance
-    const hasContextMatch = traitPath.contexts.includes('all') || 
-      traitPath.contexts.some(context => userInput.includes(context));
-
-    if (hasContextMatch) {
-      score += traitPath.weight * 0.7;
-    }
-
-    // Check for keyword matches in trait content
-    const traitValue = this.getNestedValue(fullProfile, traitPath.path);
-    if (traitValue) {
-      const contentMatch = this.checkContentRelevance(userInput, traitValue);
-      score += contentMatch * 0.3;
-    }
-
-    return Math.min(score, 1.0);
+    const traitCategory = traitPath.split('.')[0] || 'personality';
+    return `This ${traitCategory} trait (${valueDescription}) provides contextual influence on your ${domain} perspective and response style`;
   }
 
   static checkContentRelevance(userInput, traitValue) {
@@ -567,18 +547,6 @@ class V4TraitRelevanceAnalyzer {
     return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
-  }
-
-  static getRelevanceReason(userInput, traitPath) {
-    const matchedContexts = traitPath.contexts.filter(context => 
-      context === 'all' || userInput.toLowerCase().includes(context)
-    );
-    
-    if (matchedContexts.length > 0) {
-      return `Matched contexts: ${matchedContexts.join(', ')}`;
-    }
-    
-    return 'Content similarity detected';
   }
 
   static extractLinguisticSignature(fullProfile) {
