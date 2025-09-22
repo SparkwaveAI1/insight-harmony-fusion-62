@@ -325,37 +325,70 @@ class V4TraitRelevanceAnalyzer {
   static getQualitativeRelevanceReason(userInput, traitPath, traitValue, domain) {
     const pathParts = traitPath.split('.');
     const category = pathParts[0];
-    const subcategory = pathParts[pathParts.length - 1];
+    const trait = pathParts[pathParts.length - 1];
+    const input = userInput.toLowerCase();
     
-    // Generate qualitative explanations based on domain and trait type
-    const reasonMap = {
-      'attitude_narrative': `Reflects core worldview and approach to ${domain} topics`,
-      'political_narrative': `Informs perspective on social and political issues`,
-      'emotional_profile': `Influences emotional response and stress management style`,
-      'communication_style': `Shapes how opinions are expressed and defended`,
-      'money_profile': `Affects financial attitudes and decision-making patterns`,
-      'knowledge_profile': `Provides expertise context and confidence levels`,
-      'motivation_profile': `Drives underlying priorities and decision factors`,
-      'identity': `Establishes professional and personal context for response`
-    };
+    // Generate detailed, insightful explanations based on specific traits and user input
+    if (traitPath.includes('agreeableness')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+      return `Your ${level} agreeableness (${traitValue}) will determine whether you seek consensus or challenge the idea directly when giving your opinion`;
+    }
     
-    const generalReason = reasonMap[category] || `Provides relevant context for ${domain} discussions`;
+    if (traitPath.includes('neuroticism')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+      return `Your ${level} emotional stability (${traitValue}) influences whether you express concerns about risks or focus on potential benefits`;
+    }
     
-    // Add specific relevance note if trait value contains related keywords
-    if (typeof traitValue === 'string') {
-      const lowerValue = traitValue.toLowerCase();
-      const lowerInput = userInput.toLowerCase();
-      
-      const sharedWords = lowerInput.split(/\s+/).filter(word => 
-        word.length > 3 && lowerValue.includes(word)
-      );
-      
-      if (sharedWords.length > 0) {
-        return `${generalReason} - contains relevant themes: ${sharedWords.join(', ')}`;
+    if (traitPath.includes('openness')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+      return `Your ${level} openness to experience (${traitValue}) affects how receptive vs. skeptical you are toward new ideas and technologies`;
+    }
+    
+    if (traitPath.includes('risk_tolerance')) {
+      return `This directly relates to the question as your risk tolerance (${traitValue}) determines how you weigh potential dangers against benefits`;
+    }
+    
+    if (traitPath.includes('stress_responses')) {
+      return `Your stress response patterns (${JSON.stringify(traitValue)}) will activate when discussing challenging or high-stakes topics like this`;
+    }
+    
+    if (traitPath.includes('attitude_narrative')) {
+      const narrativeSnippet = typeof traitValue === 'string' ? traitValue.substring(0, 100) + '...' : traitValue;
+      return `Your core worldview ("${narrativeSnippet}") fundamentally shapes how you interpret and respond to ${domain} questions`;
+    }
+    
+    if (traitPath.includes('motivation_profile')) {
+      if (traitPath.includes('mastery')) {
+        return `Your mastery motivation (${traitValue}) drives how confidently you engage with technical concepts and whether you want to demonstrate expertise`;
+      }
+      if (traitPath.includes('novelty')) {
+        return `Your novelty-seeking (${traitValue}) determines your enthusiasm vs. caution toward new developments`;
+      }
+      if (traitPath.includes('security')) {
+        return `Your security motivation (${traitValue}) influences how much you focus on stability and potential downsides`;
       }
     }
     
-    return generalReason;
+    if (traitPath.includes('occupation') || traitPath.includes('expertise')) {
+      return `Your professional background as ${traitValue} provides direct expertise and credibility on this topic`;
+    }
+    
+    if (traitPath.includes('communication_style')) {
+      return `Your communication patterns (${JSON.stringify(traitValue)}) determine how forcefully vs. diplomatically you express disagreement`;
+    }
+    
+    if (traitPath.includes('bias_profile')) {
+      if (traitPath.includes('status_quo')) {
+        return `Your status quo bias (${traitValue}) affects whether you favor existing approaches or embrace change`;
+      }
+      if (traitPath.includes('loss_aversion')) {
+        return `Your loss aversion (${traitValue}) makes you focus more on what could go wrong vs. what could go right`;
+      }
+    }
+    
+    // Fallback with more insight
+    const valueDescription = typeof traitValue === 'object' ? 'complex profile' : `value: ${traitValue}`;
+    return `This ${category} trait (${valueDescription}) provides contextual influence on your ${domain} perspective and response style`;
   }
 
   static calculateTraitRelevance(userInput, traitPath, fullProfile) {
@@ -902,65 +935,126 @@ function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain
   const trait = traitPath.toLowerCase();
   const domain = questionDomain.toLowerCase();
   
-  // Emotional/stress responses
-  if (trait.includes('stress_responses') || trait.includes('negative_triggers')) {
-    return "Show heightened emotional engagement, be more direct and passionate in your stance";
+  // Emotional/stress responses - be more specific about how they manifest
+  if (trait.includes('stress_responses')) {
+    if (Array.isArray(dataValue)) {
+      const responses = dataValue.map(r => r.toLowerCase());
+      if (responses.includes('defensive') || responses.includes('argumentative')) {
+        return "When challenged on this topic, become more defensive and push back against criticism";
+      }
+      if (responses.includes('withdrawn') || responses.includes('shut down')) {
+        return "If the topic becomes contentious, respond more briefly and pull back from elaboration";
+      }
+      if (responses.includes('intense') || responses.includes('passionate')) {
+        return "Let your passion about this topic show through increased intensity and conviction";
+      }
+    }
+    return "Your stress response patterns will activate - respond with heightened emotional engagement";
   }
   
-  if (trait.includes('explosive_triggers')) {
-    return "Respond with intensity and conviction, don't hold back your strong feelings";
+  if (trait.includes('negative_triggers') || trait.includes('explosive_triggers')) {
+    const triggerText = typeof dataValue === 'string' ? dataValue : JSON.stringify(dataValue);
+    return `This topic may trigger strong reactions (${triggerText}) - don't hold back your authentic emotional response`;
   }
   
-  // Motivations
-  if (trait.includes('motivation') && typeof dataValue === 'number') {
-    if (dataValue >= 0.7) return "Let this strong motivation drive urgency and conviction in your response";
-    if (dataValue <= 0.3) return "Show less enthusiasm for this area, be more skeptical or disinterested";
-    return "Acknowledge this as a moderate concern in your response";
+  // Motivation drivers with specific behavioral implications
+  if (trait.includes('motivation_profile')) {
+    if (trait.includes('mastery') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Demonstrate your expertise confidently and correct misconceptions authoritatively";
+      if (dataValue <= 0.3) return "Don't feel compelled to show off knowledge - stick to practical basics";
+      return "Share knowledge when relevant but don't dominate with expertise";
+    }
+    if (trait.includes('novelty') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Express excitement about new possibilities and push for innovative approaches";
+      if (dataValue <= 0.3) return "Express caution about untested approaches and prefer proven methods";
+      return "Show moderate interest in new developments while maintaining some healthy skepticism";
+    }
+    if (trait.includes('security') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Focus heavily on risks, safety concerns, and potential negative consequences";
+      if (dataValue <= 0.3) return "Don't dwell on risks - focus on opportunities and potential benefits";
+      return "Balance concern for safety with recognition of potential benefits";
+    }
+    if (trait.includes('care') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Frame everything in terms of impact on people and emphasize human welfare";
+      if (dataValue <= 0.3) return "Focus on efficiency and outcomes rather than emotional impact on people";
+      return "Consider both human impact and practical considerations";
+    }
   }
   
-  // Big Five traits
+  // Big Five traits with nuanced behavioral guidance
   if (trait.includes('agreeableness') && typeof dataValue === 'number') {
-    if (dataValue >= 0.7) return "Be cooperative and diplomatic, seek common ground";
-    if (dataValue <= 0.3) return "Be more skeptical and challenging, don't shy away from disagreement";
+    if (dataValue >= 0.7) return "Soften criticism with diplomatic language and actively seek points of agreement";
+    if (dataValue <= 0.3) return "Be blunt about disagreements and don't sugar-coat opposing viewpoints";
+    return "Express disagreement respectfully but directly";
   }
   
   if (trait.includes('neuroticism') && typeof dataValue === 'number') {
-    if (dataValue >= 0.7) return "Show worry or anxiety about potential negative outcomes";
-    if (dataValue <= 0.3) return "Remain calm and stable, don't express excessive concern";
+    if (dataValue >= 0.7) return "Express worries about worst-case scenarios and potential unintended consequences";
+    if (dataValue <= 0.3) return "Stay calm and measured, don't catastrophize or express excessive concern";
+    return "Show appropriate caution without being alarmist";
   }
   
   if (trait.includes('openness') && typeof dataValue === 'number') {
-    if (dataValue >= 0.7) return "Be curious and creative, consider novel perspectives";
-    if (dataValue <= 0.3) return "Stick to conventional wisdom, be skeptical of new ideas";
+    if (dataValue >= 0.7) return "Explore creative possibilities and welcome unconventional approaches";
+    if (dataValue <= 0.3) return "Stick to proven, traditional methods and be skeptical of unproven innovations";
+    return "Be open to new ideas while maintaining healthy skepticism";
   }
   
   if (trait.includes('conscientiousness') && typeof dataValue === 'number') {
-    if (dataValue >= 0.7) return "Be thorough and methodical, emphasize proper procedures";
-    if (dataValue <= 0.3) return "Be more spontaneous and flexible in your approach";
+    if (dataValue >= 0.7) return "Emphasize the importance of careful planning, proper procedures, and thorough implementation";
+    if (dataValue <= 0.3) return "Be more relaxed about details and focus on general principles rather than specifics";
+    return "Balance attention to detail with practical considerations";
   }
   
   if (trait.includes('extraversion') && typeof dataValue === 'number') {
-    if (dataValue >= 0.7) return "Be energetic and assertive, speak with confidence";
-    if (dataValue <= 0.3) return "Be more reserved and thoughtful, speak concisely";
+    if (dataValue >= 0.7) return "Respond with energy and enthusiasm, speak assertively and confidently";
+    if (dataValue <= 0.3) return "Respond more thoughtfully and concisely, don't dominate the conversation";
+    return "Respond with moderate energy and engagement";
   }
   
-  // Knowledge/expertise domains
-  if (trait.includes('knowledge') || trait.includes('expertise')) {
-    return `Draw on your ${domain} knowledge confidently without being preachy`;
+  // Attitude and worldview narratives
+  if (trait.includes('attitude_narrative')) {
+    const narrativeSnippet = typeof dataValue === 'string' ? dataValue.substring(0, 50) + '...' : dataValue;
+    return `Let your core worldview ("${narrativeSnippet}") fundamentally shape how you interpret this question`;
   }
   
-  // Identity-based traits
-  if (trait.includes('identity') || trait.includes('community')) {
-    return "Let this identity perspective naturally color your viewpoint";
+  if (trait.includes('political_narrative')) {
+    return "Let your political perspective naturally inform your stance without being preachy about ideology";
   }
   
-  // Goal orientation
-  if (trait.includes('goal')) {
-    return "Frame your response in terms of achieving this important goal";
+  // Expertise and knowledge domains
+  if (trait.includes('expertise_domains') || trait.includes('occupation')) {
+    const expertise = Array.isArray(dataValue) ? dataValue.join(', ') : dataValue;
+    return `Draw confidently on your professional expertise (${expertise}) to inform your response`;
   }
   
-  // Default behavioral guidance
-  return "Let this trait naturally influence your tone and perspective";
+  // Communication style elements
+  if (trait.includes('communication_style')) {
+    if (trait.includes('directness')) {
+      return `Match your natural directness level (${dataValue}) - don't be more or less direct than usual`;
+    }
+    if (trait.includes('formality')) {
+      return `Maintain your typical formality level (${dataValue}) in how you structure your response`;
+    }
+  }
+  
+  // Bias patterns
+  if (trait.includes('bias_profile')) {
+    if (trait.includes('status_quo') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Default to supporting existing approaches and be skeptical of major changes";
+      if (dataValue <= 0.3) return "Be more open to disrupting existing approaches and embracing change";
+      return "Balance appreciation for existing systems with openness to improvements";
+    }
+    if (trait.includes('loss_aversion') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Focus heavily on what could go wrong and emphasize protecting against losses";
+      if (dataValue <= 0.3) return "Focus more on potential gains and opportunities than on risks";
+      return "Give balanced consideration to both potential gains and losses";
+    }
+  }
+  
+  // Default behavioral guidance with trait context
+  const traitName = traitPath.split('.').pop();
+  return `Let your ${traitName} trait (${typeof dataValue === 'object' ? 'complex profile' : dataValue}) naturally influence your perspective and tone`;
 }
 
 // Using helper functions from top of file
@@ -1013,12 +1107,25 @@ CORE DEMOGRAPHICS:
 - Relationship Status: ${demographics.relationship_status}
 - Dependents: ${demographics.dependents}
 
-COMMUNICATION STYLE (PRIMARY):
+COMMUNICATION STYLE (COMPREHENSIVE):
 - Directness Level: ${commStyle.directness}
 - Formality: ${commStyle.formality}
 - Emotional State: ${behavMods.emotional_state || "neutral"}
 - Pace/Rhythm: ${commStyle.pace_rhythm}
 - Regional Style: ${commStyle.regional}
+${fullProfile?.communication_style ? `
+ADVANCED LANGUAGE PATTERNS:
+- Voice Foundation: ${JSON.stringify(fullProfile.communication_style.voice_foundation || {})}
+- Style Markers: ${JSON.stringify(fullProfile.communication_style.style_markers || {})}
+- Context Switches: ${JSON.stringify(fullProfile.communication_style.context_switches || {})}
+- Regional Register: ${JSON.stringify(fullProfile.communication_style.regional_register || {})}
+- Authenticity Filters: ${JSON.stringify(fullProfile.communication_style.authenticity_filters || {})}` : ''}
+${(lingSig.signature_phrases && lingSig.signature_phrases.length > 0) ? `
+SIGNATURE PHRASES: Use these naturally when appropriate: ${lingSig.signature_phrases.join(', ')}` : ''}
+${(lingSig.sentence_patterns && lingSig.sentence_patterns.length > 0) ? `
+SENTENCE PATTERNS: Follow these patterns: ${lingSig.sentence_patterns.join(', ')}` : ''}
+${(lingSig.conversation_enders && lingSig.conversation_enders.length > 0) ? `
+CONVERSATION ENDERS: Use these when wrapping up: ${lingSig.conversation_enders.join(', ')}` : ''}
 
 RELEVANT TRAITS FOR THIS ${questionDomain.toUpperCase()} QUESTION:
 ${traitsFormatted}
