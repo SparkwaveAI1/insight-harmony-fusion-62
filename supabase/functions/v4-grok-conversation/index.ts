@@ -1598,7 +1598,7 @@ async function callGrokWithOpeningGuard(
     body: JSON.stringify({
       model: GROK_MODEL,
       messages: messages,
-      temperature: 0.4,
+      temperature: 0.7,
     }),
   });
 
@@ -1637,7 +1637,7 @@ async function callGrokWithOpeningGuard(
       body: JSON.stringify({
         model: GROK_MODEL,
         messages: retryMessages,
-        temperature: 0.4,
+        temperature: 0.7,
       }),
     });
 
@@ -1893,7 +1893,7 @@ serve(async (req) => {
           model: GROK_MODEL,
           messages: messages,
           stream: false,
-          temperature: 0.4
+          temperature: 0.7
         })
       });
 
