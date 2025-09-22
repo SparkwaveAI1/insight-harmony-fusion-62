@@ -36,12 +36,21 @@ const PersonaVisibilityToggle = ({
       const newVisibility = !isPublic;
       console.log("Toggle component requesting newVisibility:", newVisibility);
       
-      // Call parent handler instead of direct service call to avoid double updates
-      onVisibilityChange(newVisibility);
+      // ✅ FIXED: Direct database update first
+      const success = await updatePersonaVisibility(personaId, newVisibility);
+      
+      if (success) {
+        // ✅ THEN: Notify parent component on success
+        onVisibilityChange(newVisibility);
+        toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
+      } else {
+        throw new Error('Database update failed');
+      }
       
     } catch (error) {
       console.error("Error in toggle component:", error);
       toast.error("Failed to update visibility");
+      // ❌ Don't change UI state if database update fails
     } finally {
       setIsUpdating(false);
     }
