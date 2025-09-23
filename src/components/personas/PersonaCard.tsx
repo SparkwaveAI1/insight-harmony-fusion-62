@@ -129,7 +129,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       )}
       
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
-        <div className="flex items-start gap-4 flex-1">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
           {/* Profile Photo */}
           <Avatar className="h-24 w-24 border-2 border-border rounded-lg">
             <AvatarImage 
