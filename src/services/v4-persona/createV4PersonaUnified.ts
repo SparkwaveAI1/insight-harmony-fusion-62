@@ -25,14 +25,19 @@ export async function createV4PersonaUnified(request: CreateV4PersonaUnifiedRequ
       user_id: request.user_id
     });
 
-    console.log('📞 About to call edge function...');
-    const { data, error } = await supabase.functions.invoke('v4-persona-unified', {
+    console.log('💰 About to call billing-enabled edge function...');
+    const { data, error } = await supabase.functions.invoke('reserve_and_execute', {
       body: {
-        user_description: request.user_description,
-        user_id: request.user_id
+        userId: request.user_id,
+        actionType: 'persona_query',
+        actionPayload: {
+          user_description: request.user_description,
+          user_id: request.user_id
+        },
+        idempotencyKey: `persona-${request.user_id}-${Date.now()}`
       }
     });
-    console.log('📞 Edge function call completed. Error:', error, 'Data:', data);
+    console.log('💰 Billing-enabled function call completed. Error:', error, 'Data:', data);
 
     if (error) {
       console.error('❌ Error in unified persona creation:', error);
@@ -40,20 +45,22 @@ export async function createV4PersonaUnified(request: CreateV4PersonaUnifiedRequ
     }
 
     console.log('✅ Unified persona creation completed successfully:', {
-      persona_id: data.persona_id,
-      persona_name: data.persona_name,
-      stage: data.stage
+      persona_id: data.result.persona_id,
+      persona_name: data.result.persona_name,
+      stage: data.result.stage,
+      credits_used: data.creditsUsed,
+      usage_id: data.usageId
     });
 
     return {
       success: true,
-      persona_id: data.persona_id,
-      persona_name: data.persona_name,
-      stage: data.stage,
-      background: data.background,
-      character_description: data.character_description,
-      physical_description: data.physical_description,
-      message: data.message
+      persona_id: data.result.persona_id,
+      persona_name: data.result.persona_name,
+      stage: data.result.stage,
+      background: data.result.background,
+      character_description: data.result.character_description,
+      physical_description: data.result.physical_description,
+      message: data.result.message
     };
 
   } catch (error) {
