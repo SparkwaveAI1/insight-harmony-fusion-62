@@ -56,19 +56,30 @@ async function generateQuickPersonaResponse(
     try {
       console.log(`🎯 Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
+      // Get current session for billing authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Authentication required for conversation');
+      }
+
       // Use the trait-first quick chat function for authentic persona responses
-      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+      const { data, error } = await supabase.functions.invoke('reserve_and_execute', {
         body: {
-          personaId,
-          message: userMessage,
-          previousMessages: optimizedHistory.map(msg => ({
-            role: msg.role,
-            content: msg.content,
-            image: msg.image
-          })),
-          mode,
-          conversationContext,
-          imageData
+          userId: session.user.id,
+          actionType: 'conversation_message',
+          actionPayload: {
+            personaId,
+            message: userMessage,
+            previousMessages: optimizedHistory.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+              image: msg.image
+            })),
+            mode,
+            conversationContext,
+            imageData
+          },
+          idempotencyKey: `conversation_${personaId}_${Date.now()}_${Math.random()}`
         }
       });
 
@@ -96,7 +107,7 @@ async function generateQuickPersonaResponse(
         throw new Error(`Failed to get response: ${error.message}`);
       }
 
-      if (!data?.response) {
+      if (!data?.result?.response) {
         console.error('❌ No response from enhanced chat function:', data);
         
         if (attempt < maxRetries) {
@@ -109,8 +120,8 @@ async function generateQuickPersonaResponse(
         throw new Error('No response received from AI');
       }
 
-      console.log(`✅ Enhanced response generated for persona ${personaId} (${data.response.length} chars)`);
-      return data.response;
+      console.log(`✅ Enhanced response generated for persona ${personaId} (${data.result.response.length} chars)`);
+      return data.result.response;
       
     } catch (error) {
       console.error(`❌ Attempt ${attempt} failed:`, error);
