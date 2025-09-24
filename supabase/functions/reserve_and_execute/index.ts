@@ -61,6 +61,46 @@ async function performAction(actionType: string, payload: any) {
     return result;
   }
   
+  if (actionType === 'grok_conversation') {
+    console.log('📞 Calling v4-grok-conversation edge function...');
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/v4-grok-conversation`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`v4-grok-conversation failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ v4-grok-conversation completed successfully');
+    return result;
+  }
+  
+  if (actionType === 'conversation_message') {
+    console.log('📞 Calling persona-quick-chat edge function...');
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/persona-quick-chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`persona-quick-chat failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ persona-quick-chat completed successfully');
+    return result;
+  }
+  
   throw new Error(`Unsupported action type: ${actionType}`);
 }
 
