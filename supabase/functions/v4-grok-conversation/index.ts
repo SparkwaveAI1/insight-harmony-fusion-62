@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0'
 
 // Flags (default OFF)
 const CE_PROMPT_V2 = Deno.env.get("CE_PROMPT_V2") === "true";
@@ -819,6 +819,7 @@ function buildCommunicationExecution(selectedTraits, demographics, communication
   
   // DYNAMIC COMMUNICATION STYLE TRANSLATION (primary)
   const dynamicStyleInstructions = translateCommunicationStyle(communicationStyle, demographics);
+  console.log(`🎯 Dynamic style instructions for ${demographics.name}: ${dynamicStyleInstructions || 'None generated'}`);
   if (dynamicStyleInstructions) {
     instructions.push(dynamicStyleInstructions);
   }
@@ -1463,6 +1464,7 @@ function buildV4NativeInstructions(v4Analysis, conversationSummary, userInput, f
   const specificOpinion = synthesizeSpecificOpinion(selectedTraits, userInput, demographics);
   
   // Build communication execution
+  console.log(`📊 Communication style data for ${demographics.name}:`, JSON.stringify(fullProfile.communication_style, null, 2));
   const communicationExecution = buildCommunicationExecution(
     selectedTraits, 
     demographics, 
