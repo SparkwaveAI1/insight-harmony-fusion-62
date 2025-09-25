@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
       const recentMessages = previous_messages.slice(-10);
       
       // Transform messages for OpenAI API format
-      const transformedMessages = recentMessages.map(msg => {
+      const transformedMessages = recentMessages.map((msg: any) => {
         if (msg.image) {
           // Check if the image data is actually an image by checking if it starts with valid image data URL
           const isValidImage = msg.image.startsWith('data:image/') || 
@@ -238,7 +238,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({ error: `Unexpected error: ${error.message}` }),
+      JSON.stringify({ error: `Unexpected error: ${error instanceof Error ? error.message : String(error)}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -246,7 +246,7 @@ Deno.serve(async (req: Request) => {
 
 // Enhanced chat mode instructions with natural variability
 function getChatModeInstructions(mode: string, persona: any): string {
-  const baseInstructions = {
+  const baseInstructions: Record<string, string> = {
     conversation: `
       AUTHENTIC CONVERSATION MODE:
       - Express your genuine reactions and emotions
@@ -299,7 +299,7 @@ function generateLinguisticInstructions(persona: any): string {
   
   // Linguistic profile specific instructions
   if (linguisticProfile.default_output_length) {
-    const lengthMap = {
+    const lengthMap: Record<string, string> = {
       'very_short': 'Keep responses brief and to the point (1-2 sentences often)',
       'short': 'Prefer shorter responses (2-4 sentences typically)',
       'medium': 'Use moderate length responses (3-6 sentences typically)', 
@@ -307,11 +307,12 @@ function generateLinguisticInstructions(persona: any): string {
       'very_long': 'Provide comprehensive responses when engaged (8+ sentences)'
     };
     
-    instructions += `RESPONSE LENGTH PREFERENCE: ${lengthMap[linguisticProfile.default_output_length] || 'Vary naturally'}\n`;
+    const lengthInstruction = lengthMap[linguisticProfile.default_output_length] || 'Vary naturally';
+    instructions += `RESPONSE LENGTH PREFERENCE: ${lengthInstruction}\n`;
   }
   
   if (linguisticProfile.speech_register) {
-    const registerMap = {
+    const registerMap: Record<string, string> = {
       'formal': 'Use more formal language and complete sentences',
       'informal': 'Use casual, relaxed language with contractions',
       'colloquial': 'Use everyday speech with local expressions',
@@ -319,7 +320,8 @@ function generateLinguisticInstructions(persona: any): string {
       'street': 'Use street-smart, direct language'
     };
     
-    instructions += `SPEECH STYLE: ${registerMap[linguisticProfile.speech_register] || 'Use your natural style'}\n`;
+    const speechStyle = registerMap[linguisticProfile.speech_register] || 'Use your natural style';
+    instructions += `SPEECH STYLE: ${speechStyle}\n`;
   }
   
   // Simulation directives for variability
@@ -355,7 +357,7 @@ function generateResponseParameters(persona: any, chatMode: string) {
   
   // Adjust token limits based on output length preference
   if (linguisticProfile.default_output_length) {
-    const tokenMap = {
+    const tokenMap: Record<string, number> = {
       'very_short': 150,
       'short': 300,
       'medium': 500,

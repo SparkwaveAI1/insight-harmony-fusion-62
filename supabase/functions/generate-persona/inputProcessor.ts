@@ -73,7 +73,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   const familyStatus = familyPatterns.find(pattern => pattern.test(prompt));
   
   // Interest extraction
-  const interests = [];
+  const interests: string[] = [];
   const interestPatterns = [
     /crypto|cryptocurrency|bitcoin|blockchain/i,
     /tech|technology|software|programming|coding/i,

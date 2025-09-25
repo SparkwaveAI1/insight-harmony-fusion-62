@@ -65,7 +65,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "Failed to generate persona image",
+        error: error instanceof Error ? error.message : "Failed to generate persona image",
       }),
       { 
         status: 500,
