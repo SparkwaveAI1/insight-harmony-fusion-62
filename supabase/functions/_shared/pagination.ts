@@ -11,7 +11,7 @@ export function parseCursor(cursor?: string | null): Cursor | null {
  * Apply a stable (created_at DESC, id DESC) cursor.
  * Example: applyCursor(q, { cursor, createdCol: 'created_at', idCol: 'transaction_id' })
  */
-export function applyCursor<T extends ReturnType<any>>(
+export function applyCursor<T extends { or: (filter: string) => any }>(
   query: T,
   {
     cursor,
