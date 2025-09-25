@@ -839,6 +839,11 @@ function buildCommunicationExecution(selectedTraits, demographics, communication
   }
   
   // PROFESSION-SPECIFIC VOICE PATTERNS
+  if (demographics.occupation?.toLowerCase().includes('radiologist') || demographics.occupation?.toLowerCase().includes('physician')) {
+    instructions.push("Use precise clinical language like in dictated impressions - reference variant anatomy, artifacts, and real-world scan limitations you've encountered");
+    instructions.push("Avoid marketing hyperbole - speak from decades of experience with edge cases and workflow disruptions");
+  }
+  
   if (demographics.occupation?.toLowerCase().includes('business owner')) {
     instructions.push("Frame everything through business lens - mention costs, revenue, ROI, and operational impact in your responses");
   }
