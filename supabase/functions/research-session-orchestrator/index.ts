@@ -142,18 +142,23 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
           continue;
         }
 
-        // Generate response using V4 Grok conversation
+        // Generate response using billing-integrated V4 Grok conversation
         try {
-          const response = await supabase.functions.invoke('v4-grok-conversation', {
+          const response = await supabase.functions.invoke('reserve_and_execute', {
             body: {
-              persona_id: personaId,
-              user_message: question.text
+              userId: session.user_id,
+              actionType: 'grok_conversation',
+              actionPayload: {
+                persona_id: personaId,
+                user_message: question.text
+              },
+              idempotencyKey: `insights_${sessionId}_${personaId}_${questionIndex}`
             }
           });
 
           console.log(`V4 Grok response for ${personaId}:`, response);
 
-          if (response.data?.success && response.data?.response) {
+          if (response.data?.result?.success && response.data?.result?.response) {
             // Store the response
             await supabase
               .from('research_survey_responses')
@@ -162,7 +167,7 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
                 persona_id: personaId,
                 question_index: questionIndex,
                 question_text: question.text,
-                response_text: response.data.response
+                response_text: response.data.result.response
               });
 
             console.log(`Stored response for persona ${personaId}, question ${questionIndex}`);

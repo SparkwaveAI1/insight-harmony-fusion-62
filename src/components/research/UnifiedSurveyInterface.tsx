@@ -18,6 +18,7 @@ import DocumentManager from './DocumentManager';
 import { PersonaSourceSelector } from './PersonaSourceSelector';
 import { KnowledgeBaseDocument } from '@/services/collections';
 import { getProjectQuestionSets, saveQuestionSet, ProjectQuestionSet } from '@/services/questionSets/questionSetService';
+import { InsightsCostPreview } from './InsightsCostPreview';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -566,12 +567,19 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           )}
         </div>
 
-        <PersonaSourceSelector
-          projectId={selectedProjectId || undefined}
-          selectedPersonas={selectedPersonas}
-          onPersonaSelectionChange={handlePersonaSelectionChange}
-          maxPersonas={10}
-        />
+        <div className="space-y-6">
+          <PersonaSourceSelector
+            projectId={selectedProjectId || undefined}
+            selectedPersonas={selectedPersonas}
+            onPersonaSelectionChange={handlePersonaSelectionChange}
+            maxPersonas={10}
+          />
+          
+          <InsightsCostPreview
+            personaCount={selectedPersonas.length}
+            questionCount={surveyData.questions.filter(q => q.trim()).length}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end">
