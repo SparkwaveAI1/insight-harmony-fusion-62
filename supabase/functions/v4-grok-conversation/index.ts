@@ -817,7 +817,13 @@ function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
 function buildCommunicationExecution(selectedTraits, demographics, communicationStyle) {
   let instructions = [];
   
-  // CULTURAL/REGIONAL SPECIFIC INSTRUCTIONS
+  // DYNAMIC COMMUNICATION STYLE TRANSLATION (primary)
+  const dynamicStyleInstructions = translateCommunicationStyle(communicationStyle, demographics);
+  if (dynamicStyleInstructions) {
+    instructions.push(dynamicStyleInstructions);
+  }
+  
+  // CULTURAL/REGIONAL SPECIFIC INSTRUCTIONS (fallback patterns)
   if (demographics.ethnicity?.toLowerCase().includes('black') && demographics.location?.toLowerCase().includes('atlanta')) {
     instructions.push("Express your medical opinion with Southern warmth and community perspective - reference how this impacts patient care in Atlanta hospitals");
     instructions.push("Ground your responses in both clinical experience and faith-based wisdom, mentioning community service impact when relevant");
