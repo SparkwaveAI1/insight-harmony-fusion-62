@@ -58,7 +58,7 @@ Use values 0.0-1.0. Create realistic, nuanced profiles.`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY!);
   const content = response.choices[0].message.content;
   
   try {
@@ -131,7 +131,7 @@ Use values 0.0-1.0. Create realistic profiles based on demographics.`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY!);
   const content = response.choices[0].message.content;
   
   try {
@@ -182,7 +182,7 @@ Generate 3-5 sections with 2-3 questions each. Make responses authentic to the p
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY!);
   const content = response.choices[0].message.content;
   
   try {
@@ -242,7 +242,7 @@ Add rich, realistic details that enhance the persona without contradicting exist
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY!);
   const content = response.choices[0].message.content;
   
   try {

@@ -161,7 +161,7 @@ function assignRealisticTraits(persona: any): { updatedPersona: any, traitsAdded
   const age = updatedPersona.identity?.age || 35;
   const gender = updatedPersona.identity?.gender || 'non-binary';
   const ageGroup = getAgeGroup(age);
-  const modifiers = AGE_MODIFIERS[ageGroup] || {};
+  const modifiers = AGE_MODIFIERS[ageGroup as keyof typeof AGE_MODIFIERS] || {};
   
   // DISABLED: Health sanitization removed - preserving authentic OpenAI health diversity
   // Initialize missing sections
@@ -264,7 +264,7 @@ function assignPhysicalHealth(persona: any, age: number, modifiers: any, traitsA
   if (Math.random() < dist.chronic_conditions.hypertension.overall * ageMultiplier) {
     conditions.push("hypertension");
     if (!persona.health_profile.medications.includes("none")) {
-      persona.health_profile.medications = persona.health_profile.medications.filter(m => m !== "none");
+      persona.health_profile.medications = persona.health_profile.medications.filter((m: any) => m !== "none");
     }
     persona.health_profile.medications.push("lisinopril");
     traitsAdded.push("hypertension + medication");
@@ -447,7 +447,7 @@ function ensureTraitConsistency(persona: any) {
   if (persona.health_profile.substance_use.alcohol === "heavy") {
     persona.health_profile.fitness_level = "low";
     if (!persona.health_profile.chronic_conditions.includes("none")) {
-      persona.health_profile.chronic_conditions = persona.health_profile.chronic_conditions.filter(c => c !== "none");
+      persona.health_profile.chronic_conditions = persona.health_profile.chronic_conditions.filter((c: any) => c !== "none");
     }
   }
 }
@@ -496,7 +496,7 @@ serve(async (req) => {
         // DISABLED: Statistical contamination system - preserving OpenAI's authentic generation
         // const { updatedPersona, traitsAdded } = assignRealisticTraits(originalProfile);
         const updatedPersona = originalProfile; // Use original OpenAI output without statistical override
-        const traitsAdded = []; // No traits artificially added
+        const traitsAdded: any[] = []; // No traits artificially added
         
         // Track before/after for examples
         const beforeAfter = {
@@ -557,7 +557,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in convert-personas-statistical function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -71,7 +71,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Enhancement error:', error);
     return new Response(
-      JSON.stringify({ error: `Enhancement failed: ${error.message}` }),
+      JSON.stringify({ error: `Enhancement failed: ${error instanceof Error ? error.message : 'Unknown error'}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
