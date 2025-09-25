@@ -820,7 +820,7 @@ async function fixPersonaCompliance(persona: any, validation: ValidationResult) 
 }
 
 // DISABLED: Manual fixes removed - preserving OpenAI's authentic output
-function applyManualFixes(persona: any, personaName: string): any {
+async function applyManualFixes(persona: any, personaName: string): Promise<any> {
   console.log(`⚠️ applyManualFixes disabled for ${personaName} - preserving OpenAI output integrity`);
   
   // READ-ONLY: Return original persona without modifications
@@ -911,7 +911,7 @@ Required V4 Structure:
 
 Generate realistic, internally consistent values. Return ONLY valid JSON without markdown or explanations.`;
 
-  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after manual fixes): ${JSON.stringify(fixedPersona, null, 2)}\n\nValidation Errors: ${postFixValidation.errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
+  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after manual fixes): ${JSON.stringify(persona, null, 2)}\n\nValidation Errors: ${validatePersona(persona).errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -949,7 +949,7 @@ Generate realistic, internally consistent values. Return ONLY valid JSON without
     }
 
     // Merge the existing persona with generated content
-    const mergedPersona = { ...fixedPersona };
+    const mergedPersona = { ...persona };
     
     // Only add missing required fields
     for (const requiredField of PERSONA_SCHEMA.required) {
