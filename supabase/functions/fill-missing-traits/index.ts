@@ -510,7 +510,7 @@ function hasRequiredKeys(persona: any): boolean {
   return PERSONA_SCHEMA.required.every(key => persona.hasOwnProperty(key));
 }
 
-function applyManualFixes(persona: any, personaName: string): any {
+function applyManualFixesSecond(persona: any, personaName: string): any {
   const fixed = JSON.parse(JSON.stringify(persona)); // Deep clone
   
   console.log(`🔧 Applying manual fixes for ${personaName}`);
@@ -671,7 +671,7 @@ serve(async (req) => {
             const rejectionReason = `Validation failed: ${postEnhancementValidation.errors.join(', ')}`;
             
             console.log(`❌ Persona ${persona.name} rejected: ${rejectionReason}`);
-            return {
+            return new Response(JSON.stringify({
               persona_id: persona.persona_id,
               name: persona.name,
               status: 'rejected',
@@ -679,7 +679,10 @@ serve(async (req) => {
               validation_before: validation,
               validation_after: postEnhancementValidation,
               rejected_profile: enhanced
-            };
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 422
+            });
           }
           
           // Final validation
@@ -799,7 +802,7 @@ serve(async (req) => {
     console.error('❌ Error in fill-missing-traits function:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
