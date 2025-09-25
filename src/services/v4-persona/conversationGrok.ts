@@ -21,34 +21,24 @@ export interface V4GrokConversationResponse {
 // Grok conversation function - same interface as OpenAI version
 export async function sendV4GrokMessage(request: V4GrokConversationRequest): Promise<V4GrokConversationResponse> {
   try {
-    console.log('Sending V4 Grok message to persona:', request.persona_id);
+    console.log('🚀 BYPASS: Calling v4-grok-conversation directly for persona:', request.persona_id);
 
-    // Get current session for billing authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error('Authentication required for conversation');
-    }
-
-    const { data, error } = await supabase.functions.invoke('reserve_and_execute', {
+    // Direct call to v4-grok-conversation edge function (bypassing billing)
+    const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
       body: {
-        userId: session.user.id,
-        actionType: 'grok_conversation',
-        actionPayload: {
-          persona_id: request.persona_id,
-          user_message: request.user_message,
-          conversation_history: request.conversation_history || []
-        },
-        idempotencyKey: `grok_${request.persona_id}_${Date.now()}_${Math.random()}`
+        persona_id: request.persona_id,
+        user_message: request.user_message,
+        conversation_history: request.conversation_history || []
       }
     });
 
     if (error) {
-      console.error('Error in V4 Grok conversation:', error);
+      console.error('❌ Error in direct V4 Grok conversation call:', error);
       throw error;
     }
 
-    console.log('V4 Grok conversation response received:', data.result?.persona_name);
-    return data.result;
+    console.log('✅ Direct V4 Grok conversation response received:', data?.persona_name);
+    return data || { success: false, error: 'No response data' };
 
   } catch (error) {
     console.error('Error sending V4 Grok message:', error);

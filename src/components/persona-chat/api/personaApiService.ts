@@ -43,7 +43,7 @@ async function generateQuickPersonaResponse(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('🚀 Using trait-first chat pipeline for authentic persona responses');
+  console.log('🚀 BYPASS: Using direct persona-quick-chat call for authentic persona responses');
 
   // Optimize conversation history for performance
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
@@ -54,37 +54,26 @@ async function generateQuickPersonaResponse(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🎯 Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
+      console.log(`🎯 BYPASS Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
-      // Get current session for billing authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required for conversation');
-      }
-
-      // Use the trait-first quick chat function for authentic persona responses
-      const { data, error } = await supabase.functions.invoke('reserve_and_execute', {
+      // Direct call to persona-quick-chat edge function (bypassing billing)
+      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
         body: {
-          userId: session.user.id,
-          actionType: 'conversation_message',
-          actionPayload: {
-            personaId,
-            message: userMessage,
-            previousMessages: optimizedHistory.map(msg => ({
-              role: msg.role,
-              content: msg.content,
-              image: msg.image
-            })),
-            mode,
-            conversationContext,
-            imageData
-          },
-          idempotencyKey: `conversation_${personaId}_${Date.now()}_${Math.random()}`
+          personaId,
+          message: userMessage,
+          previousMessages: optimizedHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            image: msg.image
+          })),
+          mode,
+          conversationContext,
+          imageData
         }
       });
 
       if (error) {
-        console.error(`❌ Attempt ${attempt} error:`, error);
+        console.error(`❌ BYPASS Attempt ${attempt} error:`, error);
         
         // Smart retry logic for transient errors
         if (attempt < maxRetries && (
@@ -99,7 +88,7 @@ async function generateQuickPersonaResponse(
           const jitter = Math.random() * 0.3 * baseBackoff;
           const delay = Math.min(baseBackoff + jitter, 10000);
           
-          console.log(`⏳ Retrying in ${Math.round(delay)}ms...`);
+          console.log(`⏳ BYPASS Retrying in ${Math.round(delay)}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -107,12 +96,12 @@ async function generateQuickPersonaResponse(
         throw new Error(`Failed to get response: ${error.message}`);
       }
 
-      if (!data?.result?.response) {
-        console.error('❌ No response from enhanced chat function:', data);
+      if (!data?.response) {
+        console.error('❌ BYPASS No response from direct chat function:', data);
         
         if (attempt < maxRetries) {
           const delay = baseDelay * attempt;
-          console.log(`⏳ No response received, retrying in ${delay}ms...`);
+          console.log(`⏳ BYPASS No response received, retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -120,8 +109,8 @@ async function generateQuickPersonaResponse(
         throw new Error('No response received from AI');
       }
 
-      console.log(`✅ Enhanced response generated for persona ${personaId} (${data.result.response.length} chars)`);
-      return data.result.response;
+      console.log(`✅ BYPASS Direct response generated for persona ${personaId} (${data.response.length} chars)`);
+      return data.response;
       
     } catch (error) {
       console.error(`❌ Attempt ${attempt} failed:`, error);
