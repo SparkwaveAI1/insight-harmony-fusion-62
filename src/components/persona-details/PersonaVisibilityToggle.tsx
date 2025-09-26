@@ -22,22 +22,25 @@ const PersonaVisibilityToggle = ({
   
   if (!isOwner) return null;
 
-  const handleVisibilityChange = async () => {
+  const handleVisibilityChange = async (checkedValue: boolean) => {
     if (isUpdating) return;
     
     console.log("=== VISIBILITY TOGGLE COMPONENT ===");
     console.log("Component personaId:", personaId);
     console.log("Component current isPublic prop:", isPublic);
     console.log("Component isOwner:", isOwner);
+    console.log("Switch checkedValue received:", checkedValue);
     
     setIsUpdating(true);
     
     try {
-      const newVisibility = !isPublic;
+      const newVisibility = checkedValue; // ✅ Use actual Switch value
       console.log("Toggle component requesting newVisibility:", newVisibility);
       
       // ✅ FIXED: Direct database update first
+      console.log("Calling updatePersonaVisibility...");
       const success = await updatePersonaVisibility(personaId, newVisibility);
+      console.log("Database update result:", success);
       
       if (success) {
         // ✅ THEN: Notify parent component on success

@@ -180,7 +180,7 @@ export const getPersonasInCollectionWithDetails = async (collectionId: string): 
         user_id: v4Persona.user_id,
         schema_version: v4Persona.schema_version || 'v4.0',
         full_profile: v4Persona.full_profile as any,
-        conversation_summary: '', // This field was removed from schema
+        conversation_summary: v4Persona.conversation_summary as any,
         creation_stage: v4Persona.creation_stage || 'completed',
         creation_completed: v4Persona.creation_completed,
         created_at: v4Persona.created_at,
