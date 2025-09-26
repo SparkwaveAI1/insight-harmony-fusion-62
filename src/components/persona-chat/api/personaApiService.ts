@@ -15,7 +15,7 @@ export async function sendMessageToPersona(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('Using trait-first persona-quick-chat for authentic responses:', { personaId, mode, messageLength: userMessage.length });
+  console.log('Using clean v4-grok-conversation for unified authentic responses:', { personaId, mode, messageLength: userMessage.length });
 
   try {
     // Always use the enhanced quick-chat function with linguistic profiles
@@ -43,7 +43,7 @@ async function generateQuickPersonaResponse(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('🚀 BYPASS: Using direct persona-quick-chat call for authentic persona responses');
+  console.log('🚀 UNIFIED: Using v4-grok-conversation for all authentic persona responses');
 
   // Optimize conversation history for performance
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
@@ -56,18 +56,16 @@ async function generateQuickPersonaResponse(
     try {
       console.log(`🎯 BYPASS Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
-      // Direct call to persona-quick-chat edge function (bypassing billing)
-      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+      // Direct call to v4-grok-conversation edge function (clean architecture)
+      const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
         body: {
           personaId,
-          message: userMessage,
-          previousMessages: optimizedHistory.map(msg => ({
+          userMessage,
+          conversationHistory: optimizedHistory.map(msg => ({
             role: msg.role,
             content: msg.content,
             image: msg.image
           })),
-          mode,
-          conversationContext,
           imageData
         }
       });
