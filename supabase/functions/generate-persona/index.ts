@@ -344,7 +344,7 @@ PERSONA STRUCTURE:
   } catch (parseError) {
     console.error('❌ JSON parsing failed:', parseError);
     console.log('🔍 Raw content:', content.slice(0, 500) + '...');
-    throw new Error(`Failed to parse persona JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    throw new Error(`Failed to parse persona JSON: ${parseError.message}`);
   }
 }
 
@@ -413,7 +413,7 @@ serve(async (req) => {
     console.error('❌ Persona generation error:', error);
     
     return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : String(error),
+      error: error.message,
       details: 'Failed to generate persona - check edge function logs for details'
     }), {
       status: 500,

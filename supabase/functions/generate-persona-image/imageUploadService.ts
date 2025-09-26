@@ -1,18 +1,11 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
-// Function to resize image to optimize file size - Deno-safe version
+// Function to resize image to optimize file size
 async function resizeImage(base64Image: string, maxSize: number = 400): Promise<string> {
   try {
-    // Check if OffscreenCanvas is available (Deno edge functions may not have DOM APIs)
-    const OffscreenCanvasCtor = (globalThis as any).OffscreenCanvas;
-    if (!OffscreenCanvasCtor || !globalThis.createImageBitmap) {
-      console.log('OffscreenCanvas not available in this environment, skipping resize');
-      return base64Image; // Return original if canvas APIs not available
-    }
-    
     // Create canvas and context
-    const canvas = new OffscreenCanvasCtor(maxSize, maxSize);
+    const canvas = new OffscreenCanvas(maxSize, maxSize);
     const ctx = canvas.getContext('2d');
     
     if (!ctx) {
@@ -22,7 +15,7 @@ async function resizeImage(base64Image: string, maxSize: number = 400): Promise<
     // Convert base64 to image
     const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
     const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
-    const imageBitmap = await globalThis.createImageBitmap(imageBlob);
+    const imageBitmap = await createImageBitmap(imageBlob);
     
     // Calculate scaling to maintain aspect ratio
     const { width: originalWidth, height: originalHeight } = imageBitmap;

@@ -36,72 +36,23 @@ async function getCreditsRequired(actionType: string): Promise<number> {
   return price.credits_cost;
 }
 
-// Real action implementation
+// Stub action (replace later with real logic)
 async function performAction(actionType: string, payload: any) {
   console.log(`🔥 Performing action: ${actionType}`, payload);
   
-  if (actionType === 'persona_query') {
-    // Call the existing v4-persona-unified edge function
-    console.log('📞 Calling v4-persona-unified edge function...');
-    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/v4-persona-unified`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`v4-persona-unified failed: ${response.status} ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    console.log('✅ v4-persona-unified completed successfully');
-    return result;
+  // Simulate ~200ms delay
+  await new Promise((r) => setTimeout(r, 200));
+
+  if (payload?.forceFail) {
+    throw new Error("Simulated action failure");
   }
-  
-  if (actionType === 'grok_conversation') {
-    console.log('📞 Calling v4-grok-conversation edge function...');
-    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/v4-grok-conversation`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`v4-grok-conversation failed: ${response.status} ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    console.log('✅ v4-grok-conversation completed successfully');
-    return result;
-  }
-  
-  if (actionType === 'conversation_message') {
-    console.log('📞 Calling persona-quick-chat edge function...');
-    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/persona-quick-chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`persona-quick-chat failed: ${response.status} ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    console.log('✅ persona-quick-chat completed successfully');
-    return result;
-  }
-  
-  throw new Error(`Unsupported action type: ${actionType}`);
+
+  return { 
+    actionType, 
+    echo: payload,
+    timestamp: new Date().toISOString(),
+    processingTime: "200ms"
+  };
 }
 
 // Perform action with timeout protection

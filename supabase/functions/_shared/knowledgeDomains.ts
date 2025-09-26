@@ -54,7 +54,7 @@ GUIDELINES:
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY!);
+  const response = await generateChatResponse(messages, OPENAI_API_KEY);
   const content = response.choices[0].message.content;
   
   try {

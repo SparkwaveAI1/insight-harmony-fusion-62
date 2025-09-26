@@ -93,7 +93,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new chronic conditions
   const beforeConditions = before.health_profile?.chronic_conditions || [];
   const afterConditions = after.health_profile?.chronic_conditions || [];
-  const newConditions = afterConditions.filter((c: any) => !beforeConditions.includes(c));
+  const newConditions = afterConditions.filter(c => !beforeConditions.includes(c));
   if (newConditions.length > 0) {
     added.push("chronic_conditions");
   }
@@ -101,7 +101,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new medications
   const beforeMeds = before.health_profile?.medications || [];
   const afterMeds = after.health_profile?.medications || [];
-  const newMeds = afterMeds.filter((m: any) => !beforeMeds.includes(m));
+  const newMeds = afterMeds.filter(m => !beforeMeds.includes(m));
   if (newMeds.length > 0) {
     added.push("medications");
   }
@@ -109,7 +109,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new financial stressors
   const beforeStressors = before.money_profile?.financial_stressors || [];
   const afterStressors = after.money_profile?.financial_stressors || [];
-  const newStressors = afterStressors.filter((s: any) => !beforeStressors.includes(s));
+  const newStressors = afterStressors.filter(s => !beforeStressors.includes(s));
   if (newStressors.length > 0) {
     added.push("financial_stressors");
   }
@@ -117,7 +117,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new mental health flags
   const beforeMental = before.health_profile?.mental_health_flags || [];
   const afterMental = after.health_profile?.mental_health_flags || [];
-  const newMental = afterMental.filter((m: any) => !beforeMental.includes(m));
+  const newMental = afterMental.filter(m => !beforeMental.includes(m));
   if (newMental.length > 0) {
     added.push("mental_health_flags");
   }
@@ -510,7 +510,7 @@ function hasRequiredKeys(persona: any): boolean {
   return PERSONA_SCHEMA.required.every(key => persona.hasOwnProperty(key));
 }
 
-function applyManualFixesSecond(persona: any, personaName: string): any {
+function applyManualFixes(persona: any, personaName: string): any {
   const fixed = JSON.parse(JSON.stringify(persona)); // Deep clone
   
   console.log(`🔧 Applying manual fixes for ${personaName}`);
@@ -671,7 +671,7 @@ serve(async (req) => {
             const rejectionReason = `Validation failed: ${postEnhancementValidation.errors.join(', ')}`;
             
             console.log(`❌ Persona ${persona.name} rejected: ${rejectionReason}`);
-            return new Response(JSON.stringify({
+            return {
               persona_id: persona.persona_id,
               name: persona.name,
               status: 'rejected',
@@ -679,10 +679,7 @@ serve(async (req) => {
               validation_before: validation,
               validation_after: postEnhancementValidation,
               rejected_profile: enhanced
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 422
-            });
+            };
           }
           
           // Final validation
@@ -802,7 +799,7 @@ serve(async (req) => {
     console.error('❌ Error in fill-missing-traits function:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error.message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -820,7 +817,7 @@ async function fixPersonaCompliance(persona: any, validation: ValidationResult) 
 }
 
 // DISABLED: Manual fixes removed - preserving OpenAI's authentic output
-async function applyManualFixes(persona: any, personaName: string): Promise<any> {
+function applyManualFixes(persona: any, personaName: string): any {
   console.log(`⚠️ applyManualFixes disabled for ${personaName} - preserving OpenAI output integrity`);
   
   // READ-ONLY: Return original persona without modifications
@@ -911,7 +908,7 @@ Required V4 Structure:
 
 Generate realistic, internally consistent values. Return ONLY valid JSON without markdown or explanations.`;
 
-  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after manual fixes): ${JSON.stringify(persona, null, 2)}\n\nValidation Errors: ${validatePersona(persona).errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
+  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after manual fixes): ${JSON.stringify(fixedPersona, null, 2)}\n\nValidation Errors: ${postFixValidation.errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -949,7 +946,7 @@ Generate realistic, internally consistent values. Return ONLY valid JSON without
     }
 
     // Merge the existing persona with generated content
-    const mergedPersona = { ...persona };
+    const mergedPersona = { ...fixedPersona };
     
     // Only add missing required fields
     for (const requiredField of PERSONA_SCHEMA.required) {

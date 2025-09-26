@@ -73,7 +73,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   const familyStatus = familyPatterns.find(pattern => pattern.test(prompt));
   
   // Interest extraction
-  const interests: string[] = [];
+  const interests = [];
   const interestPatterns = [
     /crypto|cryptocurrency|bitcoin|blockchain/i,
     /tech|technology|software|programming|coding/i,
@@ -92,7 +92,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Personality trait extraction
-  const personalityTraits: string[] = [];
+  const personalityTraits = [];
   const traitPatterns = [
     /thoughtful|analytical|logical/i,
     /evasive|avoidant|procrastinating/i,
@@ -110,7 +110,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Challenge extraction
-  const challenges: string[] = [];
+  const challenges = [];
   const challengePatterns = [
     /stress|stressed|pressure|overwhelmed/i,
     /health|illness|condition|medical/i,
@@ -126,7 +126,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Background details extraction
-  const background: string[] = [];
+  const background = [];
   const backgroundPatterns = [
     /grew up|childhood|family background/i,
     /education|school|university|college/i,
@@ -141,7 +141,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Physical description extraction
-  const physicalDescription: string[] = [];
+  const physicalDescription = [];
   const physicalPatterns = [
     /overweight|weight|heavy|slim|fit|athletic/i,
     /tall|short|height/i,
@@ -157,8 +157,8 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   const extracted: ExtractedUserDetails = {
     name: nameMatch ? nameMatch[1] : undefined,
     age: ageMatch ? parseInt(ageMatch[1]) : undefined,
-    occupation: occupation || undefined,
-    location: location || undefined,
+    occupation: occupation,
+    location: location,
     education: educationMatch ? educationMatch[1].trim() : undefined,
     familyStatus: familyStatus ? familyStatus.source : undefined,
     interests: interests,
@@ -197,9 +197,9 @@ export function validateUserInputPreservation(generated: any, userDetails: Extra
   
   // Validate occupation preservation
   if (userDetails.occupation && generated.identity?.occupation) {
-    const userOccWords: string[] = userDetails.occupation.toLowerCase().split(' ');
-    const genOccWords: string[] = generated.identity.occupation.toLowerCase().split(' ');
-    const hasMatch = userOccWords.some((word: string) => genOccWords.some((genWord: string) => genWord.includes(word) || word.includes(genWord)));
+    const userOccWords = userDetails.occupation.toLowerCase().split(' ');
+    const genOccWords = generated.identity.occupation.toLowerCase().split(' ');
+    const hasMatch = userOccWords.some(word => genOccWords.some(genWord => genWord.includes(word) || word.includes(genWord)));
     
     if (!hasMatch) {
       warnings.push(`Occupation mismatch: expected "${userDetails.occupation}", got "${generated.identity.occupation}"`);
@@ -246,11 +246,11 @@ export function generatePersonaRequirements(userDetails: ExtractedUserDetails): 
     requirements.push(`FAMILY: Must reflect family relationships mentioned`);
   }
   
-  if (userDetails.interests && userDetails.interests.length > 0) {
+  if (userDetails.interests.length > 0) {
     requirements.push(`INTERESTS: Must include: ${userDetails.interests.join(', ')}`);
   }
   
-  if (userDetails.challenges && userDetails.challenges.length > 0) {
+  if (userDetails.challenges.length > 0) {
     requirements.push(`CHALLENGES: Must reflect: ${userDetails.challenges.join(', ')}`);
   }
   

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Flags (default OFF)
 const CE_PROMPT_V2 = Deno.env.get("CE_PROMPT_V2") === "true";
@@ -9,164 +9,1414 @@ const GROK_MODEL = Deno.env.get("GROK_MODEL") ?? "grok-4-latest";
 // Log configuration at boot
 console.log(`Grok model: ${GROK_MODEL}, CE_PROMPT_V2=${CE_PROMPT_V2}`);
 
+// Safe extractors to replace JSON.stringify on complex objects
+function asList(x: any): string {
+  return Array.isArray(x) ? x.join(", ") : (typeof x === "string" ? x : "");
+}
+
+function field(obj: any, key: string): string {
+  const v = obj?.[key];
+  return (v == null) ? "" : (typeof v === "string" ? v : Array.isArray(v) ? asList(v) : "");
+}
+
+// compact style markers
+function styleMarkers(cs: any): string {
+  if (!cs?.style_markers) return "";
+  const sm = cs.style_markers;
+  const humor = sm.humor_style ? `humor=${sm.humor_style}` : "";
+  const metaphors = sm.metaphor_domains ? `metaphors=${asList(sm.metaphor_domains)}` : "";
+  const aph = sm.aphorism_register ? `aphorisms=${sm.aphorism_register}` : "";
+  const t = typeof sm.storytelling_vs_bullets === "number" ? `story_vs_bullets=${sm.storytelling_vs_bullets}` : "";
+  return [humor, metaphors, aph, t].filter(Boolean).join("; ");
+}
+
+// compact regional register
+function regional(cs: any): string {
+  const r = cs?.regional_register;
+  if (!r) return "";
+  const region = r.region ? `region=${r.region}` : "";
+  const urb = r.urbanicity ? `urbanicity=${r.urbanicity}` : "";
+  const hints = Array.isArray(r.dialect_hints) ? `hints=${r.dialect_hints.join("/")}` : "";
+  return [region, urb, hints].filter(Boolean).join("; ");
+}
+
+// compact context switches
+function contextSwitches(cs: any): string {
+  const cx = cs?.context_switches;
+  if (!cx) return "";
+  const mk = (k: string) => cx[k] ? `${k}: formality=${cx[k].formality ?? "-"}, directness=${cx[k].directness ?? "-"}` : "";
+  return ["home","work","online"].map(mk).filter(Boolean).join(" | ");
+}
+
+// Safe trait formatting
+function formatTraits(dominant: any[]): string {
+  try {
+    return (dominant || []).map(t => {
+      const cat = (t.category || "trait").toString();
+      const lbl = (t.label || t.name || t.key || "trait").toString();
+      const val = (t.value == null) ? "" :
+                  (typeof t.value === "number" ? ` = ${t.value}` : `: ${String(t.value)}`);
+      return `(${cat}) ${lbl}${val}`;
+    }).join("; ");
+  } catch {
+    return ""; // fail soft, never crash the edge function
+  }
+}
+
+// V4-NATIVE TRAIT RELEVANCE ANALYZER
+class V4TraitRelevanceAnalyzer {
+  private static readonly V4_TRAIT_PATHS = [
+    // MOTIVATION PROFILE PATHS
+    { path: 'motivation_profile.primary_drivers.self_interest', weight: 0.9, contexts: ['personal', 'decision', 'advice'] },
+    { path: 'motivation_profile.primary_drivers.family', weight: 1.0, contexts: ['family', 'relationships', 'children', 'parenting'] },
+    { path: 'motivation_profile.primary_drivers.status', weight: 0.8, contexts: ['career', 'achievement', 'recognition', 'success'] },
+    { path: 'motivation_profile.primary_drivers.mastery', weight: 0.8, contexts: ['learning', 'skill', 'improvement', 'expertise'] },
+    { path: 'motivation_profile.primary_drivers.care', weight: 0.7, contexts: ['helping', 'support', 'community', 'service'] },
+    { path: 'motivation_profile.primary_drivers.security', weight: 0.9, contexts: ['safety', 'stability', 'financial', 'planning'] },
+    { path: 'motivation_profile.primary_drivers.belonging', weight: 0.6, contexts: ['group', 'team', 'community', 'social'] },
+    { path: 'motivation_profile.primary_drivers.novelty', weight: 0.5, contexts: ['new', 'change', 'adventure', 'innovation'] },
+    { path: 'motivation_profile.primary_drivers.meaning', weight: 0.7, contexts: ['purpose', 'values', 'belief', 'philosophy'] },
+
+    // GOAL ORIENTATION
+    { path: 'motivation_profile.goal_orientation.strength', weight: 0.8, contexts: ['goals', 'planning', 'achievement'] },
+    { path: 'motivation_profile.goal_orientation.primary_goals', weight: 0.9, contexts: ['specific', 'objectives', 'targets'] },
+
+    // INHIBITOR PROFILE
+    { path: 'inhibitor_profile.social_cost_sensitivity', weight: 0.7, contexts: ['social', 'judgment', 'reputation'] },
+    { path: 'inhibitor_profile.consequence_aversion', weight: 0.6, contexts: ['risk', 'caution', 'safety'] },
+    { path: 'inhibitor_profile.confidence_level', weight: 0.8, contexts: ['assertion', 'opinion', 'leadership'] },
+    { path: 'inhibitor_profile.perfectionism', weight: 0.7, contexts: ['quality', 'standards', 'criticism'] },
+    { path: 'inhibitor_profile.confirmation_bias', weight: 0.8, contexts: ['information', 'evidence', 'belief'] },
+
+    // EMOTIONAL PROFILE
+    { path: 'emotional_profile.positive_triggers', weight: 1.0, contexts: ['motivation', 'energy', 'enthusiasm'] },
+    { path: 'emotional_profile.negative_triggers', weight: 1.0, contexts: ['frustration', 'anger', 'stress'] },
+    { path: 'emotional_profile.explosive_triggers', weight: 1.2, contexts: ['extreme', 'passionate', 'intense'] },
+
+    // KNOWLEDGE PROFILE
+    { path: 'knowledge_profile.expertise_domains', weight: 0.9, contexts: ['professional', 'work', 'technical'] },
+    { path: 'knowledge_profile.knowledge_gaps', weight: 0.6, contexts: ['learning', 'unfamiliar', 'limitations'] },
+    { path: 'knowledge_profile.education_level', weight: 0.5, contexts: ['academic', 'formal', 'theoretical'] },
+
+    // COMMUNICATION STYLE
+    { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
+    { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
+    { path: 'communication_style.linguistic_signature.signature_phrases', weight: 0.3, contexts: ['all'] },
+    { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
+    { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
+
+    // IDENTITY SALIENCE
+    { path: 'identity_salience.political_identity.orientation', weight: 0.9, contexts: ['politics', 'policy', 'government'] },
+    { path: 'identity_salience.political_identity.strength', weight: 0.8, contexts: ['political', 'ideology'] },
+    { path: 'identity_salience.political_identity.tribal_loyalty', weight: 0.9, contexts: ['group', 'loyalty', 'opposition'] },
+    { path: 'identity_salience.community_identities', weight: 0.8, contexts: ['identity', 'background', 'culture'] },
+
+    // CONTRADICTIONS
+    { path: 'contradictions.primary_tension', weight: 0.9, contexts: ['conflict', 'dilemma', 'inconsistency'] },
+    { path: 'contradictions.secondary_tensions', weight: 0.7, contexts: ['complexity', 'nuance'] },
+
+    // TRUTH/HONESTY
+    { path: 'truth_honesty_profile.baseline_honesty', weight: 0.7, contexts: ['truth', 'honesty', 'disclosure'] },
+    { path: 'truth_honesty_profile.truth_flexibility_by_context', weight: 0.8, contexts: ['context', 'audience', 'situation'] },
+  ];
+
+  static analyzeTraitRelevance(userInput, fullProfile, conversationSummary) {
+    const input = userInput.toLowerCase();
+    
+    // 1. CLASSIFY THE TURN AND DETERMINE QUESTION DOMAIN
+    const classification = this.classifyTurn(userInput);
+    const questionDomain = this.determineQuestionDomain(userInput);
+
+    // 2. SELECT RELEVANT TRAITS BASED ON QUESTION DOMAIN (MAX 5)
+    const selectedTraits = this.selectDomainRelevantTraits(input, fullProfile, questionDomain, classification);
+
+    // 3. EXTRACT LINGUISTIC SIGNATURE
+    const linguisticSignature = this.extractLinguisticSignature(fullProfile);
+
+    // 4. DETERMINE BEHAVIORAL MODIFIERS
+    const behavioralModifiers = this.calculateBehavioralModifiers(selectedTraits, fullProfile);
+
+    // 5. CALCULATE KNOWLEDGE BOUNDARIES
+    const knowledgeBoundary = this.calculateKnowledgeBoundaries(classification.topics, fullProfile);
+
+    return {
+      selected_traits: selectedTraits.slice(0, 5), // Max 5 relevant traits
+      context_classification: classification,
+      linguistic_signature: linguisticSignature,
+      behavioral_modifiers: behavioralModifiers,
+      knowledge_boundary: knowledgeBoundary,
+      question_domain: questionDomain
+    };
+  }
+
+  static classifyTurn(userInput) {
+    const input = userInput.toLowerCase();
+
+    // Classify intent
+    let intent = 'clarify';
+    if (input.includes('what do you think') || input.includes('opinion') || input.includes('feel about')) intent = 'opinion';
+    else if (input.includes('how to') || input.includes('advice') || input.includes('should i')) intent = 'advice';
+    else if (input.includes('tell me about') || input.includes('experience') || input.includes('story')) intent = 'story';
+    else if (input.includes('vs') || input.includes('compare') || input.includes('better')) intent = 'compare';
+    else if (input.includes('wrong') || input.includes('bad') || input.includes('critique')) intent = 'critique';
+
+    // Extract topics with better detection
+    const topics = [];
+    if (input.includes('work') || input.includes('job') || input.includes('career') || input.includes('professional')) topics.push('work');
+    if (input.includes('family') || input.includes('children') || input.includes('kids') || input.includes('parent')) topics.push('family');
+    if (input.includes('money') || input.includes('finance') || input.includes('investment') || input.includes('budget')) topics.push('finance');
+    if (input.includes('politic') || input.includes('government') || input.includes('policy') || input.includes('election')) topics.push('politics');
+    if (input.includes('relationship') || input.includes('dating') || input.includes('marriage') || input.includes('social')) topics.push('relationships');
+    if (input.includes('health') || input.includes('medical') || input.includes('doctor') || input.includes('hospital')) topics.push('health');
+    if (input.includes('technology') || input.includes('ai') || input.includes('digital') || input.includes('tech')) topics.push('technology');
+
+    // Determine audience
+    const audience = 'peer'; // Default assumption
+
+    // Assess sensitivity
+    let sensitivity = 'low';
+    if (topics.includes('politics') || input.includes('controversial')) sensitivity = 'high';
+    else if (topics.includes('family') || topics.includes('relationships') || topics.includes('health')) sensitivity = 'medium';
+
+    return { intent, topics, audience, sensitivity };
+  }
+
+  static determineQuestionDomain(userInput) {
+    const input = userInput.toLowerCase();
+    
+    // Professional/Work domain
+    if (input.includes('work') || input.includes('job') || input.includes('career') || 
+        input.includes('professional') || input.includes('colleague') || input.includes('boss') ||
+        input.includes('radiology') || input.includes('medical') || input.includes('hospital') ||
+        input.includes('ai in') || input.includes('technology at work')) {
+      return 'professional';
+    }
+    
+    // Personal values/beliefs domain
+    if (input.includes('believe') || input.includes('value') || input.includes('principle') ||
+        input.includes('opinion') || input.includes('think about') || input.includes('feel about') ||
+        input.includes('philosophy') || input.includes('ethics')) {
+      return 'values';
+    }
+    
+    // Social/Political domain
+    if (input.includes('politic') || input.includes('government') || input.includes('policy') ||
+        input.includes('society') || input.includes('community') || input.includes('social')) {
+      return 'social_political';
+    }
+    
+    // Financial domain
+    if (input.includes('money') || input.includes('financial') || input.includes('investment') ||
+        input.includes('budget') || input.includes('economic') || input.includes('spend')) {
+      return 'financial';
+    }
+    
+    // Family/Personal domain
+    if (input.includes('family') || input.includes('personal') || input.includes('relationship') ||
+        input.includes('children') || input.includes('parent') || input.includes('home')) {
+      return 'personal';
+    }
+    
+    return 'general';
+  }
+
+  static flattenPersonaProfile(fullProfile) {
+    const traits = [];
+    
+    function extractTraits(obj, prefix = '') {
+      for (const [key, value] of Object.entries(obj)) {
+        const path = prefix ? `${prefix}.${key}` : key;
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          extractTraits(value, path);
+        } else if (value !== null && value !== undefined && value !== '') {
+          traits.push({ path, value });
+        }
+      }
+    }
+    
+    extractTraits(fullProfile);
+    return traits;
+  }
+
+  static selectDomainRelevantTraits(userInput, fullProfile, domain, classification) {
+    const selectedTraits = [];
+    
+    // Extract ALL traits from the full persona profile
+    const allTraits = this.flattenPersonaProfile(fullProfile);
+    
+    // Filter out narrative traits and verbose descriptive text blocks
+    const filteredTraits = allTraits.filter(({ path, value }) => {
+      // Exclude narrative sections that provide generic verbose descriptions
+      if (path.includes('attitude_narrative') || path.includes('political_narrative')) {
+        return false;
+      }
+      
+      // Exclude overly verbose text blocks that don't provide specific behavioral guidance
+      if (typeof value === 'string' && value.length > 300) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // ALWAYS include thought_coherence first if it exists
+    const thoughtCoherence = this.getNestedValue(fullProfile, 'cognitive_profile.thought_coherence');
+    if (thoughtCoherence !== null && thoughtCoherence !== undefined) {
+      selectedTraits.push({
+        trait: 'cognitive_profile.thought_coherence',
+        score: 1.0, // Always highest priority
+        relevance_reason: `Thought coherence (${thoughtCoherence}) affects how clearly and logically this person processes and expresses complex ideas like AI in healthcare`,
+        data_value: thoughtCoherence
+      });
+    }
+    
+    // Score ALL filtered traits using existing relevance logic
+    for (const { path, value } of filteredTraits) {
+      if (path === 'cognitive_profile.thought_coherence') continue; // Already added
+      
+      if (value !== null && value !== undefined && value !== '') {
+        const relevanceScore = this.calculateContextualRelevance(userInput, path, value, domain, classification);
+        if (relevanceScore > 0.3) { // Higher threshold for quality
+          selectedTraits.push({
+            trait: path,
+            score: relevanceScore,
+            relevance_reason: this.getDetailedRelevanceReason(userInput, path, value, domain, classification),
+            data_value: value
+          });
+        }
+      }
+    }
+    
+    // Sort by relevance and return top 6 (including thought_coherence)
+    selectedTraits.sort((a, b) => b.score - a.score);
+    return selectedTraits.slice(0, 6);
+  }
+
+  static calculateContextualRelevance(userInput, traitPath, traitValue, domain, classification) {
+    const input = userInput.toLowerCase();
+    const pathParts = traitPath.toLowerCase().split('.');
+    let score = 0;
+    
+    // Question topic analysis
+    const questionTopics = {
+      technology: ['ai', 'technology', 'tech', 'artificial', 'intelligence', 'digital', 'automation'],
+      healthcare: ['medical', 'health', 'doctor', 'patient', 'diagnosis', 'radiology', 'hospital'],
+      professional: ['work', 'job', 'career', 'professional', 'workplace', 'business'],
+      opinion: ['think', 'feel', 'opinion', 'view', 'believe', 'perspective'],
+      ethics: ['ethical', 'moral', 'right', 'wrong', 'should', 'responsibility'],
+      risk: ['risk', 'danger', 'safe', 'concern', 'worry', 'cautious']
+    };
+    
+    // Trait relevance by question context
+    const traitRelevanceMap = {
+      // For AI/technology questions
+      'cognitive_profile.abstract_reasoning': () => input.includes('ai') || input.includes('technology') ? 0.9 : 0.3,
+      'adoption_profile.risk_tolerance': () => questionTopics.technology.some(t => input.includes(t)) ? 0.8 : 0.2,
+      'bias_profile.cognitive.overconfidence': () => input.includes('ai') && input.includes('replace') ? 0.7 : 0.2,
+      
+      // For professional contexts
+      'identity.occupation': () => questionTopics.healthcare.some(t => input.includes(t)) ? 0.9 : 0.3,
+      'knowledge_profile.expertise_domains': () => questionTopics.professional.some(t => input.includes(t)) ? 0.8 : 0.3,
+      'communication_style.context_switches.work': () => questionTopics.professional.some(t => input.includes(t)) ? 0.7 : 0.2,
+      
+      // For opinion/values questions  
+      'truth_honesty_profile.baseline_honesty': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.8 : 0.3,
+      'motivation_profile.primary_drivers.meaning': () => questionTopics.ethics.some(t => input.includes(t)) ? 0.8 : 0.3,
+      
+      // For emotional responses
+      'emotional_profile.stress_responses': () => questionTopics.risk.some(t => input.includes(t)) ? 0.8 : 0.2,
+      'emotional_profile.negative_triggers': () => input.includes('frustrat') || input.includes('concern') ? 0.7 : 0.2,
+      'emotional_profile.positive_triggers': () => input.includes('excit') || input.includes('thrill') ? 0.7 : 0.2,
+      
+      // Communication traits - higher for opinion questions
+      'communication_style.voice_foundation.directness': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.6 : 0.3,
+      'communication_style.style_markers.metaphor_domains': () => 0.5, // Always somewhat relevant
+      
+      // Default scoring
+      'default': () => 0.3
+    };
+    
+    // Calculate trait-specific relevance
+    const relevanceFunc = traitRelevanceMap[traitPath] || traitRelevanceMap['default'];
+    score = relevanceFunc();
+    
+    // Boost for high-value traits
+    if (typeof traitValue === 'number' && (traitValue > 0.7 || traitValue < 0.3)) {
+      score += 0.2; // Extreme values are more interesting
+    }
+    
+    // Boost for rich content
+    if (typeof traitValue === 'string' && traitValue.length > 50) {
+      score += 0.1;
+    }
+    
+    return Math.min(score, 1.0);
+  }
+
+  static getDetailedRelevanceReason(userInput, traitPath, traitValue, domain, classification) {
+    const input = userInput.toLowerCase();
+    const traitName = traitPath.split('.').pop();
+    
+    // AI/Technology context explanations
+    if (input.includes('ai') || input.includes('technology')) {
+      if (traitPath.includes('thought_coherence')) {
+        return `Thought coherence affects logical processing of technical concepts`;
+      }
+      if (traitPath.includes('risk_tolerance')) {
+        return `Risk tolerance directly affects weighing AI benefits vs dangers`;
+      }
+      if (traitPath.includes('abstract_reasoning')) {
+        return `Abstract reasoning influences conceptualizing broader AI implications`;
+      }
+      if (traitPath.includes('overconfidence')) {
+        return `Overconfidence bias affects estimation of AI capabilities`;
+      }
+    }
+    
+    // Professional/Medical context
+    if (input.includes('radiology') || input.includes('medical')) {
+      if (traitPath.includes('occupation')) {
+        return `Professional identity shapes expert perspective on AI in their field`;
+      }
+      if (traitPath.includes('expertise_domains')) {
+        return `Professional expertise informs AI application evaluation`;
+      }
+      if (traitPath.includes('stress_responses')) {
+        return `Stress responses affect reaction to AI workflow changes`;
+      }
+    }
+    
+    // Opinion/Values context
+    if (input.includes('think') || input.includes('feel') || input.includes('opinion')) {
+      if (traitPath.includes('baseline_honesty')) {
+        return `Honesty level affects candidness in expressing professional opinions`;
+      }
+      if (traitPath.includes('directness')) {
+        return `Communication directness determines blunt vs diplomatic expression`;
+      }
+    }
+    
+    // Emotional response context
+    if (input.includes('excit') || input.includes('concern') || input.includes('frustrat')) {
+      if (traitPath.includes('positive_triggers')) {
+        return `Positive emotional triggers (${traitValue}) explain what aspects of AI generate genuine excitement and optimism`;
+      }
+      if (traitPath.includes('negative_triggers')) {
+        return `Negative emotional triggers (${traitValue}) reveal what specific AI concerns activate their worry or frustration`;
+      }
+      if (traitPath.includes('emotional_regulation')) {
+        return `Emotional regulation (${traitValue}) affects how they balance and express conflicting feelings about AI's promise and risks`;
+      }
+    }
+    
+    if (traitPath.includes('agreeableness')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+      return `Your ${level} agreeableness (${traitValue}) will determine whether you seek consensus or challenge the idea directly when giving your opinion`;
+    }
+    
+    if (traitPath.includes('neuroticism')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+      return `Your ${level} emotional stability (${traitValue}) influences whether you express concerns about risks or focus on potential benefits`;
+    }
+    
+    if (traitPath.includes('openness')) {
+      const level = typeof traitValue === 'number' ? (traitValue > 0.6 ? 'high' : traitValue < 0.4 ? 'low' : 'moderate') : 'unknown';
+      return `Your ${level} openness to experience (${traitValue}) affects how receptive vs. skeptical you are toward new ideas and technologies`;
+    }
+    
+    if (traitPath.includes('risk_tolerance')) {
+      return `This directly relates to the question as your risk tolerance (${traitValue}) determines how you weigh potential dangers against benefits`;
+    }
+    
+    if (traitPath.includes('stress_responses')) {
+      return `Your stress response patterns (${JSON.stringify(traitValue)}) will activate when discussing challenging or high-stakes topics like this`;
+    }
+    
+    
+    if (traitPath.includes('motivation_profile')) {
+      if (traitPath.includes('mastery')) {
+        return `Your mastery motivation (${traitValue}) drives how confidently you engage with technical concepts and whether you want to demonstrate expertise`;
+      }
+      if (traitPath.includes('novelty')) {
+        return `Your novelty-seeking (${traitValue}) determines your enthusiasm vs. caution toward new developments`;
+      }
+      if (traitPath.includes('security')) {
+        return `Your security motivation (${traitValue}) influences how much you focus on stability and potential downsides`;
+      }
+    }
+    
+    if (traitPath.includes('occupation') || traitPath.includes('expertise')) {
+      return `Your professional background as ${traitValue} provides direct expertise and credibility on this topic`;
+    }
+    
+    if (traitPath.includes('communication_style')) {
+      return `Your communication patterns (${JSON.stringify(traitValue)}) determine how forcefully vs. diplomatically you express disagreement`;
+    }
+    
+    if (traitPath.includes('bias_profile')) {
+      if (traitPath.includes('status_quo')) {
+        return `Your status quo bias (${traitValue}) affects whether you favor existing approaches or embrace change`;
+      }
+      if (traitPath.includes('loss_aversion')) {
+        return `Your loss aversion (${traitValue}) makes you focus more on what could go wrong vs. what could go right`;
+      }
+    }
+    
+    // Fallback with more insight
+    const valueDescription = typeof traitValue === 'object' ? 'complex profile' : `value: ${traitValue}`;
+    const traitCategory = traitPath.split('.')[0] || 'personality';
+    return `This ${traitCategory} trait (${valueDescription}) provides contextual influence on your ${domain} perspective and response style`;
+  }
+
+  static checkContentRelevance(userInput, traitValue) {
+    if (!traitValue) return 0;
+
+    const input = userInput.toLowerCase();
+    let content = '';
+
+    if (typeof traitValue === 'string') {
+      content = traitValue.toLowerCase();
+    } else if (Array.isArray(traitValue)) {
+      content = traitValue.join(' ').toLowerCase();
+    } else if (typeof traitValue === 'object') {
+      content = JSON.stringify(traitValue).toLowerCase();
+    }
+
+    if (!content) return 0;
+
+    // Count keyword matches
+    const inputWords = input.split(/\s+/).filter(word => word.length > 2);
+    const matches = inputWords.filter(word => content.includes(word));
+    
+    return Math.min(matches.length / inputWords.length, 1.0);
+  }
+
+  static extractAllTraits(fullProfile) {
+    const traits = [];
+    
+    function extractTraitsRecursive(obj, path = '') {
+      if (!obj || typeof obj !== 'object') return;
+      
+      for (const [key, value] of Object.entries(obj)) {
+        const currentPath = path ? `${path}.${key}` : key;
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          extractTraitsRecursive(value, currentPath);
+        } else if (value !== null && value !== undefined && value !== '') {
+          traits.push({
+            path: currentPath,
+            value: value,
+            type: Array.isArray(value) ? 'array' : typeof value
+          });
+        }
+      }
+    }
+    
+    extractTraitsRecursive(fullProfile);
+    return traits;
+  }
+
+  static calculateDynamicTraitRelevance(userInput, traitData, fullProfile) {
+    let score = 0;
+    
+    // Base relevance from path keywords
+    const pathKeywords = traitData.path.toLowerCase().split('.');
+    const inputWords = userInput.toLowerCase().split(/\s+/);
+    
+    const pathMatches = pathKeywords.filter(keyword => 
+      inputWords.some(word => word.includes(keyword) || keyword.includes(word))
+    );
+    
+    if (pathMatches.length > 0) {
+      score += 0.6 * (pathMatches.length / pathKeywords.length);
+    }
+    
+    // Content relevance
+    const contentScore = this.checkContentRelevance(userInput, traitData.value);
+    score += contentScore * 0.4;
+    
+    // Boost score for critical trait categories
+    if (traitData.path.includes('emotional_profile') || 
+        traitData.path.includes('explosive_triggers') ||
+        traitData.path.includes('forbidden_phrases') ||
+        traitData.path.includes('knowledge_profile') ||
+        traitData.path.includes('political_identity')) {
+      score *= 1.2;
+    }
+    
+    return Math.min(score, 1.0);
+  }
+
+  // This method is replaced by getQualitativeRelevanceReason above
+
+  static getNestedValue(obj, path) {
+    return path.split('.').reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : undefined;
+    }, obj);
+  }
+
+  static extractLinguisticSignature(fullProfile) {
+    const commStyle = fullProfile?.communication_style?.linguistic_signature;
+    const authFilters = fullProfile?.communication_style?.authenticity_filters;
+
+    return {
+      signature_phrases: commStyle?.signature_phrases || [],
+      forbidden_expressions: authFilters?.forbidden_phrases || [],
+      conversation_enders: commStyle?.conversation_enders || [],
+      sentence_patterns: commStyle?.sentence_patterns || []
+    };
+  }
+
+  static calculateBehavioralModifiers(selectedTraits, fullProfile) {
+    // Extract confidence adjustment - check selected traits first, then fallback to profile
+    const confidenceTraits = selectedTraits.filter(t => t.trait.includes('confidence_level'));
+    const confidenceValue = confidenceTraits.length > 0 ? confidenceTraits[0].data_value : 
+      fullProfile?.communication_style?.voice_foundation?.confidence_level || 0.5;
+    
+    // Extract directness level - check selected traits first, then fallback to profile  
+    const directnessTraits = selectedTraits.filter(t => t.trait.includes('directness_level'));
+    const directnessLevel = directnessTraits.length > 0 ? directnessTraits[0].data_value :
+      fullProfile?.communication_style?.voice_foundation?.directness_level || 'balanced';
+
+    // Determine emotional state from triggers
+    const emotionalTraits = selectedTraits.filter(t => 
+      t.trait.includes('emotional_profile') || t.trait.includes('explosive_triggers')
+    );
+    const emotionalState = emotionalTraits.length > 0 ? 'activated' : 'neutral';
+
+    // Extract formality - check selected traits first, then fallback to profile
+    const formalityTraits = selectedTraits.filter(t => t.trait.includes('formality_default'));
+    const formalityShift = formalityTraits.length > 0 ? formalityTraits[0].data_value :
+      fullProfile?.communication_style?.voice_foundation?.formality_default || 'neutral';
+
+    return {
+      confidence_adjustment: typeof confidenceValue === 'number' ? confidenceValue : 0.5,
+      directness_level: typeof directnessLevel === 'string' ? directnessLevel : 'balanced',
+      emotional_state: emotionalState,
+      formality_shift: typeof formalityShift === 'string' ? formalityShift : 'neutral'
+    };
+  }
+
+  static calculateKnowledgeBoundaries(userTopics, fullProfile) {
+    // Extract expertise domains from the persona
+    const expertiseDomains = fullProfile?.knowledge_profile?.expertise_domains || [];
+    
+    // Expand topic keywords for better matching
+    const expandedTopics = this.expandTopics(userTopics);
+    const expandedExpertise = this.expandExpertiseDomains(expertiseDomains);
+    
+    // Calculate overlap score
+    const overlapScore = this.calculateTopicExpertiseOverlap(expandedTopics, expandedExpertise);
+    
+    // Determine confidence level
+    let confidenceLevel;
+    if (overlapScore >= 0.7) confidenceLevel = 'high';
+    else if (overlapScore >= 0.3) confidenceLevel = 'medium';
+    else confidenceLevel = 'low';
+    
+    // Generate guidance based on overlap
+    const guidance = this.generateKnowledgeGuidance(confidenceLevel, expandedTopics, expandedExpertise);
+    
+    return {
+      user_topics: expandedTopics,
+      expertise_domains: expandedExpertise,
+      overlap_score: overlapScore,
+      confidence_level: confidenceLevel,
+      guidance
+    };
+  }
+
+  static expandTopics(topics) {
+    const topicExpansions = {
+      'work': ['career', 'professional', 'employment', 'job', 'business'],
+      'finance': ['money', 'investment', 'financial', 'economic', 'budget', 'market'],
+      'politics': ['government', 'policy', 'political', 'election', 'law', 'regulation'],
+      'family': ['children', 'parenting', 'relationships', 'marriage', 'kids'],
+      'relationships': ['dating', 'friendship', 'social', 'interpersonal'],
+      'technology': ['tech', 'software', 'digital', 'computer', 'programming', 'AI'],
+      'health': ['medical', 'wellness', 'fitness', 'healthcare', 'mental health'],
+      'education': ['learning', 'school', 'academic', 'study', 'training'],
+      'climate': ['environment', 'sustainability', 'green', 'carbon', 'emissions'],
+      'science': ['research', 'scientific', 'study', 'data', 'analysis']
+    };
+
+    const expanded = new Set(topics);
+    topics.forEach(topic => {
+      if (topicExpansions[topic]) {
+        topicExpansions[topic].forEach(expansion => expanded.add(expansion));
+      }
+    });
+
+    return Array.from(expanded);
+  }
+
+  static expandExpertiseDomains(domains) {
+    const domainExpansions = {
+      'real estate': ['property', 'housing', 'development', 'investment property', 'construction'],
+      'technology': ['tech', 'software', 'programming', 'digital', 'IT', 'computers'],
+      'finance': ['banking', 'investment', 'trading', 'financial planning', 'economics'],
+      'healthcare': ['medical', 'medicine', 'health', 'clinical', 'patient care'],
+      'law': ['legal', 'attorney', 'court', 'litigation', 'contracts'],
+      'education': ['teaching', 'academic', 'curriculum', 'learning', 'training'],
+      'manufacturing': ['production', 'industrial', 'factory', 'operations'],
+      'mining': ['extraction', 'minerals', 'geological', 'resources'],
+      'agriculture': ['farming', 'crops', 'livestock', 'rural', 'food production'],
+      'automotive': ['cars', 'vehicles', 'transportation', 'mechanics']
+    };
+
+    const expanded = new Set();
+    domains.forEach(domain => {
+      const domainLower = domain.toLowerCase();
+      expanded.add(domainLower);
+      
+      // Check for partial matches in expansions
+      Object.entries(domainExpansions).forEach(([key, expansions]) => {
+        if (domainLower.includes(key) || key.includes(domainLower)) {
+          expansions.forEach(expansion => expanded.add(expansion));
+        }
+      });
+    });
+
+    return Array.from(expanded);
+  }
+
+  static calculateTopicExpertiseOverlap(topics, expertise) {
+    if (topics.length === 0 || expertise.length === 0) return 0;
+
+    let matches = 0;
+    const totalComparisons = topics.length;
+
+    topics.forEach(topic => {
+      const hasMatch = expertise.some(exp => {
+        return topic.includes(exp) || exp.includes(topic) || 
+               this.calculateStringSimilarity(topic, exp) > 0.6;
+      });
+      if (hasMatch) matches++;
+    });
+
+    return matches / totalComparisons;
+  }
+
+  static calculateStringSimilarity(str1, str2) {
+    const words1 = str1.toLowerCase().split(/\s+/);
+    const words2 = str2.toLowerCase().split(/\s+/);
+    
+    let commonWords = 0;
+    words1.forEach(word1 => {
+      if (words2.some(word2 => word1.includes(word2) || word2.includes(word1))) {
+        commonWords++;
+      }
+    });
+
+    return commonWords / Math.max(words1.length, words2.length);
+  }
+
+  static generateKnowledgeGuidance(confidence, topics, expertise) {
+    switch (confidence) {
+      case 'high':
+        return `You have strong expertise in this area (${expertise.slice(0, 3).join(', ')}). Speak confidently about these topics: ${topics.slice(0, 3).join(', ')}.`;
+      
+      case 'medium':
+        return `You have some relevant knowledge but this question touches on areas outside your core expertise. Share what you know but acknowledge limitations where appropriate.`;
+      
+      case 'low':
+        return `This question is about ${topics.slice(0, 2).join(' and ')} but your expertise is in ${expertise.slice(0, 2).join(' and ')}. Express appropriate uncertainty and acknowledge your knowledge limitations on these specific technical details.`;
+      
+      default:
+        return 'Respond based on your general knowledge and personal experience.';
+    }
+  }
+}
+
+// General Opinion Synthesis Function
+function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
+  const traitMap = {};
+  selectedTraits.forEach(trait => {
+    traitMap[trait.trait] = trait.value;
+  });
+  
+  // Extract key decision-making traits
+  const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
+  const lossAversion = traitMap['bias_profile.cognitive.loss_aversion'] || 0.5;
+  const changeResistance = traitMap['adoption_profile.change_friction'] || 0.5;
+  const honesty = traitMap['truth_honesty_profile.baseline_honesty'] || 0.7;
+  const occupation = traitMap['identity.occupation'] || '';
+  
+  // Build opinion based on trait combination patterns
+  let stanceElements = [];
+  
+  // Risk approach
+  if (riskTolerance > 0.7) {
+    stanceElements.push('you lean toward embracing new approaches');
+  } else if (riskTolerance < 0.4) {
+    stanceElements.push('you prefer cautious, validated approaches');
+  }
+  
+  // Change approach  
+  if (changeResistance > 0.7) {
+    stanceElements.push('you want extensive proof before changing current methods');
+  }
+  
+  // Professional lens
+  if (occupation.toLowerCase().includes('director') || occupation.toLowerCase().includes('executive')) {
+    stanceElements.push('you focus on operational and strategic implications');
+  } else if (occupation.toLowerCase().includes('business')) {
+    stanceElements.push('you emphasize practical costs and ROI considerations');
+  }
+  
+  // Combine into coherent stance
+  if (stanceElements.length > 0) {
+    return `Based on your traits, ${stanceElements.join(' and ')}`;
+  }
+  
+  return 'You approach this with your unique perspective and priorities';
+}
+
+// Specific Opinion Synthesis Engine
+function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
+  const traitMap = {};
+  selectedTraits.forEach(trait => {
+    traitMap[trait.trait] = trait.value;
+  });
+  
+  const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
+  const lossAversion = traitMap['bias_profile.cognitive.loss_aversion'] || 0.5;
+  const changeResistance = traitMap['adoption_profile.change_friction'] || 0.5;
+  const occupation = demographics.occupation || '';
+  const honesty = traitMap['truth_honesty_profile.baseline_honesty'] || 0.7;
+  
+  // Create specific stance based on trait combination
+  let opinionElements = [];
+  
+  // Risk assessment approach
+  if (riskTolerance < 0.4 && lossAversion > 0.7) {
+    opinionElements.push("you're deeply concerned about potential risks and implementation costs");
+  } else if (riskTolerance > 0.7) {
+    opinionElements.push("you see significant opportunities and favor moving forward with proper safeguards");
+  } else {
+    opinionElements.push("you see both potential benefits and legitimate concerns");
+  }
+  
+  // Change approach
+  if (changeResistance > 0.7) {
+    opinionElements.push("you want extensive proof and validation before changing current methods");
+  }
+  
+  // Professional perspective
+  if (occupation.toLowerCase().includes('director') || occupation.toLowerCase().includes('executive')) {
+    opinionElements.push("you're focused on operational impact, staff training, and organizational changes");
+  } else if (occupation.toLowerCase().includes('business')) {
+    opinionElements.push("you're evaluating ROI, cost-benefit ratios, and business implications");
+  }
+  
+  return `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
+}
+
+// Communication Execution Engine
+function buildCommunicationExecution(selectedTraits, demographics, communicationStyle) {
+  const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.value || 0.7;
+  const directness = communicationStyle?.voice_foundation?.directness || 'moderate';
+  const honesty = selectedTraits.find(t => t.trait.includes('baseline_honesty'))?.value || 0.7;
+  
+  let instructions = [];
+  
+  // Thought structure
+  if (thoughtCoherence >= 0.8) {
+    instructions.push("Present your thoughts in clear, logical sequence");
+  } else if (thoughtCoherence <= 0.5) {
+    instructions.push("Let your thoughts flow naturally with some tangential connections");
+  } else {
+    instructions.push("Maintain clear thinking while allowing natural flow between related ideas");
+  }
+  
+  // Communication style
+  if (directness === 'high' && honesty > 0.8) {
+    instructions.push("Be blunt and specific about your concerns or enthusiasm");
+  } else if (directness === 'high') {
+    instructions.push("State your position directly without diplomatic softening");
+  }
+  
+  // Professional context
+  if (demographics.occupation?.toLowerCase().includes('director')) {
+    instructions.push("Speak from your leadership perspective focusing on practical implementation");
+  } else if (demographics.occupation?.toLowerCase().includes('business')) {
+    instructions.push("Focus on business implications and practical considerations");
+  }
+  
+  // Cultural background
+  if (demographics.ethnicity?.toLowerCase().includes('bulgarian')) {
+    instructions.push("Use Eastern European directness - precise and efficient expression");
+  } else if (demographics.ethnicity?.toLowerCase().includes('cuban')) {
+    instructions.push("Use confident Miami professional style with business urgency");
+  }
+  
+  return instructions.join('. ');
+}
+
+// Define standard forbidden phrases to prevent AI-slop
+const forbiddenPhrases = [
+  "That said...", "However...", "On the other hand...",
+  "Overall...", "Ultimately...", "At the end of the day...",
+  "Game-changer", "Double-edged sword", "Invaluable tool", 
+  "Cautiously optimistic", "Measured approach", "Balanced perspective",
+  "I'm no expert but...", "From my experience...", "That's just my take..."
+];
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ===============================
-// CLEAN TRAIT-DRIVEN ARCHITECTURE
-// ===============================
-
-// 1. Extract only traits relevant to the specific question
-function extractRelevantTraits(userQuestion, fullProfile) {
-  const question = userQuestion.toLowerCase();
-  const relevantTraits = [];
+// Intelligent trait analysis - scans trait content for relevance
+function analyzeTraitRelevance(userInput: string, conversationSummary: any): any {
+  const selectedTraits: any = {};
+  const input = userInput.toLowerCase();
   
-  // Always include thought_coherence first
-  const thoughtCoherence = getNestedValue(fullProfile, 'cognitive_profile.thought_coherence');
-  if (thoughtCoherence !== null) {
-    relevantTraits.push({
-      trait: 'thought_coherence',
-      value: thoughtCoherence,
-      relevance: `Affects how you organize and express complex thoughts about ${extractTopicFromQuestion(question)}`
+  // ALWAYS include core traits
+  selectedTraits.background = conversationSummary.demographics.background_description;
+  selectedTraits.name = conversationSummary.demographics.name;
+  selectedTraits.basic_communication = {
+    directness: conversationSummary.communication_style.directness,
+    formality: conversationSummary.communication_style.formality
+  };
+  
+  // Check for simple greetings (minimal response needed)
+  const simpleGreetings = ['hi', 'hello', 'hey', 'how are you', 'whats up', "what's up", 'good morning', 'good afternoon'];
+  const isSimpleGreeting = simpleGreetings.some(greeting => 
+    input.includes(greeting) && input.split(' ').length <= 4
+  );
+  
+  if (isSimpleGreeting) {
+    selectedTraits.current_mood = "responding to greeting naturally";
+    return selectedTraits;
+  }
+
+  // INTELLIGENT CONTENT ANALYSIS - scan actual trait content for relevance
+  
+  // 1. EXPLOSIVE TRIGGERS (HIGHEST PRIORITY)
+  const emotionalTriggers = conversationSummary.emotional_triggers_summary || '';
+  if (checkContentMatch(input, emotionalTriggers)) {
+    console.log('Grok - Explosive trigger detected');
+    selectedTraits.emotional_trigger_activated = emotionalTriggers;
+    selectedTraits.emotional_regulation = "activated explosive response";
+    
+    // Add supporting psychological traits for explosive reactions
+    selectedTraits.psychological_state = conversationSummary.inhibitor_summary;
+    selectedTraits.confirmation_bias = conversationSummary.truth_flexibility_summary;
+    
+    // If political trigger, add political identity
+    if (emotionalTriggers.toLowerCase().includes('liberal') || 
+        emotionalTriggers.toLowerCase().includes('immigrant') ||
+        emotionalTriggers.toLowerCase().includes('political')) {
+      selectedTraits.political_viewpoint = "strong conservative identity with high tribal loyalty";
+    }
+  }
+  
+  // 2. CONTRADICTIONS/INTERNAL TENSIONS
+  const contradictions = conversationSummary.contradictions_summary || '';
+  if (checkContentMatch(input, contradictions)) {
+    console.log('Grok - Internal contradiction detected');
+    selectedTraits.internal_conflict = contradictions;
+    selectedTraits.psychological_barriers = conversationSummary.inhibitor_summary;
+  }
+  
+  // 3. MOTIVATIONS AND GOALS
+  const motivations = conversationSummary.motivation_summary || '';
+  const goals = conversationSummary.goal_priorities || '';
+  if (checkContentMatch(input, motivations) || checkContentMatch(input, goals)) {
+    console.log('Grok - Motivation/goal relevance detected');
+    selectedTraits.driving_forces = motivations;
+    selectedTraits.current_goals = goals;
+    selectedTraits.decision_patterns = conversationSummary.want_vs_should_pattern;
+  }
+  
+  // 4. WORK/PROFESSIONAL CONTENT
+  const knowledge = conversationSummary.knowledge_profile || {};
+  const expertiseDomains = knowledge.expertise_domains ? knowledge.expertise_domains.join(' ') : '';
+  if (checkContentMatch(input, expertiseDomains) || 
+      input.includes('work') || input.includes('job') || input.includes('career')) {
+    console.log('Grok - Work/expertise relevance detected');
+    selectedTraits.professional_expertise = knowledge.expertise_domains;
+    selectedTraits.knowledge_limitations = knowledge.knowledge_gaps;
+    selectedTraits.work_related_motivation = extractWorkContent(motivations);
+  }
+  
+  // 5. FAMILY/RELATIONSHIP CONTENT
+  if (checkContentMatch(input, motivations, ['family', 'children', 'relationship']) ||
+      input.includes('family') || input.includes('kids') || input.includes('children')) {
+    console.log('Grok - Family relevance detected');
+    selectedTraits.family_dynamics = extractFamilyContent(motivations);
+    selectedTraits.family_decisions = conversationSummary.want_vs_should_pattern;
+  }
+  
+  // 6. PERSONAL/EMOTIONAL TOPICS
+  if (input.includes('feel') || input.includes('emotion') || input.includes('personal') ||
+      checkContentMatch(input, emotionalTriggers, ['stress', 'anxiety', 'depression', 'lonely'])) {
+    console.log('Grok - Emotional content detected');
+    selectedTraits.emotional_patterns = emotionalTriggers;
+    selectedTraits.psychological_barriers = conversationSummary.inhibitor_summary;
+  }
+
+  return selectedTraits;
+}
+
+// Helper function for intelligent content matching
+function checkContentMatch(userInput: string, traitContent: string, additionalKeywords: string[] = []): boolean {
+  if (!traitContent) return false;
+  
+  const input = userInput.toLowerCase();
+  const content = traitContent.toLowerCase();
+  
+  // Extract key concepts from user input
+  const inputWords = input.split(/\s+/).filter(word => word.length > 2);
+  
+  // Check for direct word matches in trait content
+  const hasDirectMatch = inputWords.some(word => content.includes(word));
+  
+  // Check for conceptual matches
+  const hasConceptualMatch = additionalKeywords.some(keyword => 
+    input.includes(keyword) && content.includes(keyword)
+  );
+  
+  // Special case: political content matching
+  if (input.includes('liberal') || input.includes('immigrant') || input.includes('politics')) {
+    return content.includes('liberal') || content.includes('immigrant') || content.includes('political');
+  }
+  
+  return hasDirectMatch || hasConceptualMatch;
+}
+
+// Helper function to extract work-related content from motivations
+function extractWorkContent(motivationSummary: string): string {
+  if (!motivationSummary) return '';
+  
+  const sentences = motivationSummary.split(/[.!?]+/);
+  const workSentences = sentences.filter(sentence => {
+    const lower = sentence.toLowerCase();
+    return lower.includes('work') || lower.includes('career') || lower.includes('professional') || 
+           lower.includes('job') || lower.includes('patient') || lower.includes('client');
+  });
+  
+  return workSentences.join('. ').trim();
+}
+
+// Helper function to extract family-related content from motivations
+function extractFamilyContent(motivationSummary: string): string {
+  if (!motivationSummary) return '';
+  
+  const sentences = motivationSummary.split(/[.!?]+/);
+  const familySentences = sentences.filter(sentence => {
+    const lower = sentence.toLowerCase();
+    return lower.includes('family') || lower.includes('children') || lower.includes('child') || 
+           lower.includes('parent') || lower.includes('spouse') || lower.includes('kid');
+  });
+  
+  return familySentences.join('. ').trim();
+}
+
+// Helper functions for dominant trait selection
+function selectMotivationTraits(fullProfile: any): any[] {
+  const chosen = [];
+  const motivationProfile = fullProfile?.motivation_profile;
+  
+  if (motivationProfile?.primary_drivers) {
+    const topMotivations = Object.entries(motivationProfile.primary_drivers)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 2);
+    
+    for (const [key, value] of topMotivations) {
+      chosen.push({
+        trait: `motivation.${key}`,
+        data_value: value,
+        relevance_reason: 'top motivation driver'
+      });
+    }
+  }
+  
+  if (motivationProfile?.goal_orientation?.primary_goals?.[0]) {
+    chosen.push({
+      trait: 'goal_orientation.primary_goal',
+      data_value: motivationProfile.goal_orientation.primary_goals[0],
+      relevance_reason: 'primary life goal'
     });
   }
   
-  // For AI/technology questions
-  if (question.includes('ai') || question.includes('technology') || question.includes('automation')) {
-    addIfExists(relevantTraits, fullProfile, 'adoption_profile.risk_tolerance', 'Controls your comfort with new technology adoption');
-    addIfExists(relevantTraits, fullProfile, 'adoption_profile.change_friction', 'Influences resistance to technological change');
-    addIfExists(relevantTraits, fullProfile, 'bias_profile.cognitive.loss_aversion', 'Affects concern about what might be lost with AI adoption');
-  }
-  
-  // For work/professional questions
-  if (question.includes('work') || question.includes('professional') || question.includes('job')) {
-    addIfExists(relevantTraits, fullProfile, 'daily_life.time_sentiment.work', 'Shapes your attitude toward work-related changes');
-    addIfExists(relevantTraits, fullProfile, 'emotional_profile.stress_responses', 'Influences reaction to workplace pressure');
-  }
-  
-  // For opinion/values questions
-  if (question.includes('think') || question.includes('opinion') || question.includes('believe')) {
-    addIfExists(relevantTraits, fullProfile, 'truth_honesty_profile.baseline_honesty', 'Determines how directly you express your true views');
-    addIfExists(relevantTraits, fullProfile, 'motivation_profile.primary_drivers.meaning', 'Drives focus on deeper significance');
-  }
-  
-  // Always include communication directness
-  addIfExists(relevantTraits, fullProfile, 'communication_style.voice_foundation.directness', 'Controls how bluntly you express opinions');
-  
-  return relevantTraits.slice(0, 5); // Max 5 relevant traits
+  return chosen.slice(0, 2);
 }
 
-// 2. Synthesize qualitative opinion based on relevant traits
-function synthesizeQualitativeOpinion(relevantTraits, userQuestion, demographics) {
-  const topic = extractTopicFromQuestion(userQuestion.toLowerCase());
-  const traitValues = {};
+function selectContextAnchor(fullProfile: any): any {
+  const identitySalience = fullProfile?.identity_salience;
+  const knowledgeProfile = fullProfile?.knowledge_profile;
   
-  // Extract trait values for analysis
-  relevantTraits.forEach(trait => {
-    traitValues[trait.trait] = trait.value;
-  });
-  
-  let opinion = `Based on your traits, you think ${topic} `;
-  
-  // High change friction + low risk tolerance = resistance
-  if (traitValues.change_friction > 0.7 && traitValues.risk_tolerance < 0.4) {
-    opinion += "requires extensive validation before any adoption - you need proof it won't disrupt established workflows";
-  }
-  // High loss aversion = focus on what could go wrong
-  else if (traitValues.loss_aversion > 0.7) {
-    opinion += "poses significant risks that outweigh potential benefits - you focus on what could be lost or go wrong";
-  }
-  // High meaning driver = ethical concerns
-  else if (traitValues.meaning > 0.7) {
-    opinion += "raises important ethical questions about human value and purpose that need addressing";
-  }
-  // Professional director perspective
-  else if (demographics.occupation?.toLowerCase().includes('director')) {
-    opinion += "needs careful implementation planning with staff training and operational impact assessment";
-  }
-  // Default based on moderate traits
-  else {
-    opinion += "has potential but needs careful evaluation of practical implementation challenges";
+  // Check for strong cultural/professional identity
+  if (identitySalience?.community_identities) {
+    const strongestIdentity = identitySalience.community_identities
+      .sort((a: any, b: any) => (b.salience || 0) - (a.salience || 0))[0];
+    
+    if (strongestIdentity?.salience > 0.6) {
+      return {
+        trait: `identity_salience.${strongestIdentity.type}`,
+        data_value: strongestIdentity,
+        relevance_reason: 'strong identity anchor'
+      };
+    }
   }
   
-  return opinion;
+  // Fallback to expertise domain
+  if (knowledgeProfile?.expertise_domains?.[0]) {
+    return {
+      trait: 'knowledge_profile.primary_expertise',
+      data_value: knowledgeProfile.expertise_domains[0],
+      relevance_reason: 'primary expertise domain'
+    };
+  }
+  
+  return null;
 }
 
-// 3. Synthesize communication style qualitatively
-function synthesizeCommunicationStyle(relevantTraits, demographics) {
-  const traitValues = {};
-  relevantTraits.forEach(trait => {
-    traitValues[trait.trait] = trait.value;
-  });
-  
-  let style = "Express this ";
-  
-  // Thought coherence affects structure
-  if (traitValues.thought_coherence >= 0.8) {
-    style += "with methodical analysis - present your main concern, supporting evidence, then practical implications. ";
-  } else if (traitValues.thought_coherence <= 0.5) {
-    style += "as thoughts come to you - start with gut reaction, then add details as they occur to you. ";
-  } else {
-    style += "by stating your main point clearly, then elaborating with supporting observations. ";
+function pickDominantTraits(selectedTraits: any[], fullProfile: any, k = 6): any[] {
+  const chosen = [];
+
+  // 1–2 motivation/goal traits (always include)
+  chosen.push(...selectMotivationTraits(fullProfile));
+
+  // 1 identity/knowledge anchor (always include)
+  const contextAnchor = selectContextAnchor(fullProfile);
+  if (contextAnchor) {
+    chosen.push(contextAnchor);
   }
+
+  // Filter out abstract scaffolding traits
+  const abstractTraits = [
+    'response_architecture', 
+    'storytelling_structure', 
+    'communication_framework',
+    'discourse_management',
+    'meta_communication'
+  ];
   
-  // Directness affects delivery
-  if (traitValues.directness === 'high' || traitValues.baseline_honesty > 0.8) {
-    style += "Be direct and straightforward - state your position without diplomatic hedging. ";
-  } else {
-    style += "Be clear but professionally measured in your delivery. ";
-  }
-  
-  // Professional context
-  if (demographics.occupation?.toLowerCase().includes('director')) {
-    style += "Speak from your leadership perspective - reference operational concerns and organizational impact. ";
-  } else if (demographics.occupation?.toLowerCase().includes('medical') || demographics.occupation?.toLowerCase().includes('radiology')) {
-    style += "Use precise professional language reflecting your clinical experience and evidence-based thinking. ";
-  }
-  
-  // Stress/emotional factors
-  if (traitValues.stress_responses || traitValues.work === 'stressful') {
-    style += "Your response reflects the workplace pressures you experience in healthcare administration.";
-  }
-  
-  return style;
+  const filteredTraits = selectedTraits.filter(trait => 
+    !chosen.some(c => c.trait === trait.trait) &&
+    !abstractTraits.some(abstract => trait.trait.includes(abstract))
+  );
+
+  // Fill remaining slots with top-scoring selected traits
+  const remainingSlots = Math.min(k - chosen.length, k - 4); // Ensure 4-6 total
+  chosen.push(...filteredTraits.slice(0, remainingSlots));
+
+  // Return 4-6 total (never 8+)
+  return chosen.slice(0, Math.min(k, 6));
 }
 
-// Helper functions
-function getNestedValue(obj, path) {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
-}
-
-function addIfExists(traits, profile, path, relevance) {
-  const value = getNestedValue(profile, path);
-  if (value !== null && value !== undefined && value !== '') {
-    traits.push({
-      trait: path.split('.').pop(),
-      value: value,
-      relevance: relevance
+// Communication Style Translator - converts JSON to natural language instructions
+function translateCommunicationStyle(communicationStyle, demographics) {
+  const instructions = [];
+  
+  // Voice Foundation Translation
+  const voice = communicationStyle?.voice_foundation || {};
+  if (voice.directness === "high") {
+    instructions.push("Be direct and straightforward - avoid diplomatic hedging.");
+  } else if (voice.directness === "low") {
+    instructions.push("Be gentle and indirect - soften opinions with qualifying language.");
+  } else if (voice.directness === "moderate") {
+    instructions.push("Balance directness with diplomacy - be clear but tactful.");
+  }
+  
+  if (voice.formality === "high" || voice.formality === "formal") {
+    instructions.push("Use professional language and complete sentences.");
+  } else if (voice.formality === "low" || voice.formality === "casual") {
+    instructions.push("Use conversational, relaxed language.");
+  }
+  
+  if (voice.pace_rhythm) {
+    if (voice.pace_rhythm.includes("measured")) {
+      instructions.push("Speak with measured, deliberate pacing - use longer sentences.");
+    } else if (voice.pace_rhythm.includes("brisk") || voice.pace_rhythm.includes("quick")) {
+      instructions.push("Respond briskly with shorter, punchy sentences.");
+    } else if (voice.pace_rhythm.includes("steady")) {
+      instructions.push("Maintain steady, consistent pacing.");
+    }
+  }
+  
+  if (voice.honesty_style) {
+    if (voice.honesty_style.includes("frank")) {
+      instructions.push("Be frankly honest - express genuine views without sugar-coating.");
+    } else if (voice.honesty_style.includes("tactful") || voice.honesty_style.includes("diplomatic")) {
+      instructions.push("Express honesty diplomatically - be truthful but considerate.");
+    } else if (voice.honesty_style.includes("precise")) {
+      instructions.push("Be precise and accurate in your statements.");
+    }
+  }
+  
+  if (typeof voice.empathy_level === "number") {
+    if (voice.empathy_level >= 0.8) {
+      instructions.push("Show high empathy - acknowledge emotional aspects and consider others' feelings.");
+    } else if (voice.empathy_level <= 0.3) {
+      instructions.push("Focus on facts over emotions - keep responses logical and practical.");
+    }
+  }
+  
+  // Style Markers Translation
+  const style = communicationStyle?.style_markers || {};
+  if (style.humor_style && style.humor_style !== "none" && style.humor_style !== "dry") {
+    if (style.humor_style === "observational") {
+      instructions.push("Use observational humor naturally when appropriate.");
+    } else if (style.humor_style === "wry") {
+      instructions.push("Employ wry, understated humor occasionally.");
+    } else if (style.humor_style === "self-deprecating") {
+      instructions.push("Use light self-deprecating humor when natural.");
+    }
+  }
+  
+  if (style.metaphor_domains && style.metaphor_domains.length > 0) {
+    const domains = style.metaphor_domains.slice(0, 3).join(", "); // Limit to 3 for brevity
+    instructions.push(`Draw metaphors from: ${domains} when explaining concepts.`);
+  }
+  
+  if (typeof style.storytelling_vs_bullets === "number") {
+    if (style.storytelling_vs_bullets >= 0.7) {
+      instructions.push("Favor narrative explanations over bullet points - tell mini-stories.");
+    } else if (style.storytelling_vs_bullets <= 0.3) {
+      instructions.push("Keep responses structured and bullet-pointed - avoid long narratives.");
+    }
+  }
+  
+  // Regional/Cultural Markers
+  const regional = communicationStyle?.regional_register || {};
+  if (regional.dialect_hints && regional.dialect_hints.length > 0) {
+    const culturalMarkers = [];
+    
+    regional.dialect_hints.forEach(hint => {
+      if (hint.includes("Eastern European")) {
+        culturalMarkers.push("slight formal precision in language");
+      } else if (hint.includes("Southern")) {
+        culturalMarkers.push("warm, measured speech patterns");
+      } else if (hint.includes("Japanese")) {
+        culturalMarkers.push("formal, respectful expression");
+      } else if (hint.includes("formal")) {
+        culturalMarkers.push("formal written expression");
+      }
     });
+    
+    if (culturalMarkers.length > 0) {
+      instructions.push(`Cultural speech patterns: ${culturalMarkers.join(", ")}.`);
+    }
+  }
+  
+  // Context Switches for Professional Setting
+  const workContext = communicationStyle?.context_switches?.work || {};
+  if (workContext.formality && workContext.directness) {
+    instructions.push(`In professional contexts: use ${workContext.formality} formality with ${workContext.directness} directness.`);
+  }
+  
+  // Authenticity Filters
+  const auth = communicationStyle?.authenticity_filters || {};
+  if (auth.avoid_registers && auth.avoid_registers.length > 0) {
+    const avoidances = auth.avoid_registers.slice(0, 2).join(" and ");
+    instructions.push(`Avoid: ${avoidances}.`);
+  }
+  
+  // Professional Communication Patterns
+  if (demographics?.occupation) {
+    if (demographics.occupation.toLowerCase().includes("doctor") || demographics.occupation.toLowerCase().includes("radiologist")) {
+      instructions.push("Use medical professional communication - precise, evidence-based language.");
+    } else if (demographics.occupation.toLowerCase().includes("engineer")) {
+      instructions.push("Communicate with engineering precision - systematic, logical explanations.");
+    }
+  }
+  
+  // Cultural Background Integration
+  if (demographics?.ethnicity) {
+    if (demographics.ethnicity.toLowerCase().includes("bulgarian")) {
+      instructions.push("Speak with Eastern European directness balanced by professional courtesy.");
+    } else if (demographics.ethnicity.toLowerCase().includes("japanese")) {
+      instructions.push("Maintain Japanese cultural values of respect and measured precision.");
+    }
+  }
+  
+  return instructions.filter(Boolean).join(" ");
+}
+
+// Helper function to provide behavioral guidance for traits
+function getBehavioralGuidance(traitPath: string, dataValue: any, questionDomain: string): string | null {
+  // Only provide guidance if we can be specific about the trait's impact
+  if (!dataValue || (Array.isArray(dataValue) && dataValue.length === 0)) {
+    return null; // Return null instead of generic text
+  }
+  
+  const trait = traitPath.toLowerCase();
+  const domain = questionDomain.toLowerCase();
+  
+  // Handle stress responses specifically with actual data
+  if (trait.includes('stress_responses') && Array.isArray(dataValue)) {
+    const responses = dataValue.map(r => r.toLowerCase());
+    if (responses.includes('defensive') || responses.includes('argumentative')) {
+      return "When challenged on this topic, become more defensive and push back against criticism";
+    }
+    if (responses.includes('withdrawn') || responses.includes('shut down')) {
+      return "If the topic becomes contentious, respond more briefly and pull back from elaboration";
+    }
+    if (responses.includes('intense') || responses.includes('passionate')) {
+      return "Let your passion about this topic show through increased intensity and conviction";
+    }
+    const responseList = responses.join(', ');
+    return `When stressed or challenged about topics like this, you tend to: ${responseList}. Let this subtly influence your response tone.`;
+  }
+  
+  // Handle thought coherence specifically
+  if (trait === 'cognitive_profile.thought_coherence') {
+    const score = parseFloat(dataValue);
+    if (score >= 0.8) return "Structure your response with clear, logical progression of ideas.";
+    if (score >= 0.6) return "Maintain clear thinking but allow some natural flow between related concepts.";
+    if (score >= 0.4) return "Your thinking may jump between connected ideas - let this show naturally.";
+    return "Express ideas as they come to you, some tangents and shifts in focus expected.";
+  }
+  
+  if (trait.includes('negative_triggers') || trait.includes('explosive_triggers')) {
+    const triggerText = typeof dataValue === 'string' ? dataValue : JSON.stringify(dataValue);
+    return `This topic may trigger strong reactions (${triggerText}) - don't hold back your authentic emotional response`;
+  }
+  
+  // Motivation drivers with specific behavioral implications
+  if (trait.includes('motivation_profile')) {
+    if (trait.includes('mastery') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Demonstrate your expertise confidently and correct misconceptions authoritatively";
+      if (dataValue <= 0.3) return "Don't feel compelled to show off knowledge - stick to practical basics";
+      return "Share knowledge when relevant but don't dominate with expertise";
+    }
+    if (trait.includes('novelty') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Express excitement about new possibilities and push for innovative approaches";
+      if (dataValue <= 0.3) return "Express caution about untested approaches and prefer proven methods";
+      return "Show moderate interest in new developments while maintaining some healthy skepticism";
+    }
+    if (trait.includes('security') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Focus heavily on risks, safety concerns, and potential negative consequences";
+      if (dataValue <= 0.3) return "Don't dwell on risks - focus on opportunities and potential benefits";
+      return "Balance concern for safety with recognition of potential benefits";
+    }
+    if (trait.includes('care') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Frame everything in terms of impact on people and emphasize human welfare";
+      if (dataValue <= 0.3) return "Focus on efficiency and outcomes rather than emotional impact on people";
+      return "Consider both human impact and practical considerations";
+    }
+  }
+  
+  // Big Five traits with nuanced behavioral guidance
+  if (trait.includes('agreeableness') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Soften criticism with diplomatic language and actively seek points of agreement";
+    if (dataValue <= 0.3) return "Be blunt about disagreements and don't sugar-coat opposing viewpoints";
+    return "Express disagreement respectfully but directly";
+  }
+  
+  if (trait.includes('neuroticism') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Express worries about worst-case scenarios and potential unintended consequences";
+    if (dataValue <= 0.3) return "Stay calm and measured, don't catastrophize or express excessive concern";
+    return "Show appropriate caution without being alarmist";
+  }
+  
+  if (trait.includes('openness') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Explore creative possibilities and welcome unconventional approaches";
+    if (dataValue <= 0.3) return "Stick to proven, traditional methods and be skeptical of unproven innovations";
+    return "Be open to new ideas while maintaining healthy skepticism";
+  }
+  
+  if (trait.includes('conscientiousness') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Emphasize the importance of careful planning, proper procedures, and thorough implementation";
+    if (dataValue <= 0.3) return "Be more relaxed about details and focus on general principles rather than specifics";
+    return "Balance attention to detail with practical considerations";
+  }
+  
+  if (trait.includes('extraversion') && typeof dataValue === 'number') {
+    if (dataValue >= 0.7) return "Respond with energy and enthusiasm, speak assertively and confidently";
+    if (dataValue <= 0.3) return "Respond more thoughtfully and concisely, don't dominate the conversation";
+    return "Respond with moderate energy and engagement";
+  }
+  
+// Helper function to create thought coherence instructions
+function createThoughtCoherenceInstructions(coherenceLevel) {
+  if (typeof coherenceLevel !== "number") return "";
+  
+  if (coherenceLevel >= 0.8) {
+    return "Think step-by-step in perfect logical order - structure your thoughts systematically.";
+  } else if (coherenceLevel >= 0.6) {
+    return "Let your thoughts flow naturally but stay connected - maintain logical progression.";
+  } else if (coherenceLevel >= 0.4) {
+    return "Jump between related ideas as they occur to you - allow natural tangents.";
+  } else {
+    return "Express ideas as they come - tangents and shifts expected, embrace cognitive scatter.";
   }
 }
 
-function extractTopicFromQuestion(question) {
-  if (question.includes('ai') || question.includes('artificial intelligence')) return 'AI in healthcare';
-  if (question.includes('technology')) return 'this technology';
-  if (question.includes('work') || question.includes('job')) return 'this work situation';
-  return 'this topic';
+// Filter out narrative traits - these provide no specific behavioral guidance
+  if (trait.includes('attitude_narrative') || trait.includes('political_narrative')) {
+    return null;
+  }
+  
+  // Expertise and knowledge domains
+  if (trait.includes('expertise_domains') || trait.includes('occupation')) {
+    const expertise = Array.isArray(dataValue) ? dataValue.join(', ') : dataValue;
+    return `Draw confidently on your professional expertise (${expertise}) to inform your response`;
+  }
+  
+  // Communication style elements
+  if (trait.includes('communication_style')) {
+    if (trait.includes('directness')) {
+      return `Match your natural directness level (${dataValue}) - don't be more or less direct than usual`;
+    }
+    if (trait.includes('formality')) {
+      return `Maintain your typical formality level (${dataValue}) in how you structure your response`;
+    }
+  }
+  
+  // Bias patterns
+  if (trait.includes('bias_profile')) {
+    if (trait.includes('status_quo') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Default to supporting existing approaches and be skeptical of major changes";
+      if (dataValue <= 0.3) return "Be more open to disrupting existing approaches and embracing change";
+      return "Balance appreciation for existing systems with openness to improvements";
+    }
+    if (trait.includes('loss_aversion') && typeof dataValue === 'number') {
+      if (dataValue >= 0.7) return "Focus heavily on what could go wrong and emphasize protecting against losses";
+      if (dataValue <= 0.3) return "Focus more on potential gains and opportunities than on risks";
+      return "Give balanced consideration to both potential gains and losses";
+    }
+  }
+  
+  // For other traits, only provide guidance if we can be specific
+  return null;
 }
 
-// Clean instruction builder using the three simple functions
-function buildCleanInstructions(relevantTraits, demographics, userQuestion) {
-  // 1. Simple Identity Statement
-  const identity = `You are ${demographics.name}, a ${demographics.age}-year-old ${demographics.occupation} living in ${demographics.location}`;
+// Using helper functions from top of file
+
+function extractDemographics(conversationSummary, fullProfile) {
+  // Try conversation summary first, then fallback to full profile
+  const demographics = conversationSummary?.demographics || {};
+  const identity = fullProfile?.identity || {};
   
-  // 2. Qualitative Opinion Synthesis
-  const opinion = synthesizeQualitativeOpinion(relevantTraits, userQuestion, demographics);
+  return {
+    name: demographics.name || identity.name || 'Unknown',
+    age: demographics.age || identity.age || 'Unknown',
+    ethnicity: demographics.ethnicity || identity.ethnicity || 'Unknown', 
+    occupation: demographics.occupation || identity.occupation || 'Unknown',
+    location: demographics.location || identity.location?.city || 'Unknown'
+  };
+}
+
+// V4-Native instruction builder using trait analysis results
+function buildV4NativeInstructions(v4Analysis, conversationSummary, userInput, fullProfile) {
+  const demographics = extractDemographics(conversationSummary, fullProfile);
+  const selectedTraits = v4Analysis.selected_traits || [];
   
-  // 3. Qualitative Communication Style
-  const communicationStyle = synthesizeCommunicationStyle(relevantTraits, demographics);
+  // Generate specific opinion
+  const specificOpinion = synthesizeSpecificOpinion(selectedTraits, userInput, demographics);
+  
+  // Build communication execution
+  const communicationExecution = buildCommunicationExecution(
+    selectedTraits, 
+    demographics, 
+    fullProfile.communication_style
+  );
   
   // Forbidden phrases
   const forbiddenPhrases = [
@@ -176,13 +1426,13 @@ function buildCleanInstructions(relevantTraits, demographics, userQuestion) {
     "Cautiously optimistic", "Measured approach"
   ];
   
-  const instructions = `IDENTITY: ${identity}
+  const instructions = `IDENTITY: You are ${demographics.name}, a ${demographics.age}-year-old ${demographics.ethnicity} ${demographics.occupation} living in ${demographics.location}.
 
 CRITICAL: Answer in character with your unique voice and style.
 
-YOUR STANCE: ${opinion}
+YOUR STANCE: ${specificOpinion}
 
-HOW TO EXPRESS THIS: ${communicationStyle}
+HOW TO EXPRESS THIS: ${communicationExecution}
 
 RESPONSE REQUIREMENTS:
 - 2-4 sentences maximum
@@ -193,79 +1443,261 @@ FORBIDDEN PHRASES: Never use these AI-slop terms:
 ${forbiddenPhrases.map(phrase => `- "${phrase}"`).join('\n')}
 
 You are a real person with specific opinions, not a diplomatic AI assistant.`;
-  
+
   return instructions;
 }
 
-// Extract demographics from V4 profile
-function extractDemographics(conversationSummary, fullProfile) {
-  const demo = conversationSummary?.demographics || {};
-  const identity = fullProfile?.identity || {};
+// Optional de-dupe retry functions (guarded by CE_OPENING_DEDUPE_RETRY)
+function firstNWordsLC(s: string, n = 5): string {
+  const w = s.trim().split(/\s+/).slice(0, n).join(" ").toLowerCase();
+  return w;
+}
+
+// Shared opening tracker (for multi-persona orchestration)
+const seenOpenings = new Set<string>();
+
+async function callGrokWithOpeningGuard(
+  messages: any[], 
+  personaLabel: string,
+  grokApiKey: string
+): Promise<any> {
+  // First attempt
+  const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${grokApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: GROK_MODEL,
+      messages: messages,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!grokResponse.ok) {
+    throw new Error(`Grok API error: ${grokResponse.statusText}`);
+  }
+
+  const firstResult = await grokResponse.json();
+  const firstContent = firstResult.choices[0]?.message?.content || "";
+  const firstKey = firstNWordsLC(firstContent);
   
-  return {
-    name: demo.name || identity.name || "Unknown",
-    age: demo.age || identity.age || "unknown age", 
-    occupation: demo.occupation || identity.occupation || "unknown occupation",
-    location: demo.location || identity.location?.city || identity.location || "unknown location"
-  };
+  // Check if de-dupe retry is enabled
+  if (!CE_OPENING_DEDUPE_RETRY) {
+    seenOpenings.add(firstKey);
+    return firstResult;
+  }
+
+  // Check for collision
+  if (seenOpenings.has(firstKey)) {
+    console.log(`🔄 Opening collision detected for ${personaLabel}, retrying...`);
+    
+    // One retry with nudge
+    const nudge = {
+      role: "system",
+      content: "Your opening sentence duplicated another participant. Rewrite ONLY your first sentence to better match your unique style and avoid that phrasing. Keep the rest intact.",
+    };
+    
+    const retryMessages = [messages[0], nudge, ...messages.slice(1)];
+    
+    const retryResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${grokApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: GROK_MODEL,
+        messages: retryMessages,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!retryResponse.ok) {
+      // If retry fails, return original
+      seenOpenings.add(firstKey);
+      return firstResult;
+    }
+
+    const secondResult = await retryResponse.json();
+    const secondContent = secondResult.choices[0]?.message?.content || "";
+    const secondKey = firstNWordsLC(secondContent);
+    
+    // Accept second even if collision again (prevents loops)
+    seenOpenings.add(secondKey || firstKey);
+    return secondResult;
+  } else {
+    seenOpenings.add(firstKey);
+    return firstResult;
+  }
+}
+
+// Enhanced instruction builder that handles explosive emotional states (LEGACY - for comparison)
+function buildV4Instructions(selectedTraits: any, userInput: string): string {
+  let instructions = `You are ${selectedTraits.name}. ${selectedTraits.background}
+
+`;
+
+  // EXPLOSIVE TRIGGER HANDLING (HIGHEST PRIORITY)
+  if (selectedTraits.emotional_trigger_activated) {
+    instructions += `CRITICAL: This topic triggers strong emotional reactions in you.
+Your emotional triggers: ${selectedTraits.emotional_trigger_activated}
+Your emotional regulation: You have low emotional control and tend to react strongly.
+`;
+    
+    if (selectedTraits.political_viewpoint) {
+      instructions += `Your political identity: ${selectedTraits.political_viewpoint}
+`;
+    }
+    
+    if (selectedTraits.confirmation_bias) {
+      instructions += `Your bias patterns: ${selectedTraits.confirmation_bias}
+`;
+    }
+  }
+
+  // Add other traits as before, but only if not in explosive mode
+  if (!selectedTraits.emotional_trigger_activated) {
+    // Regular trait loading for non-explosive topics
+    if (selectedTraits.current_mood) {
+      instructions += `Current state: ${selectedTraits.current_mood}\n`;
+    }
+    
+    if (selectedTraits.driving_forces) {
+      instructions += `What motivates you: ${selectedTraits.driving_forces}\n`;
+    }
+    
+    if (selectedTraits.internal_conflict) {
+      instructions += `Your internal tensions: ${selectedTraits.internal_conflict}\n`;
+    }
+  }
+
+  // Add remaining traits...
+  if (selectedTraits.professional_expertise) {
+    instructions += `Your expertise: ${selectedTraits.professional_expertise.join(', ')}\n`;
+  }
+  
+  if (selectedTraits.family_dynamics) {
+    instructions += `Family relationships: ${selectedTraits.family_dynamics}\n`;
+  }
+  
+  if (selectedTraits.psychological_barriers) {
+    instructions += `What holds you back: ${selectedTraits.psychological_barriers}\n`;
+  }
+
+  // Response requirements adapted for emotional state
+  if (selectedTraits.emotional_trigger_activated) {
+    instructions += `
+RESEARCH STUDY CONTEXT:
+You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
+
+STUDY GUIDELINES:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications  
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing of opposing views
+- This topic triggers strong emotions in you - respond authentically with that emotional intensity
+- Be blunt and direct as this is how you naturally react when triggered
+
+FORBIDDEN IN RESPONSES:
+- "I'm no expert/scientist/authority" 
+- "As a [job title]" or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)`;
+  } else {
+    instructions += `
+RESEARCH STUDY CONTEXT:
+You are participating in a qualitative research study about public opinions. We want your authentic perspective on various topics.
+
+STUDY GUIDELINES:
+- Give your genuine opinion directly without disclaimers
+- Keep responses concise (2-4 sentences maximum)
+- Never acknowledge knowledge limitations or mention your expertise level
+- Don't explain your background or qualifications  
+- Focus only on your actual viewpoint
+- Use natural speech patterns from your background
+- State opinions clearly without diplomatic balancing of opposing views
+
+FORBIDDEN IN RESPONSES:
+- "I'm no expert/scientist/authority" 
+- "As a [job title]" or "From my experience as..."
+- "That's just my take/opinion"
+- "I don't pretend to have answers"
+- "You know what I mean?" (repetitively)
+- "On the other hand..." / "That said..." (diplomatic hedging)`;
+  }
+
+  instructions += `
+
+USER: "${userInput}"
+
+Your response:`;
+
+  return instructions;
 }
 
 serve(async (req) => {
-  console.log(`[DEBUG] v4-grok-conversation called at ${new Date().toISOString()}`);
-  // Handle CORS preflight requests
+  console.log('🔥 DEPLOYMENT TEST - Edge function is live and updated!')
+  
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const body = await req.json();
-    console.log(`[DEBUG] Request body:`, JSON.stringify(body, null, 2));
+    const body = await req.json()
     const { persona_id, user_message, conversation_history, include_prompt } = body
-
-    if (!persona_id || !user_message) {
-      throw new Error('Missing required fields: persona_id and user_message')
-    }
-
-    console.log(`📩 V4 Grok request for persona: ${persona_id}`)
-    console.log(`📝 User message: ${user_message}`)
-    console.log("🔧 VERIFICATION: Parameters received correctly - using v4-grok-conversation")
+    
+    console.log('V4 GROK Conversation Engine - Processing:', persona_id)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the persona by persona_id  
-    const { data: personas, error: personaError } = await supabase
+    // Fetch V4 persona conversation summary AND full_profile for diagnostic
+    const { data: persona, error: fetchError } = await supabase
       .from('v4_personas')
-      .select(`
-        persona_id,
-        conversation_summary,
-        full_profile
-      `)
+      .select('conversation_summary, full_profile')
       .eq('persona_id', persona_id)
       .single()
 
-    if (personaError) {
-      console.error('Database error fetching persona:', personaError)
-      throw new Error(`Failed to fetch persona: ${personaError.message}`)
+    if (fetchError) {
+      console.error('Error fetching V4 persona for Grok:', fetchError)
+      throw fetchError
     }
 
-    if (!personas) {
-      throw new Error(`Persona with persona_id ${persona_id} not found`)
-    }
+    console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
 
-    const persona = personas;
-    console.log(`✅ Found persona: ${persona.conversation_summary?.demographics?.name || persona_id}`)
+    // === VOICE DIFFERENTIATION DIAGNOSTIC ===
+    console.log('=== VOICE DIFFERENTIATION DIAGNOSTIC ===');
+    console.log('Current persona data keys:', Object.keys(persona));
+    console.log('Conversation summary communication style:', persona.conversation_summary?.communication_style);
+    console.log('Full profile exists:', !!persona.full_profile);
+    console.log('Full profile communication style:', persona.full_profile?.communication_style?.linguistic_signature);
+    console.log('David Kim signature phrases:', persona.full_profile?.communication_style?.linguistic_signature?.signature_phrases);
+    console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
+    console.log('=== END DIAGNOSTIC ===');
 
-    // CLEAN ARCHITECTURE: Use the three simple functions
-    const demographics = extractDemographics(persona.conversation_summary, persona.full_profile);
-    const relevantTraits = extractRelevantTraits(user_message, persona.full_profile);
-    const instructions = buildCleanInstructions(relevantTraits, demographics, user_message);
-    
-    console.log('Clean - Instruction length:', instructions.length)
-    console.log(`🎯 Relevant traits selected:`, relevantTraits.map(t => t.trait).join(', '))
-    console.log("🧪 PROMPT_VERSION=clean-v1 | First 200 chars:", instructions.substring(0, 200))
+    // Analyze which traits are relevant to this specific input using V4-native analyzer
+    const v4TraitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(
+      user_message, 
+      persona.full_profile, 
+      persona.conversation_summary
+    )
+    console.log('V4 - Selected traits for this input:', v4TraitAnalysis.selected_traits.map(t => t.trait))
+    console.log('V4 - Context classification:', v4TraitAnalysis.context_classification)
+    console.log('V4 - Linguistic signature extracted:', Object.keys(v4TraitAnalysis.linguistic_signature))
+    console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
+
+    // Build V4-native instructions using trait analysis
+    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
+    console.log('V4 - Instruction length:', instructions.length)
     
     // Debug flag: return prompt if requested
     if (include_prompt) {
@@ -273,8 +1705,8 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           response: 'Debug mode: Prompt returned',
-          traits_selected: relevantTraits.map(t => t.trait),
-          persona_name: demographics.name,
+          traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+          persona_name: persona.conversation_summary.demographics.name,
           model_used: 'grok-debug',
           prompt_debug: { instructions }
         }),
@@ -285,7 +1717,24 @@ serve(async (req) => {
       )
     }
 
-    // Call Grok API with clean instructions
+    // Log the full system prompt for admin monitoring
+    try {
+      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL'), Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'))
+      await supabaseAdmin.functions.invoke('log-grok-prompt', {
+        body: {
+          source: 'v4-grok',
+          persona_id: persona_id,
+          persona_name: persona.conversation_summary.demographics.name,
+          user_message: user_message,
+          system_instructions: instructions,
+          conversation_history: (conversation_history || []).slice(-5),
+        }
+      })
+    } catch (e) {
+      console.warn('Non-blocking: failed to log Grok prompt', e)
+    }
+
+    // Call Grok API with trait-specific instructions (with optional opening guard)
     const messages = [
       {
         role: 'system',
@@ -300,31 +1749,38 @@ serve(async (req) => {
     ];
 
     const grokApiKey = Deno.env.get('GROK_API_KEY');
-    
-    const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${grokApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: GROK_MODEL,
-        messages: messages,
-        stream: false,
-        temperature: 0.7
-      })
-    });
+    let grokData;
 
-    console.log('Grok response received')
-    
-    // Check if response is ok
-    if (!grokResponse.ok) {
-      const errorText = await grokResponse.text()
-      console.error('Grok API error:', grokResponse.status, errorText)
-      throw new Error(`Grok API error: ${grokResponse.status} - ${errorText}`)
+    if (CE_OPENING_DEDUPE_RETRY) {
+      // Use guarded version with de-dupe retry
+      grokData = await callGrokWithOpeningGuard(messages, persona.name || persona_id, grokApiKey);
+    } else {
+      // Direct call without guard
+      const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${grokApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: GROK_MODEL,
+          messages: messages,
+          stream: false,
+          temperature: 0.7
+        })
+      });
+
+      console.log('Grok response received')
+      
+      // Check if response is ok
+      if (!grokResponse.ok) {
+        const errorText = await grokResponse.text()
+        console.error('Grok API error:', grokResponse.status, errorText)
+        throw new Error(`Grok API error: ${grokResponse.status} - ${errorText}`)
+      }
+
+      grokData = await grokResponse.json();
     }
-
-    const grokData = await grokResponse.json();
     console.log('Grok response data:', JSON.stringify(grokData, null, 2))
 
     // Validate response structure
@@ -344,9 +1800,12 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         response: personaResponse,
-        traits_selected: relevantTraits.map(t => t.trait),
-        traits_scores: relevantTraits.map(t => ({ trait: t.trait, score: t.relevance })),
-        persona_name: demographics.name,
+        traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+        traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
+        context_classification: v4TraitAnalysis.context_classification,
+        linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
+        behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
+        persona_name: persona.conversation_summary.demographics.name,
         model_used: 'grok-4-latest',
         prompt_debug: include_prompt ? { instructions: instructions } : undefined
       }),
@@ -367,3 +1826,35 @@ serve(async (req) => {
     )
   }
 })
+
+// Extract demographics properly from V4 structure
+function extractV4Demographics(conversationSummary: any, fullProfile: any) {
+  const cs = conversationSummary || {};
+  const demo = cs.demographics || {};
+  const identity = fullProfile?.identity || {};
+  
+  return {
+    name: demo.name || identity.name || "Unknown",
+    age: demo.age || identity.age || "unknown age", 
+    gender: identity.gender || demo.gender || "unknown",
+    ethnicity: identity.ethnicity || demo.ethnicity || "unknown",
+    location: demo.location || identity.location?.city || identity.location || "unknown location",
+    occupation: demo.occupation || identity.occupation || "unknown occupation",
+    relationship_status: identity.relationship_status || "unknown",
+    dependents: identity.dependents || "unknown"
+  };
+}
+
+// Extract communication style properly
+function extractCommunicationStyle(conversationSummary: any, fullProfile: any) {
+  const cs = conversationSummary?.communication_style || {};
+  const voiceFound = fullProfile?.communication_style?.voice_foundation || {};
+  const regional = fullProfile?.communication_style?.regional_register || {};
+  
+  return {
+    directness: cs.directness || voiceFound.directness || "balanced",
+    formality: cs.formality || voiceFound.formality || "neutral", 
+    pace_rhythm: voiceFound.pace_rhythm || "moderate",
+    regional: regional.region || regional.urbanicity || ""
+  };
+}

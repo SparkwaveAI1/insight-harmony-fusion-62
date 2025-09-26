@@ -89,7 +89,7 @@ function buildV4ImagePrompt(personaData: any): string {
   
   // Add facial hair details (men)
   if (gender?.toLowerCase() === 'male' && healthProfile.facial_hair) {
-    const facialHairMap: Record<string, string> = {
+    const facialHairMap = {
       'full_beard': 'full thick beard',
       'goatee': 'goatee facial hair',
       'mustache_only': 'mustache without beard',
@@ -97,24 +97,22 @@ function buildV4ImagePrompt(personaData: any): string {
       'van_dyke': 'van dyke beard style',
       'no_facial_hair': 'clean shaven'
     };
-    const facialHairDescription = facialHairMap[healthProfile.facial_hair] || healthProfile.facial_hair;
-    physicalEnhancements.push(facialHairDescription);
+    physicalEnhancements.push(facialHairMap[healthProfile.facial_hair] || healthProfile.facial_hair);
   }
   
   // Add hair loss patterns
   if (healthProfile.hair_loss_pattern) {
-    const hairLossMap: Record<string, string> = {
+    const hairLossMap = {
       'significant_balding': 'significantly bald, male pattern baldness',
       'moderate_balding': 'balding, thinning hair on top',
       'receding_hairline': 'receding hairline, widow\'s peak'
     };
-    const hairLossDescription = hairLossMap[healthProfile.hair_loss_pattern] || healthProfile.hair_loss_pattern;
-    physicalEnhancements.push(hairLossDescription);
+    physicalEnhancements.push(hairLossMap[healthProfile.hair_loss_pattern] || healthProfile.hair_loss_pattern);
   }
   
   // Add distinctive features
   if (healthProfile.distinctive_features && healthProfile.distinctive_features.length > 0) {
-    const featureMap: Record<string, string> = {
+    const featureMap = {
       'large_nose': 'large prominent nose',
       'prominent_nose': 'distinctive prominent nose',
       'prominent_ears': 'ears that stick out',
@@ -125,9 +123,8 @@ function buildV4ImagePrompt(personaData: any): string {
     };
     
     healthProfile.distinctive_features.forEach((feature: string) => {
-      const featureDescription = featureMap[feature];
-      if (featureDescription) {
-        physicalEnhancements.push(featureDescription);
+      if (featureMap[feature]) {
+        physicalEnhancements.push(featureMap[feature]);
       }
     });
   }

@@ -123,7 +123,7 @@ serve(async (req) => {
         console.error('❌ [AUDIT-LOG] Transaction query error:', transError);
       } else {
         combinedData.push(...(transactions || []).map(t => ({
-          ...(t as unknown as Record<string, unknown>),
+          ...t,
           source_table: 'transaction' as const,
           user_email: '', // Will be filled later
           status: null,
@@ -170,7 +170,7 @@ serve(async (req) => {
         console.error('❌ [AUDIT-LOG] Ledger query error:', ledgerError);
       } else {
         combinedData.push(...(ledger || []).map(l => ({
-          ...(l as unknown as Record<string, unknown>),
+          ...l,
           source_table: 'ledger' as const,
           user_email: '', // Will be filled later
           amount_usd: null,

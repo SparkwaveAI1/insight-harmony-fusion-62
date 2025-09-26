@@ -44,10 +44,3 @@ verify_jwt = false
 
 [functions.bulk-delete-old-personas]
 verify_jwt = true
-
-[functions.v4-grok-conversation]
-verify_jwt = false
-
-# [functions.persona-quick-chat]
-# verify_jwt = false
-# DISABLED - Using v4-grok-conversation for all conversations

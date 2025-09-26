@@ -21,9 +21,9 @@ export interface V4GrokConversationResponse {
 // Grok conversation function - same interface as OpenAI version
 export async function sendV4GrokMessage(request: V4GrokConversationRequest): Promise<V4GrokConversationResponse> {
   try {
-    console.log('🚀 BYPASS: Calling v4-grok-conversation directly for persona:', request.persona_id);
+    console.log('Sending V4 Grok message to persona:', request.persona_id);
 
-    // Direct call to v4-grok-conversation edge function (bypassing billing)
+
     const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
       body: {
         persona_id: request.persona_id,
@@ -33,12 +33,12 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
     });
 
     if (error) {
-      console.error('❌ Error in direct V4 Grok conversation call:', error);
+      console.error('Error in V4 Grok conversation:', error);
       throw error;
     }
 
-    console.log('✅ Direct V4 Grok conversation response received:', data?.persona_name);
-    return data || { success: false, error: 'No response data' };
+    console.log('V4 Grok conversation response received:', data.persona_name);
+    return data;
 
   } catch (error) {
     console.error('Error sending V4 Grok message:', error);

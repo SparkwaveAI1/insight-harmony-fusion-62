@@ -76,10 +76,10 @@ function extractTopicKeywords(currentTopic: string, conversationHistory: any[]):
   for (const message of recentMessages) {
     if (message.content) {
       const messageWords = message.content.toLowerCase().split(/\s+/)
-        .filter((word: string) => word.length > 4)
-        .filter((word: string) => !['this', 'that', 'with', 'have', 'will', 'been', 'from', 'they', 'what', 'when', 'where'].includes(word));
+        .filter(word => word.length > 4)
+        .filter(word => !['this', 'that', 'with', 'have', 'will', 'been', 'from', 'they', 'what', 'when', 'where'].includes(word));
       
-      messageWords.forEach((word: string) => keywords.add(word));
+      messageWords.forEach(word => keywords.add(word));
     }
   }
   

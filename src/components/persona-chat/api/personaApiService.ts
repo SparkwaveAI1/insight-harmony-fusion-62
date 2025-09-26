@@ -15,7 +15,7 @@ export async function sendMessageToPersona(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('Using clean v4-grok-conversation for unified authentic responses:', { personaId, mode, messageLength: userMessage.length });
+  console.log('Using trait-first persona-quick-chat for authentic responses:', { personaId, mode, messageLength: userMessage.length });
 
   try {
     // Always use the enhanced quick-chat function with linguistic profiles
@@ -43,7 +43,7 @@ async function generateQuickPersonaResponse(
   conversationContext: string = '',
   imageData?: string
 ): Promise<string> {
-  console.log('🚀 UNIFIED: Using v4-grok-conversation for all authentic persona responses');
+  console.log('🚀 Using trait-first chat pipeline for authentic persona responses');
 
   // Optimize conversation history for performance
   const optimizedHistory = ConversationOptimizer.optimizeHistory(previousMessages);
@@ -54,24 +54,26 @@ async function generateQuickPersonaResponse(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🎯 BYPASS Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
+      console.log(`🎯 Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
-      // Direct call to v4-grok-conversation edge function (clean architecture)
-      const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
+      // Use the trait-first quick chat function for authentic persona responses
+      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
         body: {
-          persona_id: personaId,
-          user_message: userMessage,
-          conversation_history: optimizedHistory.map(msg => ({
+          personaId,
+          message: userMessage,
+          previousMessages: optimizedHistory.map(msg => ({
             role: msg.role,
             content: msg.content,
             image: msg.image
           })),
+          mode,
+          conversationContext,
           imageData
         }
       });
 
       if (error) {
-        console.error(`❌ BYPASS Attempt ${attempt} error:`, error);
+        console.error(`❌ Attempt ${attempt} error:`, error);
         
         // Smart retry logic for transient errors
         if (attempt < maxRetries && (
@@ -86,7 +88,7 @@ async function generateQuickPersonaResponse(
           const jitter = Math.random() * 0.3 * baseBackoff;
           const delay = Math.min(baseBackoff + jitter, 10000);
           
-          console.log(`⏳ BYPASS Retrying in ${Math.round(delay)}ms...`);
+          console.log(`⏳ Retrying in ${Math.round(delay)}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -95,11 +97,11 @@ async function generateQuickPersonaResponse(
       }
 
       if (!data?.response) {
-        console.error('❌ BYPASS No response from direct chat function:', data);
+        console.error('❌ No response from enhanced chat function:', data);
         
         if (attempt < maxRetries) {
           const delay = baseDelay * attempt;
-          console.log(`⏳ BYPASS No response received, retrying in ${delay}ms...`);
+          console.log(`⏳ No response received, retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -107,7 +109,7 @@ async function generateQuickPersonaResponse(
         throw new Error('No response received from AI');
       }
 
-      console.log(`✅ BYPASS Direct response generated for persona ${personaId} (${data.response.length} chars)`);
+      console.log(`✅ Enhanced response generated for persona ${personaId} (${data.response.length} chars)`);
       return data.response;
       
     } catch (error) {

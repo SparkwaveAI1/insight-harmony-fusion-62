@@ -96,8 +96,8 @@ serve(async (req) => {
 
     // 2. Check for high usage in last 24h (> 500 credits = high, > 1000 = critical)
     console.log('🔍 [ALERTS] Checking usage spikes...');
-    const now1 = new Date();
-    const yesterday = new Date(now1.toISOString());
+    const now = new Date();
+    const yesterday = new Date(now.toISOString());
     yesterday.setDate(yesterday.getDate() - 1);
 
     const { data: usageSpikes } = await supabaseAdmin
@@ -145,8 +145,8 @@ serve(async (req) => {
 
     // 3. Check for subscriptions expiring in 3 days
     console.log('🔍 [ALERTS] Checking expiring subscriptions...');
-    const now2 = new Date();
-    const threeDaysFromNow = new Date(now2.toISOString());
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.toISOString());
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
     const { data: expiringSubscriptions } = await supabaseAdmin
@@ -203,7 +203,7 @@ serve(async (req) => {
     console.error('❌ [ALERTS] Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error' 
+      message: error.message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

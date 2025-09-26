@@ -22,38 +22,26 @@ const PersonaVisibilityToggle = ({
   
   if (!isOwner) return null;
 
-  const handleVisibilityChange = async (checkedValue: boolean) => {
+  const handleVisibilityChange = async () => {
     if (isUpdating) return;
     
     console.log("=== VISIBILITY TOGGLE COMPONENT ===");
     console.log("Component personaId:", personaId);
     console.log("Component current isPublic prop:", isPublic);
     console.log("Component isOwner:", isOwner);
-    console.log("Switch checkedValue received:", checkedValue);
     
     setIsUpdating(true);
     
     try {
-      const newVisibility = checkedValue; // ✅ Use actual Switch value
+      const newVisibility = !isPublic;
       console.log("Toggle component requesting newVisibility:", newVisibility);
       
-      // ✅ FIXED: Direct database update first
-      console.log("Calling updatePersonaVisibility...");
-      const success = await updatePersonaVisibility(personaId, newVisibility);
-      console.log("Database update result:", success);
-      
-      if (success) {
-        // ✅ THEN: Notify parent component on success
-        onVisibilityChange(newVisibility);
-        toast.success(`Persona is now ${newVisibility ? 'public' : 'private'}`);
-      } else {
-        throw new Error('Database update failed');
-      }
+      // Call parent handler instead of direct service call to avoid double updates
+      onVisibilityChange(newVisibility);
       
     } catch (error) {
       console.error("Error in toggle component:", error);
       toast.error("Failed to update visibility");
-      // ❌ Don't change UI state if database update fails
     } finally {
       setIsUpdating(false);
     }

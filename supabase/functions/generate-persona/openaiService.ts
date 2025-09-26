@@ -9,7 +9,7 @@ if (!OPENAI_API_KEY) {
 }
 
 // Input Processing Utility
-function localExtractUserDetails(prompt: string): any {
+function extractUserDetails(prompt: string): any {
   console.log('Extracting user details from prompt:', prompt);
   
   // Extract key information patterns
@@ -63,9 +63,9 @@ function generateProbabilisticTraits(userDetails: any, personalityContext: strin
   }
   
   // Clamp values to 0-1 range
-  (Object.keys(traits) as Array<keyof typeof traits>).forEach((key) => {
-    const clamped = Math.max(0, Math.min(1, traits[key]));
-    traits[key] = Math.round(clamped * 100) / 100; // Round to 2 decimal places
+  Object.keys(traits).forEach(key => {
+    traits[key] = Math.max(0, Math.min(1, traits[key]));
+    traits[key] = Math.round(traits[key] * 100) / 100; // Round to 2 decimal places
   });
   
   console.log('Generated probabilistic traits:', traits);
@@ -77,7 +77,7 @@ export async function generateCoreDemographics(prompt: string): Promise<any> {
   console.log(`Generating V3 identity from prompt: "${prompt}"`);
   
   // Extract key details from user input first
-  const userDetails = localExtractUserDetails(prompt);
+  const userDetails = extractUserDetails(prompt);
   
   const messages = [
     {

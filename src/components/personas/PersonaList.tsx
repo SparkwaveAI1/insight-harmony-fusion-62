@@ -189,6 +189,7 @@ export default function PersonaList({
   // Update local state when personas are loaded from React Query
   useEffect(() => {
     if (allPersonas) {
+      console.log("Setting personas state with count:", allPersonas.length);
       setPersonas(allPersonas);
     }
   }, [allPersonas]);
