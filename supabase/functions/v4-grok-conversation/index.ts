@@ -775,16 +775,30 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
 
 // Specific Opinion Synthesis Engine
 function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
+  console.log("=== TRAIT DEBUG START ===");
+  console.log("TRAIT DEBUG - Input selectedTraits:", JSON.stringify(selectedTraits, null, 2));
+  console.log("TRAIT DEBUG - Input demographics:", JSON.stringify(demographics, null, 2));
+  console.log("TRAIT DEBUG - User input:", userInput);
+  
   const traitMap = {};
   selectedTraits.forEach(trait => {
     traitMap[trait.trait] = trait.data_value;
   });
+  
+  console.log("TRAIT DEBUG - Built traitMap:", JSON.stringify(traitMap, null, 2));
   
   const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
   const lossAversion = traitMap['bias_profile.cognitive.loss_aversion'] || 0.5;
   const changeResistance = traitMap['adoption_profile.change_friction'] || 0.5;
   const occupation = demographics.occupation || '';
   const honesty = traitMap['truth_honesty_profile.baseline_honesty'] || 0.7;
+  
+  console.log("TRAIT DEBUG - Extracted values:");
+  console.log("  - riskTolerance:", riskTolerance);
+  console.log("  - lossAversion:", lossAversion); 
+  console.log("  - changeResistance:", changeResistance);
+  console.log("  - occupation:", occupation);
+  console.log("  - honesty:", honesty);
   
   // Create specific stance based on trait combination
   let opinionElements = [];
@@ -810,7 +824,13 @@ function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
     opinionElements.push("you're evaluating ROI, cost-benefit ratios, and business implications");
   }
   
-  return `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
+  const finalOpinion = `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
+  
+  console.log("TRAIT DEBUG - Generated opinionElements:", opinionElements);
+  console.log("TRAIT DEBUG - Final opinion:", finalOpinion);
+  console.log("=== TRAIT DEBUG END ===");
+  
+  return finalOpinion;
 }
 
 // Persona-Specific Communication Execution Engine
