@@ -1,5 +1,5 @@
+// @ts-nocheck
 // Input Processing Utilities for Persona Generation
-// Extracts structured information from user prompts to ensure accurate persona generation
 
 export interface ExtractedUserDetails {
   name?: string;

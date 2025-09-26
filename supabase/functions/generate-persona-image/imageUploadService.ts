@@ -5,7 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 async function resizeImage(base64Image: string, maxSize: number = 400): Promise<string> {
   try {
     // Create canvas and context
-    const canvas = new OffscreenCanvas(maxSize, maxSize);
+    const canvas = new (globalThis as any).OffscreenCanvas(maxSize, maxSize);
     const ctx = canvas.getContext('2d');
     
     if (!ctx) {

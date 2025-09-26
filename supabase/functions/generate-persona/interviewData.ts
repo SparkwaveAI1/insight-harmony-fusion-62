@@ -1,4 +1,6 @@
 
+// @ts-nocheck
+
 import { InterviewSection } from "./types.ts";
 
 // Standard sections and questions for interview

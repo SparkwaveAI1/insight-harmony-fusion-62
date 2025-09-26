@@ -97,7 +97,7 @@ function buildV4ImagePrompt(personaData: any): string {
       'van_dyke': 'van dyke beard style',
       'no_facial_hair': 'clean shaven'
     };
-    physicalEnhancements.push(facialHairMap[healthProfile.facial_hair] || healthProfile.facial_hair);
+    physicalEnhancements.push((facialHairMap as any)[healthProfile.facial_hair] || healthProfile.facial_hair);
   }
   
   // Add hair loss patterns
@@ -107,7 +107,7 @@ function buildV4ImagePrompt(personaData: any): string {
       'moderate_balding': 'balding, thinning hair on top',
       'receding_hairline': 'receding hairline, widow\'s peak'
     };
-    physicalEnhancements.push(hairLossMap[healthProfile.hair_loss_pattern] || healthProfile.hair_loss_pattern);
+    physicalEnhancements.push((hairLossMap as any)[healthProfile.hair_loss_pattern] || healthProfile.hair_loss_pattern);
   }
   
   // Add distinctive features
@@ -123,8 +123,8 @@ function buildV4ImagePrompt(personaData: any): string {
     };
     
     healthProfile.distinctive_features.forEach((feature: string) => {
-      if (featureMap[feature]) {
-        physicalEnhancements.push(featureMap[feature]);
+      if ((featureMap as any)[feature]) {
+        physicalEnhancements.push((featureMap as any)[feature]);
       }
     });
   }

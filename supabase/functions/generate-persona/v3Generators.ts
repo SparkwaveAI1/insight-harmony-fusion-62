@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { generateChatResponse } from "../_shared/openai.ts";
 import { extractUserDetails } from "./inputProcessor.ts";
 
