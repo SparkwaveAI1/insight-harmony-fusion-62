@@ -1701,14 +1701,23 @@ serve(async (req) => {
     console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
     console.log('=== END DIAGNOSTIC ===');
 
-    // Use NEW TraitAnalysisEngine instead of old V4TraitRelevanceAnalyzer
-    const relevantTraits = TraitAnalysisEngine.extractRelevantTraits(user_message, persona.full_profile || {});
-    const specificOpinion = TraitAnalysisEngine.synthesizeQualitativeOpinion(relevantTraits, user_message);
-    const communicationExecution = TraitAnalysisEngine.synthesizeCommunicationStyle(relevantTraits, persona.full_profile || {});
+    // Use NEW TraitAnalysisEngine instead of old V4TraitRelevanceAnalyzer with error handling
+    let relevantTraits = [];
+    let specificOpinion = "You have mixed feelings about this topic, seeing both benefits and concerns.";
+    let communicationExecution = "Respond authentically based on your natural communication patterns.";
     
-    console.log('NEW ENGINE - Selected traits for this input:', relevantTraits.map(t => `${t.trait}=${t.data_value} (relevance: ${t.relevance})`))
-    console.log('NEW ENGINE - Specific opinion generated:', specificOpinion);
-    console.log('NEW ENGINE - Communication style:', communicationExecution);
+    try {
+      relevantTraits = TraitAnalysisEngine.extractRelevantTraits(user_message, persona.full_profile || {});
+      specificOpinion = TraitAnalysisEngine.synthesizeQualitativeOpinion(relevantTraits, user_message);
+      communicationExecution = TraitAnalysisEngine.synthesizeCommunicationStyle(relevantTraits, persona.full_profile || {});
+      
+      console.log('NEW ENGINE - Selected traits for this input:', relevantTraits.map(t => `${t.trait}=${t.data_value} (relevance: ${t.relevance})`))
+      console.log('NEW ENGINE - Specific opinion generated:', specificOpinion);
+      console.log('NEW ENGINE - Communication style:', communicationExecution);
+    } catch (error) {
+      console.error('NEW ENGINE - TraitAnalysisEngine error:', error);
+      console.log('NEW ENGINE - Falling back to safe defaults');
+    }
 
     // Build V4-native instructions using NEW trait analysis
     const instructions = buildV4NativeInstructions({

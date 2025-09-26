@@ -119,13 +119,15 @@ export class TraitAnalysisEngine {
     
     let style = "";
     
-    // Get basic demographics for context
+    // Get basic demographics for context - safely handle location object/string
     const occupation = fullProfile?.identity?.occupation || '';
-    const location = fullProfile?.identity?.location || '';
-    const nationality = fullProfile?.identity?.nationality || '';
+    const loc = fullProfile?.identity?.location;
+    const locationText = typeof loc === 'string' ? loc.toLowerCase() : 
+        [loc?.city, loc?.region, loc?.country].filter(Boolean).join(' ').toLowerCase();
+    const nationality = (fullProfile?.identity?.nationality || '').toLowerCase();
     
     // Cultural/Regional influence
-    if (nationality?.toLowerCase().includes('bulgari') || location?.toLowerCase().includes('miami')) {
+    if (nationality.includes('bulgari') || locationText.includes('miami')) {
       style += "Channel your Bulgarian immigrant entrepreneur perspective - lead with ROI concerns and implementation costs. Use Eastern European directness to cut through marketing hype. ";
     }
     
