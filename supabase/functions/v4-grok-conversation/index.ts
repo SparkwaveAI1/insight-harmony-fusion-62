@@ -124,6 +124,10 @@ class V4TraitRelevanceAnalyzer {
   ];
 
   static analyzeTraitRelevance(userInput, fullProfile, conversationSummary) {
+    console.log("[TRAIT DEBUG] Starting extractRelevantTraits for question:", userInput);
+    console.log("[TRAIT DEBUG] Full profile keys:", Object.keys(fullProfile));
+    console.log("[TRAIT DEBUG] Persona name:", fullProfile?.identity?.name || "Unknown");
+
     const input = userInput.toLowerCase();
     
     // 1. CLASSIFY THE TURN AND DETERMINE QUESTION DOMAIN
@@ -132,6 +136,10 @@ class V4TraitRelevanceAnalyzer {
 
     // 2. SELECT RELEVANT TRAITS BASED ON QUESTION DOMAIN (MAX 5)
     const selectedTraits = this.selectDomainRelevantTraits(input, fullProfile, questionDomain, classification);
+
+    console.log("[TRAIT DEBUG] Selected traits count:", selectedTraits.length);
+    console.log("[TRAIT DEBUG] Selected traits:", selectedTraits.map(t => t.trait));
+    console.log("[TRAIT DEBUG] Trait values:", selectedTraits.map(t => ({trait: t.trait, value: t.data_value})));
 
     // 3. EXTRACT LINGUISTIC SIGNATURE
     const linguisticSignature = this.extractLinguisticSignature(fullProfile);
@@ -734,6 +742,8 @@ class V4TraitRelevanceAnalyzer {
 
 // General Opinion Synthesis Function
 function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
+  console.log("[OPINION DEBUG] Input traits:", selectedTraits.map(t => ({trait: t.trait, value: t.data_value})));
+  
   const traitMap = {};
   selectedTraits.forEach(trait => {
     traitMap[trait.trait] = trait.value;
@@ -769,11 +779,16 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
   }
   
   // Combine into coherent stance
+  let generatedOpinion;
   if (stanceElements.length > 0) {
-    return `Based on your traits, ${stanceElements.join(' and ')}`;
+    generatedOpinion = `Based on your traits, ${stanceElements.join(' and ')}`;
+  } else {
+    generatedOpinion = 'You approach this with your unique perspective and priorities';
   }
   
-  return 'You approach this with your unique perspective and priorities';
+  console.log("[OPINION DEBUG] Generated opinion:", generatedOpinion);
+  
+  return generatedOpinion;
 }
 
 // Specific Opinion Synthesis Engine
