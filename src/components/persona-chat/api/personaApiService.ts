@@ -59,9 +59,9 @@ async function generateQuickPersonaResponse(
       // Direct call to v4-grok-conversation edge function (clean architecture)
       const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
         body: {
-          personaId,
-          userMessage,
-          conversationHistory: optimizedHistory.map(msg => ({
+          persona_id: personaId,
+          user_message: userMessage,
+          conversation_history: optimizedHistory.map(msg => ({
             role: msg.role,
             content: msg.content,
             image: msg.image

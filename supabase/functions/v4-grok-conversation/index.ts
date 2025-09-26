@@ -225,6 +225,7 @@ serve(async (req) => {
 
     console.log(`📩 V4 Grok request for persona: ${persona_id}`)
     console.log(`📝 User message: ${user_message}`)
+    console.log("🔧 VERIFICATION: Parameters received correctly - using v4-grok-conversation")
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -261,6 +262,7 @@ serve(async (req) => {
     
     console.log('Clean - Instruction length:', instructions.length)
     console.log(`🎯 Relevant traits selected:`, relevantTraits.map(t => t.trait).join(', '))
+    console.log("🧪 PROMPT_VERSION=clean-v1 | First 200 chars:", instructions.substring(0, 200))
     
     // Debug flag: return prompt if requested
     if (include_prompt) {
