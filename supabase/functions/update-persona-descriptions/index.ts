@@ -105,7 +105,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Failed to update persona descriptions' 
+        error: (error as Error).message || 'Failed to update persona descriptions' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 

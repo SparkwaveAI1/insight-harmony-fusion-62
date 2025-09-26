@@ -24,6 +24,7 @@ serve(async (req) => {
 
     if (action === 'start') {
       // Start the research session orchestration in background
+      // @ts-ignore - Deno edge runtime
       EdgeRuntime.waitUntil(orchestrateResearchSession(session_id, supabase));
       
       return new Response(JSON.stringify({ 
@@ -52,6 +53,7 @@ serve(async (req) => {
 
     if (action === 'resume') {
       // Resume interrupted session
+      // @ts-ignore - Deno edge runtime
       EdgeRuntime.waitUntil(resumeResearchSession(session_id, supabase));
       
       return new Response(JSON.stringify({ 

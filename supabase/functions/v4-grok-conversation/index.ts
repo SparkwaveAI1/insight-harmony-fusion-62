@@ -1,5 +1,7 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { TraitAnalysisEngine } from './traitAnalysisEngine.ts';
 
 // TEMPORARY BILLING BYPASS FOR TESTING
 const BYPASS_BILLING = true;
@@ -123,7 +125,7 @@ class V4TraitRelevanceAnalyzer {
     { path: 'truth_honesty_profile.truth_flexibility_by_context', weight: 0.8, contexts: ['context', 'audience', 'situation'] },
   ];
 
-  static analyzeTraitRelevance(userInput, fullProfile, conversationSummary) {
+  static analyzeTraitRelevance(userInput: string, fullProfile: any, conversationSummary: any) {
     console.log("[TRAIT DEBUG] Starting extractRelevantTraits for question:", userInput);
     console.log("[TRAIT DEBUG] Full profile keys:", Object.keys(fullProfile));
     console.log("[TRAIT DEBUG] Persona name:", fullProfile?.identity?.name || "Unknown");
@@ -160,7 +162,7 @@ class V4TraitRelevanceAnalyzer {
     };
   }
 
-  static classifyTurn(userInput) {
+  static classifyTurn(userInput: string) {
     const input = userInput.toLowerCase();
 
     // Classify intent
@@ -192,7 +194,7 @@ class V4TraitRelevanceAnalyzer {
     return { intent, topics, audience, sensitivity };
   }
 
-  static determineQuestionDomain(userInput) {
+  static determineQuestionDomain(userInput: string) {
     const input = userInput.toLowerCase();
     
     // Professional/Work domain
@@ -231,10 +233,10 @@ class V4TraitRelevanceAnalyzer {
     return 'general';
   }
 
-  static flattenPersonaProfile(fullProfile) {
-    const traits = [];
+  static flattenPersonaProfile(fullProfile: any): any[] {
+    const traits: any[] = [];
     
-    function extractTraits(obj, prefix = '') {
+    function extractTraits(obj: any, prefix = '') {
       for (const [key, value] of Object.entries(obj)) {
         const path = prefix ? `${prefix}.${key}` : key;
         
@@ -250,7 +252,7 @@ class V4TraitRelevanceAnalyzer {
     return traits;
   }
 
-  static selectDomainRelevantTraits(userInput, fullProfile, domain, classification) {
+  static selectDomainRelevantTraits(userInput: string, fullProfile: any, domain: string, classification: any) {
     const selectedTraits = [];
     
     // Extract ALL traits from the full persona profile
@@ -304,7 +306,7 @@ class V4TraitRelevanceAnalyzer {
     return selectedTraits.slice(0, 6);
   }
 
-  static calculateContextualRelevance(userInput, traitPath, traitValue, domain, classification) {
+  static calculateContextualRelevance(userInput: string, traitPath: string, traitValue: any, domain: string, classification: any) {
     const input = userInput.toLowerCase();
     const pathParts = traitPath.toLowerCase().split('.');
     let score = 0;
