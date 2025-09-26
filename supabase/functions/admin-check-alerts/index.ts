@@ -145,7 +145,6 @@ serve(async (req) => {
 
     // 3. Check for subscriptions expiring in 3 days
     console.log('🔍 [ALERTS] Checking expiring subscriptions...');
-    const now = new Date();
     const threeDaysFromNow = new Date(now.toISOString());
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
@@ -203,7 +202,7 @@ serve(async (req) => {
     console.error('❌ [ALERTS] Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      message: error.message 
+      message: error instanceof Error ? error.message : 'Unknown error' 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

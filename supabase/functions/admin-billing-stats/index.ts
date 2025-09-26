@@ -121,7 +121,7 @@ serve(async (req) => {
       .order('created_at', { ascending: true });
 
     // Group by date
-    const dailyUsage = {};
+    const dailyUsage: Record<string, number> = {};
     dailyUsageQuery.data?.forEach(item => {
       const date = item.created_at.split('T')[0]; // Get YYYY-MM-DD
       if (!dailyUsage[date]) {
@@ -153,7 +153,7 @@ serve(async (req) => {
     ]);
 
     // Group by source/type
-    const sourcesBreakdown = {};
+    const sourcesBreakdown: Record<string, number> = {};
     
     ledgerSources.data?.forEach(item => {
       const source = item.source || 'unknown';
@@ -208,7 +208,7 @@ serve(async (req) => {
     console.error('❌ [STATS] Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      message: error.message 
+      message: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
