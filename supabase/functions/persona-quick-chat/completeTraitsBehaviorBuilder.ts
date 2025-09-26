@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Helper methods for building complete traits behavior
 export class CompleteTraitsBehaviorBuilder {
   

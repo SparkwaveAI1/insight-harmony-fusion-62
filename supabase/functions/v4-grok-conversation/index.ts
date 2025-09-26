@@ -1699,29 +1699,25 @@ serve(async (req) => {
     console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
     console.log('=== END DIAGNOSTIC ===');
 
-    // Analyze which traits are relevant to this specific input using V4-native analyzer
-    const v4TraitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(
-      user_message, 
-      persona.full_profile, 
-      persona.conversation_summary
-    )
-    console.log('V4 - Selected traits for this input:', v4TraitAnalysis.selected_traits.map(t => t.trait))
-    console.log('V4 - Context classification:', v4TraitAnalysis.context_classification)
-    console.log('V4 - Linguistic signature extracted:', Object.keys(v4TraitAnalysis.linguistic_signature))
-    console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
+    // Use NEW TraitAnalysisEngine instead of old V4TraitRelevanceAnalyzer
+    const relevantTraits = TraitAnalysisEngine.extractRelevantTraits(user_message, persona.full_profile || {});
+    const specificOpinion = TraitAnalysisEngine.synthesizeQualitativeOpinion(relevantTraits, user_message);
+    const communicationExecution = TraitAnalysisEngine.synthesizeCommunicationStyle(relevantTraits, persona.full_profile || {});
+    
+    console.log('NEW ENGINE - Selected traits for this input:', relevantTraits.map(t => `${t.trait}=${t.data_value} (relevance: ${t.relevance})`))
+    console.log('NEW ENGINE - Specific opinion generated:', specificOpinion);
+    console.log('NEW ENGINE - Communication style:', communicationExecution);
 
-    // Build V4-native instructions using trait analysis
-    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
+    // Build V4-native instructions using NEW trait analysis
+    const instructions = buildV4NativeInstructions({
+      selected_traits: relevantTraits,
+      linguistic_signature: {},
+      behavioral_modifiers: {}
+    }, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
     
-    // Prepare debug details
+    // Prepare debug details using NEW engine results
     const demographics = extractDemographics(persona.conversation_summary, persona.full_profile)
-    const specificOpinion = synthesizeSpecificOpinion(v4TraitAnalysis.selected_traits, user_message, demographics)
-    const communicationExecution = buildCommunicationExecution(
-      v4TraitAnalysis.selected_traits,
-      demographics,
-      persona.full_profile.communication_style
-    )
     
     // Debug flag: return prompt if requested
     if (include_prompt) {
@@ -1729,14 +1725,14 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           response: 'Debug mode: Prompt returned',
-          traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+          traits_selected: relevantTraits.map(t => t.trait),
           persona_name: persona.conversation_summary.demographics.name,
           model_used: 'grok-debug',
           prompt_debug: { instructions },
           debug: {
-            selected_traits_full: v4TraitAnalysis.selected_traits,
-            specific_opinion: specificOpinion,
-            communication_execution: communicationExecution
+        selected_traits_full: relevantTraits,
+        specific_opinion: specificOpinion,
+        communication_execution: communicationExecution
           }
         }),
         {

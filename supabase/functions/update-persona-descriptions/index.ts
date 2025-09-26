@@ -81,8 +81,8 @@ serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 100));
         
       } catch (error) {
-        console.error(`Error processing ${persona.name}:`, error.message);
-        errors.push(`${persona.name}: ${error.message}`);
+        console.error(`Error processing ${persona.name}:`, (error as Error).message);
+        errors.push(`${persona.name}: ${(error as Error).message}`);
       }
     }
 

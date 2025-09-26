@@ -277,7 +277,7 @@ export class TraitsFirstParameterEngine {
         'informal': { temp: 0.2, tokens: -150 },
         'slang': { temp: 0.3, tokens: -200 }
       };
-      const adjustment = formalityMap[linguistic.speech_register];
+      const adjustment = (formalityMap as any)[linguistic.speech_register];
       if (adjustment) {
         config.temperature += adjustment.temp;
         config.max_tokens += adjustment.tokens;
@@ -293,7 +293,7 @@ export class TraitsFirstParameterEngine {
         'detailed': 400,
         'extensive': 800
       };
-      const adjustment = lengthMap[linguistic.default_output_length] || 0;
+      const adjustment = (lengthMap as any)[linguistic.default_output_length] || 0;
       config.max_tokens += adjustment;
     }
     
