@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// TEMPORARY BILLING BYPASS FOR TESTING
+const BYPASS_BILLING = true;
+
 // Flags (default OFF)
 const CE_PROMPT_V2 = Deno.env.get("CE_PROMPT_V2") === "true";
 const CE_OPENING_DEDUPE_RETRY = Deno.env.get("CE_OPENING_DEDUPE_RETRY") === "true";
