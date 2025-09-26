@@ -92,7 +92,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Personality trait extraction
-  const personalityTraits = [];
+  const personalityTraits: string[] = [];
   const traitPatterns = [
     /thoughtful|analytical|logical/i,
     /evasive|avoidant|procrastinating/i,
@@ -110,7 +110,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Challenge extraction
-  const challenges = [];
+  const challenges: string[] = [];
   const challengePatterns = [
     /stress|stressed|pressure|overwhelmed/i,
     /health|illness|condition|medical/i,
@@ -126,7 +126,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Background details extraction
-  const background = [];
+  const background: string[] = [];
   const backgroundPatterns = [
     /grew up|childhood|family background/i,
     /education|school|university|college/i,
@@ -141,7 +141,7 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   });
   
   // Physical description extraction
-  const physicalDescription = [];
+  const physicalDescription: string[] = [];
   const physicalPatterns = [
     /overweight|weight|heavy|slim|fit|athletic/i,
     /tall|short|height/i,
