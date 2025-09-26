@@ -1701,22 +1701,40 @@ serve(async (req) => {
     console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
     console.log('=== END DIAGNOSTIC ===');
 
-    // Use NEW TraitAnalysisEngine instead of old V4TraitRelevanceAnalyzer with error handling
-    let relevantTraits = [];
-    let specificOpinion = "You have mixed feelings about this topic, seeing both benefits and concerns.";
-    let communicationExecution = "Respond authentically based on your natural communication patterns.";
-    
+    // Use NEW TraitAnalysisEngine with full error exposure - NO FALLBACKS
+    let relevantTraits, specificOpinion, communicationExecution;
+
     try {
-      relevantTraits = TraitAnalysisEngine.extractRelevantTraits(user_message, persona.full_profile || {});
-      specificOpinion = TraitAnalysisEngine.synthesizeQualitativeOpinion(relevantTraits, user_message);
-      communicationExecution = TraitAnalysisEngine.synthesizeCommunicationStyle(relevantTraits, persona.full_profile || {});
-      
-      console.log('NEW ENGINE - Selected traits for this input:', relevantTraits.map(t => `${t.trait}=${t.data_value} (relevance: ${t.relevance})`))
-      console.log('NEW ENGINE - Specific opinion generated:', specificOpinion);
-      console.log('NEW ENGINE - Communication style:', communicationExecution);
+        console.log("[TRAIT DEBUG] Starting trait analysis for:", user_message);
+        
+        relevantTraits = TraitAnalysisEngine.extractRelevantTraits(user_message, persona.full_profile || {});
+        console.log("[TRAIT DEBUG] Extracted traits:", relevantTraits?.length || 0);
+        
+        specificOpinion = TraitAnalysisEngine.synthesizeQualitativeOpinion(relevantTraits, user_message);
+        console.log("[TRAIT DEBUG] Generated opinion:", specificOpinion?.substring(0, 50) + "...");
+        
+        communicationExecution = TraitAnalysisEngine.synthesizeCommunicationStyle(relevantTraits, persona.full_profile || {});
+        console.log("[TRAIT DEBUG] Communication style:", communicationExecution?.substring(0, 50) + "...");
+        
     } catch (error) {
-      console.error('NEW ENGINE - TraitAnalysisEngine error:', error);
-      console.log('NEW ENGINE - Falling back to safe defaults');
+        console.error("[TRAIT ENGINE CRASH]", error);
+        console.error("[TRAIT ENGINE CRASH] Stack:", error.stack);
+        console.error("[TRAIT ENGINE CRASH] Persona data keys:", Object.keys(persona.full_profile || {}));
+        
+        return new Response(JSON.stringify({
+            success: false,
+            error: "Trait analysis engine failed",
+            error_message: error.message,
+            error_stack: error.stack,
+            persona_name: persona?.conversation_summary?.demographics?.name,
+            debug_info: {
+                persona_keys: Object.keys(persona.full_profile || {}),
+                user_message: user_message
+            }
+        }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500
+        });
     }
 
     // Build V4-native instructions using NEW trait analysis
