@@ -42,6 +42,7 @@ import Docs from "./pages/Docs";
 
 import { V4PersonaCreationPage } from "./pages/v4";
 import TestPersonaLibrary from "./pages/TestPersonaLibrary";
+import { ConversationTest } from "./test/ConversationTest";
 
 // Pages - Persona Creation
 import ConsentForm from "./pages/persona-creation/ConsentForm";
@@ -100,6 +101,9 @@ function App() {
             <Routes>
                 {/* DEPLOYMENT TEST ROUTE - Independent persona test */}
                 <Route path="/test-persona-library" element={<ProtectedRoute><TestPersonaLibrary /></ProtectedRoute>} />
+                
+                {/* CONVERSATION ENGINE TEST ROUTE */}
+                <Route path="/test-conversation" element={<ProtectedRoute><ConversationTest /></ProtectedRoute>} />
                 
                 {/* Public Routes - Accessible without login */}
                 <Route path="/" element={<Index />} />
