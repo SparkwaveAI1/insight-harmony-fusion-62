@@ -1169,10 +1169,7 @@ function translateCommunicationStyle(communicationStyle, demographics) {
     }
   }
   
-  if (style.metaphor_domains && style.metaphor_domains.length > 0) {
-    const domains = style.metaphor_domains.slice(0, 3).join(", "); // Limit to 3 for brevity
-    instructions.push(`Draw metaphors from: ${domains} when explaining concepts.`);
-  }
+  // METAPHOR INSTRUCTIONS REMOVED - not wanted in conversation engine
   
   if (typeof style.storytelling_vs_bullets === "number") {
     if (style.storytelling_vs_bullets >= 0.7) {
