@@ -208,7 +208,7 @@ serve(async (req) => {
           results.processed++;
 
         } catch (error) {
-          const errorMsg = `${persona.name}: ${error.message}`;
+          const errorMsg = `${persona.name}: ${error instanceof Error ? error.message : String(error)}`;
           results.errors.push(errorMsg);
           console.error(`❌ Failed to enhance ${persona.name}:`, error);
         }
@@ -237,7 +237,7 @@ serve(async (req) => {
     console.error('❌ Bulk enhancement error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       details: 'Failed to perform bulk persona enhancement'
     }), {
       status: 500,
