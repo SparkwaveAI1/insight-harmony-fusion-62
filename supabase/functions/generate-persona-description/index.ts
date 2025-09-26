@@ -101,7 +101,7 @@ Return only the description text, no additional formatting or explanation.`;
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Failed to generate description' 
+        error: error instanceof Error ? (error.message || 'Failed to generate description') : 'Failed to generate description' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 

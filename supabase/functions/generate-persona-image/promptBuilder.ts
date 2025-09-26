@@ -97,7 +97,7 @@ function buildV4ImagePrompt(personaData: any): string {
       'van_dyke': 'van dyke beard style',
       'no_facial_hair': 'clean shaven'
     };
-    physicalEnhancements.push(facialHairMap[healthProfile.facial_hair] || healthProfile.facial_hair);
+    physicalEnhancements.push(facialHairMap[healthProfile.facial_hair as keyof typeof facialHairMap] || healthProfile.facial_hair);
   }
   
   // Add hair loss patterns

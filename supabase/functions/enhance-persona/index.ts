@@ -100,7 +100,7 @@ interface EnhancementOptions {
 function assignRealisticTraits(persona: any, demographics: any): any {
   const updatedPersona = { ...persona };
   const ageGroup = getAgeGroup(demographics.age);
-  const modifiers = AGE_MODIFIERS[ageGroup] || {};
+  const modifiers = AGE_MODIFIERS[ageGroup as keyof typeof AGE_MODIFIERS] || {};
   
   assignPhysicalHealth(updatedPersona, demographics, modifiers);
   assignMentalHealth(updatedPersona, demographics, modifiers);
@@ -424,7 +424,7 @@ function generateRealisticIncomeRange(occupation: string, age: number, region: s
   const occupationKey = Object.keys(baseRanges).find(key => 
     occupation.toLowerCase().includes(key)) || "default";
   
-  const ranges = baseRanges[occupationKey];
+  const ranges = baseRanges[occupationKey as keyof typeof baseRanges];
   
   if (age < 30) return ranges[0];
   if (age < 45) return ranges[1];
@@ -725,7 +725,7 @@ const { data: updatedPersona, error: updateError } = await supabase
     return new Response(
       JSON.stringify({ 
         error: 'An unexpected error occurred during enhancement',
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error)
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

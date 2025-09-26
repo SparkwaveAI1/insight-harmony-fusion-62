@@ -4,6 +4,9 @@ if (!OPENAI_API_KEY) {
   throw new Error('OPENAI_API_KEY environment variable is required');
 }
 
+// Type assertion since we've checked it's not undefined above
+const apiKey: string = OPENAI_API_KEY;
+
 async function generateChatResponse(messages: any[], apiKey: string): Promise<any> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -58,7 +61,7 @@ Use values 0.0-1.0. Create realistic, nuanced profiles.`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, apiKey);
   const content = response.choices[0].message.content;
   
   try {
@@ -131,7 +134,7 @@ Use values 0.0-1.0. Create realistic profiles based on demographics.`
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, apiKey);
   const content = response.choices[0].message.content;
   
   try {
@@ -182,7 +185,7 @@ Generate 3-5 sections with 2-3 questions each. Make responses authentic to the p
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, apiKey);
   const content = response.choices[0].message.content;
   
   try {
@@ -242,7 +245,7 @@ Add rich, realistic details that enhance the persona without contradicting exist
     }
   ];
 
-  const response = await generateChatResponse(messages, OPENAI_API_KEY);
+  const response = await generateChatResponse(messages, apiKey);
   const content = response.choices[0].message.content;
   
   try {

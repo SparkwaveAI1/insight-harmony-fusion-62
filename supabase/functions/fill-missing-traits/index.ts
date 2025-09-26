@@ -93,7 +93,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new chronic conditions
   const beforeConditions = before.health_profile?.chronic_conditions || [];
   const afterConditions = after.health_profile?.chronic_conditions || [];
-  const newConditions = afterConditions.filter(c => !beforeConditions.includes(c));
+  const newConditions = afterConditions.filter((c: any) => !beforeConditions.includes(c));
   if (newConditions.length > 0) {
     added.push("chronic_conditions");
   }
@@ -101,7 +101,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new medications
   const beforeMeds = before.health_profile?.medications || [];
   const afterMeds = after.health_profile?.medications || [];
-  const newMeds = afterMeds.filter(m => !beforeMeds.includes(m));
+  const newMeds = afterMeds.filter((m: any) => !beforeMeds.includes(m));
   if (newMeds.length > 0) {
     added.push("medications");
   }
@@ -109,7 +109,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new financial stressors
   const beforeStressors = before.money_profile?.financial_stressors || [];
   const afterStressors = after.money_profile?.financial_stressors || [];
-  const newStressors = afterStressors.filter(s => !beforeStressors.includes(s));
+  const newStressors = afterStressors.filter((s: any) => !beforeStressors.includes(s));
   if (newStressors.length > 0) {
     added.push("financial_stressors");
   }
@@ -117,7 +117,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new mental health flags
   const beforeMental = before.health_profile?.mental_health_flags || [];
   const afterMental = after.health_profile?.mental_health_flags || [];
-  const newMental = afterMental.filter(m => !beforeMental.includes(m));
+  const newMental = afterMental.filter((m: any) => !beforeMental.includes(m));
   if (newMental.length > 0) {
     added.push("mental_health_flags");
   }
@@ -671,7 +671,7 @@ serve(async (req) => {
             const rejectionReason = `Validation failed: ${postEnhancementValidation.errors.join(', ')}`;
             
             console.log(`❌ Persona ${persona.name} rejected: ${rejectionReason}`);
-            return {
+            return new Response(JSON.stringify({
               persona_id: persona.persona_id,
               name: persona.name,
               status: 'rejected',
@@ -679,7 +679,10 @@ serve(async (req) => {
               validation_before: validation,
               validation_after: postEnhancementValidation,
               rejected_profile: enhanced
-            };
+            }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
           }
           
           // Final validation
@@ -814,159 +817,4 @@ async function fixPersonaCompliance(persona: any, validation: ValidationResult) 
   
   // READ-ONLY: Just reject the persona instead of modifying it
   return null; // Reject the persona entirely
-}
-
-// DISABLED: Manual fixes removed - preserving OpenAI's authentic output
-function applyManualFixes(persona: any, personaName: string): any {
-  console.log(`⚠️ applyManualFixes disabled for ${personaName} - preserving OpenAI output integrity`);
-  
-  // READ-ONLY: Return original persona without modifications
-  return persona;
-  
-  // Use AI to generate the missing required fields
-  const systemPrompt = `You are a V4 persona compliance expert. Your job is to complete missing required fields in persona profiles.
-
-CRITICAL REQUIREMENTS:
-- You must generate ALL missing required fields from this exact list: ${PERSONA_SCHEMA.required.join(', ')}
-- NEVER include any of these banned fields: ${BANNED_KEYS.join(', ')}
-- Return ONLY valid JSON that matches the V4 persona schema
-- Use realistic, psychologically coherent values
-- Ensure internal consistency across all traits
-- Numeric values must be between 0 and 1 where specified
-- Age must be between 18 and 100
-
-Required V4 Structure:
-{
-  "identity": {
-    "name": "First Last", "age": 18-100, "gender": "Male/Female/Non-binary", "pronouns": "he/him/she/her/they/them", 
-    "ethnicity": "specific ethnicity", "nationality": "specific nationality", "occupation": "specific job", 
-    "relationship_status": "single/married/divorced/partnered", "dependents": 0-3,
-    "education_level": "high_school/some_college/bachelors/masters/doctorate", 
-    "income_bracket": "$20k-30k/$30k-50k/$50k-75k/$75k-100k/$100k+",
-    "location": { "city": "City", "region": "State", "country": "Country", "urbanicity": "urban/suburban/rural" }
-  },
-  "daily_life": {
-    "primary_activities": { "work": 6-10, "family_time": 0-6, "personal_care": 1-3, "personal_interests": 0-4, "social_interaction": 0-4 },
-    "schedule_blocks": [ { "start": "HH:MM", "end": "HH:MM", "activity": "activity name", "setting": "location" } ],
-    "time_sentiment": { "work": "fulfilling/neutral/stressful", "family": "energizing/balanced/draining", "personal": "restorative/rushed/neglected" },
-    "screen_time_summary": "Detailed description", "mental_preoccupations": ["preoccupation1", "preoccupation2"]
-  },
-  "health_profile": {
-    "bmi": 16.5-50.0, "chronic_conditions": [], "mental_health_flags": [], "medications": [],
-    "adherence_level": "excellent/good/poor/inconsistent", "sleep_hours": 5-9,
-    "substance_use": { "alcohol": "none/social/regular/heavy", "cigarettes": "none/social/regular/heavy", "vaping": "none/occasional/regular", "marijuana": "none/occasional/regular" },
-    "fitness_level": "sedentary/low/moderate/high/athletic", "diet_pattern": "standard/health_conscious/restricted/irregular"
-  },
-  "relationships": {
-    "household": { "status": "alone/partner/family/roommates", "harmony_level": "tense/neutral/harmonious", "dependents": 0-3 },
-    "caregiving_roles": [], "friend_network": { "size": "small/medium/large", "frequency": "daily/weekly/monthly/rare", "anchor_contexts": [] },
-    "pets": []
-  },
-  "money_profile": {
-    "attitude_toward_money": "anxious/practical/optimistic/indifferent", "earning_context": "stable/unstable/growing/declining", "spending_style": "frugal/balanced/impulsive/luxury_focused",
-    "savings_investing_habits": { "emergency_fund_months": 0-12, "retirement_contributions": "none/minimal/adequate/aggressive", "investing_style": "conservative/balanced/aggressive/none" },
-    "debt_posture": "debt_free/manageable/struggling/overwhelmed", "financial_stressors": [], "money_conflicts": "none/minor/moderate/severe", "generosity_profile": "stingy/selective/generous/very_generous"
-  },
-  "motivation_profile": {
-    "primary_motivation_labels": [], "deal_breakers": [],
-    "primary_drivers": { "care": 0.0-1.0, "family": 0.0-1.0, "status": 0.0-1.0, "mastery": 0.0-1.0, "meaning": 0.0-1.0, "novelty": 0.0-1.0, "security": 0.0-1.0, "belonging": 0.0-1.0, "self_interest": 0.0-1.0 },
-    "goal_orientation": { "strength": 0.0-1.0, "time_horizon": "short_term/medium_term/long_term", "primary_goals": [], "goal_flexibility": 0.0-1.0 },
-    "want_vs_should_tension": { "major_conflicts": [], "default_resolution": "want_wins/should_wins/context_dependent" }
-  },
-  "communication_style": {
-    "regional_register": { "region": "region name", "urbanicity": "urban/suburban/rural", "dialect_hints": [] },
-    "voice_foundation": { "formality": "very_casual/casual/neutral/formal/very_formal", "directness": "blunt/direct/balanced/diplomatic/indirect", "pace_rhythm": "rapid/moderate/measured/slow", "positivity": "pessimistic/realistic/optimistic/very_positive", "empathy_level": 0.0-1.0, "honesty_style": "brutal/direct/tactful/diplomatic", "charisma_level": 0.0-1.0 },
-    "style_markers": { "metaphor_domains": [], "aphorism_register": "folksy/professional/philosophical/none", "storytelling_vs_bullets": 0.0-1.0, "humor_style": "dry/sarcastic/warm/silly/none", "code_switching_contexts": [] },
-    "context_switches": { "work": { "formality": "formal", "directness": "diplomatic" }, "home": { "formality": "casual", "directness": "direct" }, "online": { "formality": "neutral", "directness": "balanced" } },
-    "authenticity_filters": { "avoid_registers": [], "embrace_registers": [], "personality_anchors": [] }
-  },
-  "humor_profile": { "frequency": "rare/occasional/frequent/constant", "style": [], "boundaries": [], "targets": [], "use_cases": [] },
-  "truth_honesty_profile": {
-    "baseline_honesty": 0.0-1.0, "situational_variance": { "work": 0.0-1.0, "home": 0.0-1.0, "public": 0.0-1.0 },
-    "typical_distortions": [], "red_lines": [], "pressure_points": [], "confession_style": "immediate/delayed/never/contextual"
-  },
-  "bias_profile": {
-    "cognitive": { "status_quo": 0.0-1.0, "loss_aversion": 0.0-1.0, "confirmation": 0.0-1.0, "anchoring": 0.0-1.0, "availability": 0.0-1.0, "optimism": 0.0-1.0, "sunk_cost": 0.0-1.0, "overconfidence": 0.0-1.0 },
-    "mitigations": []
-  },
-  "cognitive_profile": { "verbal_fluency": 0.0-1.0, "abstract_reasoning": 0.0-1.0, "problem_solving_orientation": "methodical/intuitive/collaborative/avoidant", "thought_coherence": 0.0-1.0 },
-  "emotional_profile": { "stress_responses": [], "negative_triggers": [], "positive_triggers": [], "explosive_triggers": [], "emotional_regulation": "excellent/good/fair/poor" },
-  "attitude_narrative": "2-3 sentence description of overall outlook on life",
-  "political_narrative": "2-3 sentence description of political views",
-  "adoption_profile": { "buyer_power": 0.0-1.0, "adoption_influence": 0.0-1.0, "risk_tolerance": 0.0-1.0, "change_friction": 0.0-1.0, "expected_objections": [], "proof_points_needed": [] },
-  "prompt_shaping": {
-    "voice_foundation": { "formality": "copy from communication_style", "directness": "copy from communication_style", "pace_rhythm": "copy from communication_style", "positivity": "copy from communication_style", "empathy_level": 0.0-1.0 },
-    "style_markers": { "metaphor_domains": [], "humor_style": "copy from humor_profile", "storytelling_vs_bullets": 0.0-1.0 },
-    "primary_motivations": [], "deal_breakers": [], "honesty_vector": { "baseline": 0.0-1.0, "work": 0.0-1.0, "home": 0.0-1.0, "public": 0.0-1.0, "distortions": [] },
-    "bias_vector": { "top_cognitive": [], "top_social": [], "mitigation_playbook": [] }, "context_switches": { "work": "description", "home": "description", "online": "description" }, "current_focus": "current mental focus"
-  },
-  "sexuality_profile": {
-    "orientation": "heterosexual/homosexual/bisexual/asexual/pansexual", "expression_style": "private/selective/open", "relationship_norms": "monogamous/polyamorous/casual/traditional",
-    "boundaries": { "comfort_level": "conservative/moderate/liberal", "topics_off_limits": [] }, "linguistic_influences": { "flirtation_style": "none/subtle/direct", "humor_boundaries": "clean/suggestive/explicit", "taboo_navigation": "avoid/navigate_carefully/comfortable" }
-  }
-}
-
-Generate realistic, internally consistent values. Return ONLY valid JSON without markdown or explanations.`;
-
-  const userPrompt = `Persona Name: ${persona.name}\nExisting Profile (after manual fixes): ${JSON.stringify(fixedPersona, null, 2)}\n\nValidation Errors: ${postFixValidation.errors.join(', ')}\n\nComplete this persona profile by generating ALL missing required fields. Ensure the result is fully compliant with V4 validation.`;
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 3000,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    let generatedPersona;
-    
-    try {
-      // Clean the response - remove any markdown formatting
-      const content = data.choices[0].message.content.trim();
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      generatedPersona = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error('❌ Failed to parse AI response:', parseError);
-      return null;
-    }
-
-    // Merge the existing persona with generated content
-    const mergedPersona = { ...fixedPersona };
-    
-    // Only add missing required fields
-    for (const requiredField of PERSONA_SCHEMA.required) {
-      if (!mergedPersona[requiredField] && generatedPersona[requiredField]) {
-        mergedPersona[requiredField] = generatedPersona[requiredField];
-      }
-    }
-
-    // Final validation
-    const finalValidation = validatePersona(mergedPersona);
-    if (finalValidation.isValid) {
-      console.log(`✅ AI fix successful for ${persona.name}`);
-      return mergedPersona;
-    } else {
-      console.error(`❌ AI fix failed validation for ${persona.name}:`, finalValidation.errors);
-      return null;
-    }
-
-  } catch (error) {
-    console.error('❌ Error generating compliance fixes with AI:', error);
-    return null;
-  }
 }
