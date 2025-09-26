@@ -24,7 +24,7 @@ serve(async (req) => {
 
     if (action === 'start') {
       // Start the research session orchestration in background
-      EdgeRuntime.waitUntil(orchestrateResearchSession(session_id, supabase));
+      orchestrateResearchSession(session_id, supabase).catch(console.error);
       
       return new Response(JSON.stringify({ 
         success: true, 
@@ -52,7 +52,7 @@ serve(async (req) => {
 
     if (action === 'resume') {
       // Resume interrupted session
-      EdgeRuntime.waitUntil(resumeResearchSession(session_id, supabase));
+      resumeResearchSession(session_id, supabase).catch(console.error);
       
       return new Response(JSON.stringify({ 
         success: true, 
@@ -74,7 +74,7 @@ serve(async (req) => {
     console.error('Error in research orchestrator:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error instanceof Error ? error.message : String(error) 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

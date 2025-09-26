@@ -181,7 +181,7 @@ CRITICAL REQUIREMENTS:
             } catch (parseError) {
               console.error(`JSON parsing failed with ${model}:`, parseError)
               console.error('Content that failed to parse:', cleanedContent.slice(0, 500))
-              throw new Error(`Failed to parse as JSON: ${parseError.message}`)
+              throw new Error(`Failed to parse as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
             }
 
           } catch (modelError) {
@@ -198,7 +198,7 @@ CRITICAL REQUIREMENTS:
 
         // If we get here without summaryData, all models failed
         if (!summaryData) {
-          throw new Error(`All models failed. Last error: ${lastError?.message || 'Unknown error'}`)
+          throw new Error(`All models failed. Last error: ${(lastError as any)?.message || 'Unknown error'}`)
         }
 
         // Update persona with conversation summary
@@ -236,7 +236,7 @@ CRITICAL REQUIREMENTS:
     }
 
     // Start background task and return immediately
-    EdgeRuntime.waitUntil(backgroundTask())
+    backgroundTask().catch(console.error)
 
     return new Response(
       JSON.stringify({ 
@@ -257,7 +257,7 @@ CRITICAL REQUIREMENTS:
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         type: 'input_validation_error'
       }),
       {

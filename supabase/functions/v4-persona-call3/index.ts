@@ -138,9 +138,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, // Still return success since persona creation is complete
-        persona_id: req.body?.persona_id,
+        persona_id: '',
         stage: 'creation_complete',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         message: 'Persona created successfully (image generation failed)'
       }),
       {

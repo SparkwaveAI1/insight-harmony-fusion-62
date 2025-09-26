@@ -68,8 +68,8 @@ const handler = async (req: Request): Promise<Response> => {
         id: u.user_id,
         email: emailMap.get(u.user_id) || '',
         renewal_date: u.renewal_date,
-        plan_name: u.billing_plans.name,
-        price_usd: u.billing_plans.price_usd
+        plan_name: (u.billing_plans as any)?.name || '',
+        price_usd: (u.billing_plans as any)?.price_usd || 0
       })).filter(u => u.email);
 
       return await processRenewalUsers(renewalData);
@@ -80,7 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error("❌ Renewal reminder job failed:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -111,7 +111,7 @@ function generateCoherenceValue(): number {
 function assignRealisticTraits(persona: any, demographics: any): any {
   const updatedPersona = { ...persona };
   const ageGroup = getAgeGroup(demographics.age);
-  const modifiers = AGE_MODIFIERS[ageGroup] || {};
+  const modifiers = (AGE_MODIFIERS as any)[ageGroup] || {};
   
   assignPhysicalHealth(updatedPersona, demographics, modifiers);
   assignMentalHealth(updatedPersona, demographics, modifiers);
@@ -324,7 +324,7 @@ function removeSignaturePhrases(personaData: any) {
   if (personaData.communication_style?.linguistic_signature?.signature_phrases) {
     personaData.communication_style.linguistic_signature.signature_phrases = 
       personaData.communication_style.linguistic_signature.signature_phrases.filter(
-        phrase => !forbiddenPhrases.some(forbidden => phrase.includes(forbidden))
+        (phrase: string) => !forbiddenPhrases.some((forbidden: string) => phrase.includes(forbidden))
       );
   }
   
@@ -332,7 +332,7 @@ function removeSignaturePhrases(personaData: any) {
   if (personaData.communication_style?.style_markers?.signature_phrases) {
     personaData.communication_style.style_markers.signature_phrases = 
       personaData.communication_style.style_markers.signature_phrases.filter(
-        phrase => !forbiddenPhrases.some(forbidden => phrase.includes(forbidden))
+        (phrase: string) => !forbiddenPhrases.some((forbidden: string) => phrase.includes(forbidden))
       );
   }
 }
@@ -351,7 +351,7 @@ function generateRealisticIncomeRange(occupation: string, age: number, region: s
   const occupationKey = Object.keys(baseRanges).find(key => 
     occupation.toLowerCase().includes(key)) || "default";
   
-  const ranges = baseRanges[occupationKey];
+  const ranges = (baseRanges as any)[occupationKey];
   
   // Select range based on age (experience proxy)
   if (age < 30) return ranges[0];
@@ -929,7 +929,7 @@ NARRATIVE SECTIONS:
 
       } catch (error) {
         lastError = error as Error;
-        console.error(`❌ Attempt ${config.attempt} failed:`, error.message);
+        console.error(`❌ Attempt ${config.attempt} failed:`, error instanceof Error ? error.message : String(error));
         
         if (config.attempt < configurations.length) {
           await new Promise(resolve => setTimeout(resolve, 1000 * config.attempt));
@@ -975,7 +975,7 @@ NARRATIVE SECTIONS:
     
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       details: 'Comprehensive validation failed - persona was incomplete'
     }), {
       status: 500,
