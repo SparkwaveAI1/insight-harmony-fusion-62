@@ -260,33 +260,33 @@ function generateTraitBasedTriggers(persona: PersonaTemplate): { positive: any[]
   const triggers = { positive: [] as any[], negative: [] as any[] };
   
   // Big Five based triggers
-  if (parseFloat(persona.trait_profile.big_five.neuroticism || '0') > 0.6) {
+  if (parseFloat(String(persona.trait_profile.big_five.neuroticism || '0')) > 0.6) {
     triggers.negative.push(createTrigger("anxiety", ["uncertain", "risky", "unknown"], 6, "Gets anxious about uncertainty"));
     triggers.negative.push(createTrigger("overwhelm", ["too much", "pressure", "stress"], 5, "Feels overwhelmed by pressure"));
   }
   
-  if (parseFloat(persona.trait_profile.big_five.openness || '0') > 0.7) {
+  if (parseFloat(String(persona.trait_profile.big_five.openness || '0')) > 0.7) {
     triggers.positive.push(createTrigger("curiosity", ["new idea", "different perspective", "innovative"], 5, "Excited by new ideas"));
     triggers.positive.push(createTrigger("creativity", ["creative", "artistic", "original"], 6, "Appreciates creativity and originality"));
   }
   
-  if (parseFloat(persona.trait_profile.big_five.agreeableness || '0') > 0.7) {
+  if (parseFloat(String(persona.trait_profile.big_five.agreeableness || '0')) > 0.7) {
     triggers.negative.push(createTrigger("conflict_distress", ["argument", "fighting", "hostile"], 6, "Distressed by conflict and hostility"));
     triggers.positive.push(createTrigger("harmony", ["cooperation", "working together", "unity"], 5, "Values harmony and cooperation"));
   }
   
-  if (parseFloat(persona.trait_profile.big_five.conscientiousness || '0') > 0.7) {
+  if (parseFloat(String(persona.trait_profile.big_five.conscientiousness || '0')) > 0.7) {
     triggers.negative.push(createTrigger("disorder_frustration", ["messy", "disorganized", "chaotic"], 5, "Frustrated by disorder"));
     triggers.positive.push(createTrigger("achievement", ["goal", "complete", "accomplish"], 6, "Motivated by achievement"));
   }
   
   // Moral foundations triggers
-  if (parseFloat(persona.trait_profile.moral_foundations.care || '0') > 0.7) {
+  if (parseFloat(String(persona.trait_profile.moral_foundations.care || '0')) > 0.7) {
     triggers.negative.push(createTrigger("suffering", ["pain", "hurt", "suffering"], 7, "Distressed by others' suffering"));
     triggers.positive.push(createTrigger("healing", ["help", "heal", "comfort"], 6, "Gratified by helping others"));
   }
   
-  if (parseFloat(persona.trait_profile.moral_foundations.fairness || '0') > 0.7) {
+  if (parseFloat(String(persona.trait_profile.moral_foundations.fairness || '0')) > 0.7) {
     triggers.negative.push(createTrigger("injustice", ["unfair", "biased", "discrimination"], 8, "Outraged by unfairness"));
     triggers.positive.push(createTrigger("justice", ["fair", "equal", "justice"], 6, "Satisfied by fairness"));
   }
@@ -298,7 +298,7 @@ function generateDemographicTriggers(persona: PersonaTemplate): { positive: any[
   const triggers = { positive: [] as any[], negative: [] as any[] };
   
   // Age-based triggers
-  const age = persona.metadata.age;
+  const age = parseInt(persona.metadata.age || '0');
   if (age && age > 50) {
     triggers.positive.push(createTrigger("nostalgia", ["back then", "the old days", "remember when"], 4, "Nostalgic about past eras"));
     triggers.negative.push(createTrigger("change_resistance", ["these days", "modern", "new way"], 3, "Skeptical of modern changes"));

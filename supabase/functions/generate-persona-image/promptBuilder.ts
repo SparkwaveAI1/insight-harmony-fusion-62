@@ -102,7 +102,7 @@ function buildV4ImagePrompt(personaData: any): string {
   
   // Add hair loss patterns
   if (healthProfile.hair_loss_pattern) {
-    const hairLossMap = {
+    const hairLossMap: Record<string, string> = {
       'significant_balding': 'significantly bald, male pattern baldness',
       'moderate_balding': 'balding, thinning hair on top',
       'receding_hairline': 'receding hairline, widow\'s peak'
@@ -112,7 +112,7 @@ function buildV4ImagePrompt(personaData: any): string {
   
   // Add distinctive features
   if (healthProfile.distinctive_features && healthProfile.distinctive_features.length > 0) {
-    const featureMap = {
+    const featureMap: Record<string, string> = {
       'large_nose': 'large prominent nose',
       'prominent_nose': 'distinctive prominent nose',
       'prominent_ears': 'ears that stick out',

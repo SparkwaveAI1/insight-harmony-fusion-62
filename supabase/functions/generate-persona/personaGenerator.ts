@@ -169,7 +169,8 @@ export async function generatePersonaCognitiveProfile(basePersona: PersonaTempla
       break;
       
     } catch (error) {
-      console.error(`Cognitive profile generation attempt ${attemptCount} failed:`, error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Cognitive profile generation attempt ${attemptCount} failed:`, errorMessage);
       
       if (attemptCount >= maxAttempts) {
         throw new PersonaGenerationError(

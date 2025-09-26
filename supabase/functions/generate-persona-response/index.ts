@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
       const recentMessages = previous_messages.slice(-10);
       
       // Transform messages for OpenAI API format
-      const transformedMessages = recentMessages.map(msg => {
+      const transformedMessages = recentMessages.map((msg: any) => {
         if (msg.image) {
           // Check if the image data is actually an image by checking if it starts with valid image data URL
           const isValidImage = msg.image.startsWith('data:image/') || 
@@ -237,8 +237,9 @@ Deno.serve(async (req: Request) => {
     )
   } catch (error) {
     console.error('Unexpected error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return new Response(
-      JSON.stringify({ error: `Unexpected error: ${error.message}` }),
+      JSON.stringify({ error: `Unexpected error: ${errorMessage}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -283,7 +284,7 @@ function getChatModeInstructions(mode: string, persona: any): string {
     `
   };
 
-  return baseInstructions[mode] || '';
+  return baseInstructions[mode as keyof typeof baseInstructions] || '';
 }
 
 // Generate linguistic instructions based on persona profile
@@ -307,7 +308,7 @@ function generateLinguisticInstructions(persona: any): string {
       'very_long': 'Provide comprehensive responses when engaged (8+ sentences)'
     };
     
-    instructions += `RESPONSE LENGTH PREFERENCE: ${lengthMap[linguisticProfile.default_output_length] || 'Vary naturally'}\n`;
+    instructions += `RESPONSE LENGTH PREFERENCE: ${lengthMap[linguisticProfile.default_output_length as keyof typeof lengthMap] || 'Vary naturally'}\n`;
   }
   
   if (linguisticProfile.speech_register) {
@@ -319,7 +320,7 @@ function generateLinguisticInstructions(persona: any): string {
       'street': 'Use street-smart, direct language'
     };
     
-    instructions += `SPEECH STYLE: ${registerMap[linguisticProfile.speech_register] || 'Use your natural style'}\n`;
+    instructions += `SPEECH STYLE: ${registerMap[linguisticProfile.speech_register as keyof typeof registerMap] || 'Use your natural style'}\n`;
   }
   
   // Simulation directives for variability
@@ -362,7 +363,7 @@ function generateResponseParameters(persona: any, chatMode: string) {
       'long': 800,
       'very_long': 1000
     };
-    maxTokens = tokenMap[linguisticProfile.default_output_length] || 600;
+    maxTokens = tokenMap[linguisticProfile.default_output_length as keyof typeof tokenMap] || 600;
   }
   
   // Research mode gets more variability

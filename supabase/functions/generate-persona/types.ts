@@ -301,11 +301,9 @@ export interface SimulationDirectives {
 }
 
 export interface InterviewSection {
-  section_title: string;
-  responses: {
-    question: string;
-    answer: string;
-  }[];
+  section: string;
+  notes: string;
+  questions: string[];
 }
 
 // Updated PersonaTemplate to match database constraints

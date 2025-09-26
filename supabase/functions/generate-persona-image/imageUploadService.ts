@@ -4,42 +4,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 // Function to resize image to optimize file size
 async function resizeImage(base64Image: string, maxSize: number = 400): Promise<string> {
   try {
-    // Create canvas and context
-    // Use regular canvas for Deno compatibility
-    const canvas = document.createElement('canvas');
-    canvas.width = maxSize;
-    canvas.height = maxSize;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) {
-      throw new Error('Could not get canvas context');
-    }
-    
-    // Convert base64 to image
-    const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
-    const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
-    const imageBitmap = await createImageBitmap(imageBlob);
-    
-    // Calculate scaling to maintain aspect ratio
-    const { width: originalWidth, height: originalHeight } = imageBitmap;
-    const scale = Math.min(maxSize / originalWidth, maxSize / originalHeight);
-    const newWidth = originalWidth * scale;
-    const newHeight = originalHeight * scale;
-    
-    // Set canvas size to the new dimensions
-    canvas.width = newWidth;
-    canvas.height = newHeight;
-    
-    // Draw and resize image
-    ctx.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
-    
-    // Convert back to blob and then base64
-    const resizedBlob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
-    const resizedBuffer = await resizedBlob.arrayBuffer();
-    const resizedBase64 = btoa(String.fromCharCode(...new Uint8Array(resizedBuffer)));
-    
-    console.log(`Resized image from ${originalWidth}x${originalHeight} to ${newWidth}x${newHeight}`);
-    return resizedBase64;
+    // Note: Canvas operations not available in Deno edge functions
+    // Return original image for now
+    return base64Image;
   } catch (error) {
     console.warn('Failed to resize image, using original:', error);
     return base64Image; // Fallback to original
