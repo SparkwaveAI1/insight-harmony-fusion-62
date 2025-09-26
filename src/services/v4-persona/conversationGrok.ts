@@ -30,7 +30,8 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
         persona_id: request.persona_id,
         user_message: request.user_message,
         conversation_history: request.conversation_history || [],
-        include_prompt: request.include_prompt || false
+        include_prompt: request.include_prompt || false,
+        include_debug: true
       }
     });
 

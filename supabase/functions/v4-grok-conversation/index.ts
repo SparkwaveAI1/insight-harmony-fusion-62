@@ -1666,7 +1666,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { persona_id, user_message, conversation_history, include_prompt } = body
+    const { persona_id, user_message, conversation_history, include_prompt, include_debug = false } = body
     
     console.log('V4 GROK Conversation Engine - Processing:', persona_id)
 
@@ -1714,6 +1714,15 @@ serve(async (req) => {
     const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
     
+    // Prepare debug details
+    const demographics = extractDemographics(persona.conversation_summary, persona.full_profile)
+    const specificOpinion = synthesizeSpecificOpinion(v4TraitAnalysis.selected_traits, user_message, demographics)
+    const communicationExecution = buildCommunicationExecution(
+      v4TraitAnalysis.selected_traits,
+      demographics,
+      persona.full_profile.communication_style
+    )
+    
     // Debug flag: return prompt if requested
     if (include_prompt) {
       return new Response(
@@ -1723,7 +1732,12 @@ serve(async (req) => {
           traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
           persona_name: persona.conversation_summary.demographics.name,
           model_used: 'grok-debug',
-          prompt_debug: { instructions }
+          prompt_debug: { instructions },
+          debug: {
+            selected_traits_full: v4TraitAnalysis.selected_traits,
+            specific_opinion: specificOpinion,
+            communication_execution: communicationExecution
+          }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1822,7 +1836,12 @@ serve(async (req) => {
         behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
         persona_name: persona.conversation_summary.demographics.name,
         model_used: 'grok-4-latest',
-        prompt_debug: include_prompt ? { instructions: instructions } : undefined
+        prompt_debug: include_prompt ? { instructions: instructions } : undefined,
+        debug: include_debug ? {
+          selected_traits_full: v4TraitAnalysis.selected_traits,
+          specific_opinion: specificOpinion,
+          communication_execution: communicationExecution
+        } : undefined
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
