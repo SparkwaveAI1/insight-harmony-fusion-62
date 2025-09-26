@@ -114,7 +114,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   const description = getPersonaBackgroundDescription(persona) || "No description available";
 
   return (
-    <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative overflow-hidden">
+    <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative">
       {/* Remove from Collection Button */}
       {collectionId && onRemoveFromCollection && (
         <Button
@@ -129,9 +129,9 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       )}
       
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex items-start gap-4 flex-1">
           {/* Profile Photo */}
-          <Avatar className="h-24 w-24 border-2 border-border rounded-lg">
+          <Avatar className="h-32 w-32 border-2 border-border rounded-lg">
             <AvatarImage 
               src={persona.profile_image_url} 
               alt={persona.name}
@@ -196,7 +196,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover border shadow-md z-50">
+          <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleViewDetails}>
               View Details
             </DropdownMenuItem>
@@ -240,12 +240,12 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           <div className="flex items-center text-sm">
             <MapPin className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
             <span className="text-muted-foreground mr-2">Location:</span>
-            <span className="font-medium truncate min-w-0">{location}</span>
+            <span className="font-medium truncate">{location}</span>
           </div>
-          <div className="flex items-center text-sm min-w-0">
+          <div className="flex items-center text-sm">
             <Briefcase className="h-4 w-4 mr-2 text-purple-500 flex-shrink-0" />
             <span className="text-muted-foreground mr-2">Occupation:</span>
-            <span className="font-medium truncate min-w-0">{occupation}</span>
+            <span className="font-medium truncate">{occupation}</span>
           </div>
         </div>
         
@@ -253,7 +253,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
           <p className="text-sm text-foreground line-clamp-3 leading-relaxed">
-            {description}
+            {persona.conversation_summary?.character_description || "No description available"}
           </p>
         </div>
       </CardContent>

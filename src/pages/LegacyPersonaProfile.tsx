@@ -64,7 +64,6 @@ function PersonaProfile() {
       }
 
       setPersona(personaData);
-      setIsPublic(personaData.is_public || false); // ✅ Sync visibility from DB
     } catch (error) {
       console.error('Error loading persona:', error);
       toast.error('Failed to load persona');

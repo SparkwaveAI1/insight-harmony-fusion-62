@@ -124,8 +124,9 @@ const MyPersonasList = ({
 
   // Update local state only when searchedPersonas actually changes
   useEffect(() => {
+    console.log('Setting personas:', searchedPersonas.length);
     setPersonas(searchedPersonas);
-  }, [searchedPersonas]);
+  }, [searchedPersonas]); // Depend on the full array to catch changes beyond length
 
   // Handle visibility changes
   const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
