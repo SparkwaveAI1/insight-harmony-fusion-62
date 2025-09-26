@@ -53,6 +53,3 @@ verify_jwt = false
 
 [functions.research-session-orchestrator]
 verify_jwt = false
-
-[functions.persona-quick-chat]
-verify_jwt = false
