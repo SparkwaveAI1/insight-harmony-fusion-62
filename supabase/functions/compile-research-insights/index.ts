@@ -70,6 +70,10 @@ serve(async (req) => {
       throw new Error(`Failed to fetch session data: ${sessionError.message}`);
     }
 
+    // Normalize survey relation (can be array or object depending on relationship)
+    const researchSurveys = (sessionData as any)?.research_surveys;
+    const survey = Array.isArray(researchSurveys) ? (researchSurveys[0] ?? null) : (researchSurveys ?? null);
+
     // Fetch persona details for context
     const { data: personaData, error: personaError } = await supabase
       .from('v4_personas')
@@ -102,8 +106,8 @@ serve(async (req) => {
     let analysisPrompt = `You are an expert qualitative research analyst conducting a comprehensive analysis of survey responses from multiple research personas. Your task is to provide deep insights that connect responses back to the original research objectives and context.
 
 ## SURVEY OVERVIEW
-**Study Name:** ${sessionData?.research_surveys?.name || 'Research Study'}
-**Study Description:** ${sessionData?.research_surveys?.description || 'No description provided'}
+**Study Name:** ${survey?.name || 'Research Study'}
+**Study Description:** ${survey?.description || 'No description provided'}
 **Research Scope:** ${responsesByPersona.size} unique personas, ${responsesByQuestion.size} questions, ${responses.length} total responses
 
 ## RESEARCH OBJECTIVES & CONTEXT`;
@@ -154,7 +158,7 @@ ${context.document_summaries ? context.document_summaries.map((doc: any) => `- $
     // Add responses organized by question with enhanced context
     responsesByQuestion.forEach((questionResponses, questionIndex) => {
       const firstResponse = questionResponses[0];
-      const question = sessionData?.research_surveys?.questions?.[questionIndex] || {};
+      const question = survey?.questions?.[questionIndex] || {};
       
       analysisPrompt += `
 **Question ${questionIndex + 1}:** ${firstResponse.question_text}
@@ -162,7 +166,7 @@ ${question.context ? `*Question Context:* ${question.context}` : ''}
 
 **Responses:**
 `;
-      questionResponses.forEach((response) => {
+      questionResponses.forEach((response: any) => {
         const persona = personaData?.find((p: any) => p.persona_id === response.persona_id);
         const personaName = persona?.name || `Persona-${response.persona_id.slice(-4)}`;
         analysisPrompt += `
@@ -430,7 +434,7 @@ Focus on providing deep, contextual insights that would be valuable for research
   } catch (error) {
     console.error('Error in compile-research-insights function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       insights: null 
     }), {
       status: 500,
