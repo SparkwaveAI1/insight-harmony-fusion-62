@@ -3,7 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { corsHeaders } from '../_shared/cors.ts'
 import { createPersonaSystemMessage } from '../_shared/personaSystemMessage.ts'
 import { detectEmotionalTriggers, generateEmotionalStateInstructions } from '../_shared/emotionalTriggerService.ts'
-import { generateInterviewContextInstructions } from '../_shared/interviewContextService.ts'
 import { generateNaturalConversationInstructions } from '../_shared/conversationalContextService.ts'
 import { generateChatResponse } from '../_shared/openai.ts'
 
@@ -96,19 +95,6 @@ Deno.serve(async (req: Request) => {
         console.log('Emotional triggers activated:', triggeredEmotions.map(e => `${e.emotion_type} (${e.intensity})`));
         const emotionalInstructions = generateEmotionalStateInstructions(triggeredEmotions);
         systemMessage += emotionalInstructions;
-      }
-    }
-    
-    // ADD INTERVIEW CONTEXT WHEN RELEVANT
-    if (lastUserMessage && fullProfile.interview_sections) {
-      console.log('Checking for relevant interview context...');
-      const interviewInstructions = generateInterviewContextInstructions(
-        persona,
-        previous_messages || [],
-        lastUserMessage.content
-      );
-      if (interviewInstructions) {
-        systemMessage += interviewInstructions;
       }
     }
     

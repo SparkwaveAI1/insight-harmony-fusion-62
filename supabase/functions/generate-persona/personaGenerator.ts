@@ -168,9 +168,9 @@ export async function generatePersonaCognitiveProfile(basePersona: PersonaTempla
       console.log(`✅ Cognitive profile generated successfully on attempt ${attemptCount}`);
       break;
       
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`Cognitive profile generation attempt ${attemptCount} failed:`, errorMessage);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error(`Cognitive profile generation attempt ${attemptCount} failed:`, error.message);
       
       if (attemptCount >= maxAttempts) {
         throw new PersonaGenerationError(
@@ -219,7 +219,8 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
     );
     console.log(`✅ Generated ${interviewResponses.length} interview sections`);
     return interviewResponses;
-  } catch (error) {
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
     console.warn('Interview generation failed, using minimal fallback:', error.message);
     return [
       {
@@ -227,7 +228,7 @@ export async function generatePersonaInterview(basePersona: PersonaTemplate): Pr
         responses: [
           {
             question: "Tell me about yourself",
-            answer: `Hi, I'm ${basePersona.name}. I'm a ${basePersona.identity?.occupation || 'professional'} living in ${basePersona.identity?.location?.city || 'my current city'}. I'd be happy to share more about my experiences and perspective.`
+            answer: `Hi, I'm ${basePersona.name}. I'm a ${basePersona.metadata?.occupation || 'professional'} living in ${basePersona.metadata?.location || 'my current city'}. I'd be happy to share more about my experiences and perspective.`
           }
         ]
       }
