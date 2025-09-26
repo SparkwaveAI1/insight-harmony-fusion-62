@@ -331,7 +331,6 @@ class V4TraitRelevanceAnalyzer {
       
       // Communication traits - higher for opinion questions
       'communication_style.voice_foundation.directness': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.6 : 0.3,
-      'communication_style.style_markers.metaphor_domains': () => 0.5, // Always somewhat relevant
       
       // Default scoring
       'default': () => 0.3
@@ -847,17 +846,7 @@ function buildCommunicationExecution(selectedTraits, demographics, communication
     instructions.push("Speak from leadership authority - reference team management, strategic planning, and organizational change initiatives");
   }
   
-  // COMMUNICATION STYLE SPECIFIC INSTRUCTIONS
-  const metaphorDomains = communicationStyle?.style_markers?.metaphor_domains || [];
-  if (metaphorDomains.includes('faith')) {
-    instructions.push("Use biblical references or spiritual wisdom naturally when discussing ethical or complex decisions");
-  }
-  if (metaphorDomains.includes('sports')) {
-    instructions.push("Draw sports analogies naturally - reference teamwork, coaching, game strategy when explaining concepts");
-  }
-  if (metaphorDomains.includes('business') || metaphorDomains.includes('investment')) {
-    instructions.push("Use business and investment metaphors - reference market analysis, risk assessment, portfolio management");
-  }
+  // COMMUNICATION STYLE SPECIFIC INSTRUCTIONS - Metaphor logic removed for authentic responses
   
   // THOUGHT COHERENCE SPECIFIC PATTERNS
   const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.data_value || 0.7;
@@ -1209,10 +1198,6 @@ function translateCommunicationStyle(communicationStyle, demographics) {
     }
   }
   
-  if (style.metaphor_domains && style.metaphor_domains.length > 0) {
-    const domains = style.metaphor_domains.slice(0, 3).join(", "); // Limit to 3 for brevity
-    instructions.push(`Draw metaphors from: ${domains} when explaining concepts.`);
-  }
   
   if (typeof style.storytelling_vs_bullets === "number") {
     if (style.storytelling_vs_bullets >= 0.7) {

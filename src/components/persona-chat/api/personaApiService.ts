@@ -57,7 +57,7 @@ async function generateQuickPersonaResponse(
       console.log(`🎯 Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
       // Use the trait-first quick chat function for authentic persona responses
-      const { data, error } = await supabase.functions.invoke('persona-quick-chat', {
+      const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
         body: {
           personaId,
           message: userMessage,
