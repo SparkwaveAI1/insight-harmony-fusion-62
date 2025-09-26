@@ -1836,16 +1836,16 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         response: personaResponse,
-        traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
-        traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
-        context_classification: v4TraitAnalysis.context_classification,
-        linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
-        behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
+        traits_selected: relevantTraits.map(t => t.trait),
+        traits_scores: relevantTraits.map(t => ({ trait: t.trait, score: t.relevance })),
+        context_classification: null,
+        linguistic_signature_used: persona.full_profile?.communication_style?.linguistic_signature,
+        behavioral_modifiers: {},
         persona_name: persona.conversation_summary.demographics.name,
-        model_used: 'grok-4-latest',
+        model_used: GROK_MODEL,
         prompt_debug: include_prompt ? { instructions: instructions } : undefined,
         debug: include_debug ? {
-          selected_traits_full: v4TraitAnalysis.selected_traits,
+          selected_traits_full: relevantTraits,
           specific_opinion: specificOpinion,
           communication_execution: communicationExecution
         } : undefined
