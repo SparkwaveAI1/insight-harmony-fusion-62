@@ -153,7 +153,7 @@ export class DrivingTraitsSynthesizer {
       }
     };
     
-    const behavior = behaviorMappings[traitName]?.[intensity] || 
+    const behavior = (behaviorMappings as any)[traitName]?.[intensity] || 
                     `exhibits ${intensity} levels of ${traitName.toLowerCase()}`;
     
     return `${influenceStrength} ${behavior}`;
@@ -237,11 +237,11 @@ export class DrivingTraitsSynthesizer {
     const key1 = `${trait1.subcategory}_${trait2.subcategory}`;
     const key2 = `${trait2.subcategory}_${trait1.subcategory}`;
     
-    if (interactions[key1]) {
-      return interactions[key1](trait1.value, trait2.value);
+    if ((interactions as any)[key1]) {
+      return (interactions as any)[key1](trait1.value, trait2.value);
     }
-    if (interactions[key2]) {
-      return interactions[key2](trait2.value, trait1.value);
+    if ((interactions as any)[key2]) {
+      return (interactions as any)[key2](trait2.value, trait1.value);
     }
     
     return null;
