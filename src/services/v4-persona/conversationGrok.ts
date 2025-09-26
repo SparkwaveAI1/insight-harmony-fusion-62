@@ -7,7 +7,6 @@ export interface V4GrokConversationRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
-  include_prompt?: boolean;
 }
 
 export interface V4GrokConversationResponse {
@@ -25,13 +24,11 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
     console.log('Sending V4 Grok message to persona:', request.persona_id);
 
 
-    const { data, error } = await supabase.functions.invoke('v4-grok-conversation-minimal', {
+    const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
       body: {
         persona_id: request.persona_id,
         user_message: request.user_message,
-        conversation_history: request.conversation_history || [],
-        include_prompt: request.include_prompt || false,
-        include_debug: true
+        conversation_history: request.conversation_history || []
       }
     });
 

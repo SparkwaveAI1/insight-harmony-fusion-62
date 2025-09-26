@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { corsHeaders } from '../_shared/cors.ts';
 import { generateChatResponse } from '../_shared/openai.ts';
 

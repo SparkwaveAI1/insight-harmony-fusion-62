@@ -1,6 +1,4 @@
 
-// @ts-nocheck
-
 import { PersonaTemplate } from "./types.ts";
 
 // Define persona template structure

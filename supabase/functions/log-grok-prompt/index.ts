@@ -1,5 +1,4 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -85,7 +84,7 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("log-grok-prompt error", err);
-    return new Response(JSON.stringify({ success: false, error: (err as Error)?.message || "Unknown error" }), {
+    return new Response(JSON.stringify({ success: false, error: err?.message || "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Validation error:', error);
     return new Response(
-      JSON.stringify({ error: `Validation failed: ${error instanceof Error ? error.message : String(error)}` }),
+      JSON.stringify({ error: `Validation failed: ${error.message}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

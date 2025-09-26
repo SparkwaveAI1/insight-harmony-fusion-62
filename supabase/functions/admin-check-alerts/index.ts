@@ -145,8 +145,8 @@ serve(async (req) => {
 
     // 3. Check for subscriptions expiring in 3 days
     console.log('🔍 [ALERTS] Checking expiring subscriptions...');
-    const checkTime = new Date();
-    const threeDaysFromNow = new Date(checkTime.toISOString());
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.toISOString());
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
 
     const { data: expiringSubscriptions } = await supabaseAdmin
@@ -203,7 +203,7 @@ serve(async (req) => {
     console.error('❌ [ALERTS] Error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      message: error instanceof Error ? error.message : String(error)
+      message: error.message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

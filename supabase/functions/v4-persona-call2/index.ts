@@ -181,8 +181,7 @@ CRITICAL REQUIREMENTS:
             } catch (parseError) {
               console.error(`JSON parsing failed with ${model}:`, parseError)
               console.error('Content that failed to parse:', cleanedContent.slice(0, 500))
-              const errorMsg = parseError instanceof Error ? parseError.message : String(parseError)
-              throw new Error(`Failed to parse as JSON: ${errorMsg}`)
+              throw new Error(`Failed to parse as JSON: ${parseError.message}`)
             }
 
           } catch (modelError) {
@@ -199,8 +198,7 @@ CRITICAL REQUIREMENTS:
 
         // If we get here without summaryData, all models failed
         if (!summaryData) {
-          const errorMsg = lastError instanceof Error ? lastError.message : 'Unknown error'
-          throw new Error(`All models failed. Last error: ${errorMsg}`)
+          throw new Error(`All models failed. Last error: ${lastError?.message || 'Unknown error'}`)
         }
 
         // Update persona with conversation summary
@@ -238,8 +236,7 @@ CRITICAL REQUIREMENTS:
     }
 
     // Start background task and return immediately
-    // Note: EdgeRuntime.waitUntil not available in this context, task will run async
-    backgroundTask()
+    EdgeRuntime.waitUntil(backgroundTask())
 
     return new Response(
       JSON.stringify({ 
@@ -260,7 +257,7 @@ CRITICAL REQUIREMENTS:
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: error.message,
         type: 'input_validation_error'
       }),
       {

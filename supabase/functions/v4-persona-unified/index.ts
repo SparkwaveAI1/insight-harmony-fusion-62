@@ -560,7 +560,7 @@ Ensure all traits are coherent with the background story and character essence. 
     console.log('✅ Persona JSON generated, length:', personaJsonString?.length)
     
     // Clean up JSON before parsing (remove trailing commas and extra whitespace)
-    function cleanupJson(jsonString: string) {
+    function cleanupJson(jsonString) {
       return jsonString
         .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
         .replace(/\s+/g, ' ')          // Normalize whitespace
@@ -651,7 +651,7 @@ Ensure all traits are coherent with the background story and character essence. 
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: error.message,
         message: 'Persona generation failed'
       }),
       {

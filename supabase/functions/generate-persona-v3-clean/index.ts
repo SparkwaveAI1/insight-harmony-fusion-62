@@ -323,7 +323,7 @@ STRUCTURE (return ONLY valid JSON):
     
   } catch (parseError) {
     console.error('❌ V3-Clean: JSON parsing failed:', parseError);
-    throw new Error(`Failed to parse V3-Clean persona: ${(parseError as Error).message}`);
+    throw new Error(`Failed to parse V3-Clean persona: ${parseError.message}`);
   }
 }
 
@@ -377,7 +377,7 @@ serve(async (req) => {
     console.error('❌ V3-Clean: Generation error:', error);
     
     return new Response(JSON.stringify({ 
-      error: (error as Error).message,
+      error: error.message,
       details: 'V3-Clean generation failed - check logs'
     }), {
       status: 500,

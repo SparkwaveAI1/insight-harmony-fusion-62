@@ -346,7 +346,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in v4-conversation-engine:', error)
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

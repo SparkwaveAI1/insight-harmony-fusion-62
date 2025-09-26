@@ -1,6 +1,4 @@
 
-// @ts-nocheck
-
 import { PersonaTemplate } from "./types.ts";
 import { 
   generateCoreDemographics,

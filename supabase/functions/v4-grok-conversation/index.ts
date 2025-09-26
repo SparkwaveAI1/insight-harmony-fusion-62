@@ -1,10 +1,5 @@
-// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { TraitAnalysisEngine } from './traitAnalysisEngine.ts';
-
-// TEMPORARY BILLING BYPASS FOR TESTING
-const BYPASS_BILLING = true;
 
 // Flags (default OFF)
 const CE_PROMPT_V2 = Deno.env.get("CE_PROMPT_V2") === "true";
@@ -125,11 +120,7 @@ class V4TraitRelevanceAnalyzer {
     { path: 'truth_honesty_profile.truth_flexibility_by_context', weight: 0.8, contexts: ['context', 'audience', 'situation'] },
   ];
 
-  static analyzeTraitRelevance(userInput: string, fullProfile: any, conversationSummary: any) {
-    console.log("[TRAIT DEBUG] Starting extractRelevantTraits for question:", userInput);
-    console.log("[TRAIT DEBUG] Full profile keys:", Object.keys(fullProfile));
-    console.log("[TRAIT DEBUG] Persona name:", fullProfile?.identity?.name || "Unknown");
-
+  static analyzeTraitRelevance(userInput, fullProfile, conversationSummary) {
     const input = userInput.toLowerCase();
     
     // 1. CLASSIFY THE TURN AND DETERMINE QUESTION DOMAIN
@@ -138,10 +129,6 @@ class V4TraitRelevanceAnalyzer {
 
     // 2. SELECT RELEVANT TRAITS BASED ON QUESTION DOMAIN (MAX 5)
     const selectedTraits = this.selectDomainRelevantTraits(input, fullProfile, questionDomain, classification);
-
-    console.log("[TRAIT DEBUG] Selected traits count:", selectedTraits.length);
-    console.log("[TRAIT DEBUG] Selected traits:", selectedTraits.map(t => t.trait));
-    console.log("[TRAIT DEBUG] Trait values:", selectedTraits.map(t => ({trait: t.trait, value: t.data_value})));
 
     // 3. EXTRACT LINGUISTIC SIGNATURE
     const linguisticSignature = this.extractLinguisticSignature(fullProfile);
@@ -162,7 +149,7 @@ class V4TraitRelevanceAnalyzer {
     };
   }
 
-  static classifyTurn(userInput: string) {
+  static classifyTurn(userInput) {
     const input = userInput.toLowerCase();
 
     // Classify intent
@@ -194,7 +181,7 @@ class V4TraitRelevanceAnalyzer {
     return { intent, topics, audience, sensitivity };
   }
 
-  static determineQuestionDomain(userInput: string) {
+  static determineQuestionDomain(userInput) {
     const input = userInput.toLowerCase();
     
     // Professional/Work domain
@@ -233,10 +220,10 @@ class V4TraitRelevanceAnalyzer {
     return 'general';
   }
 
-  static flattenPersonaProfile(fullProfile: any): any[] {
-    const traits: any[] = [];
+  static flattenPersonaProfile(fullProfile) {
+    const traits = [];
     
-    function extractTraits(obj: any, prefix = '') {
+    function extractTraits(obj, prefix = '') {
       for (const [key, value] of Object.entries(obj)) {
         const path = prefix ? `${prefix}.${key}` : key;
         
@@ -252,7 +239,7 @@ class V4TraitRelevanceAnalyzer {
     return traits;
   }
 
-  static selectDomainRelevantTraits(userInput: string, fullProfile: any, domain: string, classification: any) {
+  static selectDomainRelevantTraits(userInput, fullProfile, domain, classification) {
     const selectedTraits = [];
     
     // Extract ALL traits from the full persona profile
@@ -306,7 +293,7 @@ class V4TraitRelevanceAnalyzer {
     return selectedTraits.slice(0, 6);
   }
 
-  static calculateContextualRelevance(userInput: string, traitPath: string, traitValue: any, domain: string, classification: any) {
+  static calculateContextualRelevance(userInput, traitPath, traitValue, domain, classification) {
     const input = userInput.toLowerCase();
     const pathParts = traitPath.toLowerCase().split('.');
     let score = 0;
@@ -744,8 +731,6 @@ class V4TraitRelevanceAnalyzer {
 
 // General Opinion Synthesis Function
 function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
-  console.log("[OPINION DEBUG] Input traits:", selectedTraits.map(t => ({trait: t.trait, value: t.data_value})));
-  
   const traitMap = {};
   selectedTraits.forEach(trait => {
     traitMap[trait.trait] = trait.value;
@@ -781,23 +766,18 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
   }
   
   // Combine into coherent stance
-  let generatedOpinion;
   if (stanceElements.length > 0) {
-    generatedOpinion = `Based on your traits, ${stanceElements.join(' and ')}`;
-  } else {
-    generatedOpinion = 'You approach this with your unique perspective and priorities';
+    return `Based on your traits, ${stanceElements.join(' and ')}`;
   }
   
-  console.log("[OPINION DEBUG] Generated opinion:", generatedOpinion);
-  
-  return generatedOpinion;
+  return 'You approach this with your unique perspective and priorities';
 }
 
 // Specific Opinion Synthesis Engine
 function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
   const traitMap = {};
   selectedTraits.forEach(trait => {
-    traitMap[trait.trait] = trait.value;
+    traitMap[trait.trait] = trait.data_value;
   });
   
   const riskTolerance = traitMap['adoption_profile.risk_tolerance'] || 0.5;
@@ -833,42 +813,82 @@ function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
   return `Based on your traits, you think ${userInput.match(/about (.+)\?/)?.[1] || 'this topic'} - ${opinionElements.join(' and ')}`;
 }
 
-// Communication Execution Engine
+// Persona-Specific Communication Execution Engine
 function buildCommunicationExecution(selectedTraits, demographics, communicationStyle) {
-  const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.value || 0.7;
-  const directness = communicationStyle?.voice_foundation?.directness || 'moderate';
-  const honesty = selectedTraits.find(t => t.trait.includes('baseline_honesty'))?.value || 0.7;
-  
   let instructions = [];
   
-  // Thought structure
-  if (thoughtCoherence >= 0.8) {
-    instructions.push("Present your thoughts in clear, logical sequence");
-  } else if (thoughtCoherence <= 0.5) {
-    instructions.push("Let your thoughts flow naturally with some tangential connections");
-  } else {
-    instructions.push("Maintain clear thinking while allowing natural flow between related ideas");
+  // CULTURAL/REGIONAL SPECIFIC INSTRUCTIONS
+  if (demographics.ethnicity?.toLowerCase().includes('black') && demographics.location?.toLowerCase().includes('atlanta')) {
+    instructions.push("Express your medical opinion with Southern warmth and community perspective - reference how this impacts patient care in Atlanta hospitals");
+    instructions.push("Ground your responses in both clinical experience and faith-based wisdom, mentioning community service impact when relevant");
   }
   
-  // Communication style
-  if (directness === 'high' && honesty > 0.8) {
-    instructions.push("Be blunt and specific about your concerns or enthusiasm");
-  } else if (directness === 'high') {
-    instructions.push("State your position directly without diplomatic softening");
-  }
-  
-  // Professional context
-  if (demographics.occupation?.toLowerCase().includes('director')) {
-    instructions.push("Speak from your leadership perspective focusing on practical implementation");
-  } else if (demographics.occupation?.toLowerCase().includes('business')) {
-    instructions.push("Focus on business implications and practical considerations");
-  }
-  
-  // Cultural background
   if (demographics.ethnicity?.toLowerCase().includes('bulgarian')) {
-    instructions.push("Use Eastern European directness - precise and efficient expression");
-  } else if (demographics.ethnicity?.toLowerCase().includes('cuban')) {
-    instructions.push("Use confident Miami professional style with business urgency");
+    instructions.push("Use Eastern European directness and precision - state your business conclusions efficiently without unnecessary elaboration");
+    instructions.push("Focus on practical ROI and implementation costs from your immigrant entrepreneur perspective");
+  }
+  
+  if (demographics.ethnicity?.toLowerCase().includes('cuban')) {
+    instructions.push("Use confident Miami professional style with business urgency - speak like a Cuban-American executive making strategic decisions");
+    instructions.push("Reference operational efficiency and staff management from your leadership experience in Miami healthcare");
+  }
+  
+  if (demographics.location?.toLowerCase().includes('chicago') && demographics.occupation?.toLowerCase().includes('director')) {
+    instructions.push("Speak like a Chicago healthcare administrator focused on operational efficiency and staff training");
+    instructions.push("Reference departmental management challenges and evidence-based decision making from your Midwestern leadership role");
+  }
+  
+  // PROFESSION-SPECIFIC VOICE PATTERNS
+  if (demographics.occupation?.toLowerCase().includes('business owner')) {
+    instructions.push("Frame everything through business lens - mention costs, revenue, ROI, and operational impact in your responses");
+  }
+  
+  if (demographics.occupation?.toLowerCase().includes('director') || demographics.occupation?.toLowerCase().includes('executive')) {
+    instructions.push("Speak from leadership authority - reference team management, strategic planning, and organizational change initiatives");
+  }
+  
+  // COMMUNICATION STYLE SPECIFIC INSTRUCTIONS
+  const metaphorDomains = communicationStyle?.style_markers?.metaphor_domains || [];
+  if (metaphorDomains.includes('faith')) {
+    instructions.push("Use biblical references or spiritual wisdom naturally when discussing ethical or complex decisions");
+  }
+  if (metaphorDomains.includes('sports')) {
+    instructions.push("Draw sports analogies naturally - reference teamwork, coaching, game strategy when explaining concepts");
+  }
+  if (metaphorDomains.includes('business') || metaphorDomains.includes('investment')) {
+    instructions.push("Use business and investment metaphors - reference market analysis, risk assessment, portfolio management");
+  }
+  
+  // THOUGHT COHERENCE SPECIFIC PATTERNS
+  const thoughtCoherence = selectedTraits.find(t => t.trait === 'cognitive_profile.thought_coherence')?.data_value || 0.7;
+  if (thoughtCoherence >= 0.8) {
+    instructions.push("Present ideas in clear logical sequence - opening position, supporting evidence, practical implications");
+  } else if (thoughtCoherence <= 0.5) {
+    instructions.push("Let thoughts flow naturally with tangential connections - start with gut reaction, then add supporting details as they occur to you");
+  } else {
+    instructions.push("Balance structured thinking with natural flow - state your main point clearly, then elaborate with related observations");
+  }
+  
+  // DIRECTNESS/HONESTY SPECIFIC INSTRUCTIONS
+  const honesty = selectedTraits.find(t => t.trait.includes('baseline_honesty'))?.data_value || 0.7;
+  const directness = communicationStyle?.voice_foundation?.directness;
+  
+  if (directness === 'high' && honesty > 0.8) {
+    instructions.push("Cut straight to your core assessment without diplomatic padding - state your position in the opening sentence with conviction");
+  } else if (directness === 'high') {
+    instructions.push("Be direct but professionally courteous - state your position clearly while acknowledging professional respect");
+  }
+  
+  // REGIONAL SPEECH PATTERNS
+  const regionalHints = communicationStyle?.regional_register?.dialect_hints || [];
+  if (regionalHints.some(hint => hint.includes('Southern'))) {
+    instructions.push("Use measured Southern speech patterns - thoughtful pacing with occasional warm colloquialisms appropriate to your professional role");
+  }
+  if (regionalHints.some(hint => hint.includes('Eastern European'))) {
+    instructions.push("Maintain slight formal precision in word choice - clear, direct sentences without unnecessary flourishes");
+  }
+  if (regionalHints.some(hint => hint.includes('Midwestern'))) {
+    instructions.push("Use straightforward Midwestern communication - practical, no-nonsense language focused on getting things done");
   }
   
   return instructions.join('. ');
@@ -1189,7 +1209,10 @@ function translateCommunicationStyle(communicationStyle, demographics) {
     }
   }
   
-  // METAPHOR INSTRUCTIONS REMOVED - not wanted in conversation engine
+  if (style.metaphor_domains && style.metaphor_domains.length > 0) {
+    const domains = style.metaphor_domains.slice(0, 3).join(", "); // Limit to 3 for brevity
+    instructions.push(`Draw metaphors from: ${domains} when explaining concepts.`);
+  }
   
   if (typeof style.storytelling_vs_bullets === "number") {
     if (style.storytelling_vs_bullets >= 0.7) {
@@ -1668,7 +1691,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { persona_id, user_message, conversation_history, include_prompt, include_debug = false } = body
+    const { persona_id, user_message, conversation_history, include_prompt } = body
     
     console.log('V4 GROK Conversation Engine - Processing:', persona_id)
 
@@ -1701,52 +1724,20 @@ serve(async (req) => {
     console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
     console.log('=== END DIAGNOSTIC ===');
 
-    // Use NEW TraitAnalysisEngine with full error exposure - NO FALLBACKS
-    let relevantTraits, specificOpinion, communicationExecution;
+    // Analyze which traits are relevant to this specific input using V4-native analyzer
+    const v4TraitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(
+      user_message, 
+      persona.full_profile, 
+      persona.conversation_summary
+    )
+    console.log('V4 - Selected traits for this input:', v4TraitAnalysis.selected_traits.map(t => t.trait))
+    console.log('V4 - Context classification:', v4TraitAnalysis.context_classification)
+    console.log('V4 - Linguistic signature extracted:', Object.keys(v4TraitAnalysis.linguistic_signature))
+    console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
 
-    try {
-        console.log("[TRAIT DEBUG] Starting trait analysis for:", user_message);
-        
-        relevantTraits = TraitAnalysisEngine.extractRelevantTraits(user_message, persona.full_profile || {});
-        console.log("[TRAIT DEBUG] Extracted traits:", relevantTraits?.length || 0);
-        
-        specificOpinion = TraitAnalysisEngine.synthesizeQualitativeOpinion(relevantTraits, user_message);
-        console.log("[TRAIT DEBUG] Generated opinion:", specificOpinion?.substring(0, 50) + "...");
-        
-        communicationExecution = TraitAnalysisEngine.synthesizeCommunicationStyle(relevantTraits, persona.full_profile || {});
-        console.log("[TRAIT DEBUG] Communication style:", communicationExecution?.substring(0, 50) + "...");
-        
-    } catch (error) {
-        console.error("[TRAIT ENGINE CRASH]", error);
-        console.error("[TRAIT ENGINE CRASH] Stack:", error.stack);
-        console.error("[TRAIT ENGINE CRASH] Persona data keys:", Object.keys(persona.full_profile || {}));
-        
-        return new Response(JSON.stringify({
-            success: false,
-            error: "Trait analysis engine failed",
-            error_message: error.message,
-            error_stack: error.stack,
-            persona_name: persona?.conversation_summary?.demographics?.name,
-            debug_info: {
-                persona_keys: Object.keys(persona.full_profile || {}),
-                user_message: user_message
-            }
-        }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500
-        });
-    }
-
-    // Build V4-native instructions using NEW trait analysis
-    const instructions = buildV4NativeInstructions({
-      selected_traits: relevantTraits,
-      linguistic_signature: {},
-      behavioral_modifiers: {}
-    }, persona.conversation_summary, user_message, persona.full_profile)
+    // Build V4-native instructions using trait analysis
+    const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
     console.log('V4 - Instruction length:', instructions.length)
-    
-    // Prepare debug details using NEW engine results
-    const demographics = extractDemographics(persona.conversation_summary, persona.full_profile)
     
     // Debug flag: return prompt if requested
     if (include_prompt) {
@@ -1754,15 +1745,10 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           response: 'Debug mode: Prompt returned',
-          traits_selected: relevantTraits.map(t => t.trait),
+          traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
           persona_name: persona.conversation_summary.demographics.name,
           model_used: 'grok-debug',
-          prompt_debug: { instructions },
-          debug: {
-        selected_traits_full: relevantTraits,
-        specific_opinion: specificOpinion,
-        communication_execution: communicationExecution
-          }
+          prompt_debug: { instructions }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -1854,19 +1840,14 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         response: personaResponse,
-        traits_selected: relevantTraits.map(t => t.trait),
-        traits_scores: relevantTraits.map(t => ({ trait: t.trait, score: t.relevance })),
-        context_classification: null,
-        linguistic_signature_used: persona.full_profile?.communication_style?.linguistic_signature,
-        behavioral_modifiers: {},
+        traits_selected: v4TraitAnalysis.selected_traits.map(t => t.trait),
+        traits_scores: v4TraitAnalysis.selected_traits.map(t => ({ trait: t.trait, score: t.score })),
+        context_classification: v4TraitAnalysis.context_classification,
+        linguistic_signature_used: v4TraitAnalysis.linguistic_signature,
+        behavioral_modifiers: v4TraitAnalysis.behavioral_modifiers,
         persona_name: persona.conversation_summary.demographics.name,
-        model_used: GROK_MODEL,
-        prompt_debug: include_prompt ? { instructions: instructions } : undefined,
-        debug: include_debug ? {
-          selected_traits_full: relevantTraits,
-          specific_opinion: specificOpinion,
-          communication_execution: communicationExecution
-        } : undefined
+        model_used: 'grok-4-latest',
+        prompt_debug: include_prompt ? { instructions: instructions } : undefined
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

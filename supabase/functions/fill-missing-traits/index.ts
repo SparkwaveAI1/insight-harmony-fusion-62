@@ -1,4 +1,3 @@
-// @ts-nocheck
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
@@ -94,7 +93,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new chronic conditions
   const beforeConditions = before.health_profile?.chronic_conditions || [];
   const afterConditions = after.health_profile?.chronic_conditions || [];
-  const newConditions = afterConditions.filter((c: any) => !beforeConditions.includes(c));
+  const newConditions = afterConditions.filter(c => !beforeConditions.includes(c));
   if (newConditions.length > 0) {
     added.push("chronic_conditions");
   }
@@ -102,7 +101,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new medications
   const beforeMeds = before.health_profile?.medications || [];
   const afterMeds = after.health_profile?.medications || [];
-  const newMeds = afterMeds.filter((m: any) => !beforeMeds.includes(m));
+  const newMeds = afterMeds.filter(m => !beforeMeds.includes(m));
   if (newMeds.length > 0) {
     added.push("medications");
   }
@@ -110,7 +109,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new financial stressors
   const beforeStressors = before.money_profile?.financial_stressors || [];
   const afterStressors = after.money_profile?.financial_stressors || [];
-  const newStressors = afterStressors.filter((s: any) => !beforeStressors.includes(s));
+  const newStressors = afterStressors.filter(s => !beforeStressors.includes(s));
   if (newStressors.length > 0) {
     added.push("financial_stressors");
   }
@@ -118,7 +117,7 @@ function getStatisticalTraitsAdded(before: any, after: any): string[] {
   // Check for new mental health flags
   const beforeMental = before.health_profile?.mental_health_flags || [];
   const afterMental = after.health_profile?.mental_health_flags || [];
-  const newMental = afterMental.filter((m: any) => !beforeMental.includes(m));
+  const newMental = afterMental.filter(m => !beforeMental.includes(m));
   if (newMental.length > 0) {
     added.push("mental_health_flags");
   }

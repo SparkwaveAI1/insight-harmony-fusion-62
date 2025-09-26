@@ -81,8 +81,8 @@ serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 100));
         
       } catch (error) {
-        console.error(`Error processing ${persona.name}:`, (error as Error).message);
-        errors.push(`${persona.name}: ${(error as Error).message}`);
+        console.error(`Error processing ${persona.name}:`, error.message);
+        errors.push(`${persona.name}: ${error.message}`);
       }
     }
 
@@ -105,7 +105,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: (error as Error).message || 'Failed to update persona descriptions' 
+        error: error.message || 'Failed to update persona descriptions' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 

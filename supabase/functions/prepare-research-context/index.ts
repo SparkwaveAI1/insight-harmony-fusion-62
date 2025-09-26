@@ -151,7 +151,7 @@ Focus on information that would be relevant for survey respondents to understand
   } catch (error) {
     console.error('Error in prepare-research-context function:', error);
     return new Response(JSON.stringify({ 
-      error: (error as Error).message,
+      error: error.message,
       research_context: null 
     }), {
       status: 500,

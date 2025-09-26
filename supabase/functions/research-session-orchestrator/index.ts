@@ -24,7 +24,6 @@ serve(async (req) => {
 
     if (action === 'start') {
       // Start the research session orchestration in background
-      // @ts-ignore - Deno edge runtime
       EdgeRuntime.waitUntil(orchestrateResearchSession(session_id, supabase));
       
       return new Response(JSON.stringify({ 
@@ -53,7 +52,6 @@ serve(async (req) => {
 
     if (action === 'resume') {
       // Resume interrupted session
-      // @ts-ignore - Deno edge runtime
       EdgeRuntime.waitUntil(resumeResearchSession(session_id, supabase));
       
       return new Response(JSON.stringify({ 
@@ -76,7 +74,7 @@ serve(async (req) => {
     console.error('Error in research orchestrator:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: (error as Error).message 
+      error: error.message 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

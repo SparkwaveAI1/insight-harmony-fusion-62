@@ -1,4 +1,3 @@
-// @ts-nocheck
 export interface PersonaMetadata {
   // Core Demographics (Stage 1)
   age: string;
