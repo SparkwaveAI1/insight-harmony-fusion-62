@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, AlertCircle } from "lucide-react";
-import { updateParticipantConsentById } from "@/services/supabase/supabaseService";
+import { updateParticipantConsentById } from "@/hooks/useQuestionnaireDataStub";
 
 const ConsentForm = () => {
   const navigate = useNavigate();

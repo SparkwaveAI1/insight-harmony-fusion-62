@@ -15,6 +15,8 @@ export {
 export { deletePersona } from './operations/deletePersona';
 export { generatePersonaImage } from './operations/generatePersonaImage';
 export { generatePersonaDescription, updatePersonaDescription } from './operations/generatePersonaDescription';
+export { savePersona } from './operations/savePersona';
+export { generatePersona } from './operations/generatePersona';
 
 // Re-export persona service functions
 export { getPublicV4Personas, getPublicV4PersonasShowAll, getMyV4PersonasShowAll } from './personaService';

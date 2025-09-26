@@ -2,39 +2,11 @@
 // Export the Supabase client
 import { supabase } from '@/integrations/supabase/client';
 
-// Export participant types and functions
-export type { 
-  Participant 
-} from './participants/participantService';
-
-export { 
-  createParticipant,
-  getParticipantByEmail,
-  getParticipantById, 
-  updateParticipantConsent,
-  updateParticipantConsentById
-} from './participants/participantService';
-
-// Export questionnaire functions
-export {
-  updateParticipantQuestionnaire,
-  updateParticipantQuestionnaireById
-} from './participants/questionnaireService';
-
-// Export interview functions
-export {
-  updateParticipantInterview,
-  generateUnlockCode,
-  generateUnlockCodeById,
-  validateUnlockCode,
-  validateUnlockCodeById
-} from './participants/interviewService';
-
-// Export storage functions
-export {
-  saveTranscript,
-  saveAudio
-} from './storage/uploadService';
+// These functions are not currently available but may be restored later
+// Export participant types and functions would go here
+// Export questionnaire functions would go here
+// Export interview functions would go here
+// Export storage functions would go here
 
 export {
   uploadPersonaImageFromUrl,

@@ -1,7 +1,7 @@
 
 import { FormSchema } from "@/schemas/personaQuestionnaireSchema";
 import { useToast } from "@/hooks/use-toast";
-import { getParticipantById, updateParticipantQuestionnaireById } from "@/services/supabase/supabaseService";
+import { getParticipantById, updateParticipantQuestionnaireById } from "./useQuestionnaireDataStub";
 import { UseFormReturn } from "react-hook-form";
 import { Json } from "@/integrations/supabase/types";
 

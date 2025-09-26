@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 import { Persona } from "@/services/persona/types";
-import { generatePersona } from "@/services/persona";
+import { generatePersona, savePersona } from "@/services/persona";
 import { cloneFormSchema, CloneFormValues } from "./cloneFormSchema";
 
 export function usePersonaClone(persona: Persona) {
@@ -36,7 +36,7 @@ export function usePersonaClone(persona: Persona) {
       
       console.log("Generating new customized persona with prompt:", fullPrompt);
       
-      // Use generatePersona instead of clonePersona to create a truly new persona
+      // Use the generatePersona function to create a truly new persona
       const generatedPersona = await generatePersona(fullPrompt);
       
       if (generatedPersona) {

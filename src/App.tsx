@@ -16,13 +16,9 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ConversationDetail from "./pages/ConversationDetail";
 
-import Interviewer from "./pages/Interviewer";
 import PRSNAEcosystem from "./pages/PRSNAEcosystem";
 import Collections from "./pages/Collections";
 import CollectionDetail from "./pages/CollectionDetail";
-import PersonaAIInterviewer from "./pages/PersonaAIInterviewer";
-
-import SimulatedPersona from "./pages/SimulatedPersona";
 import CustomResearch from "./pages/CustomResearch";
 import Research from "./pages/Research";
 import ResearchResults from "./pages/ResearchResults";
@@ -34,7 +30,6 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import PersonaQueue from "./pages/PersonaQueue";
 import ParticipateResearch from "./pages/ParticipateResearch";
-import InterviewProcess from "./pages/InterviewProcess";
 import WhitePaper from "./pages/WhitePaper";
 import Roadmap from "./pages/Roadmap";
 import EarnPRSNA from "./pages/EarnPRSNA";
@@ -145,17 +140,12 @@ function App() {
                 <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
                 
                 {/* Research section - Protected */}
-                <Route path="/interviewer" element={<ProtectedRoute><Interviewer /></ProtectedRoute>} />
-                <Route path="/persona-ai-interviewer" element={<ProtectedRoute><PersonaAIInterviewer /></ProtectedRoute>} />
-                
-                <Route path="/simulated-persona" element={<ProtectedRoute><SimulatedPersona /></ProtectedRoute>} />
                 
                 <Route path="/persona-creator" element={<ProtectedRoute><V4PersonaCreationPage /></ProtectedRoute>} />
                 <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
                 <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
                 <Route path="/research/results/:surveySessionId" element={<ProtectedRoute><ResearchResults /></ProtectedRoute>} />
                 <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
-                <Route path="/interview-process" element={<ProtectedRoute><InterviewProcess /></ProtectedRoute>} />
                 
                 {/* Persona Creation Flow - Protected */}
                 <Route path="/create" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />

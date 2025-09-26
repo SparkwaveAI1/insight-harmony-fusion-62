@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { createParticipant, getParticipantByEmail } from "@/services/supabase/supabaseService";
+import { createParticipant, getParticipantByEmail } from "@/hooks/useQuestionnaireDataStub";
 import { generateUniqueIdentifier } from "@/utils/identifierUtils";
 
 const formSchema = z.object({

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { updateParticipantQuestionnaireById, updateParticipantInterview } from "@/services/supabase/supabaseService";
+import { updateParticipantQuestionnaireById, updateParticipantInterview } from "./useQuestionnaireDataStub";
 import { FormSchema } from "@/schemas/personaQuestionnaireSchema";
 import { UseFormReturn } from "react-hook-form";
 
