@@ -157,8 +157,8 @@ export function extractUserDetails(prompt: string): ExtractedUserDetails {
   const extracted: ExtractedUserDetails = {
     name: nameMatch ? nameMatch[1] : undefined,
     age: ageMatch ? parseInt(ageMatch[1]) : undefined,
-    occupation: occupation,
-    location: location,
+    occupation: occupation || undefined,
+    location: location || undefined,
     education: educationMatch ? educationMatch[1].trim() : undefined,
     familyStatus: familyStatus ? familyStatus.source : undefined,
     interests: interests,
@@ -197,9 +197,9 @@ export function validateUserInputPreservation(generated: any, userDetails: Extra
   
   // Validate occupation preservation
   if (userDetails.occupation && generated.identity?.occupation) {
-    const userOccWords = userDetails.occupation.toLowerCase().split(' ');
-    const genOccWords = generated.identity.occupation.toLowerCase().split(' ');
-    const hasMatch = userOccWords.some(word => genOccWords.some(genWord => genWord.includes(word) || word.includes(genWord)));
+    const userOccWords: string[] = userDetails.occupation.toLowerCase().split(' ');
+    const genOccWords: string[] = generated.identity.occupation.toLowerCase().split(' ');
+    const hasMatch = userOccWords.some((word: string) => genOccWords.some((genWord: string) => genWord.includes(word) || word.includes(genWord)));
     
     if (!hasMatch) {
       warnings.push(`Occupation mismatch: expected "${userDetails.occupation}", got "${generated.identity.occupation}"`);
@@ -246,11 +246,11 @@ export function generatePersonaRequirements(userDetails: ExtractedUserDetails): 
     requirements.push(`FAMILY: Must reflect family relationships mentioned`);
   }
   
-  if (userDetails.interests.length > 0) {
+  if (userDetails.interests && userDetails.interests.length > 0) {
     requirements.push(`INTERESTS: Must include: ${userDetails.interests.join(', ')}`);
   }
   
-  if (userDetails.challenges.length > 0) {
+  if (userDetails.challenges && userDetails.challenges.length > 0) {
     requirements.push(`CHALLENGES: Must reflect: ${userDetails.challenges.join(', ')}`);
   }
   

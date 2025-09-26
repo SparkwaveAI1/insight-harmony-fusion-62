@@ -300,13 +300,17 @@ export interface SimulationDirectives {
   personality_drift_prevention: number;
 }
 
-export interface InterviewSection {
-  section_title: string;
-  responses: {
-    question: string;
-    answer: string;
-  }[];
+export interface InterviewQuestion {
+  question: string;
+  response?: string;
 }
+
+export interface InterviewSection {
+  section: string;
+  notes?: string;
+  questions: Array<string | InterviewQuestion>;
+}
+
 
 // Updated PersonaTemplate to match database constraints
 export interface PersonaTemplate {

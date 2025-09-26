@@ -211,13 +211,16 @@ function extractDemographics(conversationSummary, fullProfile) {
 }
 
 serve(async (req) => {
+  console.log(`[DEBUG] v4-grok-conversation called at ${new Date().toISOString()}`);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { persona_id, user_message, conversation_history, include_prompt } = await req.json()
+    const body = await req.json();
+    console.log(`[DEBUG] Request body:`, JSON.stringify(body, null, 2));
+    const { persona_id, user_message, conversation_history, include_prompt } = body
 
     if (!persona_id || !user_message) {
       throw new Error('Missing required fields: persona_id and user_message')
